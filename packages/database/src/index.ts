@@ -4,3 +4,8 @@ export * from "./models/diagnostic.js";
 export * from "./models/importEvent.js";
 export * from "./models/player.js";
 export * from "./models/snapshot.js";
+export * from "./repositories/clubRepository.js";
+export * from "./repositories/importEventRepository.js";
+export * from "./repositories/playerRepository.js";
+export * from "./repositories/snapshotRepository.js";
+export * from "./repositories/types.js";
