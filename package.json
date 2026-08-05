@@ -14,11 +14,13 @@
     "dev:extension": "npm run dev -w @atlas/extension",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "test": "vitest run",
+    "test": "vitest run --exclude e2e/**",
+    "test:e2e": "playwright test",
     "test:watch": "vitest"
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",
+    "@playwright/test": "^1.62.1",
     "@types/node": "^24.1.0",
     "eslint": "^9.32.0",
     "mongodb-memory-server": "^11.2.0",

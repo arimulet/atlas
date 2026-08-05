@@ -1,4 +1,4 @@
-import { Schema, model, models } from "mongoose";
+import mongoose, { Schema, model } from "mongoose";
 
 const assumptionSchema = new Schema(
   {
@@ -29,4 +29,4 @@ const diagnosticSchema = new Schema(
   { timestamps: true }
 );
 
-export const DiagnosticModel = models.Diagnostic ?? model("Diagnostic", diagnosticSchema);
+export const DiagnosticModel = mongoose.models.Diagnostic ?? model("Diagnostic", diagnosticSchema);
