@@ -11,6 +11,7 @@
   "dependencies": {
     "@atlas/application": "0.1.0",
     "@atlas/database": "0.1.0",
+    "dotenv": "^17.4.2",
     "fastify": "^5.4.0"
   },
   "devDependencies": {
