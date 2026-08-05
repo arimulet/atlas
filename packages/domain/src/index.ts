@@ -3,13 +3,7 @@ export type DataTraceKind = "observed" | "derived" | "assumed" | "recommended";
 export type AvailabilityStatus = "available" | "injured" | "suspended" | "unknown";
 
 export type PlayerRole =
-  | "goalkeeper"
-  | "defender"
-  | "midfielder"
-  | "winger"
-  | "striker"
-  | "trainee"
-  | "undefined";
+  "goalkeeper" | "defender" | "midfielder" | "winger" | "striker" | "trainee" | "undefined";
 
 export interface Money {
   amount: number;
@@ -82,3 +76,5 @@ export interface Diagnostic {
   generatedAt: string;
   findings: Finding[];
 }
+
+export * from "./diagnostics.js";
