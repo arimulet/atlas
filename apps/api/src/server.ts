@@ -1,3 +1,4 @@
+import "dotenv/config";
 import Fastify from "fastify";
 import { importPlayerSnapshotMvp, validatePlayerSnapshotImport } from "@atlas/application";
 import { connectMongoDb } from "@atlas/database";
