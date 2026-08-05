@@ -2,13 +2,22 @@ import { Schema, model, models, type InferSchemaType, type Model } from "mongoos
 
 const playerSchema = new Schema(
   {
-    externalId: { type: String, default: null, index: true },
+    externalId: { type: String, default: null },
     name: { type: String, required: true, trim: true }
   },
   { timestamps: true }
 );
 
+playerSchema.index(
+  { externalId: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { externalId: { $type: "string" } }
+  }
+);
+
 type PlayerDocument = InferSchemaType<typeof playerSchema>;
 
 export const PlayerModel =
-  (models.Player as Model<PlayerDocument> | undefined) ?? model<PlayerDocument>("Player", playerSchema);
+  (models.Player as Model<PlayerDocument> | undefined) ??
+  model<PlayerDocument>("Player", playerSchema);

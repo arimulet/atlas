@@ -66,7 +66,10 @@ const snapshotSchema = new Schema(
   { timestamps: true }
 );
 
+snapshotSchema.index({ clubId: 1, snapshotDate: 1 });
+
 type SnapshotDocument = InferSchemaType<typeof snapshotSchema>;
 
 export const SnapshotModel =
-  (models.Snapshot as Model<SnapshotDocument> | undefined) ?? model<SnapshotDocument>("Snapshot", snapshotSchema);
+  (models.Snapshot as Model<SnapshotDocument> | undefined) ??
+  model<SnapshotDocument>("Snapshot", snapshotSchema);

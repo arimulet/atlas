@@ -1,5 +1,14 @@
-import { validatePlayerSnapshotV0, type ImportIssue, type PlayerSnapshotV0 } from "@atlas/contracts";
-import { ClubModel, ImportEventModel, PlayerModel, SnapshotModel } from "@atlas/database";
+import {
+  validatePlayerSnapshotV0,
+  type ImportIssue,
+  type PlayerSnapshotV0
+} from "@atlas/contracts";
+import {
+  MongoClubRepository,
+  MongoImportEventRepository,
+  MongoPlayerRepository,
+  MongoSnapshotRepository
+} from "@atlas/database";
 
 export type ImportPlayerSnapshotStatus = "accepted" | "accepted-with-warnings" | "rejected";
 
@@ -29,11 +38,18 @@ const skillKeys = [
   "striker"
 ] as const;
 
-export async function importPlayerSnapshot(input: ImportPlayerSnapshotInput): Promise<ImportPlayerSnapshotResult> {
+const clubRepository = new MongoClubRepository();
+const importEventRepository = new MongoImportEventRepository();
+const playerRepository = new MongoPlayerRepository();
+const snapshotRepository = new MongoSnapshotRepository();
+
+export async function importPlayerSnapshot(
+  input: ImportPlayerSnapshotInput
+): Promise<ImportPlayerSnapshotResult> {
   const validation = validatePlayerSnapshotV0(input.payload);
 
   if (validation.status === "rejected") {
-    const importEvent = await ImportEventModel.create({
+    const importEvent = await importEventRepository.create({
       schemaVersion: readStringProperty(input.payload, "schemaVersion"),
       sourceType: readNestedStringProperty(input.payload, ["source", "type"]),
       status: validation.status,
@@ -54,7 +70,7 @@ export async function importPlayerSnapshot(input: ImportPlayerSnapshotInput): Pr
   }
 
   const normalized = normalizePlayerSnapshot(validation.data);
-  const importEvent = await ImportEventModel.create({
+  const importEvent = await importEventRepository.create({
     schemaVersion: normalized.schemaVersion,
     sourceType: normalized.source.type,
     status: validation.status,
@@ -62,10 +78,17 @@ export async function importPlayerSnapshot(input: ImportPlayerSnapshotInput): Pr
     warnings: validation.warnings
   });
 
-  const club = await persistClub(normalized);
-  const players = await Promise.all(normalized.players.map((player) => persistPlayer(player)));
-  const snapshot = await SnapshotModel.create({
-    clubId: club._id,
+  const club = await clubRepository.save(normalized.club);
+  const players = await Promise.all(
+    normalized.players.map((player) =>
+      playerRepository.resolveHistoricalIdentity({
+        externalId: player.externalId,
+        name: player.name
+      })
+    )
+  );
+  const snapshot = await snapshotRepository.save({
+    clubId: club.id,
     schemaVersion: normalized.schemaVersion,
     snapshotDate: normalized.snapshot.snapshotDate,
     season: normalized.snapshot.season,
@@ -73,23 +96,24 @@ export async function importPlayerSnapshot(input: ImportPlayerSnapshotInput): Pr
     importedAt: importEvent.importedAt,
     source: normalized.source,
     players: normalized.players.map((player, index) => ({
-      playerId: players[index]?._id ?? null,
+      playerId: players[index]?.id ?? null,
       externalId: player.externalId,
       name: player.name,
       age: player.age,
       wage: player.wage,
       estimatedValue: player.estimatedValue,
       form: player.form,
-      availabilityStatus: player.availabilityStatus,
+      availabilityStatus: player.availabilityStatus ?? null,
       observedPosition: player.observedPosition,
       skills: player.skills,
-      roles: []
+      roles: [] as string[]
     }))
   });
 
-  importEvent.clubId = club._id;
-  importEvent.snapshotId = snapshot._id;
-  await importEvent.save();
+  await importEventRepository.attachResult(importEvent.id, {
+    clubId: club.id,
+    snapshotId: snapshot.id
+  });
 
   return {
     status: validation.status,
@@ -169,30 +193,6 @@ function normalizePlayerSnapshot(snapshot: PlayerSnapshotV0): NormalizedPlayerSn
       skills: normalizeSkills(player.skills)
     }))
   };
-}
-
-async function persistClub(snapshot: NormalizedPlayerSnapshot) {
-  if (!snapshot.club.externalId) {
-    return ClubModel.create(snapshot.club);
-  }
-
-  return ClubModel.findOneAndUpdate(
-    { externalId: snapshot.club.externalId },
-    { $set: { name: snapshot.club.name }, $setOnInsert: { externalId: snapshot.club.externalId } },
-    { new: true, upsert: true }
-  );
-}
-
-async function persistPlayer(player: NormalizedPlayerSnapshot["players"][number]) {
-  if (!player.externalId) {
-    return PlayerModel.create({ externalId: null, name: player.name });
-  }
-
-  return PlayerModel.findOneAndUpdate(
-    { externalId: player.externalId },
-    { $set: { name: player.name }, $setOnInsert: { externalId: player.externalId } },
-    { new: true, upsert: true }
-  );
 }
 
 function normalizeSkills(skills: PlayerSnapshotV0["players"][number]["skills"]) {
