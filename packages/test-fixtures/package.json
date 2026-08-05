@@ -6,6 +6,8 @@
   "exports": {
     "./player-snapshot/valid.json": "./fixtures/player-snapshot/valid.json",
     "./player-snapshot/invalid.json": "./fixtures/player-snapshot/invalid.json",
-    "./player-snapshot/accepted-with-warnings.json": "./fixtures/player-snapshot/accepted-with-warnings.json"
+    "./player-snapshot/accepted-with-warnings.json": "./fixtures/player-snapshot/accepted-with-warnings.json",
+    "./player-snapshot/missing-external-id.json": "./fixtures/player-snapshot/missing-external-id.json",
+    "./player-snapshot/missing-skill.json": "./fixtures/player-snapshot/missing-skill.json"
   }
 }

@@ -1,4 +1,4 @@
-import { Schema, model, models } from "mongoose";
+import { Schema, model, models, type InferSchemaType, type Model } from "mongoose";
 
 const clubSchema = new Schema(
   {
@@ -8,4 +8,6 @@ const clubSchema = new Schema(
   { timestamps: true }
 );
 
-export const ClubModel = models.Club ?? model("Club", clubSchema);
+type ClubDocument = InferSchemaType<typeof clubSchema>;
+
+export const ClubModel = (models.Club as Model<ClubDocument> | undefined) ?? model<ClubDocument>("Club", clubSchema);

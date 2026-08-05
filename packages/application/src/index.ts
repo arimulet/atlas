@@ -1,5 +1,7 @@
 import { validatePlayerSnapshotV0, type PlayerSnapshotValidationResult } from "@atlas/contracts";
 
+export * from "./importPlayerSnapshot.js";
+
 export interface ValidatePlayerSnapshotInput {
   payload: unknown;
 }
