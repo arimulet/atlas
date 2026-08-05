@@ -104,6 +104,76 @@ describe("Sokker DOM export parser", () => {
     expect(result.warnings.map((warning) => warning.path)).toContain("players.0.skills.technique");
   });
 
+  it("reads accessible table labels and compact money units from Sokker-like rows", () => {
+    const document = createDocument(`
+      <html lang="es">
+        <head><title>Equipo - Sokker Manager</title></head>
+        <body>
+          <table>
+            <thead>
+              <tr>
+                <th title="Jugador"></th>
+                <th title="Edad"></th>
+                <th title="Salario"></th>
+                <th title="Valor estimado"></th>
+                <th title="Forma"></th>
+                <th title="Condicion"></th>
+                <th title="Rapidez"></th>
+                <th title="Tecnica"></th>
+                <th title="Pases"></th>
+                <th title="Porteria"></th>
+                <th title="Defensa"></th>
+                <th title="Creacion"></th>
+                <th title="Anotacion"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><a href="/es/app/player/38643161">Ryan Ahlburg</a></td>
+                <td>34</td>
+                <td>33.45k</td>
+                <td>1.55M</td>
+                <td>6</td>
+                <td title="Condicion: solido"></td>
+                <td title="Rapidez: excelente"></td>
+                <td title="Tecnica: muy bueno"></td>
+                <td title="Pases: bueno"></td>
+                <td title="Porteria: tragico"></td>
+                <td title="Defensa: excelente"></td>
+                <td title="Creacion: solido"></td>
+                <td title="Anotacion: bueno"></td>
+              </tr>
+            </tbody>
+          </table>
+        </body>
+      </html>
+    `);
+
+    const result = extractPlayerSnapshot(document, {
+      exportedAt,
+      pageUrl: "https://sokker.org/es/app/squad/",
+      locale: "es"
+    });
+
+    expect(result.snapshot.players[0]).toMatchObject({
+      externalId: "38643161",
+      name: "Ryan Ahlburg",
+      wage: { amount: 33450 },
+      estimatedValue: { amount: 1550000 },
+      skills: {
+        stamina: 8,
+        pace: 10,
+        technique: 9,
+        passing: 7,
+        keeper: 0,
+        defender: 10,
+        playmaker: 8,
+        striker: 7
+      }
+    });
+    expect(result.warnings).toEqual([]);
+  });
+
   it("produces JSON accepted by the ATLAS contract validator", () => {
     const validation = validatePlayerSnapshotV0(extensionFixture);
 

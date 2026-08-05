@@ -104,8 +104,8 @@ export function extractPlayerSnapshot(
     club: extractClub(document, options.pageUrl),
     snapshot: {
       snapshotDate: exportedAt.toISOString().slice(0, 10),
-      season: findLabeledNumber(document.body.innerText, ["season", "temporada"]),
-      week: findLabeledNumber(document.body.innerText, ["week", "semana"])
+      season: findLabeledNumber(readElementText(document.body), ["season", "temporada"]),
+      week: findLabeledNumber(readElementText(document.body), ["week", "semana"])
     },
     players
   };
@@ -157,7 +157,7 @@ function extractPlayersFromTables(document: Document, warnings: ExtractionWarnin
 
   document.querySelectorAll("table").forEach((table) => {
     const headers = [...table.querySelectorAll("thead th, thead td, tr:first-child th")].map((header) =>
-      normalizeLabel(header.textContent ?? "")
+      normalizeLabel(readElementText(header))
     );
 
     if (!headers.some((header) => matchesAny(header, fieldLabels.name))) {
@@ -189,11 +189,11 @@ function playerFromTableRow(
   const textByHeader = new Map<string, string>();
 
   headers.forEach((header, cellIndex) => {
-    textByHeader.set(header, normalizeWhitespace(cells[cellIndex]?.textContent ?? ""));
+    textByHeader.set(header, normalizeWhitespace(cells[cellIndex] ? readElementText(cells[cellIndex]!) : ""));
   });
 
   const nameCell = cellFor(row, headers, fieldLabels.name);
-  const name = normalizeWhitespace(nameCell?.textContent ?? valueFor(textByHeader, fieldLabels.name));
+  const name = normalizeWhitespace(nameCell ? readElementText(nameCell) : valueFor(textByHeader, fieldLabels.name));
   const age = parseFirstNumber(valueFor(textByHeader, fieldLabels.age));
   const wage = parseMoney(valueFor(textByHeader, fieldLabels.wage));
   const estimatedValue = parseMoney(valueFor(textByHeader, fieldLabels.estimatedValue));
@@ -212,7 +212,7 @@ function playerFromTableRow(
     wage: { amount: wage.amount, currency: wage.currency },
     estimatedValue: { amount: estimatedValue.amount, currency: estimatedValue.currency },
     form: parseFirstNumber(valueFor(textByHeader, fieldLabels.form)),
-    availabilityStatus: parseAvailability(valueFor(textByHeader, fieldLabels.availabilityStatus) || row.textContent || ""),
+    availabilityStatus: parseAvailability(valueFor(textByHeader, fieldLabels.availabilityStatus) || readElementText(row)),
     observedPosition: nullable(valueFor(textByHeader, fieldLabels.observedPosition)),
     skills
   };
@@ -223,7 +223,7 @@ function playerFromCard(
   index: number,
   warnings: ExtractionWarning[]
 ): PlayerExport | null {
-  const text = card.innerText;
+  const text = readElementText(card);
   const name =
     card.dataset.atlasName ||
     textFromSelector(card, "[data-atlas-player-name], .player-name, .name, h2, h3, a") ||
@@ -260,7 +260,12 @@ function playerFromCard(
 
 function parseSkillsFromTable(textByHeader: Map<string, string>): Record<SkillKey, number | null> {
   return Object.fromEntries(
-    skillKeys.map((skill) => [skill, parseSkillValue(valueFor(textByHeader, skillLabels[skill]))])
+    skillKeys.map((skill) => {
+      const rawValue = valueFor(textByHeader, skillLabels[skill]);
+      const labeledValue = findValueAfterLabel(rawValue, skillLabels[skill]);
+
+      return [skill, parseSkillValue(labeledValue || rawValue)];
+    })
   ) as Record<SkillKey, number | null>;
 }
 
@@ -296,9 +301,11 @@ function parseMoney(value: string | undefined): { amount: number | null; currenc
     return { amount: null, currency: null };
   }
 
-  const currency = value.match(/\b(ARS|USD|EUR|GBP|PLN|BRL|MXN)\b/i)?.[1]?.toUpperCase() ?? null;
+  const currency =
+    value.match(/\b(ARS|USD|EUR|GBP|PLN|BRL|MXN)\b/i)?.[1]?.toUpperCase() ??
+    currencyFromSymbol(value);
   const numeric = value.replace(/[^\d,.-]/g, "");
-  const amount = parseLocalizedNumber(numeric);
+  const amount = applyMoneyMultiplier(parseLocalizedNumber(numeric), value);
 
   return { amount, currency };
 }
@@ -386,6 +393,15 @@ function findValueAfterLabel(text: string, labels: string[]): string {
     if (label) {
       return line.slice(label.length).replace(/^[:\s-]+/, "").trim();
     }
+
+    for (const candidate of labels) {
+      const expression = new RegExp(`${escapeRegExp(normalizeLabel(candidate))}\\s*[:\\-]?\\s*([^;|\\n]+)`);
+      const match = normalized.match(expression);
+
+      if (match?.[1]) {
+        return match[1].trim();
+      }
+    }
   }
 
   return "";
@@ -452,7 +468,9 @@ function valueFor(values: Map<string, string>, labels: string[]): string {
 }
 
 function textFromSelector(root: ParentNode, selector: string): string {
-  return normalizeWhitespace(root.querySelector(selector)?.textContent ?? "");
+  const element = root.querySelector(selector);
+
+  return element ? normalizeWhitespace(readElementText(element)) : "";
 }
 
 function matchesAny(value: string, labels: string[]): boolean {
@@ -468,6 +486,21 @@ function normalizeLabel(value: string): string {
 
 function normalizeWhitespace(value: string): string {
   return value.replace(/\s+/g, " ").trim();
+}
+
+function readElementText(element: Element): string {
+  const parts = [
+    element.textContent ?? "",
+    element.getAttribute("title") ?? "",
+    element.getAttribute("aria-label") ?? "",
+    ...[...element.querySelectorAll("img[alt], [title], [aria-label]")].flatMap((child) => [
+      child.getAttribute("alt") ?? "",
+      child.getAttribute("title") ?? "",
+      child.getAttribute("aria-label") ?? ""
+    ])
+  ];
+
+  return normalizeWhitespace(parts.filter(Boolean).join(" "));
 }
 
 function nullable(value: string | undefined): string | null {
@@ -486,4 +519,46 @@ function isPlayer(player: PlayerExport | null): player is PlayerExport {
 
 function toPascalCase(value: string): string {
   return value[0]!.toUpperCase() + value.slice(1);
+}
+
+function applyMoneyMultiplier(amount: number | null, rawValue: string): number | null {
+  if (amount === null) {
+    return null;
+  }
+
+  const normalized = normalizeLabel(rawValue);
+
+  if (/(^|[\s\d.,])(k|mil|thousand)\b/.test(normalized)) {
+    return Math.round(amount * 1000);
+  }
+
+  if (/(^|[\s\d.,])(m|millon|millones|million|mln)\b/.test(normalized)) {
+    return Math.round(amount * 1000000);
+  }
+
+  return amount;
+}
+
+function currencyFromSymbol(value: string): string | null {
+  if (value.includes("€")) {
+    return "EUR";
+  }
+
+  if (value.includes("£")) {
+    return "GBP";
+  }
+
+  if (value.includes("zł")) {
+    return "PLN";
+  }
+
+  if (value.includes("R$")) {
+    return "BRL";
+  }
+
+  return null;
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
