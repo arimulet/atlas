@@ -1,4 +1,4 @@
-import { Schema, model, models } from "mongoose";
+import { Schema, model, models, type InferSchemaType, type Model } from "mongoose";
 
 const playerSchema = new Schema(
   {
@@ -8,4 +8,7 @@ const playerSchema = new Schema(
   { timestamps: true }
 );
 
-export const PlayerModel = models.Player ?? model("Player", playerSchema);
+type PlayerDocument = InferSchemaType<typeof playerSchema>;
+
+export const PlayerModel =
+  (models.Player as Model<PlayerDocument> | undefined) ?? model<PlayerDocument>("Player", playerSchema);

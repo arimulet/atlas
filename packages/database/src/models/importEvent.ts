@@ -1,4 +1,4 @@
-import { Schema, model, models } from "mongoose";
+import { Schema, model, models, type InferSchemaType, type Model } from "mongoose";
 
 const importIssueSchema = new Schema(
   {
@@ -19,9 +19,15 @@ const importEventSchema = new Schema(
     },
     errors: [importIssueSchema],
     warnings: [importIssueSchema],
+    clubId: { type: Schema.Types.ObjectId, ref: "Club", default: null },
+    snapshotId: { type: Schema.Types.ObjectId, ref: "Snapshot", default: null },
     importedAt: { type: Date, required: true, default: () => new Date() }
   },
-  { timestamps: true }
+  { timestamps: true, suppressReservedKeysWarning: true }
 );
 
-export const ImportEventModel = models.ImportEvent ?? model("ImportEvent", importEventSchema);
+type ImportEventDocument = InferSchemaType<typeof importEventSchema>;
+
+export const ImportEventModel =
+  (models.ImportEvent as Model<ImportEventDocument> | undefined) ??
+  model<ImportEventDocument>("ImportEvent", importEventSchema);
