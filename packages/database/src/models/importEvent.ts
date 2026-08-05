@@ -1,4 +1,4 @@
-import { Schema, model, models, type InferSchemaType, type Model } from "mongoose";
+import mongoose, { Schema, model, type InferSchemaType, type Model } from "mongoose";
 
 const importIssueSchema = new Schema(
   {
@@ -29,5 +29,5 @@ const importEventSchema = new Schema(
 type ImportEventDocument = InferSchemaType<typeof importEventSchema>;
 
 export const ImportEventModel =
-  (models.ImportEvent as Model<ImportEventDocument> | undefined) ??
+  (mongoose.models.ImportEvent as Model<ImportEventDocument> | undefined) ??
   model<ImportEventDocument>("ImportEvent", importEventSchema);

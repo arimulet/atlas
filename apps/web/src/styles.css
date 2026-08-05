@@ -1,42 +1,306 @@
 :root {
-  color: #17202a;
-  background: #f7f8fa;
+  color: #1f2933;
+  background: #f4f7f6;
   font-family:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+* {
+  box-sizing: border-box;
 }
 
 body {
   margin: 0;
 }
 
-.app-shell {
-  min-height: 100vh;
-  display: grid;
-  place-items: center;
-  padding: 32px;
+button {
+  border: 0;
+  border-radius: 6px;
+  background: #16695f;
+  color: #ffffff;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  padding: 11px 16px;
 }
 
-.intro {
-  width: min(720px, 100%);
+.app-shell {
+  min-height: 100vh;
+  padding: 28px;
+}
+
+.workspace {
+  display: grid;
+  gap: 18px;
+  margin: 0 auto;
+  max-width: 1120px;
+}
+
+.topbar {
+  align-items: end;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
 }
 
 .eyebrow {
-  color: #0f766e;
+  color: #16695f;
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: 0;
-  margin: 0 0 12px;
+  margin: 0 0 8px;
+  text-transform: uppercase;
+}
+
+h1,
+h2,
+h3,
+h4,
+p {
+  margin-top: 0;
 }
 
 h1 {
-  font-size: clamp(2rem, 7vw, 4.5rem);
+  font-size: clamp(2rem, 5vw, 3.4rem);
   line-height: 1;
+  margin-bottom: 0;
+}
+
+h2 {
+  font-size: 1.28rem;
+  margin-bottom: 0;
+}
+
+h3 {
+  font-size: 1.02rem;
+  margin-bottom: 10px;
+}
+
+h4 {
+  color: #4b5563;
+  font-size: 0.82rem;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+.status-pill {
+  border: 1px solid #cfdbd5;
+  border-radius: 999px;
+  color: #40513f;
+  font-size: 0.9rem;
+  padding: 9px 13px;
+  white-space: nowrap;
+}
+
+.status-pill.loading {
+  border-color: #2563eb;
+  color: #1d4ed8;
+}
+
+.status-pill.success {
+  border-color: #12805c;
+  color: #047857;
+}
+
+.status-pill.error {
+  border-color: #b42318;
+  color: #b42318;
+}
+
+.dropzone,
+.panel {
+  background: #ffffff;
+  border: 1px solid #d7e2dc;
+  border-radius: 8px;
+}
+
+.dropzone {
+  align-items: center;
+  display: flex;
+  gap: 18px;
+  justify-content: space-between;
+  min-height: 150px;
+  padding: 22px;
+}
+
+.dropzone.dragging {
+  border-color: #16695f;
+  box-shadow: inset 0 0 0 2px #16695f;
+}
+
+.dropzone p,
+.loading,
+.finding-description,
+.affected {
+  color: #52616b;
+  line-height: 1.5;
+  margin-bottom: 0;
+}
+
+.file-input {
+  height: 1px;
+  opacity: 0;
+  position: absolute;
+  width: 1px;
+}
+
+.panel {
+  padding: 20px;
+}
+
+.panel-heading {
+  margin-bottom: 16px;
+}
+
+.summary-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   margin: 0;
 }
 
-.intro p:last-child {
-  color: #4b5563;
-  font-size: 1.05rem;
-  line-height: 1.6;
-  max-width: 58ch;
+.summary-item {
+  background: #f8faf9;
+  border: 1px solid #e2e8e4;
+  border-radius: 6px;
+  padding: 12px;
+}
+
+.summary-item dt {
+  color: #64748b;
+  font-size: 0.82rem;
+  margin-bottom: 6px;
+}
+
+.summary-item dd {
+  font-size: 1.08rem;
+  font-weight: 800;
+  margin: 0;
+}
+
+.issue-panel.error {
+  border-color: #f3b5ae;
+}
+
+.issue-panel.warning {
+  border-color: #e7c75f;
+}
+
+.issue-list,
+.detail-block ul {
+  display: grid;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.issue-list li,
+.detail-block li {
+  align-items: start;
+  display: flex;
+  gap: 8px;
+}
+
+code {
+  background: #edf2f0;
+  border-radius: 4px;
+  font-size: 0.84rem;
+  padding: 2px 5px;
+}
+
+.finding-list,
+.finding-group {
+  display: grid;
+  gap: 14px;
+}
+
+.finding-card {
+  border: 1px solid #dce5e0;
+  border-radius: 8px;
+  display: grid;
+  gap: 12px;
+  padding: 15px;
+}
+
+.finding-header {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.severity,
+.confidence,
+.trace-kind {
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 4px 8px;
+  text-transform: uppercase;
+}
+
+.severity.high {
+  background: #fee4e2;
+  color: #b42318;
+}
+
+.severity.medium {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.severity.low,
+.severity.info {
+  background: #e0f2fe;
+  color: #075985;
+}
+
+.confidence {
+  background: #edf2f0;
+  color: #40513f;
+  text-transform: none;
+}
+
+.trace-kind.observed {
+  background: #d9f99d;
+  color: #365314;
+}
+
+.trace-kind.derived {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.trace-kind.assumed {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.trace-kind.recommended {
+  background: #ede9fe;
+  color: #5b21b6;
+}
+
+@media (max-width: 720px) {
+  .app-shell {
+    padding: 18px;
+  }
+
+  .topbar,
+  .dropzone,
+  .finding-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .status-pill {
+    white-space: normal;
+  }
 }

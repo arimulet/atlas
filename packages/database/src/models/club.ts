@@ -1,4 +1,4 @@
-import { Schema, model, models, type InferSchemaType, type Model } from "mongoose";
+import mongoose, { Schema, model, type InferSchemaType, type Model } from "mongoose";
 
 const clubSchema = new Schema(
   {
@@ -19,4 +19,5 @@ clubSchema.index(
 type ClubDocument = InferSchemaType<typeof clubSchema>;
 
 export const ClubModel =
-  (models.Club as Model<ClubDocument> | undefined) ?? model<ClubDocument>("Club", clubSchema);
+  (mongoose.models.Club as Model<ClubDocument> | undefined) ??
+  model<ClubDocument>("Club", clubSchema);

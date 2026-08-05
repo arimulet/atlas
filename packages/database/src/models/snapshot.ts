@@ -1,4 +1,4 @@
-import { Schema, model, models, type InferSchemaType, type Model } from "mongoose";
+import mongoose, { Schema, model, type InferSchemaType, type Model } from "mongoose";
 
 const moneySchema = new Schema(
   {
@@ -71,5 +71,5 @@ snapshotSchema.index({ clubId: 1, snapshotDate: 1 });
 type SnapshotDocument = InferSchemaType<typeof snapshotSchema>;
 
 export const SnapshotModel =
-  (models.Snapshot as Model<SnapshotDocument> | undefined) ??
+  (mongoose.models.Snapshot as Model<SnapshotDocument> | undefined) ??
   model<SnapshotDocument>("Snapshot", snapshotSchema);

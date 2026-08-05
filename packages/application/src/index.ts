@@ -2,6 +2,7 @@ import { validatePlayerSnapshotV0, type PlayerSnapshotValidationResult } from "@
 
 export * from "./importPlayerSnapshot.js";
 export * from "./generateBasicDiagnostic.js";
+export * from "./importPlayerSnapshotMvp.js";
 
 export interface ValidatePlayerSnapshotInput {
   payload: unknown;

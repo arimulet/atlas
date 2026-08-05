@@ -1,4 +1,4 @@
-import { Schema, model, models, type InferSchemaType, type Model } from "mongoose";
+import mongoose, { Schema, model, type InferSchemaType, type Model } from "mongoose";
 
 const playerSchema = new Schema(
   {
@@ -19,5 +19,5 @@ playerSchema.index(
 type PlayerDocument = InferSchemaType<typeof playerSchema>;
 
 export const PlayerModel =
-  (models.Player as Model<PlayerDocument> | undefined) ??
+  (mongoose.models.Player as Model<PlayerDocument> | undefined) ??
   model<PlayerDocument>("Player", playerSchema);
