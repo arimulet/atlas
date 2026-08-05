@@ -1,0 +1,11 @@
+{
+  "name": "@atlas/test-fixtures",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./player-snapshot/valid.json": "./fixtures/player-snapshot/valid.json",
+    "./player-snapshot/invalid.json": "./fixtures/player-snapshot/invalid.json",
+    "./player-snapshot/accepted-with-warnings.json": "./fixtures/player-snapshot/accepted-with-warnings.json"
+  }
+}
