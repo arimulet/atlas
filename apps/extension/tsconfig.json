@@ -1,8 +1,8 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "rootDir": "src",
-    "types": ["chrome"]
+    "rootDir": "../..",
+    "types": ["chrome", "vitest/globals"]
   },
-  "include": ["src"]
+  "include": ["src", "tests", "vite.config.ts"]
 }

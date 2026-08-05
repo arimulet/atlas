@@ -10,7 +10,7 @@ This repository contains only the software implementation:
 
 - `apps/web`: React + Vite web application.
 - `apps/api`: Node.js + Fastify API.
-- `apps/extension`: initial Manifest V3 browser extension scaffold.
+- `apps/extension`: Manifest V3 browser extension for manual Sokker DOM export.
 - `packages/contracts`: Zod JSON contracts and import validation.
 - `packages/domain`: minimal domain types.
 - `packages/application`: use-case boundary for application logic.
@@ -29,6 +29,16 @@ npm run dev:web
 npm run dev:api
 npm run dev:extension
 ```
+
+## Browser Extension
+
+Build the unpacked extension with:
+
+```bash
+npm run build -w @atlas/extension
+```
+
+Then load `apps/extension/dist` in the browser extension development screen. The popup only reads the active Sokker page after the user clicks `Generate preview`; it shows the JSON preview before downloading and does not automate Sokker clicks, navigation, login, or network sync.
 
 ## Technical Baseline
 
