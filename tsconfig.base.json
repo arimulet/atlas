@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "noUncheckedIndexedAccess": true,
+    "baseUrl": ".",
+    "paths": {
+      "@atlas/application": ["packages/application/src/index.ts"],
+      "@atlas/contracts": ["packages/contracts/src/index.ts"],
+      "@atlas/database": ["packages/database/src/index.ts"],
+      "@atlas/domain": ["packages/domain/src/index.ts"]
+    }
+  }
+}

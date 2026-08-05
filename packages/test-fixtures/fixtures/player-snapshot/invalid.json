@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "atlas.player-snapshot.v0",
+  "source": {
+    "type": "sokker-dom-export",
+    "exportedAt": "2026-08-05T20:00:00Z"
+  },
+  "club": {
+    "name": "River Plate Forever"
+  },
+  "snapshot": {
+    "snapshotDate": "2026-08-05"
+  },
+  "players": [
+    {
+      "externalId": "player-002",
+      "age": 19,
+      "wage": {
+        "amount": 8000,
+        "currency": "ARS"
+      },
+      "estimatedValue": {
+        "amount": 320000,
+        "currency": "ARS"
+      }
+    }
+  ]
+}
