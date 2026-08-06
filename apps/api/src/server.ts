@@ -4,6 +4,7 @@ import {
   calculateClubHistoricalTrends,
   compareClubSnapshots,
   generateClubHistoricalFindings,
+  getClubDashboard,
   getClubOperatingSettings,
   getClubProfile,
   importPlayerSnapshotMvp,
@@ -61,6 +62,12 @@ export function buildServer() {
     const { clubId } = request.params as { clubId: string };
 
     return { club: await getClubProfile({ clubId }) };
+  });
+
+  server.get("/api/clubs/:clubId/dashboard", async (request) => {
+    const { clubId } = request.params as { clubId: string };
+
+    return { dashboard: await getClubDashboard({ clubId }) };
   });
 
   server.patch("/api/clubs/:clubId/profile", async (request) => {
