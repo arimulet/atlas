@@ -9,13 +9,13 @@ import { getPlayerDevelopment, type PlayerDevelopmentPlayerSummary } from "./get
 import { getSquadEconomy, type SquadEconomyPlayerDetail } from "./getSquadEconomy.js";
 
 type MarketStrategy = "conservative" | "balanced" | "opportunistic";
-export type MarketPlanningCategory =
+type MarketPlanningCategory =
   | "sale_candidate"
   | "protection_candidate"
   | "follow_up"
   | "insufficient_signal";
-export type MarketPlanningSeverity = "info" | "low" | "medium" | "high";
-export type MarketPlanningConfidence = "low" | "medium" | "high";
+type MarketPlanningSeverity = "info" | "low" | "medium" | "high";
+type MarketPlanningConfidence = "low" | "medium" | "high";
 type EvidenceKind = "observed" | "manual" | "derived" | "inferred";
 
 export interface GetSquadMarketPlanningInput {
@@ -78,7 +78,6 @@ export interface SquadMarketPlayerPlan {
   severity: MarketPlanningSeverity;
   confidence: MarketPlanningConfidence;
   rationale: string;
-  timing: SquadMarketTiming;
   signals: SquadMarketSignal[];
   warnings: SquadMarketWarning[];
 }
@@ -101,18 +100,6 @@ export interface SquadMarketEvidence {
   kind: EvidenceKind;
   label: string;
   value: string | number | null;
-}
-
-export interface SquadMarketTiming {
-  label: string;
-  window: {
-    from: string | null;
-    to: string | null;
-    snapshotCount: number;
-  };
-  dataUsed: string[];
-  mainReasons: string[];
-  limits: string[];
 }
 
 const clubRepository = new MongoClubRepository();
@@ -226,14 +213,8 @@ function buildPlayerPlan(input: {
   economyDetail: SquadEconomyPlayerDetail | null;
   developmentSummary: PlayerDevelopmentPlayerSummary | null;
 }): SquadMarketPlayerPlan {
-  const historicalTrend = buildPlayerHistoricalTrend(input.player, input.snapshots);
-  const warnings = buildPlayerWarnings(
-    input.player,
-    input.snapshots,
-    input.economyDetail,
-    historicalTrend
-  );
-  const signals = buildSignals({ ...input, historicalTrend });
+  const warnings = buildPlayerWarnings(input.player, input.snapshots, input.economyDetail);
+  const signals = buildSignals(input);
   const category = chooseCategory(signals, warnings);
   const strongestSignal = signals[0] ?? null;
 
@@ -245,9 +226,8 @@ function buildPlayerPlan(input: {
     role: resolveRole(input.player),
     category,
     severity: strongestSignal?.severity ?? "info",
-    confidence: calculateConfidence(signals, warnings, historicalTrend),
+    confidence: calculateConfidence(signals, warnings, input.snapshots.length),
     rationale: buildRationale(category),
-    timing: buildTiming(category, signals, warnings, historicalTrend),
     signals:
       signals.length > 0
         ? signals
@@ -272,7 +252,6 @@ function buildSignals(input: {
   marketStrategy: MarketStrategy;
   economyDetail: SquadEconomyPlayerDetail | null;
   developmentSummary: PlayerDevelopmentPlayerSummary | null;
-  historicalTrend: PlayerHistoricalTrend;
 }): SquadMarketSignal[] {
   const signals: SquadMarketSignal[] = [];
   const wageToValueRatio = input.economyDetail?.wageToValueRatio ?? null;
@@ -281,27 +260,7 @@ function buildSignals(input: {
   const declinedSkills = input.developmentSummary?.recentEvolution.declinedSkills ?? 0;
   const comparableSkills = input.developmentSummary?.recentEvolution.comparableSkills ?? 0;
 
-  if (
-    input.player.age >= 30 &&
-    input.player.estimatedValue.amount > 0 &&
-    input.historicalTrend.valueDeltaPercent !== null &&
-    input.historicalTrend.valueDeltaPercent <= -0.08
-  ) {
-    signals.push({
-      code: "senior_declining_value_timing",
-      severity: input.player.age >= 32 || input.historicalTrend.valueDeltaPercent <= -0.18 ? "high" : "medium",
-      confidence: input.historicalTrend.snapshotCount >= 3 ? "high" : "medium",
-      message:
-        "Jugador veterano con valor estimado en baja dentro del historial propio; senal de timing patrimonial para revisar salida posible sin estimar precio real.",
-      evidence: [
-        { kind: "observed", label: "Edad", value: input.player.age },
-        { kind: "observed", label: "Ventana desde", value: input.historicalTrend.from },
-        { kind: "observed", label: "Ventana hasta", value: input.historicalTrend.to },
-        { kind: "derived", label: "Variacion valor %", value: input.historicalTrend.valueDeltaPercent },
-        { kind: "manual", label: "market.strategy", value: input.marketStrategy }
-      ]
-    });
-  } else if (input.player.age >= 30 && input.player.estimatedValue.amount > 0) {
+  if (input.player.age >= 30 && input.player.estimatedValue.amount > 0) {
     signals.push({
       code: "senior_asset_review",
       severity: input.player.age >= 32 ? "high" : "medium",
@@ -332,25 +291,6 @@ function buildSignals(input: {
     });
   }
 
-  if (
-    input.historicalTrend.wageDeltaPercent !== null &&
-    input.historicalTrend.wageDeltaPercent >= 0.12 &&
-    (input.historicalTrend.valueDeltaPercent === null || input.historicalTrend.valueDeltaPercent < 0.06)
-  ) {
-    signals.push({
-      code: "wage_growth_without_value_support",
-      severity: input.historicalTrend.wageDeltaPercent >= 0.25 ? "high" : "medium",
-      confidence: input.historicalTrend.snapshotCount >= 3 ? "high" : "medium",
-      message:
-        "El salario crece sin respaldo proporcional del valor estimado propio; conviene revisar el timing salarial del activo.",
-      evidence: [
-        { kind: "derived", label: "Variacion salario %", value: input.historicalTrend.wageDeltaPercent },
-        { kind: "derived", label: "Variacion valor %", value: input.historicalTrend.valueDeltaPercent },
-        { kind: "observed", label: "Snapshots comparables", value: input.historicalTrend.snapshotCount }
-      ]
-    });
-  }
-
   if (developmentFinding?.type === "decline") {
     signals.push({
       code: "development_decline_review",
@@ -366,12 +306,7 @@ function buildSignals(input: {
     });
   }
 
-  if (
-    input.player.age <= 23 &&
-    input.player.estimatedValue.amount > 0 &&
-    improvedSkills > declinedSkills &&
-    (input.historicalTrend.valueDeltaPercent === null || input.historicalTrend.valueDeltaPercent >= -0.05)
-  ) {
+  if (input.player.age <= 23 && input.player.estimatedValue.amount > 0 && improvedSkills > declinedSkills) {
     signals.push({
       code: "young_asset_protection",
       severity: "medium",
@@ -383,26 +318,6 @@ function buildSignals(input: {
         { kind: "observed", label: "Valor estimado", value: input.player.estimatedValue.amount },
         { kind: "derived", label: "Habilidades que subieron", value: improvedSkills },
         { kind: "manual", label: "market.strategy", value: input.marketStrategy }
-      ]
-    });
-  }
-
-  if (
-    input.player.age <= 24 &&
-    improvedSkills > declinedSkills &&
-    input.historicalTrend.valueDeltaPercent !== null &&
-    input.historicalTrend.valueDeltaPercent >= 0.08
-  ) {
-    signals.push({
-      code: "young_growth_hold_timing",
-      severity: "medium",
-      confidence: input.developmentSummary?.recentEvolution.confidence ?? "medium",
-      message:
-        "Jugador joven con mejora de habilidades y valorizacion interna; la senal favorece proteger o posponer decisiones fuertes.",
-      evidence: [
-        { kind: "derived", label: "Habilidades que subieron", value: improvedSkills },
-        { kind: "derived", label: "Variacion valor %", value: input.historicalTrend.valueDeltaPercent },
-        { kind: "observed", label: "Ventana hasta", value: input.historicalTrend.to }
       ]
     });
   }
@@ -436,19 +351,9 @@ function chooseCategory(
     return "protection_candidate";
   }
 
-  if (signals.some((signal) => signal.code === "young_growth_hold_timing")) {
-    return "protection_candidate";
-  }
-
   if (
     signals.some((signal) =>
-      [
-        "senior_asset_review",
-        "senior_declining_value_timing",
-        "high_internal_cost",
-        "wage_growth_without_value_support",
-        "development_decline_review"
-      ].includes(
+      ["senior_asset_review", "high_internal_cost", "development_decline_review"].includes(
         signal.code
       )
     )
@@ -466,8 +371,7 @@ function chooseCategory(
 function buildPlayerWarnings(
   player: PersistedPlayerSnapshot,
   snapshots: PersistedSnapshot[],
-  economyDetail: SquadEconomyPlayerDetail | null,
-  historicalTrend: PlayerHistoricalTrend
+  economyDetail: SquadEconomyPlayerDetail | null
 ): SquadMarketWarning[] {
   const warnings: SquadMarketWarning[] = [];
 
@@ -495,32 +399,6 @@ function buildPlayerWarnings(
       code: "short_history",
       message: "Historial corto; la lectura usa principalmente el snapshot actual.",
       evidence: [{ kind: "observed", label: "Snapshots disponibles", value: snapshots.length }]
-    });
-  }
-
-  if (historicalTrend.snapshotCount < 2) {
-    warnings.push({
-      code: "short_player_history",
-      message: "El jugador no tiene dos snapshots comparables por identidad estable.",
-      evidence: [
-        { kind: "observed", label: "Snapshots comparables del jugador", value: historicalTrend.snapshotCount }
-      ]
-    });
-  }
-
-  if (
-    historicalTrend.valueDeltaPercent !== null &&
-    historicalTrend.valueDeltaPercent <= -0.08 &&
-    historicalTrend.improvedSkills > historicalTrend.declinedSkills
-  ) {
-    warnings.push({
-      code: "contradictory_market_signals",
-      message:
-        "El valor estimado baja mientras las habilidades mejoran; la conclusion debe mantenerse prudente.",
-      evidence: [
-        { kind: "derived", label: "Variacion valor %", value: historicalTrend.valueDeltaPercent },
-        { kind: "derived", label: "Habilidades que subieron", value: historicalTrend.improvedSkills }
-      ]
     });
   }
 
@@ -579,173 +457,20 @@ function buildGlobalWarnings(
 function calculateConfidence(
   signals: SquadMarketSignal[],
   warnings: SquadMarketWarning[],
-  historicalTrend: PlayerHistoricalTrend
+  snapshotCount: number
 ): MarketPlanningConfidence {
   if (
     signals.length === 0 ||
-    warnings.some((warning) =>
-      [
-        "missing_market_core_data",
-        "ambiguous_identity",
-        "short_player_history",
-        "contradictory_market_signals"
-      ].includes(warning.code)
-    )
+    warnings.some((warning) => ["missing_market_core_data", "ambiguous_identity"].includes(warning.code))
   ) {
     return "low";
   }
 
-  if (
-    historicalTrend.snapshotCount >= 3 &&
-    warnings.length === 0 &&
-    signals.some((signal) => signal.confidence === "high")
-  ) {
+  if (snapshotCount >= 3 && warnings.length === 0 && signals.some((signal) => signal.confidence === "high")) {
     return "high";
   }
 
   return "medium";
-}
-
-interface PlayerHistoricalTrend {
-  from: string | null;
-  to: string | null;
-  snapshotCount: number;
-  valueDeltaPercent: number | null;
-  wageDeltaPercent: number | null;
-  improvedSkills: number;
-  declinedSkills: number;
-}
-
-function buildPlayerHistoricalTrend(
-  player: PersistedPlayerSnapshot,
-  snapshots: PersistedSnapshot[]
-): PlayerHistoricalTrend {
-  const playerSnapshots = snapshots
-    .map((snapshot) => ({
-      snapshotDate: snapshot.snapshotDate,
-      player: findSamePlayerSnapshot(player, snapshot)
-    }))
-    .filter((entry): entry is { snapshotDate: Date; player: PersistedPlayerSnapshot } =>
-      Boolean(entry.player)
-    );
-  const first = playerSnapshots[0] ?? null;
-  const latest = playerSnapshots.at(-1) ?? null;
-
-  if (!first || !latest || playerSnapshots.length < 2) {
-    return {
-      from: first ? formatDate(first.snapshotDate) : null,
-      to: latest ? formatDate(latest.snapshotDate) : null,
-      snapshotCount: playerSnapshots.length,
-      valueDeltaPercent: null,
-      wageDeltaPercent: null,
-      improvedSkills: 0,
-      declinedSkills: 0
-    };
-  }
-
-  return {
-    from: formatDate(first.snapshotDate),
-    to: formatDate(latest.snapshotDate),
-    snapshotCount: playerSnapshots.length,
-    valueDeltaPercent: calculatePercentDelta(
-      first.player.estimatedValue.amount,
-      latest.player.estimatedValue.amount
-    ),
-    wageDeltaPercent: calculatePercentDelta(first.player.wage.amount, latest.player.wage.amount),
-    ...calculateSkillDirection(first.player, latest.player)
-  };
-}
-
-function findSamePlayerSnapshot(
-  target: PersistedPlayerSnapshot,
-  snapshot: PersistedSnapshot
-): PersistedPlayerSnapshot | null {
-  if (target.externalId) {
-    return snapshot.players.find((player) => player.externalId === target.externalId) ?? null;
-  }
-
-  if (target.playerId) {
-    return snapshot.players.find((player) => player.playerId === target.playerId) ?? null;
-  }
-
-  return null;
-}
-
-function calculatePercentDelta(previous: number, current: number): number | null {
-  if (previous <= 0) {
-    return null;
-  }
-
-  return Number(((current - previous) / previous).toFixed(4));
-}
-
-function calculateSkillDirection(
-  previous: PersistedPlayerSnapshot,
-  current: PersistedPlayerSnapshot
-): Pick<PlayerHistoricalTrend, "improvedSkills" | "declinedSkills"> {
-  let improvedSkills = 0;
-  let declinedSkills = 0;
-  const skillKeys = Object.keys(current.skills) as Array<keyof PersistedPlayerSnapshot["skills"]>;
-
-  for (const skill of skillKeys) {
-    const previousValue = previous.skills[skill];
-    const currentValue = current.skills[skill];
-
-    if (previousValue === null || currentValue === null) {
-      continue;
-    }
-
-    if (currentValue > previousValue) improvedSkills += 1;
-    if (currentValue < previousValue) declinedSkills += 1;
-  }
-
-  return { improvedSkills, declinedSkills };
-}
-
-function buildTiming(
-  category: MarketPlanningCategory,
-  signals: SquadMarketSignal[],
-  warnings: SquadMarketWarning[],
-  historicalTrend: PlayerHistoricalTrend
-): SquadMarketTiming {
-  return {
-    label: labelTiming(category, warnings),
-    window: {
-      from: historicalTrend.from,
-      to: historicalTrend.to,
-      snapshotCount: historicalTrend.snapshotCount
-    },
-    dataUsed: buildTimingDataUsed(signals, historicalTrend),
-    mainReasons: signals.slice(0, 3).map((signal) => signal.message),
-    limits: warnings.map((warning) => warning.message)
-  };
-}
-
-function labelTiming(
-  category: MarketPlanningCategory,
-  warnings: SquadMarketWarning[]
-): string {
-  if (warnings.some((warning) => warning.code === "contradictory_market_signals")) {
-    return "Timing contradictorio";
-  }
-
-  if (category === "sale_candidate") return "Revision cercana";
-  if (category === "protection_candidate") return "Proteger y monitorear";
-  if (category === "follow_up") return "Esperar mas evidencia";
-  return "Sin timing fuerte";
-}
-
-function buildTimingDataUsed(
-  signals: SquadMarketSignal[],
-  historicalTrend: PlayerHistoricalTrend
-): string[] {
-  const labels = new Set(
-    signals.flatMap((signal) => signal.evidence.map((evidence) => evidence.label))
-  );
-
-  if (historicalTrend.snapshotCount > 0) labels.add("Historial propio");
-
-  return Array.from(labels);
 }
 
 function countCategories(

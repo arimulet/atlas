@@ -29,6 +29,7 @@ export interface ClubDashboard {
       | "findings"
       | "squad-economy"
       | "player-development"
+      | "squad-market-planning"
       | "training"
       | "academy"
       | "market";
@@ -272,14 +273,6 @@ function buildOperationalAreas(snapshotCount: number): ClubDashboard["operationa
       status: hasSnapshot ? "available" : "ready",
       summary: hasSnapshot
         ? "Candidatos internos de venta, proteccion y seguimiento."
-        : "Listo cuando exista un snapshot de plantilla."
-    },
-    {
-      key: "youth-pipeline-planning",
-      label: "Pipeline juvenil senior",
-      status: hasSnapshot ? "available" : "ready",
-      summary: hasSnapshot
-        ? "Jovenes del plantel senior con senales prudentes."
         : "Listo cuando exista un snapshot de plantilla."
     }
   ];

@@ -4,12 +4,14 @@ export interface ModuleGridProps {
   areas: OperationalArea[];
   onOpenSquadEconomy?: () => void;
   onOpenPlayerDevelopment?: () => void;
+  onOpenSquadMarketPlanning?: () => void;
 }
 
 export function ModuleGrid({
   areas,
   onOpenSquadEconomy,
-  onOpenPlayerDevelopment
+  onOpenPlayerDevelopment,
+  onOpenSquadMarketPlanning
 }: ModuleGridProps) {
   return (
     <div className="module-grid">
@@ -28,6 +30,11 @@ export function ModuleGrid({
           {area.key === "player-development" && area.status === "available" ? (
             <button type="button" onClick={onOpenPlayerDevelopment}>
               Abrir desarrollo
+            </button>
+          ) : null}
+          {area.key === "squad-market-planning" && area.status === "available" ? (
+            <button type="button" onClick={onOpenSquadMarketPlanning}>
+              Abrir planificacion
             </button>
           ) : null}
         </article>

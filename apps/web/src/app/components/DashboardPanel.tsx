@@ -18,13 +18,15 @@ export interface DashboardPanelProps {
   status: DashboardStatus;
   onOpenSquadEconomy?: () => void;
   onOpenPlayerDevelopment?: () => void;
+  onOpenSquadMarketPlanning?: () => void;
 }
 
 export function DashboardPanel({
   dashboard,
   status,
   onOpenSquadEconomy,
-  onOpenPlayerDevelopment
+  onOpenPlayerDevelopment,
+  onOpenSquadMarketPlanning
 }: DashboardPanelProps) {
   if (status === "loading") {
     return (
@@ -68,6 +70,7 @@ export function DashboardPanel({
           areas={dashboard.operationalAreas}
           onOpenSquadEconomy={onOpenSquadEconomy}
           onOpenPlayerDevelopment={onOpenPlayerDevelopment}
+          onOpenSquadMarketPlanning={onOpenSquadMarketPlanning}
         />
       </section>
     </section>
