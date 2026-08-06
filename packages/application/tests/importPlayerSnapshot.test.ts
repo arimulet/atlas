@@ -14,6 +14,7 @@ import extensionSnapshot from "@atlas/test-fixtures/player-snapshot/extension-so
   type: "json"
 };
 import { ClubModel, ImportEventModel, PlayerModel, SnapshotModel } from "@atlas/database";
+import type { PlayerSnapshotV0 } from "@atlas/contracts";
 import { importPlayerSnapshot } from "../src/index.js";
 
 let mongo: MongoMemoryServer;
@@ -118,5 +119,29 @@ describe("ImportPlayerSnapshot", () => {
     const snapshot = await SnapshotModel.findById(result.snapshotId).lean();
     expect(snapshot?.source?.type).toBe("sokker-dom-export");
     expect(snapshot?.players[0]?.externalId).toBe("101");
+  });
+
+  it("derives observedPosition during import when the squad page does not provide it", async () => {
+    const payload = structuredClone(validSnapshot) as PlayerSnapshotV0;
+    const player = payload.players[0]!;
+    player.observedPosition = null;
+    player.skills = {
+      stamina: 8,
+      pace: 10,
+      technique: 9,
+      passing: 8,
+      keeper: 1,
+      defender: 5,
+      playmaker: 9,
+      striker: 4
+    };
+
+    const result = await importPlayerSnapshot({ payload });
+
+    expect(result.status).toBe("accepted");
+    expect(result.warnings.map((warning) => warning.path)).not.toContain("players.0.observedPosition");
+
+    const snapshot = await SnapshotModel.findById(result.snapshotId).lean();
+    expect(snapshot?.players[0]?.observedPosition).toBe("winger");
   });
 });

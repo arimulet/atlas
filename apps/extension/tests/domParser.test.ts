@@ -117,6 +117,7 @@ describe("Sokker DOM export parser", () => {
                 <th title="Salario"></th>
                 <th title="Valor estimado"></th>
                 <th title="Forma"></th>
+                <th title="Estado"></th>
                 <th title="Condicion"></th>
                 <th title="Rapidez"></th>
                 <th title="Tecnica"></th>
@@ -131,9 +132,10 @@ describe("Sokker DOM export parser", () => {
               <tr>
                 <td><a href="/es/app/player/38643161">Ryan Ahlburg</a></td>
                 <td>34</td>
-                <td>33.45k</td>
-                <td>1.55M</td>
+                <td>33 450 EUR</td>
+                <td>1 550 000 EUR</td>
                 <td>6</td>
+                <td title="Estado:"></td>
                 <td title="Condicion: solido"></td>
                 <td title="Rapidez: excelente"></td>
                 <td title="Tecnica: muy bueno"></td>
@@ -158,8 +160,10 @@ describe("Sokker DOM export parser", () => {
     expect(result.snapshot.players[0]).toMatchObject({
       externalId: "38643161",
       name: "Ryan Ahlburg",
-      wage: { amount: 33450 },
-      estimatedValue: { amount: 1550000 },
+      wage: { amount: 33450, currency: "EUR" },
+      estimatedValue: { amount: 1550000, currency: "EUR" },
+      availabilityStatus: "available",
+      observedPosition: null,
       skills: {
         stamina: 8,
         pace: 10,

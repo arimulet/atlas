@@ -304,7 +304,7 @@ function parseMoney(value: string | undefined): { amount: number | null; currenc
   const currency =
     value.match(/\b(ARS|USD|EUR|GBP|PLN|BRL|MXN)\b/i)?.[1]?.toUpperCase() ??
     currencyFromSymbol(value);
-  const numeric = value.replace(/[^\d,.-]/g, "");
+  const numeric = value.replace(/[^\d,.\-\s]/g, "");
   const amount = applyMoneyMultiplier(parseLocalizedNumber(numeric), value);
 
   return { amount, currency };
@@ -315,13 +315,20 @@ function parseSkillValue(value: string | undefined): number | null {
     return null;
   }
 
-  const numeric = parseFirstNumber(value);
+  const normalized = normalizeLabel(value);
+  const numeric = parseFirstNumber(normalized);
 
   if (numeric !== null) {
     return numeric;
   }
 
-  return textualSkillValues.get(normalizeLabel(value)) ?? null;
+  const exactValue = textualSkillValues.get(normalized);
+
+  if (exactValue !== undefined) {
+    return exactValue;
+  }
+
+  return findFirstTextualSkillValue(normalized);
 }
 
 function parseFirstNumber(value: string | undefined): number | null {
@@ -335,7 +342,7 @@ function parseFirstNumber(value: string | undefined): number | null {
 }
 
 function parseLocalizedNumber(value: string): number | null {
-  const trimmed = value.trim();
+  const trimmed = value.trim().replace(/(?<=\d)\s+(?=\d{3}\b)/g, "");
 
   if (!trimmed) {
     return null;
@@ -374,6 +381,10 @@ function parseAvailability(value: string): PlayerExport["availabilityStatus"] {
   }
 
   if (/\bavailable|disponible|healthy|ok\b/.test(normalized)) {
+    return "available";
+  }
+
+  if (/\bestado\b|\bstatus\b|\bavailability\b|\bdisponibilidad\b/.test(normalized)) {
     return "available";
   }
 
@@ -561,4 +572,13 @@ function currencyFromSymbol(value: string): string | null {
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function findFirstTextualSkillValue(normalizedValue: string): number | null {
+  const candidates = [...textualSkillValues.entries()]
+    .map(([label, value]) => ({ label, value, index: normalizedValue.indexOf(label) }))
+    .filter((candidate) => candidate.index >= 0)
+    .sort((first, second) => first.index - second.index || second.label.length - first.label.length);
+
+  return candidates[0]?.value ?? null;
 }

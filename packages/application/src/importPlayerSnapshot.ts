@@ -9,6 +9,7 @@ import {
   MongoPlayerRepository,
   MongoSnapshotRepository
 } from "@atlas/database";
+import { inferPlayerRoleFromSkills } from "@atlas/domain";
 
 export type ImportPlayerSnapshotStatus = "accepted" | "accepted-with-warnings" | "rejected";
 
@@ -70,12 +71,14 @@ export async function importPlayerSnapshot(
   }
 
   const normalized = normalizePlayerSnapshot(validation.data);
+  const warnings = filterResolvedWarnings(validation.warnings, normalized);
+  const status = warnings.length > 0 ? "accepted-with-warnings" : "accepted";
   const importEvent = await importEventRepository.create({
     schemaVersion: normalized.schemaVersion,
     sourceType: normalized.source.type,
-    status: validation.status,
+    status,
     errors: validation.errors,
-    warnings: validation.warnings
+    warnings
   });
 
   const club = await clubRepository.save(normalized.club);
@@ -116,9 +119,9 @@ export async function importPlayerSnapshot(
   });
 
   return {
-    status: validation.status,
+    status,
     errors: validation.errors,
-    warnings: validation.warnings,
+    warnings,
     importEventId: importEvent.id,
     snapshotId: snapshot.id,
     clubId: club.id,
@@ -175,23 +178,30 @@ function normalizePlayerSnapshot(snapshot: PlayerSnapshotV0): NormalizedPlayerSn
       season: snapshot.snapshot.season ?? null,
       week: snapshot.snapshot.week ?? null
     },
-    players: snapshot.players.map((player) => ({
-      externalId: normalizeOptionalString(player.externalId),
-      name: player.name.trim(),
-      age: player.age,
-      wage: {
-        amount: player.wage.amount,
-        currency: normalizeOptionalString(player.wage.currency)
-      },
-      estimatedValue: {
-        amount: player.estimatedValue.amount,
-        currency: normalizeOptionalString(player.estimatedValue.currency)
-      },
-      form: player.form ?? null,
-      availabilityStatus: player.availabilityStatus ?? null,
-      observedPosition: normalizeOptionalString(player.observedPosition),
-      skills: normalizeSkills(player.skills)
-    }))
+    players: snapshot.players.map(normalizePlayer)
+  };
+}
+
+function normalizePlayer(player: PlayerSnapshotV0["players"][number]): NormalizedPlayerSnapshot["players"][number] {
+  const skills = normalizeSkills(player.skills);
+  const observedPosition = normalizeOptionalString(player.observedPosition) ?? deriveObservedPosition(skills);
+
+  return {
+    externalId: normalizeOptionalString(player.externalId),
+    name: player.name.trim(),
+    age: player.age,
+    wage: {
+      amount: player.wage.amount,
+      currency: normalizeOptionalString(player.wage.currency)
+    },
+    estimatedValue: {
+      amount: player.estimatedValue.amount,
+      currency: normalizeOptionalString(player.estimatedValue.currency)
+    },
+    form: player.form ?? null,
+    availabilityStatus: player.availabilityStatus ?? null,
+    observedPosition,
+    skills
   };
 }
 
@@ -200,6 +210,29 @@ function normalizeSkills(skills: PlayerSnapshotV0["players"][number]["skills"]) 
     (typeof skillKeys)[number],
     number | null
   >;
+}
+
+function deriveObservedPosition(skills: Record<(typeof skillKeys)[number], number | null>): string | null {
+  const inferred = inferPlayerRoleFromSkills(skills);
+
+  return inferred.role === "undefined" ? null : inferred.role;
+}
+
+function filterResolvedWarnings(
+  warnings: ImportIssue[],
+  snapshot: NormalizedPlayerSnapshot
+): ImportIssue[] {
+  return warnings.filter((warning) => {
+    const match = warning.path.match(/^players\.(\d+)\.observedPosition$/);
+
+    if (!match?.[1]) {
+      return true;
+    }
+
+    const player = snapshot.players[Number(match[1])];
+
+    return !player?.observedPosition;
+  });
 }
 
 function normalizeOptionalString(value: string | null | undefined): string | null {
