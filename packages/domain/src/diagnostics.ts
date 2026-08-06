@@ -142,11 +142,7 @@ function classifyPlayer(player: BasicDiagnosticPlayerSnapshot): ClassifiedPlayer
     };
   }
 
-  const scores = roleScores(player.skills);
-  const [role, score] = Object.entries(scores).sort((first, second) => second[1] - first[1])[0] as [
-    PlayerRole,
-    number
-  ];
+  const { role, score } = inferPlayerRoleFromSkills(player.skills);
 
   if (score < 5) {
     return {
@@ -175,6 +171,23 @@ function classifyPlayer(player: BasicDiagnosticPlayerSnapshot): ClassifiedPlayer
       )
     ]
   };
+}
+
+export function inferPlayerRoleFromSkills(skills: Required<SkillSet>): {
+  role: Exclude<PlayerRole, "trainee">;
+  score: number;
+} {
+  const scores = roleScores(skills);
+  const [role, score] = Object.entries(scores).sort((first, second) => second[1] - first[1])[0] as [
+    Exclude<PlayerRole, "trainee" | "undefined">,
+    number
+  ];
+
+  if (score < 5) {
+    return { role: "undefined", score };
+  }
+
+  return { role, score };
 }
 
 function createSquadBalanceFindings(players: ClassifiedPlayer[]): BasicDiagnosticFinding[] {
