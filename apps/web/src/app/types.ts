@@ -313,11 +313,17 @@ export interface PlayerDevelopmentSignal {
   code: string;
   confidence: "low" | "medium" | "high";
   message: string;
-  evidence: SquadEconomyEvidence[];
+  evidence: PlayerDevelopmentEvidence[];
 }
 
 export interface PlayerDevelopmentWarning {
   code: string;
   message: string;
-  evidence: SquadEconomyEvidence[];
+  evidence: PlayerDevelopmentEvidence[];
+}
+
+export interface PlayerDevelopmentEvidence {
+  kind: SquadEconomyEvidenceKind;
+  label: string;
+  value: string | number | null;
 }
