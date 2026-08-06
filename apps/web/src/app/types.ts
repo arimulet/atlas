@@ -2,6 +2,7 @@ export type ImportStatus = "idle" | "loading" | "success" | "error";
 export type DashboardStatus = "idle" | "loading" | "ready" | "error";
 export type SourceKind = "observed" | "manual" | "effective";
 export type SquadEconomyEvidenceKind = "observed" | "manual" | "derived" | "inferred";
+export type SkillChangeDirection = "up" | "down" | "stable" | "insufficient_data";
 
 export interface ImportIssue {
   path: string;
@@ -243,4 +244,80 @@ export interface SquadEconomyEvidence {
   kind: SquadEconomyEvidenceKind;
   label: string;
   value: string | number | null;
+}
+
+export interface PlayerDevelopment {
+  clubId: string;
+  snapshotCount: number;
+  snapshotDates: string[];
+  observed: {
+    latestSnapshotId: string | null;
+    latestSnapshotDate: string | null;
+    players: PlayerDevelopmentObservedPlayer[];
+  };
+  manual: {
+    trainingPriority: string;
+  };
+  derived: {
+    players: PlayerDevelopmentPlayerSummary[];
+  };
+  warnings: PlayerDevelopmentWarning[];
+}
+
+export interface PlayerDevelopmentObservedPlayer {
+  playerId: string | null;
+  externalId: string | null;
+  snapshotPlayerId: string;
+  name: string;
+  age: number;
+  observedPosition: string | null;
+  roles: string[];
+  skills: Record<string, number | null>;
+}
+
+export interface PlayerDevelopmentPlayerSummary {
+  playerId: string | null;
+  externalId: string | null;
+  name: string;
+  age: number;
+  role: {
+    label: string;
+    source: "observed" | "inferred" | "unknown";
+  };
+  relevantSkills: Array<{
+    skill: string;
+    value: number | null;
+  }>;
+  skillChanges: PlayerSkillChange[];
+  recentEvolution: {
+    direction: SkillChangeDirection;
+    improvedSkills: number;
+    declinedSkills: number;
+    stableSkills: number;
+    comparableSkills: number;
+    confidence: "low" | "medium" | "high";
+  };
+  signals: PlayerDevelopmentSignal[];
+  warnings: PlayerDevelopmentWarning[];
+}
+
+export interface PlayerSkillChange {
+  skill: string;
+  direction: SkillChangeDirection;
+  previousValue: number | null;
+  currentValue: number | null;
+  delta: number | null;
+}
+
+export interface PlayerDevelopmentSignal {
+  code: string;
+  confidence: "low" | "medium" | "high";
+  message: string;
+  evidence: SquadEconomyEvidence[];
+}
+
+export interface PlayerDevelopmentWarning {
+  code: string;
+  message: string;
+  evidence: SquadEconomyEvidence[];
 }

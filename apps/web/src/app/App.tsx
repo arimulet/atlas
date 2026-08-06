@@ -1,9 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { fetchClubDashboard, fetchSquadEconomy, importPlayerSnapshot } from "./api";
+import {
+  fetchClubDashboard,
+  fetchPlayerDevelopment,
+  fetchSquadEconomy,
+  importPlayerSnapshot
+} from "./api";
 import { DashboardPanel } from "./components/DashboardPanel";
 import { DiagnosticPanel } from "./components/DiagnosticPanel";
 import { IssuePanel } from "./components/IssuePanel";
+import { PlayerDevelopmentPanel } from "./components/PlayerDevelopmentPanel";
 import { SquadEconomyPanel } from "./components/SquadEconomyPanel";
 import { SummaryPanel } from "./components/SummaryPanel";
 import type {
@@ -13,6 +19,7 @@ import type {
   ImportIssue,
   ImportResponse,
   ImportStatus,
+  PlayerDevelopment,
   SquadEconomy
 } from "./types";
 
@@ -27,9 +34,13 @@ export function App() {
     activeClubId ? "loading" : "idle"
   );
   const [dashboard, setDashboard] = useState<ClubDashboard | null>(null);
-  const [activeView, setActiveView] = useState<"dashboard" | "squad-economy">("dashboard");
+  const [activeView, setActiveView] = useState<
+    "dashboard" | "squad-economy" | "player-development"
+  >("dashboard");
   const [squadEconomyStatus, setSquadEconomyStatus] = useState<DashboardStatus>("idle");
   const [squadEconomy, setSquadEconomy] = useState<SquadEconomy | null>(null);
+  const [playerDevelopmentStatus, setPlayerDevelopmentStatus] = useState<DashboardStatus>("idle");
+  const [playerDevelopment, setPlayerDevelopment] = useState<PlayerDevelopment | null>(null);
   const [status, setStatus] = useState<ImportStatus>("idle");
   const [fileName, setFileName] = useState<string | null>(null);
   const [message, setMessage] = useState("Club dashboard ready.");
@@ -65,6 +76,23 @@ export function App() {
     } catch {
       setSquadEconomy(null);
       setSquadEconomyStatus("error");
+    }
+  }, [activeClubId]);
+
+  const openPlayerDevelopment = useCallback(async () => {
+    if (!activeClubId) {
+      return;
+    }
+
+    setActiveView("player-development");
+    setPlayerDevelopmentStatus("loading");
+
+    try {
+      setPlayerDevelopment(await fetchPlayerDevelopment(activeClubId));
+      setPlayerDevelopmentStatus("ready");
+    } catch {
+      setPlayerDevelopment(null);
+      setPlayerDevelopmentStatus("error");
     }
   }, [activeClubId]);
 
@@ -138,57 +166,64 @@ export function App() {
             status={squadEconomyStatus}
             onBack={() => setActiveView("dashboard")}
           />
+        ) : activeView === "player-development" ? (
+          <PlayerDevelopmentPanel
+            playerDevelopment={playerDevelopment}
+            status={playerDevelopmentStatus}
+            onBack={() => setActiveView("dashboard")}
+          />
         ) : (
           <DashboardPanel
             dashboard={dashboard}
             status={dashboardStatus}
             onOpenSquadEconomy={() => void openSquadEconomy()}
+            onOpenPlayerDevelopment={() => void openPlayerDevelopment()}
           />
         )}
 
         {activeView === "dashboard" ? (
           <section
-          className={`dropzone ${isDragging ? "dragging" : ""}`}
-          onDragEnter={(event) => {
-            event.preventDefault();
-            setIsDragging(true);
-          }}
-          onDragOver={(event) => event.preventDefault()}
-          onDragLeave={() => setIsDragging(false)}
-          onDrop={(event) => {
-            event.preventDefault();
-            setIsDragging(false);
-            const file = event.dataTransfer.files[0];
-
-            if (file) {
-              void importFile(file);
-            }
-          }}
-          >
-          <input
-            ref={inputRef}
-            className="file-input"
-            data-testid="snapshot-file-input"
-            type="file"
-            accept="application/json,.json"
-            onChange={(event) => {
-              const file = event.target.files?.[0];
+            className={`dropzone ${isDragging ? "dragging" : ""}`}
+            onDragEnter={(event) => {
+              event.preventDefault();
+              setIsDragging(true);
+            }}
+            onDragOver={(event) => event.preventDefault()}
+            onDragLeave={() => setIsDragging(false)}
+            onDrop={(event) => {
+              event.preventDefault();
+              setIsDragging(false);
+              const file = event.dataTransfer.files[0];
 
               if (file) {
                 void importFile(file);
               }
             }}
-          />
-          <div>
-            <p className="eyebrow">Operational Intake</p>
-            <h2>Import player snapshot JSON</h2>
-            <p>
-              {fileName ? `Selected: ${fileName}` : "Drop a file here or select a JSON export."}
-            </p>
-          </div>
-          <button type="button" onClick={() => inputRef.current?.click()}>
-            Select JSON
-          </button>
+          >
+            <input
+              ref={inputRef}
+              className="file-input"
+              data-testid="snapshot-file-input"
+              type="file"
+              accept="application/json,.json"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+
+                if (file) {
+                  void importFile(file);
+                }
+              }}
+            />
+            <div>
+              <p className="eyebrow">Operational Intake</p>
+              <h2>Import player snapshot JSON</h2>
+              <p>
+                {fileName ? `Selected: ${fileName}` : "Drop a file here or select a JSON export."}
+              </p>
+            </div>
+            <button type="button" onClick={() => inputRef.current?.click()}>
+              Select JSON
+            </button>
           </section>
         ) : null}
 

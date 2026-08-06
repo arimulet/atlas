@@ -17,9 +17,15 @@ export interface DashboardPanelProps {
   dashboard: ClubDashboard | null;
   status: DashboardStatus;
   onOpenSquadEconomy?: () => void;
+  onOpenPlayerDevelopment?: () => void;
 }
 
-export function DashboardPanel({ dashboard, status, onOpenSquadEconomy }: DashboardPanelProps) {
+export function DashboardPanel({
+  dashboard,
+  status,
+  onOpenSquadEconomy,
+  onOpenPlayerDevelopment
+}: DashboardPanelProps) {
   if (status === "loading") {
     return (
       <section className="panel">
@@ -54,7 +60,11 @@ export function DashboardPanel({ dashboard, status, onOpenSquadEconomy }: Dashbo
           <p className="eyebrow">Access</p>
           <h2>Operational areas</h2>
         </div>
-        <ModuleGrid areas={dashboard.operationalAreas} onOpenSquadEconomy={onOpenSquadEconomy} />
+        <ModuleGrid
+          areas={dashboard.operationalAreas}
+          onOpenSquadEconomy={onOpenSquadEconomy}
+          onOpenPlayerDevelopment={onOpenPlayerDevelopment}
+        />
       </section>
     </section>
   );
