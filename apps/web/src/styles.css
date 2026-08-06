@@ -374,6 +374,13 @@ h4 {
   gap: 14px;
 }
 
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
 .development-card {
   background: #ffffff;
 }

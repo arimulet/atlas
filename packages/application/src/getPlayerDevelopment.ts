@@ -10,6 +10,8 @@ import { buildClubOperatingSettings } from "./clubOperatingSettings.js";
 type SkillKey = keyof SnapshotSkillSet;
 type SkillChangeDirection = "up" | "down" | "stable" | "insufficient_data";
 type DevelopmentConfidence = "low" | "medium" | "high";
+type DevelopmentSeverity = "info" | "low" | "medium" | "high";
+type DevelopmentFindingType = "improvement" | "stagnation" | "decline" | "insufficient_data";
 
 export interface GetPlayerDevelopmentInput {
   clubId: string;
@@ -66,6 +68,7 @@ export interface PlayerDevelopmentPlayerSummary {
     comparableSkills: number;
     confidence: DevelopmentConfidence;
   };
+  findings: PlayerDevelopmentFinding[];
   signals: PlayerDevelopmentSignal[];
   warnings: PlayerDevelopmentWarning[];
 }
@@ -82,6 +85,15 @@ export interface PlayerDevelopmentSignal {
   code: string;
   confidence: DevelopmentConfidence;
   message: string;
+  evidence: DevelopmentEvidence[];
+}
+
+export interface PlayerDevelopmentFinding {
+  type: DevelopmentFindingType;
+  severity: DevelopmentSeverity;
+  confidence: DevelopmentConfidence;
+  title: string;
+  description: string;
   evidence: DevelopmentEvidence[];
 }
 
@@ -177,7 +189,9 @@ function buildPlayerSummaries(
   const latestIdentityIndex = buildIdentityIndex(latest.players);
 
   return latest.players
-    .map((player) => buildPlayerSummary(player, snapshots, latestIdentityIndex, trainingPriority))
+    .map((player) =>
+      buildPlayerSummary(player, snapshots, latest, latestIdentityIndex, trainingPriority)
+    )
     .sort((left, right) => {
       const rightNet = right.recentEvolution.improvedSkills - right.recentEvolution.declinedSkills;
       const leftNet = left.recentEvolution.improvedSkills - left.recentEvolution.declinedSkills;
@@ -189,6 +203,7 @@ function buildPlayerSummaries(
 function buildPlayerSummary(
   player: PersistedPlayerSnapshot,
   snapshots: PersistedSnapshot[],
+  latest: PersistedSnapshot,
   latestIdentityIndex: Map<string, PersistedPlayerSnapshot[]>,
   trainingPriority: string
 ): PlayerDevelopmentPlayerSummary {
@@ -196,9 +211,20 @@ function buildPlayerSummary(
   const relevantSkillKeys = readRelevantSkills(role.label);
   const relevantSkills = relevantSkillKeys.map((skill) => ({ skill, value: player.skills[skill] }));
   const playerWarnings = buildPlayerWarnings(player, snapshots, latestIdentityIndex);
-  const previous = findPreviousComparablePlayer(player, snapshots);
-  const skillChanges = skillKeys.map((skill) => buildSkillChange(skill, previous, player));
-  const recentEvolution = summarizeSkillChanges(skillChanges, playerWarnings);
+  const previousPoint = findPreviousComparablePlayer(player, snapshots);
+  const skillChanges = skillKeys.map((skill) =>
+    buildSkillChange(skill, previousPoint?.player ?? null, player)
+  );
+  const recentEvolution = summarizeSkillChanges(skillChanges, playerWarnings, snapshots.length);
+  const findings = buildFindings({
+    skillChanges,
+    evolution: recentEvolution,
+    current: player,
+    currentSnapshot: latest,
+    previousPoint,
+    snapshotCount: snapshots.length,
+    warnings: playerWarnings
+  });
   const signals = buildSignals(skillChanges, recentEvolution, player, trainingPriority);
 
   return {
@@ -210,6 +236,7 @@ function buildPlayerSummary(
     relevantSkills,
     skillChanges,
     recentEvolution,
+    findings,
     signals,
     warnings: playerWarnings
   };
@@ -323,7 +350,8 @@ function buildSkillChange(
 
 function summarizeSkillChanges(
   changes: PlayerSkillChange[],
-  warnings: PlayerDevelopmentWarning[]
+  warnings: PlayerDevelopmentWarning[],
+  snapshotCount: number
 ): PlayerDevelopmentPlayerSummary["recentEvolution"] {
   const improvedSkills = changes.filter((change) => change.direction === "up").length;
   const declinedSkills = changes.filter((change) => change.direction === "down").length;
@@ -337,8 +365,110 @@ function summarizeSkillChanges(
     declinedSkills,
     stableSkills,
     comparableSkills,
-    confidence: confidenceFromEvidence(comparableSkills, warnings)
+    confidence: confidenceFromEvidence(comparableSkills, warnings, snapshotCount)
   };
+}
+
+function buildFindings(input: {
+  skillChanges: PlayerSkillChange[];
+  evolution: PlayerDevelopmentPlayerSummary["recentEvolution"];
+  current: PersistedPlayerSnapshot;
+  currentSnapshot: PersistedSnapshot;
+  previousPoint: ComparablePlayerPoint | null;
+  snapshotCount: number;
+  warnings: PlayerDevelopmentWarning[];
+}): PlayerDevelopmentFinding[] {
+  const comparableChanges = input.skillChanges.filter((change) => change.delta !== null);
+  const changedSkills = comparableChanges.filter((change) => change.delta !== 0);
+  const improvedSkills = comparableChanges.filter((change) => (change.delta ?? 0) > 0);
+  const declinedSkills = comparableChanges.filter((change) => (change.delta ?? 0) < 0);
+  const baseEvidence = buildFindingEvidence(
+    input.current,
+    input.currentSnapshot,
+    input.previousPoint,
+    input.snapshotCount
+  );
+
+  if (!input.previousPoint || input.evolution.comparableSkills < 4) {
+    return [
+      {
+        type: "insufficient_data",
+        severity: "info",
+        confidence: "low",
+        title: "Datos insuficientes",
+        description:
+          "No hay dos snapshots comparables con habilidades suficientes para clasificar evolucion.",
+        evidence: [
+          ...baseEvidence,
+          {
+            kind: "derived",
+            label: "Habilidades comparables",
+            value: input.evolution.comparableSkills
+          },
+          {
+            kind: "inferred",
+            label: "Conclusion",
+            value: "Insuficiente"
+          }
+        ]
+      }
+    ];
+  }
+
+  if (declinedSkills.length > improvedSkills.length) {
+    return [
+      {
+        type: "decline",
+        severity: severityFromNetDelta(totalDelta(declinedSkills), "decline"),
+        confidence: input.evolution.confidence,
+        title: "Deterioro observado",
+        description:
+          "El ultimo snapshot muestra mas habilidades visibles en baja que en mejora. Es una lectura observada, no una causa de entrenamiento.",
+        evidence: [
+          ...baseEvidence,
+          ...skillEvidence(declinedSkills),
+          { kind: "derived", label: "Delta neto de skills", value: totalDelta(changedSkills) },
+          { kind: "inferred", label: "Causalidad de entrenamiento", value: "No atribuida" }
+        ]
+      }
+    ];
+  }
+
+  if (improvedSkills.length > declinedSkills.length) {
+    return [
+      {
+        type: "improvement",
+        severity: severityFromNetDelta(totalDelta(improvedSkills), "improvement"),
+        confidence: input.evolution.confidence,
+        title: "Mejora observada",
+        description:
+          "El ultimo snapshot muestra mas habilidades visibles en mejora que en baja. ATLAS no atribuye causalidad al entrenamiento.",
+        evidence: [
+          ...baseEvidence,
+          ...skillEvidence(improvedSkills),
+          { kind: "derived", label: "Delta neto de skills", value: totalDelta(changedSkills) },
+          { kind: "inferred", label: "Causalidad de entrenamiento", value: "No atribuida" }
+        ]
+      }
+    ];
+  }
+
+  return [
+    {
+      type: "stagnation",
+      severity: input.snapshotCount >= 3 ? "medium" : "low",
+      confidence: input.evolution.confidence,
+      title: "Estancamiento observado",
+      description:
+        "Las habilidades visibles comparables no muestran progreso neto en la ventana analizada.",
+      evidence: [
+        ...baseEvidence,
+        { kind: "derived", label: "Habilidades estables", value: input.evolution.stableSkills },
+        { kind: "derived", label: "Delta neto de skills", value: totalDelta(changedSkills) },
+        { kind: "inferred", label: "Conclusion", value: "Estancamiento observado" }
+      ]
+    }
+  ];
 }
 
 function buildSignals(
@@ -396,10 +526,16 @@ function buildSignals(
   return signals;
 }
 
+interface ComparablePlayerPoint {
+  snapshotId: string;
+  snapshotDate: string;
+  player: PersistedPlayerSnapshot;
+}
+
 function findPreviousComparablePlayer(
   player: PersistedPlayerSnapshot,
   snapshots: PersistedSnapshot[]
-): PersistedPlayerSnapshot | null {
+): ComparablePlayerPoint | null {
   if (!player.externalId) {
     return null;
   }
@@ -412,7 +548,11 @@ function findPreviousComparablePlayer(
     );
 
     if (matches.length === 1) {
-      return matches[0]!;
+      return {
+        snapshotId: snapshot.id,
+        snapshotDate: formatDate(snapshot.snapshotDate),
+        player: matches[0]!
+      };
     }
   }
 
@@ -464,17 +604,78 @@ function readRelevantSkills(roleLabel: string): SkillKey[] {
 
 function confidenceFromEvidence(
   comparableSkills: number,
-  warnings: PlayerDevelopmentWarning[]
+  warnings: PlayerDevelopmentWarning[],
+  snapshotCount: number
 ): DevelopmentConfidence {
   if (comparableSkills < 4 || warnings.some((warning) => warning.code === "ambiguous_identity")) {
     return "low";
   }
 
-  if (warnings.length > 0) {
+  if (warnings.length > 0 || snapshotCount < 3) {
     return "medium";
   }
 
   return "high";
+}
+
+function buildFindingEvidence(
+  current: PersistedPlayerSnapshot,
+  currentSnapshot: PersistedSnapshot,
+  previousPoint: ComparablePlayerPoint | null,
+  snapshotCount: number
+): DevelopmentEvidence[] {
+  return [
+    { kind: "observed", label: "Jugador", value: current.name },
+    { kind: "observed", label: "Snapshots disponibles", value: snapshotCount },
+    { kind: "observed", label: "Snapshot anterior", value: previousPoint?.snapshotId ?? null },
+    { kind: "observed", label: "Fecha anterior", value: previousPoint?.snapshotDate ?? null },
+    { kind: "observed", label: "Snapshot actual", value: currentSnapshot.id },
+    { kind: "observed", label: "Fecha actual", value: formatDate(currentSnapshot.snapshotDate) },
+    {
+      kind: "observed",
+      label: "Ventana temporal",
+      value: buildWindowLabel(previousPoint, currentSnapshot)
+    }
+  ];
+}
+
+function skillEvidence(changes: PlayerSkillChange[]): DevelopmentEvidence[] {
+  return changes.map((change) => ({
+    kind: "observed",
+    label: change.skill,
+    value: `${change.previousValue} -> ${change.currentValue} (${formatSignedDelta(change.delta ?? 0)})`
+  }));
+}
+
+function totalDelta(changes: PlayerSkillChange[]): number {
+  return changes.reduce((total, change) => total + (change.delta ?? 0), 0);
+}
+
+function severityFromNetDelta(delta: number, type: "improvement" | "decline"): DevelopmentSeverity {
+  const magnitude = Math.abs(delta);
+
+  if (type === "improvement") {
+    return magnitude >= 4 ? "medium" : "low";
+  }
+
+  if (magnitude >= 4) return "high";
+  if (magnitude >= 2) return "medium";
+  return "low";
+}
+
+function buildWindowLabel(
+  previousPoint: ComparablePlayerPoint | null,
+  currentSnapshot: PersistedSnapshot
+): string | null {
+  if (!previousPoint) {
+    return null;
+  }
+
+  return `${previousPoint.snapshotDate} -> ${formatDate(currentSnapshot.snapshotDate)}`;
+}
+
+function formatSignedDelta(delta: number): string {
+  return delta > 0 ? `+${delta}` : delta.toString();
 }
 
 function classifyDelta(delta: number): SkillChangeDirection {
