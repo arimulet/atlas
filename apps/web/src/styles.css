@@ -289,12 +289,14 @@ h4 {
   justify-content: space-between;
 }
 
-.squad-economy-view {
+.squad-economy-view,
+.player-development-view {
   display: grid;
   gap: 18px;
 }
 
-.economy-columns {
+.economy-columns,
+.development-columns {
   display: grid;
   gap: 18px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -355,6 +357,60 @@ h4 {
 .player-detail-row span,
 .player-detail-row strong {
   overflow-wrap: anywhere;
+}
+
+.development-list {
+  display: grid;
+  gap: 14px;
+}
+
+.development-card {
+  background: #ffffff;
+}
+
+.skill-chip-list,
+.skill-change-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.skill-chip,
+.skill-change {
+  background: #f8faf9;
+  border: 1px solid #e2e8e4;
+  border-radius: 999px;
+  color: #40513f;
+  font-size: 0.84rem;
+  font-weight: 700;
+  padding: 6px 9px;
+}
+
+.skill-change.up {
+  background: #dcfce7;
+  border-color: #86efac;
+  color: #166534;
+}
+
+.skill-change.down {
+  background: #fee4e2;
+  border-color: #f3b5ae;
+  color: #b42318;
+}
+
+.skill-change.insufficient_data {
+  background: #fef3c7;
+  border-color: #e7c75f;
+  color: #92400e;
+}
+
+.signal-card {
+  background: #f8faf9;
+  border: 1px solid #e2e8e4;
+  border-radius: 8px;
+  display: grid;
+  gap: 10px;
+  padding: 12px;
 }
 
 .module-card.available {
@@ -532,6 +588,7 @@ code {
 
   .dashboard-grid,
   .economy-columns,
+  .development-columns,
   .settings-columns {
     grid-template-columns: 1fr;
   }

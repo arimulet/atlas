@@ -26,6 +26,7 @@ export interface ClubDashboard {
       | "history"
       | "findings"
       | "squad-economy"
+      | "player-development"
       | "training"
       | "academy"
       | "market";
@@ -108,6 +109,14 @@ function buildOperationalAreas(snapshotCount: number): ClubDashboard["operationa
       summary: hasSnapshot
         ? "Disponible desde salarios y valores observados."
         : "Listo cuando exista un snapshot de plantilla."
+    },
+    {
+      key: "player-development",
+      label: "Desarrollo de jugadores",
+      status: hasSnapshot ? "available" : "ready",
+      summary: hasHistory
+        ? "Evolucion observada de habilidades disponible."
+        : "Muestra datos actuales; requiere historial para evolucion."
     },
     {
       key: "training",

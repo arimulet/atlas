@@ -6,6 +6,7 @@ import {
   compareClubSnapshots,
   generateClubHistoricalFindings,
   getClubDashboard,
+  getPlayerDevelopment,
   getClubOperatingSettings,
   getClubProfile,
   getSquadEconomy,
@@ -82,6 +83,12 @@ export function buildServer() {
     const { clubId } = clubParamsSchema.parse(request.params);
 
     return { squadEconomy: await getSquadEconomy({ clubId }) };
+  });
+
+  server.get("/api/clubs/:clubId/player-development", async (request) => {
+    const { clubId } = clubParamsSchema.parse(request.params);
+
+    return { playerDevelopment: await getPlayerDevelopment({ clubId }) };
   });
 
   server.patch("/api/clubs/:clubId/profile", async (request) => {
