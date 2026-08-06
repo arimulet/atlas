@@ -6,10 +6,7 @@ export type SkillChangeDirection = "up" | "down" | "stable" | "insufficient_data
 export type PlayerDevelopmentFindingType =
   "improvement" | "stagnation" | "decline" | "insufficient_data";
 export type YouthPipelineCategory =
-  | "standout_prospect"
-  | "follow_up"
-  | "stagnation_risk"
-  | "insufficient_data";
+  "standout_prospect" | "follow_up" | "stagnation_risk" | "insufficient_data";
 
 export interface ImportIssue {
   path: string;
@@ -253,10 +250,7 @@ export interface OperationalArea {
 }
 
 export type SquadMarketCategory =
-  | "sale_candidate"
-  | "protection_candidate"
-  | "follow_up"
-  | "insufficient_signal";
+  "sale_candidate" | "protection_candidate" | "follow_up" | "insufficient_signal";
 
 export interface SquadMarketPlanning {
   clubId: string;
@@ -593,8 +587,30 @@ export interface YouthPipelinePlayerPlan {
   severity: "info" | "low" | "medium" | "high";
   confidence: "low" | "medium" | "high";
   rationale: string;
+  context: YouthPipelinePlayerContext;
   signals: YouthPipelineSignal[];
   warnings: YouthPipelineWarning[];
+}
+
+export interface YouthPipelinePlayerContext {
+  window: {
+    from: string | null;
+    to: string | null;
+    snapshotCount: number;
+  };
+  dataCompleteness: {
+    completeSkills: boolean;
+    comparableSkills: number;
+  };
+  valueAndWage: {
+    wage: number;
+    wageCurrency: string | null;
+    estimatedValue: number;
+    estimatedValueCurrency: string | null;
+    valueDeltaPercent: number | null;
+    wageDeltaPercent: number | null;
+  };
+  limits: string[];
 }
 
 export interface YouthPipelineSignal {
