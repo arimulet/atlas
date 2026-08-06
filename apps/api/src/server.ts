@@ -1,5 +1,6 @@
 import "dotenv/config";
 import Fastify from "fastify";
+import { ZodError } from "zod";
 import {
   calculateClubHistoricalTrends,
   compareClubSnapshots,
@@ -14,13 +15,19 @@ import {
   validatePlayerSnapshotImport
 } from "@atlas/application";
 import { connectMongoDb } from "@atlas/database";
+import {
+  clubParamsSchema,
+  compareClubSnapshotsBodySchema,
+  updateClubOperatingSettingsBodySchema,
+  updateClubProfileBodySchema
+} from "./http-schemas.js";
 
 export function buildServer() {
   const server = Fastify({ logger: true });
 
   server.setErrorHandler((error, _request, reply) => {
     server.log.error(error);
-    reply.code(500).send({
+    reply.code(error instanceof ZodError ? 400 : 500).send({
       importResult: {
         status: "rejected",
         errors: [{ path: "api", message: readErrorMessage(error) }],
@@ -53,84 +60,58 @@ export function buildServer() {
   });
 
   server.get("/api/clubs/:clubId/snapshots", async (request) => {
-    const { clubId } = request.params as { clubId: string };
+    const { clubId } = clubParamsSchema.parse(request.params);
 
     return { snapshots: await listClubSnapshots(clubId) };
   });
 
   server.get("/api/clubs/:clubId/profile", async (request) => {
-    const { clubId } = request.params as { clubId: string };
+    const { clubId } = clubParamsSchema.parse(request.params);
 
     return { club: await getClubProfile({ clubId }) };
   });
 
   server.get("/api/clubs/:clubId/dashboard", async (request) => {
-    const { clubId } = request.params as { clubId: string };
+    const { clubId } = clubParamsSchema.parse(request.params);
 
     return { dashboard: await getClubDashboard({ clubId }) };
   });
 
   server.patch("/api/clubs/:clubId/profile", async (request) => {
-    const { clubId } = request.params as { clubId: string };
-    const body = request.body as {
-      manual?: {
-        name?: string | null;
-        currency?: string | null;
-        season?: number | null;
-        week?: number | null;
-        assumptions?: Array<{ key: string; value: string }>;
-        preferences?: Array<{ key: string; value: string }>;
-      };
-    };
+    const { clubId } = clubParamsSchema.parse(request.params);
+    const body = updateClubProfileBodySchema.parse(request.body);
 
     return { club: await updateClubProfile({ clubId, manual: body.manual ?? {} }) };
   });
 
   server.get("/api/clubs/:clubId/operating-settings", async (request) => {
-    const { clubId } = request.params as { clubId: string };
+    const { clubId } = clubParamsSchema.parse(request.params);
 
     return { settings: await getClubOperatingSettings({ clubId }) };
   });
 
   server.patch("/api/clubs/:clubId/operating-settings", async (request) => {
-    const { clubId } = request.params as { clubId: string };
-    const body = request.body as {
-      manual?: {
-        currency?: string | null;
-        season?: number | null;
-        week?: number | null;
-        preferences?: {
-          "economy.riskTolerance"?: "conservative" | "balanced" | "aggressive" | null;
-          "training.priority"?: "performance" | "balanced" | "development" | null;
-          "academy.investment"?: "minimal" | "balanced" | "ambitious" | null;
-          "market.strategy"?: "conservative" | "balanced" | "opportunistic" | null;
-        };
-      };
-    };
+    const { clubId } = clubParamsSchema.parse(request.params);
+    const body = updateClubOperatingSettingsBodySchema.parse(request.body);
 
     return { settings: await updateClubOperatingSettings({ clubId, manual: body.manual ?? {} }) };
   });
 
   server.post("/api/clubs/:clubId/snapshot-comparisons", async (request) => {
-    const { clubId } = request.params as { clubId: string };
-    const body = request.body as {
-      baseSnapshotId?: string;
-      targetSnapshotId?: string;
-      baseSnapshotDate?: string;
-      targetSnapshotDate?: string;
-    };
+    const { clubId } = clubParamsSchema.parse(request.params);
+    const body = compareClubSnapshotsBodySchema.parse(request.body);
 
     return compareClubSnapshots({ clubId, ...body });
   });
 
   server.get("/api/clubs/:clubId/historical-trends", async (request) => {
-    const { clubId } = request.params as { clubId: string };
+    const { clubId } = clubParamsSchema.parse(request.params);
 
     return calculateClubHistoricalTrends({ clubId });
   });
 
   server.get("/api/clubs/:clubId/historical-findings", async (request) => {
-    const { clubId } = request.params as { clubId: string };
+    const { clubId } = clubParamsSchema.parse(request.params);
 
     return generateClubHistoricalFindings({ clubId });
   });
