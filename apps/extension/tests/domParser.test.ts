@@ -331,6 +331,21 @@ describe("Sokker DOM export parser", () => {
     expect(result.snapshot.players[0]?.externalId).toBe("38643161");
   });
 
+  it("extracts numeric externalId from player link variants", () => {
+    const document = createDocument(`
+      <html lang="es">
+        <body>
+          ${playerBox("38643161", "Ryan Ahlburg", "/es/app/player/38643161")}
+          ${playerBox("39409355", "Ottaviano Arixi", "/player/PID/39409355")}
+        </body>
+      </html>
+    `);
+
+    const result = extractPlayerSnapshot(document, { exportedAt });
+
+    expect(result.snapshot.players.map((player) => player.externalId)).toEqual(["38643161", "39409355"]);
+  });
+
   it("produces JSON accepted by the ATLAS contract validator", () => {
     const validation = validatePlayerSnapshotV0(extensionFixture);
 
@@ -351,13 +366,13 @@ function skillItem(label: string, value: number): string {
   `;
 }
 
-function playerBox(externalId: string, name: string): string {
+function playerBox(externalId: string, name: string, href = `/player/PID/${externalId}`): string {
   return `
     <div class="player-box__center">
       <div class="player-box__content">
         <div class="player-box__header">
           <div class="player-box-header">
-            <div class="player-box-header__name"><a href="/player/PID/${externalId}">${name}</a></div>
+            <div class="player-box-header__name"><a href="${href}">${name}</a></div>
             <div class="player-box-header__age"><span>Edad:</span><span>34</span></div>
             <div class="player-box-header__value"><span>Valor:</span><span>1&nbsp;549&nbsp;000&nbsp;u$s</span></div>
             <div class="player-box-header__salary"><span>Sueldo:</span><span>33&nbsp;450&nbsp;u$s</span></div>

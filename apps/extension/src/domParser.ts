@@ -208,7 +208,7 @@ function playerFromSokkerPlayerBox(
   collectPlayerWarnings(index, skills, warnings);
 
   return {
-    externalId: findPlayerId(card),
+    externalId: findPlayerIdFromLink(nameLink) ?? findPlayerId(card),
     name,
     age,
     wage: { amount: wage.amount, currency: wage.currency },
@@ -605,12 +605,22 @@ function findPlayerId(element: Element): string | null {
   return null;
 }
 
+function findPlayerIdFromLink(link: HTMLAnchorElement | null): string | null {
+  if (!link) {
+    return null;
+  }
+
+  return findIdInUrl(link.getAttribute("href") ?? "", ["player", "playerID"]);
+}
+
 function findIdInUrl(url: string, markers: string[]): string | null {
   for (const marker of markers) {
-    const match = url.match(new RegExp(`${marker}(?:/PID|ID)?[=/](\\d+)|${marker}/(\\d+)`, "i"));
+    const match = url.match(
+      new RegExp(`${marker}(?:/PID|ID)?[=/](\\d+)|${marker}/(\\d+)|${marker}[^\\d]+(\\d+)`, "i")
+    );
 
-    if (match?.[1] || match?.[2]) {
-      return match[1] ?? match[2] ?? null;
+    if (match?.[1] || match?.[2] || match?.[3]) {
+      return match[1] ?? match[2] ?? match[3] ?? null;
     }
   }
 
