@@ -1,7 +1,7 @@
 import type {
   PlayerDevelopment,
+  PlayerDevelopmentEvidence,
   PlayerDevelopmentPlayerSummary,
-  SquadEconomyEvidence
 } from "../types";
 import { IssuePanel } from "./IssuePanel";
 import { SummaryItem } from "./SummaryItem";
@@ -188,7 +188,7 @@ function PlayerDevelopmentCard({ player }: { player: PlayerDevelopmentPlayerSumm
   );
 }
 
-function EvidenceList({ evidence }: { evidence: SquadEconomyEvidence[] }) {
+function EvidenceList({ evidence }: { evidence: PlayerDevelopmentEvidence[] }) {
   return (
     <ul className="issue-list">
       {evidence.map((item) => (
@@ -228,3 +228,4 @@ function formatSkillChange(previousValue: number | null, currentValue: number | 
 
   return `${previousValue} -> ${currentValue} (${prefix}${delta})`;
 }
+
