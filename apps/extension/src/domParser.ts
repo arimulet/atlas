@@ -139,9 +139,7 @@ function extractPlayers(document: Document, warnings: ExtractionWarning[]): Play
     return explicitCards.map((card, index) => playerFromCard(card, index, warnings)).filter(isPlayer);
   }
 
-  const playerBoxes = [
-    ...document.querySelectorAll<HTMLElement>(".player-box__center, .player-box")
-  ].filter((element) => element.querySelector(".player-box__content, .player-box__skills"));
+  const playerBoxes = findSokkerPlayerBoxes(document);
 
   if (playerBoxes.length > 0) {
     return playerBoxes.map((card, index) => playerFromSokkerPlayerBox(card, index, warnings)).filter(isPlayer);
@@ -158,6 +156,15 @@ function extractPlayers(document: Document, warnings: ExtractionWarning[]): Play
   ].filter((element) => element.querySelector("a") || findAnyNumber(element.innerText));
 
   return likelyCards.map((card, index) => playerFromCard(card, index, warnings)).filter(isPlayer);
+}
+
+function findSokkerPlayerBoxes(document: Document): HTMLElement[] {
+  const candidates = [
+    ...document.querySelectorAll<HTMLElement>(".player-box__center, .player-box")
+  ].filter((element) => element.querySelector(".player-box__content, .player-box__skills"));
+  const roots = candidates.map((element) => element.closest<HTMLElement>(".player-box__center") ?? element);
+
+  return [...new Set(roots)];
 }
 
 function playerFromSokkerPlayerBox(
