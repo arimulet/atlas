@@ -1,4 +1,10 @@
-import type { ClubDashboard, ImportResponse, PlayerDevelopment, SquadEconomy } from "./types";
+import type {
+  ClubDashboard,
+  ImportResponse,
+  PlayerDevelopment,
+  SquadEconomy,
+  SquadMarketPlanning
+} from "./types";
 
 export async function fetchClubDashboard(clubId: string): Promise<ClubDashboard> {
   const response = await fetch(`/api/clubs/${clubId}/dashboard`);
@@ -31,6 +37,17 @@ export async function fetchPlayerDevelopment(clubId: string): Promise<PlayerDeve
   }
 
   return body.playerDevelopment;
+}
+
+export async function fetchSquadMarketPlanning(clubId: string): Promise<SquadMarketPlanning> {
+  const response = await fetch(`/api/clubs/${clubId}/squad-market-planning`);
+  const body = (await response.json()) as { squadMarketPlanning?: SquadMarketPlanning };
+
+  if (!response.ok || !body.squadMarketPlanning) {
+    throw new Error("Squad market planning API returned an unexpected response.");
+  }
+
+  return body.squadMarketPlanning;
 }
 
 export async function importPlayerSnapshot(payload: unknown): Promise<{
