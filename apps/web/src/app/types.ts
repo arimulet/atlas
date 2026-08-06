@@ -126,6 +126,7 @@ export interface ClubDashboard {
     canCompare: boolean;
   };
   developmentSummary: ClubDashboardDevelopmentSummary;
+  marketSummary: ClubDashboardMarketSummary;
   operationalAreas: OperationalArea[];
 }
 
@@ -159,6 +160,40 @@ export interface ClubDashboardDevelopmentPlayer {
   signal: PlayerDevelopmentFindingType;
   severity: "info" | "low" | "medium" | "high";
   confidence: "low" | "medium" | "high";
+}
+
+export interface ClubDashboardMarketSummary {
+  available: boolean;
+  detailPath: string;
+  observed: {
+    snapshotCount: number;
+    latestSnapshotDate: string | null;
+    playerCount: number;
+    playersWithStableIdentity: number;
+  };
+  manual: {
+    marketStrategy: string;
+  };
+  derived: {
+    saleCandidates: number;
+    protectionCandidates: number;
+    followUpPlayers: number;
+    insufficientSignalPlayers: number;
+  };
+  inferred: {
+    headline: string;
+    warning: string | null;
+    highlightedPlayers: ClubDashboardMarketPlayer[];
+  };
+}
+
+export interface ClubDashboardMarketPlayer {
+  playerId: string | null;
+  name: string;
+  signal: SquadMarketCategory;
+  severity: "info" | "low" | "medium" | "high";
+  confidence: "low" | "medium" | "high";
+  timing: string;
 }
 
 export interface SnapshotSummary {

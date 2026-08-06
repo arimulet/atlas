@@ -10,6 +10,24 @@ import {
   updateClubOperatingSettings
 } from "../src/index.js";
 
+interface DashboardSnapshotFixture {
+  source: { exportedAt: string };
+  snapshot: { snapshotDate: string; week: number };
+  players: DashboardSnapshotPlayerFixture[];
+}
+
+interface DashboardSnapshotPlayerFixture {
+  name: string;
+  age: number;
+  wage: { amount: number; currency: string | null };
+  estimatedValue: { amount: number; currency: string | null };
+  skills: {
+    pace: number | null;
+    technique: number | null;
+    passing: number | null;
+  };
+}
+
 let mongo: MongoMemoryServer;
 
 const validSnapshotPath = path.resolve(
@@ -186,18 +204,82 @@ describe("Club dashboard use case", () => {
       signal: "improvement"
     });
   });
+
+  it("integrates internal market signals without treating insufficient data as a sale signal", async () => {
+    const importResult = await importPlayerSnapshot({ payload: readValidSnapshot() });
+
+    const dashboard = await getClubDashboard({ clubId: importResult.clubId! });
+
+    expect(dashboard.marketSummary).toMatchObject({
+      available: true,
+      observed: {
+        snapshotCount: 1,
+        latestSnapshotDate: "2026-08-05",
+        playerCount: 1
+      },
+      manual: {
+        marketStrategy: "balanced"
+      },
+      derived: {
+        saleCandidates: 0,
+        protectionCandidates: 0,
+        followUpPlayers: 0,
+        insufficientSignalPlayers: 1
+      }
+    });
+    expect(dashboard.marketSummary.inferred.headline).toBe(
+      "Lectura prudente: hay jugadores con datos insuficientes para mercado interno."
+    );
+    expect(dashboard.marketSummary.inferred.highlightedPlayers).toEqual([]);
+  });
+
+  it("summarizes internal sale candidates for the operational dashboard", async () => {
+    const first = withPlayer(readValidSnapshot(), {
+      age: 31,
+      wage: { amount: 40000, currency: "ARS" },
+      estimatedValue: { amount: 450000, currency: "ARS" }
+    });
+    const second = {
+      ...first,
+      source: { ...first.source, exportedAt: "2026-08-12T12:00:00.000Z" },
+      snapshot: { ...first.snapshot, snapshotDate: "2026-08-12", week: 5 }
+    };
+    const importResult = await importPlayerSnapshot({ payload: first });
+    await importPlayerSnapshot({ payload: second });
+    await updateClubOperatingSettings({
+      clubId: importResult.clubId!,
+      manual: { preferences: { "market.strategy": "conservative" } }
+    });
+
+    const dashboard = await getClubDashboard({ clubId: importResult.clubId! });
+
+    expect(dashboard.marketSummary.derived).toMatchObject({
+      saleCandidates: 1,
+      protectionCandidates: 0,
+      followUpPlayers: 0,
+      insufficientSignalPlayers: 0
+    });
+    expect(dashboard.marketSummary.inferred.headline).toBe(
+      "Hay candidatos internos para revisar timing de venta sin automatizar decisiones."
+    );
+    expect(dashboard.marketSummary.inferred.highlightedPlayers[0]).toMatchObject({
+      name: "Tomas Alvarez",
+      signal: "sale_candidate",
+      confidence: "medium"
+    });
+  });
 });
 
-function readValidSnapshot() {
-  return JSON.parse(fs.readFileSync(validSnapshotPath, "utf8")) as {
-    source: { exportedAt: string };
-    snapshot: { snapshotDate: string; week: number };
-    players: Array<{
-      skills: {
-        pace: number | null;
-        technique: number | null;
-        passing: number | null;
-      };
-    }>;
+function readValidSnapshot(): DashboardSnapshotFixture {
+  return JSON.parse(fs.readFileSync(validSnapshotPath, "utf8")) as DashboardSnapshotFixture;
+}
+
+function withPlayer(
+  snapshot: DashboardSnapshotFixture,
+  patch: Partial<DashboardSnapshotPlayerFixture>
+): DashboardSnapshotFixture {
+  return {
+    ...snapshot,
+    players: snapshot.players.map((player) => ({ ...player, ...patch }))
   };
 }
