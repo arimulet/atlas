@@ -4,8 +4,13 @@ import {
   calculateClubHistoricalTrends,
   compareClubSnapshots,
   generateClubHistoricalFindings,
+  getClubDashboard,
+  getClubOperatingSettings,
+  getClubProfile,
   importPlayerSnapshotMvp,
   listClubSnapshots,
+  updateClubOperatingSettings,
+  updateClubProfile,
   validatePlayerSnapshotImport
 } from "@atlas/application";
 import { connectMongoDb } from "@atlas/database";
@@ -51,6 +56,59 @@ export function buildServer() {
     const { clubId } = request.params as { clubId: string };
 
     return { snapshots: await listClubSnapshots(clubId) };
+  });
+
+  server.get("/api/clubs/:clubId/profile", async (request) => {
+    const { clubId } = request.params as { clubId: string };
+
+    return { club: await getClubProfile({ clubId }) };
+  });
+
+  server.get("/api/clubs/:clubId/dashboard", async (request) => {
+    const { clubId } = request.params as { clubId: string };
+
+    return { dashboard: await getClubDashboard({ clubId }) };
+  });
+
+  server.patch("/api/clubs/:clubId/profile", async (request) => {
+    const { clubId } = request.params as { clubId: string };
+    const body = request.body as {
+      manual?: {
+        name?: string | null;
+        currency?: string | null;
+        season?: number | null;
+        week?: number | null;
+        assumptions?: Array<{ key: string; value: string }>;
+        preferences?: Array<{ key: string; value: string }>;
+      };
+    };
+
+    return { club: await updateClubProfile({ clubId, manual: body.manual ?? {} }) };
+  });
+
+  server.get("/api/clubs/:clubId/operating-settings", async (request) => {
+    const { clubId } = request.params as { clubId: string };
+
+    return { settings: await getClubOperatingSettings({ clubId }) };
+  });
+
+  server.patch("/api/clubs/:clubId/operating-settings", async (request) => {
+    const { clubId } = request.params as { clubId: string };
+    const body = request.body as {
+      manual?: {
+        currency?: string | null;
+        season?: number | null;
+        week?: number | null;
+        preferences?: {
+          "economy.riskTolerance"?: "conservative" | "balanced" | "aggressive" | null;
+          "training.priority"?: "performance" | "balanced" | "development" | null;
+          "academy.investment"?: "minimal" | "balanced" | "ambitious" | null;
+          "market.strategy"?: "conservative" | "balanced" | "opportunistic" | null;
+        };
+      };
+    };
+
+    return { settings: await updateClubOperatingSettings({ clubId, manual: body.manual ?? {} }) };
   });
 
   server.post("/api/clubs/:clubId/snapshot-comparisons", async (request) => {

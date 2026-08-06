@@ -1,0 +1,192 @@
+import mongoose from "mongoose";
+import { MongoMemoryServer } from "mongodb-memory-server";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { ClubModel, MongoClubRepository } from "@atlas/database";
+import { getClubOperatingSettings, updateClubOperatingSettings } from "../src/index.js";
+
+let mongo: MongoMemoryServer;
+
+const clubs = new MongoClubRepository();
+
+describe("Club operating settings use cases", () => {
+  beforeAll(async () => {
+    mongo = await MongoMemoryServer.create();
+    await mongoose.connect(mongo.getUri());
+  });
+
+  beforeEach(async () => {
+    await ClubModel.deleteMany({});
+  });
+
+  afterAll(async () => {
+    await mongoose.disconnect();
+    await mongo.stop();
+  });
+
+  it("reads effective defaults without mixing them into observed Sokker data", async () => {
+    const club = await clubs.save({
+      externalId: "club-001",
+      name: "River Plate Forever",
+      season: 78,
+      week: 4
+    });
+
+    const settings = await getClubOperatingSettings({ clubId: club.id });
+
+    expect(settings.observed).toEqual({ season: 78, week: 4 });
+    expect(settings.manual).toEqual({
+      currency: null,
+      season: null,
+      week: null,
+      preferences: {}
+    });
+    expect(settings.effective).toEqual({
+      currency: null,
+      season: 78,
+      week: 4,
+      preferences: {
+        "economy.riskTolerance": "balanced",
+        "training.priority": "balanced",
+        "academy.investment": "balanced",
+        "market.strategy": "balanced"
+      }
+    });
+  });
+
+  it("updates manual operating settings and keeps observed settings unchanged", async () => {
+    const club = await clubs.save({
+      externalId: "club-001",
+      name: "River Plate Forever",
+      season: 78,
+      week: 4
+    });
+
+    const settings = await updateClubOperatingSettings({
+      clubId: club.id,
+      manual: {
+        currency: " ars ",
+        season: 79,
+        week: 6,
+        preferences: {
+          "economy.riskTolerance": "conservative",
+          "training.priority": "development",
+          "academy.investment": "ambitious",
+          "market.strategy": "opportunistic"
+        }
+      }
+    });
+
+    expect(settings.observed).toEqual({ season: 78, week: 4 });
+    expect(settings.manual).toMatchObject({
+      currency: "ARS",
+      season: 79,
+      week: 6,
+      preferences: {
+        "economy.riskTolerance": "conservative",
+        "training.priority": "development",
+        "academy.investment": "ambitious",
+        "market.strategy": "opportunistic"
+      }
+    });
+    expect(settings.effective).toMatchObject({
+      currency: "ARS",
+      season: 79,
+      week: 6
+    });
+
+    const persisted = await ClubModel.findById(club.id).lean();
+    expect(persisted?.observed?.season).toBe(78);
+    expect(persisted?.manual?.currency).toBe("ARS");
+    expect(persisted?.manual?.preferences.map((preference) => preference.key).sort()).toEqual([
+      "academy.investment",
+      "economy.riskTolerance",
+      "market.strategy",
+      "training.priority"
+    ]);
+  });
+
+  it("validates currency, season, week and preference values clearly", async () => {
+    const club = await clubs.save({ externalId: "club-001", name: "River Plate Forever" });
+
+    await expect(
+      updateClubOperatingSettings({ clubId: club.id, manual: { currency: "pesos" } })
+    ).rejects.toThrow("Operating currency must be a 3-letter ISO currency code.");
+    await expect(
+      updateClubOperatingSettings({ clubId: club.id, manual: { season: 0 } })
+    ).rejects.toThrow("Operating season must be an integer between 1 and 999.");
+    await expect(
+      updateClubOperatingSettings({ clubId: club.id, manual: { week: 17 } })
+    ).rejects.toThrow("Operating week must be an integer between 1 and 16.");
+    await expect(
+      updateClubOperatingSettings({
+        clubId: club.id,
+        manual: { preferences: { "market.strategy": "reckless" as "balanced" } }
+      })
+    ).rejects.toThrow("Invalid value for operating preference market.strategy.");
+  });
+
+  it("persists only manual preference overrides and derives effective defaults on read", async () => {
+    const club = await clubs.save({
+      externalId: "club-001",
+      name: "River Plate Forever",
+      season: 78,
+      week: 4
+    });
+
+    await updateClubOperatingSettings({
+      clubId: club.id,
+      manual: {
+        preferences: {
+          "economy.riskTolerance": "aggressive"
+        }
+      }
+    });
+
+    const settings = await getClubOperatingSettings({ clubId: club.id });
+
+    expect(settings.manual.preferences).toEqual({
+      "economy.riskTolerance": "aggressive"
+    });
+    expect(settings.effective.preferences).toEqual({
+      "economy.riskTolerance": "aggressive",
+      "training.priority": "balanced",
+      "academy.investment": "balanced",
+      "market.strategy": "balanced"
+    });
+  });
+
+  it("preserves existing manual scalar settings during partial preference updates", async () => {
+    const club = await clubs.save({
+      externalId: "club-001",
+      name: "River Plate Forever",
+      season: 78,
+      week: 4
+    });
+
+    await updateClubOperatingSettings({
+      clubId: club.id,
+      manual: {
+        currency: "ARS",
+        season: 79,
+        week: 6
+      }
+    });
+    const settings = await updateClubOperatingSettings({
+      clubId: club.id,
+      manual: {
+        preferences: {
+          "market.strategy": "opportunistic"
+        }
+      }
+    });
+
+    expect(settings.manual).toMatchObject({
+      currency: "ARS",
+      season: 79,
+      week: 6,
+      preferences: {
+        "market.strategy": "opportunistic"
+      }
+    });
+  });
+});

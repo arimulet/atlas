@@ -5,8 +5,70 @@ export interface PersistedImportIssue {
 
 export interface PersistedClub {
   id: string;
+  observed: PersistedClubObservedProfile;
+  manual: PersistedClubManualProfile;
+  profile: PersistedClubEffectiveProfile;
+  settings: PersistedClubOperatingSettings;
   externalId: string | null;
   name: string;
+}
+
+export interface PersistedClubObservedProfile {
+  externalId: string | null;
+  name: string;
+  season: number | null;
+  week: number | null;
+  lastSnapshotDate: Date | null;
+  sourceType: string | null;
+  observedAt: Date | null;
+}
+
+export interface PersistedClubManualProfile {
+  name: string | null;
+  currency: string | null;
+  season: number | null;
+  week: number | null;
+  assumptions: PersistedClubManualRecord[];
+  preferences: PersistedClubManualRecord[];
+}
+
+export interface PersistedClubManualRecord {
+  key: string;
+  value: string;
+  updatedAt: Date;
+}
+
+export interface PersistedClubEffectiveProfile {
+  externalId: string | null;
+  name: string;
+  currency: string | null;
+  season: number | null;
+  week: number | null;
+}
+
+export interface PersistedClubOperatingSettings {
+  observed: PersistedClubObservedOperatingSettings;
+  manual: PersistedClubManualOperatingSettings;
+  effective: PersistedClubEffectiveOperatingSettings;
+}
+
+export interface PersistedClubObservedOperatingSettings {
+  season: number | null;
+  week: number | null;
+}
+
+export interface PersistedClubManualOperatingSettings {
+  currency: string | null;
+  season: number | null;
+  week: number | null;
+  preferences: PersistedClubManualRecord[];
+}
+
+export interface PersistedClubEffectiveOperatingSettings {
+  currency: string | null;
+  season: number | null;
+  week: number | null;
+  preferences: PersistedClubManualRecord[];
 }
 
 export interface PersistedPlayer {

@@ -141,6 +141,11 @@ interface NormalizedPlayerSnapshot {
   club: {
     externalId: string | null;
     name: string;
+    season: number | null;
+    week: number | null;
+    lastSnapshotDate: Date;
+    sourceType: PlayerSnapshotV0["source"]["type"];
+    observedAt: Date;
   };
   snapshot: {
     snapshotDate: Date;
@@ -171,7 +176,12 @@ function normalizePlayerSnapshot(snapshot: PlayerSnapshotV0): NormalizedPlayerSn
     },
     club: {
       externalId: normalizeOptionalString(snapshot.club.externalId),
-      name: snapshot.club.name.trim()
+      name: snapshot.club.name.trim(),
+      season: snapshot.snapshot.season ?? null,
+      week: snapshot.snapshot.week ?? null,
+      lastSnapshotDate: new Date(`${snapshot.snapshot.snapshotDate}T00:00:00.000Z`),
+      sourceType: snapshot.source.type,
+      observedAt: new Date(snapshot.source.exportedAt)
     },
     snapshot: {
       snapshotDate: new Date(`${snapshot.snapshot.snapshotDate}T00:00:00.000Z`),

@@ -63,6 +63,101 @@ describe("Mongo repositories", () => {
     });
   });
 
+  it("persists observed club profile separately from manual configuration", async () => {
+    const club = await clubs.save({
+      externalId: "club-001",
+      name: "River Plate Forever",
+      season: 78,
+      week: 4,
+      lastSnapshotDate: new Date("2026-08-05T00:00:00.000Z"),
+      sourceType: "sokker-dom-export",
+      observedAt: new Date("2026-08-05T20:00:00.000Z")
+    });
+
+    expect(club.observed).toMatchObject({
+      externalId: "club-001",
+      name: "River Plate Forever",
+      season: 78,
+      week: 4,
+      sourceType: "sokker-dom-export"
+    });
+    expect(club.manual).toMatchObject({
+      name: null,
+      currency: null,
+      season: null,
+      week: null,
+      assumptions: [],
+      preferences: []
+    });
+    expect(club.profile).toMatchObject({
+      externalId: "club-001",
+      name: "River Plate Forever",
+      currency: null,
+      season: 78,
+      week: 4
+    });
+    expect(club.settings).toMatchObject({
+      observed: {
+        season: 78,
+        week: 4
+      },
+      manual: {
+        currency: null,
+        season: null,
+        week: null,
+        preferences: []
+      },
+      effective: {
+        currency: null,
+        season: 78,
+        week: 4,
+        preferences: []
+      }
+    });
+  });
+
+  it("updates manual club configuration without changing observed Sokker data", async () => {
+    const club = await clubs.save({
+      externalId: "club-001",
+      name: "River Plate Forever",
+      season: 78,
+      week: 4
+    });
+
+    const updated = await clubs.updateManualProfile({
+      clubId: club.id,
+      name: "River Project",
+      currency: "ARS",
+      season: 79,
+      assumptions: [{ key: "market-risk", value: "Keep liquidity buffer before buying." }],
+      preferences: [{ key: "training-focus", value: "Prioritize playmaking trainees." }]
+    });
+
+    expect(updated.observed).toMatchObject({
+      externalId: "club-001",
+      name: "River Plate Forever",
+      season: 78,
+      week: 4
+    });
+    expect(updated.manual).toMatchObject({
+      name: "River Project",
+      currency: "ARS",
+      season: 79,
+      week: null
+    });
+    expect(updated.manual.assumptions[0]).toMatchObject({
+      key: "market-risk",
+      value: "Keep liquidity buffer before buying."
+    });
+    expect(updated.profile).toMatchObject({
+      externalId: "club-001",
+      name: "River Project",
+      currency: "ARS",
+      season: 79,
+      week: 4
+    });
+  });
+
   it("retrieves a snapshot by id", async () => {
     const club = await clubs.save({ externalId: "club-001", name: "River Plate Forever" });
     const player = await players.resolveHistoricalIdentity({

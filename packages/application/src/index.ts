@@ -6,6 +6,10 @@ export * from "./generateClubHistoricalFindings.js";
 export * from "./importPlayerSnapshotMvp.js";
 export * from "./compareClubSnapshots.js";
 export * from "./calculateClubHistoricalTrends.js";
+export * from "./getClubProfile.js";
+export * from "./updateClubProfile.js";
+export * from "./clubOperatingSettings.js";
+export * from "./getClubDashboard.js";
 
 export interface ValidatePlayerSnapshotInput {
   payload: unknown;
