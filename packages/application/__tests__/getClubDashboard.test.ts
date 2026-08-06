@@ -268,6 +268,47 @@ describe("Club dashboard use case", () => {
       confidence: "medium"
     });
   });
+
+  it("integrates senior youth pipeline without presenting it as real academy data", async () => {
+    const importResult = await importPlayerSnapshot({
+      payload: withPlayer(readValidSnapshot(), { age: 19 })
+    });
+    await updateClubOperatingSettings({
+      clubId: importResult.clubId!,
+      manual: { preferences: { "academy.investment": "ambitious" } }
+    });
+
+    const dashboard = await getClubDashboard({ clubId: importResult.clubId! });
+
+    expect(dashboard.youthPipelineSummary).toMatchObject({
+      available: true,
+      observed: {
+        snapshotCount: 1,
+        latestSnapshotDate: "2026-08-05",
+        youngSeniorPlayerCount: 1,
+        youthAgeThreshold: 23
+      },
+      manual: {
+        academyInvestment: "ambitious"
+      },
+      derived: {
+        standoutProspects: 0,
+        followUpPlayers: 0,
+        stagnationRiskPlayers: 0,
+        insufficientDataPlayers: 1
+      }
+    });
+    expect(dashboard.youthPipelineSummary.inferred.warning).toContain("plantel senior");
+    expect(dashboard.operationalAreas).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          key: "youth-pipeline-planning",
+          label: "Pipeline juvenil senior",
+          status: "available"
+        })
+      ])
+    );
+  });
 });
 
 function readValidSnapshot(): DashboardSnapshotFixture {

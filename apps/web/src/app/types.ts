@@ -5,6 +5,11 @@ export type SquadEconomyEvidenceKind = "observed" | "manual" | "derived" | "infe
 export type SkillChangeDirection = "up" | "down" | "stable" | "insufficient_data";
 export type PlayerDevelopmentFindingType =
   "improvement" | "stagnation" | "decline" | "insufficient_data";
+export type YouthPipelineCategory =
+  | "standout_prospect"
+  | "follow_up"
+  | "stagnation_risk"
+  | "insufficient_data";
 
 export interface ImportIssue {
   path: string;
@@ -127,6 +132,7 @@ export interface ClubDashboard {
   };
   developmentSummary: ClubDashboardDevelopmentSummary;
   marketSummary: ClubDashboardMarketSummary;
+  youthPipelineSummary: ClubDashboardYouthPipelineSummary;
   operationalAreas: OperationalArea[];
 }
 
@@ -194,6 +200,40 @@ export interface ClubDashboardMarketPlayer {
   severity: "info" | "low" | "medium" | "high";
   confidence: "low" | "medium" | "high";
   timing: string;
+}
+
+export interface ClubDashboardYouthPipelineSummary {
+  available: boolean;
+  detailPath: string;
+  observed: {
+    snapshotCount: number;
+    latestSnapshotDate: string | null;
+    seniorPlayerCount: number;
+    youngSeniorPlayerCount: number;
+    youthAgeThreshold: number;
+  };
+  manual: {
+    academyInvestment: string;
+  };
+  derived: {
+    standoutProspects: number;
+    followUpPlayers: number;
+    stagnationRiskPlayers: number;
+    insufficientDataPlayers: number;
+  };
+  inferred: {
+    headline: string;
+    warning: string | null;
+    highlightedPlayers: ClubDashboardYouthPipelinePlayer[];
+  };
+}
+
+export interface ClubDashboardYouthPipelinePlayer {
+  playerId: string | null;
+  name: string;
+  signal: YouthPipelineCategory;
+  severity: "info" | "low" | "medium" | "high";
+  confidence: "low" | "medium" | "high";
 }
 
 export interface SnapshotSummary {
@@ -496,6 +536,82 @@ export interface PlayerDevelopmentWarning {
 }
 
 export interface PlayerDevelopmentEvidence {
+  kind: SquadEconomyEvidenceKind;
+  label: string;
+  value: string | number | null;
+}
+
+export interface YouthPipelinePlanning {
+  clubId: string;
+  snapshotId: string | null;
+  snapshotDate: string | null;
+  observed: {
+    youthAgeThreshold: number;
+    players: YouthPipelineObservedPlayer[];
+    coverage: {
+      seniorPlayerCount: number;
+      youngSeniorPlayerCount: number;
+      playersWithStableIdentity: number;
+      playersWithCompleteSkills: number;
+    };
+  };
+  manual: {
+    academyInvestment: string;
+  };
+  derived: {
+    categoryCounts: Record<YouthPipelineCategory, number>;
+    players: YouthPipelinePlayerPlan[];
+  };
+  warnings: YouthPipelineWarning[];
+}
+
+export interface YouthPipelineObservedPlayer {
+  playerId: string | null;
+  externalId: string | null;
+  snapshotPlayerId: string;
+  name: string;
+  age: number;
+  role: {
+    label: string;
+    source: "observed" | "inferred" | "unknown";
+  };
+  wage: { amount: number; currency: string | null };
+  estimatedValue: { amount: number; currency: string | null };
+  skills: Record<string, number | null>;
+}
+
+export interface YouthPipelinePlayerPlan {
+  playerId: string | null;
+  snapshotPlayerId: string;
+  name: string;
+  age: number;
+  role: {
+    label: string;
+    source: "observed" | "inferred" | "unknown";
+  };
+  category: YouthPipelineCategory;
+  severity: "info" | "low" | "medium" | "high";
+  confidence: "low" | "medium" | "high";
+  rationale: string;
+  signals: YouthPipelineSignal[];
+  warnings: YouthPipelineWarning[];
+}
+
+export interface YouthPipelineSignal {
+  code: string;
+  severity: "info" | "low" | "medium" | "high";
+  confidence: "low" | "medium" | "high";
+  message: string;
+  evidence: YouthPipelineEvidence[];
+}
+
+export interface YouthPipelineWarning {
+  code: string;
+  message: string;
+  evidence: YouthPipelineEvidence[];
+}
+
+export interface YouthPipelineEvidence {
   kind: SquadEconomyEvidenceKind;
   label: string;
   value: string | number | null;

@@ -6,15 +6,15 @@ import {
   type SnapshotSkillSet
 } from "@atlas/database";
 import { buildClubOperatingSettings } from "./clubOperatingSettings.js";
-import {
-  getPlayerDevelopment,
-  type PlayerDevelopmentPlayerSummary
-} from "./getPlayerDevelopment.js";
+import { getPlayerDevelopment, type PlayerDevelopmentPlayerSummary } from "./getPlayerDevelopment.js";
 import { getSquadMarketPlanning, type SquadMarketPlayerPlan } from "./getSquadMarketPlanning.js";
 
 type EvidenceKind = "observed" | "manual" | "derived" | "inferred";
 export type YouthPipelineCategory =
-  "standout_prospect" | "follow_up" | "stagnation_risk" | "insufficient_data";
+  | "standout_prospect"
+  | "follow_up"
+  | "stagnation_risk"
+  | "insufficient_data";
 export type YouthPipelineSeverity = "info" | "low" | "medium" | "high";
 export type YouthPipelineConfidence = "low" | "medium" | "high";
 type SkillKey = keyof SnapshotSkillSet;
@@ -75,30 +75,8 @@ export interface YouthPipelinePlayerPlan {
   severity: YouthPipelineSeverity;
   confidence: YouthPipelineConfidence;
   rationale: string;
-  context: YouthPipelinePlayerContext;
   signals: YouthPipelineSignal[];
   warnings: YouthPipelineWarning[];
-}
-
-export interface YouthPipelinePlayerContext {
-  window: {
-    from: string | null;
-    to: string | null;
-    snapshotCount: number;
-  };
-  dataCompleteness: {
-    completeSkills: boolean;
-    comparableSkills: number;
-  };
-  valueAndWage: {
-    wage: number;
-    wageCurrency: string | null;
-    estimatedValue: number;
-    estimatedValueCurrency: string | null;
-    valueDeltaPercent: number | null;
-    wageDeltaPercent: number | null;
-  };
-  limits: string[];
 }
 
 export interface YouthPipelineSignal {
@@ -161,9 +139,7 @@ export async function getYouthPipelinePlanning(
   ]);
   const developmentIndex = buildDevelopmentIndex(development.derived.players);
   const marketIndex = buildMarketIndex(marketPlanning.derived.players);
-  const youngPlayers = latest.players.filter(
-    (player) => player.age <= YOUTH_PIPELINE_AGE_THRESHOLD
-  );
+  const youngPlayers = latest.players.filter((player) => player.age <= YOUTH_PIPELINE_AGE_THRESHOLD);
   const plans = youngPlayers
     .map((player) =>
       buildPlayerPlan({
@@ -242,14 +218,8 @@ function buildPlayerPlan(input: {
   developmentSummary: PlayerDevelopmentPlayerSummary | null;
   marketPlan: SquadMarketPlayerPlan | null;
 }): YouthPipelinePlayerPlan {
-  const context = buildPlayerContext(input.player, input.snapshots, input.developmentSummary);
-  const warnings = buildPlayerWarnings(
-    input.player,
-    input.snapshots,
-    input.developmentSummary,
-    context
-  );
-  const signals = buildSignals({ ...input, context });
+  const warnings = buildPlayerWarnings(input.player, input.snapshots, input.developmentSummary);
+  const signals = buildSignals(input);
   const category = chooseCategory(signals, warnings);
   const strongestSignal = signals[0] ?? null;
 
@@ -263,7 +233,6 @@ function buildPlayerPlan(input: {
     severity: strongestSignal?.severity ?? "info",
     confidence: calculateConfidence(signals, warnings),
     rationale: buildRationale(category),
-    context,
     signals: signals.length > 0 ? signals : [buildInsufficientSignal(input.player)],
     warnings
   };
@@ -274,7 +243,6 @@ function buildSignals(input: {
   academyInvestment: string;
   developmentSummary: PlayerDevelopmentPlayerSummary | null;
   marketPlan: SquadMarketPlayerPlan | null;
-  context: YouthPipelinePlayerContext;
 }): YouthPipelineSignal[] {
   const signals: YouthPipelineSignal[] = [];
   const development = input.developmentSummary;
@@ -291,27 +259,14 @@ function buildSignals(input: {
   ) {
     signals.push({
       code: "standout_young_growth",
-      severity: input.context.window.snapshotCount >= 3 ? "medium" : "low",
-      confidence:
-        input.context.window.snapshotCount >= 3
-          ? (development?.recentEvolution.confidence ?? "medium")
-          : "medium",
+      severity: "medium",
+      confidence: development?.recentEvolution.confidence ?? "medium",
       message:
         "Jugador joven del plantel senior con habilidades relevantes altas y mejora observada.",
       evidence: [
         { kind: "observed", label: "Edad", value: input.player.age },
-        { kind: "observed", label: "Rol", value: resolveRole(input.player).label },
-        { kind: "observed", label: "Ventana desde", value: input.context.window.from },
-        { kind: "observed", label: "Ventana hasta", value: input.context.window.to },
         { kind: "derived", label: "Promedio skills relevantes", value: relevantSkillAverage },
         { kind: "derived", label: "Habilidades que subieron", value: improvedSkills },
-        {
-          kind: "derived",
-          label: "Variacion valor %",
-          value: input.context.valueAndWage.valueDeltaPercent
-        },
-        { kind: "observed", label: "Salario", value: input.player.wage.amount },
-        { kind: "observed", label: "Valor estimado", value: input.player.estimatedValue.amount },
         { kind: "manual", label: "academy.investment", value: input.academyInvestment }
       ]
     });
@@ -326,9 +281,7 @@ function buildSignals(input: {
         "La planificacion interna de mercado tambien marca al jugador como activo a proteger.",
       evidence: [
         { kind: "inferred", label: "Senal mercado interno", value: input.marketPlan.category },
-        { kind: "inferred", label: "Timing mercado", value: input.marketPlan.timing.label },
-        { kind: "observed", label: "Ventana desde", value: input.context.window.from },
-        { kind: "observed", label: "Ventana hasta", value: input.context.window.to }
+        { kind: "inferred", label: "Timing mercado", value: input.marketPlan.timing.label }
       ]
     });
   }
@@ -342,20 +295,7 @@ function buildSignals(input: {
         "El modulo de desarrollo muestra estancamiento observado; requiere revisar prioridad de seguimiento.",
       evidence: [
         { kind: "observed", label: "Edad", value: input.player.age },
-        { kind: "observed", label: "Rol", value: resolveRole(input.player).label },
-        { kind: "observed", label: "Ventana desde", value: input.context.window.from },
-        { kind: "observed", label: "Ventana hasta", value: input.context.window.to },
         { kind: "derived", label: "Habilidades comparables", value: comparableSkills },
-        {
-          kind: "derived",
-          label: "Variacion valor %",
-          value: input.context.valueAndWage.valueDeltaPercent
-        },
-        {
-          kind: "derived",
-          label: "Variacion salario %",
-          value: input.context.valueAndWage.wageDeltaPercent
-        },
         { kind: "inferred", label: "Hallazgo desarrollo", value: "stagnation" }
       ]
     });
@@ -368,15 +308,8 @@ function buildSignals(input: {
       confidence: development?.recentEvolution.confidence ?? "low",
       message: "Hay mas habilidades visibles en baja que en mejora para un jugador joven.",
       evidence: [
-        { kind: "observed", label: "Ventana desde", value: input.context.window.from },
-        { kind: "observed", label: "Ventana hasta", value: input.context.window.to },
         { kind: "derived", label: "Habilidades que bajaron", value: declinedSkills },
-        { kind: "derived", label: "Habilidades que subieron", value: improvedSkills },
-        {
-          kind: "derived",
-          label: "Variacion valor %",
-          value: input.context.valueAndWage.valueDeltaPercent
-        }
+        { kind: "derived", label: "Habilidades que subieron", value: improvedSkills }
       ]
     });
   }
@@ -390,13 +323,7 @@ function buildSignals(input: {
         "Jugador joven del plantel senior sin historial comparable suficiente; corresponde seguimiento prudente.",
       evidence: [
         { kind: "observed", label: "Edad", value: input.player.age },
-        { kind: "observed", label: "Rol", value: resolveRole(input.player).label },
         { kind: "derived", label: "Habilidades comparables", value: comparableSkills },
-        {
-          kind: "observed",
-          label: "Snapshots comparables",
-          value: input.context.window.snapshotCount
-        },
         { kind: "manual", label: "academy.investment", value: input.academyInvestment }
       ]
     });
@@ -409,10 +336,6 @@ function chooseCategory(
   signals: YouthPipelineSignal[],
   warnings: YouthPipelineWarning[]
 ): YouthPipelineCategory {
-  if (warnings.some((warning) => warning.code === "contradictory_signals")) {
-    return "follow_up";
-  }
-
   if (
     warnings.some((warning) =>
       ["missing_skills", "ambiguous_identity", "short_player_history"].includes(warning.code)
@@ -431,9 +354,7 @@ function chooseCategory(
   }
 
   if (
-    signals.some((signal) =>
-      ["young_stagnation_risk", "young_decline_review"].includes(signal.code)
-    )
+    signals.some((signal) => ["young_stagnation_risk", "young_decline_review"].includes(signal.code))
   ) {
     return "stagnation_risk";
   }
@@ -448,8 +369,7 @@ function chooseCategory(
 function buildPlayerWarnings(
   player: PersistedPlayerSnapshot,
   snapshots: PersistedSnapshot[],
-  developmentSummary: PlayerDevelopmentPlayerSummary | null,
-  context: YouthPipelinePlayerContext
+  developmentSummary: PlayerDevelopmentPlayerSummary | null
 ): YouthPipelineWarning[] {
   const warnings: YouthPipelineWarning[] = [];
   const missingSkills = skillKeys.filter((skill) => player.skills[skill] === null);
@@ -482,134 +402,11 @@ function buildPlayerWarnings(
     warnings.push({
       code: "missing_skills",
       message: "Faltan habilidades visibles; la clasificacion queda limitada.",
-      evidence: [
-        { kind: "observed", label: "Habilidades faltantes", value: missingSkills.join(", ") }
-      ]
-    });
-  }
-
-  if (
-    developmentSummary &&
-    developmentSummary.recentEvolution.improvedSkills > 0 &&
-    developmentSummary.recentEvolution.declinedSkills > 0
-  ) {
-    warnings.push({
-      code: "contradictory_signals",
-      message:
-        "Hay senales mixtas de mejora y baja; corresponde seguimiento antes de clasificar con fuerza.",
-      evidence: [
-        {
-          kind: "derived",
-          label: "Habilidades que subieron",
-          value: developmentSummary.recentEvolution.improvedSkills
-        },
-        {
-          kind: "derived",
-          label: "Habilidades que bajaron",
-          value: developmentSummary.recentEvolution.declinedSkills
-        }
-      ]
-    });
-  }
-
-  if (player.age === null || !Number.isFinite(player.age)) {
-    warnings.push({
-      code: "missing_age",
-      message: "Falta edad comparable; la lectura juvenil no puede ser fuerte.",
-      evidence: [{ kind: "observed", label: "Edad", value: player.age }]
-    });
-  }
-
-  if (context.valueAndWage.wage <= 0 || context.valueAndWage.estimatedValue <= 0) {
-    warnings.push({
-      code: "missing_value_or_wage",
-      message: "Falta salario o valor estimado positivo; el contexto patrimonial queda limitado.",
-      evidence: [
-        { kind: "observed", label: "Salario", value: context.valueAndWage.wage },
-        { kind: "observed", label: "Valor estimado", value: context.valueAndWage.estimatedValue }
-      ]
+      evidence: [{ kind: "observed", label: "Habilidades faltantes", value: missingSkills.join(", ") }]
     });
   }
 
   return warnings;
-}
-
-function buildPlayerContext(
-  player: PersistedPlayerSnapshot,
-  snapshots: PersistedSnapshot[],
-  developmentSummary: PlayerDevelopmentPlayerSummary | null
-): YouthPipelinePlayerContext {
-  const history = findPlayerHistory(player, snapshots);
-  const first = history[0] ?? null;
-  const latest = history.at(-1) ?? null;
-  const limits: string[] = [
-    "Solo jovenes observados en el plantel senior.",
-    "No usa datos de escuela juvenil real de Sokker."
-  ];
-
-  if (history.length < 2) limits.push("Historial corto para evolucion individual.");
-  if (!hasCompleteSkills(player)) limits.push("Habilidades visibles incompletas.");
-  if (player.wage.amount <= 0 || player.estimatedValue.amount <= 0) {
-    limits.push("Valor o salario faltante limita lectura patrimonial.");
-  }
-
-  return {
-    window: {
-      from: first ? formatDate(first.snapshot.snapshotDate) : null,
-      to: latest ? formatDate(latest.snapshot.snapshotDate) : null,
-      snapshotCount: history.length
-    },
-    dataCompleteness: {
-      completeSkills: hasCompleteSkills(player),
-      comparableSkills: developmentSummary?.recentEvolution.comparableSkills ?? 0
-    },
-    valueAndWage: {
-      wage: player.wage.amount,
-      wageCurrency: player.wage.currency,
-      estimatedValue: player.estimatedValue.amount,
-      estimatedValueCurrency: player.estimatedValue.currency,
-      valueDeltaPercent:
-        first && latest
-          ? calculatePercentDelta(
-              first.player.estimatedValue.amount,
-              latest.player.estimatedValue.amount
-            )
-          : null,
-      wageDeltaPercent:
-        first && latest
-          ? calculatePercentDelta(first.player.wage.amount, latest.player.wage.amount)
-          : null
-    },
-    limits
-  };
-}
-
-function findPlayerHistory(
-  player: PersistedPlayerSnapshot,
-  snapshots: PersistedSnapshot[]
-): Array<{ snapshot: PersistedSnapshot; player: PersistedPlayerSnapshot }> {
-  return snapshots
-    .map((snapshot) => {
-      const matchingPlayer = snapshot.players.find((candidate) => {
-        if (player.externalId && candidate.externalId)
-          return candidate.externalId === player.externalId;
-        if (player.playerId && candidate.playerId) return candidate.playerId === player.playerId;
-        return false;
-      });
-
-      return matchingPlayer ? { snapshot, player: matchingPlayer } : null;
-    })
-    .filter((entry): entry is { snapshot: PersistedSnapshot; player: PersistedPlayerSnapshot } =>
-      Boolean(entry)
-    );
-}
-
-function calculatePercentDelta(previous: number, current: number): number | null {
-  if (previous <= 0) {
-    return null;
-  }
-
-  return Number(((current - previous) / previous).toFixed(4));
 }
 
 function buildGlobalWarnings(
@@ -665,13 +462,7 @@ function calculateConfidence(
   if (
     signals.length === 0 ||
     warnings.some((warning) =>
-      [
-        "missing_skills",
-        "ambiguous_identity",
-        "short_player_history",
-        "contradictory_signals",
-        "missing_age"
-      ].includes(warning.code)
+      ["missing_skills", "ambiguous_identity", "short_player_history"].includes(warning.code)
     )
   ) {
     return "low";
@@ -757,7 +548,10 @@ function buildMarketIndex(players: SquadMarketPlayerPlan[]): Map<string, SquadMa
   return new Map(players.map((player) => [player.snapshotPlayerId, player]));
 }
 
-function comparePlayerPlans(left: YouthPipelinePlayerPlan, right: YouthPipelinePlayerPlan): number {
+function comparePlayerPlans(
+  left: YouthPipelinePlayerPlan,
+  right: YouthPipelinePlayerPlan
+): number {
   return (
     categoryPriority(right.category) - categoryPriority(left.category) ||
     severityPriority(right.severity) - severityPriority(left.severity) ||
