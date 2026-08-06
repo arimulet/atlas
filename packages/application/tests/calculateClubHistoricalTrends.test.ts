@@ -1,0 +1,78 @@
+import mongoose from "mongoose";
+import { MongoMemoryServer } from "mongodb-memory-server";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import validSnapshot from "@atlas/test-fixtures/player-snapshot/valid.json" with { type: "json" };
+import { ClubModel, ImportEventModel, PlayerModel, SnapshotModel } from "@atlas/database";
+import type { PlayerSnapshotV0 } from "@atlas/contracts";
+import { calculateClubHistoricalTrends, importPlayerSnapshot } from "../src/index.js";
+
+let mongo: MongoMemoryServer;
+
+describe("CalculateClubHistoricalTrends", () => {
+  beforeAll(async () => {
+    mongo = await MongoMemoryServer.create();
+    await mongoose.connect(mongo.getUri());
+  });
+
+  beforeEach(async () => {
+    await Promise.all([
+      ClubModel.deleteMany({}),
+      ImportEventModel.deleteMany({}),
+      PlayerModel.deleteMany({}),
+      SnapshotModel.deleteMany({})
+    ]);
+  });
+
+  afterAll(async () => {
+    await mongoose.disconnect();
+    await mongo.stop();
+  });
+
+  it("calculates trends from persisted club snapshots", async () => {
+    const base = await importPlayerSnapshot({ payload: payload({ snapshotDate: "2026-08-05" }) });
+    await importPlayerSnapshot({
+      payload: payload({
+        snapshotDate: "2026-08-12",
+        player: { wage: 15000, estimatedValue: 500000, pace: 11 }
+      })
+    });
+
+    const trends = await calculateClubHistoricalTrends({ clubId: base.clubId! });
+
+    expect(trends.snapshotDates).toEqual(["2026-08-05", "2026-08-12"]);
+    expect(trends.players[0]?.wage.evidence.deltaAbsolute).toBe(3000);
+    expect(trends.players[0]?.value.direction).toBe("up");
+    expect(trends.squad.valueTotal.direction).toBe("up");
+  });
+
+  it("returns explicit insufficient_data with a single persisted snapshot", async () => {
+    const imported = await importPlayerSnapshot({
+      payload: payload({ snapshotDate: "2026-08-05" })
+    });
+
+    const trends = await calculateClubHistoricalTrends({ clubId: imported.clubId! });
+
+    expect(trends.players[0]?.value.direction).toBe("insufficient_data");
+    expect(trends.squad.valueTotal.direction).toBe("insufficient_data");
+  });
+});
+
+function payload(overrides: {
+  snapshotDate: string;
+  player?: {
+    wage?: number;
+    estimatedValue?: number;
+    pace?: number;
+  };
+}): PlayerSnapshotV0 {
+  const cloned = structuredClone(validSnapshot) as PlayerSnapshotV0;
+  cloned.snapshot.snapshotDate = overrides.snapshotDate;
+  cloned.source.exportedAt = `${overrides.snapshotDate}T20:00:00.000Z`;
+
+  const player = cloned.players[0]!;
+  player.wage.amount = overrides.player?.wage ?? player.wage.amount;
+  player.estimatedValue.amount = overrides.player?.estimatedValue ?? player.estimatedValue.amount;
+  player.skills.pace = overrides.player?.pace ?? player.skills.pace;
+
+  return cloned;
+}

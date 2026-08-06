@@ -78,4 +78,5 @@ export interface Diagnostic {
 }
 
 export * from "./diagnostics.js";
+export * from "./historicalTrends.js";
 export * from "./snapshotComparison.js";
