@@ -99,11 +99,28 @@ describe("Youth pipeline planning use case", () => {
           code: "standout_young_growth",
           evidence: expect.arrayContaining([
             expect.objectContaining({ kind: "manual", label: "academy.investment" }),
-            expect.objectContaining({ kind: "derived", label: "Promedio skills relevantes" })
+            expect.objectContaining({ kind: "derived", label: "Promedio skills relevantes" }),
+            expect.objectContaining({
+              kind: "observed",
+              label: "Ventana desde",
+              value: "2026-08-05"
+            }),
+            expect.objectContaining({
+              kind: "observed",
+              label: "Ventana hasta",
+              value: "2026-08-12"
+            }),
+            expect.objectContaining({ kind: "observed", label: "Salario" }),
+            expect.objectContaining({ kind: "observed", label: "Valor estimado" })
           ])
         })
       ])
     );
+    expect(pipeline.derived.players[0]?.context).toMatchObject({
+      window: { from: "2026-08-05", to: "2026-08-12", snapshotCount: 2 },
+      dataCompleteness: { completeSkills: true },
+      limits: expect.arrayContaining(["Solo jovenes observados en el plantel senior."])
+    });
   });
 
   it("keeps a single-snapshot young senior as insufficient data instead of a strong conclusion", async () => {
@@ -140,6 +157,51 @@ describe("Youth pipeline planning use case", () => {
     });
     expect(pipeline.derived.players[0]?.signals).toEqual(
       expect.arrayContaining([expect.objectContaining({ code: "young_stagnation_risk" })])
+    );
+  });
+
+  it("keeps contradictory youth signals as follow up instead of a strong prospect or risk", async () => {
+    const first = withPlayer(readValidSnapshot(), {
+      age: 20,
+      skills: {
+        stamina: 8,
+        pace: 9,
+        technique: 9,
+        passing: 8,
+        keeper: 1,
+        defender: 5,
+        playmaker: 9,
+        striker: 4
+      }
+    });
+    const second = withSnapshotDate(first, "2026-08-12", 5, {
+      pace: 10,
+      technique: 8
+    });
+    const importResult = await importPlayerSnapshot({ payload: first });
+    await importPlayerSnapshot({ payload: second });
+
+    const pipeline = await getYouthPipelinePlanning({ clubId: importResult.clubId! });
+
+    expect(pipeline.derived.categoryCounts.follow_up).toBe(1);
+    expect(pipeline.derived.players[0]).toMatchObject({
+      category: "follow_up",
+      confidence: "low"
+    });
+    expect(pipeline.derived.players[0]?.warnings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "contradictory_signals",
+          evidence: expect.arrayContaining([
+            expect.objectContaining({
+              kind: "derived",
+              label: "Habilidades que subieron",
+              value: 1
+            }),
+            expect.objectContaining({ kind: "derived", label: "Habilidades que bajaron", value: 1 })
+          ])
+        })
+      ])
     );
   });
 
