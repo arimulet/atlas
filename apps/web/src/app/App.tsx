@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { fetchClubDashboard, importPlayerSnapshot } from "./api";
+import { fetchClubDashboard, fetchSquadEconomy, importPlayerSnapshot } from "./api";
 import { DashboardPanel } from "./components/DashboardPanel";
 import { DiagnosticPanel } from "./components/DiagnosticPanel";
 import { IssuePanel } from "./components/IssuePanel";
+import { SquadEconomyPanel } from "./components/SquadEconomyPanel";
 import { SummaryPanel } from "./components/SummaryPanel";
 import type {
   ClubDashboard,
@@ -11,7 +12,8 @@ import type {
   DiagnosticFinding,
   ImportIssue,
   ImportResponse,
-  ImportStatus
+  ImportStatus,
+  SquadEconomy
 } from "./types";
 
 const lastClubStorageKey = "atlas.lastClubId";
@@ -25,6 +27,9 @@ export function App() {
     activeClubId ? "loading" : "idle"
   );
   const [dashboard, setDashboard] = useState<ClubDashboard | null>(null);
+  const [activeView, setActiveView] = useState<"dashboard" | "squad-economy">("dashboard");
+  const [squadEconomyStatus, setSquadEconomyStatus] = useState<DashboardStatus>("idle");
+  const [squadEconomy, setSquadEconomy] = useState<SquadEconomy | null>(null);
   const [status, setStatus] = useState<ImportStatus>("idle");
   const [fileName, setFileName] = useState<string | null>(null);
   const [message, setMessage] = useState("Club dashboard ready.");
@@ -45,6 +50,23 @@ export function App() {
       setDashboardStatus("error");
     }
   }, []);
+
+  const openSquadEconomy = useCallback(async () => {
+    if (!activeClubId) {
+      return;
+    }
+
+    setActiveView("squad-economy");
+    setSquadEconomyStatus("loading");
+
+    try {
+      setSquadEconomy(await fetchSquadEconomy(activeClubId));
+      setSquadEconomyStatus("ready");
+    } catch {
+      setSquadEconomy(null);
+      setSquadEconomyStatus("error");
+    }
+  }, [activeClubId]);
 
   useEffect(() => {
     if (activeClubId) {
@@ -110,9 +132,22 @@ export function App() {
           <div className={`status-pill ${status}`}>{message}</div>
         </header>
 
-        <DashboardPanel dashboard={dashboard} status={dashboardStatus} />
+        {activeView === "squad-economy" ? (
+          <SquadEconomyPanel
+            squadEconomy={squadEconomy}
+            status={squadEconomyStatus}
+            onBack={() => setActiveView("dashboard")}
+          />
+        ) : (
+          <DashboardPanel
+            dashboard={dashboard}
+            status={dashboardStatus}
+            onOpenSquadEconomy={() => void openSquadEconomy()}
+          />
+        )}
 
-        <section
+        {activeView === "dashboard" ? (
+          <section
           className={`dropzone ${isDragging ? "dragging" : ""}`}
           onDragEnter={(event) => {
             event.preventDefault();
@@ -129,7 +164,7 @@ export function App() {
               void importFile(file);
             }
           }}
-        >
+          >
           <input
             ref={inputRef}
             className="file-input"
@@ -154,21 +189,28 @@ export function App() {
           <button type="button" onClick={() => inputRef.current?.click()}>
             Select JSON
           </button>
-        </section>
+          </section>
+        ) : null}
 
-        {status === "loading" ? <p className="loading">Processing import...</p> : null}
+        {activeView === "dashboard" && status === "loading" ? (
+          <p className="loading">Processing import...</p>
+        ) : null}
 
-        {errors.length > 0 ? (
+        {activeView === "dashboard" && errors.length > 0 ? (
           <IssuePanel title="Blocking errors" tone="error" issues={errors} />
         ) : null}
 
-        {result?.importResult.warnings.length ? (
+        {activeView === "dashboard" && result?.importResult.warnings.length ? (
           <IssuePanel title="Warnings" tone="warning" issues={result.importResult.warnings} />
         ) : null}
 
-        {result?.summary ? <SummaryPanel summary={result.summary} /> : null}
+        {activeView === "dashboard" && result?.summary ? (
+          <SummaryPanel summary={result.summary} />
+        ) : null}
 
-        <DiagnosticPanel findingsByCategory={findingsByCategory} />
+        {activeView === "dashboard" ? (
+          <DiagnosticPanel findingsByCategory={findingsByCategory} />
+        ) : null}
       </section>
     </main>
   );

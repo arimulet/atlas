@@ -69,13 +69,6 @@ describe("Squad economy use case", () => {
       name: "Tomas Alvarez",
       share: 1
     });
-    expect(squadEconomy.derived.playerDetails[0]).toMatchObject({
-      name: "Tomas Alvarez",
-      wageShare: 1,
-      estimatedValueShare: 1,
-      wageToValueRatio: 0.0267,
-      warnings: []
-    });
     expect(squadEconomy.findings).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -114,9 +107,7 @@ describe("Squad economy use case", () => {
       totalEstimatedValueDeltaPercent: 0.0222
     });
     expect(squadEconomy.findings).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ code: "wage_growth_without_asset_growth" })
-      ])
+      expect.arrayContaining([expect.objectContaining({ code: "wage_growth_without_asset_growth" })])
     );
   });
 
@@ -137,7 +128,6 @@ describe("Squad economy use case", () => {
     expect(squadEconomy.warnings).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ code: "missing_currency" }),
-        expect.objectContaining({ code: "non_comparable_history" }),
         expect.objectContaining({ code: "insufficient_history" })
       ])
     );
@@ -172,58 +162,6 @@ describe("Squad economy use case", () => {
     expect(squadEconomy.derived.totalEstimatedValue.isComplete).toBe(false);
     expect(squadEconomy.warnings).toEqual(
       expect.arrayContaining([expect.objectContaining({ code: "partial_player_economy_data" })])
-    );
-    expect(squadEconomy.derived.playerDetails).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          name: "Partial Player",
-          warnings: expect.arrayContaining([
-            expect.objectContaining({ code: "partial_player_detail" })
-          ])
-        })
-      ])
-    );
-    expect(squadEconomy.findings.every((finding) => finding.confidence !== "high")).toBe(true);
-  });
-
-  it("explains high relative wage to value findings with player evidence", async () => {
-    const payload = {
-      ...readValidSnapshot(),
-      players: [
-        {
-          ...readValidSnapshot().players[0],
-          wage: { amount: 40000, currency: "ARS" },
-          estimatedValue: { amount: 450000, currency: "ARS" }
-        },
-        {
-          ...readValidSnapshot().players[0],
-          externalId: "low-cost-player",
-          name: "Low Cost Player",
-          wage: { amount: 1000, currency: "ARS" },
-          estimatedValue: { amount: 300000, currency: "ARS" }
-        }
-      ]
-    };
-
-    const importResult = await importPlayerSnapshot({ payload });
-
-    const squadEconomy = await getSquadEconomy({ clubId: importResult.clubId! });
-
-    expect(squadEconomy.derived.playerDetails[0]).toMatchObject({
-      name: "Tomas Alvarez",
-      wageToValueRatio: 0.0889
-    });
-    expect(squadEconomy.findings).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          code: "high_relative_wage_to_value",
-          severity: "high",
-          confidence: "medium",
-          evidence: expect.arrayContaining([
-            expect.objectContaining({ label: "Ratio salario/valor jugador", value: 0.0889 })
-          ])
-        })
-      ])
     );
   });
 });

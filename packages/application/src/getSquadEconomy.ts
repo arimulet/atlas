@@ -37,7 +37,6 @@ export interface SquadEconomy {
     totalWage: SquadEconomyMoneyTotal;
     totalEstimatedValue: SquadEconomyMoneyTotal;
     wageToValueRatio: number | null;
-    playerDetails: SquadEconomyPlayerDetail[];
     concentration: {
       wage: SquadEconomyConcentration[];
       estimatedValue: SquadEconomyConcentration[];
@@ -83,19 +82,6 @@ export interface SquadEconomyConcentration {
   share: number | null;
 }
 
-export interface SquadEconomyPlayerDetail {
-  playerId: string | null;
-  snapshotPlayerId: string;
-  name: string;
-  age: number;
-  wage: SnapshotMoney;
-  estimatedValue: SnapshotMoney;
-  wageShare: number | null;
-  estimatedValueShare: number | null;
-  wageToValueRatio: number | null;
-  warnings: SquadEconomyWarning[];
-}
-
 export interface SquadEconomyHistoricalSnapshot {
   snapshotId: string;
   snapshotDate: string;
@@ -138,9 +124,7 @@ export async function getSquadEconomy(input: GetSquadEconomyInput): Promise<Squa
   }
 
   const settings = buildClubOperatingSettings(club);
-  const riskTolerance = settings.effective.preferences[
-    "economy.riskTolerance"
-  ] as EconomyRiskTolerance;
+  const riskTolerance = settings.effective.preferences["economy.riskTolerance"] as EconomyRiskTolerance;
   const snapshots = await snapshotRepository.listByClub(input.clubId);
   const latest = snapshots.at(-1) ?? null;
 
@@ -197,7 +181,6 @@ function buildEmptySquadEconomy(
       totalWage: { amount: 0, currency, isComplete: false },
       totalEstimatedValue: { amount: 0, currency, isComplete: false },
       wageToValueRatio: null,
-      playerDetails: [],
       concentration: {
         wage: [],
         estimatedValue: []
@@ -241,13 +224,10 @@ function buildObserved(snapshot: PersistedSnapshot): SquadEconomy["observed"] {
     coverage: {
       playerCount: players.length,
       playersWithWage: players.filter((player) => hasPositiveAmount(player.wage)).length,
-      playersWithEstimatedValue: players.filter((player) =>
-        hasPositiveAmount(player.estimatedValue)
-      ).length,
+      playersWithEstimatedValue: players.filter((player) => hasPositiveAmount(player.estimatedValue))
+        .length,
       wageCurrency: readSingleCurrency(players.map((player) => player.wage.currency)),
-      estimatedValueCurrency: readSingleCurrency(
-        players.map((player) => player.estimatedValue.currency)
-      )
+      estimatedValueCurrency: readSingleCurrency(players.map((player) => player.estimatedValue.currency))
     }
   };
 }
@@ -269,21 +249,10 @@ function buildDerived(
       isComplete: observed.coverage.playersWithEstimatedValue === observed.coverage.playerCount
     },
     wageToValueRatio:
-      totalEstimatedValue.amount > 0
-        ? roundRatio(totalWage.amount / totalEstimatedValue.amount)
-        : null,
-    playerDetails: buildPlayerDetails(
-      snapshot.players,
-      totalWage.amount,
-      totalEstimatedValue.amount
-    ),
+      totalEstimatedValue.amount > 0 ? roundRatio(totalWage.amount / totalEstimatedValue.amount) : null,
     concentration: {
       wage: buildConcentration(snapshot.players, "wage", totalWage.amount),
-      estimatedValue: buildConcentration(
-        snapshot.players,
-        "estimatedValue",
-        totalEstimatedValue.amount
-      )
+      estimatedValue: buildConcentration(snapshot.players, "estimatedValue", totalEstimatedValue.amount)
     }
   };
 }
@@ -293,9 +262,7 @@ function buildHistorical(
   effectiveCurrency: string | null,
   warnings: SquadEconomyWarning[]
 ): SquadEconomy["historical"] {
-  const comparable = snapshots.filter((snapshot) =>
-    isComparableSnapshot(snapshot, effectiveCurrency)
-  );
+  const comparable = snapshots.filter((snapshot) => isComparableSnapshot(snapshot, effectiveCurrency));
   const current = comparable.at(-1) ?? null;
   const previous = comparable.at(-2) ?? null;
 
@@ -304,19 +271,6 @@ function buildHistorical(
       code: "insufficient_history",
       message: "La lectura historica requiere al menos dos snapshots comparables.",
       evidence: [{ kind: "observed", label: "Snapshots comparables", value: comparable.length }]
-    });
-  }
-
-  if (snapshots.length >= 2 && comparable.length < 2) {
-    warnings.push({
-      code: "non_comparable_history",
-      message:
-        "Existen snapshots historicos, pero no hay dos con moneda comparable para una lectura monetaria prudente.",
-      evidence: [
-        { kind: "observed", label: "Snapshots del club", value: snapshots.length },
-        { kind: "observed", label: "Snapshots comparables", value: comparable.length },
-        { kind: "manual", label: "Moneda efectiva", value: effectiveCurrency }
-      ]
     });
   }
 
@@ -336,8 +290,7 @@ function buildHistorical(
               currentSummary.totalWage.amount
             ),
             totalEstimatedValueDelta:
-              currentSummary.totalEstimatedValue.amount -
-              previousSummary.totalEstimatedValue.amount,
+              currentSummary.totalEstimatedValue.amount - previousSummary.totalEstimatedValue.amount,
             totalEstimatedValueDeltaPercent: percentDelta(
               previousSummary.totalEstimatedValue.amount,
               currentSummary.totalEstimatedValue.amount
@@ -365,14 +318,10 @@ function buildWarnings(
 ): SquadEconomyWarning[] {
   const warnings: SquadEconomyWarning[] = [];
 
-  if (
-    !effectiveCurrency &&
-    (!observed.coverage.wageCurrency || !observed.coverage.estimatedValueCurrency)
-  ) {
+  if (!effectiveCurrency && (!observed.coverage.wageCurrency || !observed.coverage.estimatedValueCurrency)) {
     warnings.push({
       code: "missing_currency",
-      message:
-        "Falta moneda efectiva u observada; los importes se muestran como evidencia monetaria no comparable.",
+      message: "Falta moneda efectiva u observada; los importes se muestran como evidencia monetaria no comparable.",
       evidence: [
         { kind: "manual", label: "Moneda efectiva", value: effectiveCurrency },
         { kind: "observed", label: "Moneda salario", value: observed.coverage.wageCurrency },
@@ -384,32 +333,11 @@ function buildWarnings(
   if (!derived.totalWage.isComplete || !derived.totalEstimatedValue.isComplete) {
     warnings.push({
       code: "partial_player_economy_data",
-      message:
-        "Hay jugadores sin salario o valor estimado positivo; los totales reflejan solo evidencia disponible.",
+      message: "Hay jugadores sin salario o valor estimado positivo; los totales reflejan solo evidencia disponible.",
       evidence: [
         { kind: "observed", label: "Jugadores", value: snapshot.players.length },
         { kind: "observed", label: "Con salario", value: observed.coverage.playersWithWage },
-        {
-          kind: "observed",
-          label: "Con valor estimado",
-          value: observed.coverage.playersWithEstimatedValue
-        }
-      ]
-    });
-  }
-
-  if (
-    observed.coverage.wageCurrency &&
-    observed.coverage.estimatedValueCurrency &&
-    observed.coverage.wageCurrency !== observed.coverage.estimatedValueCurrency
-  ) {
-    warnings.push({
-      code: "mixed_money_currency",
-      message:
-        "Salarios y valores estimados usan monedas distintas; el ratio salario/valor no es comparable.",
-      evidence: [
-        { kind: "observed", label: "Moneda salario", value: observed.coverage.wageCurrency },
-        { kind: "observed", label: "Moneda valor", value: observed.coverage.estimatedValueCurrency }
+        { kind: "observed", label: "Con valor estimado", value: observed.coverage.playersWithEstimatedValue }
       ]
     });
   }
@@ -426,39 +354,18 @@ function buildFindings(
   const findings: SquadEconomyFinding[] = [];
   const topWage = derived.concentration.wage[0] ?? null;
   const topValue = derived.concentration.estimatedValue[0] ?? null;
-  const confidence = calculateConfidence(warnings);
+  const confidence = warnings.length > 0 ? "low" : "medium";
 
   if (topWage && topWage.share !== null && topWage.share >= concentrationLimit(riskTolerance)) {
-    const topWageDetail = derived.playerDetails.find(
-      (player) => player.snapshotPlayerId === topWage.snapshotPlayerId
-    );
-
     findings.push({
       code: "salary_concentration",
-      severity: severityForConcentration(topWage.share, riskTolerance),
+      severity: severityForRiskTolerance(riskTolerance, "medium"),
       confidence,
       title: "Concentracion salarial relevante",
-      description:
-        "Un jugador concentra una parte alta de la masa salarial observada. Es una senal relativa de plantilla, no una lectura de caja o liquidez.",
+      description: "Un jugador concentra una parte alta de la masa salarial observada.",
       evidence: [
         { kind: "observed", label: "Jugador", value: topWage.name },
-        { kind: "observed", label: "Salario", value: topWage.amount },
-        {
-          kind: "observed",
-          label: "Valor estimado",
-          value: topWageDetail?.estimatedValue.amount ?? null
-        },
         { kind: "derived", label: "Participacion salarial", value: roundPercent(topWage.share) },
-        {
-          kind: "derived",
-          label: "Ratio salario/valor jugador",
-          value: topWageDetail?.wageToValueRatio ?? null
-        },
-        {
-          kind: "derived",
-          label: "Umbral aplicado",
-          value: roundPercent(concentrationLimit(riskTolerance))
-        },
         { kind: "manual", label: "Tolerancia de riesgo", value: riskTolerance }
       ]
     });
@@ -467,48 +374,13 @@ function buildFindings(
   if (topValue && topValue.share !== null && topValue.share >= 0.35) {
     findings.push({
       code: "asset_concentration",
-      severity: severityForAssetConcentration(topValue.share),
+      severity: "medium",
       confidence,
       title: "Concentracion patrimonial relevante",
-      description:
-        "Una parte material del valor estimado de la plantilla depende de un jugador. La lectura ayuda a revisar dependencia patrimonial interna.",
+      description: "Una parte material del valor estimado de la plantilla depende de un jugador.",
       evidence: [
         { kind: "observed", label: "Jugador", value: topValue.name },
-        { kind: "observed", label: "Valor estimado", value: topValue.amount },
-        { kind: "derived", label: "Participacion de valor", value: roundPercent(topValue.share) },
-        { kind: "derived", label: "Umbral medio", value: 35 }
-      ]
-    });
-  }
-
-  const highestRelativeCost = derived.playerDetails.find(
-    (player) =>
-      player.wageToValueRatio !== null && player.wageToValueRatio >= wageToValueLimit(riskTolerance)
-  );
-
-  if (highestRelativeCost) {
-    findings.push({
-      code: "high_relative_wage_to_value",
-      severity: severityForWageToValue(highestRelativeCost.wageToValueRatio, riskTolerance),
-      confidence,
-      title: "Salario relativo alto frente al valor estimado",
-      description:
-        "Un jugador muestra una relacion salario/valor elevada dentro de la evidencia disponible. No implica insolvencia ni presupuesto de compras.",
-      evidence: [
-        { kind: "observed", label: "Jugador", value: highestRelativeCost.name },
-        { kind: "observed", label: "Salario", value: highestRelativeCost.wage.amount },
-        {
-          kind: "observed",
-          label: "Valor estimado",
-          value: highestRelativeCost.estimatedValue.amount
-        },
-        {
-          kind: "derived",
-          label: "Ratio salario/valor jugador",
-          value: highestRelativeCost.wageToValueRatio
-        },
-        { kind: "derived", label: "Umbral aplicado", value: wageToValueLimit(riskTolerance) },
-        { kind: "manual", label: "Tolerancia de riesgo", value: riskTolerance }
+        { kind: "derived", label: "Participacion de valor", value: roundPercent(topValue.share) }
       ]
     });
   }
@@ -521,22 +393,11 @@ function buildFindings(
   ) {
     findings.push({
       code: "wage_growth_without_asset_growth",
-      severity: severityForDeterioration(
-        historical.changes.totalWageDeltaPercent,
-        historical.changes.totalEstimatedValueDeltaPercent,
-        riskTolerance
-      ),
-      confidence:
-        historical.comparableSnapshotCount >= 3 && warnings.length === 0 ? "high" : confidence,
+      severity: severityForRiskTolerance(riskTolerance, "high"),
+      confidence: warnings.length > 0 ? "low" : "medium",
       title: "Salario crece sin mejora patrimonial proporcional",
-      description:
-        "La masa salarial subio mas rapido que el valor estimado comparable. Es una lectura historica relativa de plantilla.",
+      description: "La masa salarial subio mas rapido que el valor estimado comparable.",
       evidence: [
-        {
-          kind: "observed",
-          label: "Snapshots comparables",
-          value: historical.comparableSnapshotCount
-        },
         {
           kind: "derived",
           label: "Variacion masa salarial",
@@ -546,11 +407,6 @@ function buildFindings(
           kind: "derived",
           label: "Variacion valor estimado",
           value: roundPercent(historical.changes.totalEstimatedValueDeltaPercent)
-        },
-        {
-          kind: "derived",
-          label: "Cambio ratio salario/valor",
-          value: historical.changes.wageToValueRatioDelta
         },
         { kind: "manual", label: "Tolerancia de riesgo", value: riskTolerance }
       ]
@@ -572,113 +428,6 @@ function buildFindings(
   }
 
   return findings;
-}
-
-function buildPlayerDetails(
-  players: PersistedPlayerSnapshot[],
-  totalWage: number,
-  totalEstimatedValue: number
-): SquadEconomyPlayerDetail[] {
-  return players
-    .map((player) => {
-      const wageShare = totalWage > 0 ? roundRatio(player.wage.amount / totalWage) : null;
-      const estimatedValueShare =
-        totalEstimatedValue > 0
-          ? roundRatio(player.estimatedValue.amount / totalEstimatedValue)
-          : null;
-      const wageToValueRatio =
-        player.estimatedValue.amount > 0
-          ? roundRatio(player.wage.amount / player.estimatedValue.amount)
-          : null;
-
-      return {
-        playerId: player.playerId,
-        snapshotPlayerId: player.id,
-        name: player.name,
-        age: player.age,
-        wage: player.wage,
-        estimatedValue: player.estimatedValue,
-        wageShare,
-        estimatedValueShare,
-        wageToValueRatio,
-        warnings: buildPlayerWarnings(player, wageShare, estimatedValueShare, wageToValueRatio)
-      };
-    })
-    .sort((first, second) => {
-      const firstRatio = first.wageToValueRatio ?? -1;
-      const secondRatio = second.wageToValueRatio ?? -1;
-
-      return secondRatio - firstRatio;
-    });
-}
-
-function buildPlayerWarnings(
-  player: PersistedPlayerSnapshot,
-  wageShare: number | null,
-  estimatedValueShare: number | null,
-  wageToValueRatio: number | null
-): SquadEconomyWarning[] {
-  const warnings: SquadEconomyWarning[] = [];
-
-  if (!hasPositiveAmount(player.wage) || !hasPositiveAmount(player.estimatedValue)) {
-    warnings.push({
-      code: "partial_player_detail",
-      message: "El detalle del jugador tiene salario o valor estimado incompleto.",
-      evidence: [
-        { kind: "observed", label: "Salario", value: player.wage.amount },
-        { kind: "observed", label: "Valor estimado", value: player.estimatedValue.amount }
-      ]
-    });
-  }
-
-  if (!player.wage.currency || !player.estimatedValue.currency) {
-    warnings.push({
-      code: "missing_player_currency",
-      message: "Falta moneda observada en salario o valor estimado del jugador.",
-      evidence: [
-        { kind: "observed", label: "Moneda salario", value: player.wage.currency },
-        { kind: "observed", label: "Moneda valor", value: player.estimatedValue.currency }
-      ]
-    });
-  }
-
-  if (
-    player.wage.currency &&
-    player.estimatedValue.currency &&
-    player.wage.currency !== player.estimatedValue.currency
-  ) {
-    warnings.push({
-      code: "mixed_player_currency",
-      message: "Salario y valor estimado del jugador no estan en la misma moneda.",
-      evidence: [
-        { kind: "observed", label: "Moneda salario", value: player.wage.currency },
-        { kind: "observed", label: "Moneda valor", value: player.estimatedValue.currency }
-      ]
-    });
-  }
-
-  if (
-    wageShare !== null &&
-    estimatedValueShare !== null &&
-    wageToValueRatio !== null &&
-    wageShare > estimatedValueShare * 2
-  ) {
-    warnings.push({
-      code: "relative_cost_above_value_share",
-      message: "La participacion salarial duplica la participacion de valor estimado.",
-      evidence: [
-        { kind: "derived", label: "Participacion salarial", value: roundPercent(wageShare) },
-        {
-          kind: "derived",
-          label: "Participacion de valor",
-          value: roundPercent(estimatedValueShare)
-        },
-        { kind: "derived", label: "Ratio salario/valor", value: wageToValueRatio }
-      ]
-    });
-  }
-
-  return warnings;
 }
 
 function buildHistoricalSnapshot(snapshot: PersistedSnapshot): SquadEconomyHistoricalSnapshot {
@@ -711,10 +460,7 @@ function buildConcentration(
     .sort((first, second) => second.amount - first.amount);
 }
 
-function isComparableSnapshot(
-  snapshot: PersistedSnapshot,
-  effectiveCurrency: string | null
-): boolean {
+function isComparableSnapshot(snapshot: PersistedSnapshot, effectiveCurrency: string | null): boolean {
   const currencies = snapshot.players.flatMap((player) => [
     player.wage.currency ?? effectiveCurrency,
     player.estimatedValue.currency ?? effectiveCurrency
@@ -732,7 +478,7 @@ function sumMoney(values: SnapshotMoney[]): { amount: number; currency: string |
 
 function readSingleCurrency(currencies: Array<string | null>): string | null {
   const unique = new Set(currencies.filter(Boolean));
-  return unique.size === 1 ? ([...unique][0] ?? null) : null;
+  return unique.size === 1 ? [...unique][0] ?? null : null;
 }
 
 function hasPositiveAmount(money: SnapshotMoney): boolean {
@@ -745,56 +491,13 @@ function concentrationLimit(riskTolerance: EconomyRiskTolerance): number {
   return 0.32;
 }
 
-function wageToValueLimit(riskTolerance: EconomyRiskTolerance): number {
-  if (riskTolerance === "conservative") return 0.035;
-  if (riskTolerance === "aggressive") return 0.065;
-  return 0.05;
-}
-
-function severityForConcentration(
-  share: number,
-  riskTolerance: EconomyRiskTolerance
+function severityForRiskTolerance(
+  riskTolerance: EconomyRiskTolerance,
+  base: Exclude<SquadEconomySeverity, "info" | "low">
 ): SquadEconomySeverity {
-  const highLimit = concentrationLimit(riskTolerance) + 0.1;
-
-  return share >= highLimit ? "high" : "medium";
-}
-
-function severityForAssetConcentration(share: number): SquadEconomySeverity {
-  if (share >= 0.5) return "high";
-  if (share >= 0.35) return "medium";
-  return "low";
-}
-
-function severityForWageToValue(
-  ratio: number | null,
-  riskTolerance: EconomyRiskTolerance
-): SquadEconomySeverity {
-  if (ratio === null) return "low";
-  if (ratio >= wageToValueLimit(riskTolerance) * 1.6) return "high";
-  return "medium";
-}
-
-function severityForDeterioration(
-  wageDeltaPercent: number,
-  valueDeltaPercent: number,
-  riskTolerance: EconomyRiskTolerance
-): SquadEconomySeverity {
-  const pressure = wageDeltaPercent - valueDeltaPercent;
-  const highLimit = riskTolerance === "aggressive" ? 0.3 : 0.2;
-
-  return pressure >= highLimit ? "high" : "medium";
-}
-
-function calculateConfidence(warnings: SquadEconomyWarning[]): SquadEconomyConfidence {
-  const strongWarningCodes = new Set([
-    "missing_currency",
-    "mixed_money_currency",
-    "non_comparable_history",
-    "partial_player_economy_data"
-  ]);
-
-  return warnings.some((warning) => strongWarningCodes.has(warning.code)) ? "low" : "medium";
+  if (riskTolerance === "conservative" && base === "medium") return "high";
+  if (riskTolerance === "aggressive" && base === "high") return "medium";
+  return base;
 }
 
 function percentDelta(previous: number, current: number): number | null {
