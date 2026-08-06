@@ -315,6 +315,22 @@ describe("Sokker DOM export parser", () => {
     expect(result.snapshot.players[0]?.externalId).toBe("38643161");
   });
 
+  it("does not duplicate separate Sokker player-box renders for the same externalId", () => {
+    const document = createDocument(`
+      <html lang="es">
+        <body>
+          ${playerBox("38643161", "Ryan Ahlburg")}
+          ${playerBox("38643161", "Ryan Ahlburg")}
+        </body>
+      </html>
+    `);
+
+    const result = extractPlayerSnapshot(document, { exportedAt });
+
+    expect(result.snapshot.players).toHaveLength(1);
+    expect(result.snapshot.players[0]?.externalId).toBe("38643161");
+  });
+
   it("produces JSON accepted by the ATLAS contract validator", () => {
     const validation = validatePlayerSnapshotV0(extensionFixture);
 
@@ -332,5 +348,34 @@ function skillItem(label: string, value: number): string {
       <div class="skill-list-item"><span class="text-overflow">${label}</span></div>
       <div class="skill-list__value"><span>${value}</span></div>
     </li>
+  `;
+}
+
+function playerBox(externalId: string, name: string): string {
+  return `
+    <div class="player-box__center">
+      <div class="player-box__content">
+        <div class="player-box__header">
+          <div class="player-box-header">
+            <div class="player-box-header__name"><a href="/player/PID/${externalId}">${name}</a></div>
+            <div class="player-box-header__age"><span>Edad:</span><span>34</span></div>
+            <div class="player-box-header__value"><span>Valor:</span><span>1&nbsp;549&nbsp;000&nbsp;u$s</span></div>
+            <div class="player-box-header__salary"><span>Sueldo:</span><span>33&nbsp;450&nbsp;u$s</span></div>
+          </div>
+        </div>
+        <div class="player-box__skills">
+          <ul class="skill-list">
+            ${skillItem("condicion", 11)}
+            ${skillItem("rapidez", 14)}
+            ${skillItem("tecnica", 16)}
+            ${skillItem("pases", 16)}
+            ${skillItem("porteria", 0)}
+            ${skillItem("defensa", 10)}
+            ${skillItem("creacion", 16)}
+            ${skillItem("anotacion", 6)}
+          </ul>
+        </div>
+      </div>
+    </div>
   `;
 }

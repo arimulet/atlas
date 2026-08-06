@@ -136,26 +136,46 @@ function extractPlayers(document: Document, warnings: ExtractionWarning[]): Play
   const explicitCards = [...document.querySelectorAll<HTMLElement>("[data-atlas-player]")];
 
   if (explicitCards.length > 0) {
-    return explicitCards.map((card, index) => playerFromCard(card, index, warnings)).filter(isPlayer);
+    return deduplicatePlayers(explicitCards.map((card, index) => playerFromCard(card, index, warnings)).filter(isPlayer));
   }
 
   const playerBoxes = findSokkerPlayerBoxes(document);
 
   if (playerBoxes.length > 0) {
-    return playerBoxes.map((card, index) => playerFromSokkerPlayerBox(card, index, warnings)).filter(isPlayer);
+    return deduplicatePlayers(
+      playerBoxes.map((card, index) => playerFromSokkerPlayerBox(card, index, warnings)).filter(isPlayer)
+    );
   }
 
   const tablePlayers = extractPlayersFromTables(document, warnings);
 
   if (tablePlayers.length > 0) {
-    return tablePlayers;
+    return deduplicatePlayers(tablePlayers);
   }
 
   const likelyCards = [
     ...document.querySelectorAll<HTMLElement>(".player, .player-row, .player-card, [class*='player']")
   ].filter((element) => element.querySelector("a") || findAnyNumber(element.innerText));
 
-  return likelyCards.map((card, index) => playerFromCard(card, index, warnings)).filter(isPlayer);
+  return deduplicatePlayers(likelyCards.map((card, index) => playerFromCard(card, index, warnings)).filter(isPlayer));
+}
+
+function deduplicatePlayers(players: PlayerExport[]): PlayerExport[] {
+  const seen = new Set<string>();
+  const uniquePlayers: PlayerExport[] = [];
+
+  players.forEach((player) => {
+    const key = player.externalId ? `id:${player.externalId}` : `name:${normalizeLabel(player.name)}:${player.age}`;
+
+    if (seen.has(key)) {
+      return;
+    }
+
+    seen.add(key);
+    uniquePlayers.push(player);
+  });
+
+  return uniquePlayers;
 }
 
 function findSokkerPlayerBoxes(document: Document): HTMLElement[] {
