@@ -96,6 +96,24 @@ describe("Mongo repositories", () => {
       season: 78,
       week: 4
     });
+    expect(club.settings).toMatchObject({
+      observed: {
+        season: 78,
+        week: 4
+      },
+      manual: {
+        currency: null,
+        season: null,
+        week: null,
+        preferences: []
+      },
+      effective: {
+        currency: null,
+        season: 78,
+        week: 4,
+        preferences: []
+      }
+    });
   });
 
   it("updates manual club configuration without changing observed Sokker data", async () => {
