@@ -116,11 +116,88 @@ describe("Club dashboard use case", () => {
       ])
     );
   });
+
+  it("integrates player development signals without treating insufficient data as a strong conclusion", async () => {
+    const importResult = await importPlayerSnapshot({ payload: readValidSnapshot() });
+
+    const dashboard = await getClubDashboard({ clubId: importResult.clubId! });
+
+    expect(dashboard.developmentSummary).toMatchObject({
+      available: true,
+      observed: {
+        snapshotCount: 1,
+        latestSnapshotDate: "2026-08-05",
+        playerCount: 1
+      },
+      manual: {
+        trainingPriority: "balanced"
+      },
+      derived: {
+        improvingPlayers: 0,
+        stagnatedPlayers: 0,
+        decliningPlayers: 0,
+        insufficientDataPlayers: 1
+      },
+      inferred: {
+        warning: "Hay pocos snapshots; ATLAS solo muestra datos actuales sin evaluar evolucion."
+      }
+    });
+    expect(dashboard.developmentSummary.inferred.highlightedPlayers[0]).toMatchObject({
+      name: "Tomas Alvarez",
+      signal: "insufficient_data",
+      severity: "info",
+      confidence: "low"
+    });
+  });
+
+  it("summarizes improvement and decline counts for the operational dashboard", async () => {
+    const first = readValidSnapshot();
+    const second = {
+      ...first,
+      source: { ...first.source, exportedAt: "2026-08-12T12:00:00.000Z" },
+      snapshot: { ...first.snapshot, snapshotDate: "2026-08-12", week: 5 },
+      players: first.players.map((player) => ({
+        ...player,
+        skills: {
+          ...player.skills,
+          pace: 11,
+          technique: 10,
+          passing: 9
+        }
+      }))
+    };
+
+    const importResult = await importPlayerSnapshot({ payload: first });
+    await importPlayerSnapshot({ payload: second });
+
+    const dashboard = await getClubDashboard({ clubId: importResult.clubId! });
+
+    expect(dashboard.developmentSummary.derived).toMatchObject({
+      improvingPlayers: 1,
+      stagnatedPlayers: 0,
+      decliningPlayers: 0,
+      insufficientDataPlayers: 0
+    });
+    expect(dashboard.developmentSummary.inferred.headline).toBe(
+      "Hay mejoras observadas en habilidades visibles."
+    );
+    expect(dashboard.developmentSummary.inferred.highlightedPlayers[0]).toMatchObject({
+      name: "Tomas Alvarez",
+      signal: "improvement"
+    });
+  });
 });
 
 function readValidSnapshot() {
   return JSON.parse(fs.readFileSync(validSnapshotPath, "utf8")) as {
     source: { exportedAt: string };
     snapshot: { snapshotDate: string; week: number };
+    players: Array<{
+      skills: {
+        pace: number | null;
+        technique: number | null;
+        passing: number | null;
+      };
+    }>;
   };
 }

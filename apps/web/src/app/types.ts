@@ -125,7 +125,40 @@ export interface ClubDashboard {
     previous: SnapshotSummary | null;
     canCompare: boolean;
   };
+  developmentSummary: ClubDashboardDevelopmentSummary;
   operationalAreas: OperationalArea[];
+}
+
+export interface ClubDashboardDevelopmentSummary {
+  available: boolean;
+  detailPath: string;
+  observed: {
+    snapshotCount: number;
+    latestSnapshotDate: string | null;
+    playerCount: number;
+  };
+  manual: {
+    trainingPriority: string;
+  };
+  derived: {
+    improvingPlayers: number;
+    stagnatedPlayers: number;
+    decliningPlayers: number;
+    insufficientDataPlayers: number;
+  };
+  inferred: {
+    headline: string;
+    warning: string | null;
+    highlightedPlayers: ClubDashboardDevelopmentPlayer[];
+  };
+}
+
+export interface ClubDashboardDevelopmentPlayer {
+  playerId: string | null;
+  name: string;
+  signal: PlayerDevelopmentFindingType;
+  severity: "info" | "low" | "medium" | "high";
+  confidence: "low" | "medium" | "high";
 }
 
 export interface SnapshotSummary {
