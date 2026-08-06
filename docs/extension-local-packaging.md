@@ -84,7 +84,7 @@ Do not use the extension to automate Sokker. The user remains in control of ever
 Automated tests cover the import path for JSON generated from representative Sokker DOM fixtures:
 
 ```bash
-npm test -- --run apps/extension/tests/domParser.test.ts packages/application/tests/importPlayerSnapshot.test.ts
+npm test -- --run apps/extension/__tests__/domParser.test.ts packages/application/__tests__/importPlayerSnapshot.test.ts
 ```
 
 For final manual acceptance, use a JSON downloaded from the locally installed extension and import that exact file into ATLAS.
