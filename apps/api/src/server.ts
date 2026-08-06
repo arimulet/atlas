@@ -1,6 +1,11 @@
 import "dotenv/config";
 import Fastify from "fastify";
-import { importPlayerSnapshotMvp, validatePlayerSnapshotImport } from "@atlas/application";
+import {
+  compareClubSnapshots,
+  importPlayerSnapshotMvp,
+  listClubSnapshots,
+  validatePlayerSnapshotImport
+} from "@atlas/application";
 import { connectMongoDb } from "@atlas/database";
 
 export function buildServer() {
@@ -38,6 +43,24 @@ export function buildServer() {
     }
 
     return result;
+  });
+
+  server.get("/api/clubs/:clubId/snapshots", async (request) => {
+    const { clubId } = request.params as { clubId: string };
+
+    return { snapshots: await listClubSnapshots(clubId) };
+  });
+
+  server.post("/api/clubs/:clubId/snapshot-comparisons", async (request) => {
+    const { clubId } = request.params as { clubId: string };
+    const body = request.body as {
+      baseSnapshotId?: string;
+      targetSnapshotId?: string;
+      baseSnapshotDate?: string;
+      targetSnapshotDate?: string;
+    };
+
+    return compareClubSnapshots({ clubId, ...body });
   });
 
   return server;

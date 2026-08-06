@@ -78,3 +78,4 @@ export interface Diagnostic {
 }
 
 export * from "./diagnostics.js";
+export * from "./snapshotComparison.js";
