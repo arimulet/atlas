@@ -3,6 +3,8 @@ export type DashboardStatus = "idle" | "loading" | "ready" | "error";
 export type SourceKind = "observed" | "manual" | "effective";
 export type SquadEconomyEvidenceKind = "observed" | "manual" | "derived" | "inferred";
 export type SkillChangeDirection = "up" | "down" | "stable" | "insufficient_data";
+export type PlayerDevelopmentFindingType =
+  "improvement" | "stagnation" | "decline" | "insufficient_data";
 
 export interface ImportIssue {
   path: string;
@@ -297,6 +299,7 @@ export interface PlayerDevelopmentPlayerSummary {
     comparableSkills: number;
     confidence: "low" | "medium" | "high";
   };
+  findings: PlayerDevelopmentFinding[];
   signals: PlayerDevelopmentSignal[];
   warnings: PlayerDevelopmentWarning[];
 }
@@ -313,6 +316,15 @@ export interface PlayerDevelopmentSignal {
   code: string;
   confidence: "low" | "medium" | "high";
   message: string;
+  evidence: PlayerDevelopmentEvidence[];
+}
+
+export interface PlayerDevelopmentFinding {
+  type: PlayerDevelopmentFindingType;
+  severity: "info" | "low" | "medium" | "high";
+  confidence: "low" | "medium" | "high";
+  title: string;
+  description: string;
   evidence: PlayerDevelopmentEvidence[];
 }
 

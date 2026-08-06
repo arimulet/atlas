@@ -30,6 +30,16 @@ button {
   padding: 11px 16px;
 }
 
+.secondary-button {
+  background: #edf2f0;
+  color: #40513f;
+}
+
+.secondary-button.active {
+  background: #16695f;
+  color: #ffffff;
+}
+
 .app-shell {
   min-height: 100vh;
   padding: 28px;
@@ -362,6 +372,13 @@ h4 {
 .development-list {
   display: grid;
   gap: 14px;
+}
+
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
 }
 
 .development-card {
