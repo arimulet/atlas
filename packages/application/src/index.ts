@@ -4,6 +4,7 @@ export * from "./importPlayerSnapshot.js";
 export * from "./generateBasicDiagnostic.js";
 export * from "./importPlayerSnapshotMvp.js";
 export * from "./compareClubSnapshots.js";
+export * from "./calculateClubHistoricalTrends.js";
 
 export interface ValidatePlayerSnapshotInput {
   payload: unknown;

@@ -1,6 +1,7 @@
 import "dotenv/config";
 import Fastify from "fastify";
 import {
+  calculateClubHistoricalTrends,
   compareClubSnapshots,
   importPlayerSnapshotMvp,
   listClubSnapshots,
@@ -61,6 +62,12 @@ export function buildServer() {
     };
 
     return compareClubSnapshots({ clubId, ...body });
+  });
+
+  server.get("/api/clubs/:clubId/historical-trends", async (request) => {
+    const { clubId } = request.params as { clubId: string };
+
+    return calculateClubHistoricalTrends({ clubId });
   });
 
   return server;
