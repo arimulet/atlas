@@ -139,6 +139,14 @@ function extractPlayers(document: Document, warnings: ExtractionWarning[]): Play
     return explicitCards.map((card, index) => playerFromCard(card, index, warnings)).filter(isPlayer);
   }
 
+  const playerBoxes = [
+    ...document.querySelectorAll<HTMLElement>(".player-box__center, .player-box")
+  ].filter((element) => element.querySelector(".player-box__content, .player-box__skills"));
+
+  if (playerBoxes.length > 0) {
+    return playerBoxes.map((card, index) => playerFromSokkerPlayerBox(card, index, warnings)).filter(isPlayer);
+  }
+
   const tablePlayers = extractPlayersFromTables(document, warnings);
 
   if (tablePlayers.length > 0) {
@@ -150,6 +158,39 @@ function extractPlayers(document: Document, warnings: ExtractionWarning[]): Play
   ].filter((element) => element.querySelector("a") || findAnyNumber(element.innerText));
 
   return likelyCards.map((card, index) => playerFromCard(card, index, warnings)).filter(isPlayer);
+}
+
+function playerFromSokkerPlayerBox(
+  card: HTMLElement,
+  index: number,
+  warnings: ExtractionWarning[]
+): PlayerExport | null {
+  const nameLink =
+    card.querySelector<HTMLAnchorElement>(".player-box-header__name a[href*='/player/']") ??
+    card.querySelector<HTMLAnchorElement>("a[href*='/player/']");
+  const name = normalizeWhitespace(nameLink?.textContent ?? "");
+  const age = parseFirstNumber(readElementTextFromSelector(card, ".player-box-header__age"));
+  const wage = parseMoney(readElementTextFromSelector(card, ".player-box-header__salary"));
+  const estimatedValue = parseMoney(readElementTextFromSelector(card, ".player-box-header__value"));
+  const skills = parseSkillsFromSkillList(card);
+
+  if (!name || age === null || wage.amount === null || estimatedValue.amount === null) {
+    return null;
+  }
+
+  collectPlayerWarnings(index, skills, warnings);
+
+  return {
+    externalId: findPlayerId(card),
+    name,
+    age,
+    wage: { amount: wage.amount, currency: wage.currency },
+    estimatedValue: { amount: estimatedValue.amount, currency: estimatedValue.currency },
+    form: parseFormFromSkillList(card),
+    availabilityStatus: parseAvailabilityFromStatusElement(card),
+    observedPosition: null,
+    skills
+  };
 }
 
 function extractPlayersFromTables(document: Document, warnings: ExtractionWarning[]): PlayerExport[] {
@@ -286,6 +327,41 @@ function parseSkillsFromCard(card: HTMLElement, text: string): Record<SkillKey, 
   ) as Record<SkillKey, number | null>;
 }
 
+function parseSkillsFromSkillList(card: HTMLElement): Record<SkillKey, number | null> {
+  const skills = createEmptySkills();
+
+  card.querySelectorAll<HTMLElement>(".skill-list__item").forEach((item) => {
+    const label = normalizeLabel(readSkillItemLabel(item));
+    const skill = skillKeys.find((key) => matchesAny(label, skillLabels[key]));
+
+    if (!skill) {
+      return;
+    }
+
+    skills[skill] = parseFirstNumber(readElementTextFromSelector(item, ".skill-list__value"));
+  });
+
+  return skills;
+}
+
+function parseFormFromSkillList(card: HTMLElement): number | null {
+  for (const item of card.querySelectorAll<HTMLElement>(".skill-list__item")) {
+    if (matchesAny(normalizeLabel(readSkillItemLabel(item)), fieldLabels.form)) {
+      return parseFirstNumber(readElementTextFromSelector(item, ".skill-list__value"));
+    }
+  }
+
+  return null;
+}
+
+function readSkillItemLabel(item: HTMLElement): string {
+  return (
+    readElementTextFromSelector(item, ".skill-list-item .text-overflow") ||
+    readElementTextFromSelector(item, ".player-box-skills-value__label") ||
+    readElementTextFromSelector(item, ".skill-list-item")
+  );
+}
+
 function collectPlayerWarnings(
   index: number,
   skills: Record<SkillKey, number | null>,
@@ -299,6 +375,10 @@ function collectPlayerWarnings(
       });
     }
   });
+}
+
+function createEmptySkills(): Record<SkillKey, number | null> {
+  return Object.fromEntries(skillKeys.map((skill) => [skill, null])) as Record<SkillKey, number | null>;
 }
 
 function parseMoney(value: string | undefined): { amount: number | null; currency: string | null } {
@@ -394,6 +474,25 @@ function parseAvailability(value: string): PlayerExport["availabilityStatus"] {
   }
 
   return "unknown";
+}
+
+function parseAvailabilityFromStatusElement(card: HTMLElement): PlayerExport["availabilityStatus"] {
+  const statusElement = card.querySelector<HTMLElement>(".player-box-header__status");
+  const statusText = statusElement ? readElementText(statusElement) : "";
+  const iconSources = statusElement
+    ? [...statusElement.querySelectorAll<HTMLImageElement>("img")].map((image) => image.getAttribute("src") ?? "")
+    : [];
+  const iconText = iconSources.join(" ");
+
+  if (/injur|lesion|wound|contus/i.test(iconText)) {
+    return "injured";
+  }
+
+  if (/red-card|suspend|sancion/i.test(iconText)) {
+    return "suspended";
+  }
+
+  return parseAvailability(statusText);
 }
 
 function findValueAfterLabel(text: string, labels: string[]): string {
@@ -499,6 +598,12 @@ function textFromSelector(root: ParentNode, selector: string): string {
   return element ? normalizeWhitespace(readElementText(element)) : "";
 }
 
+function readElementTextFromSelector(root: ParentNode, selector: string): string {
+  const element = root.querySelector(selector);
+
+  return element ? readElementText(element) : "";
+}
+
 function matchesAny(value: string, labels: string[]): boolean {
   return labels.some((label) => value === normalizeLabel(label) || value.includes(normalizeLabel(label)));
 }
@@ -582,7 +687,7 @@ function currencyFromSymbol(value: string): string | null {
     return "BRL";
   }
 
-  if (value.includes("US$")) {
+  if (/u\$s/i.test(value) || value.includes("US$")) {
     return "USD";
   }
 

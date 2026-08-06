@@ -166,6 +166,75 @@ describe("Sokker DOM export parser", () => {
     expect(result.warnings).toEqual([]);
   });
 
+  it("maps Sokker player-box cards with numeric skill-list values", () => {
+    const document = createDocument(`
+      <html lang="es">
+        <head><title>Equipo - Sokker Manager</title></head>
+        <body>
+          <div class="player-box__center">
+            <div class="player-box-head">
+              <div class="player-face" id="face2-38643161" data-pid="38643161"></div>
+            </div>
+            <div class="player-box__content">
+              <div class="player-box__header">
+                <div class="player-box-header">
+                  <div class="player-box-header__name">
+                    <span class="headline"><a href="/player/PID/38643161">Ryan Ahlburg</a></span>
+                  </div>
+                  <div class="player-box-header__age"><span>Edad:</span><span>34</span></div>
+                  <div class="player-box-header__value"><span>Valor:</span><span>1&nbsp;549&nbsp;000&nbsp;u$s</span></div>
+                  <div class="player-box-header__salary"><span>Sueldo:</span><span>33&nbsp;450&nbsp;u$s</span></div>
+                  <div class="player-box-header__status"><span>Estado: </span></div>
+                </div>
+              </div>
+              <div class="player-box__skills">
+                <ul class="skill-list">
+                  ${skillItem("condicion", 11)}
+                  ${skillItem("rapidez", 14)}
+                  ${skillItem("tecnica", 16)}
+                  ${skillItem("pases", 16)}
+                  ${skillItem("porteria", 0)}
+                  ${skillItem("defensa", 10)}
+                  ${skillItem("creacion", 16)}
+                  ${skillItem("anotacion", 6)}
+                  ${skillItem("forma", 6)}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </body>
+      </html>
+    `);
+
+    const result = extractPlayerSnapshot(document, {
+      exportedAt,
+      pageUrl: "https://sokker.org/es/app/squad/",
+      locale: "es"
+    });
+
+    expect(result.snapshot.players[0]).toMatchObject({
+      externalId: "38643161",
+      name: "Ryan Ahlburg",
+      age: 34,
+      wage: { amount: 33450, currency: "USD" },
+      estimatedValue: { amount: 1549000, currency: "USD" },
+      form: 6,
+      availabilityStatus: "available",
+      observedPosition: null,
+      skills: {
+        stamina: 11,
+        pace: 14,
+        technique: 16,
+        passing: 16,
+        keeper: 0,
+        defender: 10,
+        playmaker: 16,
+        striker: 6
+      }
+    });
+    expect(result.warnings).toEqual([]);
+  });
+
   it("produces JSON accepted by the ATLAS contract validator", () => {
     const validation = validatePlayerSnapshotV0(extensionFixture);
 
@@ -175,4 +244,13 @@ describe("Sokker DOM export parser", () => {
 
 function createDocument(html: string): Document {
   return new DOMParser().parseFromString(html, "text/html");
+}
+
+function skillItem(label: string, value: number): string {
+  return `
+    <li class="skill-list__item">
+      <div class="skill-list-item"><span class="text-overflow">${label}</span></div>
+      <div class="skill-list__value"><span>${value}</span></div>
+    </li>
+  `;
 }
