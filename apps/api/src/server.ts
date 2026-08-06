@@ -9,6 +9,7 @@ import {
   getPlayerDevelopment,
   getClubOperatingSettings,
   getClubProfile,
+  getSquadMarketPlanning,
   getSquadEconomy,
   importPlayerSnapshotMvp,
   listClubSnapshots,
@@ -89,6 +90,12 @@ export function buildServer() {
     const { clubId } = clubParamsSchema.parse(request.params);
 
     return { playerDevelopment: await getPlayerDevelopment({ clubId }) };
+  });
+
+  server.get("/api/clubs/:clubId/squad-market-planning", async (request) => {
+    const { clubId } = clubParamsSchema.parse(request.params);
+
+    return { squadMarketPlanning: await getSquadMarketPlanning({ clubId }) };
   });
 
   server.patch("/api/clubs/:clubId/profile", async (request) => {

@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   fetchClubDashboard,
   fetchPlayerDevelopment,
+  fetchSquadMarketPlanning,
   fetchSquadEconomy,
   importPlayerSnapshot
 } from "./api";
@@ -10,6 +11,7 @@ import { DashboardPanel } from "./components/DashboardPanel";
 import { DiagnosticPanel } from "./components/DiagnosticPanel";
 import { IssuePanel } from "./components/IssuePanel";
 import { PlayerDevelopmentPanel } from "./components/PlayerDevelopmentPanel";
+import { SquadMarketPlanningPanel } from "./components/SquadMarketPlanningPanel";
 import { SquadEconomyPanel } from "./components/SquadEconomyPanel";
 import { SummaryPanel } from "./components/SummaryPanel";
 import type {
@@ -20,7 +22,8 @@ import type {
   ImportResponse,
   ImportStatus,
   PlayerDevelopment,
-  SquadEconomy
+  SquadEconomy,
+  SquadMarketPlanning
 } from "./types";
 
 const lastClubStorageKey = "atlas.lastClubId";
@@ -35,12 +38,15 @@ export function App() {
   );
   const [dashboard, setDashboard] = useState<ClubDashboard | null>(null);
   const [activeView, setActiveView] = useState<
-    "dashboard" | "squad-economy" | "player-development"
+    "dashboard" | "squad-economy" | "player-development" | "squad-market-planning"
   >("dashboard");
   const [squadEconomyStatus, setSquadEconomyStatus] = useState<DashboardStatus>("idle");
   const [squadEconomy, setSquadEconomy] = useState<SquadEconomy | null>(null);
   const [playerDevelopmentStatus, setPlayerDevelopmentStatus] = useState<DashboardStatus>("idle");
   const [playerDevelopment, setPlayerDevelopment] = useState<PlayerDevelopment | null>(null);
+  const [squadMarketPlanningStatus, setSquadMarketPlanningStatus] =
+    useState<DashboardStatus>("idle");
+  const [squadMarketPlanning, setSquadMarketPlanning] = useState<SquadMarketPlanning | null>(null);
   const [status, setStatus] = useState<ImportStatus>("idle");
   const [fileName, setFileName] = useState<string | null>(null);
   const [message, setMessage] = useState("Club dashboard ready.");
@@ -93,6 +99,23 @@ export function App() {
     } catch {
       setPlayerDevelopment(null);
       setPlayerDevelopmentStatus("error");
+    }
+  }, [activeClubId]);
+
+  const openSquadMarketPlanning = useCallback(async () => {
+    if (!activeClubId) {
+      return;
+    }
+
+    setActiveView("squad-market-planning");
+    setSquadMarketPlanningStatus("loading");
+
+    try {
+      setSquadMarketPlanning(await fetchSquadMarketPlanning(activeClubId));
+      setSquadMarketPlanningStatus("ready");
+    } catch {
+      setSquadMarketPlanning(null);
+      setSquadMarketPlanningStatus("error");
     }
   }, [activeClubId]);
 
@@ -172,12 +195,19 @@ export function App() {
             status={playerDevelopmentStatus}
             onBack={() => setActiveView("dashboard")}
           />
+        ) : activeView === "squad-market-planning" ? (
+          <SquadMarketPlanningPanel
+            squadMarketPlanning={squadMarketPlanning}
+            status={squadMarketPlanningStatus}
+            onBack={() => setActiveView("dashboard")}
+          />
         ) : (
           <DashboardPanel
             dashboard={dashboard}
             status={dashboardStatus}
             onOpenSquadEconomy={() => void openSquadEconomy()}
             onOpenPlayerDevelopment={() => void openPlayerDevelopment()}
+            onOpenSquadMarketPlanning={() => void openSquadMarketPlanning()}
           />
         )}
 

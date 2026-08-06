@@ -300,7 +300,8 @@ h4 {
 }
 
 .squad-economy-view,
-.player-development-view {
+.player-development-view,
+.squad-market-view {
   display: grid;
   gap: 18px;
 }

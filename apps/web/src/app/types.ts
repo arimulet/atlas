@@ -177,6 +177,86 @@ export interface OperationalArea {
   summary: string;
 }
 
+export type SquadMarketCategory =
+  | "sale_candidate"
+  | "protection_candidate"
+  | "follow_up"
+  | "insufficient_signal";
+
+export interface SquadMarketPlanning {
+  clubId: string;
+  snapshotId: string | null;
+  snapshotDate: string | null;
+  observed: {
+    players: SquadMarketObservedPlayer[];
+    coverage: {
+      playerCount: number;
+      playersWithWage: number;
+      playersWithEstimatedValue: number;
+      playersWithStableIdentity: number;
+    };
+  };
+  manual: {
+    marketStrategy: string;
+  };
+  derived: {
+    categoryCounts: Record<SquadMarketCategory, number>;
+    players: SquadMarketPlayerPlan[];
+  };
+  warnings: SquadMarketWarning[];
+}
+
+export interface SquadMarketObservedPlayer {
+  playerId: string | null;
+  externalId: string | null;
+  snapshotPlayerId: string;
+  name: string;
+  age: number;
+  role: {
+    label: string;
+    source: "observed" | "inferred" | "unknown";
+  };
+  wage: { amount: number; currency: string | null };
+  estimatedValue: { amount: number; currency: string | null };
+}
+
+export interface SquadMarketPlayerPlan {
+  playerId: string | null;
+  snapshotPlayerId: string;
+  name: string;
+  age: number;
+  role: {
+    label: string;
+    source: "observed" | "inferred" | "unknown";
+  };
+  category: SquadMarketCategory;
+  severity: "info" | "low" | "medium" | "high";
+  confidence: "low" | "medium" | "high";
+  rationale: string;
+  signals: SquadMarketSignal[];
+  warnings: SquadMarketWarning[];
+}
+
+export interface SquadMarketSignal {
+  code: string;
+  severity: "info" | "low" | "medium" | "high";
+  confidence: "low" | "medium" | "high";
+  message: string;
+  evidence: SquadMarketEvidence[];
+}
+
+export interface SquadMarketWarning {
+  code: string;
+  message: string;
+  evidence: SquadMarketEvidence[];
+}
+
+export interface SquadMarketEvidence {
+  kind: SquadEconomyEvidenceKind;
+  label: string;
+  value: string | number | null;
+}
+
 export interface SquadEconomy {
   clubId: string;
   snapshotId: string | null;
