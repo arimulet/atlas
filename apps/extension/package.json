@@ -6,6 +6,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.json --noEmit && vite build",
     "dev": "vite build --watch",
+    "package:local": "npm run build && node ../../scripts/extension-local-package.mjs package",
+    "validate": "node ../../scripts/extension-local-package.mjs validate",
     "test": "vitest run"
   },
   "dependencies": {

@@ -32,13 +32,21 @@ npm run dev:extension
 
 ## Browser Extension
 
-Build the unpacked extension with:
+Build and validate the unpacked extension with:
 
 ```bash
-npm run build -w @atlas/extension
+npm run extension:build
 ```
 
-Then load `apps/extension/dist` in the browser extension development screen. The popup only reads the active Sokker page after the user clicks `Generate preview`; it shows the JSON preview before downloading and does not automate Sokker clicks, navigation, login, or network sync.
+Create the clean local installation folder with:
+
+```bash
+npm run extension:package
+```
+
+Then load `artifacts/extension/atlas-snapshot-exporter` in the browser extension development screen. The popup only reads the active Sokker page after the user clicks `Generate preview`; it shows the JSON preview before downloading and does not automate Sokker clicks, navigation, login, or network sync.
+
+See `docs/extension-local-packaging.md` for installation, usage and manual verification steps.
 
 ## Technical Baseline
 
