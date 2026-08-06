@@ -163,6 +163,7 @@ export interface SquadEconomy {
     totalWage: MoneyTotal;
     totalEstimatedValue: MoneyTotal;
     wageToValueRatio: number | null;
+    playerDetails: SquadEconomyPlayerDetail[];
     concentration: {
       wage: SquadEconomyConcentration[];
       estimatedValue: SquadEconomyConcentration[];
@@ -200,6 +201,19 @@ export interface SquadEconomyConcentration {
   amount: number;
   currency: string | null;
   share: number | null;
+}
+
+export interface SquadEconomyPlayerDetail {
+  playerId: string | null;
+  snapshotPlayerId: string;
+  name: string;
+  age: number;
+  wage: { amount: number; currency: string | null };
+  estimatedValue: { amount: number; currency: string | null };
+  wageShare: number | null;
+  estimatedValueShare: number | null;
+  wageToValueRatio: number | null;
+  warnings: SquadEconomyWarning[];
 }
 
 export interface SquadEconomyHistoricalSnapshot {

@@ -1,5 +1,10 @@
 import { formatMoney, formatNullable } from "../formatters";
-import type { SquadEconomy, SquadEconomyConcentration, SquadEconomyEvidence } from "../types";
+import type {
+  SquadEconomy,
+  SquadEconomyConcentration,
+  SquadEconomyEvidence,
+  SquadEconomyPlayerDetail
+} from "../types";
 import { IssuePanel } from "./IssuePanel";
 import { SummaryItem } from "./SummaryItem";
 
@@ -72,10 +77,7 @@ export function SquadEconomyPanel({ squadEconomy, status, onBack }: SquadEconomy
             label="Relacion salario/valor"
             value={formatRatio(squadEconomy.derived.wageToValueRatio)}
           />
-          <SummaryItem
-            label="Snapshot"
-            value={squadEconomy.snapshotDate ?? "No disponible"}
-          />
+          <SummaryItem label="Snapshot" value={squadEconomy.snapshotDate ?? "No disponible"} />
         </dl>
       </section>
 
@@ -87,7 +89,10 @@ export function SquadEconomyPanel({ squadEconomy, status, onBack }: SquadEconomy
             <h2>Settings efectivos</h2>
           </div>
           <dl className="summary-grid">
-            <SummaryItem label="Moneda operativa" value={formatNullable(squadEconomy.manual.currency)} />
+            <SummaryItem
+              label="Moneda operativa"
+              value={formatNullable(squadEconomy.manual.currency)}
+            />
             <SummaryItem label="Tolerancia de riesgo" value={squadEconomy.manual.riskTolerance} />
           </dl>
         </section>
@@ -103,6 +108,8 @@ export function SquadEconomyPanel({ squadEconomy, status, onBack }: SquadEconomy
           items={squadEconomy.derived.concentration.estimatedValue}
         />
       </section>
+
+      <PlayerDetailPanel players={squadEconomy.derived.playerDetails} />
 
       <HistoricalPanel squadEconomy={squadEconomy} />
 
@@ -131,7 +138,7 @@ export function SquadEconomyPanel({ squadEconomy, status, onBack }: SquadEconomy
                   <span className={`severity ${finding.severity}`}>{finding.severity}</span>
                 </div>
                 <p className="finding-description">{finding.description}</p>
-                <span className="confidence">Confidence: {finding.confidence}</span>
+                <span className="confidence">Confianza: {finding.confidence}</span>
                 <EvidenceList evidence={finding.evidence} />
               </article>
             ))
@@ -152,7 +159,10 @@ function EvidencePanel({ squadEconomy }: { squadEconomy: SquadEconomy }) {
         <h2>Cobertura de datos</h2>
       </div>
       <dl className="summary-grid">
-        <SummaryItem label="Jugadores" value={squadEconomy.observed.coverage.playerCount.toString()} />
+        <SummaryItem
+          label="Jugadores"
+          value={squadEconomy.observed.coverage.playerCount.toString()}
+        />
         <SummaryItem
           label="Con salario"
           value={squadEconomy.observed.coverage.playersWithWage.toString()}
@@ -170,6 +180,43 @@ function EvidencePanel({ squadEconomy }: { squadEconomy: SquadEconomy }) {
           }
         />
       </dl>
+    </section>
+  );
+}
+
+function PlayerDetailPanel({ players }: { players: SquadEconomyPlayerDetail[] }) {
+  return (
+    <section className="panel">
+      <div className="panel-heading">
+        <p className="eyebrow">Derivado por jugador</p>
+        <h2>Ranking de riesgo relativo</h2>
+      </div>
+      <div className="player-detail-table" role="table" aria-label="Detalle por jugador">
+        <div className="player-detail-row header" role="row">
+          <span role="columnheader">Jugador</span>
+          <span role="columnheader">Salario</span>
+          <span role="columnheader">Valor</span>
+          <span role="columnheader">Salario</span>
+          <span role="columnheader">Valor</span>
+          <span role="columnheader">Ratio</span>
+          <span role="columnheader">Advertencias</span>
+        </div>
+        {players.slice(0, 8).map((player) => (
+          <div className="player-detail-row" role="row" key={player.snapshotPlayerId}>
+            <strong role="cell">{player.name}</strong>
+            <span role="cell">{formatMoneyValue(player.wage)}</span>
+            <span role="cell">{formatMoneyValue(player.estimatedValue)}</span>
+            <span role="cell">{formatPercent(player.wageShare)}</span>
+            <span role="cell">{formatPercent(player.estimatedValueShare)}</span>
+            <span role="cell">{formatRatio(player.wageToValueRatio)}</span>
+            <span role="cell">
+              {player.warnings.length > 0
+                ? player.warnings.map((warning) => warning.code).join(", ")
+                : "Sin advertencias"}
+            </span>
+          </div>
+        ))}
+      </div>
     </section>
   );
 }
@@ -244,6 +291,10 @@ function EvidenceList({ evidence }: { evidence: SquadEconomyEvidence[] }) {
       ))}
     </ul>
   );
+}
+
+function formatMoneyValue(value: { amount: number; currency: string | null }): string {
+  return `${value.currency ?? "mixed"} ${value.amount.toLocaleString("en-US")}`;
 }
 
 function formatRatio(value: number | null): string {
