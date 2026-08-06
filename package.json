@@ -16,6 +16,7 @@
     "dev:web": "npm run dev -w @atlas/web",
     "dev:extension": "npm run dev -w @atlas/extension",
     "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "test": "vitest run",
     "test:e2e": "playwright test",
