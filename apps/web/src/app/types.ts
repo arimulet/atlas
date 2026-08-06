@@ -233,8 +233,21 @@ export interface SquadMarketPlayerPlan {
   severity: "info" | "low" | "medium" | "high";
   confidence: "low" | "medium" | "high";
   rationale: string;
+  timing: SquadMarketTiming;
   signals: SquadMarketSignal[];
   warnings: SquadMarketWarning[];
+}
+
+export interface SquadMarketTiming {
+  label: string;
+  window: {
+    from: string | null;
+    to: string | null;
+    snapshotCount: number;
+  };
+  dataUsed: string[];
+  mainReasons: string[];
+  limits: string[];
 }
 
 export interface SquadMarketSignal {

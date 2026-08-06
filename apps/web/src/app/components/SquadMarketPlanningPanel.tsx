@@ -159,7 +159,20 @@ function MarketPlayerCard({ player }: { player: SquadMarketPlayerPlan }) {
         <span className={`severity ${player.severity}`}>{labelCategory(player.category)}</span>
       </div>
       <p className="muted">{player.rationale}</p>
-      <span className="confidence">Confianza: {player.confidence}</span>
+      <div className="trace-row">
+        <span className="confidence">Confianza: {player.confidence}</span>
+        <span className="confidence">Timing: {player.timing.label}</span>
+        <span className="confidence">
+          Ventana: {formatNullable(player.timing.window.from)} a{" "}
+          {formatNullable(player.timing.window.to)} ({player.timing.window.snapshotCount})
+        </span>
+      </div>
+
+      <div className="market-timing-grid">
+        <TimingList title="Datos usados" items={player.timing.dataUsed} />
+        <TimingList title="Razones principales" items={player.timing.mainReasons} />
+        <TimingList title="Limites" items={player.timing.limits} />
+      </div>
 
       {player.warnings.length > 0 ? (
         <IssuePanel
@@ -185,6 +198,23 @@ function MarketPlayerCard({ player }: { player: SquadMarketPlayerPlan }) {
         ))}
       </div>
     </article>
+  );
+}
+
+function TimingList({ title, items }: { title: string; items: string[] }) {
+  return (
+    <div className="detail-block">
+      <h4>{title}</h4>
+      {items.length > 0 ? (
+        <ul>
+          {items.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
+      ) : (
+        <p className="muted">Sin datos suficientes.</p>
+      )}
+    </div>
   );
 }
 
