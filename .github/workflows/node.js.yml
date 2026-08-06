@@ -30,3 +30,9 @@ jobs:
 
       - name: Compilar proyecto (Build)
         run: npm run build
+
+      - name: Instalar navegadores de Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Ejecutar pruebas e2e
+        run: npm run test:e2e
