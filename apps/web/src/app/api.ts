@@ -3,7 +3,8 @@ import type {
   ImportResponse,
   PlayerDevelopment,
   SquadEconomy,
-  SquadMarketPlanning
+  SquadMarketPlanning,
+  YouthPipelinePlanning
 } from "./types";
 
 export async function fetchClubDashboard(clubId: string): Promise<ClubDashboard> {
@@ -48,6 +49,17 @@ export async function fetchSquadMarketPlanning(clubId: string): Promise<SquadMar
   }
 
   return body.squadMarketPlanning;
+}
+
+export async function fetchYouthPipelinePlanning(clubId: string): Promise<YouthPipelinePlanning> {
+  const response = await fetch(`/api/clubs/${clubId}/youth-pipeline-planning`);
+  const body = (await response.json()) as { youthPipelinePlanning?: YouthPipelinePlanning };
+
+  if (!response.ok || !body.youthPipelinePlanning) {
+    throw new Error("Youth pipeline planning API returned an unexpected response.");
+  }
+
+  return body.youthPipelinePlanning;
 }
 
 export async function importPlayerSnapshot(payload: unknown): Promise<{

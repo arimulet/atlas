@@ -5,6 +5,7 @@ import {
   fetchPlayerDevelopment,
   fetchSquadMarketPlanning,
   fetchSquadEconomy,
+  fetchYouthPipelinePlanning,
   importPlayerSnapshot
 } from "./api";
 import { DashboardPanel } from "./components/DashboardPanel";
@@ -14,6 +15,7 @@ import { PlayerDevelopmentPanel } from "./components/PlayerDevelopmentPanel";
 import { SquadMarketPlanningPanel } from "./components/SquadMarketPlanningPanel";
 import { SquadEconomyPanel } from "./components/SquadEconomyPanel";
 import { SummaryPanel } from "./components/SummaryPanel";
+import { YouthPipelinePlanningPanel } from "./components/YouthPipelinePlanningPanel";
 import type {
   ClubDashboard,
   DashboardStatus,
@@ -23,7 +25,8 @@ import type {
   ImportStatus,
   PlayerDevelopment,
   SquadEconomy,
-  SquadMarketPlanning
+  SquadMarketPlanning,
+  YouthPipelinePlanning
 } from "./types";
 
 const lastClubStorageKey = "atlas.lastClubId";
@@ -38,7 +41,11 @@ export function App() {
   );
   const [dashboard, setDashboard] = useState<ClubDashboard | null>(null);
   const [activeView, setActiveView] = useState<
-    "dashboard" | "squad-economy" | "player-development" | "squad-market-planning"
+    | "dashboard"
+    | "squad-economy"
+    | "player-development"
+    | "squad-market-planning"
+    | "youth-pipeline-planning"
   >("dashboard");
   const [squadEconomyStatus, setSquadEconomyStatus] = useState<DashboardStatus>("idle");
   const [squadEconomy, setSquadEconomy] = useState<SquadEconomy | null>(null);
@@ -47,6 +54,10 @@ export function App() {
   const [squadMarketPlanningStatus, setSquadMarketPlanningStatus] =
     useState<DashboardStatus>("idle");
   const [squadMarketPlanning, setSquadMarketPlanning] = useState<SquadMarketPlanning | null>(null);
+  const [youthPipelinePlanningStatus, setYouthPipelinePlanningStatus] =
+    useState<DashboardStatus>("idle");
+  const [youthPipelinePlanning, setYouthPipelinePlanning] =
+    useState<YouthPipelinePlanning | null>(null);
   const [status, setStatus] = useState<ImportStatus>("idle");
   const [fileName, setFileName] = useState<string | null>(null);
   const [message, setMessage] = useState("Club dashboard ready.");
@@ -116,6 +127,23 @@ export function App() {
     } catch {
       setSquadMarketPlanning(null);
       setSquadMarketPlanningStatus("error");
+    }
+  }, [activeClubId]);
+
+  const openYouthPipelinePlanning = useCallback(async () => {
+    if (!activeClubId) {
+      return;
+    }
+
+    setActiveView("youth-pipeline-planning");
+    setYouthPipelinePlanningStatus("loading");
+
+    try {
+      setYouthPipelinePlanning(await fetchYouthPipelinePlanning(activeClubId));
+      setYouthPipelinePlanningStatus("ready");
+    } catch {
+      setYouthPipelinePlanning(null);
+      setYouthPipelinePlanningStatus("error");
     }
   }, [activeClubId]);
 
@@ -201,6 +229,12 @@ export function App() {
             status={squadMarketPlanningStatus}
             onBack={() => setActiveView("dashboard")}
           />
+        ) : activeView === "youth-pipeline-planning" ? (
+          <YouthPipelinePlanningPanel
+            youthPipelinePlanning={youthPipelinePlanning}
+            status={youthPipelinePlanningStatus}
+            onBack={() => setActiveView("dashboard")}
+          />
         ) : (
           <DashboardPanel
             dashboard={dashboard}
@@ -208,6 +242,7 @@ export function App() {
             onOpenSquadEconomy={() => void openSquadEconomy()}
             onOpenPlayerDevelopment={() => void openPlayerDevelopment()}
             onOpenSquadMarketPlanning={() => void openSquadMarketPlanning()}
+            onOpenYouthPipelinePlanning={() => void openYouthPipelinePlanning()}
           />
         )}
 
