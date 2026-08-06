@@ -478,6 +478,11 @@ function parseAvailability(value: string): PlayerExport["availabilityStatus"] {
 
 function parseAvailabilityFromStatusElement(card: HTMLElement): PlayerExport["availabilityStatus"] {
   const statusElement = card.querySelector<HTMLElement>(".player-box-header__status");
+
+  if (!statusElement) {
+    return "available";
+  }
+
   const statusText = statusElement ? readElementText(statusElement) : "";
   const iconSources = statusElement
     ? [...statusElement.querySelectorAll<HTMLImageElement>("img")].map((image) => image.getAttribute("src") ?? "")
@@ -553,15 +558,24 @@ function parseBoundedLabeledNumber(value: string | undefined): number | null {
 }
 
 function findPlayerId(element: Element): string | null {
+  const playerLinks = [
+    ...element.querySelectorAll<HTMLAnchorElement>("a[href*='/player/'], a[href*='playerID'], a[href*='player=']")
+  ];
+  const idFromLink = playerLinks
+    .map((link) => findIdInUrl(link.getAttribute("href") ?? "", ["player", "playerID"]))
+    .find((id): id is string => id !== null);
+
+  if (idFromLink) {
+    return idFromLink;
+  }
+
   const explicit = element.getAttribute("data-atlas-external-id") || element.getAttribute("data-player-id");
 
-  if (explicit) {
+  if (explicit && /^\d+$/.test(explicit)) {
     return explicit;
   }
 
-  const href = element.querySelector("a")?.getAttribute("href") ?? "";
-
-  return findIdInUrl(href, ["player", "playerID"]);
+  return null;
 }
 
 function findIdInUrl(url: string, markers: string[]): string | null {

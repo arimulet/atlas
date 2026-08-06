@@ -172,8 +172,8 @@ describe("Sokker DOM export parser", () => {
         <head><title>Equipo - Sokker Manager</title></head>
         <body>
           <div class="player-box__center">
-            <div class="player-box-head">
-              <div class="player-face" id="face2-38643161" data-pid="38643161"></div>
+            <div class="player-box-head" data-player-id="999">
+              <div class="player-face" id="face2-38643161" data-pid="999"></div>
             </div>
             <div class="player-box__content">
               <div class="player-box__header">
@@ -233,6 +233,46 @@ describe("Sokker DOM export parser", () => {
       }
     });
     expect(result.warnings).toEqual([]);
+  });
+
+  it("defaults missing Sokker status to available and keeps externalId from the player link", () => {
+    const document = createDocument(`
+      <html lang="es">
+        <body>
+          <div class="player-box__center" data-player-id="999">
+            <div class="player-box__content">
+              <div class="player-box__header">
+                <div class="player-box-header">
+                  <div class="player-box-header__name"><a href="/es/app/player/12345">Linked Player</a></div>
+                  <div class="player-box-header__age"><span>Edad:</span><span>20</span></div>
+                  <div class="player-box-header__value"><span>Valor:</span><span>100&nbsp;000&nbsp;u$s</span></div>
+                  <div class="player-box-header__salary"><span>Sueldo:</span><span>1&nbsp;000&nbsp;u$s</span></div>
+                </div>
+              </div>
+              <div class="player-box__skills">
+                <ul class="skill-list">
+                  ${skillItem("condicion", 8)}
+                  ${skillItem("rapidez", 8)}
+                  ${skillItem("tecnica", 8)}
+                  ${skillItem("pases", 8)}
+                  ${skillItem("porteria", 0)}
+                  ${skillItem("defensa", 8)}
+                  ${skillItem("creacion", 8)}
+                  ${skillItem("anotacion", 8)}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </body>
+      </html>
+    `);
+
+    const result = extractPlayerSnapshot(document, { exportedAt });
+
+    expect(result.snapshot.players[0]).toMatchObject({
+      externalId: "12345",
+      availabilityStatus: "available"
+    });
   });
 
   it("produces JSON accepted by the ATLAS contract validator", () => {
