@@ -1,0 +1,88 @@
+name: CI/CD Workflow1
+
+on:
+  pull_request:
+    branches: [ develop, master ]
+    types: [ opened, synchronize, reopened ]
+
+jobs:
+  security:
+    name: Auditoria de Seguridad
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar codigo fuente
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Auditar vulnerabilidades en dependencias
+        run: npm audit --audit-level=high
+
+  lint-and-types:
+    name: Calidad de Codigo
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar codigo fuente
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Validar reglas de Linter
+        run: npm run lint
+
+  unit-tests:
+    name: Tests Unitarios
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar codigo fuente
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Ejecutar suite de pruebas
+        run: npm test
+
+  build:
+    name: Compilacion del Proyecto
+    runs-on: ubuntu-latest
+    needs: [ lint-and-types, unit-tests ]
+
+    steps:
+      - name: Descargar codigo fuente
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Compilar aplicacion
+        run: npm run build
