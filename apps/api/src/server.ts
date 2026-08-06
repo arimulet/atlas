@@ -85,6 +85,12 @@ export function buildServer() {
     return { squadEconomy: await getSquadEconomy({ clubId }) };
   });
 
+  server.get("/api/clubs/:clubId/player-development", async (request) => {
+    const { clubId } = clubParamsSchema.parse(request.params);
+
+    return { playerDevelopment: await getPlayerDevelopment({ clubId }) };
+  });
+
   server.patch("/api/clubs/:clubId/profile", async (request) => {
     const { clubId } = clubParamsSchema.parse(request.params);
     const body = updateClubProfileBodySchema.parse(request.body);

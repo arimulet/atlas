@@ -1,10 +1,7 @@
-import { useState } from "react";
-
 import type {
   PlayerDevelopment,
-  PlayerDevelopmentEvidence,
-  PlayerDevelopmentFindingType,
-  PlayerDevelopmentPlayerSummary
+  PlayerDevelopmentPlayerSummary,
+  SquadEconomyEvidence
 } from "../types";
 import { IssuePanel } from "./IssuePanel";
 import { SummaryItem } from "./SummaryItem";
@@ -20,10 +17,6 @@ export function PlayerDevelopmentPanel({
   status,
   onBack
 }: PlayerDevelopmentPanelProps) {
-  const [evolutionFilter, setEvolutionFilter] = useState<PlayerDevelopmentFindingType | "all">(
-    "all"
-  );
-
   if (status === "loading") {
     return (
       <section className="panel">
@@ -46,14 +39,6 @@ export function PlayerDevelopmentPanel({
       </section>
     );
   }
-
-  const visiblePlayers = playerDevelopment.derived.players.filter((player) => {
-    if (evolutionFilter === "all") {
-      return true;
-    }
-
-    return player.findings.some((finding) => finding.type === evolutionFilter);
-  });
 
   return (
     <section className="player-development-view">
@@ -128,24 +113,8 @@ export function PlayerDevelopmentPanel({
           <p className="eyebrow">Derivado por jugador</p>
           <h2>Evolucion reciente</h2>
         </div>
-        <div className="filter-row" aria-label="Filtrar por evolucion">
-          {(["all", "improvement", "stagnation", "decline", "insufficient_data"] as const).map(
-            (option) => (
-              <button
-                className={
-                  evolutionFilter === option ? "secondary-button active" : "secondary-button"
-                }
-                key={option}
-                type="button"
-                onClick={() => setEvolutionFilter(option)}
-              >
-                {labelFilter(option)}
-              </button>
-            )
-          )}
-        </div>
         <div className="development-list">
-          {visiblePlayers.map((player) => (
+          {playerDevelopment.derived.players.map((player) => (
             <PlayerDevelopmentCard key={player.playerId ?? player.name} player={player} />
           ))}
         </div>
@@ -207,15 +176,11 @@ function PlayerDevelopmentCard({ player }: { player: PlayerDevelopmentPlayerSumm
       ) : null}
 
       <div className="finding-list">
-        {player.findings.map((finding) => (
-          <article className="signal-card" key={finding.type}>
-            <div className="finding-header">
-              <strong>{finding.title}</strong>
-              <span className={`severity ${finding.severity}`}>{finding.severity}</span>
-            </div>
-            <p className="muted">{finding.description}</p>
-            <span className="confidence">Confianza: {finding.confidence}</span>
-            <EvidenceList evidence={finding.evidence} />
+        {player.signals.map((signal) => (
+          <article className="signal-card" key={signal.code}>
+            <strong>{signal.message}</strong>
+            <span className="confidence">Confianza: {signal.confidence}</span>
+            <EvidenceList evidence={signal.evidence} />
           </article>
         ))}
       </div>
@@ -223,15 +188,7 @@ function PlayerDevelopmentCard({ player }: { player: PlayerDevelopmentPlayerSumm
   );
 }
 
-function labelFilter(filter: PlayerDevelopmentFindingType | "all"): string {
-  if (filter === "all") return "Todos";
-  if (filter === "improvement") return "Mejora";
-  if (filter === "stagnation") return "Estancamiento";
-  if (filter === "decline") return "Deterioro";
-  return "Sin datos";
-}
-
-function EvidenceList({ evidence }: { evidence: PlayerDevelopmentEvidence[] }) {
+function EvidenceList({ evidence }: { evidence: SquadEconomyEvidence[] }) {
   return (
     <ul className="issue-list">
       {evidence.map((item) => (
