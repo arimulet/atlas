@@ -4,8 +4,10 @@ import {
   calculateClubHistoricalTrends,
   compareClubSnapshots,
   generateClubHistoricalFindings,
+  getClubProfile,
   importPlayerSnapshotMvp,
   listClubSnapshots,
+  updateClubProfile,
   validatePlayerSnapshotImport
 } from "@atlas/application";
 import { connectMongoDb } from "@atlas/database";
@@ -51,6 +53,28 @@ export function buildServer() {
     const { clubId } = request.params as { clubId: string };
 
     return { snapshots: await listClubSnapshots(clubId) };
+  });
+
+  server.get("/api/clubs/:clubId/profile", async (request) => {
+    const { clubId } = request.params as { clubId: string };
+
+    return { club: await getClubProfile({ clubId }) };
+  });
+
+  server.patch("/api/clubs/:clubId/profile", async (request) => {
+    const { clubId } = request.params as { clubId: string };
+    const body = request.body as {
+      manual?: {
+        name?: string | null;
+        currency?: string | null;
+        season?: number | null;
+        week?: number | null;
+        assumptions?: Array<{ key: string; value: string }>;
+        preferences?: Array<{ key: string; value: string }>;
+      };
+    };
+
+    return { club: await updateClubProfile({ clubId, manual: body.manual ?? {} }) };
   });
 
   server.post("/api/clubs/:clubId/snapshot-comparisons", async (request) => {
