@@ -1,6 +1,7 @@
 name: CI CD Workflow
 
 on:
+  workflow_dispatch: # Permite ejecutar el workflow manualmente desde la web
   pull_request:
     branches: [ develop, master ]
     types: [ opened, synchronize, reopened ]
