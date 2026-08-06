@@ -1,7 +1,12 @@
 // @vitest-environment happy-dom
 
+import { existsSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import extensionFixture from "../../../packages/test-fixtures/fixtures/player-snapshot/extension-sokker-dom-export.json" with {
+  type: "json"
+};
+import sokkerPlayerBoxFixture from "../../../packages/test-fixtures/fixtures/player-snapshot/sokker-squad-player-box-export.json" with {
   type: "json"
 };
 import { validatePlayerSnapshotV0 } from "@atlas/contracts";
@@ -10,6 +15,21 @@ import { extractPlayerSnapshot } from "../src/domParser";
 const exportedAt = new Date("2026-08-05T20:30:00.000Z");
 
 describe("Sokker DOM export parser", () => {
+  it("converts the representative Sokker squad HTML fixture to valid atlas.player-snapshot.v0 JSON", () => {
+    const html = readFixture("sokker-squad-player-box.es.html");
+    const document = createDocument(html);
+
+    const result = extractPlayerSnapshot(document, {
+      exportedAt,
+      pageUrl: "https://sokker.org/es/app/squad/club/100",
+      locale: "es"
+    });
+
+    expect(result.snapshot).toEqual(sokkerPlayerBoxFixture);
+    expect(result.warnings).toEqual([]);
+    expect(validatePlayerSnapshotV0(result.snapshot).status).toBe("accepted");
+  });
+
   it("maps a visible squad table to atlas.player-snapshot.v0", () => {
     const document = createDocument(`
       <html lang="es-AR">
@@ -355,6 +375,13 @@ describe("Sokker DOM export parser", () => {
 
 function createDocument(html: string): Document {
   return new DOMParser().parseFromString(html, "text/html");
+}
+
+function readFixture(fileName: string): string {
+  const workspacePath = resolve(process.cwd(), "tests", "fixtures", fileName);
+  const repoPath = resolve(process.cwd(), "apps", "extension", "tests", "fixtures", fileName);
+
+  return readFileSync(existsSync(workspacePath) ? workspacePath : repoPath, "utf8");
 }
 
 function skillItem(label: string, value: number): string {
