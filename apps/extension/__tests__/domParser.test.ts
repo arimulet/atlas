@@ -3,12 +3,8 @@
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import extensionFixture from "../../../packages/test-fixtures/fixtures/player-snapshot/extension-sokker-dom-export.json" with {
-  type: "json"
-};
-import sokkerPlayerBoxFixture from "../../../packages/test-fixtures/fixtures/player-snapshot/sokker-squad-player-box-export.json" with {
-  type: "json"
-};
+import extensionFixture from "../../../packages/test-fixtures/fixtures/player-snapshot/extension-sokker-dom-export.json" with { type: "json" };
+import sokkerPlayerBoxFixture from "../../../packages/test-fixtures/fixtures/player-snapshot/sokker-squad-player-box-export.json" with { type: "json" };
 import { validatePlayerSnapshotV0 } from "@atlas/contracts";
 import { extractPlayerSnapshot } from "../src/domParser";
 
@@ -363,7 +359,10 @@ describe("Sokker DOM export parser", () => {
 
     const result = extractPlayerSnapshot(document, { exportedAt });
 
-    expect(result.snapshot.players.map((player) => player.externalId)).toEqual(["38643161", "39409355"]);
+    expect(result.snapshot.players.map((player) => player.externalId)).toEqual([
+      "38643161",
+      "39409355"
+    ]);
   });
 
   it("produces JSON accepted by the ATLAS contract validator", () => {
@@ -378,8 +377,8 @@ function createDocument(html: string): Document {
 }
 
 function readFixture(fileName: string): string {
-  const workspacePath = resolve(process.cwd(), "tests", "fixtures", fileName);
-  const repoPath = resolve(process.cwd(), "apps", "extension", "tests", "fixtures", fileName);
+  const workspacePath = resolve(process.cwd(), "__tests__", "fixtures", fileName);
+  const repoPath = resolve(process.cwd(), "apps", "extension", "__tests__", "fixtures", fileName);
 
   return readFileSync(existsSync(workspacePath) ? workspacePath : repoPath, "utf8");
 }

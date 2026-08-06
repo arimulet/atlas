@@ -21,6 +21,7 @@ const forbiddenPathParts = new Set([
   "node_modules",
   "src",
   "tests",
+  "__tests__",
   "fixtures",
   ".env",
   ".git",
@@ -58,7 +59,9 @@ async function validateDirectory(directory, label) {
   }
 
   const files = await listFiles(directory);
-  const relativeFiles = files.map((file) => path.relative(directory, file).replaceAll(path.sep, "/")).sort();
+  const relativeFiles = files
+    .map((file) => path.relative(directory, file).replaceAll(path.sep, "/"))
+    .sort();
   const missingFiles = [...requiredFiles].filter((file) => !relativeFiles.includes(file));
   const extraFiles = relativeFiles.filter((file) => !requiredFiles.has(file));
 
@@ -132,10 +135,15 @@ async function validateManifest(manifestPath, label) {
   const hostPermissions = new Set(manifest.host_permissions ?? []);
 
   if (!permissions.has("activeTab") || !permissions.has("downloads")) {
-    throw new Error(`${label} manifest must only support manual active-tab export and JSON download.`);
+    throw new Error(
+      `${label} manifest must only support manual active-tab export and JSON download.`
+    );
   }
 
-  if (!hostPermissions.has("https://sokker.org/*") || !hostPermissions.has("https://*.sokker.org/*")) {
+  if (
+    !hostPermissions.has("https://sokker.org/*") ||
+    !hostPermissions.has("https://*.sokker.org/*")
+  ) {
     throw new Error(`${label} manifest must be scoped to Sokker pages.`);
   }
 }

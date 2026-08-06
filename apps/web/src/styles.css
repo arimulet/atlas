@@ -30,6 +30,16 @@ button {
   padding: 11px 16px;
 }
 
+.secondary-button {
+  background: #edf2f0;
+  color: #40513f;
+}
+
+.secondary-button.active {
+  background: #16695f;
+  color: #ffffff;
+}
+
 .app-shell {
   min-height: 100vh;
   padding: 28px;
@@ -278,6 +288,149 @@ h4 {
   gap: 8px;
 }
 
+.module-card button {
+  justify-self: start;
+}
+
+.module-topbar {
+  align-items: center;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+}
+
+.squad-economy-view,
+.player-development-view,
+.squad-market-view {
+  display: grid;
+  gap: 18px;
+}
+
+.economy-columns,
+.development-columns {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.concentration-list {
+  display: grid;
+  gap: 10px;
+}
+
+.concentration-row {
+  align-items: center;
+  background: #f8faf9;
+  border: 1px solid #e2e8e4;
+  border-radius: 6px;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 12px;
+}
+
+.concentration-row div {
+  display: grid;
+  gap: 4px;
+}
+
+.concentration-row span {
+  color: #52616b;
+}
+
+.player-detail-table {
+  border: 1px solid #e2e8e4;
+  border-radius: 8px;
+  display: grid;
+  overflow: hidden;
+}
+
+.player-detail-row {
+  align-items: center;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(130px, 1.4fr) repeat(5, minmax(82px, 0.8fr)) minmax(150px, 1.2fr);
+  padding: 11px 12px;
+}
+
+.player-detail-row:nth-child(even) {
+  background: #f8faf9;
+}
+
+.player-detail-row.header {
+  background: #edf2f0;
+  color: #40513f;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.player-detail-row span,
+.player-detail-row strong {
+  overflow-wrap: anywhere;
+}
+
+.development-list {
+  display: grid;
+  gap: 14px;
+}
+
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.development-card {
+  background: #ffffff;
+}
+
+.skill-chip-list,
+.skill-change-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.skill-chip,
+.skill-change {
+  background: #f8faf9;
+  border: 1px solid #e2e8e4;
+  border-radius: 999px;
+  color: #40513f;
+  font-size: 0.84rem;
+  font-weight: 700;
+  padding: 6px 9px;
+}
+
+.skill-change.up {
+  background: #dcfce7;
+  border-color: #86efac;
+  color: #166534;
+}
+
+.skill-change.down {
+  background: #fee4e2;
+  border-color: #f3b5ae;
+  color: #b42318;
+}
+
+.skill-change.insufficient_data {
+  background: #fef3c7;
+  border-color: #e7c75f;
+  color: #92400e;
+}
+
+.signal-card {
+  background: #f8faf9;
+  border: 1px solid #e2e8e4;
+  border-radius: 8px;
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+}
+
 .module-card.available {
   border-color: #8ac7ad;
 }
@@ -446,12 +599,84 @@ code {
   color: #5b21b6;
 }
 
+.trace-kind.inferred {
+  background: #ede9fe;
+  color: #5b21b6;
+}
+
+.development-summary-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.development-counts {
+  margin-top: 0;
+}
+
+.trace-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.market-timing-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.market-timing-grid .detail-block {
+  background: #f8faf9;
+  border: 1px solid #e2e8e4;
+  border-radius: 6px;
+  padding: 12px;
+}
+
+.inline-warning {
+  background: #fffbeb;
+  border: 1px solid #e7c75f;
+  border-radius: 6px;
+  color: #92400e;
+  line-height: 1.5;
+  margin-bottom: 0;
+  padding: 10px 12px;
+}
+
+.highlight-list {
+  display: grid;
+  gap: 8px;
+}
+
+.highlight-row {
+  align-items: center;
+  background: #f8faf9;
+  border: 1px solid #e2e8e4;
+  border-radius: 6px;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 10px 12px;
+}
+
+.highlight-row div {
+  display: grid;
+  gap: 3px;
+}
+
+.highlight-row span:not(.severity) {
+  color: #52616b;
+  font-size: 0.9rem;
+}
+
 @media (max-width: 720px) {
   .app-shell {
     padding: 18px;
   }
 
   .dashboard-grid,
+  .economy-columns,
+  .development-columns,
+  .market-timing-grid,
   .settings-columns {
     grid-template-columns: 1fr;
   }
@@ -461,6 +686,7 @@ code {
   }
 
   .topbar,
+  .module-topbar,
   .dropzone,
   .finding-header {
     align-items: stretch;
@@ -469,5 +695,21 @@ code {
 
   .status-pill {
     white-space: normal;
+  }
+
+  .player-detail-table {
+    border: 0;
+    gap: 10px;
+  }
+
+  .player-detail-row,
+  .player-detail-row.header {
+    border: 1px solid #e2e8e4;
+    border-radius: 8px;
+    grid-template-columns: 1fr;
+  }
+
+  .player-detail-row.header {
+    display: none;
   }
 }
