@@ -1,4 +1,4 @@
-name: CI CD Workflow Atlas
+name: CI CD Workflow Atlas 1
 
 on:
   workflow_dispatch: # Permite ejecutar el workflow manualmente desde la web
