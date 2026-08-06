@@ -197,7 +197,8 @@ function playerFromTableRow(
   const age = parseFirstNumber(valueFor(textByHeader, fieldLabels.age));
   const wage = parseMoney(valueFor(textByHeader, fieldLabels.wage));
   const estimatedValue = parseMoney(valueFor(textByHeader, fieldLabels.estimatedValue));
-  const skills = parseSkillsFromTable(textByHeader);
+  const rowText = readElementText(row);
+  const skills = parseSkillsFromTable(textByHeader, rowText);
 
   if (!name || age === null || wage.amount === null || estimatedValue.amount === null) {
     return null;
@@ -212,7 +213,7 @@ function playerFromTableRow(
     wage: { amount: wage.amount, currency: wage.currency },
     estimatedValue: { amount: estimatedValue.amount, currency: estimatedValue.currency },
     form: parseFirstNumber(valueFor(textByHeader, fieldLabels.form)),
-    availabilityStatus: parseAvailability(valueFor(textByHeader, fieldLabels.availabilityStatus) || readElementText(row)),
+    availabilityStatus: parseAvailability(valueFor(textByHeader, fieldLabels.availabilityStatus) || rowText),
     observedPosition: nullable(valueFor(textByHeader, fieldLabels.observedPosition)),
     skills
   };
@@ -258,13 +259,17 @@ function playerFromCard(
   };
 }
 
-function parseSkillsFromTable(textByHeader: Map<string, string>): Record<SkillKey, number | null> {
+function parseSkillsFromTable(
+  textByHeader: Map<string, string>,
+  rowText: string
+): Record<SkillKey, number | null> {
   return Object.fromEntries(
     skillKeys.map((skill) => {
       const rawValue = valueFor(textByHeader, skillLabels[skill]);
       const labeledValue = findValueAfterLabel(rawValue, skillLabels[skill]);
+      const fallbackValue = findValueAfterLabel(rowText, skillLabels[skill]);
 
-      return [skill, parseSkillValue(labeledValue || rawValue)];
+      return [skill, parseSkillValue(labeledValue || rawValue || fallbackValue)];
     })
   ) as Record<SkillKey, number | null>;
 }
@@ -419,7 +424,7 @@ function findValueAfterLabel(text: string, labels: string[]): string {
 }
 
 function findLabeledNumber(text: string, labels: string[]): number | null {
-  const directValue = parseFirstNumber(findValueAfterLabel(text, labels));
+  const directValue = parseBoundedLabeledNumber(findValueAfterLabel(text, labels));
 
   if (directValue !== null) {
     return directValue;
@@ -428,7 +433,7 @@ function findLabeledNumber(text: string, labels: string[]): number | null {
   const normalized = normalizeLabel(text);
 
   for (const label of labels) {
-    const match = normalized.match(new RegExp(`${normalizeLabel(label)}\\s*(\\d+)`));
+    const match = normalized.match(new RegExp(`${normalizeLabel(label)}\\s*[:\\-]?\\s*(\\d{1,3})\\b`));
 
     if (match?.[1]) {
       return Number(match[1]);
@@ -436,6 +441,16 @@ function findLabeledNumber(text: string, labels: string[]): number | null {
   }
 
   return null;
+}
+
+function parseBoundedLabeledNumber(value: string | undefined): number | null {
+  const parsed = parseFirstNumber(value);
+
+  if (parsed === null || parsed > 999) {
+    return null;
+  }
+
+  return parsed;
 }
 
 function findPlayerId(element: Element): string | null {
@@ -565,6 +580,14 @@ function currencyFromSymbol(value: string): string | null {
 
   if (value.includes("R$")) {
     return "BRL";
+  }
+
+  if (value.includes("US$")) {
+    return "USD";
+  }
+
+  if (value.includes("$")) {
+    return "ARS";
   }
 
   return null;

@@ -109,6 +109,7 @@ describe("Sokker DOM export parser", () => {
       <html lang="es">
         <head><title>Equipo - Sokker Manager</title></head>
         <body>
+          <p>Temporada 78 Semana 7 2026 2026</p>
           <table>
             <thead>
               <tr>
@@ -118,32 +119,18 @@ describe("Sokker DOM export parser", () => {
                 <th title="Valor estimado"></th>
                 <th title="Forma"></th>
                 <th title="Estado"></th>
-                <th title="Condicion"></th>
-                <th title="Rapidez"></th>
-                <th title="Tecnica"></th>
-                <th title="Pases"></th>
-                <th title="Porteria"></th>
-                <th title="Defensa"></th>
-                <th title="Creacion"></th>
-                <th title="Anotacion"></th>
+                <th title="Habilidades"></th>
               </tr>
             </thead>
             <tbody>
               <tr>
                 <td><a href="/es/app/player/38643161">Ryan Ahlburg</a></td>
                 <td>34</td>
-                <td>33 450 EUR</td>
-                <td>1 550 000 EUR</td>
+                <td>33 450 $</td>
+                <td>1 550 000 $</td>
                 <td>6</td>
                 <td title="Estado:"></td>
-                <td title="Condicion: solido"></td>
-                <td title="Rapidez: excelente"></td>
-                <td title="Tecnica: muy bueno"></td>
-                <td title="Pases: bueno"></td>
-                <td title="Porteria: tragico"></td>
-                <td title="Defensa: excelente"></td>
-                <td title="Creacion: solido"></td>
-                <td title="Anotacion: bueno"></td>
+                <td title="Condicion: solido Rapidez: excelente Tecnica: muy bueno Pases: bueno Porteria: tragico Defensa: excelente Creacion: solido Anotacion: bueno"></td>
               </tr>
             </tbody>
           </table>
@@ -160,8 +147,8 @@ describe("Sokker DOM export parser", () => {
     expect(result.snapshot.players[0]).toMatchObject({
       externalId: "38643161",
       name: "Ryan Ahlburg",
-      wage: { amount: 33450, currency: "EUR" },
-      estimatedValue: { amount: 1550000, currency: "EUR" },
+      wage: { amount: 33450, currency: "ARS" },
+      estimatedValue: { amount: 1550000, currency: "ARS" },
       availabilityStatus: "available",
       observedPosition: null,
       skills: {
@@ -175,6 +162,7 @@ describe("Sokker DOM export parser", () => {
         striker: 7
       }
     });
+    expect(result.snapshot.snapshot).toMatchObject({ season: 78, week: 7 });
     expect(result.warnings).toEqual([]);
   });
 
