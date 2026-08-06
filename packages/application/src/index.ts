@@ -2,6 +2,7 @@ import { validatePlayerSnapshotV0, type PlayerSnapshotValidationResult } from "@
 
 export * from "./importPlayerSnapshot.js";
 export * from "./generateBasicDiagnostic.js";
+export * from "./generateClubHistoricalFindings.js";
 export * from "./importPlayerSnapshotMvp.js";
 export * from "./compareClubSnapshots.js";
 export * from "./calculateClubHistoricalTrends.js";

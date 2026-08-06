@@ -3,6 +3,7 @@ import Fastify from "fastify";
 import {
   calculateClubHistoricalTrends,
   compareClubSnapshots,
+  generateClubHistoricalFindings,
   importPlayerSnapshotMvp,
   listClubSnapshots,
   validatePlayerSnapshotImport
@@ -68,6 +69,12 @@ export function buildServer() {
     const { clubId } = request.params as { clubId: string };
 
     return calculateClubHistoricalTrends({ clubId });
+  });
+
+  server.get("/api/clubs/:clubId/historical-findings", async (request) => {
+    const { clubId } = request.params as { clubId: string };
+
+    return generateClubHistoricalFindings({ clubId });
   });
 
   return server;
