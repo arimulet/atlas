@@ -278,6 +278,53 @@ h4 {
   gap: 8px;
 }
 
+.module-card button {
+  justify-self: start;
+}
+
+.module-topbar {
+  align-items: center;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+}
+
+.squad-economy-view {
+  display: grid;
+  gap: 18px;
+}
+
+.economy-columns {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.concentration-list {
+  display: grid;
+  gap: 10px;
+}
+
+.concentration-row {
+  align-items: center;
+  background: #f8faf9;
+  border: 1px solid #e2e8e4;
+  border-radius: 6px;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 12px;
+}
+
+.concentration-row div {
+  display: grid;
+  gap: 4px;
+}
+
+.concentration-row span {
+  color: #52616b;
+}
+
 .module-card.available {
   border-color: #8ac7ad;
 }
@@ -452,6 +499,7 @@ code {
   }
 
   .dashboard-grid,
+  .economy-columns,
   .settings-columns {
     grid-template-columns: 1fr;
   }
@@ -461,6 +509,7 @@ code {
   }
 
   .topbar,
+  .module-topbar,
   .dropzone,
   .finding-header {
     align-items: stretch;

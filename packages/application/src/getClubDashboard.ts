@@ -21,7 +21,14 @@ export interface ClubDashboard {
     canCompare: boolean;
   };
   operationalAreas: Array<{
-    key: "diagnostic" | "history" | "findings" | "economy" | "training" | "academy" | "market";
+    key:
+      | "diagnostic"
+      | "history"
+      | "findings"
+      | "squad-economy"
+      | "training"
+      | "academy"
+      | "market";
     label: string;
     status: "available" | "ready" | "planned";
     summary: string;
@@ -95,10 +102,12 @@ function buildOperationalAreas(snapshotCount: number): ClubDashboard["operationa
         : "Se activan con historial suficiente."
     },
     {
-      key: "economy",
-      label: "Economia",
-      status: "planned",
-      summary: "Acceso futuro; modulo no implementado todavia."
+      key: "squad-economy",
+      label: "Economia de plantilla",
+      status: hasSnapshot ? "available" : "ready",
+      summary: hasSnapshot
+        ? "Disponible desde salarios y valores observados."
+        : "Listo cuando exista un snapshot de plantilla."
     },
     {
       key: "training",

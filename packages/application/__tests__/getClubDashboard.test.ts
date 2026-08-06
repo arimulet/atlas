@@ -87,7 +87,7 @@ describe("Club dashboard use case", () => {
       expect.arrayContaining([
         expect.objectContaining({ key: "diagnostic", status: "available" }),
         expect.objectContaining({ key: "history", status: "ready" }),
-        expect.objectContaining({ key: "economy", status: "planned" })
+        expect.objectContaining({ key: "squad-economy", status: "available" })
       ])
     );
   });

@@ -19,8 +19,15 @@ test("imports a valid JSON snapshot and shows summary plus diagnostic", async ({
   await expect(page.getByText("effective").first()).toBeVisible();
   await expect(page.getByRole("heading", { name: "Historical availability" })).toBeVisible();
   await expect(page.getByText("Needs history")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Economia" })).toBeVisible();
-  await expect(page.getByText("Acceso futuro; modulo no implementado todavia.").first()).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Economia de plantilla" })).toBeVisible();
+  await expect(page.getByText("Disponible desde salarios y valores observados.")).toBeVisible();
+  await page.getByRole("button", { name: "Abrir Economia de plantilla" }).click();
+  await expect(page.getByRole("heading", { name: "Lectura derivada de plantilla" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Resumen economico observado" })).toBeVisible();
+  await expect(page.getByText("Masa salarial", { exact: true })).toBeVisible();
+  await expect(page.getByText("Valor estimado total")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Hallazgos explicables" })).toBeVisible();
+  await page.getByRole("button", { name: "Volver al dashboard" }).click();
   await expect(page.getByRole("heading", { name: "Squad summary" })).toBeVisible();
   await expect(page.getByText("River Plate Forever").first()).toBeVisible();
   await expect(page.getByText("2026-08-05").first()).toBeVisible();

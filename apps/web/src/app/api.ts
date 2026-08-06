@@ -1,4 +1,4 @@
-import type { ClubDashboard, ImportResponse } from "./types";
+import type { ClubDashboard, ImportResponse, SquadEconomy } from "./types";
 
 export async function fetchClubDashboard(clubId: string): Promise<ClubDashboard> {
   const response = await fetch(`/api/clubs/${clubId}/dashboard`);
@@ -9,6 +9,17 @@ export async function fetchClubDashboard(clubId: string): Promise<ClubDashboard>
   }
 
   return body.dashboard;
+}
+
+export async function fetchSquadEconomy(clubId: string): Promise<SquadEconomy> {
+  const response = await fetch(`/api/clubs/${clubId}/squad-economy`);
+  const body = (await response.json()) as { squadEconomy?: SquadEconomy };
+
+  if (!response.ok || !body.squadEconomy) {
+    throw new Error("Squad economy API returned an unexpected response.");
+  }
+
+  return body.squadEconomy;
 }
 
 export async function importPlayerSnapshot(payload: unknown): Promise<{
