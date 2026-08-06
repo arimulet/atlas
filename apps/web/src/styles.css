@@ -619,6 +619,19 @@ code {
   gap: 8px;
 }
 
+.market-timing-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.market-timing-grid .detail-block {
+  background: #f8faf9;
+  border: 1px solid #e2e8e4;
+  border-radius: 6px;
+  padding: 12px;
+}
+
 .inline-warning {
   background: #fffbeb;
   border: 1px solid #e7c75f;
@@ -663,6 +676,7 @@ code {
   .dashboard-grid,
   .economy-columns,
   .development-columns,
+  .market-timing-grid,
   .settings-columns {
     grid-template-columns: 1fr;
   }
