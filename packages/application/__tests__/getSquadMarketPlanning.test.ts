@@ -142,6 +142,68 @@ describe("Squad market planning use case", () => {
       expect.arrayContaining([expect.objectContaining({ code: "partial_market_data" })])
     );
   });
+
+  it("explains near-term timing for an older player with declining internal value", async () => {
+    const first = withPlayer(readValidSnapshot(), {
+      age: 31,
+      wage: { amount: 26000, currency: "ARS" },
+      estimatedValue: { amount: 600000, currency: "ARS" }
+    });
+    const second = withSnapshotDate(first, "2026-08-12", 5, {});
+    const third = withPlayer(withSnapshotDate(first, "2026-08-19", 6, {}), {
+      age: 31,
+      wage: { amount: 30000, currency: "ARS" },
+      estimatedValue: { amount: 480000, currency: "ARS" }
+    });
+    const importResult = await importPlayerSnapshot({ payload: first });
+    await importPlayerSnapshot({ payload: second });
+    await importPlayerSnapshot({ payload: third });
+
+    const planning = await getSquadMarketPlanning({ clubId: importResult.clubId! });
+
+    expect(planning.derived.players[0]).toMatchObject({
+      category: "sale_candidate",
+      timing: {
+        label: "Revision cercana",
+        window: { from: "2026-08-05", to: "2026-08-19", snapshotCount: 3 }
+      }
+    });
+    expect(planning.derived.players[0]?.signals).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "senior_declining_value_timing",
+          evidence: expect.arrayContaining([
+            expect.objectContaining({ label: "Variacion valor %" })
+          ])
+        })
+      ])
+    );
+  });
+
+  it("keeps contradictory timing at low confidence", async () => {
+    const first = withPlayer(readValidSnapshot(), {
+      age: 22,
+      estimatedValue: { amount: 700000, currency: "ARS" }
+    });
+    const second = withPlayer(withSnapshotDate(first, "2026-08-12", 5, { pace: 11 }), {
+      age: 22,
+      estimatedValue: { amount: 600000, currency: "ARS" }
+    });
+    const importResult = await importPlayerSnapshot({ payload: first });
+    await importPlayerSnapshot({ payload: second });
+
+    const planning = await getSquadMarketPlanning({ clubId: importResult.clubId! });
+
+    expect(planning.derived.players[0]).toMatchObject({
+      confidence: "low",
+      timing: { label: "Timing contradictorio" }
+    });
+    expect(planning.derived.players[0]?.warnings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: "contradictory_market_signals" })
+      ])
+    );
+  });
 });
 
 function readValidSnapshot(): SnapshotFixture {
