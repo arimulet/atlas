@@ -1,11 +1,4 @@
-import type {
-  ClubDashboard,
-  ImportResponse,
-  PlayerDevelopment,
-  SquadEconomy,
-  SquadMarketPlanning,
-  YouthPipelinePlanning
-} from "./types";
+import type { ClubDashboard, ImportResponse } from "./types";
 
 export async function fetchClubDashboard(clubId: string): Promise<ClubDashboard> {
   const response = await fetch(`/api/clubs/${clubId}/dashboard`);
@@ -16,50 +9,6 @@ export async function fetchClubDashboard(clubId: string): Promise<ClubDashboard>
   }
 
   return body.dashboard;
-}
-
-export async function fetchSquadEconomy(clubId: string): Promise<SquadEconomy> {
-  const response = await fetch(`/api/clubs/${clubId}/squad-economy`);
-  const body = (await response.json()) as { squadEconomy?: SquadEconomy };
-
-  if (!response.ok || !body.squadEconomy) {
-    throw new Error("Squad economy API returned an unexpected response.");
-  }
-
-  return body.squadEconomy;
-}
-
-export async function fetchPlayerDevelopment(clubId: string): Promise<PlayerDevelopment> {
-  const response = await fetch(`/api/clubs/${clubId}/player-development`);
-  const body = (await response.json()) as { playerDevelopment?: PlayerDevelopment };
-
-  if (!response.ok || !body.playerDevelopment) {
-    throw new Error("Player development API returned an unexpected response.");
-  }
-
-  return body.playerDevelopment;
-}
-
-export async function fetchSquadMarketPlanning(clubId: string): Promise<SquadMarketPlanning> {
-  const response = await fetch(`/api/clubs/${clubId}/squad-market-planning`);
-  const body = (await response.json()) as { squadMarketPlanning?: SquadMarketPlanning };
-
-  if (!response.ok || !body.squadMarketPlanning) {
-    throw new Error("Squad market planning API returned an unexpected response.");
-  }
-
-  return body.squadMarketPlanning;
-}
-
-export async function fetchYouthPipelinePlanning(clubId: string): Promise<YouthPipelinePlanning> {
-  const response = await fetch(`/api/clubs/${clubId}/youth-pipeline-planning`);
-  const body = (await response.json()) as { youthPipelinePlanning?: YouthPipelinePlanning };
-
-  if (!response.ok || !body.youthPipelinePlanning) {
-    throw new Error("Youth pipeline planning API returned an unexpected response.");
-  }
-
-  return body.youthPipelinePlanning;
 }
 
 export async function importPlayerSnapshot(payload: unknown): Promise<{
