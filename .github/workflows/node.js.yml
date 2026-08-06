@@ -1,0 +1,32 @@
+name: CI Web App
+
+on:
+  pull_request:
+    branches: [ develop ]
+    types: [ opened, synchronize, reopened ]
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar codigo fuente
+        uses: actions/checkout@v4
+
+      - name: Configurar entorno Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Validar estilo y tipos (Linter)
+        run: npm run lint --if-present
+
+      - name: Ejecutar pruebas unitarias
+        run: npm test
+
+      - name: Compilar proyecto (Build)
+        run: npm run build
