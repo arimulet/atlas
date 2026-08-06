@@ -1,0 +1,20 @@
+{
+  "name": "@atlas/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json --noEmit",
+    "dev": "tsx watch src/server.ts",
+    "start": "node dist/server.js"
+  },
+  "dependencies": {
+    "@atlas/application": "0.1.0",
+    "@atlas/database": "0.1.0",
+    "dotenv": "^17.4.2",
+    "fastify": "^5.4.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.20.3"
+  }
+}

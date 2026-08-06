@@ -1,0 +1,46 @@
+{
+  "schemaVersion": "atlas.player-snapshot.v0",
+  "source": {
+    "type": "sokker-dom-export",
+    "exportedAt": "2026-08-05T20:30:00.000Z",
+    "pageUrl": "https://sokker.org/team/100/players",
+    "locale": "es-AR"
+  },
+  "club": {
+    "externalId": "100",
+    "name": "River Plate Forever"
+  },
+  "snapshot": {
+    "snapshotDate": "2026-08-05",
+    "season": 78,
+    "week": 4
+  },
+  "players": [
+    {
+      "externalId": "101",
+      "name": "Tomas Alvarez",
+      "age": 22,
+      "wage": {
+        "amount": 12000,
+        "currency": "ARS"
+      },
+      "estimatedValue": {
+        "amount": 450000,
+        "currency": "ARS"
+      },
+      "form": 10,
+      "availabilityStatus": "available",
+      "observedPosition": "midfielder",
+      "skills": {
+        "stamina": 8,
+        "pace": 10,
+        "technique": 9,
+        "passing": 8,
+        "keeper": 1,
+        "defender": 5,
+        "playmaker": 9,
+        "striker": 4
+      }
+    }
+  ]
+}

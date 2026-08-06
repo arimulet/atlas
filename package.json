@@ -1,0 +1,35 @@
+{
+  "name": "atlas",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "extension:build": "npm run build -w @atlas/extension && npm run extension:validate",
+    "extension:package": "npm run extension:build && node scripts/extension-local-package.mjs package",
+    "extension:validate": "node scripts/extension-local-package.mjs validate",
+    "dev:api": "npm run dev -w @atlas/api",
+    "dev:web": "npm run dev -w @atlas/web",
+    "dev:extension": "npm run dev -w @atlas/extension",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "test": "vitest run --exclude e2e/**",
+    "test:e2e": "playwright test",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.32.0",
+    "@playwright/test": "^1.62.1",
+    "@types/node": "^24.1.0",
+    "eslint": "^9.32.0",
+    "mongodb-memory-server": "^11.2.0",
+    "prettier": "^3.6.2",
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.38.0",
+    "vitest": "^3.2.4"
+  }
+}

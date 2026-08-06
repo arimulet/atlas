@@ -1,0 +1,15 @@
+{
+  "name": "@atlas/test-fixtures",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./player-snapshot/valid.json": "./fixtures/player-snapshot/valid.json",
+    "./player-snapshot/invalid.json": "./fixtures/player-snapshot/invalid.json",
+    "./player-snapshot/accepted-with-warnings.json": "./fixtures/player-snapshot/accepted-with-warnings.json",
+    "./player-snapshot/missing-external-id.json": "./fixtures/player-snapshot/missing-external-id.json",
+    "./player-snapshot/missing-skill.json": "./fixtures/player-snapshot/missing-skill.json",
+    "./player-snapshot/extension-sokker-dom-export.json": "./fixtures/player-snapshot/extension-sokker-dom-export.json",
+    "./player-snapshot/sokker-squad-player-box-export.json": "./fixtures/player-snapshot/sokker-squad-player-box-export.json"
+  }
+}
