@@ -16,9 +16,10 @@ const preferenceLabels: Record<OperatingPreferenceKey, string> = {
 export interface DashboardPanelProps {
   dashboard: ClubDashboard | null;
   status: DashboardStatus;
+  onOpenSquadEconomy?: () => void;
 }
 
-export function DashboardPanel({ dashboard, status }: DashboardPanelProps) {
+export function DashboardPanel({ dashboard, status, onOpenSquadEconomy }: DashboardPanelProps) {
   if (status === "loading") {
     return (
       <section className="panel">
@@ -53,7 +54,7 @@ export function DashboardPanel({ dashboard, status }: DashboardPanelProps) {
           <p className="eyebrow">Access</p>
           <h2>Operational areas</h2>
         </div>
-        <ModuleGrid areas={dashboard.operationalAreas} />
+        <ModuleGrid areas={dashboard.operationalAreas} onOpenSquadEconomy={onOpenSquadEconomy} />
       </section>
     </section>
   );

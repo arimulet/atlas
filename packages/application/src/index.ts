@@ -10,6 +10,7 @@ export * from "./getClubProfile.js";
 export * from "./updateClubProfile.js";
 export * from "./clubOperatingSettings.js";
 export * from "./getClubDashboard.js";
+export * from "./getSquadEconomy.js";
 
 export interface ValidatePlayerSnapshotInput {
   payload: unknown;

@@ -2,9 +2,10 @@ import type { OperationalArea } from "../types";
 
 export interface ModuleGridProps {
   areas: OperationalArea[];
+  onOpenSquadEconomy?: () => void;
 }
 
-export function ModuleGrid({ areas }: ModuleGridProps) {
+export function ModuleGrid({ areas, onOpenSquadEconomy }: ModuleGridProps) {
   return (
     <div className="module-grid">
       {areas.map((area) => (
@@ -14,6 +15,11 @@ export function ModuleGrid({ areas }: ModuleGridProps) {
             <span className={`module-status ${area.status}`}>{area.status}</span>
           </div>
           <p>{area.summary}</p>
+          {area.key === "squad-economy" && area.status === "available" ? (
+            <button type="button" onClick={onOpenSquadEconomy}>
+              Abrir Economia de plantilla
+            </button>
+          ) : null}
         </article>
       ))}
     </div>

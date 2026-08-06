@@ -1,0 +1,191 @@
+import fs from "node:fs";
+import path from "node:path";
+import mongoose from "mongoose";
+import { MongoMemoryServer } from "mongodb-memory-server";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { ClubModel, ImportEventModel, PlayerModel, SnapshotModel } from "@atlas/database";
+import {
+  getSquadEconomy,
+  importPlayerSnapshot,
+  updateClubOperatingSettings
+} from "../src/index.js";
+
+let mongo: MongoMemoryServer;
+
+const validSnapshotPath = path.resolve(
+  "packages/test-fixtures/fixtures/player-snapshot/valid.json"
+);
+
+describe("Squad economy use case", () => {
+  beforeAll(async () => {
+    mongo = await MongoMemoryServer.create();
+    await mongoose.connect(mongo.getUri());
+  });
+
+  beforeEach(async () => {
+    await Promise.all([
+      ClubModel.deleteMany({}),
+      ImportEventModel.deleteMany({}),
+      PlayerModel.deleteMany({}),
+      SnapshotModel.deleteMany({})
+    ]);
+  });
+
+  afterAll(async () => {
+    await mongoose.disconnect();
+    await mongo.stop();
+  });
+
+  it("returns Economia de plantilla from the latest snapshot and effective risk settings", async () => {
+    const importResult = await importPlayerSnapshot({ payload: readValidSnapshot() });
+
+    await updateClubOperatingSettings({
+      clubId: importResult.clubId!,
+      manual: {
+        currency: "ARS",
+        preferences: { "economy.riskTolerance": "conservative" }
+      }
+    });
+
+    const squadEconomy = await getSquadEconomy({ clubId: importResult.clubId! });
+
+    expect(squadEconomy.snapshotDate).toBe("2026-08-05");
+    expect(squadEconomy.manual).toEqual({
+      currency: "ARS",
+      riskTolerance: "conservative"
+    });
+    expect(squadEconomy.derived.totalWage).toMatchObject({
+      amount: 12000,
+      currency: "ARS",
+      isComplete: true
+    });
+    expect(squadEconomy.derived.totalEstimatedValue).toMatchObject({
+      amount: 450000,
+      currency: "ARS",
+      isComplete: true
+    });
+    expect(squadEconomy.derived.wageToValueRatio).toBe(0.0267);
+    expect(squadEconomy.derived.concentration.wage[0]).toMatchObject({
+      name: "Tomas Alvarez",
+      share: 1
+    });
+    expect(squadEconomy.findings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "salary_concentration",
+          severity: "high"
+        })
+      ])
+    );
+  });
+
+  it("uses comparable historical snapshots when currencies are available", async () => {
+    const first = readValidSnapshot();
+    const second = {
+      ...first,
+      source: { ...first.source, exportedAt: "2026-08-12T12:00:00.000Z" },
+      snapshot: { ...first.snapshot, snapshotDate: "2026-08-12", week: 5 },
+      players: first.players.map((player) => ({
+        ...player,
+        wage: { ...player.wage, amount: 15000 },
+        estimatedValue: { ...player.estimatedValue, amount: 460000 }
+      }))
+    };
+
+    const importResult = await importPlayerSnapshot({ payload: first });
+    await importPlayerSnapshot({ payload: second });
+
+    const squadEconomy = await getSquadEconomy({ clubId: importResult.clubId! });
+
+    expect(squadEconomy.historical.comparableSnapshotCount).toBe(2);
+    expect(squadEconomy.historical.previousSnapshot?.snapshotDate).toBe("2026-08-05");
+    expect(squadEconomy.historical.currentSnapshot?.snapshotDate).toBe("2026-08-12");
+    expect(squadEconomy.historical.changes).toMatchObject({
+      totalWageDelta: 3000,
+      totalWageDeltaPercent: 0.25,
+      totalEstimatedValueDelta: 10000,
+      totalEstimatedValueDeltaPercent: 0.0222
+    });
+    expect(squadEconomy.findings).toEqual(
+      expect.arrayContaining([expect.objectContaining({ code: "wage_growth_without_asset_growth" })])
+    );
+  });
+
+  it("warns instead of making strong historical conclusions when currency is missing", async () => {
+    const first = withoutCurrencies(readValidSnapshot());
+    const second = {
+      ...first,
+      source: { ...first.source, exportedAt: "2026-08-12T12:00:00.000Z" },
+      snapshot: { ...first.snapshot, snapshotDate: "2026-08-12", week: 5 }
+    };
+
+    const importResult = await importPlayerSnapshot({ payload: first });
+    await importPlayerSnapshot({ payload: second });
+
+    const squadEconomy = await getSquadEconomy({ clubId: importResult.clubId! });
+
+    expect(squadEconomy.historical.comparableSnapshotCount).toBe(0);
+    expect(squadEconomy.warnings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: "missing_currency" }),
+        expect.objectContaining({ code: "insufficient_history" })
+      ])
+    );
+    expect(squadEconomy.findings.every((finding) => finding.confidence !== "high")).toBe(true);
+  });
+
+  it("marks totals incomplete when player economy data is partial", async () => {
+    const payload = {
+      ...readValidSnapshot(),
+      players: [
+        ...readValidSnapshot().players,
+        {
+          ...readValidSnapshot().players[0],
+          externalId: "partial-player",
+          name: "Partial Player",
+          wage: { amount: 0, currency: "ARS" },
+          estimatedValue: { amount: 0, currency: "ARS" }
+        }
+      ]
+    };
+
+    const importResult = await importPlayerSnapshot({ payload });
+
+    const squadEconomy = await getSquadEconomy({ clubId: importResult.clubId! });
+
+    expect(squadEconomy.observed.coverage).toMatchObject({
+      playerCount: 2,
+      playersWithWage: 1,
+      playersWithEstimatedValue: 1
+    });
+    expect(squadEconomy.derived.totalWage.isComplete).toBe(false);
+    expect(squadEconomy.derived.totalEstimatedValue.isComplete).toBe(false);
+    expect(squadEconomy.warnings).toEqual(
+      expect.arrayContaining([expect.objectContaining({ code: "partial_player_economy_data" })])
+    );
+  });
+});
+
+function readValidSnapshot() {
+  return JSON.parse(fs.readFileSync(validSnapshotPath, "utf8")) as {
+    source: { exportedAt: string };
+    snapshot: { snapshotDate: string; week: number };
+    players: Array<{
+      externalId: string | null;
+      name: string;
+      wage: { amount: number; currency: string | null };
+      estimatedValue: { amount: number; currency: string | null };
+    }>;
+  };
+}
+
+function withoutCurrencies(snapshot: ReturnType<typeof readValidSnapshot>) {
+  return {
+    ...snapshot,
+    players: snapshot.players.map((player) => ({
+      ...player,
+      wage: { ...player.wage, currency: null },
+      estimatedValue: { ...player.estimatedValue, currency: null }
+    }))
+  };
+}
