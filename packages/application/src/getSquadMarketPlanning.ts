@@ -9,13 +9,13 @@ import { getPlayerDevelopment, type PlayerDevelopmentPlayerSummary } from "./get
 import { getSquadEconomy, type SquadEconomyPlayerDetail } from "./getSquadEconomy.js";
 
 type MarketStrategy = "conservative" | "balanced" | "opportunistic";
-type MarketPlanningCategory =
+export type MarketPlanningCategory =
   | "sale_candidate"
   | "protection_candidate"
   | "follow_up"
   | "insufficient_signal";
-type MarketPlanningSeverity = "info" | "low" | "medium" | "high";
-type MarketPlanningConfidence = "low" | "medium" | "high";
+export type MarketPlanningSeverity = "info" | "low" | "medium" | "high";
+export type MarketPlanningConfidence = "low" | "medium" | "high";
 type EvidenceKind = "observed" | "manual" | "derived" | "inferred";
 
 export interface GetSquadMarketPlanningInput {

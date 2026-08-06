@@ -6,6 +6,12 @@ import {
 } from "@atlas/database";
 import { buildClubOperatingSettings, type ClubOperatingSettings } from "./clubOperatingSettings.js";
 import { getPlayerDevelopment, type PlayerDevelopmentFinding } from "./getPlayerDevelopment.js";
+import {
+  getSquadMarketPlanning,
+  type MarketPlanningCategory,
+  type MarketPlanningConfidence,
+  type MarketPlanningSeverity
+} from "./getSquadMarketPlanning.js";
 
 export interface GetClubDashboardInput {
   clubId: string;
@@ -22,6 +28,7 @@ export interface ClubDashboard {
     canCompare: boolean;
   };
   developmentSummary: ClubDashboardDevelopmentSummary;
+  marketSummary: ClubDashboardMarketSummary;
   operationalAreas: Array<{
     key:
       | "diagnostic"
@@ -80,6 +87,40 @@ export interface ClubDashboardDevelopmentPlayer {
   confidence: "low" | "medium" | "high";
 }
 
+export interface ClubDashboardMarketSummary {
+  available: boolean;
+  detailPath: string;
+  observed: {
+    snapshotCount: number;
+    latestSnapshotDate: string | null;
+    playerCount: number;
+    playersWithStableIdentity: number;
+  };
+  manual: {
+    marketStrategy: string;
+  };
+  derived: {
+    saleCandidates: number;
+    protectionCandidates: number;
+    followUpPlayers: number;
+    insufficientSignalPlayers: number;
+  };
+  inferred: {
+    headline: string;
+    warning: string | null;
+    highlightedPlayers: ClubDashboardMarketPlayer[];
+  };
+}
+
+export interface ClubDashboardMarketPlayer {
+  playerId: string | null;
+  name: string;
+  signal: MarketPlanningCategory;
+  severity: MarketPlanningSeverity;
+  confidence: MarketPlanningConfidence;
+  timing: string;
+}
+
 const clubRepository = new MongoClubRepository();
 const snapshotRepository = new MongoSnapshotRepository();
 
@@ -93,7 +134,10 @@ export async function getClubDashboard(input: GetClubDashboardInput): Promise<Cl
   const snapshots = await snapshotRepository.listByClub(input.clubId);
   const latest = snapshots.at(-1) ?? null;
   const previous = snapshots.at(-2) ?? null;
-  const development = await getPlayerDevelopment({ clubId: input.clubId });
+  const [development, marketPlanning] = await Promise.all([
+    getPlayerDevelopment({ clubId: input.clubId }),
+    getSquadMarketPlanning({ clubId: input.clubId })
+  ]);
 
   return {
     club,
@@ -106,6 +150,7 @@ export async function getClubDashboard(input: GetClubDashboardInput): Promise<Cl
       canCompare: snapshots.length >= 2
     },
     developmentSummary: buildDevelopmentSummary(input.clubId, development),
+    marketSummary: buildMarketSummary(input.clubId, snapshots.length, marketPlanning),
     operationalAreas: buildOperationalAreas(snapshots.length)
   };
 }
@@ -207,6 +252,94 @@ function signalPriority(signal: ClubDashboardDevelopmentPlayer["signal"]): numbe
   if (signal === "decline") return 4;
   if (signal === "stagnation") return 3;
   if (signal === "improvement") return 2;
+  return 1;
+}
+
+function buildMarketSummary(
+  clubId: string,
+  snapshotCount: number,
+  marketPlanning: Awaited<ReturnType<typeof getSquadMarketPlanning>>
+): ClubDashboardMarketSummary {
+  const counts = marketPlanning.derived.categoryCounts;
+  const derived = {
+    saleCandidates: counts.sale_candidate,
+    protectionCandidates: counts.protection_candidate,
+    followUpPlayers: counts.follow_up,
+    insufficientSignalPlayers: counts.insufficient_signal
+  };
+
+  return {
+    available: marketPlanning.snapshotId !== null,
+    detailPath: `/clubs/${clubId}/squad-market-planning`,
+    observed: {
+      snapshotCount,
+      latestSnapshotDate: marketPlanning.snapshotDate,
+      playerCount: marketPlanning.observed.coverage.playerCount,
+      playersWithStableIdentity: marketPlanning.observed.coverage.playersWithStableIdentity
+    },
+    manual: {
+      marketStrategy: marketPlanning.manual.marketStrategy
+    },
+    derived,
+    inferred: {
+      headline: buildMarketHeadline(derived),
+      warning: marketPlanning.warnings[0]?.message ?? null,
+      highlightedPlayers: marketPlanning.derived.players
+        .filter((player) => player.category !== "insufficient_signal")
+        .map(mapHighlightedMarketPlayer)
+        .sort(compareHighlightedMarketPlayers)
+        .slice(0, 4)
+    }
+  };
+}
+
+function buildMarketHeadline(summary: ClubDashboardMarketSummary["derived"]): string {
+  if (summary.insufficientSignalPlayers > 0) {
+    return "Lectura prudente: hay jugadores con datos insuficientes para mercado interno.";
+  }
+
+  if (summary.saleCandidates > 0) {
+    return "Hay candidatos internos para revisar timing de venta sin automatizar decisiones.";
+  }
+
+  if (summary.protectionCandidates > 0) {
+    return "Hay activos propios con senales de proteccion patrimonial.";
+  }
+
+  if (summary.followUpPlayers > 0) {
+    return "La senal principal es seguimiento interno de activos propios.";
+  }
+
+  return "Sin senales de mercado interno disponibles todavia.";
+}
+
+function mapHighlightedMarketPlayer(
+  player: Awaited<ReturnType<typeof getSquadMarketPlanning>>["derived"]["players"][number]
+): ClubDashboardMarketPlayer {
+  return {
+    playerId: player.playerId,
+    name: player.name,
+    signal: player.category,
+    severity: player.severity,
+    confidence: player.confidence,
+    timing: player.timing.label
+  };
+}
+
+function compareHighlightedMarketPlayers(
+  left: ClubDashboardMarketPlayer,
+  right: ClubDashboardMarketPlayer
+): number {
+  return (
+    marketSignalPriority(right.signal) - marketSignalPriority(left.signal) ||
+    left.name.localeCompare(right.name)
+  );
+}
+
+function marketSignalPriority(signal: ClubDashboardMarketPlayer["signal"]): number {
+  if (signal === "sale_candidate") return 4;
+  if (signal === "protection_candidate") return 3;
+  if (signal === "follow_up") return 2;
   return 1;
 }
 
