@@ -2,7 +2,7 @@ name: CI/CD Workflow1
 
 on:
   pull_request:
-    branches: [ develop, main ]
+    branches: [ develop, master ]
     types: [ opened, synchronize, reopened ]
 
 jobs:
