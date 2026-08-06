@@ -598,6 +598,62 @@ code {
   color: #5b21b6;
 }
 
+.trace-kind.inferred {
+  background: #ede9fe;
+  color: #5b21b6;
+}
+
+.development-summary-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.development-counts {
+  margin-top: 0;
+}
+
+.trace-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.inline-warning {
+  background: #fffbeb;
+  border: 1px solid #e7c75f;
+  border-radius: 6px;
+  color: #92400e;
+  line-height: 1.5;
+  margin-bottom: 0;
+  padding: 10px 12px;
+}
+
+.highlight-list {
+  display: grid;
+  gap: 8px;
+}
+
+.highlight-row {
+  align-items: center;
+  background: #f8faf9;
+  border: 1px solid #e2e8e4;
+  border-radius: 6px;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 10px 12px;
+}
+
+.highlight-row div {
+  display: grid;
+  gap: 3px;
+}
+
+.highlight-row span:not(.severity) {
+  color: #52616b;
+  font-size: 0.9rem;
+}
+
 @media (max-width: 720px) {
   .app-shell {
     padding: 18px;
