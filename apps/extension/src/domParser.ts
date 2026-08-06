@@ -103,7 +103,7 @@ export function extractPlayerSnapshot(
     },
     club: extractClub(document, options.pageUrl),
     snapshot: {
-      snapshotDate: exportedAt.toISOString().slice(0, 10),
+      snapshotDate: extractSnapshotDate(document) ?? exportedAt.toISOString().slice(0, 10),
       season: findLabeledNumber(readElementText(document.body), ["season", "temporada"]),
       week: findLabeledNumber(readElementText(document.body), ["week", "semana"])
     },
@@ -200,6 +200,7 @@ function playerFromSokkerPlayerBox(
   const wage = parseMoney(readElementTextFromSelector(card, ".player-box-header__salary"));
   const estimatedValue = parseMoney(readElementTextFromSelector(card, ".player-box-header__value"));
   const skills = parseSkillsFromSkillList(card);
+  const observedPosition = extractObservedPositionFromPlayerBox(card);
 
   if (!name || age === null || wage.amount === null || estimatedValue.amount === null) {
     return null;
@@ -215,7 +216,7 @@ function playerFromSokkerPlayerBox(
     estimatedValue: { amount: estimatedValue.amount, currency: estimatedValue.currency },
     form: parseFormFromSkillList(card),
     availabilityStatus: parseAvailabilityFromStatusElement(card),
-    observedPosition: null,
+    observedPosition,
     skills
   };
 }
@@ -365,7 +366,7 @@ function parseSkillsFromSkillList(card: HTMLElement): Record<SkillKey, number | 
       return;
     }
 
-    skills[skill] = parseFirstNumber(readElementTextFromSelector(item, ".skill-list__value"));
+    skills[skill] = parseSkillValue(readElementTextFromSelector(item, ".skill-list__value"));
   });
 
   return skills;
@@ -374,11 +375,24 @@ function parseSkillsFromSkillList(card: HTMLElement): Record<SkillKey, number | 
 function parseFormFromSkillList(card: HTMLElement): number | null {
   for (const item of card.querySelectorAll<HTMLElement>(".skill-list__item")) {
     if (matchesAny(normalizeLabel(readSkillItemLabel(item)), fieldLabels.form)) {
-      return parseFirstNumber(readElementTextFromSelector(item, ".skill-list__value"));
+      return parseSkillValue(readElementTextFromSelector(item, ".skill-list__value"));
     }
   }
 
   return null;
+}
+
+function extractObservedPositionFromPlayerBox(card: HTMLElement): string | null {
+  const explicit =
+    card.dataset.atlasObservedPosition ||
+    card.dataset.atlasPosition ||
+    readElementTextFromSelector(card, ".player-box-header__position") ||
+    readElementTextFromSelector(card, ".player-box-header__role") ||
+    readElementTextFromSelector(card, ".player-box__position") ||
+    readElementTextFromSelector(card, ".player-position") ||
+    readElementTextFromSelector(card, "[data-position], [data-role]");
+
+  return nullable(stripKnownLabel(explicit, fieldLabels.observedPosition));
 }
 
 function readSkillItemLabel(item: HTMLElement): string {
@@ -441,6 +455,52 @@ function parseSkillValue(value: string | undefined): number | null {
   }
 
   return findFirstTextualSkillValue(normalized);
+}
+
+function extractSnapshotDate(document: Document): string | null {
+  const explicit =
+    document.querySelector<HTMLElement>("[data-atlas-snapshot-date]")?.dataset.atlasSnapshotDate ||
+    textFromSelector(document, "[data-snapshot-date], .snapshot-date, .current-date");
+  const explicitDate = parseDate(explicit);
+
+  if (explicitDate) {
+    return explicitDate;
+  }
+
+  for (const time of document.querySelectorAll<HTMLTimeElement>("time[datetime]")) {
+    const date = parseDate(time.getAttribute("datetime") ?? "");
+
+    if (date) {
+      return date;
+    }
+  }
+
+  const bodyText = readElementText(document.body);
+  const labeledDate = parseDate(
+    findValueAfterLabel(bodyText, ["snapshot date", "fecha de snapshot", "fecha", "actualizado", "updated"])
+  );
+
+  return labeledDate ?? parseDate(bodyText);
+}
+
+function parseDate(value: string | undefined): string | null {
+  if (!value) {
+    return null;
+  }
+
+  const isoMatch = value.match(/\b(\d{4})-(\d{2})-(\d{2})\b/);
+
+  if (isoMatch?.[1] && isoMatch[2] && isoMatch[3]) {
+    return `${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3]}`;
+  }
+
+  const localizedMatch = value.match(/\b(\d{1,2})[/.](\d{1,2})[/.](\d{4})\b/);
+
+  if (localizedMatch?.[1] && localizedMatch[2] && localizedMatch[3]) {
+    return `${localizedMatch[3]}-${localizedMatch[2].padStart(2, "0")}-${localizedMatch[1].padStart(2, "0")}`;
+  }
+
+  return null;
 }
 
 function parseFirstNumber(value: string | undefined): number | null {
@@ -528,6 +588,7 @@ function parseAvailabilityFromStatusElement(card: HTMLElement): PlayerExport["av
 }
 
 function findValueAfterLabel(text: string, labels: string[]): string {
+  const sortedLabels = [...labels].sort((first, second) => second.length - first.length);
   const normalizedLines = text
     .split(/\n|;/)
     .map((line) => normalizeWhitespace(line))
@@ -535,13 +596,13 @@ function findValueAfterLabel(text: string, labels: string[]): string {
 
   for (const line of normalizedLines) {
     const normalized = normalizeLabel(line);
-    const label = labels.find((candidate) => normalized.startsWith(`${normalizeLabel(candidate)} `));
+    const label = sortedLabels.find((candidate) => normalized.startsWith(`${normalizeLabel(candidate)} `));
 
     if (label) {
       return line.slice(label.length).replace(/^[:\s-]+/, "").trim();
     }
 
-    for (const candidate of labels) {
+    for (const candidate of sortedLabels) {
       const expression = new RegExp(`${escapeRegExp(normalizeLabel(candidate))}\\s*[:\\-]?\\s*([^;|\\n]+)`);
       const match = normalized.match(expression);
 
@@ -691,6 +752,26 @@ function nullable(value: string | undefined): string | null {
   return normalized ? normalized : null;
 }
 
+function stripKnownLabel(value: string | undefined, labels: string[]): string {
+  if (!value) {
+    return "";
+  }
+
+  const labeledValue = findValueAfterLabel(value, labels);
+
+  if (labeledValue) {
+    return labeledValue;
+  }
+
+  const normalized = normalizeLabel(value);
+  const sortedLabels = [...labels].sort((first, second) => second.length - first.length);
+  const label = sortedLabels.find((candidate) =>
+    normalized.startsWith(`${normalizeLabel(candidate)} `) || normalized.startsWith(`${normalizeLabel(candidate)}:`)
+  );
+
+  return label ? value.slice(label.length).replace(/^[:\s-]+/, "").trim() : value.trim();
+}
+
 function findAnyNumber(value: string): boolean {
   return /\d/.test(value);
 }
@@ -722,6 +803,18 @@ function applyMoneyMultiplier(amount: number | null, rawValue: string): number |
 }
 
 function currencyFromSymbol(value: string): string | null {
+  if (value.includes("\u20ac")) {
+    return "EUR";
+  }
+
+  if (value.includes("\u00a3")) {
+    return "GBP";
+  }
+
+  if (/z\u0142/i.test(value)) {
+    return "PLN";
+  }
+
   if (value.includes("€")) {
     return "EUR";
   }
