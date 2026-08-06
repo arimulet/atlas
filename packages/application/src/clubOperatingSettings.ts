@@ -1,0 +1,294 @@
+import { MongoClubRepository, type PersistedClub, type PersistedClubManualRecord } from "@atlas/database";
+
+export const operatingPreferenceDefaults = {
+  "economy.riskTolerance": "balanced",
+  "training.priority": "balanced",
+  "academy.investment": "balanced",
+  "market.strategy": "balanced"
+} as const;
+
+const preferenceOptions = {
+  "economy.riskTolerance": ["conservative", "balanced", "aggressive"],
+  "training.priority": ["performance", "balanced", "development"],
+  "academy.investment": ["minimal", "balanced", "ambitious"],
+  "market.strategy": ["conservative", "balanced", "opportunistic"]
+} as const;
+
+export type OperatingPreferenceKey = keyof typeof operatingPreferenceDefaults;
+export type OperatingPreferenceValue = (typeof preferenceOptions)[OperatingPreferenceKey][number];
+
+export interface ClubOperatingSettings {
+  clubId: string;
+  observed: {
+    season: number | null;
+    week: number | null;
+  };
+  manual: {
+    currency: string | null;
+    season: number | null;
+    week: number | null;
+    preferences: Partial<Record<OperatingPreferenceKey, OperatingPreferenceValue>>;
+  };
+  effective: {
+    currency: string | null;
+    season: number | null;
+    week: number | null;
+    preferences: Record<OperatingPreferenceKey, OperatingPreferenceValue>;
+  };
+}
+
+export interface GetClubOperatingSettingsInput {
+  clubId: string;
+}
+
+export interface UpdateClubOperatingSettingsInput {
+  clubId: string;
+  manual: {
+    currency?: string | null;
+    season?: number | null;
+    week?: number | null;
+    preferences?: Partial<Record<OperatingPreferenceKey, OperatingPreferenceValue | null>>;
+  };
+}
+
+export interface ValidatedManualProfileUpdate {
+  name?: string | null;
+  currency?: string | null;
+  season?: number | null;
+  week?: number | null;
+  assumptions?: Array<{ key: string; value: string }>;
+  preferences?: Array<{ key: string; value: string }>;
+}
+
+interface ValidatedManualOperatingSettingsUpdate {
+  currency?: string | null;
+  season?: number | null;
+  week?: number | null;
+  preferences?: Partial<Record<OperatingPreferenceKey, OperatingPreferenceValue | null>>;
+}
+
+const clubRepository = new MongoClubRepository();
+
+export async function getClubOperatingSettings(
+  input: GetClubOperatingSettingsInput
+): Promise<ClubOperatingSettings> {
+  const club = await clubRepository.findById(input.clubId);
+
+  if (!club) {
+    throw new Error(`Club not found: ${input.clubId}`);
+  }
+
+  return buildClubOperatingSettings(club);
+}
+
+export async function updateClubOperatingSettings(
+  input: UpdateClubOperatingSettingsInput
+): Promise<ClubOperatingSettings> {
+  const club = await clubRepository.findById(input.clubId);
+
+  if (!club) {
+    throw new Error(`Club not found: ${input.clubId}`);
+  }
+
+  const manual = validateManualOperatingSettings(input.manual);
+  const nextPreferences =
+    input.manual.preferences === undefined
+      ? undefined
+      : mergeOperatingPreferenceRecords(club.manual.preferences, manual.preferences ?? {});
+  const update = {
+    clubId: input.clubId,
+    ...(input.manual.currency !== undefined ? { currency: manual.currency } : {}),
+    ...(input.manual.season !== undefined ? { season: manual.season } : {}),
+    ...(input.manual.week !== undefined ? { week: manual.week } : {}),
+    ...(nextPreferences !== undefined ? { preferences: nextPreferences } : {})
+  };
+
+  const updated = await clubRepository.updateManualProfile(update);
+
+  return buildClubOperatingSettings(updated);
+}
+
+export function validateManualProfileUpdate(
+  manual: ValidatedManualProfileUpdate
+): ValidatedManualProfileUpdate {
+  const validated: ValidatedManualProfileUpdate = {};
+
+  if ("name" in manual) validated.name = normalizeNullableString(manual.name);
+  if ("currency" in manual) validated.currency = validateCurrency(manual.currency);
+  if ("season" in manual) validated.season = validateSeason(manual.season);
+  if ("week" in manual) validated.week = validateWeek(manual.week);
+  if (manual.assumptions) validated.assumptions = validateManualRecords(manual.assumptions);
+  if (manual.preferences) validated.preferences = validateManualRecords(manual.preferences);
+
+  return validated;
+}
+
+export function buildClubOperatingSettings(club: PersistedClub): ClubOperatingSettings {
+  const manualPreferences = readOperatingPreferences(club.manual.preferences);
+
+  return {
+    clubId: club.id,
+    observed: {
+      season: club.observed.season,
+      week: club.observed.week
+    },
+    manual: {
+      currency: club.manual.currency,
+      season: club.manual.season,
+      week: club.manual.week,
+      preferences: manualPreferences
+    },
+    effective: {
+      currency: club.manual.currency,
+      season: club.manual.season ?? club.observed.season,
+      week: club.manual.week ?? club.observed.week,
+      preferences: {
+        ...operatingPreferenceDefaults,
+        ...manualPreferences
+      }
+    }
+  };
+}
+
+function validateManualOperatingSettings(
+  manual: UpdateClubOperatingSettingsInput["manual"]
+): ValidatedManualOperatingSettingsUpdate {
+  const validated: ValidatedManualOperatingSettingsUpdate = {};
+
+  if ("currency" in manual) validated.currency = validateCurrency(manual.currency);
+  if ("season" in manual) validated.season = validateSeason(manual.season);
+  if ("week" in manual) validated.week = validateWeek(manual.week);
+  if (manual.preferences) validated.preferences = validateOperatingPreferences(manual.preferences);
+
+  return validated;
+}
+
+function validateCurrency(value: string | null | undefined): string | null {
+  const normalized = normalizeNullableString(value)?.toUpperCase() ?? null;
+
+  if (normalized === null) {
+    return null;
+  }
+
+  if (!/^[A-Z]{3}$/.test(normalized)) {
+    throw new Error("Operating currency must be a 3-letter ISO currency code.");
+  }
+
+  return normalized;
+}
+
+function validateSeason(value: number | null | undefined): number | null {
+  if (value === null || value === undefined) {
+    return null;
+  }
+
+  if (!Number.isInteger(value) || value < 1 || value > 999) {
+    throw new Error("Operating season must be an integer between 1 and 999.");
+  }
+
+  return value;
+}
+
+function validateWeek(value: number | null | undefined): number | null {
+  if (value === null || value === undefined) {
+    return null;
+  }
+
+  if (!Number.isInteger(value) || value < 1 || value > 16) {
+    throw new Error("Operating week must be an integer between 1 and 16.");
+  }
+
+  return value;
+}
+
+function validateOperatingPreferences(
+  preferences: Partial<Record<OperatingPreferenceKey, OperatingPreferenceValue | null>>
+) {
+  return Object.fromEntries(
+    Object.entries(preferences).map(([key, value]) => {
+      assertOperatingPreferenceKey(key);
+
+      if (value === null) {
+        return [key, null];
+      }
+
+      const options = preferenceOptions[key];
+
+      if (!options.includes(value as never)) {
+        throw new Error(`Invalid value for operating preference ${key}.`);
+      }
+
+      return [key, value];
+    })
+  ) as Partial<Record<OperatingPreferenceKey, OperatingPreferenceValue | null>>;
+}
+
+function validateManualRecords(records: Array<{ key: string; value: string }>) {
+  return records.map((record) => {
+    const key = normalizeNullableString(record.key);
+    const value = normalizeNullableString(record.value);
+
+    if (!key || !value) {
+      throw new Error("Manual records must include non-empty key and value.");
+    }
+
+    return { key, value };
+  });
+}
+
+function readOperatingPreferences(
+  preferences: PersistedClubManualRecord[]
+): Partial<Record<OperatingPreferenceKey, OperatingPreferenceValue>> {
+  const result: Partial<Record<OperatingPreferenceKey, OperatingPreferenceValue>> = {};
+
+  for (const preference of preferences) {
+    if (!isOperatingPreferenceKey(preference.key)) {
+      continue;
+    }
+
+    const value = preference.value;
+
+    if (preferenceOptions[preference.key].includes(value as never)) {
+      result[preference.key] = value as OperatingPreferenceValue;
+    }
+  }
+
+  return result;
+}
+
+function mergeOperatingPreferenceRecords(
+  existing: PersistedClubManualRecord[],
+  updates: Partial<Record<OperatingPreferenceKey, OperatingPreferenceValue | null>>
+) {
+  const operatingKeys = new Set(Object.keys(operatingPreferenceDefaults));
+  const records = existing
+    .filter((record) => !operatingKeys.has(record.key))
+    .map(({ key, value }) => ({ key, value }));
+  const current = readOperatingPreferences(existing);
+  const next = { ...current, ...updates };
+
+  for (const key of Object.keys(operatingPreferenceDefaults) as OperatingPreferenceKey[]) {
+    const value = next[key];
+
+    if (value) {
+      records.push({ key, value });
+    }
+  }
+
+  return records;
+}
+
+function assertOperatingPreferenceKey(key: string): asserts key is OperatingPreferenceKey {
+  if (!isOperatingPreferenceKey(key)) {
+    throw new Error(`Unknown operating preference: ${key}.`);
+  }
+}
+
+function isOperatingPreferenceKey(key: string): key is OperatingPreferenceKey {
+  return key in operatingPreferenceDefaults;
+}
+
+function normalizeNullableString(value: string | null | undefined): string | null {
+  const normalized = value?.trim();
+  return normalized ? normalized : null;
+}

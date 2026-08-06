@@ -4,9 +4,11 @@ import {
   calculateClubHistoricalTrends,
   compareClubSnapshots,
   generateClubHistoricalFindings,
+  getClubOperatingSettings,
   getClubProfile,
   importPlayerSnapshotMvp,
   listClubSnapshots,
+  updateClubOperatingSettings,
   updateClubProfile,
   validatePlayerSnapshotImport
 } from "@atlas/application";
@@ -75,6 +77,31 @@ export function buildServer() {
     };
 
     return { club: await updateClubProfile({ clubId, manual: body.manual ?? {} }) };
+  });
+
+  server.get("/api/clubs/:clubId/operating-settings", async (request) => {
+    const { clubId } = request.params as { clubId: string };
+
+    return { settings: await getClubOperatingSettings({ clubId }) };
+  });
+
+  server.patch("/api/clubs/:clubId/operating-settings", async (request) => {
+    const { clubId } = request.params as { clubId: string };
+    const body = request.body as {
+      manual?: {
+        currency?: string | null;
+        season?: number | null;
+        week?: number | null;
+        preferences?: {
+          "economy.riskTolerance"?: "conservative" | "balanced" | "aggressive" | null;
+          "training.priority"?: "performance" | "balanced" | "development" | null;
+          "academy.investment"?: "minimal" | "balanced" | "ambitious" | null;
+          "market.strategy"?: "conservative" | "balanced" | "opportunistic" | null;
+        };
+      };
+    };
+
+    return { settings: await updateClubOperatingSettings({ clubId, manual: body.manual ?? {} }) };
   });
 
   server.post("/api/clubs/:clubId/snapshot-comparisons", async (request) => {

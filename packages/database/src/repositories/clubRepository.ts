@@ -149,6 +149,24 @@ function mapClub(club: {
       season: manual.season ?? observed.season,
       week: manual.week ?? observed.week
     },
+    settings: {
+      observed: {
+        season: observed.season,
+        week: observed.week
+      },
+      manual: {
+        currency: manual.currency,
+        season: manual.season,
+        week: manual.week,
+        preferences: manual.preferences
+      },
+      effective: {
+        currency: manual.currency,
+        season: manual.season ?? observed.season,
+        week: manual.week ?? observed.week,
+        preferences: manual.preferences
+      }
+    },
     externalId: observed.externalId,
     name: manual.name ?? observed.name
   };

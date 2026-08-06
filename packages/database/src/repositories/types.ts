@@ -8,6 +8,7 @@ export interface PersistedClub {
   observed: PersistedClubObservedProfile;
   manual: PersistedClubManualProfile;
   profile: PersistedClubEffectiveProfile;
+  settings: PersistedClubOperatingSettings;
   externalId: string | null;
   name: string;
 }
@@ -43,6 +44,31 @@ export interface PersistedClubEffectiveProfile {
   currency: string | null;
   season: number | null;
   week: number | null;
+}
+
+export interface PersistedClubOperatingSettings {
+  observed: PersistedClubObservedOperatingSettings;
+  manual: PersistedClubManualOperatingSettings;
+  effective: PersistedClubEffectiveOperatingSettings;
+}
+
+export interface PersistedClubObservedOperatingSettings {
+  season: number | null;
+  week: number | null;
+}
+
+export interface PersistedClubManualOperatingSettings {
+  currency: string | null;
+  season: number | null;
+  week: number | null;
+  preferences: PersistedClubManualRecord[];
+}
+
+export interface PersistedClubEffectiveOperatingSettings {
+  currency: string | null;
+  season: number | null;
+  week: number | null;
+  preferences: PersistedClubManualRecord[];
 }
 
 export interface PersistedPlayer {

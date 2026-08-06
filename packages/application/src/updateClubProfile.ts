@@ -1,4 +1,5 @@
 import { MongoClubRepository, type PersistedClub } from "@atlas/database";
+import { validateManualProfileUpdate } from "./clubOperatingSettings.js";
 
 export interface UpdateClubProfileInput {
   clubId: string;
@@ -17,6 +18,6 @@ const clubRepository = new MongoClubRepository();
 export async function updateClubProfile(input: UpdateClubProfileInput): Promise<PersistedClub> {
   return clubRepository.updateManualProfile({
     clubId: input.clubId,
-    ...input.manual
+    ...validateManualProfileUpdate(input.manual)
   });
 }
