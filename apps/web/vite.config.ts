@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      '@atlas/web/*': path.resolve(__dirname, './src') // Ajusta según la estructura de tu proyecto
+      '@atlas/web': path.resolve(__dirname, './src') // Ajusta según la estructura de tu proyecto
     }
   },
   server: {
