@@ -1,6 +1,6 @@
-import { OperatingPreferenceKey } from "../../../../types";
-import { PreferenceItem } from "../../../PreferenceItem";
-import { SourcedItem } from "../../../SourcedItem";
+import { OperatingPreferenceKey } from "@atlas/web/app/types";
+import { PreferenceItem } from "@atlas/web/app/components/PreferenceItem";
+import { SourcedItem } from "@atlas/web/app/components/SourcedItem";
 import { OperatingSettingsPanelProps } from "./types";
 
 const preferenceLabels: Record<OperatingPreferenceKey, string> = {

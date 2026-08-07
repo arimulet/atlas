@@ -1,5 +1,5 @@
-import { IssuePanel } from "../IssuePanel";
-import { SummaryItem } from "../SummaryItem";
+import { IssuePanel } from "@atlas/web/app/components/IssuePanel";
+import { SummaryItem } from "@atlas/web/app/components/SummaryItem";
 import { MarketPlayerCard } from "./components/MarketPlayerCard";
 import { SquadMarketPlanningPanelProps } from "./types";
 

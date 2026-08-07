@@ -14,9 +14,18 @@ import {
   compareClubSnapshotsBodySchema,
   updateClubOperatingSettingsBodySchema,
   updateClubProfileBodySchema
-} from "../../http-schemas.js";
+} from "@atlas/api/schemas";
 
-import { GetClubDashboardParams, GetClubHistoricalFindingsParams, GetClubHistoricalTrendsParams, GetClubOperatingSettingsParams, GetClubProfileParams, GetClubSnapshotsParams, PatchClubOperatingSettingsParams, PatchClubProfileParams } from "./types.js";
+import {
+  GetClubDashboardParams,
+  GetClubHistoricalFindingsParams,
+  GetClubHistoricalTrendsParams,
+  GetClubOperatingSettingsParams,
+  GetClubProfileParams,
+  GetClubSnapshotsParams,
+  PatchClubOperatingSettingsParams,
+  PatchClubProfileParams
+} from "./types";
 
 async function clubRoutes(server: FastifyInstance, options: FastifyPluginOptions) {
   server.get<{ Params: GetClubProfileParams }>("/profile", async (request) => {
@@ -75,15 +84,12 @@ async function clubRoutes(server: FastifyInstance, options: FastifyPluginOptions
     return { snapshots: await getClubSnapshots(clubId) };
   });
 
-  server.post<{ Params: GetClubSnapshotsParams }>(
-    "/snapshot-comparisons",
-    async (request) => {
-      const { clubId } = request.params;
-      const body = compareClubSnapshotsBodySchema.parse(request.body);
+  server.post<{ Params: GetClubSnapshotsParams }>("/snapshot-comparisons", async (request) => {
+    const { clubId } = request.params;
+    const body = compareClubSnapshotsBodySchema.parse(request.body);
 
-      return compareClubSnapshots({ clubId, ...body });
-    }
-  );
+    return compareClubSnapshots({ clubId, ...body });
+  });
 }
 
 export default clubRoutes;

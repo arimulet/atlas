@@ -1,4 +1,4 @@
-import { SummaryItem } from "../../../SummaryItem";
+import { SummaryItem } from "@atlas/web/app/components/SummaryItem";
 import { EvidencePanelProps } from "./types";
 
 export const EvidencePanel = ({ squadEconomy }: EvidencePanelProps) => {

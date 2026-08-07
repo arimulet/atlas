@@ -1,4 +1,4 @@
-import { ModuleGrid } from "../ModuleGrid";
+import { ModuleGrid } from "@atlas/web/app/components/ModuleGrid";
 
 export const EmptyDashboardPanel = () => {
   return (

@@ -1,4 +1,4 @@
-import type { PlayerDevelopmentEvidence } from "../../types";
+import type { PlayerDevelopmentEvidence } from "@atlas/web/app/types";
 
 export interface EvidenceListProps {
   evidence: PlayerDevelopmentEvidence[];

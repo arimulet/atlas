@@ -1,4 +1,4 @@
-import { SummaryItem } from "../../../SummaryItem";
+import { SummaryItem } from "@atlas/web/app/components/SummaryItem";
 import { HistoricalPanelProps } from "./types";
 
 function formatPercent(value: number | null): string {

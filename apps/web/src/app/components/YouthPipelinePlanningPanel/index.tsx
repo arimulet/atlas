@@ -1,6 +1,6 @@
-import { IssuePanel } from "../IssuePanel";
-import { SummaryItem } from "../SummaryItem";
-import { YouthPlayerCard } from "./components/YouthPlayerCard";
+import { IssuePanel } from "@atlas/web/app/components/IssuePanel";
+import { SummaryItem } from "@atlas/web/app/components/SummaryItem";
+import { YouthPlayerCard } from "@atlas/web/app/components/YouthPipelinePlanningPanel/components/YouthPlayerCard";
 import { YouthPipelinePlanningPanelProps } from "./types";
 
 
