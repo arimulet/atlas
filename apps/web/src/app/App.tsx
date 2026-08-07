@@ -29,7 +29,6 @@ import type {
   YouthPipelinePlanning
 } from "./types";
 
-
 const lastClubStorageKey = "atlas.lastClubId";
 
 export function App() {
