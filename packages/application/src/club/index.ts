@@ -1,172 +1,37 @@
 import {
   MongoClubRepository,
   MongoSnapshotRepository,
-  type PersistedClub,
+  PersistedClub,
+  PersistedPlayerSnapshot,
   type PersistedSnapshot
 } from "@atlas/database";
-import { buildClubOperatingSettings, type ClubOperatingSettings } from "./clubOperatingSettings.js";
-import { getPlayerDevelopment, type PlayerDevelopmentFinding } from "./getPlayerDevelopment.js";
+import { buildClubOperatingSettings } from "../clubOperatingSettings/index.js";
+import { getPlayerDevelopment } from "../playerDevelopment/index.js";
+import { type PlayerDevelopmentFinding } from "../playerDevelopment/types.js";
+import { getSquadMarketPlanning } from "../marketPlanning/index.js";
+import { getYouthPipelinePlanning } from "../playerDevelopment/index.js";
+import { type YouthPipelineCategory } from "../playerDevelopment/types.js";
 import {
-  getSquadMarketPlanning,
-  type MarketPlanningCategory,
-  type MarketPlanningConfidence,
-  type MarketPlanningSeverity
-} from "./getSquadMarketPlanning.js";
-import {
-  getYouthPipelinePlanning,
-  type YouthPipelineCategory,
-  type YouthPipelineConfidence,
-  type YouthPipelineSeverity
-} from "./getYouthPipelinePlanning.js";
-
-export interface GetClubDashboardInput {
-  clubId: string;
-}
-
-export interface ClubDashboard {
-  club: PersistedClub;
-  settings: ClubOperatingSettings;
-  snapshots: {
-    available: boolean;
-    count: number;
-    latest: ClubDashboardSnapshotSummary | null;
-    previous: ClubDashboardSnapshotSummary | null;
-    canCompare: boolean;
-  };
-  developmentSummary: ClubDashboardDevelopmentSummary;
-  marketSummary: ClubDashboardMarketSummary;
-  youthPipelineSummary: ClubDashboardYouthPipelineSummary;
-  operationalAreas: Array<{
-    key:
-      | "diagnostic"
-      | "history"
-      | "findings"
-      | "squad-economy"
-      | "player-development"
-      | "squad-market-planning"
-      | "youth-pipeline-planning"
-      | "training"
-      | "academy"
-      | "market";
-    label: string;
-    status: "available" | "ready" | "planned";
-    summary: string;
-  }>;
-}
-
-export interface ClubDashboardSnapshotSummary {
-  id: string;
-  snapshotDate: string;
-  importedAt: string;
-  season: number | null;
-  week: number | null;
-  playerCount: number;
-}
-
-export interface ClubDashboardDevelopmentSummary {
-  available: boolean;
-  detailPath: string;
-  observed: {
-    snapshotCount: number;
-    latestSnapshotDate: string | null;
-    playerCount: number;
-  };
-  manual: {
-    trainingPriority: string;
-  };
-  derived: {
-    improvingPlayers: number;
-    stagnatedPlayers: number;
-    decliningPlayers: number;
-    insufficientDataPlayers: number;
-  };
-  inferred: {
-    headline: string;
-    warning: string | null;
-    highlightedPlayers: ClubDashboardDevelopmentPlayer[];
-  };
-}
-
-export interface ClubDashboardDevelopmentPlayer {
-  playerId: string | null;
-  name: string;
-  signal: "improvement" | "stagnation" | "decline" | "insufficient_data";
-  severity: "info" | "low" | "medium" | "high";
-  confidence: "low" | "medium" | "high";
-}
-
-export interface ClubDashboardMarketSummary {
-  available: boolean;
-  detailPath: string;
-  observed: {
-    snapshotCount: number;
-    latestSnapshotDate: string | null;
-    playerCount: number;
-    playersWithStableIdentity: number;
-  };
-  manual: {
-    marketStrategy: string;
-  };
-  derived: {
-    saleCandidates: number;
-    protectionCandidates: number;
-    followUpPlayers: number;
-    insufficientSignalPlayers: number;
-  };
-  inferred: {
-    headline: string;
-    warning: string | null;
-    highlightedPlayers: ClubDashboardMarketPlayer[];
-  };
-}
-
-export interface ClubDashboardMarketPlayer {
-  playerId: string | null;
-  name: string;
-  signal: MarketPlanningCategory;
-  severity: MarketPlanningSeverity;
-  confidence: MarketPlanningConfidence;
-  timing: string;
-}
-
-export interface ClubDashboardYouthPipelineSummary {
-  available: boolean;
-  detailPath: string;
-  observed: {
-    snapshotCount: number;
-    latestSnapshotDate: string | null;
-    seniorPlayerCount: number;
-    youngSeniorPlayerCount: number;
-    youthAgeThreshold: number;
-  };
-  manual: {
-    academyInvestment: string;
-  };
-  derived: {
-    standoutProspects: number;
-    followUpPlayers: number;
-    stagnationRiskPlayers: number;
-    insufficientDataPlayers: number;
-  };
-  inferred: {
-    headline: string;
-    warning: string | null;
-    highlightedPlayers: ClubDashboardYouthPipelinePlayer[];
-  };
-}
-
-export interface ClubDashboardYouthPipelinePlayer {
-  playerId: string | null;
-  name: string;
-  signal: YouthPipelineCategory;
-  severity: YouthPipelineSeverity;
-  confidence: YouthPipelineConfidence;
-}
+  ClubDashboard,
+  ClubDashboardDevelopmentPlayer,
+  ClubDashboardDevelopmentSummary,
+  ClubDashboardMarketPlayer,
+  ClubDashboardMarketSummary,
+  ClubDashboardSnapshotSummary,
+  ClubDashboardYouthPipelinePlayer,
+  ClubDashboardYouthPipelineSummary,
+  CompareClubSnapshotsInput,
+  GetClubDashboardInput,
+  GetClubProfileInput,
+  UpdateClubProfileInput,
+  ValidatedManualProfileUpdate
+} from "./types";
+import { compareSnapshots, SnapshotComparison, SnapshotComparisonPlayer, SnapshotComparisonSnapshot } from "@atlas/domain";
 
 const clubRepository = new MongoClubRepository();
 const snapshotRepository = new MongoSnapshotRepository();
 
-export async function getClubDashboard(input: GetClubDashboardInput): Promise<ClubDashboard> {
+export const getClubDashboard = async (input: GetClubDashboardInput): Promise<ClubDashboard> => {
   const club = await clubRepository.findById(input.clubId);
 
   if (!club) {
@@ -197,6 +62,113 @@ export async function getClubDashboard(input: GetClubDashboardInput): Promise<Cl
     youthPipelineSummary: buildYouthPipelineSummary(input.clubId, snapshots.length, youthPipeline),
     operationalAreas: buildOperationalAreas(snapshots.length)
   };
+};
+
+export const getClubProfile = async (input: GetClubProfileInput): Promise<PersistedClub> => {
+  const club = await clubRepository.findById(input.clubId);
+
+  if (!club) {
+    throw new Error(`Club not found: ${input.clubId}`);
+  }
+
+  return club;
+};
+
+export const updateClubProfile = async (input: UpdateClubProfileInput): Promise<PersistedClub> => {
+  return clubRepository.updateManualProfile({
+    clubId: input.clubId,
+    ...validateManualProfileUpdate(input.manual)
+  });
+};
+
+export const getClubSnapshots = async (clubId: string): Promise<ClubDashboardSnapshotSummary[]> => {
+  const snapshots = await snapshotRepository.listByClub(clubId);
+
+  return snapshots.map(mapSnapshotSummary);
+};
+
+
+export const compareClubSnapshots = async (
+  input: CompareClubSnapshotsInput
+): Promise<SnapshotComparison> => {
+  const [baseSnapshot, targetSnapshot] = await Promise.all([
+    resolveSnapshot(input.clubId, input.baseSnapshotId, input.baseSnapshotDate, "base"),
+    resolveSnapshot(input.clubId, input.targetSnapshotId, input.targetSnapshotDate, "target")
+  ]);
+
+  return compareSnapshots(mapSnapshot(baseSnapshot), mapSnapshot(targetSnapshot));
+}
+
+
+function validateManualProfileUpdate(
+  manual: ValidatedManualProfileUpdate
+): ValidatedManualProfileUpdate {
+  const validated: ValidatedManualProfileUpdate = {};
+
+  if ("name" in manual) validated.name = normalizeNullableString(manual.name);
+  if ("currency" in manual) validated.currency = validateCurrency(manual.currency);
+  if ("season" in manual) validated.season = validateSeason(manual.season);
+  if ("week" in manual) validated.week = validateWeek(manual.week);
+  if (manual.assumptions) validated.assumptions = validateManualRecords(manual.assumptions);
+  if (manual.preferences) validated.preferences = validateManualRecords(manual.preferences);
+
+  return validated;
+}
+
+function validateManualRecords(records: Array<{ key: string; value: string }>) {
+  return records.map((record) => {
+    const key = normalizeNullableString(record.key);
+    const value = normalizeNullableString(record.value);
+
+    if (!key || !value) {
+      throw new Error("Manual records must include non-empty key and value.");
+    }
+
+    return { key, value };
+  });
+}
+
+function validateSeason(value: number | null | undefined): number | null {
+  if (value === null || value === undefined) {
+    return null;
+  }
+
+  if (!Number.isInteger(value) || value < 1 || value > 999) {
+    throw new Error("Operating season must be an integer between 1 and 999.");
+  }
+
+  return value;
+}
+
+function validateWeek(value: number | null | undefined): number | null {
+  if (value === null || value === undefined) {
+    return null;
+  }
+
+  if (!Number.isInteger(value) || value < 1 || value > 16) {
+    throw new Error("Operating week must be an integer between 1 and 16.");
+  }
+
+  return value;
+}
+
+function normalizeNullableString(value: string | null | undefined): string | null {
+  const normalized = value?.trim();
+  return normalized ? normalized : null;
+}
+
+function validateCurrency(value: string | null | undefined): string | null {
+  const normalized = normalizeNullableString(value)?.toUpperCase() ?? null;
+
+  if (normalized === null) {
+    return null;
+  }
+
+  if (!/^[A-Z]{3}$/.test(normalized)) {
+    throw new Error("Operating currency must be a 3-letter ISO currency code.");
+  }
+
+  return normalized;
 }
 
 function buildDevelopmentSummary(
@@ -432,9 +404,7 @@ function buildYouthPipelineSummary(
   };
 }
 
-function buildYouthPipelineHeadline(
-  summary: ClubDashboardYouthPipelineSummary["derived"]
-): string {
+function buildYouthPipelineHeadline(summary: ClubDashboardYouthPipelineSummary["derived"]): string {
   if (summary.insufficientDataPlayers > 0) {
     return "Lectura prudente: hay jovenes senior con datos insuficientes.";
   }
@@ -550,10 +520,75 @@ function buildOperationalAreas(snapshotCount: number): ClubDashboard["operationa
 function mapSnapshotSummary(snapshot: PersistedSnapshot): ClubDashboardSnapshotSummary {
   return {
     id: snapshot.id,
+    clubId: snapshot.clubId,
     snapshotDate: snapshot.snapshotDate.toISOString().slice(0, 10),
     importedAt: snapshot.importedAt.toISOString(),
     season: snapshot.season,
     week: snapshot.week,
     playerCount: snapshot.players.length
   };
+}
+
+
+
+async function resolveSnapshot(
+  clubId: string,
+  snapshotId: string | undefined,
+  snapshotDate: string | undefined,
+  role: "base" | "target"
+): Promise<PersistedSnapshot> {
+  if (snapshotId) {
+    const snapshot = await snapshotRepository.findById(snapshotId);
+
+    if (!snapshot || snapshot.clubId !== clubId) {
+      throw new Error(`${role} snapshot not found for club.`);
+    }
+
+    return snapshot;
+  }
+
+  if (!snapshotDate) {
+    throw new Error(`${role} snapshot id or date is required.`);
+  }
+
+  const snapshots = await snapshotRepository.findByClubAndDate(
+    clubId,
+    new Date(`${snapshotDate}T00:00:00.000Z`)
+  );
+
+  if (snapshots.length === 0) {
+    throw new Error(`${role} snapshot not found for date ${snapshotDate}.`);
+  }
+
+  if (snapshots.length > 1) {
+    throw new Error(`${role} snapshot date ${snapshotDate} is ambiguous; use snapshot id.`);
+  }
+
+  return snapshots[0]!;
+}
+
+function mapSnapshot(snapshot: PersistedSnapshot): SnapshotComparisonSnapshot {
+  return {
+    id: snapshot.id,
+    clubId: snapshot.clubId,
+    snapshotDate: toDateOnly(snapshot.snapshotDate),
+    players: snapshot.players.map(mapPlayer)
+  };
+}
+
+function mapPlayer(player: PersistedPlayerSnapshot): SnapshotComparisonPlayer {
+  return {
+    id: player.id,
+    playerId: player.playerId,
+    externalId: player.externalId,
+    name: player.name,
+    age: player.age,
+    wage: player.wage,
+    estimatedValue: player.estimatedValue,
+    skills: player.skills
+  };
+}
+
+function toDateOnly(date: Date): string {
+  return date.toISOString().slice(0, 10);
 }

@@ -4,11 +4,9 @@ import mongoose from "mongoose";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { ClubModel, ImportEventModel, PlayerModel, SnapshotModel } from "@atlas/database";
-import {
-  getSquadEconomy,
-  importPlayerSnapshot,
-  updateClubOperatingSettings
-} from "../src/index.js";
+import { getSquadEconomy } from "../src/economy/index.js";
+import { importPlayerSnapshot } from "../src/playerImport/index.js";
+import { updateClubOperatingSettings } from "../src/clubOperatingSettings/index.js";
 
 let mongo: MongoMemoryServer;
 
