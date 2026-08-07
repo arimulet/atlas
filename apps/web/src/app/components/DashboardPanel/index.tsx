@@ -1,5 +1,5 @@
-import { EmptyDashboardPanel } from "../EmptyDashboardPanel";
-import { ModuleGrid } from "../ModuleGrid";
+import { EmptyDashboardPanel } from "@atlas/web/app/components/EmptyDashboardPanel";
+import { ModuleGrid } from "@atlas/web/app/components/ModuleGrid";
 import { ClubProfilePanel } from "./components/ClubProfilePanel";
 import { DevelopmentSummaryPanel } from "./components/DevelopmentSummaryPanel";
 import { MarketSummaryPanel } from "./components/MarketSummaryPanel";

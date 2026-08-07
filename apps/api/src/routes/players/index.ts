@@ -1,6 +1,6 @@
 import { getPlayerDevelopment, getYouthPipelinePlanning } from "@atlas/application";
 import { FastifyInstance, FastifyPluginOptions } from "fastify";
-import { clubParamsSchema } from "../../http-schemas";
+import { clubParamsSchema } from "@atlas/api/schemas";
 import { GetDevelopmentParams, GetYouthPipelinePlanningParams } from "./types";
 
 async function playerRoutes(server: FastifyInstance, options: FastifyPluginOptions) {

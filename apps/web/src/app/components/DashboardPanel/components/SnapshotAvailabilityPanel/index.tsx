@@ -1,5 +1,5 @@
-import { formatDateTime } from "../../../../formatters";
-import { SummaryItem } from "../../../SummaryItem";
+import { formatDateTime } from "@atlas/web/app/formatters";
+import { SummaryItem } from "@atlas/web/app/components/SummaryItem";
 import { SnapshotAvailabilityPanelProps } from "./types";
 
 export const SnapshotAvailabilityPanel = ({ dashboard }: SnapshotAvailabilityPanelProps) => {

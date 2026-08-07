@@ -1,6 +1,6 @@
-import { formatLabel } from "../../formatters";
-import { AssumptionList } from "../AssumptionList";
-import { TraceList } from "../TraceList";
+import { formatLabel } from "@atlas/web/app/formatters";
+import { AssumptionList } from "@atlas/web/app/components/AssumptionList";
+import { TraceList } from "@atlas/web/app/components/TraceList";
 import { DiagnosticPanelProps } from "./types";
 
 export const DiagnosticPanel = ({ findingsByCategory }: DiagnosticPanelProps) =>  {

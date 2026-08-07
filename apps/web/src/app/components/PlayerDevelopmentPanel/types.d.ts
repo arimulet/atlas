@@ -1,4 +1,4 @@
-import type { PlayerDevelopment } from "../../types";
+import type { PlayerDevelopment } from "@atlas/web/app/types";
 
 export interface PlayerDevelopmentPanelProps {
   playerDevelopment: PlayerDevelopment | null;

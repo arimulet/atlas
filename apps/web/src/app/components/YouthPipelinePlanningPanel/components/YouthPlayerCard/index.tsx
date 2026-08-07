@@ -1,8 +1,8 @@
-import { formatNullable } from "../../../../formatters";
-import { YouthPipelinePlayerPlan } from "../../../../types";
-import { IssuePanel } from "../../../IssuePanel";
-import { SummaryItem } from "../../../SummaryItem";
-import { EvidenceList } from "../../../EvidenceList";
+import { formatNullable } from "@atlas/web/app/formatters";
+import { YouthPipelinePlayerPlan } from "@atlas/web/app/types";
+import { IssuePanel } from "@atlas/web/app/components/IssuePanel";
+import { SummaryItem } from "@atlas/web/app/components/SummaryItem";
+import { EvidenceList } from "@atlas/web/app/components/EvidenceList";
 import { YouthPlayerCardProps } from "./types";
 
 function labelCategory(category: YouthPipelinePlayerPlan["category"]): string {

@@ -1,4 +1,4 @@
-import type { DiagnosticTrace } from "../../types";
+import type { DiagnosticTrace } from "@atlas/web/app/types";
 
 export interface TraceListProps {
   title: string;

@@ -1,8 +1,8 @@
-import { formatNullable } from "../../../../formatters";
-import { SquadMarketPlayerPlan } from "../../../../types";
-import { EvidenceList } from "../../../EvidenceList";
-import { IssuePanel } from "../../../IssuePanel";
-import { TimingList } from "../TimingList";
+import { formatNullable } from "@atlas/web/app/formatters";
+import { SquadMarketPlayerPlan } from "@atlas/web/app/types";
+import { EvidenceList } from "@atlas/web/app/components/EvidenceList";
+import { IssuePanel } from "@atlas/web/app/components/IssuePanel";
+import { TimingList } from "@atlas/web/app/components/SquadMarketPlanningPanel/components/TimingList";
 import { MarketPlayerCardProps } from "./types";
 
 

@@ -1,4 +1,4 @@
-import { ClubParams } from "../../types.js";
+import { ClubParams } from "@atlas/api/types";
 
 export type GetClubProfileParams = ClubParams;
 export type GetClubDashboardParams = ClubParams;
