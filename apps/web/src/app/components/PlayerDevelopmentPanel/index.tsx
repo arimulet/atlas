@@ -1,8 +1,8 @@
 import { useState } from "react";
 
-import type { PlayerDevelopmentFindingType } from "../../types";
-import { IssuePanel } from "../IssuePanel";
-import { SummaryItem } from "../SummaryItem";
+import type { PlayerDevelopmentFindingType } from "@atlas/web/app/types";
+import { IssuePanel } from "@atlas/web/app/components/IssuePanel";
+import { SummaryItem } from "@atlas/web/app/components/SummaryItem";
 import { PlayerDevelopmentPanelProps } from "./types";
 import { PlayerDevelopmentCard } from "./components/PlayerDevelopmentCard";
 

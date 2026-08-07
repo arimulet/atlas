@@ -7,15 +7,15 @@ import {
   fetchSquadEconomy,
   fetchYouthPipelinePlanning,
   importPlayerSnapshot
-} from "./api";
-import { DashboardPanel } from "./components/DashboardPanel";
-import { DiagnosticPanel } from "./components/DiagnosticPanel";
-import { IssuePanel } from "./components/IssuePanel";
-import { PlayerDevelopmentPanel } from "./components/PlayerDevelopmentPanel";
-import { SquadMarketPlanningPanel } from "./components/SquadMarketPlanningPanel";
-import { SquadEconomyPanel } from "./components/SquadEconomyPanel";
-import { SummaryPanel } from "./components/SummaryPanel";
-import { YouthPipelinePlanningPanel } from "./components/YouthPipelinePlanningPanel";
+} from "@atlas/web/app/api";
+import { DashboardPanel } from "@atlas/web/app/components/DashboardPanel";
+import { DiagnosticPanel } from "@atlas/web/app/components/DiagnosticPanel";
+import { IssuePanel } from "@atlas/web/app/components/IssuePanel";
+import { PlayerDevelopmentPanel } from "@atlas/web/app/components/PlayerDevelopmentPanel";
+import { SquadMarketPlanningPanel } from "@atlas/web/app/components/SquadMarketPlanningPanel";
+import { SquadEconomyPanel } from "@atlas/web/app/components/SquadEconomyPanel";
+import { SummaryPanel } from "@atlas/web/app/components/SummaryPanel";
+import { YouthPipelinePlanningPanel } from "@atlas/web/app/components/YouthPipelinePlanningPanel";
 import type {
   ClubDashboard,
   DashboardStatus,

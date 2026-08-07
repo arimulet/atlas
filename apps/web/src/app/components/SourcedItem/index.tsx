@@ -1,4 +1,4 @@
-import { formatNullable } from "../../formatters";
+import { formatNullable } from "@atlas/web/app/formatters";
 import { SourcedItemProps } from "./types";
 
 export const SourcedItem = ({ label, value, source }: SourcedItemProps) => {

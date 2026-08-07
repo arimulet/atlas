@@ -1,4 +1,4 @@
-import { formatLabel } from "../../formatters";
+import { formatLabel } from "@atlas/web/app/formatters";
 import { PreferenceItemProps } from "./types";
 
 export const PreferenceItem = ({ label, manual, effective }: PreferenceItemProps) => {

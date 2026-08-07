@@ -1,8 +1,8 @@
-import { formatMoney, formatNullable } from "../../formatters";
-import { EvidenceList } from "../EvidenceList";
+import { formatMoney, formatNullable } from "@atlas/web/app/formatters";
+import { EvidenceList } from "@atlas/web/app/components/EvidenceList";
+import { IssuePanel } from "@atlas/web/app/components/IssuePanel";
+import { SummaryItem } from "@atlas/web/app/components/SummaryItem";
 
-import { IssuePanel } from "../IssuePanel";
-import { SummaryItem } from "../SummaryItem";
 import { ConcentrationPanel } from "./components/ConcentrationPanel";
 import { EvidencePanel } from "./components/EvidencePanel";
 import { HistoricalPanel } from "./components/HistoricalPanel";

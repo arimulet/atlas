@@ -1,6 +1,6 @@
-import { formatMoney } from "../../formatters";
+import { formatMoney } from "@atlas/web/app/formatters";
 
-import { SummaryItem } from "../SummaryItem";
+import { SummaryItem } from "@atlas/web/app/components/SummaryItem";
 import { SummaryPanelProps } from "./types";
 
 export const SummaryPanel = ({ summary }: SummaryPanelProps) => {

@@ -1,4 +1,4 @@
-import { SummaryItem } from "../../../SummaryItem";
+import { SummaryItem } from "@atlas/web/app/components/SummaryItem";
 import { MarketSummaryPanelProps } from "./types";
 
 function labelMarketSignal(signal: string): string {

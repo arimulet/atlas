@@ -1,5 +1,5 @@
-import { formatDateTime } from "../../../../formatters";
-import { SourcedItem } from "../../../SourcedItem";
+import { formatDateTime } from "@atlas/web/app/formatters";
+import { SourcedItem } from "@atlas/web/app/components/SourcedItem";
 import { ClubProfilePanelProps } from "./types";
 
 export const ClubProfilePanel = ({ dashboard }: ClubProfilePanelProps) => {

@@ -1,4 +1,4 @@
-import type { ImportIssue } from "../../types";
+import type { ImportIssue } from "@atlas/web/app/types";
 
 export interface IssuePanelProps {
   title: string;

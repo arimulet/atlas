@@ -1,4 +1,4 @@
-import type { MoneyTotal } from "./types";
+import type { MoneyTotal } from "@atlas/web/app/types";
 
 export function formatMoney(total: MoneyTotal): string {
   const value = `${total.currency ?? "mixed"} ${total.amount.toLocaleString("en-US")}`;

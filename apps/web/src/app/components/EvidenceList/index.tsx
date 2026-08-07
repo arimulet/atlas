@@ -1,4 +1,4 @@
-import { formatNullable } from "../../formatters";
+import { formatNullable } from "@atlas/web/app/formatters";
 import { EvidenceListProps } from "./types";
 
 export const EvidenceList = ({ evidence }: EvidenceListProps) => {

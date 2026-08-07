@@ -1,7 +1,7 @@
-import { PlayerDevelopmentPlayerSummary } from "../../../../types";
-import { EvidenceList } from "../../../EvidenceList";
-import { IssuePanel } from "../../../IssuePanel";
-import { SummaryItem } from "../../../SummaryItem";
+import { PlayerDevelopmentPlayerSummary } from "@atlas/web/app/types";
+import { EvidenceList } from "@atlas/web/app/components/EvidenceList";
+import { IssuePanel } from "@atlas/web/app/components/IssuePanel";
+import { SummaryItem } from "@atlas/web/app/components/SummaryItem";
 import { PlayerDevelopmentCardProps } from "./types";
 
 

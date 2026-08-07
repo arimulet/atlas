@@ -1,4 +1,4 @@
-import { SummaryItem } from "../../../SummaryItem";
+import { SummaryItem } from "@atlas/web/app/components/SummaryItem";
 import { YouthPipelineSummaryPanelProps } from "./types";
 
 function labelYouthSignal(signal: string): string {

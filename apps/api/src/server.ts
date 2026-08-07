@@ -2,12 +2,11 @@ import "dotenv/config";
 import Fastify from "fastify";
 import { ZodError } from "zod";
 import { connectMongoDb } from "@atlas/database";
-
-import importsRoutes from "./routes/imports/index.js";
-import clubRoutes from "./routes/club/index.js";
-import playerRoutes from "./routes/players/index.js";
-import economyRoutes from "./routes/economy/index.js";
-import { clubParamsSchema } from "./http-schemas.js";
+import importsRoutes from "@atlas/api//routes/imports";
+import clubRoutes from "@atlas/api//routes/club";
+import playerRoutes from "@atlas/api//routes/players";
+import economyRoutes from "@atlas/api//routes/economy";
+import { clubParamsSchema } from "@atlas/api/schemas";
 
 const server = Fastify({ logger: true });
 
