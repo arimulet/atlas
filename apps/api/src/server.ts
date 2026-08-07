@@ -3,19 +3,26 @@ import Fastify from "fastify";
 import { ZodError } from "zod";
 import { connectMongoDb } from "@atlas/database";
 
-import importsRoutes from "./routes/imports.js";
-import clubRoutes from "./routes/club.js";
-import playerRoutes from "./routes/player.js";
-import economyRoutes from "./routes/economy.js";
+import importsRoutes from "./routes/imports/index.js";
+import clubRoutes from "./routes/club/index.js";
+import playerRoutes from "./routes/players/index.js";
+import economyRoutes from "./routes/economy/index.js";
+import { clubParamsSchema } from "./http-schemas.js";
 
 const server = Fastify({ logger: true });
 
 server.get("/health", async () => ({ status: "ok", service: "atlas-api" }));
 
 server.register(importsRoutes, { path: "/api/imports" });
-server.register(clubRoutes, { path: "/api/clubs/:clubId" });
-server.register(playerRoutes, { path: "/api/clubs/:clubId/players" });
-server.register(economyRoutes, { path: "/api/clubs/:clubId/economy" });
+server.register(clubRoutes, { path: "/api/clubs/:clubId", schema: { params: clubParamsSchema } });
+server.register(playerRoutes, {
+  path: "/api/clubs/:clubId/players",
+  schema: { params: clubParamsSchema }
+});
+server.register(economyRoutes, {
+  path: "/api/clubs/:clubId/economy",
+  schema: { params: clubParamsSchema }
+});
 
 server.setErrorHandler((error, _request, reply) => {
   server.log.error(error);
