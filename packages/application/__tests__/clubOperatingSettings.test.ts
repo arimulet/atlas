@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { ClubModel, MongoClubRepository } from "@atlas/database";
-import { getClubOperatingSettings, updateClubOperatingSettings } from "../src/index.js";
+import { getClubOperatingSettings, updateClubOperatingSettings } from "../src/clubOperatingSettings/index.js";
 
 let mongo: MongoMemoryServer;
 

@@ -1,4 +1,5 @@
 import {
+  PlayerSnapshotValidationResult,
   validatePlayerSnapshotV0,
   type ImportIssue,
   type PlayerSnapshotV0
@@ -7,28 +8,27 @@ import {
   MongoClubRepository,
   MongoImportEventRepository,
   MongoPlayerRepository,
-  MongoSnapshotRepository
+  MongoSnapshotRepository,
+  PersistedPlayerSnapshot
 } from "@atlas/database";
-import { inferPlayerRoleFromSkills } from "@atlas/domain";
+import {
+  BasicDiagnostic,
+  BasicDiagnosticPlayerSnapshot,
+  generateBasicDiagnostic,
+  inferPlayerRoleFromSkills
+} from "@atlas/domain";
+import {
+  GenerateBasicDiagnosticInput,
+  ImportedSquadSummary,
+  ImportPlayerSnapshotInput,
+  ImportPlayerSnapshotMvpResult,
+  ImportPlayerSnapshotResult,
+  NormalizedPlayerSnapshot,
+  SkillKey,
+  ValidatePlayerSnapshotInput
+} from "./types";
 
-export type ImportPlayerSnapshotStatus = "accepted" | "accepted-with-warnings" | "rejected";
-
-export interface ImportPlayerSnapshotInput {
-  payload: unknown;
-}
-
-export interface ImportPlayerSnapshotResult {
-  status: ImportPlayerSnapshotStatus;
-  errors: ImportIssue[];
-  warnings: ImportIssue[];
-  importEventId: string;
-  snapshotId: string | null;
-  clubId: string | null;
-  playerIds: string[];
-  importedPlayerCount: number;
-}
-
-const skillKeys = [
+const skillKeys: SkillKey[] = [
   "stamina",
   "pace",
   "technique",
@@ -37,16 +37,16 @@ const skillKeys = [
   "defender",
   "playmaker",
   "striker"
-] as const;
+];
 
 const clubRepository = new MongoClubRepository();
 const importEventRepository = new MongoImportEventRepository();
 const playerRepository = new MongoPlayerRepository();
 const snapshotRepository = new MongoSnapshotRepository();
 
-export async function importPlayerSnapshot(
+export const importPlayerSnapshot = async (
   input: ImportPlayerSnapshotInput
-): Promise<ImportPlayerSnapshotResult> {
+): Promise<ImportPlayerSnapshotResult> => {
   const validation = validatePlayerSnapshotV0(input.payload);
 
   if (validation.status === "rejected") {
@@ -128,41 +128,109 @@ export async function importPlayerSnapshot(
     playerIds: players.map((player) => player.id),
     importedPlayerCount: players.length
   };
+};
+
+export const importPlayerSnapshotMvp = async (
+  input: ImportPlayerSnapshotInput
+): Promise<ImportPlayerSnapshotMvpResult> => {
+  const importResult = await importPlayerSnapshot(input);
+
+  if (importResult.status === "rejected" || !importResult.snapshotId) {
+    return {
+      importResult,
+      summary: null,
+      diagnostic: null
+    };
+  }
+
+  const [snapshot, diagnostic] = await Promise.all([
+    snapshotRepository.findById(importResult.snapshotId),
+    generateBasicDiagnosticForSnapshot({ snapshotId: importResult.snapshotId })
+  ]);
+
+  if (!snapshot) {
+    throw new Error(`Imported snapshot not found: ${importResult.snapshotId}`);
+  }
+
+  const club = await clubRepository.findById(snapshot.clubId);
+
+  return {
+    importResult,
+    summary: {
+      playerCount: snapshot.players.length,
+      snapshotDate: snapshot.snapshotDate.toISOString().slice(0, 10),
+      club: club?.name ?? "Unknown club",
+      totalEstimatedValue: sumMoney(snapshot.players, "estimatedValue"),
+      totalWage: sumMoney(snapshot.players, "wage"),
+      incompletePlayerCount: snapshot.players.filter(hasIncompleteData).length
+    },
+    diagnostic
+  };
+};
+
+export const validatePlayerSnapshotImport = (
+  input: ValidatePlayerSnapshotInput
+): PlayerSnapshotValidationResult => {
+  return validatePlayerSnapshotV0(input.payload);
+};
+
+async function generateBasicDiagnosticForSnapshot(
+  input: GenerateBasicDiagnosticInput
+): Promise<BasicDiagnostic> {
+  const snapshot = await snapshotRepository.findById(input.snapshotId);
+
+  if (!snapshot) {
+    throw new Error(`Snapshot not found: ${input.snapshotId}`);
+  }
+
+  return generateBasicDiagnostic(
+    {
+      id: snapshot.id,
+      players: snapshot.players.map(mapPlayerSnapshot)
+    },
+    input.generatedAt
+  );
 }
 
-interface NormalizedPlayerSnapshot {
-  schemaVersion: PlayerSnapshotV0["schemaVersion"];
-  source: {
-    type: PlayerSnapshotV0["source"]["type"];
-    exportedAt: Date;
-    pageUrl: string | null;
-    locale: string | null;
+function mapPlayerSnapshot(player: PersistedPlayerSnapshot): BasicDiagnosticPlayerSnapshot {
+  return {
+    id: player.id,
+    playerId: player.playerId,
+    externalId: player.externalId,
+    name: player.name,
+    age: player.age,
+    wage: player.wage,
+    estimatedValue: player.estimatedValue,
+    form: player.form,
+    availabilityStatus: player.availabilityStatus,
+    observedPosition: player.observedPosition,
+    skills: player.skills
   };
-  club: {
-    externalId: string | null;
-    name: string;
-    season: number | null;
-    week: number | null;
-    lastSnapshotDate: Date;
-    sourceType: PlayerSnapshotV0["source"]["type"];
-    observedAt: Date;
+}
+
+function sumMoney(
+  players: PersistedPlayerSnapshot[],
+  field: "estimatedValue" | "wage"
+): ImportedSquadSummary["totalEstimatedValue"] {
+  const currencies = new Set(players.map((player) => player[field].currency).filter(Boolean));
+
+  return {
+    amount: players.reduce((total, player) => total + player[field].amount, 0),
+    currency: currencies.size === 1 ? ([...currencies][0] ?? null) : null,
+    isComplete: players.every((player) => player[field].currency !== null) && currencies.size <= 1
   };
-  snapshot: {
-    snapshotDate: Date;
-    season: number | null;
-    week: number | null;
-  };
-  players: Array<{
-    externalId: string | null;
-    name: string;
-    age: number;
-    wage: { amount: number; currency: string | null };
-    estimatedValue: { amount: number; currency: string | null };
-    form: number | null;
-    availabilityStatus: PlayerSnapshotV0["players"][number]["availabilityStatus"] | null;
-    observedPosition: string | null;
-    skills: Record<(typeof skillKeys)[number], number | null>;
-  }>;
+}
+
+function hasIncompleteData(player: PersistedPlayerSnapshot): boolean {
+  return (
+    !player.externalId ||
+    player.form === null ||
+    player.availabilityStatus === null ||
+    !player.observedPosition ||
+    !player.wage.currency ||
+    !player.estimatedValue.currency ||
+    Object.values(player.skills).some((skill) => skill === null)
+  );
 }
 
 function normalizePlayerSnapshot(snapshot: PlayerSnapshotV0): NormalizedPlayerSnapshot {
@@ -192,9 +260,12 @@ function normalizePlayerSnapshot(snapshot: PlayerSnapshotV0): NormalizedPlayerSn
   };
 }
 
-function normalizePlayer(player: PlayerSnapshotV0["players"][number]): NormalizedPlayerSnapshot["players"][number] {
+function normalizePlayer(
+  player: PlayerSnapshotV0["players"][number]
+): NormalizedPlayerSnapshot["players"][number] {
   const skills = normalizeSkills(player.skills);
-  const observedPosition = normalizeOptionalString(player.observedPosition) ?? deriveObservedPosition(skills);
+  const observedPosition =
+    normalizeOptionalString(player.observedPosition) ?? deriveObservedPosition(skills);
 
   return {
     externalId: normalizeOptionalString(player.externalId),
@@ -216,13 +287,12 @@ function normalizePlayer(player: PlayerSnapshotV0["players"][number]): Normalize
 }
 
 function normalizeSkills(skills: PlayerSnapshotV0["players"][number]["skills"]) {
-  return Object.fromEntries(skillKeys.map((skill) => [skill, skills[skill] ?? null])) as Record<
-    (typeof skillKeys)[number],
-    number | null
-  >;
+  return Object.fromEntries(
+    skillKeys.map((skill: SkillKey) => [skill, skills[skill] ?? null])
+  ) as Record<SkillKey, number | null>;
 }
 
-function deriveObservedPosition(skills: Record<(typeof skillKeys)[number], number | null>): string | null {
+function deriveObservedPosition(skills: Record<SkillKey, number | null>): string | null {
   const inferred = inferPlayerRoleFromSkills(skills);
 
   return inferred.role === "undefined" ? null : inferred.role;

@@ -4,7 +4,8 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import validSnapshot from "@atlas/test-fixtures/player-snapshot/valid.json" with { type: "json" };
 import { ClubModel, ImportEventModel, PlayerModel, SnapshotModel } from "@atlas/database";
 import type { PlayerSnapshotV0 } from "@atlas/contracts";
-import { calculateClubHistoricalTrends, importPlayerSnapshot } from "../src/index.js";
+import { calculateClubHistoricalTrends, generateClubHistoricalFindings } from "../src/clubHistorical/index.js";
+import { importPlayerSnapshot } from "../src/playerImport/index.js";
 
 let mongo: MongoMemoryServer;
 
@@ -54,6 +55,54 @@ describe("CalculateClubHistoricalTrends", () => {
 
     expect(trends.players[0]?.value.direction).toBe("insufficient_data");
     expect(trends.squad.valueTotal.direction).toBe("insufficient_data");
+  });
+});
+
+
+describe("GenerateClubHistoricalFindings", () => {
+  beforeAll(async () => {
+    mongo = await MongoMemoryServer.create();
+    await mongoose.connect(mongo.getUri());
+  });
+
+  beforeEach(async () => {
+    await Promise.all([
+      ClubModel.deleteMany({}),
+      ImportEventModel.deleteMany({}),
+      PlayerModel.deleteMany({}),
+      SnapshotModel.deleteMany({})
+    ]);
+  });
+
+  afterAll(async () => {
+    await mongoose.disconnect();
+    await mongo.stop();
+  });
+
+  it("generates historical findings from persisted club snapshots", async () => {
+    const base = await importPlayerSnapshot({
+      payload: payload({ snapshotDate: "2026-08-05", player: { estimatedValue: 400000 } })
+    });
+    await importPlayerSnapshot({
+      payload: payload({ snapshotDate: "2026-08-12", player: { estimatedValue: 450000 } })
+    });
+    await importPlayerSnapshot({
+      payload: payload({
+        snapshotDate: "2026-08-19",
+        player: { estimatedValue: 500000, pace: 11 }
+      })
+    });
+
+    const findings = await generateClubHistoricalFindings({ clubId: base.clubId! });
+
+    expect(findings.snapshotDates).toEqual(["2026-08-05", "2026-08-12", "2026-08-19"]);
+    expect(findings.taxonomy).toContain("player_sustained_asset_appreciation");
+    expect(findings.findings).toContainEqual(
+      expect.objectContaining({
+        type: "player_sustained_asset_appreciation",
+        confidence: "high"
+      })
+    );
   });
 });
 

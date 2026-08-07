@@ -1,77 +1,25 @@
 import { MongoClubRepository, type PersistedClub, type PersistedClubManualRecord } from "@atlas/database";
+import { ClubOperatingSettings, GetClubOperatingSettingsInput, OperatingPreferenceKey, OperatingPreferenceValue, UpdateClubOperatingSettingsInput, ValidatedManualOperatingSettingsUpdate } from "./types";
 
-export const operatingPreferenceDefaults = {
+const operatingPreferenceDefaults: Record<OperatingPreferenceKey, OperatingPreferenceValue> = {
   "economy.riskTolerance": "balanced",
   "training.priority": "balanced",
   "academy.investment": "balanced",
   "market.strategy": "balanced"
-} as const;
+};
 
-const preferenceOptions = {
+const preferenceOptions: Record<OperatingPreferenceKey, OperatingPreferenceValue[]> = {
   "economy.riskTolerance": ["conservative", "balanced", "aggressive"],
   "training.priority": ["performance", "balanced", "development"],
   "academy.investment": ["minimal", "balanced", "ambitious"],
   "market.strategy": ["conservative", "balanced", "opportunistic"]
-} as const;
-
-export type OperatingPreferenceKey = keyof typeof operatingPreferenceDefaults;
-export type OperatingPreferenceValue = (typeof preferenceOptions)[OperatingPreferenceKey][number];
-
-export interface ClubOperatingSettings {
-  clubId: string;
-  observed: {
-    season: number | null;
-    week: number | null;
-  };
-  manual: {
-    currency: string | null;
-    season: number | null;
-    week: number | null;
-    preferences: Partial<Record<OperatingPreferenceKey, OperatingPreferenceValue>>;
-  };
-  effective: {
-    currency: string | null;
-    season: number | null;
-    week: number | null;
-    preferences: Record<OperatingPreferenceKey, OperatingPreferenceValue>;
-  };
-}
-
-export interface GetClubOperatingSettingsInput {
-  clubId: string;
-}
-
-export interface UpdateClubOperatingSettingsInput {
-  clubId: string;
-  manual: {
-    currency?: string | null;
-    season?: number | null;
-    week?: number | null;
-    preferences?: Partial<Record<OperatingPreferenceKey, OperatingPreferenceValue | null>>;
-  };
-}
-
-export interface ValidatedManualProfileUpdate {
-  name?: string | null;
-  currency?: string | null;
-  season?: number | null;
-  week?: number | null;
-  assumptions?: Array<{ key: string; value: string }>;
-  preferences?: Array<{ key: string; value: string }>;
-}
-
-interface ValidatedManualOperatingSettingsUpdate {
-  currency?: string | null;
-  season?: number | null;
-  week?: number | null;
-  preferences?: Partial<Record<OperatingPreferenceKey, OperatingPreferenceValue | null>>;
-}
+};
 
 const clubRepository = new MongoClubRepository();
 
-export async function getClubOperatingSettings(
+export const getClubOperatingSettings = async (
   input: GetClubOperatingSettingsInput
-): Promise<ClubOperatingSettings> {
+): Promise<ClubOperatingSettings> => {
   const club = await clubRepository.findById(input.clubId);
 
   if (!club) {
@@ -81,9 +29,9 @@ export async function getClubOperatingSettings(
   return buildClubOperatingSettings(club);
 }
 
-export async function updateClubOperatingSettings(
+export const updateClubOperatingSettings = async (
   input: UpdateClubOperatingSettingsInput
-): Promise<ClubOperatingSettings> {
+): Promise<ClubOperatingSettings> => {
   const club = await clubRepository.findById(input.clubId);
 
   if (!club) {
@@ -106,21 +54,6 @@ export async function updateClubOperatingSettings(
   const updated = await clubRepository.updateManualProfile(update);
 
   return buildClubOperatingSettings(updated);
-}
-
-export function validateManualProfileUpdate(
-  manual: ValidatedManualProfileUpdate
-): ValidatedManualProfileUpdate {
-  const validated: ValidatedManualProfileUpdate = {};
-
-  if ("name" in manual) validated.name = normalizeNullableString(manual.name);
-  if ("currency" in manual) validated.currency = validateCurrency(manual.currency);
-  if ("season" in manual) validated.season = validateSeason(manual.season);
-  if ("week" in manual) validated.week = validateWeek(manual.week);
-  if (manual.assumptions) validated.assumptions = validateManualRecords(manual.assumptions);
-  if (manual.preferences) validated.preferences = validateManualRecords(manual.preferences);
-
-  return validated;
 }
 
 export function buildClubOperatingSettings(club: PersistedClub): ClubOperatingSettings {
@@ -221,19 +154,6 @@ function validateOperatingPreferences(
       return [key, value];
     })
   ) as Partial<Record<OperatingPreferenceKey, OperatingPreferenceValue | null>>;
-}
-
-function validateManualRecords(records: Array<{ key: string; value: string }>) {
-  return records.map((record) => {
-    const key = normalizeNullableString(record.key);
-    const value = normalizeNullableString(record.value);
-
-    if (!key || !value) {
-      throw new Error("Manual records must include non-empty key and value.");
-    }
-
-    return { key, value };
-  });
 }
 
 function readOperatingPreferences(

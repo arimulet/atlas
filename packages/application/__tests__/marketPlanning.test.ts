@@ -4,11 +4,9 @@ import mongoose from "mongoose";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { ClubModel, ImportEventModel, PlayerModel, SnapshotModel } from "@atlas/database";
-import {
-  getSquadMarketPlanning,
-  importPlayerSnapshot,
-  updateClubOperatingSettings
-} from "../src/index.js";
+import { getSquadMarketPlanning } from "../src/marketPlanning/index.js";
+import { importPlayerSnapshot } from "../src/playerImport/index.js";
+import { updateClubOperatingSettings } from "../src/clubOperatingSettings/index.js";
 
 interface SnapshotFixture {
   source: {
@@ -199,9 +197,7 @@ describe("Squad market planning use case", () => {
       timing: { label: "Timing contradictorio" }
     });
     expect(planning.derived.players[0]?.warnings).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ code: "contradictory_market_signals" })
-      ])
+      expect.arrayContaining([expect.objectContaining({ code: "contradictory_market_signals" })])
     );
   });
 });

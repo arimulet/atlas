@@ -13,7 +13,7 @@ import {
   getSquadEconomy,
   getYouthPipelinePlanning,
   importPlayerSnapshotMvp,
-  listClubSnapshots,
+  getClubSnapshots,
   updateClubOperatingSettings,
   updateClubProfile,
   validatePlayerSnapshotImport
@@ -26,126 +26,122 @@ import {
   updateClubProfileBodySchema
 } from "./http-schemas.js";
 
-export function buildServer() {
-  const server = Fastify({ logger: true });
+const server = Fastify({ logger: true });
 
-  server.setErrorHandler((error, _request, reply) => {
-    server.log.error(error);
-    reply.code(error instanceof ZodError ? 400 : 500).send({
-      importResult: {
-        status: "rejected",
-        errors: [{ path: "api", message: readErrorMessage(error) }],
-        warnings: [],
-        importEventId: "",
-        snapshotId: null,
-        clubId: null,
-        playerIds: [],
-        importedPlayerCount: 0
-      },
-      summary: null,
-      diagnostic: null
-    });
+server.setErrorHandler((error, _request, reply) => {
+  server.log.error(error);
+  reply.code(error instanceof ZodError ? 400 : 500).send({
+    importResult: {
+      status: "rejected",
+      errors: [{ path: "api", message: readErrorMessage(error) }],
+      warnings: [],
+      importEventId: "",
+      snapshotId: null,
+      clubId: null,
+      playerIds: [],
+      importedPlayerCount: 0
+    },
+    summary: null,
+    diagnostic: null
   });
+});
 
-  server.get("/health", async () => ({ status: "ok", service: "atlas-api" }));
+server.get("/health", async () => ({ status: "ok", service: "atlas-api" }));
 
-  server.post("/imports/player-snapshot/validate", async (request) => {
-    return validatePlayerSnapshotImport({ payload: request.body });
-  });
+server.post("/imports/player-snapshot/validate", async (request) => {
+  return validatePlayerSnapshotImport({ payload: request.body });
+});
 
-  server.post("/api/imports/player-snapshot", async (request, reply) => {
-    const result = await importPlayerSnapshotMvp({ payload: request.body });
+server.post("/api/imports/player-snapshot", async (request, reply) => {
+  const result = await importPlayerSnapshotMvp({ payload: request.body });
 
-    if (result.importResult.status === "rejected") {
-      reply.code(422);
-    }
+  if (result.importResult.status === "rejected") {
+    reply.code(422);
+  }
 
-    return result;
-  });
+  return result;
+});
 
-  server.get("/api/clubs/:clubId/snapshots", async (request) => {
-    const { clubId } = clubParamsSchema.parse(request.params);
+server.get("/api/clubs/:clubId/snapshots", async (request) => {
+  const { clubId } = clubParamsSchema.parse(request.params);
 
-    return { snapshots: await listClubSnapshots(clubId) };
-  });
+  return { snapshots: await getClubSnapshots(clubId) };
+});
 
-  server.get("/api/clubs/:clubId/profile", async (request) => {
-    const { clubId } = clubParamsSchema.parse(request.params);
+server.get("/api/clubs/:clubId/profile", async (request) => {
+  const { clubId } = clubParamsSchema.parse(request.params);
 
-    return { club: await getClubProfile({ clubId }) };
-  });
+  return { club: await getClubProfile({ clubId }) };
+});
 
-  server.get("/api/clubs/:clubId/dashboard", async (request) => {
-    const { clubId } = clubParamsSchema.parse(request.params);
+server.get("/api/clubs/:clubId/dashboard", async (request) => {
+  const { clubId } = clubParamsSchema.parse(request.params);
 
-    return { dashboard: await getClubDashboard({ clubId }) };
-  });
+  return { dashboard: await getClubDashboard({ clubId }) };
+});
 
-  server.get("/api/clubs/:clubId/squad-economy", async (request) => {
-    const { clubId } = clubParamsSchema.parse(request.params);
+server.get("/api/clubs/:clubId/squad-economy", async (request) => {
+  const { clubId } = clubParamsSchema.parse(request.params);
 
-    return { squadEconomy: await getSquadEconomy({ clubId }) };
-  });
+  return { squadEconomy: await getSquadEconomy({ clubId }) };
+});
 
-  server.get("/api/clubs/:clubId/player-development", async (request) => {
-    const { clubId } = clubParamsSchema.parse(request.params);
+server.get("/api/clubs/:clubId/player-development", async (request) => {
+  const { clubId } = clubParamsSchema.parse(request.params);
 
-    return { playerDevelopment: await getPlayerDevelopment({ clubId }) };
-  });
+  return { playerDevelopment: await getPlayerDevelopment({ clubId }) };
+});
 
-  server.get("/api/clubs/:clubId/squad-market-planning", async (request) => {
-    const { clubId } = clubParamsSchema.parse(request.params);
+server.get("/api/clubs/:clubId/squad-market-planning", async (request) => {
+  const { clubId } = clubParamsSchema.parse(request.params);
 
-    return { squadMarketPlanning: await getSquadMarketPlanning({ clubId }) };
-  });
+  return { squadMarketPlanning: await getSquadMarketPlanning({ clubId }) };
+});
 
-  server.get("/api/clubs/:clubId/youth-pipeline-planning", async (request) => {
-    const { clubId } = clubParamsSchema.parse(request.params);
+server.get("/api/clubs/:clubId/youth-pipeline-planning", async (request) => {
+  const { clubId } = clubParamsSchema.parse(request.params);
 
-    return { youthPipelinePlanning: await getYouthPipelinePlanning({ clubId }) };
-  });
+  return { youthPipelinePlanning: await getYouthPipelinePlanning({ clubId }) };
+});
 
-  server.patch("/api/clubs/:clubId/profile", async (request) => {
-    const { clubId } = clubParamsSchema.parse(request.params);
-    const body = updateClubProfileBodySchema.parse(request.body);
+server.patch("/api/clubs/:clubId/profile", async (request) => {
+  const { clubId } = clubParamsSchema.parse(request.params);
+  const body = updateClubProfileBodySchema.parse(request.body);
 
-    return { club: await updateClubProfile({ clubId, manual: body.manual ?? {} }) };
-  });
+  return { club: await updateClubProfile({ clubId, manual: body.manual ?? {} }) };
+});
 
-  server.get("/api/clubs/:clubId/operating-settings", async (request) => {
-    const { clubId } = clubParamsSchema.parse(request.params);
+server.get("/api/clubs/:clubId/operating-settings", async (request) => {
+  const { clubId } = clubParamsSchema.parse(request.params);
 
-    return { settings: await getClubOperatingSettings({ clubId }) };
-  });
+  return { settings: await getClubOperatingSettings({ clubId }) };
+});
 
-  server.patch("/api/clubs/:clubId/operating-settings", async (request) => {
-    const { clubId } = clubParamsSchema.parse(request.params);
-    const body = updateClubOperatingSettingsBodySchema.parse(request.body);
+server.patch("/api/clubs/:clubId/operating-settings", async (request) => {
+  const { clubId } = clubParamsSchema.parse(request.params);
+  const body = updateClubOperatingSettingsBodySchema.parse(request.body);
 
-    return { settings: await updateClubOperatingSettings({ clubId, manual: body.manual ?? {} }) };
-  });
+  return { settings: await updateClubOperatingSettings({ clubId, manual: body.manual ?? {} }) };
+});
 
-  server.post("/api/clubs/:clubId/snapshot-comparisons", async (request) => {
-    const { clubId } = clubParamsSchema.parse(request.params);
-    const body = compareClubSnapshotsBodySchema.parse(request.body);
+server.post("/api/clubs/:clubId/snapshot-comparisons", async (request) => {
+  const { clubId } = clubParamsSchema.parse(request.params);
+  const body = compareClubSnapshotsBodySchema.parse(request.body);
 
-    return compareClubSnapshots({ clubId, ...body });
-  });
+  return compareClubSnapshots({ clubId, ...body });
+});
 
-  server.get("/api/clubs/:clubId/historical-trends", async (request) => {
-    const { clubId } = clubParamsSchema.parse(request.params);
+server.get("/api/clubs/:clubId/historical-trends", async (request) => {
+  const { clubId } = clubParamsSchema.parse(request.params);
 
-    return calculateClubHistoricalTrends({ clubId });
-  });
+  return calculateClubHistoricalTrends({ clubId });
+});
 
-  server.get("/api/clubs/:clubId/historical-findings", async (request) => {
-    const { clubId } = clubParamsSchema.parse(request.params);
+server.get("/api/clubs/:clubId/historical-findings", async (request) => {
+  const { clubId } = clubParamsSchema.parse(request.params);
 
-    return generateClubHistoricalFindings({ clubId });
-  });
-
-  return server;
-}
+  return generateClubHistoricalFindings({ clubId });
+});
 
 function readErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "Unexpected import API error.";
@@ -154,7 +150,6 @@ function readErrorMessage(error: unknown): string {
 if (process.env.NODE_ENV !== "test" && process.env.ATLAS_API_AUTOSTART !== "false") {
   const port = Number(process.env.PORT ?? 3000);
   const host = process.env.HOST ?? "127.0.0.1";
-  const server = buildServer();
 
   if (process.env.MONGODB_URI) {
     await connectMongoDb(process.env.MONGODB_URI);
