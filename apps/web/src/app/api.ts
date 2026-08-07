@@ -19,7 +19,7 @@ export async function fetchClubDashboard(clubId: string): Promise<ClubDashboard>
 }
 
 export async function fetchSquadEconomy(clubId: string): Promise<SquadEconomy> {
-  const response = await fetch(`/api/clubs/${clubId}/squad-economy`);
+  const response = await fetch(`/api/clubs/${clubId}/economy`);
   const body = (await response.json()) as { squadEconomy?: SquadEconomy };
 
   if (!response.ok || !body.squadEconomy) {
@@ -30,7 +30,7 @@ export async function fetchSquadEconomy(clubId: string): Promise<SquadEconomy> {
 }
 
 export async function fetchPlayerDevelopment(clubId: string): Promise<PlayerDevelopment> {
-  const response = await fetch(`/api/clubs/${clubId}/player-development`);
+  const response = await fetch(`/api/clubs/${clubId}/players/development`);
   const body = (await response.json()) as { playerDevelopment?: PlayerDevelopment };
 
   if (!response.ok || !body.playerDevelopment) {
@@ -41,7 +41,7 @@ export async function fetchPlayerDevelopment(clubId: string): Promise<PlayerDeve
 }
 
 export async function fetchSquadMarketPlanning(clubId: string): Promise<SquadMarketPlanning> {
-  const response = await fetch(`/api/clubs/${clubId}/squad-market-planning`);
+  const response = await fetch(`/api/clubs/${clubId}/economy/squad-market-planning`);
   const body = (await response.json()) as { squadMarketPlanning?: SquadMarketPlanning };
 
   if (!response.ok || !body.squadMarketPlanning) {
@@ -52,7 +52,7 @@ export async function fetchSquadMarketPlanning(clubId: string): Promise<SquadMar
 }
 
 export async function fetchYouthPipelinePlanning(clubId: string): Promise<YouthPipelinePlanning> {
-  const response = await fetch(`/api/clubs/${clubId}/youth-pipeline-planning`);
+  const response = await fetch(`/api/clubs/${clubId}/players/youth-pipeline-planning`);
   const body = (await response.json()) as { youthPipelinePlanning?: YouthPipelinePlanning };
 
   if (!response.ok || !body.youthPipelinePlanning) {
