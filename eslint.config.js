@@ -8,6 +8,12 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
+    rules: {
+      "no-unused-vars": "off", // Apagas la regla base de JavaScript
+      "@typescript-eslint/no-unused-vars": "warn" // Cambias la regla de TS a warning
+    }
+  },
+  {
     files: ["scripts/**/*.mjs"],
     languageOptions: {
       globals: {
