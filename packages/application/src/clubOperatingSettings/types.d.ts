@@ -1,4 +1,4 @@
-import { ClubId, KeyValue } from "../types";
+import { ClubId, KeyValue } from "@atlas/application";
 
 export type OperatingPreferenceKey = "academy.investment" | "economy.riskTolerance" | "market.strategy" | "training.priority" // keyof typeof operatingPreferenceDefaults;
 export type OperatingPreferenceValue = "aggressive" | "ambitious" | "balanced" | "conservative" | "development" | "minimal" | "opportunistic" | "performance" // (typeof preferenceOptions)[OperatingPreferenceKey][number];
@@ -21,10 +21,6 @@ export interface ClubOperatingSettings {
     week: number | null;
     preferences: Record<OperatingPreferenceKey, OperatingPreferenceValue>;
   };
-}
-
-export interface GetClubOperatingSettingsInput {
-  clubId: string;
 }
 
 export interface UpdateClubOperatingSettingsInput {

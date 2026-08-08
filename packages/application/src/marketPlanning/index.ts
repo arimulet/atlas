@@ -4,20 +4,31 @@ import {
   type PersistedPlayerSnapshot,
   type PersistedSnapshot
 } from "@atlas/database";
-import { buildClubOperatingSettings } from "../clubOperatingSettings/index.js";
-import { getPlayerDevelopment } from "../playerDevelopment/index.js";
-import { Severity, type PlayerDevelopmentPlayerSummary } from "../playerDevelopment/types.js";
-import { getSquadEconomy } from "../economy/index.js";
-import { SquadEconomyPlayerDetail } from "../economy/types.js";
-import { MarketPlanningCategory, MarketStrategy, SquadMarketObservedPlayer, SquadMarketPlanning, SquadMarketPlayerPlan, SquadMarketSignal, SquadMarketTiming, SquadMarketWarning } from "./types.js";
-import { ClubId, Confidence } from "../types.js";
+import {
+  buildClubOperatingSettings,
+  getPlayerDevelopment,
+  Severity,
+  getSquadEconomy,
+  Confidence,
+  ClubId,
+  SquadEconomyPlayerDetail,
+  PlayerDevelopmentPlayerSummary
+} from "@atlas/application";
+import {
+  MarketPlanningCategory,
+  MarketStrategy,
+  SquadMarketObservedPlayer,
+  SquadMarketPlanning,
+  SquadMarketPlayerPlan,
+  SquadMarketSignal,
+  SquadMarketTiming,
+  SquadMarketWarning
+} from "./types.js";
 
 const clubRepository = new MongoClubRepository();
 const snapshotRepository = new MongoSnapshotRepository();
 
-export const getSquadMarketPlanning = async (
- clubId: ClubId
-): Promise<SquadMarketPlanning> => {
+export const getSquadMarketPlanning = async (clubId: ClubId): Promise<SquadMarketPlanning> => {
   const club = await clubRepository.findById(clubId.toString());
 
   if (!club) {
@@ -77,12 +88,9 @@ export const getSquadMarketPlanning = async (
     },
     warnings: buildGlobalWarnings(latest, snapshots)
   };
-}
+};
 
-function buildEmptyPlanning(
-  clubId: ClubId,
-  marketStrategy: MarketStrategy
-): SquadMarketPlanning {
+function buildEmptyPlanning(clubId: ClubId, marketStrategy: MarketStrategy): SquadMarketPlanning {
   return {
     clubId,
     snapshotId: null,
@@ -186,15 +194,26 @@ function buildSignals(input: {
   ) {
     signals.push({
       code: "senior_declining_value_timing",
-      severity: input.player.age >= 32 || input.historicalTrend.valueDeltaPercent <= -0.18 ? "high" : "medium",
+      severity:
+        input.player.age >= 32 || input.historicalTrend.valueDeltaPercent <= -0.18
+          ? "high"
+          : "medium",
       confidence: input.historicalTrend.snapshotCount >= 3 ? "high" : "medium",
       message:
         "Jugador veterano con valor estimado en baja dentro del historial propio; senal de timing patrimonial para revisar salida posible sin estimar precio real.",
       evidence: [
         { kind: "observed", label: "Edad", value: input.player.age },
-        { kind: "observed", label: "Ventana desde", value: input.historicalTrend.from ?? undefined },
+        {
+          kind: "observed",
+          label: "Ventana desde",
+          value: input.historicalTrend.from ?? undefined
+        },
         { kind: "observed", label: "Ventana hasta", value: input.historicalTrend.to ?? undefined },
-        { kind: "derived", label: "Variacion valor %", value: input.historicalTrend.valueDeltaPercent ?? undefined },
+        {
+          kind: "derived",
+          label: "Variacion valor %",
+          value: input.historicalTrend.valueDeltaPercent ?? undefined
+        },
         { kind: "manual", label: "market.strategy", value: input.marketStrategy }
       ]
     });
@@ -216,7 +235,8 @@ function buildSignals(input: {
   if (wageToValueRatio !== null && wageToValueRatio >= wageToValueLimit(input.marketStrategy)) {
     signals.push({
       code: "high_internal_cost",
-      severity: wageToValueRatio >= wageToValueLimit(input.marketStrategy) * 1.5 ? "high" : "medium",
+      severity:
+        wageToValueRatio >= wageToValueLimit(input.marketStrategy) * 1.5 ? "high" : "medium",
       confidence: "medium",
       message:
         "El costo salarial relativo es alto frente al valor estimado interno; es senal de revision, no orden de venta.",
@@ -232,7 +252,8 @@ function buildSignals(input: {
   if (
     input.historicalTrend.wageDeltaPercent !== null &&
     input.historicalTrend.wageDeltaPercent >= 0.12 &&
-    (input.historicalTrend.valueDeltaPercent === null || input.historicalTrend.valueDeltaPercent < 0.06)
+    (input.historicalTrend.valueDeltaPercent === null ||
+      input.historicalTrend.valueDeltaPercent < 0.06)
   ) {
     signals.push({
       code: "wage_growth_without_value_support",
@@ -241,9 +262,21 @@ function buildSignals(input: {
       message:
         "El salario crece sin respaldo proporcional del valor estimado propio; conviene revisar el timing salarial del activo.",
       evidence: [
-        { kind: "derived", label: "Variacion salario %", value: input.historicalTrend.wageDeltaPercent ?? undefined },
-        { kind: "derived", label: "Variacion valor %", value: input.historicalTrend.valueDeltaPercent ?? undefined },
-        { kind: "observed", label: "Snapshots comparables", value: input.historicalTrend.snapshotCount }
+        {
+          kind: "derived",
+          label: "Variacion salario %",
+          value: input.historicalTrend.wageDeltaPercent ?? undefined
+        },
+        {
+          kind: "derived",
+          label: "Variacion valor %",
+          value: input.historicalTrend.valueDeltaPercent ?? undefined
+        },
+        {
+          kind: "observed",
+          label: "Snapshots comparables",
+          value: input.historicalTrend.snapshotCount
+        }
       ]
     });
   }
@@ -267,7 +300,8 @@ function buildSignals(input: {
     input.player.age <= 23 &&
     input.player.estimatedValue.amount > 0 &&
     improvedSkills > declinedSkills &&
-    (input.historicalTrend.valueDeltaPercent === null || input.historicalTrend.valueDeltaPercent >= -0.05)
+    (input.historicalTrend.valueDeltaPercent === null ||
+      input.historicalTrend.valueDeltaPercent >= -0.05)
   ) {
     signals.push({
       code: "young_asset_protection",
@@ -298,7 +332,11 @@ function buildSignals(input: {
         "Jugador joven con mejora de habilidades y valorizacion interna; la senal favorece proteger o posponer decisiones fuertes.",
       evidence: [
         { kind: "derived", label: "Habilidades que subieron", value: improvedSkills },
-        { kind: "derived", label: "Variacion valor %", value: input.historicalTrend.valueDeltaPercent ?? undefined },
+        {
+          kind: "derived",
+          label: "Variacion valor %",
+          value: input.historicalTrend.valueDeltaPercent ?? undefined
+        },
         { kind: "observed", label: "Ventana hasta", value: input.historicalTrend.to ?? undefined }
       ]
     });
@@ -345,9 +383,7 @@ function chooseCategory(
         "high_internal_cost",
         "wage_growth_without_value_support",
         "development_decline_review"
-      ].includes(
-        signal.code
-      )
+      ].includes(signal.code)
     )
   ) {
     return "sale_candidate";
@@ -400,7 +436,11 @@ function buildPlayerWarnings(
       code: "short_player_history",
       message: "El jugador no tiene dos snapshots comparables por identidad estable.",
       evidence: [
-        { kind: "observed", label: "Snapshots comparables del jugador", value: historicalTrend.snapshotCount }
+        {
+          kind: "observed",
+          label: "Snapshots comparables del jugador",
+          value: historicalTrend.snapshotCount
+        }
       ]
     });
   }
@@ -416,7 +456,11 @@ function buildPlayerWarnings(
         "El valor estimado baja mientras las habilidades mejoran; la conclusion debe mantenerse prudente.",
       evidence: [
         { kind: "derived", label: "Variacion valor %", value: historicalTrend.valueDeltaPercent },
-        { kind: "derived", label: "Habilidades que subieron", value: historicalTrend.improvedSkills }
+        {
+          kind: "derived",
+          label: "Habilidades que subieron",
+          value: historicalTrend.improvedSkills
+        }
       ]
     });
   }
@@ -447,16 +491,18 @@ function buildGlobalWarnings(
   if (snapshots.length < 2) {
     warnings.push({
       code: "short_history",
-      message:
-        "La planificacion de mercado interno mejora con al menos dos snapshots comparables.",
+      message: "La planificacion de mercado interno mejora con al menos dos snapshots comparables.",
       evidence: [{ kind: "observed", label: "Snapshots disponibles", value: snapshots.length }]
     });
   }
 
-  if (latest.players.some((player) => player.wage.amount <= 0 || player.estimatedValue.amount <= 0)) {
+  if (
+    latest.players.some((player) => player.wage.amount <= 0 || player.estimatedValue.amount <= 0)
+  ) {
     warnings.push({
       code: "partial_market_data",
-      message: "Hay jugadores con salario o valor estimado faltante; algunas categorias quedan debiles.",
+      message:
+        "Hay jugadores con salario o valor estimado faltante; algunas categorias quedan debiles.",
       evidence: [
         { kind: "observed", label: "Jugadores", value: latest.players.length },
         {
@@ -618,10 +664,7 @@ function buildTiming(
   };
 }
 
-function labelTiming(
-  category: MarketPlanningCategory,
-  warnings: SquadMarketWarning[]
-): string {
+function labelTiming(category: MarketPlanningCategory, warnings: SquadMarketWarning[]): string {
   if (warnings.some((warning) => warning.code === "contradictory_market_signals")) {
     return "Timing contradictorio";
   }
@@ -645,9 +688,7 @@ function buildTimingDataUsed(
   return Array.from(labels);
 }
 
-function countCategories(
-  players: SquadMarketPlayerPlan[]
-): Record<MarketPlanningCategory, number> {
+function countCategories(players: SquadMarketPlayerPlan[]): Record<MarketPlanningCategory, number> {
   return {
     sale_candidate: players.filter((player) => player.category === "sale_candidate").length,
     protection_candidate: players.filter((player) => player.category === "protection_candidate")
@@ -767,3 +808,5 @@ function buildRationale(category: MarketPlanningCategory): string {
 function formatDate(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
+
+export * from './types.js'
