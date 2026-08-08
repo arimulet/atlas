@@ -1,7 +1,7 @@
 import { Category, ClubId, Confidence, FindingType, KeyValue, Severity } from "@atlas/application";
 import { type PersistedClub } from "@atlas/database";
-import { type ClubOperatingSettings } from "../clubOperatingSettings/types.js";
-import { MarketStrategy, type MarketPlanningCategory } from "../marketPlanning/types.js";
+import { type ClubOperatingSettings } from "@atlas/application/clubOperatingSettingss/types.ts";
+import { MarketStrategy, type MarketPlanningCategory } from "@atlas/application";
 
 
 export interface UpdateClubProfileInput {

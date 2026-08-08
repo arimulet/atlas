@@ -1,6 +1,16 @@
-import { MongoClubRepository, type PersistedClub, type PersistedClubManualRecord } from "@atlas/database";
-import { ClubOperatingSettings, GetClubOperatingSettingsInput, OperatingPreferenceKey, OperatingPreferenceValue, UpdateClubOperatingSettingsInput, ValidatedManualOperatingSettingsUpdate } from "./types";
-import { ClubId } from "../types";
+import {
+  MongoClubRepository,
+  type PersistedClub,
+  type PersistedClubManualRecord
+} from "@atlas/database";
+import {
+  ClubOperatingSettings,
+  OperatingPreferenceKey,
+  OperatingPreferenceValue,
+  UpdateClubOperatingSettingsInput,
+  ValidatedManualOperatingSettingsUpdate
+} from "./types";
+import { ClubId } from "@atlas/application";
 
 const operatingPreferenceDefaults: Record<OperatingPreferenceKey, OperatingPreferenceValue> = {
   "economy.riskTolerance": "balanced",
@@ -18,9 +28,7 @@ const preferenceOptions: Record<OperatingPreferenceKey, OperatingPreferenceValue
 
 const clubRepository = new MongoClubRepository();
 
-export const getClubOperatingSettings = async (
-  clubId: ClubId
-): Promise<ClubOperatingSettings> => {
+export const getClubOperatingSettings = async (clubId: ClubId): Promise<ClubOperatingSettings> => {
   const club = await clubRepository.findById(clubId.toString());
 
   if (!club) {
@@ -28,7 +36,7 @@ export const getClubOperatingSettings = async (
   }
 
   return buildClubOperatingSettings(club);
-}
+};
 
 export const updateClubOperatingSettings = async (
   input: UpdateClubOperatingSettingsInput
@@ -55,7 +63,7 @@ export const updateClubOperatingSettings = async (
   const updated = await clubRepository.updateManualProfile(update);
 
   return buildClubOperatingSettings(updated);
-}
+};
 
 export function buildClubOperatingSettings(club: PersistedClub): ClubOperatingSettings {
   const manualPreferences = readOperatingPreferences(club.manual.preferences);
