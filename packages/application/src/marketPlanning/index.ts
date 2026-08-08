@@ -4,6 +4,7 @@ import {
   type PersistedPlayerSnapshot,
   type PersistedSnapshot
 } from "@atlas/database";
+import { formatDate } from "@atlas/utils";
 import {
   buildClubOperatingSettings,
   getPlayerDevelopment,
@@ -805,8 +806,6 @@ function buildRationale(category: MarketPlanningCategory): string {
   return "Sin evidencia suficiente para clasificar con fuerza.";
 }
 
-function formatDate(date: Date): string {
-  return date.toISOString().slice(0, 10);
-}
+
 
 export * from './types.js'

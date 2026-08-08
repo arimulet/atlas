@@ -5,6 +5,7 @@ import {
   type PersistedSnapshot
 } from "@atlas/database";
 import { buildClubOperatingSettings, Category, ClubId, Confidence, DeltaDirection, getSquadMarketPlanning, SquadMarketPlayerPlan, Severity } from "@atlas/application";
+import { formatDate } from "@atlas/utils";
 
 import type {
   ComparablePlayerPoint,
@@ -660,9 +661,7 @@ function classifyDelta(delta: number): DeltaDirection {
   return "stable";
 }
 
-function formatDate(date: Date): string {
-  return date.toISOString().slice(0, 10);
-}
+
 
 function buildEmptyPlanning(clubId: ClubId, academyInvestment: string): YouthPipelinePlanning {
   return {

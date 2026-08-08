@@ -16,6 +16,7 @@ import {
   SquadEconomyWarning
 } from "./types.js";
 import { Confidence, Money, Severity, buildClubOperatingSettings } from "@atlas/application";
+import { formatDate } from "@atlas/utils";
 
 const clubRepository = new MongoClubRepository();
 const snapshotRepository = new MongoSnapshotRepository();
@@ -696,8 +697,6 @@ function roundPercent(value: number): number {
   return Math.round(value * 1000) / 10;
 }
 
-function formatDate(date: Date): string {
-  return date.toISOString().slice(0, 10);
-}
+
 
 export * from './types.js'
