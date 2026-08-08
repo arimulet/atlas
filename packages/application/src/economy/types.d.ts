@@ -1,5 +1,5 @@
 import { Severity } from "../playerDevelopment/types";
-import { Confidence } from "../types";
+import { Confidence, EvidenceKind, Money } from "../types";
 
 type EconomyRiskTolerance = "conservative" | "balanced" | "aggressive";
 
@@ -26,8 +26,8 @@ export interface SquadEconomy {
     riskTolerance: EconomyRiskTolerance;
   };
   derived: {
-    totalWage: SquadEconomyMoneyTotal;
-    totalEstimatedValue: SquadEconomyMoneyTotal;
+    totalWage: Money;
+    totalEstimatedValue: Money;
     wageToValueRatio: number | null;
     playerDetails: SquadEconomyPlayerDetail[];
     concentration: {
@@ -60,12 +60,6 @@ export interface SquadEconomyObservedPlayer {
   estimatedValue: SnapshotMoney;
 }
 
-export interface SquadEconomyMoneyTotal {
-  amount: number;
-  currency: string | null;
-  isComplete: boolean;
-}
-
 export interface SquadEconomyConcentration {
   playerId: string | null;
   snapshotPlayerId: string;
@@ -91,8 +85,8 @@ export interface SquadEconomyPlayerDetail {
 export interface SquadEconomyHistoricalSnapshot {
   snapshotId: string;
   snapshotDate: string;
-  totalWage: SquadEconomyMoneyTotal;
-  totalEstimatedValue: SquadEconomyMoneyTotal;
+  totalWage: Money;
+  totalEstimatedValue: Money;
   wageToValueRatio: number | null;
 }
 
@@ -103,7 +97,7 @@ export interface SquadEconomyFinding {
   title: string;
   description: string;
   evidence: Array<{
-    kind: "observed" | "manual" | "derived" | "inferred";
+    kind: EvidenceKind;
     label: string;
     value: string | number | null;
   }>;
@@ -113,7 +107,7 @@ export interface SquadEconomyWarning {
   code: string;
   message: string;
   evidence: Array<{
-    kind: "observed" | "manual" | "derived" | "inferred";
+    kind: EvidenceKind;
     label: string;
     value: string | number | null;
   }>;
