@@ -1,13 +1,9 @@
 import { Severity } from "../playerDevelopment/types";
-import { Confidence } from "../types";
+import { Confidence, EvidenceKind, Money, RoleSource } from "../types";
 
 export type MarketStrategy = "conservative" | "balanced" | "opportunistic";
 export type MarketPlanningCategory =
-  | "sale_candidate"
-  | "protection_candidate"
-  | "follow_up"
-  | "insufficient_signal";
-export type EvidenceKind = "observed" | "manual" | "derived" | "inferred";
+  "sale_candidate" | "protection_candidate" | "follow_up" | "insufficient_signal";
 
 export interface GetSquadMarketPlanningInput {
   clubId: string;
@@ -44,16 +40,10 @@ export interface SquadMarketObservedPlayer {
   age: number;
   role: {
     label: string;
-    source: "observed" | "inferred" | "unknown";
+    source: RoleSource;
   };
-  wage: {
-    amount: number;
-    currency: string | null;
-  };
-  estimatedValue: {
-    amount: number;
-    currency: string | null;
-  };
+  wage: Money;
+  estimatedValue: Money;
 }
 
 export interface SquadMarketPlayerPlan {
@@ -63,7 +53,7 @@ export interface SquadMarketPlayerPlan {
   age: number;
   role: {
     label: string;
-    source: "observed" | "inferred" | "unknown";
+    source: RoleSource;
   };
   category: MarketPlanningCategory;
   severity: Severity;
@@ -91,7 +81,7 @@ export interface SquadMarketWarning {
 export interface SquadMarketEvidence {
   kind: EvidenceKind;
   label: string;
-  value: string | number | null;
+  value?: string | number;
 }
 
 export interface SquadMarketTiming {

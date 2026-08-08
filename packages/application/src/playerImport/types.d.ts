@@ -1,6 +1,7 @@
 import { type ImportIssue, type PlayerSnapshotV0 } from "@atlas/contracts";
 import { type SnapshotSkillSet } from "@atlas/database";
 import type { BasicDiagnostic } from "@atlas/domain";
+import { Money } from "../types";
 
 export type ImportPlayerSnapshotStatus = "accepted" | "accepted-with-warnings" | "rejected";
 
@@ -20,21 +21,12 @@ export interface ImportPlayerSnapshotResult {
   importedPlayerCount: number;
 }
 
-
 export interface ImportedSquadSummary {
   playerCount: number;
   snapshotDate: string;
   club: string;
-  totalEstimatedValue: {
-    amount: number;
-    currency: string | null;
-    isComplete: boolean;
-  };
-  totalWage: {
-    amount: number;
-    currency: string | null;
-    isComplete: boolean;
-  };
+  totalEstimatedValue: Money;
+  totalWage: Money;
   incompletePlayerCount: number;
 }
 
@@ -43,7 +35,6 @@ export interface ImportPlayerSnapshotMvpResult {
   summary: ImportedSquadSummary | null;
   diagnostic: BasicDiagnostic | null;
 }
-
 
 export interface NormalizedPlayerSnapshot {
   schemaVersion: PlayerSnapshotV0["schemaVersion"];
