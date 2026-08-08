@@ -7,7 +7,7 @@ async function playerRoutes(server: FastifyInstance, options: FastifyPluginOptio
   server.get<{ Params: GetDevelopmentParams }>("/development", async (request) => {
     const { clubId } = clubParamsSchema.parse(request.params);
 
-    const playerDevelopment = await getPlayerDevelopment({ clubId });
+    const playerDevelopment = await getPlayerDevelopment(clubId);
 
     return playerDevelopment;
   });
@@ -17,7 +17,7 @@ async function playerRoutes(server: FastifyInstance, options: FastifyPluginOptio
     async (request) => {
       const { clubId } = clubParamsSchema.parse(request.params);
 
-      const youthPlanning = await getYouthPipelinePlanning({ clubId });
+      const youthPlanning = await getYouthPipelinePlanning(clubId);
 
       return youthPlanning;
     }

@@ -38,7 +38,7 @@ describe("CalculateClubHistoricalTrends", () => {
       })
     });
 
-    const trends = await calculateClubHistoricalTrends({ clubId: base.clubId! });
+    const trends = await calculateClubHistoricalTrends(base.clubId);
 
     expect(trends.snapshotDates).toEqual(["2026-08-05", "2026-08-12"]);
     expect(trends.players[0]?.wage.evidence.deltaAbsolute).toBe(3000);
@@ -51,7 +51,7 @@ describe("CalculateClubHistoricalTrends", () => {
       payload: payload({ snapshotDate: "2026-08-05" })
     });
 
-    const trends = await calculateClubHistoricalTrends({ clubId: imported.clubId! });
+    const trends = await calculateClubHistoricalTrends(imported.clubId);
 
     expect(trends.players[0]?.value.direction).toBe("insufficient_data");
     expect(trends.squad.valueTotal.direction).toBe("insufficient_data");
@@ -93,7 +93,7 @@ describe("GenerateClubHistoricalFindings", () => {
       })
     });
 
-    const findings = await generateClubHistoricalFindings({ clubId: base.clubId! });
+    const findings = await generateClubHistoricalFindings(base.clubId);
 
     expect(findings.snapshotDates).toEqual(["2026-08-05", "2026-08-12", "2026-08-19"]);
     expect(findings.taxonomy).toContain("player_sustained_asset_appreciation");

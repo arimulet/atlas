@@ -1,5 +1,5 @@
 import { type SnapshotSkillSet, type PersistedPlayerSnapshot } from "@atlas/database";
-import { Category, Confidence, DeltaDirection, EvidenceKind, FindingType, Money, RoleSource } from "../types";
+import { Category, ClubId, Confidence, DeltaDirection, EvidenceKind, FindingType, Money, RoleSource } from "../types";
 
 type SkillKey = keyof SnapshotSkillSet;
 
@@ -8,7 +8,7 @@ export interface GetPlayerDevelopmentInput {
 }
 
 export interface PlayerDevelopment {
-  clubId: string;
+  clubId: ClubId;
   snapshotCount: number;
   snapshotDates: string[];
   observed: {
@@ -116,7 +116,7 @@ export interface GetYouthPipelinePlanningInput {
 }
 
 export interface YouthPipelinePlanning {
-  clubId: string;
+  clubId: ClubId;
   snapshotId: string | null;
   snapshotDate: string | null;
   observed: {

@@ -1,4 +1,5 @@
 import {
+    ClubId,
   MongoClubRepository,
   MongoSnapshotRepository,
   type PersistedPlayerSnapshot,
@@ -6,28 +7,28 @@ import {
   type SnapshotMoney
 } from "@atlas/database";
 import { buildClubOperatingSettings } from "../clubOperatingSettings/index.js";
-import { EconomyRiskTolerance, GetSquadEconomyInput, SquadEconomy, SquadEconomyConcentration, SquadEconomyFinding, SquadEconomyHistoricalSnapshot, SquadEconomyPlayerDetail, SquadEconomyWarning } from "./types.js";
-import { Confidence, Severity } from "../types.js";
+import { EconomyRiskTolerance, SquadEconomy, SquadEconomyConcentration, SquadEconomyFinding, SquadEconomyHistoricalSnapshot, SquadEconomyPlayerDetail, SquadEconomyWarning } from "./types.js";
+import { Confidence, Money, Severity } from "../types.js";
 
 const clubRepository = new MongoClubRepository();
 const snapshotRepository = new MongoSnapshotRepository();
 
-export const getSquadEconomy = async (input: GetSquadEconomyInput): Promise<SquadEconomy> => {
-  const club = await clubRepository.findById(input.clubId);
+export const getSquadEconomy = async (clubId: ClubId): Promise<SquadEconomy> => {
+  const club = await clubRepository.findById(clubId.toString());
 
   if (!club) {
-    throw new Error(`Club not found: ${input.clubId}`);
+    throw new Error(`Club not found: ${clubId}`);
   }
 
   const settings = buildClubOperatingSettings(club);
   const riskTolerance = settings.effective.preferences[
     "economy.riskTolerance"
   ] as EconomyRiskTolerance;
-  const snapshots = await snapshotRepository.listByClub(input.clubId);
+  const snapshots = await snapshotRepository.listByClub(clubId);
   const latest = snapshots.at(-1) ?? null;
 
   if (!latest) {
-    return buildEmptySquadEconomy(input.clubId, settings.effective.currency, riskTolerance);
+    return buildEmptySquadEconomy(clubId, settings.effective.currency, riskTolerance);
   }
 
   const observed = buildObserved(latest);
@@ -37,7 +38,7 @@ export const getSquadEconomy = async (input: GetSquadEconomyInput): Promise<Squa
   const findings = buildFindings(derived, historical, riskTolerance, warnings);
 
   return {
-    clubId: input.clubId,
+    clubId,
     snapshotId: latest.id,
     snapshotDate: formatDate(latest.snapshotDate),
     observed,
@@ -53,7 +54,7 @@ export const getSquadEconomy = async (input: GetSquadEconomyInput): Promise<Squa
 }
 
 function buildEmptySquadEconomy(
-  clubId: string,
+  clubId: ClubId,
   currency: string | null,
   riskTolerance: EconomyRiskTolerance
 ): SquadEconomy {
@@ -605,7 +606,7 @@ function isComparableSnapshot(
   return currencies.every((currency) => currency && currency === currencies[0]);
 }
 
-function sumMoney(values: SnapshotMoney[]): { amount: number; currency: string | null } {
+function sumMoney(values: SnapshotMoney[]): Money {
   return {
     amount: values.reduce((total, money) => total + money.amount, 0),
     currency: readSingleCurrency(values.map((money) => money.currency))

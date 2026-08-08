@@ -1,4 +1,4 @@
-import { KeyValue } from "../types";
+import { ClubId, KeyValue } from "../types";
 
 export type OperatingPreferenceKey = "academy.investment" | "economy.riskTolerance" | "market.strategy" | "training.priority" // keyof typeof operatingPreferenceDefaults;
 export type OperatingPreferenceValue = "aggressive" | "ambitious" | "balanced" | "conservative" | "development" | "minimal" | "opportunistic" | "performance" // (typeof preferenceOptions)[OperatingPreferenceKey][number];
@@ -28,7 +28,7 @@ export interface GetClubOperatingSettingsInput {
 }
 
 export interface UpdateClubOperatingSettingsInput {
-  clubId: string;
+  clubId: ClubId;
   manual: {
     currency?: string | null;
     season?: number | null;

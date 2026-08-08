@@ -38,14 +38,14 @@ describe("Squad economy use case", () => {
     const importResult = await importPlayerSnapshot({ payload: readValidSnapshot() });
 
     await updateClubOperatingSettings({
-      clubId: importResult.clubId!,
+      clubId: importResult.clubId,
       manual: {
         currency: "ARS",
         preferences: { "economy.riskTolerance": "conservative" }
       }
     });
 
-    const squadEconomy = await getSquadEconomy({ clubId: importResult.clubId! });
+    const squadEconomy = await getSquadEconomy(importResult.clubId);
 
     expect(squadEconomy.snapshotDate).toBe("2026-08-05");
     expect(squadEconomy.manual).toEqual({
@@ -100,7 +100,7 @@ describe("Squad economy use case", () => {
     const importResult = await importPlayerSnapshot({ payload: first });
     await importPlayerSnapshot({ payload: second });
 
-    const squadEconomy = await getSquadEconomy({ clubId: importResult.clubId! });
+    const squadEconomy = await getSquadEconomy(importResult.clubId);
 
     expect(squadEconomy.historical.comparableSnapshotCount).toBe(2);
     expect(squadEconomy.historical.previousSnapshot?.snapshotDate).toBe("2026-08-05");
@@ -129,7 +129,7 @@ describe("Squad economy use case", () => {
     const importResult = await importPlayerSnapshot({ payload: first });
     await importPlayerSnapshot({ payload: second });
 
-    const squadEconomy = await getSquadEconomy({ clubId: importResult.clubId! });
+    const squadEconomy = await getSquadEconomy(importResult.clubId);
 
     expect(squadEconomy.historical.comparableSnapshotCount).toBe(0);
     expect(squadEconomy.warnings).toEqual(
@@ -159,7 +159,7 @@ describe("Squad economy use case", () => {
 
     const importResult = await importPlayerSnapshot({ payload });
 
-    const squadEconomy = await getSquadEconomy({ clubId: importResult.clubId! });
+    const squadEconomy = await getSquadEconomy(importResult.clubId);
 
     expect(squadEconomy.observed.coverage).toMatchObject({
       playerCount: 2,
@@ -205,7 +205,7 @@ describe("Squad economy use case", () => {
 
     const importResult = await importPlayerSnapshot({ payload });
 
-    const squadEconomy = await getSquadEconomy({ clubId: importResult.clubId! });
+    const squadEconomy = await getSquadEconomy(importResult.clubId);
 
     expect(squadEconomy.derived.playerDetails[0]).toMatchObject({
       name: "Tomas Alvarez",

@@ -1,4 +1,5 @@
 import {
+  ClubId,
   MongoSnapshotRepository,
   type PersistedPlayerSnapshot,
   type PersistedSnapshot
@@ -12,33 +13,29 @@ import {
   type SnapshotComparisonSnapshot
 } from "@atlas/domain";
 
-import { CalculateClubHistoricalTrendsInput, GenerateClubHistoricalFindingsInput } from "./types";
-
 const snapshotRepository = new MongoSnapshotRepository();
 
-export const calculateClubHistoricalTrends = async (
-  input: CalculateClubHistoricalTrendsInput
-): Promise<HistoricalTrends> => {
-  const snapshots = await snapshotRepository.listByClub(input.clubId);
+export const calculateClubHistoricalTrends = async (clubId: ClubId): Promise<HistoricalTrends> => {
+  const snapshots = await snapshotRepository.listByClub(clubId);
 
   if (snapshots.length === 0) {
     throw new Error("No snapshots found for club.");
   }
 
   return calculateHistoricalTrends(snapshots.map(mapSnapshot));
-}
+};
 
 export const generateClubHistoricalFindings = async (
-  input: GenerateClubHistoricalFindingsInput
+  clubId: ClubId
 ): Promise<HistoricalFindings> => {
-  const snapshots = await snapshotRepository.listByClub(input.clubId);
+  const snapshots = await snapshotRepository.listByClub(clubId);
 
   if (snapshots.length === 0) {
     throw new Error("No snapshots found for club.");
   }
 
   return generateHistoricalFindings(snapshots.map(mapSnapshot));
-}
+};
 
 function mapSnapshot(snapshot: PersistedSnapshot): SnapshotComparisonSnapshot {
   return {

@@ -2,6 +2,8 @@ import { Types } from "mongoose";
 import { ClubModel } from "../models/club.js";
 import type { PersistedClub } from "./types.js";
 
+export type ClubId = string | number;
+
 export interface SaveClubInput {
   externalId: string | null;
   name: string;
@@ -13,7 +15,7 @@ export interface SaveClubInput {
 }
 
 export interface UpdateClubManualProfileInput {
-  clubId: string;
+  clubId: ClubId;
   name?: string | null;
   currency?: string | null;
   season?: number | null;
@@ -79,7 +81,7 @@ export class MongoClubRepository {
     }
 
     if (Object.keys($set).length === 0) {
-      const club = await this.findById(input.clubId);
+      const club = await this.findById(input.clubId.toString(9));
 
       if (!club) {
         throw new Error(`Club not found: ${input.clubId}`);

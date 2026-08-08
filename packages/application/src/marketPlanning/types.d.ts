@@ -1,5 +1,5 @@
 import { Severity } from "../playerDevelopment/types";
-import { Confidence, EvidenceKind, Money, RoleSource } from "../types";
+import { ClubId, Confidence, EvidenceKind, Money, RoleSource } from "../types";
 
 export type MarketStrategy = "conservative" | "balanced" | "opportunistic";
 export type MarketPlanningCategory =
@@ -10,7 +10,7 @@ export interface GetSquadMarketPlanningInput {
 }
 
 export interface SquadMarketPlanning {
-  clubId: string;
+  clubId: ClubId;
   snapshotId: string | null;
   snapshotDate: string | null;
   observed: {
