@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "atlas.youth-academy-snapshot.v0",
+  "source": {
+    "type": "sokker-dom-export",
+    "exportedAt": "2026-08-08T00:00:00.000Z"
+  },
+  "club": {
+    "name": "River Plate Forever"
+  },
+  "snapshot": {
+    "snapshotDate": "2026-08-08"
+  },
+  "academy": {
+    "players": [
+      {
+        "name": "Pedro Gomez",
+        "age": 16,
+        "weeksInAcademy": 8,
+        "weeksRemaining": 8,
+        "estimatedLevel": "solid",
+        "status": "in_academy"
+      }
+    ]
+  }
+}

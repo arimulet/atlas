@@ -8,9 +8,12 @@ import {
   MongoImportEventRepository,
   MongoPlayerRepository,
   MongoSnapshotRepository,
+  MongoYouthSnapshotRepository,
   PlayerModel,
   SnapshotModel,
-  type SaveSnapshotInput
+  YouthSnapshotModel,
+  type SaveSnapshotInput,
+  type SaveYouthSnapshotInput
 } from "../src/index.js";
 
 let mongo: MongoMemoryServer;
@@ -19,6 +22,7 @@ const clubs = new MongoClubRepository();
 const importEvents = new MongoImportEventRepository();
 const players = new MongoPlayerRepository();
 const snapshots = new MongoSnapshotRepository();
+const youthSnapshots = new MongoYouthSnapshotRepository();
 
 describe("Mongo repositories", () => {
   beforeAll(async () => {
@@ -31,7 +35,8 @@ describe("Mongo repositories", () => {
       ClubModel.deleteMany({}),
       ImportEventModel.deleteMany({}),
       PlayerModel.deleteMany({}),
-      SnapshotModel.deleteMany({})
+      SnapshotModel.deleteMany({}),
+      YouthSnapshotModel.deleteMany({})
     ]);
   });
 
@@ -270,6 +275,44 @@ describe("Mongo repositories", () => {
       }
     ]);
   });
+
+  it("saves and retrieves a valid youth academy snapshot", async () => {
+    const club = await clubs.save({ externalId: "club-001", name: "River Plate Forever" });
+    const snapshotDate = new Date("2026-08-08T00:00:00.000Z");
+
+    const input: SaveYouthSnapshotInput = buildYouthSnapshotInput({
+      clubId: club.id,
+      snapshotDate
+    });
+
+    const saved = await youthSnapshots.save(input);
+
+    expect(saved.id).toEqual(expect.any(String));
+    expect(saved.clubId).toBe(club.id);
+    expect(saved.schemaVersion).toBe("atlas.youth-academy-snapshot.v0");
+    expect(saved.weeklyInvestment).toEqual({ amount: 15000, currency: "ARS" });
+    expect(saved.players).toHaveLength(1);
+    expect(saved.players[0]).toMatchObject({
+      externalId: "youth-101",
+      name: "Matias Cantero",
+      age: 16,
+      weeksInAcademy: 12,
+      weeksRemaining: 4,
+      estimatedLevel: "good",
+      status: "in_academy"
+    });
+
+    const found = await youthSnapshots.findById(saved.id);
+    expect(found?.id).toBe(saved.id);
+
+    const list = await youthSnapshots.listByClub(club.id);
+    expect(list).toHaveLength(1);
+    expect(list[0]?.id).toBe(saved.id);
+
+    const byDate = await youthSnapshots.findByClubAndDate(club.id, snapshotDate);
+    expect(byDate).toHaveLength(1);
+    expect(byDate[0]?.id).toBe(saved.id);
+  });
 });
 
 function buildSnapshotInput(overrides: {
@@ -312,6 +355,38 @@ function buildSnapshotInput(overrides: {
           striker: 4
         },
         roles: []
+      }
+    ]
+  };
+}
+
+function buildYouthSnapshotInput(overrides: {
+  clubId: string;
+  snapshotDate?: Date;
+}): SaveYouthSnapshotInput {
+  return {
+    clubId: overrides.clubId,
+    schemaVersion: "atlas.youth-academy-snapshot.v0",
+    snapshotDate: overrides.snapshotDate ?? new Date("2026-08-08T00:00:00.000Z"),
+    season: 78,
+    week: 6,
+    importedAt: new Date("2026-08-08T10:00:00.000Z"),
+    source: {
+      type: "sokker-dom-export",
+      exportedAt: new Date("2026-08-08T10:00:00.000Z"),
+      pageUrl: "https://sokker.org/app/juniors",
+      locale: "es-AR"
+    },
+    weeklyInvestment: { amount: 15000, currency: "ARS" },
+    players: [
+      {
+        externalId: "youth-101",
+        name: "Matias Cantero",
+        age: 16,
+        weeksInAcademy: 12,
+        weeksRemaining: 4,
+        estimatedLevel: "good",
+        status: "in_academy"
       }
     ]
   };

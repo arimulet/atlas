@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "atlas.youth-academy-snapshot.v0",
+  "source": {
+    "type": "sokker-dom-export",
+    "exportedAt": "2026-08-08T00:00:00.000Z"
+  },
+  "club": {
+    "name": "River Plate Forever"
+  },
+  "snapshot": {
+    "snapshotDate": "2026-08-08"
+  },
+  "academy": {
+    "weeklyInvestment": {
+      "amount": 10000
+    },
+    "players": [
+      {
+        "name": "Juan Perez",
+        "age": 17
+      }
+    ]
+  }
+}
