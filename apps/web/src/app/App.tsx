@@ -67,7 +67,15 @@ export function App() {
   const [errors, setErrors] = useState<ImportIssue[]>([]);
   const [isDragging, setIsDragging] = useState(false);
 
-  const findingsByCategory = useMemo(() => groupFindingsByCategory(result), [result]);
+  const findingsByCategory = useMemo(() => {
+    const groups = new Map<string, DiagnosticFinding[]>();
+
+    result?.diagnostic?.findings.forEach((finding) => {
+      groups.set(finding.category, [...(groups.get(finding.category) ?? []), finding]);
+    });
+
+    return [...groups.entries()];
+  }, [result]);
 
   const loadDashboard = useCallback(async (clubId: string) => {
     setDashboardStatus("loading");
@@ -327,16 +335,4 @@ export function App() {
       </section>
     </main>
   );
-}
-
-function groupFindingsByCategory(
-  result: ImportResponse | null
-): Array<[string, DiagnosticFinding[]]> {
-  const groups = new Map<string, DiagnosticFinding[]>();
-
-  result?.diagnostic?.findings.forEach((finding) => {
-    groups.set(finding.category, [...(groups.get(finding.category) ?? []), finding]);
-  });
-
-  return [...groups.entries()];
 }

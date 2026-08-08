@@ -6,14 +6,21 @@ async function economyRoutes(server: FastifyInstance, options: FastifyPluginOpti
   server.get<{ Params: GetEconomyParams }>("/", async (request) => {
     const { clubId } = request.params;
 
-    return { squadEconomy: await getSquadEconomy({ clubId }) };
+    const economy = await getSquadEconomy({ clubId });
+
+    return economy;
   });
 
-  server.get<{ Params: GetSquadMarketPlanningParams }>("/squad-market-planning", async (request) => {
-    const { clubId } = request.params;
+  server.get<{ Params: GetSquadMarketPlanningParams }>(
+    "/squad-market-planning",
+    async (request) => {
+      const { clubId } = request.params;
 
-    return { squadMarketPlanning: await getSquadMarketPlanning({ clubId }) };
-  });
+      const marketPlanning = await getSquadMarketPlanning({ clubId });
+
+      return marketPlanning;
+    }
+  );
 }
 
 export default economyRoutes;
