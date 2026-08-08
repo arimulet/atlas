@@ -5,10 +5,6 @@ export type MarketStrategy = "conservative" | "balanced" | "opportunistic";
 export type MarketPlanningCategory =
   "sale_candidate" | "protection_candidate" | "follow_up" | "insufficient_signal";
 
-export interface GetSquadMarketPlanningInput {
-  clubId: string;
-}
-
 export interface SquadMarketPlanning {
   clubId: ClubId;
   snapshotId: string | null;

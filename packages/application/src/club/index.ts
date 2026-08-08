@@ -5,10 +5,6 @@ import {
   PersistedPlayerSnapshot,
   type PersistedSnapshot
 } from "@atlas/database";
-import { buildClubOperatingSettings } from "../clubOperatingSettings/index.js";
-import { getPlayerDevelopment } from "../playerDevelopment/index.js";
-import { getSquadMarketPlanning } from "../marketPlanning/index.js";
-import { getYouthPipelinePlanning } from "../playerDevelopment/index.js";
 import {
   ClubDashboard,
   ClubDashboardDevelopmentPlayer,
@@ -28,7 +24,16 @@ import {
   SnapshotComparisonPlayer,
   SnapshotComparisonSnapshot
 } from "@atlas/domain";
-import { Category, ClubId, FindingType, KeyValue } from "../types.js";
+import {
+  Category,
+  ClubId,
+  FindingType,
+  KeyValue,
+  buildClubOperatingSettings,
+  getPlayerDevelopment,
+  getSquadMarketPlanning,
+  getYouthPipelinePlanning
+} from "@atlas/application";
 
 const clubRepository = new MongoClubRepository();
 const snapshotRepository = new MongoSnapshotRepository();

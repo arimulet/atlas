@@ -1,11 +1,7 @@
 import { type SnapshotSkillSet, type PersistedPlayerSnapshot } from "@atlas/database";
-import { Category, ClubId, Confidence, DeltaDirection, EvidenceKind, FindingType, Money, RoleSource } from "../types";
+import { Category, ClubId, Confidence, DeltaDirection, EvidenceKind, FindingType, Money, RoleSource, Severity } from "@atlas/application";
 
 type SkillKey = keyof SnapshotSkillSet;
-
-export interface GetPlayerDevelopmentInput {
-  clubId: string;
-}
 
 export interface PlayerDevelopment {
   clubId: ClubId;
@@ -105,15 +101,10 @@ export interface ComparablePlayerPoint {
   player: PersistedPlayerSnapshot;
 }
 
-export type Severity = "info" | "low" | "medium" | "high";
-
 export type YouthPipelineCategory =
   "standout_prospect" | "follow_up" | "stagnation_risk" | "insufficient_data";
 type SkillKey = keyof SnapshotSkillSet;
 
-export interface GetYouthPipelinePlanningInput {
-  clubId: string;
-}
 
 export interface YouthPipelinePlanning {
   clubId: ClubId;

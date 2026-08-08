@@ -1,11 +1,6 @@
-import { Severity } from "../playerDevelopment/types";
-import { ClubId, Confidence, EvidenceKind, Money } from "../types";
+import { ClubId, Confidence, EvidenceKind, Money, Severity } from "@atlas/application";
 
 type EconomyRiskTolerance = "conservative" | "balanced" | "aggressive";
-
-export interface GetSquadEconomyInput {
-  clubId: string;
-}
 
 export interface SquadEconomy {
   clubId: ClubId;
