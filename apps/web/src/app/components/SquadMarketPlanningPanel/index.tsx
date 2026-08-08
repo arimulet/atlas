@@ -1,8 +1,8 @@
-import { IssuePanel } from "@atlas/web/app/components/IssuePanel";
 import { SummaryItem } from "@atlas/web/app/components/SummaryItem";
 import { MarketPlayerCard } from "./components/MarketPlayerCard";
+import { Section } from "@atlas/web/app/components/Section";
+import { IssueList } from "@atlas/web/app/components/IssueList";
 import { SquadMarketPlanningPanelProps } from "./types";
-import { Section } from "../Section";
 
 export function SquadMarketPlanningPanel({
   squadMarketPlanning,
@@ -20,7 +20,7 @@ export function SquadMarketPlanningPanel({
   if (status === "error" || !squadMarketPlanning) {
     return (
       <Section
-        className="issue-panel error"
+        tone="error"
         title="Planificacion interna de mercado"
         subtitle="No se pudo cargar el modulo"
         description="Volver al dashboard e intentar nuevamente."
@@ -105,14 +105,9 @@ export function SquadMarketPlanningPanel({
       </Section>
 
       {squadMarketPlanning.warnings.length > 0 ? (
-        <IssuePanel
-          title="Advertencias de evidencia"
-          tone="warning"
-          issues={squadMarketPlanning.warnings.map((warning) => ({
-            path: warning.code,
-            message: warning.message
-          }))}
-        />
+        <Section title="Advertencias de evidencia" tone="warning">
+          <IssueList issues={squadMarketPlanning.warnings} />
+        </Section>
       ) : null}
 
       <Section title="Inferido por jugador" subtitle="Candidatos y seguimiento">

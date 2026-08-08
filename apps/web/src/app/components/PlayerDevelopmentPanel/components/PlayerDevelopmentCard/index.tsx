@@ -1,9 +1,9 @@
 import { PlayerDevelopmentPlayerSummary } from "@atlas/web/app/types";
 import { EvidenceList } from "@atlas/web/app/components/EvidenceList";
-import { IssuePanel } from "@atlas/web/app/components/IssuePanel";
 import { SummaryItem } from "@atlas/web/app/components/SummaryItem";
 import { PlayerDevelopmentCardProps } from "./types";
-
+import { Section } from "@atlas/web/app/components/Section";
+import { IssueList } from "@atlas/web/app/components/IssueList";
 
 function severityForDirection(
   direction: PlayerDevelopmentPlayerSummary["recentEvolution"]["direction"]
@@ -73,14 +73,9 @@ export const PlayerDevelopmentCard = ({ player }: PlayerDevelopmentCardProps) =>
       </div>
 
       {player.warnings.length > 0 ? (
-        <IssuePanel
-          title="Advertencias del jugador"
-          tone="warning"
-          issues={player.warnings.map((warning) => ({
-            path: warning.code,
-            message: warning.message
-          }))}
-        />
+        <Section title="Advertencias del jugador" tone="warning">
+          <IssueList issues={player.warnings} />
+        </Section>
       ) : null}
 
       <div className="finding-list">
@@ -98,4 +93,4 @@ export const PlayerDevelopmentCard = ({ player }: PlayerDevelopmentCardProps) =>
       </div>
     </article>
   );
-}
+};

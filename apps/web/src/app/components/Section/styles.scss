@@ -1,8 +1,20 @@
 .panel {
   padding: 20px;
   background: #ffffff;
-  border: 1px solid #d7e2dc;
+  border: 1px solid;
   border-radius: 8px;
+
+  &.normal {
+    border-color: #d7e2dc;
+  }
+
+  &.error {
+    border-color: #f3b5ae;
+  }
+
+  &.warning {
+    border-color: #e7c75f;
+  }
 
   .panel-heading {
     margin-bottom: 16px;

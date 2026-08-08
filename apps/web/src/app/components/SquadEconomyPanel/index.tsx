@@ -1,14 +1,14 @@
 import { formatMoney, formatNullable } from "@atlas/web/app/formatters";
 import { EvidenceList } from "@atlas/web/app/components/EvidenceList";
-import { IssuePanel } from "@atlas/web/app/components/IssuePanel";
 import { SummaryItem } from "@atlas/web/app/components/SummaryItem";
+import { Section } from "@atlas/web/app/components/Section";
+import { IssueList } from "@atlas/web/app/components/IssueList";
 
 import { ConcentrationPanel } from "./components/ConcentrationPanel";
 import { EvidencePanel } from "./components/EvidencePanel";
 import { HistoricalPanel } from "./components/HistoricalPanel";
 import { PlayerDetailPanel } from "./components/PlayerDetailPanel";
 import { SquadEconomyPanelProps } from "./types";
-import { Section } from "../Section";
 
 function formatRatio(value: number | null): string {
   return value === null ? "No disponible" : value.toFixed(4);
@@ -26,7 +26,7 @@ export const SquadEconomyPanel = ({ squadEconomy, status, onBack }: SquadEconomy
   if (status === "error" || !squadEconomy) {
     return (
       <Section
-        className="issue-panel error"
+        tone="error"
         title="Economia de plantilla"
         subtitle="No se pudo cargar el modulo"
         description="Volver al dashboard e intentar nuevamente."
@@ -100,14 +100,9 @@ export const SquadEconomyPanel = ({ squadEconomy, status, onBack }: SquadEconomy
       <HistoricalPanel squadEconomy={squadEconomy} />
 
       {squadEconomy.warnings.length > 0 ? (
-        <IssuePanel
-          title="Advertencias de evidencia"
-          tone="warning"
-          issues={squadEconomy.warnings.map((warning) => ({
-            path: warning.code,
-            message: warning.message
-          }))}
-        />
+        <Section title="Advertencias de evidencia" tone="warning">
+          <IssueList issues={squadEconomy.warnings} />
+        </Section>
       ) : null}
 
       <Section title="Inferido" subtitle="Hallazgos explicables">
