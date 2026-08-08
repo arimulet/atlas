@@ -1,6 +1,6 @@
 .panel {
   padding: 20px;
-  background: #ffffff;
+  background: var(--bg-primary);
   border: 1px solid;
   border-radius: 8px;
 
@@ -9,11 +9,11 @@
   }
 
   &.error {
-    border-color: #f3b5ae;
+    border-color: var(--semantic-error-border);
   }
 
   &.warning {
-    border-color: #e7c75f;
+    border-color: var(--semantic-warning-border);
   }
 
   .panel-heading {
@@ -21,7 +21,7 @@
   }
 
   .eyebrow {
-    color: #16695f;
+    color: var(--text-primary);
     font-size: 0.78rem;
     font-weight: 800;
     letter-spacing: 0;
@@ -30,7 +30,7 @@
   }
 
   .muted {
-    color: #52616b;
+    color: var(--text-secondary);
     line-height: 1.5;
     margin-bottom: 0;
   }

@@ -6,37 +6,37 @@
   text-transform: uppercase;
 
   &.observed {
-    background: #d9f99d;
-    color: #365314;
+    background: var(--semantic-success-bg);
+    color: var(--semantic-success-text);
   }
 
   &.derived {
-    background: #dbeafe;
-    color: #1d4ed8;
+    background: var(--semantic-info-bg);
+    color: var(--semantic-info-text);
   }
 
   &.manual {
-    background: #fce7f3;
-    color: #9d174d;
+    background: var(--trace-pink-bg);
+    color: var(--trace-pink-text);
   }
 
   &.assumed {
-    background: #fef3c7;
-    color: #92400e;
+    background: var(--semantic-warning-bg);
+    color: var(--semantic-warning-text);
   }
 
   &.effective {
-    background: #dbeafe;
-    color: #1d4ed8;
+    background: var(--semantic-info-bg);
+    color: var(--semantic-info-text);
   }
 
   &.recommended {
-    background: #ede9fe;
-    color: #5b21b6;
+    background: var(--trace-purple-bg);
+    color: var(--trace-purple-text);
   }
 
   &.inferred {
-    background: #ede9fe;
-    color: #5b21b6;
+    background: var(--trace-purple-bg);
+    color: var(--trace-purple-text);
   }
 }
