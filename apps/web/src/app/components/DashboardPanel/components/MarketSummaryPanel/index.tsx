@@ -1,5 +1,7 @@
 import { SummaryItem } from "@atlas/web/app/components/SummaryItem";
 import { MarketSummaryPanelProps } from "./types";
+import { TraceKind } from "../../../TraceKind";
+import { Section } from "../../../Section";
 
 function labelMarketSignal(signal: string): string {
   if (signal === "sale_candidate") return "Candidato a venta";
@@ -8,19 +10,19 @@ function labelMarketSignal(signal: string): string {
   return "Datos insuficientes";
 }
 
-export const  MarketSummaryPanel = ({
+export const MarketSummaryPanel = ({
   dashboard,
   onOpenSquadMarketPlanning
 }: MarketSummaryPanelProps) => {
   const summary = dashboard.marketSummary;
 
   return (
-    <section className="panel development-summary-panel">
-      <div className="panel-heading">
-        <p className="eyebrow">Mercado interno</p>
-        <h2>Lectura operativa</h2>
-      </div>
-      <p className="muted">{summary.inferred.headline}</p>
+    <Section
+      className="development-summary-panel"
+      title="Mercado interno"
+      subtitle="Lectura operativa"
+      description={summary.inferred.headline}
+    >
       <dl className="summary-grid development-counts">
         <SummaryItem label="Venta" value={summary.derived.saleCandidates.toString()} />
         <SummaryItem label="Proteccion" value={summary.derived.protectionCandidates.toString()} />
@@ -31,12 +33,13 @@ export const  MarketSummaryPanel = ({
         />
       </dl>
       <div className="trace-row" aria-label="Origen de la lectura de mercado interno">
-        <span className="trace-kind observed">
-          observado: {summary.observed.snapshotCount} snapshots
-        </span>
-        <span className="trace-kind manual">manual: {summary.manual.marketStrategy}</span>
-        <span className="trace-kind derived">derivado: categorias internas</span>
-        <span className="trace-kind inferred">inferido: senal ejecutiva</span>
+        <TraceKind
+          type="observed"
+          label={`observado: ${summary.observed.snapshotCount} snapshots`}
+        />
+        <TraceKind type="manual" label={`manual: ${summary.manual.marketStrategy}`} />
+        <TraceKind type="derived" label="derivado: categorias internas" />
+        <TraceKind type="inferred" label="inferido: senal ejecutiva" />
       </div>
       {summary.inferred.warning ? (
         <p className="inline-warning">{summary.inferred.warning}</p>
@@ -65,6 +68,6 @@ export const  MarketSummaryPanel = ({
           Abrir detalle de mercado interno
         </button>
       ) : null}
-    </section>
+    </Section>
   );
-}
+};

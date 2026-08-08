@@ -1,12 +1,13 @@
+import { Section } from "../Section";
 import { IssuePanelProps } from "./types";
 
 export const IssuePanel = ({ title, tone, issues }: IssuePanelProps) => {
   return (
-    <section className={`panel issue-panel ${tone}`}>
-      <div className="panel-heading">
-        <p className="eyebrow">{tone === "error" ? "Import Errors" : "Import Warnings"}</p>
-        <h2>{title}</h2>
-      </div>
+    <Section
+      className={`issue-panel ${tone}`}
+      title={tone === "error" ? "Import Errors" : "Import Warnings"}
+      subtitle={title}
+    >
       <ul className="issue-list">
         {issues.map((issue) => (
           <li key={`${issue.path}-${issue.message}`}>
@@ -15,6 +16,6 @@ export const IssuePanel = ({ title, tone, issues }: IssuePanelProps) => {
           </li>
         ))}
       </ul>
-    </section>
+    </Section>
   );
-}
+};

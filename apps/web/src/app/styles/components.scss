@@ -1,1 +1,4 @@
-@use "@atlas/web/app/components/SummaryItem/styles.scss";
+@use "@atlas/web/app/components/SummaryItem/styles.scss" as *;
+@use "@atlas/web/app/components/DetailBlock/styles.scss" as *;
+@use "@atlas/web/app/components/TraceKind/styles.scss" as *;
+@use "@atlas/web/app/components/Section/styles.scss" as *;

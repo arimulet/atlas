@@ -1,0 +1,42 @@
+.trace-kind {
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 4px 8px;
+  text-transform: uppercase;
+
+  &.observed {
+    background: #d9f99d;
+    color: #365314;
+  }
+
+  &.derived {
+    background: #dbeafe;
+    color: #1d4ed8;
+  }
+
+  &.manual {
+    background: #fce7f3;
+    color: #9d174d;
+  }
+
+  &.assumed {
+    background: #fef3c7;
+    color: #92400e;
+  }
+
+  &.effective {
+    background: #dbeafe;
+    color: #1d4ed8;
+  }
+
+  &.recommended {
+    background: #ede9fe;
+    color: #5b21b6;
+  }
+
+  &.inferred {
+    background: #ede9fe;
+    color: #5b21b6;
+  }
+}

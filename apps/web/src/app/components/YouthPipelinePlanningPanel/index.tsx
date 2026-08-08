@@ -2,7 +2,7 @@ import { IssuePanel } from "@atlas/web/app/components/IssuePanel";
 import { SummaryItem } from "@atlas/web/app/components/SummaryItem";
 import { YouthPlayerCard } from "@atlas/web/app/components/YouthPipelinePlanningPanel/components/YouthPlayerCard";
 import { YouthPipelinePlanningPanelProps } from "./types";
-
+import { Section } from "../Section";
 
 export const YouthPipelinePlanningPanel = ({
   youthPipelinePlanning,
@@ -19,16 +19,16 @@ export const YouthPipelinePlanningPanel = ({
 
   if (status === "error" || !youthPipelinePlanning) {
     return (
-      <section className="panel issue-panel error">
-        <div className="panel-heading">
-          <p className="eyebrow">Pipeline juvenil senior</p>
-          <h2>No se pudo cargar el modulo</h2>
-        </div>
-        <p className="muted">Volver al dashboard e intentar nuevamente.</p>
+      <Section
+        className="issue-panel error"
+        title="Pipeline juvenil senior"
+        subtitle="No se pudo cargar el modulo"
+        description="Volver al dashboard e intentar nuevamente."
+      >
         <button type="button" onClick={onBack}>
           Volver al dashboard
         </button>
-      </section>
+      </Section>
     );
   }
 
@@ -44,24 +44,16 @@ export const YouthPipelinePlanningPanel = ({
         </button>
       </div>
 
-      <section className="panel">
-        <div className="panel-heading">
-          <p className="eyebrow">Alcance</p>
-          <h2>Jovenes ya presentes en plantilla</h2>
-        </div>
-        <p className="muted">
-          Esta vista analiza jugadores del plantel senior con edad menor o igual a{" "}
-          {youthPipelinePlanning.observed.youthAgeThreshold}. No modela escuela juvenil real,
-          juveniles externos, plazas, entrenadores, costos ni inversion real de cantera.
-        </p>
-      </section>
+      <Section
+        title="Alcance"
+        subtitle="Jovenes ya presentes en plantilla"
+        description={`Esta vista analiza jugadores del plantel senior con edad menor o igual a{" "}
+          ${youthPipelinePlanning.observed.youthAgeThreshold}. No modela escuela juvenil real,
+          juveniles externos, plazas, entrenadores, costos ni inversion real de cantera.`}
+      />
 
       <section className="economy-columns">
-        <section className="panel">
-          <div className="panel-heading">
-            <p className="eyebrow">Observado</p>
-            <h2>Cobertura del snapshot</h2>
-          </div>
+        <Section title="Observado" subtitle="Cobertura del snapshot">
           <dl className="summary-grid">
             <SummaryItem
               label="Snapshot"
@@ -80,13 +72,9 @@ export const YouthPipelinePlanningPanel = ({
               value={youthPipelinePlanning.observed.coverage.playersWithStableIdentity.toString()}
             />
           </dl>
-        </section>
+        </Section>
 
-        <section className="panel">
-          <div className="panel-heading">
-            <p className="eyebrow">Manual</p>
-            <h2>Contexto del club</h2>
-          </div>
+        <Section title="Manual" subtitle="Contexto del club">
           <dl className="summary-grid">
             <SummaryItem
               label="academy.investment"
@@ -94,14 +82,10 @@ export const YouthPipelinePlanningPanel = ({
             />
             <SummaryItem label="Alcance" value="Plantel senior" />
           </dl>
-        </section>
+        </Section>
       </section>
 
-      <section className="panel">
-        <div className="panel-heading">
-          <p className="eyebrow">Derivado</p>
-          <h2>Clasificacion de jovenes senior</h2>
-        </div>
+      <Section title="Derivado" subtitle="Clasificacion de jovenes senior">
         <dl className="summary-grid">
           <SummaryItem
             label="Prospecto destacado"
@@ -120,7 +104,7 @@ export const YouthPipelinePlanningPanel = ({
             value={youthPipelinePlanning.derived.categoryCounts.insufficient_data.toString()}
           />
         </dl>
-      </section>
+      </Section>
 
       {youthPipelinePlanning.warnings.length > 0 ? (
         <IssuePanel
@@ -133,11 +117,7 @@ export const YouthPipelinePlanningPanel = ({
         />
       ) : null}
 
-      <section className="panel">
-        <div className="panel-heading">
-          <p className="eyebrow">Inferido por jugador</p>
-          <h2>Prospectos, seguimiento y riesgos</h2>
-        </div>
+      <Section title="Inferido por jugador" subtitle="Prospectos, seguimiento y riesgos">
         <div className="development-list">
           {youthPipelinePlanning.derived.players.length > 0 ? (
             youthPipelinePlanning.derived.players.map((player) => (
@@ -147,11 +127,7 @@ export const YouthPipelinePlanningPanel = ({
             <p className="muted">No hay jovenes del plantel senior dentro del umbral definido.</p>
           )}
         </div>
-      </section>
+      </Section>
     </section>
   );
-}
-
-
-
-
+};

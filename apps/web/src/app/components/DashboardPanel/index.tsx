@@ -8,6 +8,7 @@ import { SnapshotAvailabilityPanel } from "./components/SnapshotAvailabilityPane
 import { YouthPipelineSummaryPanel } from "./components/YouthPipelineSummaryPanel";
 
 import { DashboardPanelProps } from "./types";
+import { Section } from "../Section";
 
 export const DashboardPanel = ({
   dashboard,
@@ -18,22 +19,17 @@ export const DashboardPanel = ({
   onOpenYouthPipelinePlanning
 }: DashboardPanelProps) => {
   if (status === "loading") {
-    return (
-      <section className="panel">
-        <p className="loading">Loading club dashboard...</p>
-      </section>
-    );
+    return <Section description="Loading club dashboard..." />;
   }
 
   if (status === "error") {
     return (
-      <section className="panel issue-panel error">
-        <div className="panel-heading">
-          <p className="eyebrow">Club Dashboard</p>
-          <h2>Club could not be loaded</h2>
-        </div>
-        <p className="muted">Import a fresh snapshot to select the active club again.</p>
-      </section>
+      <Section
+        className="issue-panel error"
+        title="Club Dashboard"
+        subtitle="Club could not be loaded"
+        description="Import a fresh snapshot to select the active club again."
+      />
     );
   }
 
@@ -58,11 +54,7 @@ export const DashboardPanel = ({
         dashboard={dashboard}
         onOpenYouthPipelinePlanning={onOpenYouthPipelinePlanning}
       />
-      <section className="panel">
-        <div className="panel-heading">
-          <p className="eyebrow">Access</p>
-          <h2>Operational areas</h2>
-        </div>
+      <Section title="Access" subtitle="Operational areas">
         <ModuleGrid
           areas={dashboard.operationalAreas}
           onOpenSquadEconomy={onOpenSquadEconomy}
@@ -70,17 +62,7 @@ export const DashboardPanel = ({
           onOpenSquadMarketPlanning={onOpenSquadMarketPlanning}
           onOpenYouthPipelinePlanning={onOpenYouthPipelinePlanning}
         />
-      </section>
+      </Section>
     </section>
   );
-}
-
-
-
-
-
-
-
-
-
-
+};

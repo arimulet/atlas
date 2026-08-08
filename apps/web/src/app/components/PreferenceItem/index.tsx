@@ -1,5 +1,6 @@
 import { formatLabel } from "@atlas/web/app/formatters";
 import { PreferenceItemProps } from "./types";
+import { TraceKind } from "../TraceKind";
 
 export const PreferenceItem = ({ label, manual, effective }: PreferenceItemProps) => {
   return (
@@ -8,9 +9,7 @@ export const PreferenceItem = ({ label, manual, effective }: PreferenceItemProps
         <span>{label}</span>
         <strong>{formatLabel(effective)}</strong>
       </div>
-      <span className={`trace-kind ${manual ? "manual" : "effective"}`}>
-        {manual ? "manual" : "effective"}
-      </span>
+      <TraceKind type={manual ? "manual" : "effective"} label={manual ? "manual" : "effective"} />      
     </div>
   );
-}
+};

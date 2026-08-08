@@ -1,19 +1,13 @@
+import { Section } from "../../../Section";
 import { ConcentrationPanelProps } from "./types";
 
 function formatPercent(value: number | null): string {
   return value === null ? "No disponible" : `${(value * 100).toFixed(1)}%`;
 }
 
-export const ConcentrationPanel = ({
-  title,
-  items
-}: ConcentrationPanelProps) => {
+export const ConcentrationPanel = ({ title, items }: ConcentrationPanelProps) => {
   return (
-    <section className="panel">
-      <div className="panel-heading">
-        <p className="eyebrow">Derivado</p>
-        <h2>{title}</h2>
-      </div>
+    <Section title="Derivado" subtitle={title}>
       <div className="concentration-list">
         {items.slice(0, 5).map((item) => (
           <div className="concentration-row" key={item.snapshotPlayerId}>
@@ -25,6 +19,6 @@ export const ConcentrationPanel = ({
           </div>
         ))}
       </div>
-    </section>
+    </Section>
   );
-}
+};
