@@ -638,3 +638,83 @@ export interface YouthPipelineEvidence {
   label: string;
   value: string | number | null;
 }
+
+export type RealYouthAcademyCategory =
+  | "standout_prospect"
+  | "ready_for_promotion"
+  | "follow_up"
+  | "stagnation_risk"
+  | "insufficient_data";
+
+export interface RealYouthAcademyPlanning {
+  clubId: string;
+  snapshotId: string | null;
+  snapshotDate: string | null;
+  observed: {
+    players: RealYouthAcademyObservedPlayer[];
+    coverage: {
+      totalYouthCount: number;
+      youthsWithWeeksRemaining: number;
+      youthsWithEstimatedLevel: number;
+    };
+    weeklyInvestment: { amount: number; currency: string | null } | null;
+  };
+  manual: {
+    academyInvestment: string;
+  };
+  derived: {
+    categoryCounts: Record<RealYouthAcademyCategory, number>;
+    players: RealYouthAcademyPlayerPlan[];
+  };
+  warnings: RealYouthAcademyWarning[];
+}
+
+export interface RealYouthAcademyObservedPlayer {
+  id: string;
+  externalId: string | null;
+  name: string;
+  age: number;
+  weeksInAcademy: number | null;
+  weeksRemaining: number | null;
+  estimatedLevel: string | null;
+  status: "in_academy" | "ready_for_promotion" | "promoted";
+}
+
+export interface RealYouthAcademyPlayerPlan {
+  id: string;
+  externalId: string | null;
+  name: string;
+  age: number;
+  weeksInAcademy: number | null;
+  weeksRemaining: number | null;
+  projectedPromotionAge: number | null;
+  estimatedLevel: string | null;
+  status: "in_academy" | "ready_for_promotion" | "promoted";
+  category: RealYouthAcademyCategory;
+  severity: Severity;
+  confidence: "low" | "medium" | "high";
+  rationale: string;
+  signals: RealYouthAcademySignal[];
+  warnings: RealYouthAcademyWarning[];
+}
+
+export interface RealYouthAcademySignal {
+  code: string;
+  severity: Severity;
+  confidence: "low" | "medium" | "high";
+  message: string;
+  evidence: RealYouthAcademyEvidence[];
+}
+
+export interface RealYouthAcademyWarning {
+  code: string;
+  message: string;
+  evidence: RealYouthAcademyEvidence[];
+}
+
+export interface RealYouthAcademyEvidence {
+  kind: SquadEconomyEvidenceKind;
+  label: string;
+  value: string | number | null;
+}
+

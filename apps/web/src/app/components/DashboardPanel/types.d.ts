@@ -1,4 +1,4 @@
-import { ClubDashboard, DashboardStatus } from "@atlas/web/app/types";
+import type { ClubDashboard, DashboardStatus } from "@atlas/web/app/types";
 export interface DashboardPanelProps {
   dashboard: ClubDashboard | null;
   status: DashboardStatus;
@@ -6,4 +6,5 @@ export interface DashboardPanelProps {
   onOpenPlayerDevelopment?: () => void;
   onOpenSquadMarketPlanning?: () => void;
   onOpenYouthPipelinePlanning?: () => void;
+  onOpenRealYouthAcademy?: () => void;
 }

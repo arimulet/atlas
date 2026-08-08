@@ -1,11 +1,9 @@
 import { type ImportIssue, type PlayerSnapshotV0 } from "@atlas/contracts";
-import { type SnapshotSkillSet } from "@atlas/database";
 import type { BasicDiagnostic } from "@atlas/domain";
-import { ClubId, Money } from "../types";
+import { ClubId, Money, SkillKey } from "../types.js";
 
 export type ImportPlayerSnapshotStatus = "accepted" | "accepted-with-warnings" | "rejected";
 
-export type SkillKey = keyof SnapshotSkillSet;
 export interface ImportPlayerSnapshotInput {
   payload: unknown;
 }

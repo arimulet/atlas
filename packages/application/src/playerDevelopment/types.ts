@@ -1,7 +1,5 @@
 import { type SnapshotSkillSet, type PersistedPlayerSnapshot } from "@atlas/database";
-import { Category, ClubId, Confidence, DeltaDirection, EvidenceKind, FindingType, Money, RoleSource, Severity } from "@atlas/application";
-
-export type SkillKey = keyof SnapshotSkillSet;
+import { Category, ClubId, Confidence, DeltaDirection, EvidenceKind, FindingType, Money, RoleSource, Severity, SkillKey } from "../types.js";
 
 export interface PlayerDevelopment {
   clubId: ClubId;

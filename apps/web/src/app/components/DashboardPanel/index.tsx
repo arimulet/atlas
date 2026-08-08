@@ -15,7 +15,8 @@ export const DashboardPanel = ({
   onOpenSquadEconomy,
   onOpenPlayerDevelopment,
   onOpenSquadMarketPlanning,
-  onOpenYouthPipelinePlanning
+  onOpenYouthPipelinePlanning,
+  onOpenRealYouthAcademy
 }: DashboardPanelProps) => {
   if (status === "loading") {
     return <Section description="Loading club dashboard..." />;
@@ -82,9 +83,15 @@ export const DashboardPanel = ({
                   Abrir pipeline juvenil senior
                 </button>
               ) : null}
+              {area.key === "academy" && onOpenRealYouthAcademy ? (
+                <button type="button" onClick={onOpenRealYouthAcademy}>
+                  Abrir cantera real
+                </button>
+              ) : null}
             </ModuleCard>
           ))}
         </div>
+
         {/* <ModuleGrid
           areas={dashboard.operationalAreas}
           onOpenSquadEconomy={onOpenSquadEconomy}

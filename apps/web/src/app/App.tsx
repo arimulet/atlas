@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   fetchClubDashboard,
   fetchPlayerDevelopment,
+  fetchRealYouthAcademyPlanning,
   fetchSquadMarketPlanning,
   fetchSquadEconomy,
   fetchYouthPipelinePlanning,
@@ -15,6 +16,7 @@ import { SquadMarketPlanningPanel } from "@atlas/web/app/components/SquadMarketP
 import { SquadEconomyPanel } from "@atlas/web/app/components/SquadEconomyPanel";
 import { SummaryPanel } from "@atlas/web/app/components/SummaryPanel";
 import { YouthPipelinePlanningPanel } from "@atlas/web/app/components/YouthPipelinePlanningPanel";
+import { YouthAcademyPlanningPanel } from "@atlas/web/app/components/YouthAcademyPlanningPanel";
 import type {
   ClubDashboard,
   DashboardStatus,
@@ -23,6 +25,7 @@ import type {
   ImportResponse,
   ImportStatus,
   PlayerDevelopment,
+  RealYouthAcademyPlanning,
   SquadEconomy,
   SquadMarketPlanning,
   YouthPipelinePlanning
@@ -47,6 +50,7 @@ export function App() {
     | "player-development"
     | "squad-market-planning"
     | "youth-pipeline-planning"
+    | "real-youth-academy"
   >("dashboard");
   const [squadEconomyStatus, setSquadEconomyStatus] = useState<DashboardStatus>("idle");
   const [squadEconomy, setSquadEconomy] = useState<SquadEconomy | null>(null);
@@ -60,6 +64,9 @@ export function App() {
   const [youthPipelinePlanning, setYouthPipelinePlanning] = useState<YouthPipelinePlanning | null>(
     null
   );
+  const [realYouthAcademyStatus, setRealYouthAcademyStatus] = useState<DashboardStatus>("idle");
+  const [realYouthAcademy, setRealYouthAcademy] = useState<RealYouthAcademyPlanning | null>(null);
+
   const [status, setStatus] = useState<ImportStatus>("idle");
   const [fileName, setFileName] = useState<string | null>(null);
   const [message, setMessage] = useState("Club dashboard ready.");
@@ -157,6 +164,23 @@ export function App() {
     }
   }, [activeClubId]);
 
+  const openRealYouthAcademy = useCallback(async () => {
+    if (!activeClubId) {
+      return;
+    }
+
+    setActiveView("real-youth-academy");
+    setRealYouthAcademyStatus("loading");
+
+    try {
+      setRealYouthAcademy(await fetchRealYouthAcademyPlanning(activeClubId));
+      setRealYouthAcademyStatus("ready");
+    } catch {
+      setRealYouthAcademy(null);
+      setRealYouthAcademyStatus("error");
+    }
+  }, [activeClubId]);
+
   useEffect(() => {
     if (activeClubId) {
       void loadDashboard(activeClubId);
@@ -245,6 +269,12 @@ export function App() {
             status={youthPipelinePlanningStatus}
             onBack={() => setActiveView("dashboard")}
           />
+        ) : activeView === "real-youth-academy" ? (
+          <YouthAcademyPlanningPanel
+            realYouthAcademyPlanning={realYouthAcademy}
+            status={realYouthAcademyStatus}
+            onBack={() => setActiveView("dashboard")}
+          />
         ) : (
           <DashboardPanel
             dashboard={dashboard}
@@ -253,8 +283,10 @@ export function App() {
             onOpenPlayerDevelopment={() => void openPlayerDevelopment()}
             onOpenSquadMarketPlanning={() => void openSquadMarketPlanning()}
             onOpenYouthPipelinePlanning={() => void openYouthPipelinePlanning()}
+            onOpenRealYouthAcademy={() => void openRealYouthAcademy()}
           />
         )}
+
 
         {activeView === "dashboard" ? (
           <section

@@ -2,6 +2,7 @@ import type {
   ClubDashboard,
   ImportResponse,
   PlayerDevelopment,
+  RealYouthAcademyPlanning,
   SquadEconomy,
   SquadMarketPlanning,
   YouthPipelinePlanning
@@ -57,6 +58,19 @@ export async function fetchYouthPipelinePlanning(clubId: string): Promise<YouthP
 
   if (!response.ok || !body) {
     throw new Error("Youth pipeline planning API returned an unexpected response.");
+  }
+
+  return body;
+}
+
+export async function fetchRealYouthAcademyPlanning(
+  clubId: string
+): Promise<RealYouthAcademyPlanning> {
+  const response = await fetch(`/api/clubs/${clubId}/players/youth-academy`);
+  const body = (await response.json()) as RealYouthAcademyPlanning;
+
+  if (!response.ok || !body) {
+    throw new Error("Real youth academy planning API returned an unexpected response.");
   }
 
   return body;
