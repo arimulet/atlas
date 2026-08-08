@@ -10,7 +10,6 @@ function labelYouthSignal(signal: string): string {
   return "Datos insuficientes";
 }
 
-
 export const YouthPipelineSummaryPanel = ({
   dashboard,
   onOpenYouthPipelinePlanning
@@ -18,7 +17,12 @@ export const YouthPipelineSummaryPanel = ({
   const summary = dashboard.youthPipelineSummary;
 
   return (
-    <Section className="development-summary-panel" title="Pipeline juvenil senior" subtitle="Jovenes del plantel senior" description={summary.inferred.headline}>     
+    <Section
+      className="development-summary-panel"
+      title="Pipeline juvenil senior"
+      subtitle="Plantel senior (sin escuela juvenil real)"
+      description={summary.inferred.headline}
+    >
       <dl className="summary-grid development-counts">
         <SummaryItem label="Destacados" value={summary.derived.standoutProspects.toString()} />
         <SummaryItem label="Seguimiento" value={summary.derived.followUpPlayers.toString()} />
@@ -32,7 +36,10 @@ export const YouthPipelineSummaryPanel = ({
         />
       </dl>
       <div className="trace-row" aria-label="Origen de la lectura de pipeline juvenil senior">
-        <TraceKind type="observed" label={`observado: edad ${"<="} ${summary.observed.youthAgeThreshold}`} />
+        <TraceKind
+          type="observed"
+          label={`observado: edad <= ${summary.observed.youthAgeThreshold} en plantel senior`}
+        />
         <TraceKind type="manual" label={`manual: ${summary.manual.academyInvestment}`} />
         <TraceKind type="derived" label="derivado: clasificacion senior" />
         <TraceKind type="inferred" label="inferido: senal prudente" />
@@ -52,9 +59,17 @@ export const YouthPipelineSummaryPanel = ({
             </article>
           ))}
         </div>
+      ) : summary.observed.snapshotCount === 0 ? (
+        <p className="muted">
+          Importa un snapshot de plantilla para analizar jovenes observados en el plantel senior.
+        </p>
+      ) : summary.observed.youngSeniorPlayerCount === 0 ? (
+        <p className="muted">
+          No se observan jugadores jovenes (edad &lt;= {summary.observed.youthAgeThreshold}) en el plantel senior. Esta lectura no modela escuela juvenil real ni juveniles externos.
+        </p>
       ) : (
         <p className="muted">
-          Esta lectura no usa escuela juvenil real; requiere jovenes ya presentes en plantilla.
+          Esta lectura corresponde solo a jovenes observados en el plantel senior (sin escuela juvenil real). Requiere historial comparable para senales mas concluyentes.
         </p>
       )}
       {summary.available ? (
@@ -64,4 +79,4 @@ export const YouthPipelineSummaryPanel = ({
       ) : null}
     </Section>
   );
-}
+};

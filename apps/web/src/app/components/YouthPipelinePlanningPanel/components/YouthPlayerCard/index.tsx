@@ -75,7 +75,7 @@ export const YouthPlayerCard = ({ player }: YouthPlayerCardProps) => {
 
       <div className="trace-row" aria-label={`Limites de lectura de ${player.name}`}>
         {player.context.limits.map((limit) => (
-          <TraceKind type="inferred" label={limit} />
+          <TraceKind key={limit} type="inferred" label={limit} />
         ))}
       </div>
 
