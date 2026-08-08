@@ -1,7 +1,7 @@
+import { Severity } from "../playerDevelopment/types";
+import { Confidence } from "../types";
 
 type EconomyRiskTolerance = "conservative" | "balanced" | "aggressive";
-type SquadEconomySeverity = "info" | "low" | "medium" | "high";
-type SquadEconomyConfidence = "low" | "medium" | "high";
 
 export interface GetSquadEconomyInput {
   clubId: string;
@@ -98,8 +98,8 @@ export interface SquadEconomyHistoricalSnapshot {
 
 export interface SquadEconomyFinding {
   code: string;
-  severity: SquadEconomySeverity;
-  confidence: SquadEconomyConfidence;
+  severity: Severity;
+  confidence: Confidence;
   title: string;
   description: string;
   evidence: Array<{

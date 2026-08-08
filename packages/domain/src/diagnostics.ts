@@ -1,9 +1,8 @@
-import type { AvailabilityStatus, DataTraceKind, Money, PlayerRole, SkillSet } from "./index.js";
+import type { AvailabilityStatus, DataTraceKind, Money, PlayerRole, Severity, SkillSet } from "./index.js";
 
 export type DiagnosticCategory =
   "squad-balance" | "economic-risk" | "asset-risk" | "training-potential" | "follow-up";
 
-export type DiagnosticSeverity = "info" | "low" | "medium" | "high";
 export type DiagnosticConfidence = "low" | "medium" | "high";
 
 export interface DiagnosticTrace {
@@ -27,7 +26,7 @@ export interface DiagnosticRecommendation {
 export interface BasicDiagnosticFinding {
   code: string;
   category: DiagnosticCategory;
-  severity: DiagnosticSeverity;
+  severity: Severity;
   description: string;
   evidence: DiagnosticTrace[];
   assumptions: DiagnosticAssumption[];

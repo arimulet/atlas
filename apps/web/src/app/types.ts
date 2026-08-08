@@ -43,13 +43,15 @@ export interface DiagnosticAssumption {
 export interface DiagnosticFinding {
   code: string;
   category: string;
-  severity: "info" | "low" | "medium" | "high";
+  severity: Severity;
   description: string;
   evidence: DiagnosticTrace[];
   assumptions: DiagnosticAssumption[];
   confidence: "low" | "medium" | "high";
   affectedPlayerIds: string[];
 }
+
+export type Severity =  "info" | "low" | "medium" | "high";
 
 export interface ImportResponse {
   importResult: {
@@ -161,7 +163,7 @@ export interface ClubDashboardDevelopmentPlayer {
   playerId: string | null;
   name: string;
   signal: PlayerDevelopmentFindingType;
-  severity: "info" | "low" | "medium" | "high";
+  severity: Severity;
   confidence: "low" | "medium" | "high";
 }
 
@@ -194,7 +196,7 @@ export interface ClubDashboardMarketPlayer {
   playerId: string | null;
   name: string;
   signal: SquadMarketCategory;
-  severity: "info" | "low" | "medium" | "high";
+  severity: Severity;
   confidence: "low" | "medium" | "high";
   timing: string;
 }
@@ -229,7 +231,7 @@ export interface ClubDashboardYouthPipelinePlayer {
   playerId: string | null;
   name: string;
   signal: YouthPipelineCategory;
-  severity: "info" | "low" | "medium" | "high";
+  severity: Severity;
   confidence: "low" | "medium" | "high";
 }
 
@@ -299,7 +301,7 @@ export interface SquadMarketPlayerPlan {
     source: "observed" | "inferred" | "unknown";
   };
   category: SquadMarketCategory;
-  severity: "info" | "low" | "medium" | "high";
+  severity: Severity;
   confidence: "low" | "medium" | "high";
   rationale: string;
   timing: SquadMarketTiming;
@@ -321,7 +323,7 @@ export interface SquadMarketTiming {
 
 export interface SquadMarketSignal {
   code: string;
-  severity: "info" | "low" | "medium" | "high";
+  severity: Severity;
   confidence: "low" | "medium" | "high";
   message: string;
   evidence: SquadMarketEvidence[];
@@ -424,7 +426,7 @@ export interface SquadEconomyHistoricalSnapshot {
 
 export interface SquadEconomyFinding {
   code: string;
-  severity: "info" | "low" | "medium" | "high";
+  severity: Severity;
   confidence: "low" | "medium" | "high";
   title: string;
   description: string;
@@ -516,7 +518,7 @@ export interface PlayerDevelopmentSignal {
 
 export interface PlayerDevelopmentFinding {
   type: PlayerDevelopmentFindingType;
-  severity: "info" | "low" | "medium" | "high";
+  severity: Severity;
   confidence: "low" | "medium" | "high";
   title: string;
   description: string;
@@ -579,18 +581,22 @@ export interface YouthPipelinePlayerPlan {
   snapshotPlayerId: string;
   name: string;
   age: number;
-  role: {
-    label: string;
-    source: "observed" | "inferred" | "unknown";
-  };
+  role: YouthPipelinePlayerPlanRole;
   category: YouthPipelineCategory;
-  severity: "info" | "low" | "medium" | "high";
+  severity: Severity;
   confidence: "low" | "medium" | "high";
   rationale: string;
   context: YouthPipelinePlayerContext;
   signals: YouthPipelineSignal[];
   warnings: YouthPipelineWarning[];
 }
+
+export interface YouthPipelinePlayerPlanRole {
+  label: string;
+  source: YouthPipelinePlayerPlaneRoleSource;
+}
+
+export type YouthPipelinePlayerPlaneRoleSource = "observed" | "inferred" | "unknown";
 
 export interface YouthPipelinePlayerContext {
   window: {
@@ -615,7 +621,7 @@ export interface YouthPipelinePlayerContext {
 
 export interface YouthPipelineSignal {
   code: string;
-  severity: "info" | "low" | "medium" | "high";
+  severity: Severity;
   confidence: "low" | "medium" | "high";
   message: string;
   evidence: YouthPipelineEvidence[];

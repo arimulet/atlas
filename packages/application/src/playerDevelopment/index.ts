@@ -8,9 +8,7 @@ import { buildClubOperatingSettings } from "../clubOperatingSettings/index.js";
 
 import type {
   ComparablePlayerPoint,
-  DevelopmentConfidence,
   DevelopmentEvidence,
-  DevelopmentSeverity,
   GetPlayerDevelopmentInput,
   GetYouthPipelinePlanningInput,
   PlayerDevelopment,
@@ -20,21 +18,20 @@ import type {
   PlayerDevelopmentSignal,
   PlayerDevelopmentWarning,
   PlayerSkillChange,
+  Severity,
   SkillChangeDirection,
   SkillKey,
   YouthPipelineCategory,
-  YouthPipelineConfidence,
   YouthPipelineObservedPlayer,
   YouthPipelinePlanning,
   YouthPipelinePlayerContext,
   YouthPipelinePlayerPlan,
-  YouthPipelineSeverity,
   YouthPipelineSignal,
   YouthPipelineWarning
 } from "./types";
 import { getSquadMarketPlanning } from "../marketPlanning/index.js";
 import { SquadMarketPlayerPlan } from "../marketPlanning/types.js";
-
+import { Confidence } from "../types.js";
 
 const skillKeys: SkillKey[] = [
   "stamina",
@@ -171,8 +168,7 @@ export const getYouthPipelinePlanning = async (
     },
     warnings: buildGlobalYouthWarnings(latest, snapshots, youngPlayers)
   };
-}
-
+};
 
 function buildPlayerSummaries(
   snapshots: PersistedSnapshot[],
@@ -593,7 +589,7 @@ function confidenceFromEvidence(
   comparableSkills: number,
   warnings: PlayerDevelopmentWarning[],
   snapshotCount: number
-): DevelopmentConfidence {
+): Confidence {
   if (comparableSkills < 4 || warnings.some((warning) => warning.code === "ambiguous_identity")) {
     return "low";
   }
@@ -638,7 +634,7 @@ function totalDelta(changes: PlayerSkillChange[]): number {
   return changes.reduce((total, change) => total + (change.delta ?? 0), 0);
 }
 
-function severityFromNetDelta(delta: number, type: "improvement" | "decline"): DevelopmentSeverity {
+function severityFromNetDelta(delta: number, type: "improvement" | "decline"): Severity {
   const magnitude = Math.abs(delta);
 
   if (type === "improvement") {
@@ -709,7 +705,6 @@ function buildEmptyPlanning(clubId: string, academyInvestment: string): YouthPip
     ]
   };
 }
-
 
 function buildDevelopmentIndex(
   players: PlayerDevelopmentPlayerSummary[]
@@ -811,7 +806,6 @@ function buildPlayerContext(
     limits
   };
 }
-
 
 function findPlayerHistory(
   player: PersistedPlayerSnapshot,
@@ -1086,7 +1080,7 @@ function compareSignals(left: YouthPipelineSignal, right: YouthPipelineSignal): 
   return severityPriority(right.severity) - severityPriority(left.severity);
 }
 
-function severityPriority(severity: YouthPipelineSeverity): number {
+function severityPriority(severity: Severity): number {
   if (severity === "high") return 4;
   if (severity === "medium") return 3;
   if (severity === "low") return 2;
@@ -1096,7 +1090,7 @@ function severityPriority(severity: YouthPipelineSeverity): number {
 function calculateConfidence(
   signals: YouthPipelineSignal[],
   warnings: YouthPipelineWarning[]
-): YouthPipelineConfidence {
+): Confidence {
   if (
     signals.length === 0 ||
     warnings.some((warning) =>
@@ -1233,7 +1227,6 @@ function countCategories(
     insufficient_data: players.filter((player) => player.category === "insufficient_data").length
   };
 }
-
 
 function buildGlobalYouthWarnings(
   latest: PersistedSnapshot,

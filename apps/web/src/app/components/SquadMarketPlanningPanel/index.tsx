@@ -10,11 +10,7 @@ export function SquadMarketPlanningPanel({
   onBack
 }: SquadMarketPlanningPanelProps) {
   if (status === "loading") {
-    return (
-      <section className="panel">
-        <p className="loading">Cargando planificacion interna de mercado...</p>
-      </section>
-    );
+    return <Section description="Cargando planificacion interna de mercado..." />;
   }
 
   if (status === "error" || !squadMarketPlanning) {

@@ -1,3 +1,5 @@
+import { KeyValue } from "../types";
+
 export type OperatingPreferenceKey = "academy.investment" | "economy.riskTolerance" | "market.strategy" | "training.priority" // keyof typeof operatingPreferenceDefaults;
 export type OperatingPreferenceValue = "aggressive" | "ambitious" | "balanced" | "conservative" | "development" | "minimal" | "opportunistic" | "performance" // (typeof preferenceOptions)[OperatingPreferenceKey][number];
 
@@ -40,8 +42,8 @@ export interface ValidatedManualProfileUpdate {
   currency?: string | null;
   season?: number | null;
   week?: number | null;
-  assumptions?: Array<{ key: string; value: string }>;
-  preferences?: Array<{ key: string; value: string }>;
+  assumptions?: KeyValue[];
+  preferences?: KeyValue[];
 }
 
 interface ValidatedManualOperatingSettingsUpdate {

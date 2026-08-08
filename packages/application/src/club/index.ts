@@ -27,6 +27,7 @@ import {
   ValidatedManualProfileUpdate
 } from "./types";
 import { compareSnapshots, SnapshotComparison, SnapshotComparisonPlayer, SnapshotComparisonSnapshot } from "@atlas/domain";
+import { KeyValue } from "../types.js";
 
 const clubRepository = new MongoClubRepository();
 const snapshotRepository = new MongoSnapshotRepository();
@@ -115,7 +116,7 @@ function validateManualProfileUpdate(
   return validated;
 }
 
-function validateManualRecords(records: Array<{ key: string; value: string }>) {
+function validateManualRecords(records: KeyValue[]) {
   return records.map((record) => {
     const key = normalizeNullableString(record.key);
     const value = normalizeNullableString(record.value);

@@ -1,10 +1,9 @@
 import { type SnapshotSkillSet, type PersistedPlayerSnapshot } from "@atlas/database";
+import { Confidence } from "../types";
 
 type SkillKey = keyof SnapshotSkillSet;
 type SkillChangeDirection = "up" | "down" | "stable" | "insufficient_data";
-type DevelopmentConfidence = "low" | "medium" | "high";
-type DevelopmentSeverity = "info" | "low" | "medium" | "high";
-type DevelopmentFindingType = "improvement" | "stagnation" | "decline" | "insufficient_data";
+export type DevelopmentFindingType = "improvement" | "stagnation" | "decline" | "insufficient_data";
 
 export interface GetPlayerDevelopmentInput {
   clubId: string;
@@ -59,7 +58,7 @@ export interface PlayerDevelopmentPlayerSummary {
     declinedSkills: number;
     stableSkills: number;
     comparableSkills: number;
-    confidence: DevelopmentConfidence;
+    confidence: Confidence;
   };
   findings: PlayerDevelopmentFinding[];
   signals: PlayerDevelopmentSignal[];
@@ -76,15 +75,15 @@ export interface PlayerSkillChange {
 
 export interface PlayerDevelopmentSignal {
   code: string;
-  confidence: DevelopmentConfidence;
+  confidence: Confidence;
   message: string;
   evidence: DevelopmentEvidence[];
 }
 
 export interface PlayerDevelopmentFinding {
   type: DevelopmentFindingType;
-  severity: DevelopmentSeverity;
-  confidence: DevelopmentConfidence;
+  severity: Severity;
+  confidence: Confidence;
   title: string;
   description: string;
   evidence: DevelopmentEvidence[];
@@ -108,12 +107,11 @@ export interface ComparablePlayerPoint {
   player: PersistedPlayerSnapshot;
 }
 
+export type Severity = "info" | "low" | "medium" | "high";
 
 type EvidenceKind = "observed" | "manual" | "derived" | "inferred";
 export type YouthPipelineCategory =
   "standout_prospect" | "follow_up" | "stagnation_risk" | "insufficient_data";
-export type YouthPipelineSeverity = "info" | "low" | "medium" | "high";
-export type YouthPipelineConfidence = "low" | "medium" | "high";
 type SkillKey = keyof SnapshotSkillSet;
 
 export interface GetYouthPipelinePlanningInput {
@@ -169,8 +167,8 @@ export interface YouthPipelinePlayerPlan {
     source: "observed" | "inferred" | "unknown";
   };
   category: YouthPipelineCategory;
-  severity: YouthPipelineSeverity;
-  confidence: YouthPipelineConfidence;
+  severity: Severity;
+  confidence: Confidence;
   rationale: string;
   context: YouthPipelinePlayerContext;
   signals: YouthPipelineSignal[];
@@ -200,8 +198,8 @@ export interface YouthPipelinePlayerContext {
 
 export interface YouthPipelineSignal {
   code: string;
-  severity: YouthPipelineSeverity;
-  confidence: YouthPipelineConfidence;
+  severity: Severity;
+  confidence: Confidence;
   message: string;
   evidence: YouthPipelineEvidence[];
 }
