@@ -1,6 +1,7 @@
+import { type SnapshotMoney } from "@atlas/database";
 import { ClubId, Confidence, EvidenceKind, Money, Severity } from "@atlas/application";
 
-type EconomyRiskTolerance = "conservative" | "balanced" | "aggressive";
+export type EconomyRiskTolerance = "conservative" | "balanced" | "aggressive";
 
 export interface SquadEconomy {
   clubId: ClubId;

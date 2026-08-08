@@ -1,5 +1,4 @@
-import { Severity } from "../playerDevelopment/types";
-import { ClubId, Confidence, EvidenceKind, Money, RoleSource } from "../types";
+import { ClubId, Confidence, EvidenceKind, Money, RoleSource, Severity } from "@atlas/application";
 
 export type MarketStrategy = "conservative" | "balanced" | "opportunistic";
 export type MarketPlanningCategory =
