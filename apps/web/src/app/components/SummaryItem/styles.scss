@@ -1,11 +1,11 @@
 .summary-item {
-  background: #f8faf9;
-  border: 1px solid #e2e8e4;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
   border-radius: 6px;
   padding: 12px;
 
   dt {
-    color: #64748b;
+    color: var(--text-tertiary);
     font-size: 0.82rem;
     margin-bottom: 6px;
   }
