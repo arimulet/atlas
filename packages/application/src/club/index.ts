@@ -25,6 +25,13 @@ import {
   SnapshotComparisonSnapshot
 } from "@atlas/domain";
 import {
+  formatDate,
+  normalizeNullableString,
+  validateCurrency,
+  validateSeason,
+  validateWeek
+} from "@atlas/utils";
+import {
   Category,
   ClubId,
   FindingType,
@@ -133,48 +140,6 @@ function validateManualRecords(records: KeyValue[]) {
   });
 }
 
-function validateSeason(value: number | null | undefined): number | null {
-  if (value === null || value === undefined) {
-    return null;
-  }
-
-  if (!Number.isInteger(value) || value < 1 || value > 999) {
-    throw new Error("Operating season must be an integer between 1 and 999.");
-  }
-
-  return value;
-}
-
-function validateWeek(value: number | null | undefined): number | null {
-  if (value === null || value === undefined) {
-    return null;
-  }
-
-  if (!Number.isInteger(value) || value < 1 || value > 16) {
-    throw new Error("Operating week must be an integer between 1 and 16.");
-  }
-
-  return value;
-}
-
-function normalizeNullableString(value: string | null | undefined): string | null {
-  const normalized = value?.trim();
-  return normalized ? normalized : null;
-}
-
-function validateCurrency(value: string | null | undefined): string | null {
-  const normalized = normalizeNullableString(value)?.toUpperCase() ?? null;
-
-  if (normalized === null) {
-    return null;
-  }
-
-  if (!/^[A-Z]{3}$/.test(normalized)) {
-    throw new Error("Operating currency must be a 3-letter ISO currency code.");
-  }
-
-  return normalized;
-}
 
 function buildDevelopmentSummary(
   clubId: ClubId,
@@ -574,7 +539,7 @@ function mapSnapshot(snapshot: PersistedSnapshot): SnapshotComparisonSnapshot {
   return {
     id: snapshot.id,
     clubId: snapshot.clubId,
-    snapshotDate: toDateOnly(snapshot.snapshotDate),
+    snapshotDate: formatDate(snapshot.snapshotDate),
     players: snapshot.players.map(mapPlayer)
   };
 }
@@ -590,8 +555,4 @@ function mapPlayer(player: PersistedPlayerSnapshot): SnapshotComparisonPlayer {
     estimatedValue: player.estimatedValue,
     skills: player.skills
   };
-}
-
-function toDateOnly(date: Date): string {
-  return date.toISOString().slice(0, 10);
 }
