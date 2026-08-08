@@ -1,5 +1,5 @@
 .module-card {
-  border: 1px solid #dce5e0;
+  border: 1px solid var(--border-default);
   border-radius: 8px;
   padding: 13px;
   display: grid;
@@ -10,16 +10,16 @@
   }
 
   &.available {
-    border-color: #8ac7ad;
+    border-color: var(--border-active);
   }
 
   &.ready {
-    border-color: #b8c7da;
+    border-color: var(--semantic-info-border);
   }
 
   &.planned {
     background: #faf7ef;
-    border-color: #e2cf9f;
+    border-color: var(--semantic-warning-border-light);
   }
 
   .module-card-heading {
@@ -34,7 +34,7 @@
   }
 
   p {
-    color: #52616b;
+    color: var(--text-secondary);
     line-height: 1.5;
     margin-bottom: 0;
   }
@@ -47,18 +47,18 @@
     text-transform: uppercase;
 
     &.available {
-      background: #d9f99d;
-      color: #365314;
+      background: var(--semantic-success-bg);
+      color: var(--semantic-success-text);
     }
 
     &.ready {
-      background: #dbeafe;
-      color: #1d4ed8;
+      background: var(--semantic-info-bg);
+      color: var(--semantic-info-text);
     }
 
     &.planned {
-      background: #fef3c7;
-      color: #92400e;
+      background: var(--semantic-warning-bg);
+      color: var(--semantic-warning-text);
     }
   }
 }
