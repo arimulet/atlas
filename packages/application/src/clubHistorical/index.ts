@@ -12,6 +12,7 @@ import {
   type SnapshotComparisonPlayer,
   type SnapshotComparisonSnapshot
 } from "@atlas/domain";
+import { formatDate } from "@atlas/utils";
 
 const snapshotRepository = new MongoSnapshotRepository();
 
@@ -41,7 +42,7 @@ function mapSnapshot(snapshot: PersistedSnapshot): SnapshotComparisonSnapshot {
   return {
     id: snapshot.id,
     clubId: snapshot.clubId,
-    snapshotDate: snapshot.snapshotDate.toISOString().slice(0, 10),
+    snapshotDate: formatDate(snapshot.snapshotDate),
     players: snapshot.players.map(mapPlayer)
   };
 }
