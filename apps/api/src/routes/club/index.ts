@@ -31,26 +31,33 @@ async function clubRoutes(server: FastifyInstance, options: FastifyPluginOptions
   server.get<{ Params: GetClubProfileParams }>("/profile", async (request) => {
     const { clubId } = request.params;
 
-    return { club: await getClubProfile({ clubId }) };
+    const club = await getClubProfile({ clubId });
+
+    return club;
   });
 
   server.get<{ Params: GetClubDashboardParams }>("/dashboard", async (request) => {
     const { clubId } = request.params;
 
-    return { dashboard: await getClubDashboard({ clubId }) };
+    const dashboard = await getClubDashboard({ clubId });
+
+    return dashboard;
   });
 
   server.patch<{ Params: PatchClubProfileParams }>("/profile", async (request) => {
     const { clubId } = request.params;
     const body = updateClubProfileBodySchema.parse(request.body);
 
-    return { club: await updateClubProfile({ clubId, manual: body.manual ?? {} }) };
+    const profile = await updateClubProfile({ clubId, manual: body.manual ?? {} });
+
+    return profile;
   });
 
   server.get<{ Params: GetClubOperatingSettingsParams }>("/operating-settings", async (request) => {
     const { clubId } = request.params;
 
-    return { settings: await getClubOperatingSettings({ clubId }) };
+    const operatingSettings = await getClubOperatingSettings({ clubId });
+    return operatingSettings;
   });
 
   server.patch<{ Params: PatchClubOperatingSettingsParams }>(
@@ -59,14 +66,21 @@ async function clubRoutes(server: FastifyInstance, options: FastifyPluginOptions
       const { clubId } = request.params;
       const body = updateClubOperatingSettingsBodySchema.parse(request.body);
 
-      return { settings: await updateClubOperatingSettings({ clubId, manual: body.manual ?? {} }) };
+      const operatingSettings = await updateClubOperatingSettings({
+        clubId,
+        manual: body.manual ?? {}
+      });
+
+      return operatingSettings;
     }
   );
 
   server.get<{ Params: GetClubHistoricalTrendsParams }>("/historical-trends", async (request) => {
     const { clubId } = request.params;
 
-    return calculateClubHistoricalTrends({ clubId });
+    const historicalTrends = await calculateClubHistoricalTrends({ clubId });
+
+    return historicalTrends;
   });
 
   server.get<{ Params: GetClubHistoricalFindingsParams }>(
@@ -74,21 +88,27 @@ async function clubRoutes(server: FastifyInstance, options: FastifyPluginOptions
     async (request) => {
       const { clubId } = request.params;
 
-      return generateClubHistoricalFindings({ clubId });
+      const historicalFindings = await generateClubHistoricalFindings({ clubId });
+
+      return historicalFindings;
     }
   );
 
   server.get<{ Params: GetClubSnapshotsParams }>("/snapshots", async (request) => {
     const { clubId } = request.params;
 
-    return { snapshots: await getClubSnapshots(clubId) };
+    const snapshots = await getClubSnapshots(clubId);
+
+    return snapshots;
   });
 
   server.post<{ Params: GetClubSnapshotsParams }>("/snapshot-comparisons", async (request) => {
     const { clubId } = request.params;
     const body = compareClubSnapshotsBodySchema.parse(request.body);
 
-    return compareClubSnapshots({ clubId, ...body });
+    const snapshotsCompare = await compareClubSnapshots({ clubId, ...body });
+
+    return snapshotsCompare;
   });
 }
 
