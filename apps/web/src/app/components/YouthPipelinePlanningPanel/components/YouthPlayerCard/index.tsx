@@ -1,10 +1,11 @@
 import { formatNullable } from "@atlas/web/app/formatters";
 import { YouthPipelinePlayerPlan } from "@atlas/web/app/types";
-import { IssuePanel } from "@atlas/web/app/components/IssuePanel";
 import { SummaryItem } from "@atlas/web/app/components/SummaryItem";
 import { EvidenceList } from "@atlas/web/app/components/EvidenceList";
+import { TraceKind } from "@atlas/web/app/components/TraceKind";
+import { Section } from "@atlas/web/app/components/Section";
+import { IssueList } from "@atlas/web/app/components/IssueList";
 import { YouthPlayerCardProps } from "./types";
-import { TraceKind } from "../../../TraceKind";
 
 function labelCategory(category: YouthPipelinePlayerPlan["category"]): string {
   if (category === "standout_prospect") return "destacado";
@@ -79,14 +80,9 @@ export const YouthPlayerCard = ({ player }: YouthPlayerCardProps) => {
       </div>
 
       {player.warnings.length > 0 ? (
-        <IssuePanel
-          title="Advertencias del jugador"
-          tone="warning"
-          issues={player.warnings.map((warning) => ({
-            path: warning.code,
-            message: warning.message
-          }))}
-        />
+        <Section title="Advertencias del jugador" tone="warning">
+          <IssueList issues={player.warnings} />
+        </Section>
       ) : null}
 
       <div className="finding-list">

@@ -1,11 +1,11 @@
 import { useState } from "react";
 
 import type { PlayerDevelopmentFindingType } from "@atlas/web/app/types";
-import { IssuePanel } from "@atlas/web/app/components/IssuePanel";
 import { SummaryItem } from "@atlas/web/app/components/SummaryItem";
 import { PlayerDevelopmentPanelProps } from "./types";
 import { PlayerDevelopmentCard } from "./components/PlayerDevelopmentCard";
-import { Section } from "../Section";
+import { Section } from "@atlas/web/app/components/Section";
+import { IssueList } from "@atlas/web/app/components/IssueList";
 
 export const PlayerDevelopmentPanel = ({
   playerDevelopment,
@@ -27,7 +27,7 @@ export const PlayerDevelopmentPanel = ({
   if (status === "error" || !playerDevelopment) {
     return (
       <Section
-        className="issue-panel error"
+        tone="error"
         title="Desarrollo de jugadores"
         subtitle="No se pudo cargar el modulo"
         description=">Volver al dashboard e intentar nuevamente."
@@ -92,14 +92,9 @@ export const PlayerDevelopmentPanel = ({
       </section>
 
       {playerDevelopment.warnings.length > 0 ? (
-        <IssuePanel
-          title="Advertencias del modulo"
-          tone="warning"
-          issues={playerDevelopment.warnings.map((warning) => ({
-            path: warning.code,
-            message: warning.message
-          }))}
-        />
+        <Section title="Advertencias del modulo" tone="warning">
+          <IssueList issues={playerDevelopment.warnings} />
+        </Section>
       ) : null}
 
       <Section title="Derivado por jugador" subtitle="Evolucion reciente">

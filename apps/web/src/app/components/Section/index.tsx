@@ -1,8 +1,15 @@
 import { SectionProps } from "./types";
 import classNames from "classnames";
 
-export const Section = ({ title, subtitle, description, className, children }: SectionProps) => (
-  <section className={classNames("panel", className)}>
+export const Section = ({
+  title,
+  subtitle,
+  description,
+  className,
+  tone = "normal",
+  children
+}: SectionProps) => (
+  <section className={classNames(`panel ${tone}`, className)}>
     <div className="panel-heading">
       {title && <p className="eyebrow">{title}</p>}
       {subtitle && <h2>{subtitle}</h2>}

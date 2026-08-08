@@ -10,7 +10,6 @@ import {
 } from "@atlas/web/app/api";
 import { DashboardPanel } from "@atlas/web/app/components/DashboardPanel";
 import { DiagnosticPanel } from "@atlas/web/app/components/DiagnosticPanel";
-import { IssuePanel } from "@atlas/web/app/components/IssuePanel";
 import { PlayerDevelopmentPanel } from "@atlas/web/app/components/PlayerDevelopmentPanel";
 import { SquadMarketPlanningPanel } from "@atlas/web/app/components/SquadMarketPlanningPanel";
 import { SquadEconomyPanel } from "@atlas/web/app/components/SquadEconomyPanel";
@@ -28,6 +27,8 @@ import type {
   SquadMarketPlanning,
   YouthPipelinePlanning
 } from "./types";
+import { Section } from "./components/Section";
+import { IssueList } from "./components/IssueList";
 
 const lastClubStorageKey = "atlas.lastClubId";
 
@@ -56,8 +57,9 @@ export function App() {
   const [squadMarketPlanning, setSquadMarketPlanning] = useState<SquadMarketPlanning | null>(null);
   const [youthPipelinePlanningStatus, setYouthPipelinePlanningStatus] =
     useState<DashboardStatus>("idle");
-  const [youthPipelinePlanning, setYouthPipelinePlanning] =
-    useState<YouthPipelinePlanning | null>(null);
+  const [youthPipelinePlanning, setYouthPipelinePlanning] = useState<YouthPipelinePlanning | null>(
+    null
+  );
   const [status, setStatus] = useState<ImportStatus>("idle");
   const [fileName, setFileName] = useState<string | null>(null);
   const [message, setMessage] = useState("Club dashboard ready.");
@@ -297,11 +299,22 @@ export function App() {
         ) : null}
 
         {activeView === "dashboard" && errors.length > 0 ? (
-          <IssuePanel title="Blocking errors" tone="error" issues={errors} />
+          <Section title="Blocking errors" tone="error">
+            <IssueList
+              issues={errors.map((error) => ({ code: error.path, message: error.message }))}
+            />
+          </Section>
         ) : null}
 
         {activeView === "dashboard" && result?.importResult.warnings.length ? (
-          <IssuePanel title="Warnings" tone="warning" issues={result.importResult.warnings} />
+          <Section title="Warnings" tone="warning">
+            <IssueList
+              issues={result.importResult.warnings.map((warning) => ({
+                code: warning.path,
+                message: warning.message
+              }))}
+            />
+          </Section>
         ) : null}
 
         {activeView === "dashboard" && result?.summary ? (
