@@ -3,8 +3,20 @@ import path from "node:path";
 import mongoose from "mongoose";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { ClubModel, ImportEventModel, MongoClubRepository, PlayerModel, SnapshotModel } from "@atlas/database";
-import { compareClubSnapshots, getClubDashboard, getClubProfile, getClubSnapshots, updateClubProfile } from "../src/club/index.js";
+import {
+  ClubModel,
+  ImportEventModel,
+  MongoClubRepository,
+  PlayerModel,
+  SnapshotModel
+} from "@atlas/database";
+import {
+  compareClubSnapshots,
+  getClubDashboard,
+  getClubProfile,
+  getClubSnapshots,
+  updateClubProfile
+} from "../src/club/index.js";
 import { updateClubOperatingSettings } from "../src/clubOperatingSettings/index.js";
 import { importPlayerSnapshot } from "../src/playerImport/index.js";
 import { PlayerSnapshotV0 } from "@atlas/contracts";
@@ -31,7 +43,6 @@ interface DashboardSnapshotPlayerFixture {
 let mongo: MongoMemoryServer;
 
 const clubs = new MongoClubRepository();
-
 
 const validSnapshotPath = path.resolve(
   "packages/test-fixtures/fixtures/player-snapshot/valid.json"
@@ -61,7 +72,7 @@ describe("Club dashboard use case", () => {
     const importResult = await importPlayerSnapshot({ payload: readValidSnapshot() });
 
     await updateClubOperatingSettings({
-      clubId: importResult.clubId!,
+      clubId: importResult.clubId,
       manual: {
         currency: "ARS",
         week: 6,
@@ -71,7 +82,7 @@ describe("Club dashboard use case", () => {
       }
     });
 
-    const dashboard = await getClubDashboard({ clubId: importResult.clubId! });
+    const dashboard = await getClubDashboard(importResult.clubId);
 
     expect(dashboard.club.observed).toMatchObject({
       name: "River Plate Forever",
@@ -124,7 +135,7 @@ describe("Club dashboard use case", () => {
     const importResult = await importPlayerSnapshot({ payload: first });
     await importPlayerSnapshot({ payload: second });
 
-    const dashboard = await getClubDashboard({ clubId: importResult.clubId! });
+    const dashboard = await getClubDashboard(importResult.clubId);
 
     expect(dashboard.snapshots.count).toBe(2);
     expect(dashboard.snapshots.canCompare).toBe(true);
@@ -141,7 +152,7 @@ describe("Club dashboard use case", () => {
   it("integrates player development signals without treating insufficient data as a strong conclusion", async () => {
     const importResult = await importPlayerSnapshot({ payload: readValidSnapshot() });
 
-    const dashboard = await getClubDashboard({ clubId: importResult.clubId! });
+    const dashboard = await getClubDashboard(importResult.clubId);
 
     expect(dashboard.developmentSummary).toMatchObject({
       available: true,
@@ -191,7 +202,7 @@ describe("Club dashboard use case", () => {
     const importResult = await importPlayerSnapshot({ payload: first });
     await importPlayerSnapshot({ payload: second });
 
-    const dashboard = await getClubDashboard({ clubId: importResult.clubId! });
+    const dashboard = await getClubDashboard(importResult.clubId);
 
     expect(dashboard.developmentSummary.derived).toMatchObject({
       improvingPlayers: 1,
@@ -211,7 +222,7 @@ describe("Club dashboard use case", () => {
   it("integrates internal market signals without treating insufficient data as a sale signal", async () => {
     const importResult = await importPlayerSnapshot({ payload: readValidSnapshot() });
 
-    const dashboard = await getClubDashboard({ clubId: importResult.clubId! });
+    const dashboard = await getClubDashboard(importResult.clubId);
 
     expect(dashboard.marketSummary).toMatchObject({
       available: true,
@@ -250,11 +261,11 @@ describe("Club dashboard use case", () => {
     const importResult = await importPlayerSnapshot({ payload: first });
     await importPlayerSnapshot({ payload: second });
     await updateClubOperatingSettings({
-      clubId: importResult.clubId!,
+      clubId: importResult.clubId,
       manual: { preferences: { "market.strategy": "conservative" } }
     });
 
-    const dashboard = await getClubDashboard({ clubId: importResult.clubId! });
+    const dashboard = await getClubDashboard(importResult.clubId);
 
     expect(dashboard.marketSummary.derived).toMatchObject({
       saleCandidates: 1,
@@ -277,11 +288,11 @@ describe("Club dashboard use case", () => {
       payload: withPlayer(readValidSnapshot(), { age: 19 })
     });
     await updateClubOperatingSettings({
-      clubId: importResult.clubId!,
+      clubId: importResult.clubId,
       manual: { preferences: { "academy.investment": "ambitious" } }
     });
 
-    const dashboard = await getClubDashboard({ clubId: importResult.clubId! });
+    const dashboard = await getClubDashboard(importResult.clubId);
 
     expect(dashboard.youthPipelineSummary).toMatchObject({
       available: true,
@@ -314,7 +325,6 @@ describe("Club dashboard use case", () => {
   });
 });
 
-
 describe("Club profile use cases", () => {
   beforeAll(async () => {
     mongo = await MongoMemoryServer.create();
@@ -338,7 +348,7 @@ describe("Club profile use cases", () => {
       week: 4
     });
 
-    const profile = await getClubProfile({ clubId: club.id });
+    const profile = await getClubProfile(club.id);
 
     expect(profile.profile).toMatchObject({
       externalId: "club-001",
@@ -376,7 +386,6 @@ describe("Club profile use cases", () => {
   });
 });
 
-
 describe("CompareClubSnapshots", () => {
   beforeAll(async () => {
     mongo = await MongoMemoryServer.create();
@@ -407,7 +416,7 @@ describe("CompareClubSnapshots", () => {
     });
 
     const comparison = await compareClubSnapshots({
-      clubId: base.clubId!,
+      clubId: base.clubId,
       baseSnapshotDate: "2026-08-05",
       targetSnapshotDate: "2026-08-12"
     });
@@ -437,7 +446,7 @@ describe("CompareClubSnapshots", () => {
 
     await expect(
       compareClubSnapshots({
-        clubId: first.clubId!,
+        clubId: first.clubId,
         baseSnapshotDate: "2026-08-05",
         targetSnapshotId: target.snapshotId!
       })
@@ -464,7 +473,6 @@ function payload(overrides: {
 
   return cloned;
 }
-
 
 function readValidSnapshot(): DashboardSnapshotFixture {
   return JSON.parse(fs.readFileSync(validSnapshotPath, "utf8")) as DashboardSnapshotFixture;

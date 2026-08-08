@@ -1,5 +1,6 @@
 import { MongoClubRepository, type PersistedClub, type PersistedClubManualRecord } from "@atlas/database";
 import { ClubOperatingSettings, GetClubOperatingSettingsInput, OperatingPreferenceKey, OperatingPreferenceValue, UpdateClubOperatingSettingsInput, ValidatedManualOperatingSettingsUpdate } from "./types";
+import { ClubId } from "../types";
 
 const operatingPreferenceDefaults: Record<OperatingPreferenceKey, OperatingPreferenceValue> = {
   "economy.riskTolerance": "balanced",
@@ -18,12 +19,12 @@ const preferenceOptions: Record<OperatingPreferenceKey, OperatingPreferenceValue
 const clubRepository = new MongoClubRepository();
 
 export const getClubOperatingSettings = async (
-  input: GetClubOperatingSettingsInput
+  clubId: ClubId
 ): Promise<ClubOperatingSettings> => {
-  const club = await clubRepository.findById(input.clubId);
+  const club = await clubRepository.findById(clubId.toString());
 
   if (!club) {
-    throw new Error(`Club not found: ${input.clubId}`);
+    throw new Error(`Club not found: ${clubId}`);
   }
 
   return buildClubOperatingSettings(club);
@@ -32,7 +33,7 @@ export const getClubOperatingSettings = async (
 export const updateClubOperatingSettings = async (
   input: UpdateClubOperatingSettingsInput
 ): Promise<ClubOperatingSettings> => {
-  const club = await clubRepository.findById(input.clubId);
+  const club = await clubRepository.findById(input.clubId.toString());
 
   if (!club) {
     throw new Error(`Club not found: ${input.clubId}`);

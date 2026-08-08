@@ -1,15 +1,8 @@
-import { Category, Confidence, FindingType, KeyValue, Severity } from "@atlas/application";
+import { Category, ClubId, Confidence, FindingType, KeyValue, Severity } from "@atlas/application";
 import { type PersistedClub } from "@atlas/database";
 import { type ClubOperatingSettings } from "../clubOperatingSettings/types.js";
 import { MarketStrategy, type MarketPlanningCategory } from "../marketPlanning/types.js";
 
-export interface GetClubDashboardInput {
-  clubId: string;
-}
-
-export interface GetClubProfileInput {
-  clubId: string;
-}
 
 export interface UpdateClubProfileInput {
   clubId: string;
@@ -176,7 +169,7 @@ export interface ClubDashboardYouthPipelinePlayer {
 }
 
 export interface CompareClubSnapshotsInput {
-  clubId: string;
+  clubId: ClubId;
   baseSnapshotId?: string;
   targetSnapshotId?: string;
   baseSnapshotDate?: string;

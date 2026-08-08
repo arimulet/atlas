@@ -9,33 +9,33 @@ import { getPlayerDevelopment } from "../playerDevelopment/index.js";
 import { Severity, type PlayerDevelopmentPlayerSummary } from "../playerDevelopment/types.js";
 import { getSquadEconomy } from "../economy/index.js";
 import { SquadEconomyPlayerDetail } from "../economy/types.js";
-import { GetSquadMarketPlanningInput, MarketPlanningCategory, MarketStrategy, SquadMarketObservedPlayer, SquadMarketPlanning, SquadMarketPlayerPlan, SquadMarketSignal, SquadMarketTiming, SquadMarketWarning } from "./types.js";
-import { Confidence } from "../types.js";
+import { MarketPlanningCategory, MarketStrategy, SquadMarketObservedPlayer, SquadMarketPlanning, SquadMarketPlayerPlan, SquadMarketSignal, SquadMarketTiming, SquadMarketWarning } from "./types.js";
+import { ClubId, Confidence } from "../types.js";
 
 const clubRepository = new MongoClubRepository();
 const snapshotRepository = new MongoSnapshotRepository();
 
 export const getSquadMarketPlanning = async (
-  input: GetSquadMarketPlanningInput
+ clubId: ClubId
 ): Promise<SquadMarketPlanning> => {
-  const club = await clubRepository.findById(input.clubId);
+  const club = await clubRepository.findById(clubId.toString());
 
   if (!club) {
-    throw new Error(`Club not found: ${input.clubId}`);
+    throw new Error(`Club not found: ${clubId}`);
   }
 
   const settings = buildClubOperatingSettings(club);
   const marketStrategy = settings.effective.preferences["market.strategy"] as MarketStrategy;
-  const snapshots = await snapshotRepository.listByClub(input.clubId);
+  const snapshots = await snapshotRepository.listByClub(clubId);
   const latest = snapshots.at(-1) ?? null;
 
   if (!latest) {
-    return buildEmptyPlanning(input.clubId, marketStrategy);
+    return buildEmptyPlanning(clubId, marketStrategy);
   }
 
   const [economy, development] = await Promise.all([
-    getSquadEconomy({ clubId: input.clubId }),
-    getPlayerDevelopment({ clubId: input.clubId })
+    getSquadEconomy(clubId),
+    getPlayerDevelopment(clubId)
   ]);
   const economyBySnapshotPlayerId = new Map(
     economy.derived.playerDetails.map((player) => [player.snapshotPlayerId, player])
@@ -55,7 +55,7 @@ export const getSquadMarketPlanning = async (
     .sort(comparePlayerPlans);
 
   return {
-    clubId: input.clubId,
+    clubId,
     snapshotId: latest.id,
     snapshotDate: formatDate(latest.snapshotDate),
     observed: {
@@ -80,7 +80,7 @@ export const getSquadMarketPlanning = async (
 }
 
 function buildEmptyPlanning(
-  clubId: string,
+  clubId: ClubId,
   marketStrategy: MarketStrategy
 ): SquadMarketPlanning {
   return {

@@ -31,7 +31,7 @@ describe("Club operating settings use cases", () => {
       week: 4
     });
 
-    const settings = await getClubOperatingSettings({ clubId: club.id });
+    const settings = await getClubOperatingSettings(club.id);
 
     expect(settings.observed).toEqual({ season: 78, week: 4 });
     expect(settings.manual).toEqual({
@@ -142,7 +142,7 @@ describe("Club operating settings use cases", () => {
       }
     });
 
-    const settings = await getClubOperatingSettings({ clubId: club.id });
+    const settings = await getClubOperatingSettings(club.id);
 
     expect(settings.manual.preferences).toEqual({
       "economy.riskTolerance": "aggressive"

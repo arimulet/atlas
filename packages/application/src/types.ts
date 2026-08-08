@@ -14,3 +14,4 @@ export type Money = {
   currency: string | null;
   isComplete?: boolean;
 };
+export type ClubId = string | number;

@@ -7,7 +7,6 @@ import {
 } from "@atlas/database";
 import { buildClubOperatingSettings } from "../clubOperatingSettings/index.js";
 import { getPlayerDevelopment } from "../playerDevelopment/index.js";
-import { type PlayerDevelopmentFinding } from "../playerDevelopment/types.js";
 import { getSquadMarketPlanning } from "../marketPlanning/index.js";
 import { getYouthPipelinePlanning } from "../playerDevelopment/index.js";
 import {
@@ -20,31 +19,34 @@ import {
   ClubDashboardYouthPipelinePlayer,
   ClubDashboardYouthPipelineSummary,
   CompareClubSnapshotsInput,
-  GetClubDashboardInput,
-  GetClubProfileInput,
   UpdateClubProfileInput,
   ValidatedManualProfileUpdate
 } from "./types";
-import { compareSnapshots, SnapshotComparison, SnapshotComparisonPlayer, SnapshotComparisonSnapshot } from "@atlas/domain";
-import { Category, KeyValue } from "../types.js";
+import {
+  compareSnapshots,
+  SnapshotComparison,
+  SnapshotComparisonPlayer,
+  SnapshotComparisonSnapshot
+} from "@atlas/domain";
+import { Category, ClubId, FindingType, KeyValue } from "../types.js";
 
 const clubRepository = new MongoClubRepository();
 const snapshotRepository = new MongoSnapshotRepository();
 
-export const getClubDashboard = async (input: GetClubDashboardInput): Promise<ClubDashboard> => {
-  const club = await clubRepository.findById(input.clubId);
+export const getClubDashboard = async (clubId: ClubId): Promise<ClubDashboard> => {
+  const club = await clubRepository.findById(clubId.toString());
 
   if (!club) {
-    throw new Error(`Club not found: ${input.clubId}`);
+    throw new Error(`Club not found: ${clubId}`);
   }
 
-  const snapshots = await snapshotRepository.listByClub(input.clubId);
+  const snapshots = await snapshotRepository.listByClub(clubId);
   const latest = snapshots.at(-1) ?? null;
   const previous = snapshots.at(-2) ?? null;
   const [development, marketPlanning, youthPipeline] = await Promise.all([
-    getPlayerDevelopment({ clubId: input.clubId }),
-    getSquadMarketPlanning({ clubId: input.clubId }),
-    getYouthPipelinePlanning({ clubId: input.clubId })
+    getPlayerDevelopment(clubId),
+    getSquadMarketPlanning(clubId),
+    getYouthPipelinePlanning(clubId)
   ]);
 
   return {
@@ -57,18 +59,18 @@ export const getClubDashboard = async (input: GetClubDashboardInput): Promise<Cl
       previous: previous ? mapSnapshotSummary(previous) : null,
       canCompare: snapshots.length >= 2
     },
-    developmentSummary: buildDevelopmentSummary(input.clubId, development),
-    marketSummary: buildMarketSummary(input.clubId, snapshots.length, marketPlanning),
-    youthPipelineSummary: buildYouthPipelineSummary(input.clubId, snapshots.length, youthPipeline),
+    developmentSummary: buildDevelopmentSummary(clubId, development),
+    marketSummary: buildMarketSummary(clubId, snapshots.length, marketPlanning),
+    youthPipelineSummary: buildYouthPipelineSummary(clubId, snapshots.length, youthPipeline),
     operationalAreas: buildOperationalAreas(snapshots.length)
   };
 };
 
-export const getClubProfile = async (input: GetClubProfileInput): Promise<PersistedClub> => {
-  const club = await clubRepository.findById(input.clubId);
+export const getClubProfile = async (clubId: ClubId): Promise<PersistedClub> => {
+  const club = await clubRepository.findById(clubId.toString());
 
   if (!club) {
-    throw new Error(`Club not found: ${input.clubId}`);
+    throw new Error(`Club not found: ${clubId}`);
   }
 
   return club;
@@ -81,12 +83,11 @@ export const updateClubProfile = async (input: UpdateClubProfileInput): Promise<
   });
 };
 
-export const getClubSnapshots = async (clubId: string): Promise<ClubDashboardSnapshotSummary[]> => {
+export const getClubSnapshots = async (clubId: ClubId): Promise<ClubDashboardSnapshotSummary[]> => {
   const snapshots = await snapshotRepository.listByClub(clubId);
 
   return snapshots.map(mapSnapshotSummary);
 };
-
 
 export const compareClubSnapshots = async (
   input: CompareClubSnapshotsInput
@@ -97,8 +98,7 @@ export const compareClubSnapshots = async (
   ]);
 
   return compareSnapshots(mapSnapshot(baseSnapshot), mapSnapshot(targetSnapshot));
-}
-
+};
 
 function validateManualProfileUpdate(
   manual: ValidatedManualProfileUpdate
@@ -172,7 +172,7 @@ function validateCurrency(value: string | null | undefined): string | null {
 }
 
 function buildDevelopmentSummary(
-  clubId: string,
+  clubId: ClubId,
   development: Awaited<ReturnType<typeof getPlayerDevelopment>>
 ): ClubDashboardDevelopmentSummary {
   const counts = {
@@ -209,7 +209,7 @@ function buildDevelopmentSummary(
 
 function countPlayersByFinding(
   development: Awaited<ReturnType<typeof getPlayerDevelopment>>,
-  type: PlayerDevelopmentFinding["type"]
+  type: FindingType
 ): number {
   return development.derived.players.filter((player) =>
     player.findings.some((finding) => finding.type === type)
@@ -272,7 +272,7 @@ function signalPriority(signal: ClubDashboardDevelopmentPlayer["signal"]): numbe
 }
 
 function buildMarketSummary(
-  clubId: string,
+  clubId: ClubId,
   snapshotCount: number,
   marketPlanning: Awaited<ReturnType<typeof getSquadMarketPlanning>>
 ): ClubDashboardMarketSummary {
@@ -360,7 +360,7 @@ function marketSignalPriority(signal: ClubDashboardMarketPlayer["signal"]): numb
 }
 
 function buildYouthPipelineSummary(
-  clubId: string,
+  clubId: ClubId,
   snapshotCount: number,
   youthPipeline: Awaited<ReturnType<typeof getYouthPipelinePlanning>>
 ): ClubDashboardYouthPipelineSummary {
@@ -529,10 +529,8 @@ function mapSnapshotSummary(snapshot: PersistedSnapshot): ClubDashboardSnapshotS
   };
 }
 
-
-
 async function resolveSnapshot(
-  clubId: string,
+  clubId: ClubId,
   snapshotId: string | undefined,
   snapshotDate: string | undefined,
   role: "base" | "target"
@@ -552,7 +550,7 @@ async function resolveSnapshot(
   }
 
   const snapshots = await snapshotRepository.findByClubAndDate(
-    clubId,
+    clubId.toString(),
     new Date(`${snapshotDate}T00:00:00.000Z`)
   );
 

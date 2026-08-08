@@ -29,7 +29,7 @@ import type {
 } from "./types";
 import { getSquadMarketPlanning } from "../marketPlanning/index.js";
 import { SquadMarketPlayerPlan } from "../marketPlanning/types.js";
-import { Category, Confidence, DeltaDirection } from "../types.js";
+import { Category, ClubId, Confidence, DeltaDirection } from "../types.js";
 
 const skillKeys: SkillKey[] = [
   "stamina",
@@ -57,16 +57,14 @@ const roleRelevantSkills: Record<string, SkillKey[]> = {
 const clubRepository = new MongoClubRepository();
 const snapshotRepository = new MongoSnapshotRepository();
 
-export const getPlayerDevelopment = async (
-  input: GetPlayerDevelopmentInput
-): Promise<PlayerDevelopment> => {
-  const club = await clubRepository.findById(input.clubId);
+export const getPlayerDevelopment = async (clubId: ClubId): Promise<PlayerDevelopment> => {
+  const club = await clubRepository.findById(clubId.toString());
 
   if (!club) {
-    throw new Error(`Club not found: ${input.clubId}`);
+    throw new Error(`Club not found: ${clubId}`);
   }
 
-  const snapshots = await snapshotRepository.listByClub(input.clubId);
+  const snapshots = await snapshotRepository.listByClub(clubId);
   const latest = snapshots.at(-1) ?? null;
   const trainingPriority =
     buildClubOperatingSettings(club).effective.preferences["training.priority"];
@@ -74,7 +72,7 @@ export const getPlayerDevelopment = async (
 
   if (!latest) {
     return {
-      clubId: input.clubId,
+      clubId: clubId,
       snapshotCount: 0,
       snapshotDates: [],
       observed: {
@@ -89,7 +87,7 @@ export const getPlayerDevelopment = async (
   }
 
   return {
-    clubId: input.clubId,
+    clubId: clubId,
     snapshotCount: snapshots.length,
     snapshotDates: snapshots.map((snapshot) => formatDate(snapshot.snapshotDate)),
     observed: {
@@ -106,26 +104,26 @@ export const getPlayerDevelopment = async (
 };
 
 export const getYouthPipelinePlanning = async (
-  input: GetYouthPipelinePlanningInput
+  clubId: ClubId
 ): Promise<YouthPipelinePlanning> => {
-  const club = await clubRepository.findById(input.clubId);
+  const club = await clubRepository.findById(clubId.toString());
 
   if (!club) {
-    throw new Error(`Club not found: ${input.clubId}`);
+    throw new Error(`Club not found: ${clubId}`);
   }
 
   const academyInvestment =
     buildClubOperatingSettings(club).effective.preferences["academy.investment"];
-  const snapshots = await snapshotRepository.listByClub(input.clubId);
+  const snapshots = await snapshotRepository.listByClub(clubId);
   const latest = snapshots.at(-1) ?? null;
 
   if (!latest) {
-    return buildEmptyPlanning(input.clubId, academyInvestment);
+    return buildEmptyPlanning(clubId, academyInvestment);
   }
 
   const [development, marketPlanning] = await Promise.all([
-    getPlayerDevelopment({ clubId: input.clubId }),
-    getSquadMarketPlanning({ clubId: input.clubId })
+    getPlayerDevelopment(clubId),
+    getSquadMarketPlanning(clubId)
   ]);
   const developmentIndex = buildDevelopmentIndex(development.derived.players);
   const marketIndex = buildMarketIndex(marketPlanning.derived.players);
@@ -145,7 +143,7 @@ export const getYouthPipelinePlanning = async (
     .sort(comparePlayerPlans);
 
   return {
-    clubId: input.clubId,
+    clubId,
     snapshotId: latest.id,
     snapshotDate: formatDate(latest.snapshotDate),
     observed: {
@@ -669,7 +667,7 @@ function formatDate(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
 
-function buildEmptyPlanning(clubId: string, academyInvestment: string): YouthPipelinePlanning {
+function buildEmptyPlanning(clubId: ClubId, academyInvestment: string): YouthPipelinePlanning {
   return {
     clubId,
     snapshotId: null,
@@ -798,7 +796,8 @@ function buildPlayerContext(
           : undefined,
       wageDeltaPercent:
         first && latest
-          ? (calculatePercentDelta(first.player.wage.amount, latest.player.wage.amount) ?? undefined)
+          ? (calculatePercentDelta(first.player.wage.amount, latest.player.wage.amount) ??
+            undefined)
           : undefined
     },
     limits
@@ -1215,9 +1214,7 @@ function mapObservedYouth(player: PersistedPlayerSnapshot): YouthPipelineObserve
   };
 }
 
-function countCategories(
-  players: YouthPipelinePlayerPlan[]
-): Record<Category, number> {
+function countCategories(players: YouthPipelinePlayerPlan[]): Record<Category, number> {
   return {
     standout_prospect: players.filter((player) => player.category === "standout_prospect").length,
     follow_up: players.filter((player) => player.category === "follow_up").length,

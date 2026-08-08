@@ -6,7 +6,7 @@ async function economyRoutes(server: FastifyInstance, options: FastifyPluginOpti
   server.get<{ Params: GetEconomyParams }>("/", async (request) => {
     const { clubId } = request.params;
 
-    const economy = await getSquadEconomy({ clubId });
+    const economy = await getSquadEconomy(clubId);
 
     return economy;
   });
@@ -16,7 +16,7 @@ async function economyRoutes(server: FastifyInstance, options: FastifyPluginOpti
     async (request) => {
       const { clubId } = request.params;
 
-      const marketPlanning = await getSquadMarketPlanning({ clubId });
+      const marketPlanning = await getSquadMarketPlanning(clubId);
 
       return marketPlanning;
     }

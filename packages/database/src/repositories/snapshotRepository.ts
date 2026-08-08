@@ -1,6 +1,7 @@
 import { Types } from "mongoose";
 import { SnapshotModel } from "../models/snapshot.js";
 import type { PersistedPlayerSnapshot, PersistedSnapshot, SnapshotSource } from "./types.js";
+import { ClubId } from "./clubRepository.js";
 
 export interface SaveSnapshotInput {
   clubId: string;
@@ -39,7 +40,7 @@ export class MongoSnapshotRepository {
     return snapshot ? mapSnapshot(snapshot.toObject()) : null;
   }
 
-  async listByClub(clubId: string): Promise<PersistedSnapshot[]> {
+  async listByClub(clubId: ClubId): Promise<PersistedSnapshot[]> {
     const snapshots = await SnapshotModel.find({ clubId: new Types.ObjectId(clubId) }).sort({
       snapshotDate: 1
     });
