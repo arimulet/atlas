@@ -1,4 +1,8 @@
-import { getPlayerDevelopment, getYouthPipelinePlanning } from "@atlas/application";
+import {
+  getPlayerDevelopment,
+  getRealYouthAcademyPlanning,
+  getYouthPipelinePlanning
+} from "@atlas/application";
 import { FastifyInstance, FastifyPluginOptions } from "fastify";
 import { clubParamsSchema } from "@atlas/api/schemas";
 import { GetDevelopmentParams, GetYouthPipelinePlanningParams } from "./types";
@@ -22,6 +26,15 @@ async function playerRoutes(server: FastifyInstance, options: FastifyPluginOptio
       return youthPlanning;
     }
   );
+
+  server.get<{ Params: GetYouthPipelinePlanningParams }>("/youth-academy", async (request) => {
+    const { clubId } = clubParamsSchema.parse(request.params);
+
+    const realYouthPlanning = await getRealYouthAcademyPlanning(clubId);
+
+    return realYouthPlanning;
+  });
 }
 
 export default playerRoutes;
+
