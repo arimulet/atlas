@@ -1,14 +1,11 @@
 import { formatDateTime } from "@atlas/web/app/formatters";
 import { SourcedItem } from "@atlas/web/app/components/SourcedItem";
 import { ClubProfilePanelProps } from "./types";
+import { Section } from "../../../Section";
 
 export const ClubProfilePanel = ({ dashboard }: ClubProfilePanelProps) => {
   return (
-    <section className="panel club-profile-panel">
-      <div className="panel-heading">
-        <p className="eyebrow">Club Profile</p>
-        <h2>{dashboard.club.profile.name}</h2>
-      </div>
+    <Section className="club-profile-panel" title="Club Profile" subtitle={dashboard.club.profile.name}>
       <dl className="source-list">
         <SourcedItem label="Observed name" value={dashboard.club.observed.name} source="observed" />
         <SourcedItem label="Manual name" value={dashboard.club.manual.name} source="manual" />
@@ -28,6 +25,6 @@ export const ClubProfilePanel = ({ dashboard }: ClubProfilePanelProps) => {
           source="observed"
         />
       </dl>
-    </section>
+    </Section>
   );
 }

@@ -2,18 +2,15 @@ import { formatLabel } from "@atlas/web/app/formatters";
 import { AssumptionList } from "@atlas/web/app/components/AssumptionList";
 import { TraceList } from "@atlas/web/app/components/TraceList";
 import { DiagnosticPanelProps } from "./types";
+import { Section } from "../Section";
 
-export const DiagnosticPanel = ({ findingsByCategory }: DiagnosticPanelProps) =>  {
+export const DiagnosticPanel = ({ findingsByCategory }: DiagnosticPanelProps) => {
   if (findingsByCategory.length === 0) {
     return null;
   }
 
   return (
-    <section className="panel">
-      <div className="panel-heading">
-        <p className="eyebrow">Diagnostic</p>
-        <h2>Basic findings</h2>
-      </div>
+    <Section title="Diagnostic" subtitle="Basic findings">
       <div className="finding-list">
         {findingsByCategory.map(([category, findings]) => (
           <section className="finding-group" key={category}>
@@ -37,6 +34,6 @@ export const DiagnosticPanel = ({ findingsByCategory }: DiagnosticPanelProps) =>
           </section>
         ))}
       </div>
-    </section>
+    </Section>
   );
-}
+};

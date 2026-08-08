@@ -5,6 +5,7 @@ import { IssuePanel } from "@atlas/web/app/components/IssuePanel";
 import { SummaryItem } from "@atlas/web/app/components/SummaryItem";
 import { PlayerDevelopmentPanelProps } from "./types";
 import { PlayerDevelopmentCard } from "./components/PlayerDevelopmentCard";
+import { Section } from "../Section";
 
 export const PlayerDevelopmentPanel = ({
   playerDevelopment,
@@ -25,16 +26,16 @@ export const PlayerDevelopmentPanel = ({
 
   if (status === "error" || !playerDevelopment) {
     return (
-      <section className="panel issue-panel error">
-        <div className="panel-heading">
-          <p className="eyebrow">Desarrollo de jugadores</p>
-          <h2>No se pudo cargar el modulo</h2>
-        </div>
-        <p className="muted">Volver al dashboard e intentar nuevamente.</p>
+      <Section
+        className="issue-panel error"
+        title="Desarrollo de jugadores"
+        subtitle="No se pudo cargar el modulo"
+        description=">Volver al dashboard e intentar nuevamente."
+      >
         <button type="button" onClick={onBack}>
           Volver al dashboard
         </button>
-      </section>
+      </Section>
     );
   }
 
@@ -58,23 +59,14 @@ export const PlayerDevelopmentPanel = ({
         </button>
       </div>
 
-      <section className="panel">
-        <div className="panel-heading">
-          <p className="eyebrow">Alcance</p>
-          <h2>Evolucion observada de habilidades</h2>
-        </div>
-        <p className="muted">
-          Esta vista compara habilidades visibles entre snapshots historicos. La prioridad de
-          entrenamiento aparece como contexto manual y no como prueba causal de las mejoras.
-        </p>
-      </section>
+      <Section
+        title="Alcance"
+        subtitle="Evolucion observada de habilidades"
+        description="Esta vista compara habilidades visibles entre snapshots historicos. La prioridad de entrenamiento aparece como contexto manual y no como prueba causal de las mejoras."
+      />
 
       <section className="development-columns">
-        <section className="panel">
-          <div className="panel-heading">
-            <p className="eyebrow">Observado</p>
-            <h2>Historial disponible</h2>
-          </div>
+        <Section title="Observado" subtitle="Historial disponible">
           <dl className="summary-grid">
             <SummaryItem label="Snapshots" value={playerDevelopment.snapshotCount.toString()} />
             <SummaryItem
@@ -86,13 +78,9 @@ export const PlayerDevelopmentPanel = ({
               value={playerDevelopment.observed.players.length.toString()}
             />
           </dl>
-        </section>
+        </Section>
 
-        <section className="panel">
-          <div className="panel-heading">
-            <p className="eyebrow">Manual</p>
-            <h2>Contexto del club</h2>
-          </div>
+        <Section title="Manual" subtitle="Contexto del club">
           <dl className="summary-grid">
             <SummaryItem
               label="training.priority"
@@ -100,7 +88,7 @@ export const PlayerDevelopmentPanel = ({
             />
             <SummaryItem label="Causalidad" value="No atribuida" />
           </dl>
-        </section>
+        </Section>
       </section>
 
       {playerDevelopment.warnings.length > 0 ? (
@@ -114,11 +102,7 @@ export const PlayerDevelopmentPanel = ({
         />
       ) : null}
 
-      <section className="panel">
-        <div className="panel-heading">
-          <p className="eyebrow">Derivado por jugador</p>
-          <h2>Evolucion reciente</h2>
-        </div>
+      <Section title="Derivado por jugador" subtitle="Evolucion reciente">
         <div className="filter-row" aria-label="Filtrar por evolucion">
           {(["all", "improvement", "stagnation", "decline", "insufficient_data"] as const).map(
             (option) => (
@@ -140,11 +124,10 @@ export const PlayerDevelopmentPanel = ({
             <PlayerDevelopmentCard key={player.playerId ?? player.name} player={player} />
           ))}
         </div>
-      </section>
+      </Section>
     </section>
   );
-}
-
+};
 
 function labelFilter(filter: PlayerDevelopmentFindingType | "all"): string {
   if (filter === "all") return "Todos";
@@ -153,8 +136,3 @@ function labelFilter(filter: PlayerDevelopmentFindingType | "all"): string {
   if (filter === "decline") return "Deterioro";
   return "Sin datos";
 }
-
-
-
-
-

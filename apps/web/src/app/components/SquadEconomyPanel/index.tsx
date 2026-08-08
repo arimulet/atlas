@@ -8,6 +8,7 @@ import { EvidencePanel } from "./components/EvidencePanel";
 import { HistoricalPanel } from "./components/HistoricalPanel";
 import { PlayerDetailPanel } from "./components/PlayerDetailPanel";
 import { SquadEconomyPanelProps } from "./types";
+import { Section } from "../Section";
 
 function formatRatio(value: number | null): string {
   return value === null ? "No disponible" : value.toFixed(4);
@@ -24,16 +25,16 @@ export const SquadEconomyPanel = ({ squadEconomy, status, onBack }: SquadEconomy
 
   if (status === "error" || !squadEconomy) {
     return (
-      <section className="panel issue-panel error">
-        <div className="panel-heading">
-          <p className="eyebrow">Economia de plantilla</p>
-          <h2>No se pudo cargar el modulo</h2>
-        </div>
-        <p className="muted">Volver al dashboard e intentar nuevamente.</p>
+      <Section
+        className="issue-panel error"
+        title="Economia de plantilla"
+        subtitle="No se pudo cargar el modulo"
+        description="Volver al dashboard e intentar nuevamente."
+      >
         <button type="button" onClick={onBack}>
           Volver al dashboard
         </button>
-      </section>
+      </Section>
     );
   }
 
@@ -49,23 +50,13 @@ export const SquadEconomyPanel = ({ squadEconomy, status, onBack }: SquadEconomy
         </button>
       </div>
 
-      <section className="panel">
-        <div className="panel-heading">
-          <p className="eyebrow">Alcance</p>
-          <h2>Lectura derivada de plantilla</h2>
-        </div>
-        <p className="muted">
-          Este modulo usa salarios, valores estimados, snapshots y tolerancia de riesgo. No
-          representa caja, ingresos, gastos no salariales, estadio, sponsors, transferencias
-          externas ni liquidez real.
-        </p>
-      </section>
+      <Section
+        title="Alcance"
+        subtitle="Lectura derivada de plantilla"
+        description="Este modulo usa salarios, valores estimados, snapshots y tolerancia de riesgo. No representa caja, ingresos, gastos no salariales, estadio, sponsors, transferencias externas ni liquidez real."
+      />
 
-      <section className="panel">
-        <div className="panel-heading">
-          <p className="eyebrow">Derivado</p>
-          <h2>Resumen economico observado</h2>
-        </div>
+      <Section title="Derivado" subtitle="Resumen economico observado">
         <dl className="summary-grid">
           <SummaryItem label="Masa salarial" value={formatMoney(squadEconomy.derived.totalWage)} />
           <SummaryItem
@@ -78,15 +69,11 @@ export const SquadEconomyPanel = ({ squadEconomy, status, onBack }: SquadEconomy
           />
           <SummaryItem label="Snapshot" value={squadEconomy.snapshotDate ?? "No disponible"} />
         </dl>
-      </section>
+      </Section>
 
       <section className="economy-columns">
         <EvidencePanel squadEconomy={squadEconomy} />
-        <section className="panel">
-          <div className="panel-heading">
-            <p className="eyebrow">Manual</p>
-            <h2>Settings efectivos</h2>
-          </div>
+        <Section title="Manual" subtitle="Settings efectivos">
           <dl className="summary-grid">
             <SummaryItem
               label="Moneda operativa"
@@ -94,7 +81,7 @@ export const SquadEconomyPanel = ({ squadEconomy, status, onBack }: SquadEconomy
             />
             <SummaryItem label="Tolerancia de riesgo" value={squadEconomy.manual.riskTolerance} />
           </dl>
-        </section>
+        </Section>
       </section>
 
       <section className="economy-columns">
@@ -123,11 +110,7 @@ export const SquadEconomyPanel = ({ squadEconomy, status, onBack }: SquadEconomy
         />
       ) : null}
 
-      <section className="panel">
-        <div className="panel-heading">
-          <p className="eyebrow">Inferido</p>
-          <h2>Hallazgos explicables</h2>
-        </div>
+      <Section title="Inferido" subtitle="Hallazgos explicables">
         <div className="finding-list">
           {squadEconomy.findings.length > 0 ? (
             squadEconomy.findings.map((finding) => (
@@ -145,7 +128,7 @@ export const SquadEconomyPanel = ({ squadEconomy, status, onBack }: SquadEconomy
             <p className="muted">Sin hallazgos fuertes con la evidencia disponible.</p>
           )}
         </div>
-      </section>
+      </Section>
     </section>
   );
-}
+};

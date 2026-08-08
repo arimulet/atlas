@@ -1,13 +1,14 @@
+import { DetailBlock } from "../DetailBlock";
+import { TraceKind } from "../TraceKind";
 import { TraceListProps } from "./types";
 
 export const TraceList = ({ title, traces }: TraceListProps) => {
   return (
-    <div className="detail-block">
-      <h4>{title}</h4>
+    <DetailBlock title={title}>
       <ul>
         {traces.map((trace) => (
           <li key={`${trace.kind}-${trace.label}-${trace.value}`}>
-            <span className={`trace-kind ${trace.kind}`}>{trace.kind}</span>
+            <TraceKind type={trace.kind} label={trace.kind} />
             <span>
               {trace.label}
               {trace.value !== null ? `: ${trace.value}` : ""}
@@ -15,7 +16,6 @@ export const TraceList = ({ title, traces }: TraceListProps) => {
           </li>
         ))}
       </ul>
-    </div>
+    </DetailBlock>
   );
-}
-
+};

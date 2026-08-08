@@ -2,6 +2,7 @@ import { OperatingPreferenceKey } from "@atlas/web/app/types";
 import { PreferenceItem } from "@atlas/web/app/components/PreferenceItem";
 import { SourcedItem } from "@atlas/web/app/components/SourcedItem";
 import { OperatingSettingsPanelProps } from "./types";
+import { Section } from "../../../Section";
 
 const preferenceLabels: Record<OperatingPreferenceKey, string> = {
   "economy.riskTolerance": "Economy risk",
@@ -12,11 +13,7 @@ const preferenceLabels: Record<OperatingPreferenceKey, string> = {
 
 export const OperatingSettingsPanel = ({ dashboard }: OperatingSettingsPanelProps) => {
   return (
-    <section className="panel">
-      <div className="panel-heading">
-        <p className="eyebrow">Operating Settings</p>
-        <h2>Effective reading</h2>
-      </div>
+    <Section title="Operating Settings" subtitle="Effective reading">
       <div className="settings-columns">
         <dl className="source-list">
           <SourcedItem
@@ -55,6 +52,6 @@ export const OperatingSettingsPanel = ({ dashboard }: OperatingSettingsPanelProp
           />
         ))}
       </div>
-    </section>
+    </Section>
   );
-}
+};
