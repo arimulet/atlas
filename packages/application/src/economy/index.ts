@@ -6,7 +6,8 @@ import {
   type SnapshotMoney
 } from "@atlas/database";
 import { buildClubOperatingSettings } from "../clubOperatingSettings/index.js";
-import { EconomyRiskTolerance, GetSquadEconomyInput, SquadEconomy, SquadEconomyConcentration, SquadEconomyConfidence, SquadEconomyFinding, SquadEconomyHistoricalSnapshot, SquadEconomyPlayerDetail, SquadEconomySeverity, SquadEconomyWarning } from "./types.js";
+import { EconomyRiskTolerance, GetSquadEconomyInput, SquadEconomy, SquadEconomyConcentration, SquadEconomyFinding, SquadEconomyHistoricalSnapshot, SquadEconomyPlayerDetail, SquadEconomyWarning } from "./types.js";
+import { Confidence, Severity } from "../types.js";
 
 const clubRepository = new MongoClubRepository();
 const snapshotRepository = new MongoSnapshotRepository();
@@ -635,13 +636,13 @@ function wageToValueLimit(riskTolerance: EconomyRiskTolerance): number {
 function severityForConcentration(
   share: number,
   riskTolerance: EconomyRiskTolerance
-): SquadEconomySeverity {
+): Severity {
   const highLimit = concentrationLimit(riskTolerance) + 0.1;
 
   return share >= highLimit ? "high" : "medium";
 }
 
-function severityForAssetConcentration(share: number): SquadEconomySeverity {
+function severityForAssetConcentration(share: number): Severity {
   if (share >= 0.5) return "high";
   if (share >= 0.35) return "medium";
   return "low";
@@ -650,7 +651,7 @@ function severityForAssetConcentration(share: number): SquadEconomySeverity {
 function severityForWageToValue(
   ratio: number | null,
   riskTolerance: EconomyRiskTolerance
-): SquadEconomySeverity {
+): Severity {
   if (ratio === null) return "low";
   if (ratio >= wageToValueLimit(riskTolerance) * 1.6) return "high";
   return "medium";
@@ -660,14 +661,14 @@ function severityForDeterioration(
   wageDeltaPercent: number,
   valueDeltaPercent: number,
   riskTolerance: EconomyRiskTolerance
-): SquadEconomySeverity {
+): Severity {
   const pressure = wageDeltaPercent - valueDeltaPercent;
   const highLimit = riskTolerance === "aggressive" ? 0.3 : 0.2;
 
   return pressure >= highLimit ? "high" : "medium";
 }
 
-function calculateConfidence(warnings: SquadEconomyWarning[]): SquadEconomyConfidence {
+function calculateConfidence(warnings: SquadEconomyWarning[]): Confidence {
   const strongWarningCodes = new Set([
     "missing_currency",
     "mixed_money_currency",

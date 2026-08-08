@@ -1,4 +1,4 @@
-import { PlayerDevelopmentPlayerSummary } from "@atlas/web/app/types";
+import { PlayerDevelopmentPlayerSummary, Severity } from "@atlas/web/app/types";
 import { EvidenceList } from "@atlas/web/app/components/EvidenceList";
 import { SummaryItem } from "@atlas/web/app/components/SummaryItem";
 import { PlayerDevelopmentCardProps } from "./types";
@@ -7,7 +7,7 @@ import { IssueList } from "@atlas/web/app/components/IssueList";
 
 function severityForDirection(
   direction: PlayerDevelopmentPlayerSummary["recentEvolution"]["direction"]
-): "info" | "low" | "medium" | "high" {
+): Severity {
   if (direction === "up") return "low";
   if (direction === "down") return "medium";
   return "info";

@@ -6,10 +6,11 @@ import {
 } from "@atlas/database";
 import { buildClubOperatingSettings } from "../clubOperatingSettings/index.js";
 import { getPlayerDevelopment } from "../playerDevelopment/index.js";
-import { type PlayerDevelopmentPlayerSummary } from "../playerDevelopment/types.js";
+import { Severity, type PlayerDevelopmentPlayerSummary } from "../playerDevelopment/types.js";
 import { getSquadEconomy } from "../economy/index.js";
 import { SquadEconomyPlayerDetail } from "../economy/types.js";
-import { GetSquadMarketPlanningInput, MarketPlanningCategory, MarketPlanningConfidence, MarketPlanningSeverity, MarketStrategy, SquadMarketObservedPlayer, SquadMarketPlanning, SquadMarketPlayerPlan, SquadMarketSignal, SquadMarketTiming, SquadMarketWarning } from "./types.js";
+import { GetSquadMarketPlanningInput, MarketPlanningCategory, MarketStrategy, SquadMarketObservedPlayer, SquadMarketPlanning, SquadMarketPlayerPlan, SquadMarketSignal, SquadMarketTiming, SquadMarketWarning } from "./types.js";
+import { Confidence } from "../types.js";
 
 const clubRepository = new MongoClubRepository();
 const snapshotRepository = new MongoSnapshotRepository();
@@ -476,7 +477,7 @@ function calculateConfidence(
   signals: SquadMarketSignal[],
   warnings: SquadMarketWarning[],
   historicalTrend: PlayerHistoricalTrend
-): MarketPlanningConfidence {
+): Confidence {
   if (
     signals.length === 0 ||
     warnings.some((warning) =>
@@ -740,7 +741,7 @@ function categoryPriority(category: MarketPlanningCategory): number {
   return 1;
 }
 
-function severityPriority(severity: MarketPlanningSeverity): number {
+function severityPriority(severity: Severity): number {
   if (severity === "high") return 4;
   if (severity === "medium") return 3;
   if (severity === "low") return 2;

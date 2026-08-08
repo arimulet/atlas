@@ -17,11 +17,7 @@ export const PlayerDevelopmentPanel = ({
   );
 
   if (status === "loading") {
-    return (
-      <section className="panel">
-        <p className="loading">Cargando desarrollo de jugadores...</p>
-      </section>
-    );
+    return <Section description="Cargando desarrollo de jugadores..." />;
   }
 
   if (status === "error" || !playerDevelopment) {

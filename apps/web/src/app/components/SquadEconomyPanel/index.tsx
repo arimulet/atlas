@@ -17,9 +17,7 @@ function formatRatio(value: number | null): string {
 export const SquadEconomyPanel = ({ squadEconomy, status, onBack }: SquadEconomyPanelProps) => {
   if (status === "loading") {
     return (
-      <section className="panel">
-        <p className="loading">Cargando Economia de plantilla...</p>
-      </section>
+      <Section description="Cargando Economia de plantilla..." />
     );
   }
 

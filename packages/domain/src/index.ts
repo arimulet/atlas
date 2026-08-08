@@ -65,10 +65,12 @@ export interface Assumption {
 export interface Finding {
   code: string;
   title: string;
-  severity: "info" | "low" | "medium" | "high";
+  severity: Severity;
   evidence: string[];
   assumptions: Assumption[];
 }
+
+export type Severity = "info" | "low" | "medium" | "high";
 
 export interface Diagnostic {
   id: string;

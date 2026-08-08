@@ -1,4 +1,4 @@
-import type { SkillSet } from "./index.js";
+import type { Severity, SkillSet } from "./index.js";
 import {
   calculateHistoricalTrends,
   type HistoricalTrends,
@@ -13,7 +13,7 @@ export type HistoricalFindingType =
   | "risky_wage_against_historical_evolution"
   | "squad_asset_evolution";
 
-export type HistoricalFindingSeverity = "info" | "low" | "medium" | "high";
+export type HistoricalFindingSeverity = Severity;
 export type HistoricalFindingConfidence = "low" | "medium" | "high";
 
 export interface HistoricalFindingEvidence {
