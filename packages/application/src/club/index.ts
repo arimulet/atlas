@@ -357,7 +357,11 @@ function buildYouthPipelineSummary(
     },
     derived,
     inferred: {
-      headline: buildYouthPipelineHeadline(derived),
+      headline: buildYouthPipelineHeadline(
+        derived,
+        youthPipeline.observed.coverage.youngSeniorPlayerCount,
+        snapshotCount
+      ),
       warning: youthPipeline.warnings[0]?.message ?? null,
       highlightedPlayers: youthPipeline.derived.players
         .filter((player) => player.category !== "insufficient_data")
@@ -374,7 +378,19 @@ function buildYouthPipelineSummary(
   };
 }
 
-function buildYouthPipelineHeadline(summary: ClubDashboardYouthPipelineSummary["derived"]): string {
+function buildYouthPipelineHeadline(
+  summary: ClubDashboardYouthPipelineSummary["derived"],
+  youngSeniorPlayerCount?: number,
+  snapshotCount?: number
+): string {
+  if (snapshotCount === 0) {
+    return "Sin snapshots importados para analizar jovenes del plantel senior.";
+  }
+
+  if (youngSeniorPlayerCount === 0) {
+    return "No se observan jugadores jovenes (<= 23) en el plantel senior.";
+  }
+
   if (summary.insufficientDataPlayers > 0) {
     return "Lectura prudente: hay jovenes senior con datos insuficientes.";
   }

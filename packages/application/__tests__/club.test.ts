@@ -34,9 +34,14 @@ interface DashboardSnapshotPlayerFixture {
   wage: { amount: number; currency: string | null };
   estimatedValue: { amount: number; currency: string | null };
   skills: {
-    pace: number | null;
-    technique: number | null;
-    passing: number | null;
+    stamina?: number | null;
+    pace?: number | null;
+    technique?: number | null;
+    passing?: number | null;
+    keeper?: number | null;
+    defender?: number | null;
+    playmaker?: number | null;
+    striker?: number | null;
   };
 }
 
@@ -312,6 +317,9 @@ describe("Club dashboard use case", () => {
         insufficientDataPlayers: 1
       }
     });
+    expect(dashboard.youthPipelineSummary.inferred.headline).toBe(
+      "Lectura prudente: hay jovenes senior con datos insuficientes."
+    );
     expect(dashboard.youthPipelineSummary.inferred.warning).toContain("plantel senior");
     expect(dashboard.operationalAreas).toEqual(
       expect.arrayContaining([
@@ -319,6 +327,126 @@ describe("Club dashboard use case", () => {
           key: "youth-pipeline-planning",
           label: "Pipeline juvenil senior",
           status: "available"
+        })
+      ])
+    );
+  });
+
+  it("summarizes highlighted youth players and counts when comparable snapshots exist", async () => {
+    const first = withPlayer(readValidSnapshot(), {
+      age: 20,
+      skills: {
+        stamina: 8,
+        pace: 9,
+        technique: 9,
+        passing: 8,
+        keeper: 1,
+        defender: 5,
+        playmaker: 9,
+        striker: 4
+      }
+    });
+    const second = {
+      ...first,
+      source: { ...first.source, exportedAt: "2026-08-12T12:00:00.000Z" },
+      snapshot: { ...first.snapshot, snapshotDate: "2026-08-12", week: 5 },
+      players: first.players.map((p) => ({
+        ...p,
+        skills: { ...p.skills, pace: 11, technique: 10, passing: 9, playmaker: 10 }
+      }))
+    };
+    const importResult = await importPlayerSnapshot({ payload: first });
+    await importPlayerSnapshot({ payload: second });
+    await updateClubOperatingSettings({
+      clubId: importResult.clubId,
+      manual: { preferences: { "academy.investment": "ambitious" } }
+    });
+
+    const dashboard = await getClubDashboard(importResult.clubId);
+
+    expect(dashboard.youthPipelineSummary.derived).toMatchObject({
+      standoutProspects: 1,
+      followUpPlayers: 0,
+      stagnationRiskPlayers: 0,
+      insufficientDataPlayers: 0
+    });
+    expect(dashboard.youthPipelineSummary.inferred.headline).toBe(
+      "Hay prospectos destacados dentro del plantel senior."
+    );
+    expect(dashboard.youthPipelineSummary.inferred.highlightedPlayers[0]).toMatchObject({
+      name: "Tomas Alvarez",
+      signal: "standout_prospect",
+      confidence: "medium"
+    });
+    expect(dashboard.youthPipelineSummary.detailPath).toBe(
+      `/clubs/${importResult.clubId}/youth-pipeline-planning`
+    );
+  });
+
+  it("handles a club without young senior players as a prudent empty state", async () => {
+    const importResult = await importPlayerSnapshot({
+      payload: withPlayer(readValidSnapshot(), { age: 28 })
+    });
+
+    const dashboard = await getClubDashboard(importResult.clubId);
+
+    expect(dashboard.youthPipelineSummary).toMatchObject({
+      available: true,
+      observed: {
+        snapshotCount: 1,
+        youngSeniorPlayerCount: 0,
+        youthAgeThreshold: 23
+      },
+      derived: {
+        standoutProspects: 0,
+        followUpPlayers: 0,
+        stagnationRiskPlayers: 0,
+        insufficientDataPlayers: 0
+      },
+      inferred: {
+        headline: "No se observan jugadores jovenes (<= 23) en el plantel senior.",
+        highlightedPlayers: []
+      }
+    });
+    expect(dashboard.youthPipelineSummary.inferred.warning).toContain("plantel senior");
+  });
+
+  it("handles a club without snapshots with unavailable youth pipeline and ready status", async () => {
+    const club = await clubs.save({
+      name: "Club Sin Snapshots",
+      externalId: null,
+      season: null,
+      week: null
+    });
+
+    const dashboard = await getClubDashboard(club.id);
+
+    expect(dashboard.youthPipelineSummary).toMatchObject({
+      available: false,
+      observed: {
+        snapshotCount: 0,
+        latestSnapshotDate: null,
+        seniorPlayerCount: 0,
+        youngSeniorPlayerCount: 0,
+        youthAgeThreshold: 23
+      },
+      derived: {
+        standoutProspects: 0,
+        followUpPlayers: 0,
+        stagnationRiskPlayers: 0,
+        insufficientDataPlayers: 0
+      },
+      inferred: {
+        headline: "Sin snapshots importados para analizar jovenes del plantel senior.",
+        highlightedPlayers: []
+      }
+    });
+    expect(dashboard.operationalAreas).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          key: "youth-pipeline-planning",
+          label: "Pipeline juvenil senior",
+          status: "ready"
         })
       ])
     );
@@ -480,10 +608,16 @@ function readValidSnapshot(): DashboardSnapshotFixture {
 
 function withPlayer(
   snapshot: DashboardSnapshotFixture,
-  patch: Partial<DashboardSnapshotPlayerFixture>
+  patch: Partial<Omit<DashboardSnapshotPlayerFixture, "skills">> & {
+    skills?: Partial<DashboardSnapshotPlayerFixture["skills"]>;
+  }
 ): DashboardSnapshotFixture {
   return {
     ...snapshot,
-    players: snapshot.players.map((player) => ({ ...player, ...patch }))
+    players: snapshot.players.map((player) => ({
+      ...player,
+      ...patch,
+      skills: { ...player.skills, ...(patch.skills ?? {}) }
+    }))
   };
 }
