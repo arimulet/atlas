@@ -1,8 +1,8 @@
-import { IssuePanel } from "@atlas/web/app/components/IssuePanel";
 import { SummaryItem } from "@atlas/web/app/components/SummaryItem";
 import { YouthPlayerCard } from "@atlas/web/app/components/YouthPipelinePlanningPanel/components/YouthPlayerCard";
+import { Section } from "@atlas/web/app/components/Section";
+import { IssueList } from "@atlas/web/app/components/IssueList";
 import { YouthPipelinePlanningPanelProps } from "./types";
-import { Section } from "../Section";
 
 export const YouthPipelinePlanningPanel = ({
   youthPipelinePlanning,
@@ -20,7 +20,7 @@ export const YouthPipelinePlanningPanel = ({
   if (status === "error" || !youthPipelinePlanning) {
     return (
       <Section
-        className="issue-panel error"
+        tone="error"
         title="Pipeline juvenil senior"
         subtitle="No se pudo cargar el modulo"
         description="Volver al dashboard e intentar nuevamente."
@@ -107,14 +107,9 @@ export const YouthPipelinePlanningPanel = ({
       </Section>
 
       {youthPipelinePlanning.warnings.length > 0 ? (
-        <IssuePanel
-          title="Advertencias de alcance y evidencia"
-          tone="warning"
-          issues={youthPipelinePlanning.warnings.map((warning) => ({
-            path: warning.code,
-            message: warning.message
-          }))}
-        />
+        <Section title="Advertencias de alcance y evidencia" tone="warning">
+          <IssueList issues={youthPipelinePlanning.warnings} />
+        </Section>
       ) : null}
 
       <Section title="Inferido por jugador" subtitle="Prospectos, seguimiento y riesgos">
