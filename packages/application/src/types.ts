@@ -1,3 +1,6 @@
+import { type SnapshotSkillSet } from "@atlas/database";
+
+export type SkillKey = keyof SnapshotSkillSet;
 export type Severity = "info" | "low" | "medium" | "high";
 export type Confidence = "low" | "medium" | "high";
 export type KeyValue = {

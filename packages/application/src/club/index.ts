@@ -572,3 +572,5 @@ function mapPlayer(player: PersistedPlayerSnapshot): SnapshotComparisonPlayer {
     skills: player.skills
   };
 }
+
+export * from "./types.js";
