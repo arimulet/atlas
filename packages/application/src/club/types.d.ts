@@ -1,15 +1,8 @@
+import { Confidence, KeyValue, Severity } from "@atlas/application";
 import { type PersistedClub } from "@atlas/database";
 import { type ClubOperatingSettings } from "../clubOperatingSettings/types.js";
-import {
-  type MarketPlanningCategory,
-  type MarketPlanningConfidence,
-  type MarketPlanningSeverity
-} from "../marketPlanning/types.js";
-import {
-  type YouthPipelineCategory,
-  type YouthPipelineConfidence,
-  type YouthPipelineSeverity
-} from "../playerDevelopment/types.js";
+import { MarketStrategy, type MarketPlanningCategory } from "../marketPlanning/types.js";
+import { type YouthPipelineCategory } from "../playerDevelopment/types.js";
 
 export interface GetClubDashboardInput {
   clubId: string;
@@ -26,8 +19,8 @@ export interface UpdateClubProfileInput {
     currency?: string | null;
     season?: number | null;
     week?: number | null;
-    assumptions?: Array<{ key: string; value: string }>;
-    preferences?: Array<{ key: string; value: string }>;
+    assumptions?: KeyValue[];
+    preferences?: KeyValue[];
   };
 }
 
@@ -36,8 +29,8 @@ export interface ValidatedManualProfileUpdate {
   currency?: string | null;
   season?: number | null;
   week?: number | null;
-  assumptions?: Array<{ key: string; value: string }>;
-  preferences?: Array<{ key: string; value: string }>;
+  assumptions?: KeyValue[];
+  preferences?: KeyValue[];
 }
 
 export interface ClubDashboard {
@@ -66,10 +59,12 @@ export interface ClubDashboard {
       | "academy"
       | "market";
     label: string;
-    status: "available" | "ready" | "planned";
+    status: ClubDashboardStatus;
     summary: string;
   }>;
 }
+
+export type ClubDashboardStatus = "available" | "ready" | "planned";
 
 export interface ClubDashboardSnapshotSummary {
   id: string;
@@ -108,9 +103,9 @@ export interface ClubDashboardDevelopmentSummary {
 export interface ClubDashboardDevelopmentPlayer {
   playerId: string | null;
   name: string;
-  signal: "improvement" | "stagnation" | "decline" | "insufficient_data";
-  severity: "info" | "low" | "medium" | "high";
-  confidence: "low" | "medium" | "high";
+  signal: DevelopmentFindingType;
+  severity: Severity;
+  confidence: Confidence;
 }
 
 export interface ClubDashboardMarketSummary {
@@ -123,7 +118,7 @@ export interface ClubDashboardMarketSummary {
     playersWithStableIdentity: number;
   };
   manual: {
-    marketStrategy: string;
+    marketStrategy: MarketStrategy;
   };
   derived: {
     saleCandidates: number;
@@ -142,8 +137,8 @@ export interface ClubDashboardMarketPlayer {
   playerId: string | null;
   name: string;
   signal: MarketPlanningCategory;
-  severity: MarketPlanningSeverity;
-  confidence: MarketPlanningConfidence;
+  severity: Severity;
+  confidence: Confidence;
   timing: string;
 }
 
@@ -177,8 +172,8 @@ export interface ClubDashboardYouthPipelinePlayer {
   playerId: string | null;
   name: string;
   signal: YouthPipelineCategory;
-  severity: YouthPipelineSeverity;
-  confidence: YouthPipelineConfidence;
+  severity: Severity;
+  confidence: Confidence;
 }
 
 export interface CompareClubSnapshotsInput {

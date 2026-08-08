@@ -1,11 +1,12 @@
+import { Severity } from "../playerDevelopment/types";
+import { Confidence } from "../types";
+
 export type MarketStrategy = "conservative" | "balanced" | "opportunistic";
 export type MarketPlanningCategory =
   | "sale_candidate"
   | "protection_candidate"
   | "follow_up"
   | "insufficient_signal";
-export type MarketPlanningSeverity = "info" | "low" | "medium" | "high";
-export type MarketPlanningConfidence = "low" | "medium" | "high";
 export type EvidenceKind = "observed" | "manual" | "derived" | "inferred";
 
 export interface GetSquadMarketPlanningInput {
@@ -65,8 +66,8 @@ export interface SquadMarketPlayerPlan {
     source: "observed" | "inferred" | "unknown";
   };
   category: MarketPlanningCategory;
-  severity: MarketPlanningSeverity;
-  confidence: MarketPlanningConfidence;
+  severity: Severity;
+  confidence: Confidence;
   rationale: string;
   timing: SquadMarketTiming;
   signals: SquadMarketSignal[];
@@ -75,8 +76,8 @@ export interface SquadMarketPlayerPlan {
 
 export interface SquadMarketSignal {
   code: string;
-  severity: MarketPlanningSeverity;
-  confidence: MarketPlanningConfidence;
+  severity: Severity;
+  confidence: Confidence;
   message: string;
   evidence: SquadMarketEvidence[];
 }

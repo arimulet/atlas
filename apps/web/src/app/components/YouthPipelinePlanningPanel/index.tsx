@@ -10,11 +10,7 @@ export const YouthPipelinePlanningPanel = ({
   onBack
 }: YouthPipelinePlanningPanelProps) => {
   if (status === "loading") {
-    return (
-      <section className="panel">
-        <p className="loading">Cargando pipeline juvenil senior...</p>
-      </section>
-    );
+    return <Section description="Cargando pipeline juvenil senior..." />;
   }
 
   if (status === "error" || !youthPipelinePlanning) {
