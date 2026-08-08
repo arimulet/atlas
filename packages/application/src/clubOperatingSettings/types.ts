@@ -1,7 +1,7 @@
-import { ClubId, KeyValue } from "@atlas/application";
+import { ClubId, KeyValue } from "../types.js";
 
-export type OperatingPreferenceKey = "academy.investment" | "economy.riskTolerance" | "market.strategy" | "training.priority" // keyof typeof operatingPreferenceDefaults;
-export type OperatingPreferenceValue = "aggressive" | "ambitious" | "balanced" | "conservative" | "development" | "minimal" | "opportunistic" | "performance" // (typeof preferenceOptions)[OperatingPreferenceKey][number];
+export type OperatingPreferenceKey = "academy.investment" | "economy.riskTolerance" | "market.strategy" | "training.priority";
+export type OperatingPreferenceValue = "aggressive" | "ambitious" | "balanced" | "conservative" | "development" | "minimal" | "opportunistic" | "performance";
 
 export interface ClubOperatingSettings {
   clubId: string;
@@ -33,16 +33,7 @@ export interface UpdateClubOperatingSettingsInput {
   };
 }
 
-export interface ValidatedManualProfileUpdate {
-  name?: string | null;
-  currency?: string | null;
-  season?: number | null;
-  week?: number | null;
-  assumptions?: KeyValue[];
-  preferences?: KeyValue[];
-}
-
-interface ValidatedManualOperatingSettingsUpdate {
+export interface ValidatedManualOperatingSettingsUpdate {
   currency?: string | null;
   season?: number | null;
   week?: number | null;
