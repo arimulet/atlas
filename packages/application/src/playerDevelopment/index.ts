@@ -19,9 +19,7 @@ import type {
   PlayerDevelopmentWarning,
   PlayerSkillChange,
   Severity,
-  SkillChangeDirection,
   SkillKey,
-  YouthPipelineCategory,
   YouthPipelineObservedPlayer,
   YouthPipelinePlanning,
   YouthPipelinePlayerContext,
@@ -31,7 +29,7 @@ import type {
 } from "./types";
 import { getSquadMarketPlanning } from "../marketPlanning/index.js";
 import { SquadMarketPlayerPlan } from "../marketPlanning/types.js";
-import { Confidence } from "../types.js";
+import { Category, Confidence, DeltaDirection } from "../types.js";
 
 const skillKeys: SkillKey[] = [
   "stamina",
@@ -661,7 +659,7 @@ function formatSignedDelta(delta: number): string {
   return delta > 0 ? `+${delta}` : delta.toString();
 }
 
-function classifyDelta(delta: number): SkillChangeDirection {
+function classifyDelta(delta: number): DeltaDirection {
   if (delta > 0) return "up";
   if (delta < 0) return "down";
   return "stable";
@@ -742,7 +740,7 @@ function buildPlayerPlan(input: {
   const strongestSignal = signals[0] ?? null;
 
   return {
-    playerId: input.player.playerId,
+    playerId: input.player.playerId ?? undefined,
     snapshotPlayerId: input.player.id,
     name: input.player.name,
     age: input.player.age,
@@ -778,8 +776,8 @@ function buildPlayerContext(
 
   return {
     window: {
-      from: first ? formatDate(first.snapshot.snapshotDate) : null,
-      to: latest ? formatDate(latest.snapshot.snapshotDate) : null,
+      from: first ? formatDate(first.snapshot.snapshotDate) : undefined,
+      to: latest ? formatDate(latest.snapshot.snapshotDate) : undefined,
       snapshotCount: history.length
     },
     dataCompleteness: {
@@ -788,20 +786,20 @@ function buildPlayerContext(
     },
     valueAndWage: {
       wage: player.wage.amount,
-      wageCurrency: player.wage.currency,
+      wageCurrency: player.wage.currency ?? undefined,
       estimatedValue: player.estimatedValue.amount,
-      estimatedValueCurrency: player.estimatedValue.currency,
+      estimatedValueCurrency: player.estimatedValue.currency ?? undefined,
       valueDeltaPercent:
         first && latest
-          ? calculatePercentDelta(
+          ? (calculatePercentDelta(
               first.player.estimatedValue.amount,
               latest.player.estimatedValue.amount
-            )
-          : null,
+            ) ?? undefined)
+          : undefined,
       wageDeltaPercent:
         first && latest
-          ? calculatePercentDelta(first.player.wage.amount, latest.player.wage.amount)
-          : null
+          ? (calculatePercentDelta(first.player.wage.amount, latest.player.wage.amount) ?? undefined)
+          : undefined
     },
     limits
   };
@@ -852,7 +850,7 @@ function buildYouthWarnings(
     warnings.push({
       code: "ambiguous_identity",
       message: "Falta identidad estable; el historial del joven puede no ser comparable.",
-      evidence: [{ kind: "observed", label: "External id", value: player.externalId }]
+      evidence: [{ kind: "observed", label: "External id", value: player.externalId ?? undefined }]
     });
   }
 
@@ -1113,7 +1111,7 @@ function calculateConfidence(
   return "medium";
 }
 
-function buildRationale(category: YouthPipelineCategory): string {
+function buildRationale(category: Category): string {
   if (category === "standout_prospect") {
     return "Prospecto destacado dentro del plantel senior; no implica escuela juvenil real.";
   }
@@ -1142,7 +1140,7 @@ function buildInsufficientSignal(player: PersistedPlayerSnapshot): YouthPipeline
 function chooseCategory(
   signals: YouthPipelineSignal[],
   warnings: YouthPipelineWarning[]
-): YouthPipelineCategory {
+): Category {
   if (warnings.some((warning) => warning.code === "contradictory_signals")) {
     return "follow_up";
   }
@@ -1196,7 +1194,7 @@ function comparePlayerPlans(left: YouthPipelinePlayerPlan, right: YouthPipelineP
   );
 }
 
-function categoryPriority(category: YouthPipelineCategory): number {
+function categoryPriority(category: Category): number {
   if (category === "stagnation_risk") return 4;
   if (category === "standout_prospect") return 3;
   if (category === "follow_up") return 2;
@@ -1219,7 +1217,7 @@ function mapObservedYouth(player: PersistedPlayerSnapshot): YouthPipelineObserve
 
 function countCategories(
   players: YouthPipelinePlayerPlan[]
-): Record<YouthPipelineCategory, number> {
+): Record<Category, number> {
   return {
     standout_prospect: players.filter((player) => player.category === "standout_prospect").length,
     follow_up: players.filter((player) => player.category === "follow_up").length,

@@ -192,9 +192,9 @@ function buildSignals(input: {
         "Jugador veterano con valor estimado en baja dentro del historial propio; senal de timing patrimonial para revisar salida posible sin estimar precio real.",
       evidence: [
         { kind: "observed", label: "Edad", value: input.player.age },
-        { kind: "observed", label: "Ventana desde", value: input.historicalTrend.from },
-        { kind: "observed", label: "Ventana hasta", value: input.historicalTrend.to },
-        { kind: "derived", label: "Variacion valor %", value: input.historicalTrend.valueDeltaPercent },
+        { kind: "observed", label: "Ventana desde", value: input.historicalTrend.from ?? undefined },
+        { kind: "observed", label: "Ventana hasta", value: input.historicalTrend.to ?? undefined },
+        { kind: "derived", label: "Variacion valor %", value: input.historicalTrend.valueDeltaPercent ?? undefined },
         { kind: "manual", label: "market.strategy", value: input.marketStrategy }
       ]
     });
@@ -241,8 +241,8 @@ function buildSignals(input: {
       message:
         "El salario crece sin respaldo proporcional del valor estimado propio; conviene revisar el timing salarial del activo.",
       evidence: [
-        { kind: "derived", label: "Variacion salario %", value: input.historicalTrend.wageDeltaPercent },
-        { kind: "derived", label: "Variacion valor %", value: input.historicalTrend.valueDeltaPercent },
+        { kind: "derived", label: "Variacion salario %", value: input.historicalTrend.wageDeltaPercent ?? undefined },
+        { kind: "derived", label: "Variacion valor %", value: input.historicalTrend.valueDeltaPercent ?? undefined },
         { kind: "observed", label: "Snapshots comparables", value: input.historicalTrend.snapshotCount }
       ]
     });
@@ -298,8 +298,8 @@ function buildSignals(input: {
         "Jugador joven con mejora de habilidades y valorizacion interna; la senal favorece proteger o posponer decisiones fuertes.",
       evidence: [
         { kind: "derived", label: "Habilidades que subieron", value: improvedSkills },
-        { kind: "derived", label: "Variacion valor %", value: input.historicalTrend.valueDeltaPercent },
-        { kind: "observed", label: "Ventana hasta", value: input.historicalTrend.to }
+        { kind: "derived", label: "Variacion valor %", value: input.historicalTrend.valueDeltaPercent ?? undefined },
+        { kind: "observed", label: "Ventana hasta", value: input.historicalTrend.to ?? undefined }
       ]
     });
   }
@@ -382,8 +382,8 @@ function buildPlayerWarnings(
   if (!player.externalId) {
     warnings.push({
       code: "ambiguous_identity",
-      message: "Falta identidad estable; el historial del jugador puede no ser comparable.",
-      evidence: [{ kind: "observed", label: "External id", value: player.externalId }]
+      message: "Falta identidad stable; el historial del jugador puede no ser comparable.",
+      evidence: [{ kind: "observed", label: "External id", value: player.externalId ?? undefined }]
     });
   }
 
@@ -504,8 +504,8 @@ function calculateConfidence(
 }
 
 interface PlayerHistoricalTrend {
-  from: string | null;
-  to: string | null;
+  from?: string | null;
+  to?: string | null;
   snapshotCount: number;
   valueDeltaPercent: number | null;
   wageDeltaPercent: number | null;
@@ -608,8 +608,8 @@ function buildTiming(
   return {
     label: labelTiming(category, warnings),
     window: {
-      from: historicalTrend.from,
-      to: historicalTrend.to,
+      from: historicalTrend.from ?? null,
+      to: historicalTrend.to ?? null,
       snapshotCount: historicalTrend.snapshotCount
     },
     dataUsed: buildTimingDataUsed(signals, historicalTrend),

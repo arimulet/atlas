@@ -1,9 +1,7 @@
 import { type SnapshotSkillSet, type PersistedPlayerSnapshot } from "@atlas/database";
-import { Confidence } from "../types";
+import { Category, Confidence, DeltaDirection, EvidenceKind, FindingType, Money, RoleSource } from "../types";
 
 type SkillKey = keyof SnapshotSkillSet;
-type SkillChangeDirection = "up" | "down" | "stable" | "insufficient_data";
-export type DevelopmentFindingType = "improvement" | "stagnation" | "decline" | "insufficient_data";
 
 export interface GetPlayerDevelopmentInput {
   clubId: string;
@@ -45,7 +43,7 @@ export interface PlayerDevelopmentPlayerSummary {
   age: number;
   role: {
     label: string;
-    source: "observed" | "inferred" | "unknown";
+    source: RoleSource;
   };
   relevantSkills: Array<{
     skill: SkillKey;
@@ -53,7 +51,7 @@ export interface PlayerDevelopmentPlayerSummary {
   }>;
   skillChanges: PlayerSkillChange[];
   recentEvolution: {
-    direction: SkillChangeDirection;
+    direction: DeltaDirection;
     improvedSkills: number;
     declinedSkills: number;
     stableSkills: number;
@@ -67,7 +65,7 @@ export interface PlayerDevelopmentPlayerSummary {
 
 export interface PlayerSkillChange {
   skill: SkillKey;
-  direction: SkillChangeDirection;
+  direction: DeltaDirection;
   previousValue: number | null;
   currentValue: number | null;
   delta: number | null;
@@ -81,7 +79,7 @@ export interface PlayerDevelopmentSignal {
 }
 
 export interface PlayerDevelopmentFinding {
-  type: DevelopmentFindingType;
+  type: FindingType;
   severity: Severity;
   confidence: Confidence;
   title: string;
@@ -96,7 +94,7 @@ export interface PlayerDevelopmentWarning {
 }
 
 export interface DevelopmentEvidence {
-  kind: "observed" | "manual" | "derived" | "inferred";
+  kind: EvidenceKind;
   label: string;
   value: string | number | null;
 }
@@ -109,7 +107,6 @@ export interface ComparablePlayerPoint {
 
 export type Severity = "info" | "low" | "medium" | "high";
 
-type EvidenceKind = "observed" | "manual" | "derived" | "inferred";
 export type YouthPipelineCategory =
   "standout_prospect" | "follow_up" | "stagnation_risk" | "insufficient_data";
 type SkillKey = keyof SnapshotSkillSet;
@@ -136,7 +133,7 @@ export interface YouthPipelinePlanning {
     academyInvestment: string;
   };
   derived: {
-    categoryCounts: Record<YouthPipelineCategory, number>;
+    categoryCounts: Record<Category, number>;
     players: YouthPipelinePlayerPlan[];
   };
   warnings: YouthPipelineWarning[];
@@ -150,23 +147,23 @@ export interface YouthPipelineObservedPlayer {
   age: number;
   role: {
     label: string;
-    source: "observed" | "inferred" | "unknown";
+    source: RoleSource;
   };
-  wage: { amount: number; currency: string | null };
-  estimatedValue: { amount: number; currency: string | null };
+  wage: Money;
+  estimatedValue: Money;
   skills: SnapshotSkillSet;
 }
 
 export interface YouthPipelinePlayerPlan {
-  playerId: string | null;
+  playerId?: string;
   snapshotPlayerId: string;
   name: string;
   age: number;
   role: {
     label: string;
-    source: "observed" | "inferred" | "unknown";
+    source: RoleSource;
   };
-  category: YouthPipelineCategory;
+  category: Category;
   severity: Severity;
   confidence: Confidence;
   rationale: string;
@@ -177,8 +174,8 @@ export interface YouthPipelinePlayerPlan {
 
 export interface YouthPipelinePlayerContext {
   window: {
-    from: string | null;
-    to: string | null;
+    from?: string;
+    to?: string;
     snapshotCount: number;
   };
   dataCompleteness: {
@@ -187,11 +184,11 @@ export interface YouthPipelinePlayerContext {
   };
   valueAndWage: {
     wage: number;
-    wageCurrency: string | null;
+    wageCurrency?: string;
     estimatedValue: number;
-    estimatedValueCurrency: string | null;
-    valueDeltaPercent: number | null;
-    wageDeltaPercent: number | null;
+    estimatedValueCurrency?: string;
+    valueDeltaPercent?: number;
+    wageDeltaPercent?: number;
   };
   limits: string[];
 }
@@ -213,5 +210,5 @@ export interface YouthPipelineWarning {
 export interface YouthPipelineEvidence {
   kind: EvidenceKind;
   label: string;
-  value: string | number | null;
+  value?: string | number;
 }

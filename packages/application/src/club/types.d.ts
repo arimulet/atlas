@@ -1,8 +1,7 @@
-import { Confidence, KeyValue, Severity } from "@atlas/application";
+import { Category, Confidence, FindingType, KeyValue, Severity } from "@atlas/application";
 import { type PersistedClub } from "@atlas/database";
 import { type ClubOperatingSettings } from "../clubOperatingSettings/types.js";
 import { MarketStrategy, type MarketPlanningCategory } from "../marketPlanning/types.js";
-import { type YouthPipelineCategory } from "../playerDevelopment/types.js";
 
 export interface GetClubDashboardInput {
   clubId: string;
@@ -103,7 +102,7 @@ export interface ClubDashboardDevelopmentSummary {
 export interface ClubDashboardDevelopmentPlayer {
   playerId: string | null;
   name: string;
-  signal: DevelopmentFindingType;
+  signal: FindingType;
   severity: Severity;
   confidence: Confidence;
 }
@@ -171,7 +170,7 @@ export interface ClubDashboardYouthPipelineSummary {
 export interface ClubDashboardYouthPipelinePlayer {
   playerId: string | null;
   name: string;
-  signal: YouthPipelineCategory;
+  signal: Category;
   severity: Severity;
   confidence: Confidence;
 }

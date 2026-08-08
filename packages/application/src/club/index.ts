@@ -10,7 +10,6 @@ import { getPlayerDevelopment } from "../playerDevelopment/index.js";
 import { type PlayerDevelopmentFinding } from "../playerDevelopment/types.js";
 import { getSquadMarketPlanning } from "../marketPlanning/index.js";
 import { getYouthPipelinePlanning } from "../playerDevelopment/index.js";
-import { type YouthPipelineCategory } from "../playerDevelopment/types.js";
 import {
   ClubDashboard,
   ClubDashboardDevelopmentPlayer,
@@ -27,7 +26,7 @@ import {
   ValidatedManualProfileUpdate
 } from "./types";
 import { compareSnapshots, SnapshotComparison, SnapshotComparisonPlayer, SnapshotComparisonSnapshot } from "@atlas/domain";
-import { KeyValue } from "../types.js";
+import { Category, KeyValue } from "../types.js";
 
 const clubRepository = new MongoClubRepository();
 const snapshotRepository = new MongoSnapshotRepository();
@@ -393,7 +392,7 @@ function buildYouthPipelineSummary(
       highlightedPlayers: youthPipeline.derived.players
         .filter((player) => player.category !== "insufficient_data")
         .map((player) => ({
-          playerId: player.playerId,
+          playerId: player.playerId ?? null,
           name: player.name,
           signal: player.category,
           severity: player.severity,
@@ -435,7 +434,7 @@ function compareHighlightedYouthPlayers(
   );
 }
 
-function youthSignalPriority(signal: YouthPipelineCategory): number {
+function youthSignalPriority(signal: Category): number {
   if (signal === "stagnation_risk") return 4;
   if (signal === "standout_prospect") return 3;
   if (signal === "follow_up") return 2;
