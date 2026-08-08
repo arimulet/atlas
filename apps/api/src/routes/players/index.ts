@@ -7,14 +7,21 @@ async function playerRoutes(server: FastifyInstance, options: FastifyPluginOptio
   server.get<{ Params: GetDevelopmentParams }>("/development", async (request) => {
     const { clubId } = clubParamsSchema.parse(request.params);
 
-    return { playerDevelopment: await getPlayerDevelopment({ clubId }) };
+    const playerDevelopment = await getPlayerDevelopment({ clubId });
+
+    return playerDevelopment;
   });
 
-  server.get<{ Params: GetYouthPipelinePlanningParams }>("/youth-pipeline-planning", async (request) => {
-    const { clubId } = clubParamsSchema.parse(request.params);
+  server.get<{ Params: GetYouthPipelinePlanningParams }>(
+    "/youth-pipeline-planning",
+    async (request) => {
+      const { clubId } = clubParamsSchema.parse(request.params);
 
-    return { youthPipelinePlanning: await getYouthPipelinePlanning({ clubId }) };
-  });
+      const youthPlanning = await getYouthPipelinePlanning({ clubId });
+
+      return youthPlanning;
+    }
+  );
 }
 
 export default playerRoutes;
