@@ -31,7 +31,7 @@ async function clubRoutes(server: FastifyInstance, options: FastifyPluginOptions
   server.get<{ Params: GetClubProfileParams }>("/profile", async (request) => {
     const { clubId } = request.params;
 
-    const club = await getClubProfile({ clubId });
+    const club = await getClubProfile(clubId);
 
     return club;
   });
@@ -39,7 +39,7 @@ async function clubRoutes(server: FastifyInstance, options: FastifyPluginOptions
   server.get<{ Params: GetClubDashboardParams }>("/dashboard", async (request) => {
     const { clubId } = request.params;
 
-    const dashboard = await getClubDashboard({ clubId });
+    const dashboard = await getClubDashboard(clubId);
 
     return dashboard;
   });
@@ -56,7 +56,7 @@ async function clubRoutes(server: FastifyInstance, options: FastifyPluginOptions
   server.get<{ Params: GetClubOperatingSettingsParams }>("/operating-settings", async (request) => {
     const { clubId } = request.params;
 
-    const operatingSettings = await getClubOperatingSettings({ clubId });
+    const operatingSettings = await getClubOperatingSettings(clubId);
     return operatingSettings;
   });
 
@@ -78,7 +78,7 @@ async function clubRoutes(server: FastifyInstance, options: FastifyPluginOptions
   server.get<{ Params: GetClubHistoricalTrendsParams }>("/historical-trends", async (request) => {
     const { clubId } = request.params;
 
-    const historicalTrends = await calculateClubHistoricalTrends({ clubId });
+    const historicalTrends = await calculateClubHistoricalTrends(clubId);
 
     return historicalTrends;
   });
@@ -88,7 +88,7 @@ async function clubRoutes(server: FastifyInstance, options: FastifyPluginOptions
     async (request) => {
       const { clubId } = request.params;
 
-      const historicalFindings = await generateClubHistoricalFindings({ clubId });
+      const historicalFindings = await generateClubHistoricalFindings(clubId);
 
       return historicalFindings;
     }

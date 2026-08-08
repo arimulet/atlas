@@ -19,7 +19,6 @@ import {
 } from "@atlas/domain";
 import {
   GenerateBasicDiagnosticInput,
-  ImportedSquadSummary,
   ImportPlayerSnapshotInput,
   ImportPlayerSnapshotMvpResult,
   ImportPlayerSnapshotResult,
@@ -27,6 +26,7 @@ import {
   SkillKey,
   ValidatePlayerSnapshotInput
 } from "./types";
+import { Money } from "../types";
 
 const skillKeys: SkillKey[] = [
   "stamina",
@@ -64,7 +64,7 @@ export const importPlayerSnapshot = async (
       warnings: validation.warnings,
       importEventId: importEvent.id,
       snapshotId: null,
-      clubId: null,
+      clubId: 1,
       playerIds: [],
       importedPlayerCount: 0
     };
@@ -211,7 +211,7 @@ function mapPlayerSnapshot(player: PersistedPlayerSnapshot): BasicDiagnosticPlay
 function sumMoney(
   players: PersistedPlayerSnapshot[],
   field: "estimatedValue" | "wage"
-): ImportedSquadSummary["totalEstimatedValue"] {
+): Money {
   const currencies = new Set(players.map((player) => player[field].currency).filter(Boolean));
 
   return {

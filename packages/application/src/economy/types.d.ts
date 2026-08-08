@@ -1,5 +1,5 @@
 import { Severity } from "../playerDevelopment/types";
-import { Confidence, EvidenceKind, Money } from "../types";
+import { ClubId, Confidence, EvidenceKind, Money } from "../types";
 
 type EconomyRiskTolerance = "conservative" | "balanced" | "aggressive";
 
@@ -8,7 +8,7 @@ export interface GetSquadEconomyInput {
 }
 
 export interface SquadEconomy {
-  clubId: string;
+  clubId: ClubId;
   snapshotId: string | null;
   snapshotDate: string | null;
   observed: {

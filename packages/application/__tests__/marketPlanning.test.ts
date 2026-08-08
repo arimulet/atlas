@@ -71,7 +71,7 @@ describe("Squad market planning use case", () => {
       manual: { preferences: { "market.strategy": "conservative" } }
     });
 
-    const planning = await getSquadMarketPlanning({ clubId: importResult.clubId! });
+    const planning = await getSquadMarketPlanning(importResult.clubId);
 
     expect(planning.manual.marketStrategy).toBe("conservative");
     expect(planning.derived.categoryCounts.sale_candidate).toBe(1);
@@ -103,7 +103,7 @@ describe("Squad market planning use case", () => {
     const importResult = await importPlayerSnapshot({ payload: first });
     await importPlayerSnapshot({ payload: second });
 
-    const planning = await getSquadMarketPlanning({ clubId: importResult.clubId! });
+    const planning = await getSquadMarketPlanning(importResult.clubId);
 
     expect(planning.derived.categoryCounts.protection_candidate).toBe(1);
     expect(planning.derived.players[0]).toMatchObject({
@@ -127,7 +127,7 @@ describe("Squad market planning use case", () => {
     });
     const importResult = await importPlayerSnapshot({ payload });
 
-    const planning = await getSquadMarketPlanning({ clubId: importResult.clubId! });
+    const planning = await getSquadMarketPlanning(importResult.clubId);
 
     expect(planning.derived.players[0]).toMatchObject({
       category: "insufficient_signal",
@@ -157,7 +157,7 @@ describe("Squad market planning use case", () => {
     await importPlayerSnapshot({ payload: second });
     await importPlayerSnapshot({ payload: third });
 
-    const planning = await getSquadMarketPlanning({ clubId: importResult.clubId! });
+    const planning = await getSquadMarketPlanning(importResult.clubId);
 
     expect(planning.derived.players[0]).toMatchObject({
       category: "sale_candidate",
@@ -190,7 +190,7 @@ describe("Squad market planning use case", () => {
     const importResult = await importPlayerSnapshot({ payload: first });
     await importPlayerSnapshot({ payload: second });
 
-    const planning = await getSquadMarketPlanning({ clubId: importResult.clubId! });
+    const planning = await getSquadMarketPlanning(importResult.clubId);
 
     expect(planning.derived.players[0]).toMatchObject({
       confidence: "low",

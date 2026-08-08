@@ -1,7 +1,7 @@
 import { type ImportIssue, type PlayerSnapshotV0 } from "@atlas/contracts";
 import { type SnapshotSkillSet } from "@atlas/database";
 import type { BasicDiagnostic } from "@atlas/domain";
-import { Money } from "../types";
+import { ClubId, Money } from "../types";
 
 export type ImportPlayerSnapshotStatus = "accepted" | "accepted-with-warnings" | "rejected";
 
@@ -16,7 +16,7 @@ export interface ImportPlayerSnapshotResult {
   warnings: ImportIssue[];
   importEventId: string;
   snapshotId: string | null;
-  clubId: string | null;
+  clubId: ClubId;
   playerIds: string[];
   importedPlayerCount: number;
 }
