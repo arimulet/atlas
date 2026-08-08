@@ -2,7 +2,7 @@ import { IssuePanel } from "@atlas/web/app/components/IssuePanel";
 import { SummaryItem } from "@atlas/web/app/components/SummaryItem";
 import { MarketPlayerCard } from "./components/MarketPlayerCard";
 import { SquadMarketPlanningPanelProps } from "./types";
-
+import { Section } from "../Section";
 
 export function SquadMarketPlanningPanel({
   squadMarketPlanning,
@@ -19,16 +19,16 @@ export function SquadMarketPlanningPanel({
 
   if (status === "error" || !squadMarketPlanning) {
     return (
-      <section className="panel issue-panel error">
-        <div className="panel-heading">
-          <p className="eyebrow">Planificacion interna de mercado</p>
-          <h2>No se pudo cargar el modulo</h2>
-        </div>
-        <p className="muted">Volver al dashboard e intentar nuevamente.</p>
+      <Section
+        className="issue-panel error"
+        title="Planificacion interna de mercado"
+        subtitle="No se pudo cargar el modulo"
+        description="Volver al dashboard e intentar nuevamente."
+      >
         <button type="button" onClick={onBack}>
           Volver al dashboard
         </button>
-      </section>
+      </Section>
     );
   }
 
@@ -44,25 +44,19 @@ export function SquadMarketPlanningPanel({
         </button>
       </div>
 
-      <section className="panel">
-        <div className="panel-heading">
-          <p className="eyebrow">Alcance</p>
-          <h2>Activos propios, senales prudentes</h2>
-        </div>
-        <p className="muted">
-          Esta vista clasifica jugadores propios para revision interna. No usa mercado externo,
-          listados, pujas, compras, ventas reales, comparables externos, presupuesto ni liquidez.
-        </p>
-      </section>
+      <Section
+        title="Alcance"
+        subtitle="Activos propios, senales prudentes"
+        description="Esta vista clasifica jugadores propios para revision interna. No usa mercado externo, listados, pujas, compras, ventas reales, comparables externos, presupuesto ni liquidez."
+      />
 
       <section className="economy-columns">
-        <section className="panel">
-          <div className="panel-heading">
-            <p className="eyebrow">Observado</p>
-            <h2>Cobertura del snapshot</h2>
-          </div>
+        <Section title="Observado" subtitle="Cobertura del snapshot">
           <dl className="summary-grid">
-            <SummaryItem label="Snapshot" value={squadMarketPlanning.snapshotDate ?? "No disponible"} />
+            <SummaryItem
+              label="Snapshot"
+              value={squadMarketPlanning.snapshotDate ?? "No disponible"}
+            />
             <SummaryItem
               label="Jugadores"
               value={squadMarketPlanning.observed.coverage.playerCount.toString()}
@@ -76,25 +70,20 @@ export function SquadMarketPlanningPanel({
               value={squadMarketPlanning.observed.coverage.playersWithEstimatedValue.toString()}
             />
           </dl>
-        </section>
+        </Section>
 
-        <section className="panel">
-          <div className="panel-heading">
-            <p className="eyebrow">Manual</p>
-            <h2>Contexto del club</h2>
-          </div>
+        <Section title="Manual" subtitle="Contexto del club">
           <dl className="summary-grid">
-            <SummaryItem label="market.strategy" value={squadMarketPlanning.manual.marketStrategy} />
+            <SummaryItem
+              label="market.strategy"
+              value={squadMarketPlanning.manual.marketStrategy}
+            />
             <SummaryItem label="Alcance" value="Plantel propio" />
           </dl>
-        </section>
+        </Section>
       </section>
 
-      <section className="panel">
-        <div className="panel-heading">
-          <p className="eyebrow">Derivado</p>
-          <h2>Clasificacion interna</h2>
-        </div>
+      <Section title="Derivado" subtitle="Clasificacion interna">
         <dl className="summary-grid">
           <SummaryItem
             label="Venta"
@@ -113,7 +102,7 @@ export function SquadMarketPlanningPanel({
             value={squadMarketPlanning.derived.categoryCounts.insufficient_signal.toString()}
           />
         </dl>
-      </section>
+      </Section>
 
       {squadMarketPlanning.warnings.length > 0 ? (
         <IssuePanel
@@ -126,20 +115,13 @@ export function SquadMarketPlanningPanel({
         />
       ) : null}
 
-      <section className="panel">
-        <div className="panel-heading">
-          <p className="eyebrow">Inferido por jugador</p>
-          <h2>Candidatos y seguimiento</h2>
-        </div>
+      <Section title="Inferido por jugador" subtitle="Candidatos y seguimiento">
         <div className="development-list">
           {squadMarketPlanning.derived.players.map((player) => (
             <MarketPlayerCard key={player.snapshotPlayerId} player={player} />
           ))}
         </div>
-      </section>
+      </Section>
     </section>
   );
 }
-
-
-

@@ -1,3 +1,4 @@
+import { Section } from "../../../Section";
 import { PlayerDetailPanelProps } from "./types";
 
 function formatMoneyValue(value: { amount: number; currency: string | null }): string {
@@ -14,11 +15,7 @@ function formatRatio(value: number | null): string {
 
 export const PlayerDetailPanel = ({ players }: PlayerDetailPanelProps) => {
   return (
-    <section className="panel">
-      <div className="panel-heading">
-        <p className="eyebrow">Derivado por jugador</p>
-        <h2>Ranking de riesgo relativo</h2>
-      </div>
+    <Section title="Derivado por jugador" subtitle="Ranking de riesgo relativo">
       <div className="player-detail-table" role="table" aria-label="Detalle por jugador">
         <div className="player-detail-row header" role="row">
           <span role="columnheader">Jugador</span>
@@ -45,6 +42,6 @@ export const PlayerDetailPanel = ({ players }: PlayerDetailPanelProps) => {
           </div>
         ))}
       </div>
-    </section>
+    </Section>
   );
-}
+};

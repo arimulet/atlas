@@ -4,6 +4,7 @@ import { IssuePanel } from "@atlas/web/app/components/IssuePanel";
 import { SummaryItem } from "@atlas/web/app/components/SummaryItem";
 import { EvidenceList } from "@atlas/web/app/components/EvidenceList";
 import { YouthPlayerCardProps } from "./types";
+import { TraceKind } from "../../../TraceKind";
 
 function labelCategory(category: YouthPipelinePlayerPlan["category"]): string {
   if (category === "standout_prospect") return "destacado";
@@ -33,11 +34,11 @@ export const YouthPlayerCard = ({ player }: YouthPlayerCardProps) => {
       <p className="muted">{player.rationale}</p>
       <div className="trace-row">
         <span className="confidence">Confianza: {player.confidence}</span>
-        <span className="trace-kind derived">
-          ventana: {player.context.window.from ?? "sin inicio"} -{" "}
-          {player.context.window.to ?? "sin cierre"}
-        </span>
-        <span className="trace-kind derived">snapshots: {player.context.window.snapshotCount}</span>
+        <TraceKind
+          type="derived"
+          label={`ventana: ${player.context.window.from ?? "sin inicio"} - ${player.context.window.to ?? "sin cierre"}`}
+        />
+        <TraceKind type="derived" label={`snapshots: ${player.context.window.snapshotCount}`} />
       </div>
 
       <dl className="summary-grid compact-summary">
@@ -73,9 +74,7 @@ export const YouthPlayerCard = ({ player }: YouthPlayerCardProps) => {
 
       <div className="trace-row" aria-label={`Limites de lectura de ${player.name}`}>
         {player.context.limits.map((limit) => (
-          <span className="trace-kind inferred" key={limit}>
-            {limit}
-          </span>
+          <TraceKind type="inferred" label={limit} />
         ))}
       </div>
 
@@ -104,4 +103,4 @@ export const YouthPlayerCard = ({ player }: YouthPlayerCardProps) => {
       </div>
     </article>
   );
-}
+};

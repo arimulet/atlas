@@ -1,5 +1,7 @@
 import { SummaryItem } from "@atlas/web/app/components/SummaryItem";
 import { DevelopmentSummaryPanelProps } from "./types";
+import { TraceKind } from "../../../TraceKind";
+import { Section } from "../../../Section";
 
 function labelDevelopmentSignal(signal: string): string {
   if (signal === "improvement") return "Mejora observada";
@@ -15,12 +17,12 @@ export const DevelopmentSummaryPanel = ({
   const summary = dashboard.developmentSummary;
 
   return (
-    <section className="panel development-summary-panel">
-      <div className="panel-heading">
-        <p className="eyebrow">Desarrollo de jugadores</p>
-        <h2>Lectura operativa</h2>
-      </div>
-      <p className="muted">{summary.inferred.headline}</p>
+    <Section
+      className="development-summary-panel"
+      title="Desarrollo de jugadores"
+      subtitle="Lectura operativa"
+      description={summary.inferred.headline}
+    >
       <dl className="summary-grid development-counts">
         <SummaryItem label="En mejora" value={summary.derived.improvingPlayers.toString()} />
         <SummaryItem label="Estancados" value={summary.derived.stagnatedPlayers.toString()} />
@@ -31,12 +33,13 @@ export const DevelopmentSummaryPanel = ({
         />
       </dl>
       <div className="trace-row" aria-label="Origen de la lectura de desarrollo">
-        <span className="trace-kind observed">
-          observado: {summary.observed.snapshotCount} snapshots
-        </span>
-        <span className="trace-kind manual">manual: {summary.manual.trainingPriority}</span>
-        <span className="trace-kind derived">derivado: conteos por evolucion</span>
-        <span className="trace-kind inferred">inferido: senal ejecutiva</span>
+        <TraceKind
+          type="observed"
+          label={`observado: ${summary.observed.snapshotCount} snapshots`}
+        />
+        <TraceKind type="manual" label={`manual: {summary.manual.trainingPriority}`} />
+        <TraceKind type="derived" label="derivado: conteos por evolucion" />
+        <TraceKind label="inferido: senal ejecutiva" type="inferred" />
       </div>
       {summary.inferred.warning ? (
         <p className="inline-warning">{summary.inferred.warning}</p>
@@ -63,6 +66,6 @@ export const DevelopmentSummaryPanel = ({
           Abrir detalle de desarrollo
         </button>
       ) : null}
-    </section>
+    </Section>
   );
-}
+};

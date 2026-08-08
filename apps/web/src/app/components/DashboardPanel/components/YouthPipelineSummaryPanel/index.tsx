@@ -1,5 +1,7 @@
 import { SummaryItem } from "@atlas/web/app/components/SummaryItem";
 import { YouthPipelineSummaryPanelProps } from "./types";
+import { TraceKind } from "../../../TraceKind";
+import { Section } from "../../../Section";
 
 function labelYouthSignal(signal: string): string {
   if (signal === "standout_prospect") return "Prospecto destacado";
@@ -16,12 +18,7 @@ export const YouthPipelineSummaryPanel = ({
   const summary = dashboard.youthPipelineSummary;
 
   return (
-    <section className="panel development-summary-panel">
-      <div className="panel-heading">
-        <p className="eyebrow">Pipeline juvenil senior</p>
-        <h2>Jovenes del plantel senior</h2>
-      </div>
-      <p className="muted">{summary.inferred.headline}</p>
+    <Section className="development-summary-panel" title="Pipeline juvenil senior" subtitle="Jovenes del plantel senior" description={summary.inferred.headline}>     
       <dl className="summary-grid development-counts">
         <SummaryItem label="Destacados" value={summary.derived.standoutProspects.toString()} />
         <SummaryItem label="Seguimiento" value={summary.derived.followUpPlayers.toString()} />
@@ -35,12 +32,10 @@ export const YouthPipelineSummaryPanel = ({
         />
       </dl>
       <div className="trace-row" aria-label="Origen de la lectura de pipeline juvenil senior">
-        <span className="trace-kind observed">
-          observado: edad {"<="} {summary.observed.youthAgeThreshold}
-        </span>
-        <span className="trace-kind manual">manual: {summary.manual.academyInvestment}</span>
-        <span className="trace-kind derived">derivado: clasificacion senior</span>
-        <span className="trace-kind inferred">inferido: senal prudente</span>
+        <TraceKind type="observed" label={`observado: edad ${"<="} ${summary.observed.youthAgeThreshold}`} />
+        <TraceKind type="manual" label={`manual: ${summary.manual.academyInvestment}`} />
+        <TraceKind type="derived" label="derivado: clasificacion senior" />
+        <TraceKind type="inferred" label="inferido: senal prudente" />
       </div>
       {summary.inferred.warning ? (
         <p className="inline-warning">{summary.inferred.warning}</p>
@@ -67,6 +62,6 @@ export const YouthPipelineSummaryPanel = ({
           Abrir pipeline juvenil senior
         </button>
       ) : null}
-    </section>
+    </Section>
   );
 }

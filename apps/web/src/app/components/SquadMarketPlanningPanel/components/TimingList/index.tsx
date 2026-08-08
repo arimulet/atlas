@@ -1,9 +1,9 @@
+import { DetailBlock } from "../../../DetailBlock";
 import { TimingListProps } from "./types";
 
 export const TimingList = ({ title, items }: TimingListProps) => {
   return (
-    <div className="detail-block">
-      <h4>{title}</h4>
+    <DetailBlock title={title}>
       {items.length > 0 ? (
         <ul>
           {items.map((item) => (
@@ -13,6 +13,6 @@ export const TimingList = ({ title, items }: TimingListProps) => {
       ) : (
         <p className="muted">Sin datos suficientes.</p>
       )}
-    </div>
+    </DetailBlock>
   );
-}
+};
