@@ -7,7 +7,8 @@ import {
   fetchSquadMarketPlanning,
   fetchSquadEconomy,
   fetchYouthPipelinePlanning,
-  importPlayerSnapshot
+  importPlayerSnapshot,
+  syncSokkerXml
 } from "@atlas/web/app/api";
 import { DashboardPanel } from "@atlas/web/app/components/DashboardPanel";
 import { DiagnosticPanel } from "@atlas/web/app/components/DiagnosticPanel";
@@ -32,6 +33,7 @@ import type {
 } from "./types";
 import { Section } from "./components/Section";
 import { IssueList } from "./components/IssueList";
+import { SokkerSyncModal } from "./components/SokkerSyncModal";
 
 const lastClubStorageKey = "atlas.lastClubId";
 
@@ -73,6 +75,7 @@ export function App() {
   const [result, setResult] = useState<ImportResponse | null>(null);
   const [errors, setErrors] = useState<ImportIssue[]>([]);
   const [isDragging, setIsDragging] = useState(false);
+  const [isSokkerModalOpen, setIsSokkerModalOpen] = useState(false);
 
   const findingsByCategory = useMemo(() => {
     const groups = new Map<string, DiagnosticFinding[]>();
@@ -234,6 +237,53 @@ export function App() {
     [loadDashboard]
   );
 
+  const handleSokkerSync = useCallback(
+    async (login: string, pass: string) => {
+      setStatus("loading");
+      setFileName(null);
+      setMessage("Sincronizando con Sokker XML...");
+      setResult(null);
+      setErrors([]);
+
+      try {
+        const { response, body } = await syncSokkerXml({ login, password: pass });
+
+        if (!response.ok || body.importResult.status === "rejected") {
+          setStatus("error");
+          setMessage("Sincronización rechazada.");
+          setResult(body);
+          setErrors(body.importResult.errors);
+          return;
+        }
+
+        if (body.importResult.clubId) {
+          window.localStorage.setItem(lastClubStorageKey, body.importResult.clubId);
+          setActiveClubId(body.importResult.clubId);
+          await loadDashboard(body.importResult.clubId);
+        }
+
+        setStatus("success");
+        setMessage(
+          body.importResult.status === "accepted-with-warnings"
+            ? "Sincronización completada con advertencias."
+            : "Sincronización completada exitosamente."
+        );
+        setResult(body);
+        setIsSokkerModalOpen(false);
+      } catch (error) {
+        setStatus("error");
+        setMessage("Error de conexión al sincronizar.");
+        setErrors([
+          {
+            path: "api",
+            message: error instanceof Error ? error.message : "Unknown sync error."
+          }
+        ]);
+      }
+    },
+    [loadDashboard]
+  );
+
   return (
     <main className="app-shell">
       <section className="workspace">
@@ -334,6 +384,19 @@ export function App() {
           </section>
         ) : null}
 
+        {activeView === "dashboard" ? (
+          <section className="dropzone" style={{ marginTop: "16px", display: "flex", justifyContent: "space-between", alignItems: "center", borderStyle: "solid" }}>
+            <div>
+              <p className="eyebrow">Integración Oficial</p>
+              <h2>Sincronización Sokker XML</h2>
+              <p>Conecta directamente con Sokker para descargar tus juveniles, profesionales y estado económico en tiempo real.</p>
+            </div>
+            <button type="button" onClick={() => setIsSokkerModalOpen(true)} style={{ background: "var(--accent-color, #007bff)", color: "#fff", border: "none" }}>
+              Iniciar Sincronización
+            </button>
+          </section>
+        ) : null}
+
         {activeView === "dashboard" && status === "loading" ? (
           <p className="loading">Processing import...</p>
         ) : null}
@@ -364,6 +427,13 @@ export function App() {
         {activeView === "dashboard" ? (
           <DiagnosticPanel findingsByCategory={findingsByCategory} />
         ) : null}
+
+        <SokkerSyncModal 
+          isOpen={isSokkerModalOpen}
+          onClose={() => setIsSokkerModalOpen(false)}
+          onSync={handleSokkerSync}
+          isLoading={status === "loading"}
+        />
       </section>
     </main>
   );

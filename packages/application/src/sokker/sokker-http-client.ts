@@ -4,15 +4,22 @@ export interface SokkerCredentials {
 }
 
 export interface SokkerAuthResult {
-  teamId: number;
   sessionId: string;
+  teamId: string;
 }
+
+const sessionCache = new Map<string, { sessionId: string; teamId: string; expiresAt: number }>();
 
 export class SokkerHttpClient {
   /**
    * Autentica al usuario en Sokker y retorna el Team ID y la cookie de sesión.
    */
   async login(credentials: SokkerCredentials): Promise<SokkerAuthResult> {
+    const cached = sessionCache.get(credentials.login);
+    if (cached && cached.expiresAt > Date.now()) {
+      return { sessionId: cached.sessionId, teamId: cached.teamId };
+    }
+
     const params = new URLSearchParams();
     params.append("ilogin", credentials.login);
     params.append("ipassword", credentials.password);
@@ -33,22 +40,29 @@ export class SokkerHttpClient {
       throw new Error(`Could not parse Team ID from Sokker response: ${body}`);
     }
 
-    const teamId = parseInt(teamIdMatch[1]!, 10);
+    const teamId = teamIdMatch[1]!;
+    
+    // Attempt to read XMLSESSID from Set-Cookie header
+    const setCookie = response.headers.get("set-cookie");
+    let sessionId = "";
+    if (setCookie) {
+      const match = setCookie.match(/XMLSESSID=([^;]+)/);
+      if (match) {
+        sessionId = match[1]!;
+      }
+    }
 
-    const setCookieHeader = response.headers.get("set-cookie");
-    if (!setCookieHeader) {
+    if (!sessionId) {
       throw new Error("No session cookie received from Sokker");
     }
 
-    const match = setCookieHeader.match(/XMLSESSID=([^;]+)/);
-    if (!match) {
-      throw new Error("Could not parse XMLSESSID from response");
-    }
-
-    return {
+    sessionCache.set(credentials.login, {
+      sessionId,
       teamId,
-      sessionId: match[1]!
-    };
+      expiresAt: Date.now() + 1000 * 60 * 30 // 30 minutes
+    });
+
+    return { sessionId, teamId };
   }
 
   /**
