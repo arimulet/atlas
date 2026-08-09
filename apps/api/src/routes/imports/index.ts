@@ -86,7 +86,7 @@ async function importsRoutes(server: FastifyInstance) {
       let message = error instanceof Error ? error.message : String(error);
       if (error && typeof error === "object" && "format" in error && typeof (error as { format: unknown }).format === "function") {
         // It's a Zod error, let's make it readable
-        const e = error as { issues: Array<{ path: (string | number)[], message: string }> };
+        const e = error as unknown as { issues: Array<{ path: (string | number)[], message: string }> };
         message = "XML Validation Error: " + e.issues.map(i => `${i.path.join('.')}: ${i.message}`).join(', ');
       }
 
