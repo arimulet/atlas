@@ -65,11 +65,32 @@ export class SokkerXmlProvider {
     const playersJson = this.parser.parse(playersXmlRaw);
     const juniorsJson = this.parser.parse(juniorsXmlRaw);
 
-    // 4. Validate with Zod
-    const teamData = sokkerTeamXmlSchema.parse(teamJson).team;
-    const countriesData = sokkerCountriesXmlSchema.parse(countriesJson).countries.country;
-    const playersData = sokkerPlayersXmlSchema.parse(playersJson).players.player;
-    const juniorsData = sokkerJuniorsXmlSchema.parse(juniorsJson).juniors.junior;
+    // 4. Validate and extract data
+    let teamData, countriesData, playersData, juniorsData;
+    try {
+      teamData = sokkerTeamXmlSchema.parse(teamJson).teamdata.team;
+    } catch (e: any) {
+      const keys = teamJson.teamdata ? Object.keys(teamJson.teamdata) : Object.keys(teamJson);
+      throw new Error(`Team validation failed. Received keys: ${JSON.stringify(keys)}. Error: ${e.message}`);
+    }
+
+    try {
+      countriesData = sokkerCountriesXmlSchema.parse(countriesJson).countries.country;
+    } catch (e: any) {
+      throw new Error(`Countries validation failed. Received keys: ${JSON.stringify(Object.keys(countriesJson))}. Error: ${e.message}`);
+    }
+
+    try {
+      playersData = sokkerPlayersXmlSchema.parse(playersJson).players.player;
+    } catch (e: any) {
+      throw new Error(`Players validation failed. Received keys: ${JSON.stringify(Object.keys(playersJson))}. Error: ${e.message}`);
+    }
+
+    try {
+      juniorsData = sokkerJuniorsXmlSchema.parse(juniorsJson).juniors.junior;
+    } catch (e: any) {
+      throw new Error(`Juniors validation failed. Received keys: ${JSON.stringify(Object.keys(juniorsJson))}. Error: ${e.message}`);
+    }
 
     // 5. Data Mapping & Currency Conversion
     
@@ -104,23 +125,23 @@ export class SokkerXmlProvider {
     const players: PlayerSnapshotV0["players"] = playersArray.map(p => {
       const name = p.surname ? `${p.name} ${p.surname}` : p.name;
       return {
-        externalId: String(p.playerID),
+        externalId: String(p.ID),
         name: name,
         age: p.age,
         wage: convertMoney(p.wage),
         estimatedValue: convertMoney(p.value),
-        form: p.form ?? 10,
+        form: p.skillForm ?? 10,
         availabilityStatus: "available", // To be refined
         observedPosition: "undefined", // To be refined
         skills: {
-          stamina: p.stamina,
-          pace: p.pace,
-          technique: p.technique,
-          passing: p.passing,
-          keeper: p.keeper,
-          defender: p.defender,
-          playmaker: p.playmaker,
-          striker: p.striker
+          stamina: p.skillStamina,
+          pace: p.skillPace,
+          technique: p.skillTechnique,
+          passing: p.skillPassing,
+          keeper: p.skillKeeper,
+          defender: p.skillDefending,
+          playmaker: p.skillPlaymaking,
+          striker: p.skillScoring
         }
       };
     });
@@ -146,7 +167,7 @@ export class SokkerXmlProvider {
         players: juniorsArray.map(j => {
           const name = j.surname ? `${j.name} ${j.surname}` : j.name;
           return {
-            externalId: String(j.juniorID),
+            externalId: String(j.ID),
             name: name,
             age: j.age,
             weeksRemaining: j.weeks, // Assuming weeks means weeks remaining based on XML docs

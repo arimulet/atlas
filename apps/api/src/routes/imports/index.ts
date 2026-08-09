@@ -69,17 +69,37 @@ async function importsRoutes(server: FastifyInstance) {
       // Import Juniors
       const youthResult = await importYouthAcademySnapshot({ payload: xmlData.juniors });
 
-      return {
-        success: true,
-        playerResult,
-        youthResult
-      };
-    } catch (error) {
-      reply.code(400);
-      if (error instanceof Error) {
-        return { success: false, error: error.message };
+      // Merge youth errors/warnings into playerResult so the frontend sees them
+      playerResult.importResult.errors.push(...youthResult.errors);
+      playerResult.importResult.warnings.push(...youthResult.warnings);
+
+      if (youthResult.status === "rejected") {
+        playerResult.importResult.status = "rejected";
+      } else if (youthResult.status === "accepted-with-warnings" && playerResult.importResult.status === "accepted") {
+        playerResult.importResult.status = "accepted-with-warnings";
       }
-      return { success: false, error: "Unknown error occurred" };
+
+      return playerResult;
+    } catch (error: any) {
+      reply.code(422);
+      
+      let message = error.message;
+      if (error && typeof error.format === "function") {
+        // It's a Zod error, let's make it readable
+        message = "XML Validation Error: " + error.issues.map((i: any) => `${i.path.join('.')}: ${i.message}`).join(', ');
+      }
+
+      return { 
+        importResult: {
+          status: "rejected",
+          errors: [{ path: "api", message }],
+          warnings: [],
+          clubId: null,
+          importedPlayerCount: 0
+        },
+        summary: null,
+        diagnostic: null
+      };
     }
   });
 }

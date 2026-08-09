@@ -1,21 +1,22 @@
 import { z } from "zod";
+import { sokkerNumber } from "./utils.js";
 
 export const sokkerPlayerXmlSchema = z.object({
-  playerID: z.coerce.number(),
+  ID: sokkerNumber,
   name: z.string(),
   surname: z.string().optional(),
-  age: z.coerce.number(),
-  value: z.coerce.number(),
-  wage: z.coerce.number(),
-  form: z.coerce.number().optional(),
-  stamina: z.coerce.number().optional(),
-  pace: z.coerce.number().optional(),
-  technique: z.coerce.number().optional(),
-  passing: z.coerce.number().optional(),
-  keeper: z.coerce.number().optional(),
-  defender: z.coerce.number().optional(),
-  playmaker: z.coerce.number().optional(),
-  striker: z.coerce.number().optional()
+  age: sokkerNumber,
+  value: sokkerNumber,
+  wage: sokkerNumber,
+  skillForm: sokkerNumber.optional(),
+  skillStamina: sokkerNumber.optional(),
+  skillPace: sokkerNumber.optional(),
+  skillTechnique: sokkerNumber.optional(),
+  skillPassing: sokkerNumber.optional(),
+  skillKeeper: sokkerNumber.optional(),
+  skillDefending: sokkerNumber.optional(),
+  skillPlaymaking: sokkerNumber.optional(),
+  skillScoring: sokkerNumber.optional()
 }).passthrough();
 
 export const sokkerPlayersXmlSchema = z.object({

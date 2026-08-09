@@ -1,12 +1,13 @@
 import { z } from "zod";
+import { sokkerNumber } from "./utils.js";
 
 export const sokkerJuniorXmlSchema = z.object({
-  juniorID: z.coerce.number(),
+  ID: sokkerNumber,
   name: z.string(),
   surname: z.string().optional(),
-  age: z.coerce.number(),
-  weeks: z.coerce.number(),
-  skill: z.coerce.number()
+  age: sokkerNumber,
+  weeks: sokkerNumber,
+  skill: sokkerNumber
 }).passthrough();
 
 export const sokkerJuniorsXmlSchema = z.object({

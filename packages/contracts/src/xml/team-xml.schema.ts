@@ -1,14 +1,17 @@
 import { z } from "zod";
+import { sokkerNumber } from "./utils.js";
 
 export const sokkerTeamXmlSchema = z.object({
-  team: z.object({
-    teamID: z.coerce.number(),
-    name: z.string(),
-    countryID: z.coerce.number(),
-    money: z.coerce.number(),
-    // We assume these might be present or can be inferred
-    season: z.coerce.number().optional(),
-    week: z.coerce.number().optional()
+  teamdata: z.object({
+    team: z.object({
+      teamID: sokkerNumber,
+      name: z.string(),
+      countryID: sokkerNumber,
+      money: sokkerNumber,
+      // We assume these might be present or can be inferred
+      season: sokkerNumber.optional(),
+      week: sokkerNumber.optional()
+    }).passthrough()
   }).passthrough()
 });
 
