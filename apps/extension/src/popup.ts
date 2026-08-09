@@ -1,5 +1,5 @@
 import "./popup.css";
-import type { ExtractionResult, PlayerSnapshotExport } from "./types";
+import type { ExtractionResult, PlayerSnapshotExport, YouthAcademySnapshotExport } from "./types";
 
 interface RuntimeExtractionResponse {
   ok: boolean;
@@ -15,7 +15,7 @@ if (!appRoot) {
 
 const app = appRoot;
 
-let latestSnapshot: PlayerSnapshotExport | null = null;
+let latestSnapshot: PlayerSnapshotExport | YouthAcademySnapshotExport | null = null;
 
 renderIdle();
 
@@ -115,23 +115,13 @@ function renderPreview(result: ExtractionResult) {
       <section class="summary">
         <div><span>Club</span><strong>${escapeHtml(snapshot.club.name)}</strong></div>
         <div><span>Date</span><strong>${snapshot.snapshot.snapshotDate}</strong></div>
-        <div><span>Players</span><strong>${snapshot.players.length}</strong></div>
+        <div><span>Players</span><strong>${isYouthAcademySnapshot(snapshot) ? snapshot.academy.players.length : snapshot.players.length}</strong></div>
         <div><span>Schema</span><strong>${snapshot.schemaVersion}</strong></div>
       </section>
       ${warnings ? `<ul class="warnings">${warnings}</ul>` : ""}
       <div class="table-wrap">
         <table>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Age</th>
-              <th>Value</th>
-              <th>Wage</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${snapshot.players.map(playerRow).join("")}
-          </tbody>
+          ${isYouthAcademySnapshot(snapshot) ? renderYouthTable(snapshot) : renderPlayerTable(snapshot)}
         </table>
       </div>
       <textarea readonly spellcheck="false">${escapeHtml(JSON.stringify(snapshot, null, 2))}</textarea>
@@ -149,6 +139,42 @@ function renderPreview(result: ExtractionResult) {
   app.querySelector("#download")?.addEventListener("click", () => downloadSnapshot(fileName));
 }
 
+function isYouthAcademySnapshot(snapshot: PlayerSnapshotExport | YouthAcademySnapshotExport): snapshot is YouthAcademySnapshotExport {
+  return snapshot.schemaVersion === "atlas.youth-academy-snapshot.v0";
+}
+
+function renderPlayerTable(snapshot: PlayerSnapshotExport): string {
+  return `
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Age</th>
+        <th>Value</th>
+        <th>Wage</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${snapshot.players.map(playerRow).join("")}
+    </tbody>
+  `;
+}
+
+function renderYouthTable(snapshot: YouthAcademySnapshotExport): string {
+  return `
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Age</th>
+        <th>Weeks</th>
+        <th>Level</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${snapshot.academy.players.map(youthPlayerRow).join("")}
+    </tbody>
+  `;
+}
+
 function playerRow(player: PlayerSnapshotExport["players"][number]): string {
   return `
     <tr>
@@ -156,6 +182,17 @@ function playerRow(player: PlayerSnapshotExport["players"][number]): string {
       <td>${player.age}</td>
       <td>${formatMoney(player.estimatedValue)}</td>
       <td>${formatMoney(player.wage)}</td>
+    </tr>
+  `;
+}
+
+function youthPlayerRow(player: YouthAcademySnapshotExport["academy"]["players"][number]): string {
+  return `
+    <tr>
+      <td>${escapeHtml(player.name)}</td>
+      <td>${player.age}</td>
+      <td>${player.weeksRemaining ?? "?"} / ${player.weeksInAcademy ?? "?"}</td>
+      <td>${escapeHtml(player.estimatedLevel ?? "?")}</td>
     </tr>
   `;
 }
@@ -176,10 +213,11 @@ function downloadSnapshot(fileName: string) {
   });
 }
 
-function createFileName(snapshot: PlayerSnapshotExport): string {
+function createFileName(snapshot: PlayerSnapshotExport | YouthAcademySnapshotExport): string {
   const club = snapshot.club.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const type = isYouthAcademySnapshot(snapshot) ? "youth-academy-snapshot" : "player-snapshot";
 
-  return `atlas-player-snapshot-${club || "club"}-${snapshot.snapshot.snapshotDate}.json`;
+  return `atlas-${type}-${club || "club"}-${snapshot.snapshot.snapshotDate}.json`;
 }
 
 function formatMoney(money: { amount: number; currency: string | null }): string {
