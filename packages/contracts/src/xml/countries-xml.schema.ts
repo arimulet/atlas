@@ -1,11 +1,12 @@
 import { z } from "zod";
+import { sokkerNumber } from "./utils.js";
 
 export const sokkerCountryXmlSchema = z.object({
   country: z.object({
-    countryID: z.coerce.number(),
+    countryID: sokkerNumber,
     name: z.string(),
     currencyName: z.string(),
-    currencyRate: z.coerce.number()
+    currencyRate: sokkerNumber
   }).passthrough()
 });
 

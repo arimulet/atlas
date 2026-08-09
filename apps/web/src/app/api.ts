@@ -89,6 +89,19 @@ export async function importPlayerSnapshot(payload: unknown): Promise<{
   return { response, body: await readImportResponse(response) };
 }
 
+export async function syncSokkerXml(payload: unknown): Promise<{
+  response: Response;
+  body: ImportResponse;
+}> {
+  const response = await fetch("/api/imports/sokker-sync", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+
+  return { response, body: await readImportResponse(response) };
+}
+
 async function readImportResponse(response: Response): Promise<ImportResponse> {
   const text = await response.text();
 
