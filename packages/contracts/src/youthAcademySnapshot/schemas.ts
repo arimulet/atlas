@@ -30,7 +30,7 @@ export const youthPlayerItemSchema = z.object({
 export const youthAcademySnapshotV0Schema = z.object({
   schemaVersion: z.literal(YOUTH_ACADEMY_SNAPSHOT_SCHEMA_VERSION),
   source: z.object({
-    type: z.literal("sokker-dom-export"),
+    type: z.enum(["sokker-dom-export", "sokker-xml-import"]),
     exportedAt: z.string().datetime(),
     pageUrl: z.string().url().nullable().optional(),
     locale: nullableString

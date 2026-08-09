@@ -2,8 +2,10 @@ import {
   importPlayerSnapshotMvp,
   importYouthAcademySnapshot,
   validatePlayerSnapshotImport,
-  validateYouthAcademySnapshotImport
+  validateYouthAcademySnapshotImport,
+  SokkerXmlProvider
 } from "@atlas/application";
+import { sokkerSyncRequestSchema } from "../../schemas.js";
 import { FastifyInstance } from "fastify";
 
 async function importsRoutes(server: FastifyInstance) {
@@ -33,6 +35,49 @@ async function importsRoutes(server: FastifyInstance) {
     }
 
     return result;
+  });
+
+  server.post("/sokker-sync", async (request, reply) => {
+    try {
+      const credentials = sokkerSyncRequestSchema.parse(request.body);
+      const provider = new SokkerXmlProvider();
+      
+      const xmlData = await provider.importFullTeamData(credentials);
+
+      // Reconstruct payload for player snapshot
+      const playerSnapshotPayload = {
+        schemaVersion: "atlas.player-snapshot.v0",
+        source: {
+          type: "sokker-xml-import",
+          exportedAt: xmlData.importedAt.toISOString(),
+          locale: null
+        },
+        club: {
+          externalId: xmlData.clubProfile.externalId,
+          name: xmlData.clubProfile.name
+        },
+        snapshot: {
+          snapshotDate: xmlData.importedAt.toISOString().split("T")[0],
+          season: xmlData.clubProfile.season,
+          week: xmlData.clubProfile.week
+        },
+        players: xmlData.players
+      };
+
+      const playerResult = await importPlayerSnapshotMvp({ payload: playerSnapshotPayload });
+      
+      // Import Juniors
+      const youthResult = await importYouthAcademySnapshot({ payload: xmlData.juniors });
+
+      return {
+        success: true,
+        playerResult,
+        youthResult
+      };
+    } catch (error: any) {
+      reply.code(400);
+      return { success: false, error: error.message };
+    }
   });
 }
 
