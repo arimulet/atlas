@@ -4,6 +4,11 @@ export const clubParamsSchema = z.object({
   clubId: z.string().min(1)
 });
 
+export const sokkerSyncRequestSchema = z.object({
+  login: z.string().min(1),
+  password: z.string().min(1)
+});
+
 const manualRecordSchema = z.object({
   key: z.string(),
   value: z.string()
