@@ -9,4 +9,4 @@ export * from "./economy/index.js";
 export * from "./marketPlanning/index.js";
 export * from "./youthAcademyPlanning/index.js";
 export * from "./types.js";
-
+export * from "./sokker/index.js";
