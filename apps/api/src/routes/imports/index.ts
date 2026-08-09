@@ -74,9 +74,12 @@ async function importsRoutes(server: FastifyInstance) {
         playerResult,
         youthResult
       };
-    } catch (error: any) {
+    } catch (error) {
       reply.code(400);
-      return { success: false, error: error.message };
+      if (error instanceof Error) {
+        return { success: false, error: error.message };
+      }
+      return { success: false, error: "Unknown error occurred" };
     }
   });
 }
