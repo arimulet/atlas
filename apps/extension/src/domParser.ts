@@ -1,8 +1,12 @@
 import {
   PLAYER_SNAPSHOT_SCHEMA_VERSION,
+  YOUTH_ACADEMY_SNAPSHOT_SCHEMA_VERSION,
   type ExtractionResult,
   type ExtractionWarning,
   type PlayerExport,
+  type PlayerSnapshotExport,
+  type YouthPlayerExport,
+  type YouthAcademySnapshotExport,
   type SkillKey
 } from "./types";
 
@@ -88,7 +92,7 @@ export interface ExtractPlayerSnapshotOptions {
 export function extractPlayerSnapshot(
   document: Document,
   options: ExtractPlayerSnapshotOptions = {}
-): ExtractionResult {
+): ExtractionResult<PlayerSnapshotExport> {
   const exportedAt = options.exportedAt ?? new Date();
   const warnings: ExtractionWarning[] = [];
   const players = extractPlayers(document, warnings);
@@ -118,6 +122,161 @@ export function extractPlayerSnapshot(
   }
 
   return { snapshot, warnings };
+}
+
+export function extractYouthAcademySnapshot(
+  document: Document,
+  options: ExtractPlayerSnapshotOptions = {}
+): ExtractionResult<YouthAcademySnapshotExport> {
+  const exportedAt = options.exportedAt ?? new Date();
+  const warnings: ExtractionWarning[] = [];
+  const players = extractYouthPlayers(document, warnings);
+
+  const snapshot: YouthAcademySnapshotExport = {
+    schemaVersion: YOUTH_ACADEMY_SNAPSHOT_SCHEMA_VERSION,
+    source: {
+      type: "sokker-dom-export" as const,
+      exportedAt: exportedAt.toISOString(),
+      pageUrl: options.pageUrl ?? document.location?.href ?? null,
+      locale: options.locale ?? (document.documentElement.lang || navigator.language || null)
+    },
+    club: extractClub(document, options.pageUrl),
+    snapshot: {
+      snapshotDate: extractSnapshotDate(document) ?? exportedAt.toISOString().slice(0, 10),
+      season: findLabeledNumber(readElementText(document.body), ["season", "temporada"]),
+      week: findLabeledNumber(readElementText(document.body), ["week", "semana"])
+    },
+    academy: {
+      weeklyInvestment: (() => {
+        const money = parseMoney(findValueAfterLabel(document.body.innerText || document.body.textContent || "", ["investment", "inversion", "cost", "costo", "youth academy", "escuela juvenil"]));
+        return money.amount !== null ? { amount: money.amount, currency: money.currency } : null;
+      })(),
+      players
+    }
+  };
+
+  if (players.length === 0) {
+    warnings.push({
+      path: "academy.players",
+      message: "No youth players were detected on this page."
+    });
+  }
+
+  return { snapshot, warnings };
+}
+
+function extractYouthPlayers(document: Document, warnings: ExtractionWarning[]): YouthPlayerExport[] {
+  const tablePlayers = extractYouthPlayersFromTables(document, warnings);
+  if (tablePlayers.length > 0) return deduplicateYouthPlayers(tablePlayers);
+
+  const likelyCards = [
+    ...document.querySelectorAll<HTMLElement>(".player, .player-row, .player-card, [class*='player']")
+  ].filter((element) => element.querySelector("a") || findAnyNumber(element.innerText));
+
+  return deduplicateYouthPlayers(likelyCards.map((card, index) => youthPlayerFromCard(card, index, warnings)).filter((p): p is YouthPlayerExport => p !== null));
+}
+
+function deduplicateYouthPlayers(players: YouthPlayerExport[]): YouthPlayerExport[] {
+  const seen = new Set<string>();
+  const uniquePlayers: YouthPlayerExport[] = [];
+
+  players.forEach((player) => {
+    const key = player.externalId ? `id:${player.externalId}` : `name:${normalizeLabel(player.name)}:${player.age}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      uniquePlayers.push(player);
+    }
+  });
+
+  return uniquePlayers;
+}
+
+function extractYouthPlayersFromTables(document: Document, warnings: ExtractionWarning[]): YouthPlayerExport[] {
+  const players: YouthPlayerExport[] = [];
+  document.querySelectorAll("table").forEach((table) => {
+    const headers = [...table.querySelectorAll("thead th, thead td, tr:first-child th")].map((header) =>
+      normalizeLabel(readElementText(header))
+    );
+    if (!headers.some((header) => matchesAny(header, fieldLabels.name))) return;
+    const rows = [...table.querySelectorAll("tbody tr")];
+    const dataRows = rows.length > 0 ? rows : [...table.querySelectorAll("tr")].slice(1);
+    dataRows.forEach((row) => {
+      const player = youthPlayerFromTableRow(row, headers, players.length, warnings);
+      if (player) players.push(player);
+    });
+  });
+  return players;
+}
+
+function parseYouthStatus(value: string | undefined): YouthPlayerExport["status"] {
+  if (!value) return null;
+  const normalized = normalizeLabel(value);
+  if (/\bpromoted|promovido\b/.test(normalized)) return "promoted";
+  if (/\bready|listo|promover|promote\b/.test(normalized)) return "ready_for_promotion";
+  if (/\bacademy|cantera|school|escuela\b/.test(normalized)) return "in_academy";
+  return null;
+}
+
+function youthPlayerFromTableRow(
+  row: Element,
+  headers: string[],
+  index: number,
+  warnings: ExtractionWarning[]
+): YouthPlayerExport | null {
+  const cells = [...row.querySelectorAll("td, th")];
+  const textByHeader = new Map<string, string>();
+  headers.forEach((header, cellIndex) => {
+    textByHeader.set(header, normalizeWhitespace(cells[cellIndex] ? readElementText(cells[cellIndex]!) : ""));
+  });
+
+  const nameCell = cellFor(row, headers, fieldLabels.name);
+  const name = normalizeWhitespace(nameCell ? readElementText(nameCell) : valueFor(textByHeader, fieldLabels.name));
+  const age = parseFirstNumber(valueFor(textByHeader, fieldLabels.age));
+  
+  if (!name || age === null) return null;
+
+  const rowText = readElementText(row);
+  const weeksRemaining = parseFirstNumber(valueFor(textByHeader, ["weeks remaining", "semanas restantes", "remaining", "restantes"]) || findValueAfterLabel(rowText, ["semanas restantes", "weeks remaining"]));
+  const weeksInAcademy = parseFirstNumber(valueFor(textByHeader, ["weeks in academy", "semanas en cantera", "weeks", "semanas"]) || findValueAfterLabel(rowText, ["semanas en cantera", "weeks in academy", "semanas"]));
+  const estimatedLevel = nullable(valueFor(textByHeader, ["level", "nivel", "talent", "talento"]) || findValueAfterLabel(rowText, ["nivel", "level"]));
+  const status = parseYouthStatus(valueFor(textByHeader, ["status", "estado"]) || rowText);
+
+  return {
+    externalId: findPlayerId(nameCell ?? row),
+    name,
+    age,
+    weeksInAcademy,
+    weeksRemaining,
+    estimatedLevel,
+    status
+  };
+}
+
+function youthPlayerFromCard(
+  card: HTMLElement,
+  index: number,
+  warnings: ExtractionWarning[]
+): YouthPlayerExport | null {
+  const text = readElementText(card);
+  const name = textFromSelector(card, ".player-name, .name, h2, h3, a") || "";
+  const age = parseFirstNumber(findValueAfterLabel(text, fieldLabels.age));
+  
+  if (!name || age === null) return null;
+
+  const weeksRemaining = parseFirstNumber(findValueAfterLabel(text, ["semanas restantes", "weeks remaining"]));
+  const weeksInAcademy = parseFirstNumber(findValueAfterLabel(text, ["semanas en cantera", "weeks in academy", "semanas"]));
+  const estimatedLevel = nullable(findValueAfterLabel(text, ["nivel", "level", "talento", "talent"]));
+  const status = parseYouthStatus(text);
+
+  return {
+    externalId: findPlayerId(card),
+    name,
+    age,
+    weeksInAcademy,
+    weeksRemaining,
+    estimatedLevel,
+    status
+  };
 }
 
 function extractClub(document: Document, pageUrl?: string) {
