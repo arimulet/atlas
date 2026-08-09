@@ -69,27 +69,31 @@ export class SokkerXmlProvider {
     let teamData, countriesData, playersData, juniorsData;
     try {
       teamData = sokkerTeamXmlSchema.parse(teamJson).teamdata.team;
-    } catch (e: any) {
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
       const keys = teamJson.teamdata ? Object.keys(teamJson.teamdata) : Object.keys(teamJson);
-      throw new Error(`Team validation failed. Received keys: ${JSON.stringify(keys)}. Error: ${e.message}`);
+      throw new Error(`Team validation failed. Received keys: ${JSON.stringify(keys)}. Error: ${message}`);
     }
 
     try {
       countriesData = sokkerCountriesXmlSchema.parse(countriesJson).countries.country;
-    } catch (e: any) {
-      throw new Error(`Countries validation failed. Received keys: ${JSON.stringify(Object.keys(countriesJson))}. Error: ${e.message}`);
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
+      throw new Error(`Countries validation failed. Received keys: ${JSON.stringify(Object.keys(countriesJson))}. Error: ${message}`);
     }
 
     try {
       playersData = sokkerPlayersXmlSchema.parse(playersJson).players.player;
-    } catch (e: any) {
-      throw new Error(`Players validation failed. Received keys: ${JSON.stringify(Object.keys(playersJson))}. Error: ${e.message}`);
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
+      throw new Error(`Players validation failed. Received keys: ${JSON.stringify(Object.keys(playersJson))}. Error: ${message}`);
     }
 
     try {
       juniorsData = sokkerJuniorsXmlSchema.parse(juniorsJson).juniors.junior;
-    } catch (e: any) {
-      throw new Error(`Juniors validation failed. Received keys: ${JSON.stringify(Object.keys(juniorsJson))}. Error: ${e.message}`);
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
+      throw new Error(`Juniors validation failed. Received keys: ${JSON.stringify(Object.keys(juniorsJson))}. Error: ${message}`);
     }
 
     // 5. Data Mapping & Currency Conversion

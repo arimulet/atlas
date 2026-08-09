@@ -80,13 +80,14 @@ async function importsRoutes(server: FastifyInstance) {
       }
 
       return playerResult;
-    } catch (error: any) {
+    } catch (error) {
       reply.code(422);
       
-      let message = error.message;
-      if (error && typeof error.format === "function") {
+      let message = error instanceof Error ? error.message : String(error);
+      if (error && typeof error === "object" && "format" in error && typeof (error as { format: unknown }).format === "function") {
         // It's a Zod error, let's make it readable
-        message = "XML Validation Error: " + error.issues.map((i: any) => `${i.path.join('.')}: ${i.message}`).join(', ');
+        const e = error as { issues: Array<{ path: (string | number)[], message: string }> };
+        message = "XML Validation Error: " + e.issues.map(i => `${i.path.join('.')}: ${i.message}`).join(', ');
       }
 
       return { 
