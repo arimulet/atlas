@@ -58,6 +58,21 @@ export const importYouthAcademySnapshot = async (
 
   const club = await clubRepository.save(normalized.club);
 
+  const history = await youthSnapshotRepository.listByClub(club.id);
+  const previousSnapshot = history.at(-1);
+
+  if (previousSnapshot) {
+    for (const player of normalized.academy.players) {
+      const previousPlayer = previousSnapshot.players.find(
+        (p) => (p.externalId && p.externalId === player.externalId) || p.name === player.name
+      );
+      
+      if (previousPlayer?.initialWeeksRemaining != null) {
+        player.initialWeeksRemaining = previousPlayer.initialWeeksRemaining;
+      }
+    }
+  }
+
   const snapshot = await youthSnapshotRepository.save({
     clubId: club.id,
     schemaVersion: normalized.schemaVersion,
@@ -128,6 +143,7 @@ function normalizeYouthAcademySnapshot(
         externalId: normalizeOptionalString(player.externalId),
         name: player.name.trim(),
         age: player.age,
+        initialWeeksRemaining: player.weeksRemaining ?? null,
         weeksInAcademy: player.weeksInAcademy ?? null,
         weeksRemaining: player.weeksRemaining ?? null,
         estimatedLevel: player.estimatedLevel ? player.estimatedLevel.trim() : null,

@@ -49,6 +49,7 @@ export interface NormalizedYouthAcademySnapshot {
       externalId: string | null;
       name: string;
       age: number;
+      initialWeeksRemaining: number | null;
       weeksInAcademy: number | null;
       weeksRemaining: number | null;
       estimatedLevel: string | null;

@@ -384,6 +384,7 @@ function buildYouthSnapshotInput(overrides: {
         name: "Matias Cantero",
         age: 16,
         weeksInAcademy: 12,
+        initialWeeksRemaining: null,
         weeksRemaining: 4,
         estimatedLevel: "good",
         status: "in_academy"

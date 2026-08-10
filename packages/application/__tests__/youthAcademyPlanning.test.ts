@@ -75,12 +75,19 @@ describe("Real Youth Academy Planning use case", () => {
   });
 
   it("classifies stagnation risk for youth with 16+ weeks in academy and non-high level", async () => {
-    const payload = structuredClone(validYouthSnapshot);
-    payload.academy.players[0]!.weeksInAcademy = 18;
-    payload.academy.players[0]!.weeksRemaining = 12;
-    payload.academy.players[0]!.estimatedLevel = "average";
+    // Primera importacion: ancla las semanas iniciales
+    const firstPayload = structuredClone(validYouthSnapshot);
+    firstPayload.academy.players[0]!.weeksRemaining = 20;
+    firstPayload.academy.players[0]!.estimatedLevel = "average";
+    const firstImportResult = await importYouthAcademySnapshot({ payload: firstPayload });
 
-    const importResult = await importYouthAcademySnapshot({ payload });
+    // Segunda importacion: avanza el tiempo
+    const secondPayload = structuredClone(validYouthSnapshot);
+    secondPayload.snapshot.snapshotDate = "2026-11-28";
+    secondPayload.academy.players[0]!.weeksRemaining = 4; // 20 - 4 + 1 = 17 semanas
+    secondPayload.academy.players[0]!.estimatedLevel = "average";
+
+    const importResult = await importYouthAcademySnapshot({ payload: secondPayload });
     const planning = await getRealYouthAcademyPlanning(importResult.clubId!);
 
     expect(planning.derived.categoryCounts.stagnation_risk).toBe(1);
