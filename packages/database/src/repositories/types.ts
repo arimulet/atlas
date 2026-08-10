@@ -174,3 +174,18 @@ export interface PersistedYouthSnapshot {
 }
 
 export type PersistedYouthAcademySnapshot = PersistedYouthSnapshot;
+
+export interface PersistedCountry {
+  id: string;
+  countryId: number;
+  name: string;
+  currencyName: string;
+  currencyRate: number;
+}
+
+export interface SaveCountryInput {
+  countryId: number;
+  name: string;
+  currencyName: string;
+  currencyRate: number;
+}

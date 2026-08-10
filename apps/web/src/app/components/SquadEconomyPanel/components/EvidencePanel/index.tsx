@@ -3,6 +3,12 @@ import { EvidencePanelProps } from "./types";
 import { Section } from "../../../Section";
 
 export const EvidencePanel = ({ squadEconomy }: EvidencePanelProps) => {
+  const currencyDisplay = squadEconomy.countryDetails
+    ? squadEconomy.countryDetails.currencyName
+    : squadEconomy.observed.coverage.wageCurrency ??
+      squadEconomy.observed.coverage.estimatedValueCurrency ??
+      "No disponible";
+
   return (
     <Section title="Observado" subtitle="Cobertura de datos">
       <dl className="summary-grid">
@@ -20,11 +26,7 @@ export const EvidencePanel = ({ squadEconomy }: EvidencePanelProps) => {
         />
         <SummaryItem
           label="Moneda observada"
-          value={
-            squadEconomy.observed.coverage.wageCurrency ??
-            squadEconomy.observed.coverage.estimatedValueCurrency ??
-            "No disponible"
-          }
+          value={currencyDisplay}
         />
       </dl>
     </Section>

@@ -343,6 +343,11 @@ export interface SquadMarketEvidence {
 
 export interface SquadEconomy {
   clubId: string;
+  countryDetails: {
+    name: string;
+    currencyName: string;
+    currencyRate: number;
+  } | null;
   snapshotId: string | null;
   snapshotDate: string | null;
   observed: {

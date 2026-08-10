@@ -3,6 +3,7 @@ import {
   MongoSnapshotRepository,
   PersistedClub,
   PersistedPlayerSnapshot,
+  MongoCountryRepository,
   type PersistedSnapshot
 } from "@atlas/database";
 import {
@@ -44,6 +45,7 @@ import {
 
 const clubRepository = new MongoClubRepository();
 const snapshotRepository = new MongoSnapshotRepository();
+const countryRepository = new MongoCountryRepository();
 
 export const getClubDashboard = async (clubId: ClubId): Promise<ClubDashboard> => {
   const club = await clubRepository.findById(clubId.toString());
@@ -55,14 +57,16 @@ export const getClubDashboard = async (clubId: ClubId): Promise<ClubDashboard> =
   const snapshots = await snapshotRepository.listByClub(clubId);
   const latest = snapshots.at(-1) ?? null;
   const previous = snapshots.at(-2) ?? null;
-  const [development, marketPlanning, youthPipeline] = await Promise.all([
+  const [development, marketPlanning, youthPipeline, countryDetails] = await Promise.all([
     getPlayerDevelopment(clubId),
     getSquadMarketPlanning(clubId),
-    getYouthPipelinePlanning(clubId)
+    getYouthPipelinePlanning(clubId),
+    countryRepository.getById(club.country)
   ]);
 
   return {
     club,
+    countryDetails,
     settings: buildClubOperatingSettings(club),
     snapshots: {
       available: snapshots.length > 0,
