@@ -41,9 +41,9 @@ async function importsRoutes(server: FastifyInstance) {
     try {
       const credentials = sokkerSyncRequestSchema.parse(request.body);
       const provider = new SokkerXmlProvider();
-      
-      const xmlData = await provider.importFullTeamData(credentials);
 
+      const xmlData = await provider.importFullTeamData(credentials);
+      
       // Reconstruct payload for player snapshot
       const playerSnapshotPayload = {
         schemaVersion: "atlas.player-snapshot.v0",
@@ -53,7 +53,8 @@ async function importsRoutes(server: FastifyInstance) {
           locale: null
         },
         club: {
-          externalId: xmlData.clubProfile.externalId,
+          clubId: Number(xmlData.clubProfile.externalId),
+          country: xmlData.clubProfile.countryId,
           name: xmlData.clubProfile.name
         },
         snapshot: {
@@ -65,7 +66,7 @@ async function importsRoutes(server: FastifyInstance) {
       };
 
       const playerResult = await importPlayerSnapshotMvp({ payload: playerSnapshotPayload });
-      
+
       // Import Juniors
       const youthResult = await importYouthAcademySnapshot({ payload: xmlData.juniors });
 
@@ -75,22 +76,34 @@ async function importsRoutes(server: FastifyInstance) {
 
       if (youthResult.status === "rejected") {
         playerResult.importResult.status = "rejected";
-      } else if (youthResult.status === "accepted-with-warnings" && playerResult.importResult.status === "accepted") {
+      } else if (
+        youthResult.status === "accepted-with-warnings" &&
+        playerResult.importResult.status === "accepted"
+      ) {
         playerResult.importResult.status = "accepted-with-warnings";
       }
 
       return playerResult;
     } catch (error) {
       reply.code(422);
-      
+
       let message = error instanceof Error ? error.message : String(error);
-      if (error && typeof error === "object" && "format" in error && typeof (error as { format: unknown }).format === "function") {
+      if (
+        error &&
+        typeof error === "object" &&
+        "format" in error &&
+        typeof (error as { format: unknown }).format === "function"
+      ) {
         // It's a Zod error, let's make it readable
-        const e = error as unknown as { issues: Array<{ path: (string | number)[], message: string }> };
-        message = "XML Validation Error: " + e.issues.map(i => `${i.path.join('.')}: ${i.message}`).join(', ');
+        const e = error as unknown as {
+          issues: Array<{ path: (string | number)[]; message: string }>;
+        };
+        message =
+          "XML Validation Error: " +
+          e.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join(", ");
       }
 
-      return { 
+      return {
         importResult: {
           status: "rejected",
           errors: [{ path: "api", message }],
