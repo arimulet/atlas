@@ -9,7 +9,7 @@ import {
   updateClubOperatingSettings,
   updateClubProfile
 } from "@atlas/application";
-import { FastifyInstance, FastifyPluginOptions } from "fastify";
+import { FastifyInstance } from "fastify";
 import {
   compareClubSnapshotsBodySchema,
   updateClubOperatingSettingsBodySchema,
@@ -27,7 +27,7 @@ import {
   PatchClubProfileParams
 } from "./types";
 
-async function clubRoutes(server: FastifyInstance, options: FastifyPluginOptions) {
+async function clubRoutes(server: FastifyInstance) {
   server.get<{ Params: GetClubProfileParams }>("/profile", async (request) => {
     const { clubId } = request.params;
 

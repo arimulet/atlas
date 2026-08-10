@@ -159,7 +159,8 @@ export class SokkerXmlProvider {
         locale: null
       },
       club: {
-        externalId: String(teamData.teamID),
+        clubId: teamData.teamID,
+        country: teamData.countryID,
         name: teamData.name
       },
       snapshot: {

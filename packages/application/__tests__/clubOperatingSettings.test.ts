@@ -25,7 +25,8 @@ describe("Club operating settings use cases", () => {
 
   it("reads effective defaults without mixing them into observed Sokker data", async () => {
     const club = await clubs.save({
-      externalId: "club-001",
+      clubId: 1,
+      country: 1,
       name: "River Plate Forever",
       season: 78,
       week: 4
@@ -55,7 +56,8 @@ describe("Club operating settings use cases", () => {
 
   it("updates manual operating settings and keeps observed settings unchanged", async () => {
     const club = await clubs.save({
-      externalId: "club-001",
+      clubId: 1,
+      country: 1,
       name: "River Plate Forever",
       season: 78,
       week: 4
@@ -106,7 +108,7 @@ describe("Club operating settings use cases", () => {
   });
 
   it("validates currency, season, week and preference values clearly", async () => {
-    const club = await clubs.save({ externalId: "club-001", name: "River Plate Forever" });
+    const club = await clubs.save({ clubId: 1, country: 1, name: "River Plate Forever" });
 
     await expect(
       updateClubOperatingSettings({ clubId: club.id, manual: { currency: "pesos" } })
@@ -127,7 +129,8 @@ describe("Club operating settings use cases", () => {
 
   it("persists only manual preference overrides and derives effective defaults on read", async () => {
     const club = await clubs.save({
-      externalId: "club-001",
+      clubId: 1,
+      country: 1,
       name: "River Plate Forever",
       season: 78,
       week: 4
@@ -157,7 +160,8 @@ describe("Club operating settings use cases", () => {
 
   it("preserves existing manual scalar settings during partial preference updates", async () => {
     const club = await clubs.save({
-      externalId: "club-001",
+      clubId: 1,
+      country: 1,
       name: "River Plate Forever",
       season: 78,
       week: 4

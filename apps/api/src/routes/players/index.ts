@@ -3,11 +3,11 @@ import {
   getRealYouthAcademyPlanning,
   getYouthPipelinePlanning
 } from "@atlas/application";
-import { FastifyInstance, FastifyPluginOptions } from "fastify";
+import { FastifyInstance } from "fastify";
 import { clubParamsSchema } from "@atlas/api/schemas";
 import { GetDevelopmentParams, GetYouthPipelinePlanningParams } from "./types";
 
-async function playerRoutes(server: FastifyInstance, options: FastifyPluginOptions) {
+async function playerRoutes(server: FastifyInstance) {
   server.get<{ Params: GetDevelopmentParams }>("/development", async (request) => {
     const { clubId } = clubParamsSchema.parse(request.params);
 

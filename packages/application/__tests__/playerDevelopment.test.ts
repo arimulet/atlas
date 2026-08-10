@@ -51,7 +51,8 @@ interface SnapshotFixture {
 let mongo: MongoMemoryServer;
 
 const validSnapshotPath = path.resolve(
-  "packages/test-fixtures/fixtures/player-snapshot/valid.json"
+  __dirname,
+  "../../test-fixtures/fixtures/player-snapshot/valid.json"
 );
 
 describe("Player development use case", () => {
@@ -98,7 +99,7 @@ describe("Player development use case", () => {
       manual: { preferences: { "training.priority": "development" } }
     });
 
-    const development = await getPlayerDevelopment(importResult.clubId);
+    const development = await getPlayerDevelopment(importResult.clubId!);
 
     expect(development.manual.trainingPriority).toBe("development");
     expect(development.snapshotCount).toBe(2);
@@ -161,7 +162,7 @@ describe("Player development use case", () => {
     await importPlayerSnapshot({ payload: second });
     await importPlayerSnapshot({ payload: third });
 
-    const development = await getPlayerDevelopment(importResult.clubId);
+    const development = await getPlayerDevelopment(importResult.clubId!);
 
     expect(development.derived.players[0]?.findings).toEqual(
       expect.arrayContaining([
@@ -199,7 +200,7 @@ describe("Player development use case", () => {
     await importPlayerSnapshot({ payload: second });
     await importPlayerSnapshot({ payload: third });
 
-    const development = await getPlayerDevelopment(importResult.clubId);
+    const development = await getPlayerDevelopment(importResult.clubId!);
 
     expect(development.derived.players[0]?.findings[0]).toMatchObject({
       type: "decline",
@@ -219,7 +220,7 @@ describe("Player development use case", () => {
     const importResult = await importPlayerSnapshot({ payload: first });
     await importPlayerSnapshot({ payload: second });
 
-    const development = await getPlayerDevelopment(importResult.clubId);
+    const development = await getPlayerDevelopment(importResult.clubId!);
 
     expect(development.derived.players[0]?.recentEvolution).toMatchObject({
       direction: "insufficient_data",
@@ -253,7 +254,7 @@ describe("Player development use case", () => {
     const importResult = await importPlayerSnapshot({ payload: first });
     await importPlayerSnapshot({ payload: second });
 
-    const development = await getPlayerDevelopment(importResult.clubId);
+    const development = await getPlayerDevelopment(importResult.clubId!);
 
     expect(development.derived.players[0]?.skillChanges).toEqual(
       expect.arrayContaining([
@@ -276,7 +277,7 @@ describe("Player development use case", () => {
   it("keeps conclusions weak with a single snapshot", async () => {
     const importResult = await importPlayerSnapshot({ payload: readValidSnapshot() });
 
-    const development = await getPlayerDevelopment(importResult.clubId);
+    const development = await getPlayerDevelopment(importResult.clubId!);
 
     expect(development.warnings).toEqual(
       expect.arrayContaining([expect.objectContaining({ code: "few_snapshots" })])
@@ -340,7 +341,7 @@ describe("Youth pipeline planning use case", () => {
       manual: { preferences: { "academy.investment": "ambitious" } }
     });
 
-    const pipeline = await getYouthPipelinePlanning(importResult.clubId);
+    const pipeline = await getYouthPipelinePlanning(importResult.clubId!);
 
     expect(pipeline.observed.youthAgeThreshold).toBe(23);
     expect(pipeline.manual.academyInvestment).toBe("ambitious");
@@ -385,7 +386,7 @@ describe("Youth pipeline planning use case", () => {
       payload: withPlayer(readValidSnapshot(), { age: 19 })
     });
 
-    const pipeline = await getYouthPipelinePlanning(importResult.clubId);
+    const pipeline = await getYouthPipelinePlanning(importResult.clubId!);
 
     expect(pipeline.derived.categoryCounts.insufficient_data).toBe(1);
     expect(pipeline.derived.players[0]).toMatchObject({
@@ -405,7 +406,7 @@ describe("Youth pipeline planning use case", () => {
     await importPlayerSnapshot({ payload: second });
     await importPlayerSnapshot({ payload: third });
 
-    const pipeline = await getYouthPipelinePlanning(importResult.clubId);
+    const pipeline = await getYouthPipelinePlanning(importResult.clubId!);
 
     expect(pipeline.derived.categoryCounts.stagnation_risk).toBe(1);
     expect(pipeline.derived.players[0]).toMatchObject({
@@ -438,7 +439,7 @@ describe("Youth pipeline planning use case", () => {
     const importResult = await importPlayerSnapshot({ payload: first });
     await importPlayerSnapshot({ payload: second });
 
-    const pipeline = await getYouthPipelinePlanning(importResult.clubId);
+    const pipeline = await getYouthPipelinePlanning(importResult.clubId!);
 
     expect(pipeline.derived.categoryCounts.follow_up).toBe(1);
     expect(pipeline.derived.players[0]).toMatchObject({
@@ -467,7 +468,7 @@ describe("Youth pipeline planning use case", () => {
       payload: withPlayer(readValidSnapshot(), { age: 24 })
     });
 
-    const pipeline = await getYouthPipelinePlanning(importResult.clubId);
+    const pipeline = await getYouthPipelinePlanning(importResult.clubId!);
 
     expect(pipeline.observed.coverage.youngSeniorPlayerCount).toBe(0);
     expect(pipeline.derived.players).toEqual([]);

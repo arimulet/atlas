@@ -46,7 +46,7 @@ describe("Mongo repositories", () => {
   });
 
   it("saves a valid normalized snapshot", async () => {
-    const club = await clubs.save({ externalId: "club-001", name: "River Plate Forever" });
+    const club = await clubs.save({ clubId: 1, country: 1, name: "River Plate Forever" });
     const player = await players.resolveHistoricalIdentity({
       externalId: "player-001",
       name: "Tomas Alvarez"
@@ -70,7 +70,7 @@ describe("Mongo repositories", () => {
 
   it("persists observed club profile separately from manual configuration", async () => {
     const club = await clubs.save({
-      externalId: "club-001",
+      clubId: 1, country: 1,
       name: "River Plate Forever",
       season: 78,
       week: 4,
@@ -80,7 +80,7 @@ describe("Mongo repositories", () => {
     });
 
     expect(club.observed).toMatchObject({
-      externalId: "club-001",
+      clubId: 1,
       name: "River Plate Forever",
       season: 78,
       week: 4,
@@ -95,7 +95,7 @@ describe("Mongo repositories", () => {
       preferences: []
     });
     expect(club.profile).toMatchObject({
-      externalId: "club-001",
+      clubId: 1,
       name: "River Plate Forever",
       currency: null,
       season: 78,
@@ -123,7 +123,7 @@ describe("Mongo repositories", () => {
 
   it("updates manual club configuration without changing observed Sokker data", async () => {
     const club = await clubs.save({
-      externalId: "club-001",
+      clubId: 1, country: 1,
       name: "River Plate Forever",
       season: 78,
       week: 4
@@ -139,7 +139,7 @@ describe("Mongo repositories", () => {
     });
 
     expect(updated.observed).toMatchObject({
-      externalId: "club-001",
+      clubId: 1,
       name: "River Plate Forever",
       season: 78,
       week: 4
@@ -155,7 +155,7 @@ describe("Mongo repositories", () => {
       value: "Keep liquidity buffer before buying."
     });
     expect(updated.profile).toMatchObject({
-      externalId: "club-001",
+      clubId: 1,
       name: "River Project",
       currency: "ARS",
       season: 79,
@@ -164,7 +164,7 @@ describe("Mongo repositories", () => {
   });
 
   it("retrieves a snapshot by id", async () => {
-    const club = await clubs.save({ externalId: "club-001", name: "River Plate Forever" });
+    const club = await clubs.save({ clubId: 1, country: 1, name: "River Plate Forever" });
     const player = await players.resolveHistoricalIdentity({
       externalId: "player-001",
       name: "Tomas Alvarez"
@@ -180,8 +180,8 @@ describe("Mongo repositories", () => {
   });
 
   it("lists snapshots for a club", async () => {
-    const club = await clubs.save({ externalId: "club-001", name: "River Plate Forever" });
-    const otherClub = await clubs.save({ externalId: "club-002", name: "Atlas Wanderers" });
+    const club = await clubs.save({ clubId: 1, country: 1, name: "River Plate Forever" });
+    const otherClub = await clubs.save({ clubId: 2, country: 1, name: "Atlas Wanderers" });
     const player = await players.resolveHistoricalIdentity({
       externalId: "player-001",
       name: "Tomas Alvarez"
@@ -207,7 +207,7 @@ describe("Mongo repositories", () => {
   });
 
   it("retrieves snapshots by club and date", async () => {
-    const club = await clubs.save({ externalId: "club-001", name: "River Plate Forever" });
+    const club = await clubs.save({ clubId: 1, country: 1, name: "River Plate Forever" });
     const player = await players.resolveHistoricalIdentity({
       externalId: "player-001",
       name: "Tomas Alvarez"
@@ -277,7 +277,7 @@ describe("Mongo repositories", () => {
   });
 
   it("saves and retrieves a valid youth academy snapshot", async () => {
-    const club = await clubs.save({ externalId: "club-001", name: "River Plate Forever" });
+    const club = await clubs.save({ clubId: 1, country: 1, name: "River Plate Forever" });
     const snapshotDate = new Date("2026-08-08T00:00:00.000Z");
 
     const input: SaveYouthSnapshotInput = buildYouthSnapshotInput({

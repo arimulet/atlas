@@ -32,7 +32,14 @@ export const playerSnapshotV0Schema = z.object({
     locale: nullableString
   }),
   club: z.object({
-    externalId: nullableString,
+    clubId: z.number().int().positive(),
+    country: z.number().int().positive(),
+    training: z.object({
+      gk: z.number().int().nonnegative().nullable().optional(),
+      def: z.number().int().nonnegative().nullable().optional(),
+      mid: z.number().int().nonnegative().nullable().optional(),
+      att: z.number().int().nonnegative().nullable().optional()
+    }).nullable().optional(),
     name: z.string().min(1)
   }),
   snapshot: z.object({

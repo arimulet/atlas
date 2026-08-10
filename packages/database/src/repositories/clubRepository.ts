@@ -5,7 +5,14 @@ import type { PersistedClub } from "./types.js";
 export type ClubId = string | number;
 
 export interface SaveClubInput {
-  externalId: string | null;
+  clubId: number;
+  country: number;
+  training?: {
+    gk: number | null;
+    def: number | null;
+    mid: number | null;
+    att: number | null;
+  } | null;
   name: string;
   season?: number | null;
   week?: number | null;
@@ -27,7 +34,7 @@ export interface UpdateClubManualProfileInput {
 export class MongoClubRepository {
   async save(input: SaveClubInput): Promise<PersistedClub> {
     const observed = {
-      externalId: input.externalId,
+      clubId: input.clubId,
       name: input.name,
       season: input.season ?? null,
       week: input.week ?? null,
@@ -36,9 +43,11 @@ export class MongoClubRepository {
       observedAt: input.observedAt ?? null
     };
 
-    if (!input.externalId) {
+    if (!input.clubId) {
       const club = await ClubModel.create({
-        externalId: input.externalId,
+        clubId: input.clubId,
+        country: input.country,
+        training: input.training ?? null,
         name: input.name,
         observed
       });
@@ -46,13 +55,15 @@ export class MongoClubRepository {
     }
 
     const club = await ClubModel.findOneAndUpdate(
-      { externalId: input.externalId },
+      { clubId: input.clubId },
       {
         $set: {
           name: input.name,
+          country: input.country,
+          training: input.training ?? null,
           observed
         },
-        $setOnInsert: { externalId: input.externalId }
+        $setOnInsert: { clubId: input.clubId }
       },
       { new: true, upsert: true }
     );
@@ -102,10 +113,17 @@ export class MongoClubRepository {
 
 function mapClub(club: {
   _id: Types.ObjectId;
-  externalId?: string | null;
+  clubId?: number | null;
+  country?: number | null;
+  training?: {
+    gk?: number | null;
+    def?: number | null;
+    mid?: number | null;
+    att?: number | null;
+  } | null;
   name: string;
   observed?: {
-    externalId?: string | null;
+    clubId?: number | null;
     name?: string | null;
     season?: number | null;
     week?: number | null;
@@ -123,7 +141,7 @@ function mapClub(club: {
   } | null;
 }): PersistedClub {
   const observed = {
-    externalId: club.observed?.externalId ?? club.externalId ?? null,
+    clubId: club.observed?.clubId ?? club.clubId ?? null,
     name: club.observed?.name ?? club.name,
     season: club.observed?.season ?? null,
     week: club.observed?.week ?? null,
@@ -145,7 +163,7 @@ function mapClub(club: {
     observed,
     manual,
     profile: {
-      externalId: observed.externalId,
+      clubId: observed.clubId,
       name: manual.name ?? observed.name,
       currency: manual.currency,
       season: manual.season ?? observed.season,
@@ -169,7 +187,16 @@ function mapClub(club: {
         preferences: manual.preferences
       }
     },
-    externalId: observed.externalId,
+    clubId: observed.clubId ?? 0,
+    country: club.country ?? 0,
+    training: club.training
+      ? {
+          gk: club.training.gk ?? null,
+          def: club.training.def ?? null,
+          mid: club.training.mid ?? null,
+          att: club.training.att ?? null
+        }
+      : null,
     name: manual.name ?? observed.name
   };
 }

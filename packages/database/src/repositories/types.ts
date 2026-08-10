@@ -9,12 +9,19 @@ export interface PersistedClub {
   manual: PersistedClubManualProfile;
   profile: PersistedClubEffectiveProfile;
   settings: PersistedClubOperatingSettings;
-  externalId: string | null;
+  clubId: number;
+  country: number;
+  training: {
+    gk: number | null;
+    def: number | null;
+    mid: number | null;
+    att: number | null;
+  } | null;
   name: string;
 }
 
 export interface PersistedClubObservedProfile {
-  externalId: string | null;
+  clubId: number | null;
   name: string;
   season: number | null;
   week: number | null;
@@ -39,7 +46,7 @@ export interface PersistedClubManualRecord {
 }
 
 export interface PersistedClubEffectiveProfile {
-  externalId: string | null;
+  clubId: number | null;
   name: string;
   currency: string | null;
   season: number | null;
