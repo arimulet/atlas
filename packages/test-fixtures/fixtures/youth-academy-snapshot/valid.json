@@ -25,8 +25,8 @@
         "externalId": "youth-101",
         "name": "Matias Cantero",
         "age": 16,
-        "weeksInAcademy": 12,
         "weeksRemaining": 4,
+        "weeksInAcademy": 10,
         "estimatedLevel": "good",
         "status": "in_academy"
       }

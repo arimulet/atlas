@@ -33,16 +33,24 @@ export const getRealYouthAcademyPlanning = async (
   }
 
   const warnings: YouthAcademyWarning[] = [];
-  const observedPlayers: YouthAcademyObservedPlayer[] = latest.players.map((p) => ({
-    id: p.id,
-    externalId: p.externalId,
-    name: p.name,
-    age: p.age,
-    weeksInAcademy: p.weeksInAcademy,
-    weeksRemaining: p.weeksRemaining,
-    estimatedLevel: p.estimatedLevel,
-    status: p.status
-  }));
+  const observedPlayers: YouthAcademyObservedPlayer[] = latest.players.map((p) => {
+    let weeksInAcademy: number | null = null;
+    
+    if (p.initialWeeksRemaining !== null && p.weeksRemaining !== null) {
+      weeksInAcademy = Math.max(1, p.initialWeeksRemaining - p.weeksRemaining + 1);
+    }
+    
+    return {
+      id: p.id,
+      externalId: p.externalId,
+      name: p.name,
+      age: p.age,
+      weeksInAcademy,
+      weeksRemaining: p.weeksRemaining,
+      estimatedLevel: p.estimatedLevel,
+      status: p.status
+    };
+  });
 
   const playerPlans = observedPlayers.map((player) => classifyYouthPlayer(player));
 

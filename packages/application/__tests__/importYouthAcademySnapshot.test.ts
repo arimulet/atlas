@@ -64,7 +64,7 @@ describe("ImportYouthAcademySnapshot", () => {
       externalId: "youth-101",
       name: "Matias Cantero",
       age: 16,
-      weeksInAcademy: 12,
+      initialWeeksRemaining: 4,
       weeksRemaining: 4,
       estimatedLevel: "good",
       status: "in_academy"
