@@ -27,7 +27,8 @@ export interface NormalizedYouthAcademySnapshot {
     locale: string | null;
   };
   club: {
-    externalId: string | null;
+    clubId: number;
+    country: number;
     name: string;
     season: number | null;
     week: number | null;

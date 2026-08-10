@@ -50,7 +50,8 @@ let mongo: MongoMemoryServer;
 const clubs = new MongoClubRepository();
 
 const validSnapshotPath = path.resolve(
-  "packages/test-fixtures/fixtures/player-snapshot/valid.json"
+  __dirname,
+  "../../test-fixtures/fixtures/player-snapshot/valid.json"
 );
 
 describe("Club dashboard use case", () => {
@@ -77,7 +78,7 @@ describe("Club dashboard use case", () => {
     const importResult = await importPlayerSnapshot({ payload: readValidSnapshot() });
 
     await updateClubOperatingSettings({
-      clubId: importResult.clubId,
+      clubId: importResult.clubId!,
       manual: {
         currency: "ARS",
         week: 6,
@@ -87,7 +88,7 @@ describe("Club dashboard use case", () => {
       }
     });
 
-    const dashboard = await getClubDashboard(importResult.clubId);
+    const dashboard = await getClubDashboard(importResult.clubId!);
 
     expect(dashboard.club.observed).toMatchObject({
       name: "River Plate Forever",
@@ -140,7 +141,7 @@ describe("Club dashboard use case", () => {
     const importResult = await importPlayerSnapshot({ payload: first });
     await importPlayerSnapshot({ payload: second });
 
-    const dashboard = await getClubDashboard(importResult.clubId);
+    const dashboard = await getClubDashboard(importResult.clubId!);
 
     expect(dashboard.snapshots.count).toBe(2);
     expect(dashboard.snapshots.canCompare).toBe(true);
@@ -157,7 +158,7 @@ describe("Club dashboard use case", () => {
   it("integrates player development signals without treating insufficient data as a strong conclusion", async () => {
     const importResult = await importPlayerSnapshot({ payload: readValidSnapshot() });
 
-    const dashboard = await getClubDashboard(importResult.clubId);
+    const dashboard = await getClubDashboard(importResult.clubId!);
 
     expect(dashboard.developmentSummary).toMatchObject({
       available: true,
@@ -207,7 +208,7 @@ describe("Club dashboard use case", () => {
     const importResult = await importPlayerSnapshot({ payload: first });
     await importPlayerSnapshot({ payload: second });
 
-    const dashboard = await getClubDashboard(importResult.clubId);
+    const dashboard = await getClubDashboard(importResult.clubId!);
 
     expect(dashboard.developmentSummary.derived).toMatchObject({
       improvingPlayers: 1,
@@ -227,7 +228,7 @@ describe("Club dashboard use case", () => {
   it("integrates internal market signals without treating insufficient data as a sale signal", async () => {
     const importResult = await importPlayerSnapshot({ payload: readValidSnapshot() });
 
-    const dashboard = await getClubDashboard(importResult.clubId);
+    const dashboard = await getClubDashboard(importResult.clubId!);
 
     expect(dashboard.marketSummary).toMatchObject({
       available: true,
@@ -266,11 +267,11 @@ describe("Club dashboard use case", () => {
     const importResult = await importPlayerSnapshot({ payload: first });
     await importPlayerSnapshot({ payload: second });
     await updateClubOperatingSettings({
-      clubId: importResult.clubId,
+      clubId: importResult.clubId!,
       manual: { preferences: { "market.strategy": "conservative" } }
     });
 
-    const dashboard = await getClubDashboard(importResult.clubId);
+    const dashboard = await getClubDashboard(importResult.clubId!);
 
     expect(dashboard.marketSummary.derived).toMatchObject({
       saleCandidates: 1,
@@ -293,11 +294,11 @@ describe("Club dashboard use case", () => {
       payload: withPlayer(readValidSnapshot(), { age: 19 })
     });
     await updateClubOperatingSettings({
-      clubId: importResult.clubId,
+      clubId: importResult.clubId!,
       manual: { preferences: { "academy.investment": "ambitious" } }
     });
 
-    const dashboard = await getClubDashboard(importResult.clubId);
+    const dashboard = await getClubDashboard(importResult.clubId!);
 
     expect(dashboard.youthPipelineSummary).toMatchObject({
       available: true,
@@ -358,11 +359,11 @@ describe("Club dashboard use case", () => {
     const importResult = await importPlayerSnapshot({ payload: first });
     await importPlayerSnapshot({ payload: second });
     await updateClubOperatingSettings({
-      clubId: importResult.clubId,
+      clubId: importResult.clubId!,
       manual: { preferences: { "academy.investment": "ambitious" } }
     });
 
-    const dashboard = await getClubDashboard(importResult.clubId);
+    const dashboard = await getClubDashboard(importResult.clubId!);
 
     expect(dashboard.youthPipelineSummary.derived).toMatchObject({
       standoutProspects: 1,
@@ -379,7 +380,7 @@ describe("Club dashboard use case", () => {
       confidence: "medium"
     });
     expect(dashboard.youthPipelineSummary.detailPath).toBe(
-      `/clubs/${importResult.clubId}/youth-pipeline-planning`
+      `/clubs/${importResult.clubId!}/youth-pipeline-planning`
     );
   });
 
@@ -388,7 +389,7 @@ describe("Club dashboard use case", () => {
       payload: withPlayer(readValidSnapshot(), { age: 28 })
     });
 
-    const dashboard = await getClubDashboard(importResult.clubId);
+    const dashboard = await getClubDashboard(importResult.clubId!);
 
     expect(dashboard.youthPipelineSummary).toMatchObject({
       available: true,
@@ -413,8 +414,9 @@ describe("Club dashboard use case", () => {
 
   it("handles a club without snapshots with unavailable youth pipeline and ready status", async () => {
     const club = await clubs.save({
+      clubId: 999,
+      country: 1,
       name: "Club Sin Snapshots",
-      externalId: null,
       season: null,
       week: null
     });
@@ -470,7 +472,8 @@ describe("Club profile use cases", () => {
 
   it("reads a minimal operational profile", async () => {
     const club = await clubs.save({
-      externalId: "club-001",
+      clubId: 1,
+      country: 1,
       name: "River Plate Forever",
       season: 78,
       week: 4
@@ -479,7 +482,6 @@ describe("Club profile use cases", () => {
     const profile = await getClubProfile(club.id);
 
     expect(profile.profile).toMatchObject({
-      externalId: "club-001",
       name: "River Plate Forever",
       currency: null,
       season: 78,
@@ -489,7 +491,8 @@ describe("Club profile use cases", () => {
 
   it("updates manual assumptions and preferences separately from observed values", async () => {
     const club = await clubs.save({
-      externalId: "club-001",
+      clubId: 1,
+      country: 1,
       name: "River Plate Forever",
       season: 78,
       week: 4
@@ -544,7 +547,7 @@ describe("CompareClubSnapshots", () => {
     });
 
     const comparison = await compareClubSnapshots({
-      clubId: base.clubId,
+      clubId: base.clubId!,
       baseSnapshotDate: "2026-08-05",
       targetSnapshotDate: "2026-08-12"
     });
@@ -574,7 +577,7 @@ describe("CompareClubSnapshots", () => {
 
     await expect(
       compareClubSnapshots({
-        clubId: first.clubId,
+        clubId: first.clubId!,
         baseSnapshotDate: "2026-08-05",
         targetSnapshotId: target.snapshotId!
       })

@@ -63,7 +63,7 @@ export const importPlayerSnapshot = async (
       warnings: validation.warnings,
       importEventId: importEvent.id,
       snapshotId: null,
-      clubId: 1,
+      clubId: null,
       playerIds: [],
       importedPlayerCount: 0
     };
@@ -242,7 +242,8 @@ function normalizePlayerSnapshot(snapshot: PlayerSnapshotV0): NormalizedPlayerSn
       locale: normalizeOptionalString(snapshot.source.locale)
     },
     club: {
-      externalId: normalizeOptionalString(snapshot.club.externalId),
+      clubId: snapshot.club.clubId,
+      country: snapshot.club.country,
       name: snapshot.club.name.trim(),
       season: snapshot.snapshot.season ?? null,
       week: snapshot.snapshot.week ?? null,

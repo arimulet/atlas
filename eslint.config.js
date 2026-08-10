@@ -30,5 +30,20 @@ export default tseslint.config(
         tsconfigRootDir: import.meta.dirname
       }
     }
+  },
+  {
+    files: ["**/*.cjs"],
+    languageOptions: {
+      globals: {
+        console: "readonly",
+        process: "readonly",
+        __dirname: "readonly",
+        require: "readonly",
+        module: "readonly"
+      }
+    },
+    rules: {
+      "@typescript-eslint/no-require-imports": "off"
+    }
   }
 );
