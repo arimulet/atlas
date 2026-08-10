@@ -106,14 +106,11 @@ export class SokkerXmlProvider {
       currencyRate: c.currencyRate
     }));
 
-    // Find Team's Country to get the currency rate
-    const teamCountry = countries.find(c => c.id === teamData.countryID);
-    const currencyRate = teamCountry?.currencyRate || 1;
-    const currencyName = teamCountry?.currencyName || "UNK";
-
+    // Do not convert money; store the base value from XML.
+    // The frontend will convert it using the Country model.
     const convertMoney = (amount: number): Money => ({
-      amount: amount * currencyRate,
-      currency: currencyName
+      amount,
+      currency: null // Will be populated by the frontend or API layer using the Country collection
     });
 
     const clubProfile: ClubObservedProfile = {

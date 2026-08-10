@@ -1,10 +1,12 @@
 import {
   ClubId,
   MongoClubRepository,
+  MongoCountryRepository,
   MongoSnapshotRepository,
   type PersistedPlayerSnapshot,
   type PersistedSnapshot,
-  type SnapshotMoney
+  type SnapshotMoney,
+  type PersistedCountry
 } from "@atlas/database";
 import {
   EconomyRiskTolerance,
@@ -20,6 +22,7 @@ import { formatDate } from "@atlas/utils";
 
 const clubRepository = new MongoClubRepository();
 const snapshotRepository = new MongoSnapshotRepository();
+const countryRepository = new MongoCountryRepository();
 
 export const getSquadEconomy = async (clubId: ClubId): Promise<SquadEconomy> => {
   const club = await clubRepository.findById(clubId.toString());
@@ -35,8 +38,10 @@ export const getSquadEconomy = async (clubId: ClubId): Promise<SquadEconomy> => 
   const snapshots = await snapshotRepository.listByClub(clubId);
   const latest = snapshots.at(-1) ?? null;
 
+  const countryDetails = await countryRepository.getById(club.country);
+
   if (!latest) {
-    return buildEmptySquadEconomy(clubId, settings.effective.currency, riskTolerance);
+    return buildEmptySquadEconomy(clubId, settings.effective.currency, riskTolerance, countryDetails);
   }
 
   const observed = buildObserved(latest);
@@ -47,6 +52,7 @@ export const getSquadEconomy = async (clubId: ClubId): Promise<SquadEconomy> => 
 
   return {
     clubId,
+    countryDetails,
     snapshotId: latest.id,
     snapshotDate: formatDate(latest.snapshotDate),
     observed,
@@ -64,10 +70,12 @@ export const getSquadEconomy = async (clubId: ClubId): Promise<SquadEconomy> => 
 function buildEmptySquadEconomy(
   clubId: ClubId,
   currency: string | null,
-  riskTolerance: EconomyRiskTolerance
+  riskTolerance: EconomyRiskTolerance,
+  countryDetails: PersistedCountry | null
 ): SquadEconomy {
   return {
     clubId,
+    countryDetails,
     snapshotId: null,
     snapshotDate: null,
     observed: {

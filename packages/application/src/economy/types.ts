@@ -1,10 +1,11 @@
-import { type SnapshotMoney } from "@atlas/database";
+import { type SnapshotMoney, type PersistedCountry } from "@atlas/database";
 import { ClubId, Confidence, EvidenceKind, Money, Severity } from "@atlas/application";
 
 export type EconomyRiskTolerance = "conservative" | "balanced" | "aggressive";
 
 export interface SquadEconomy {
   clubId: ClubId;
+  countryDetails: PersistedCountry | null;
   snapshotId: string | null;
   snapshotDate: string | null;
   observed: {
