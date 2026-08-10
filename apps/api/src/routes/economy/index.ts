@@ -1,8 +1,8 @@
 import { getSquadEconomy, getSquadMarketPlanning } from "@atlas/application";
-import { FastifyInstance, FastifyPluginOptions } from "fastify";
+import { FastifyInstance } from "fastify";
 import { GetEconomyParams, GetSquadMarketPlanningParams } from "./types";
 
-async function economyRoutes(server: FastifyInstance, options: FastifyPluginOptions) {
+async function economyRoutes(server: FastifyInstance) {
   server.get<{ Params: GetEconomyParams }>("/", async (request) => {
     const { clubId } = request.params;
 

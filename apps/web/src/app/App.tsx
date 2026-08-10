@@ -69,7 +69,6 @@ export function App() {
   const [realYouthAcademy, setRealYouthAcademy] = useState<RealYouthAcademyPlanning | null>(null);
 
   const [status, setStatus] = useState<ImportStatus>("idle");
-  const [fileName, setFileName] = useState<string | null>(null);
   const [message, setMessage] = useState("Club dashboard ready.");
   const [result, setResult] = useState<ImportResponse | null>(null);
   const [errors, setErrors] = useState<ImportIssue[]>([]);
@@ -194,7 +193,6 @@ export function App() {
   const handleSokkerSync = useCallback(
     async (login: string, pass: string) => {
       setStatus("loading");
-      setFileName(null);
       setMessage("Sincronizando con Sokker XML...");
       setResult(null);
       setErrors([]);

@@ -128,7 +128,7 @@ describe("ImportPlayerSnapshot", () => {
       }
     });
 
-    const payload = structuredClone(validSnapshot) as PlayerSnapshotV0;
+    const payload = structuredClone(validSnapshot) as unknown as PlayerSnapshotV0;
     payload.snapshot.snapshotDate = "2026-08-06";
     payload.snapshot.week = 5;
 
@@ -173,7 +173,7 @@ describe("ImportPlayerSnapshot", () => {
   });
 
   it("derives observedPosition during import when the squad page does not provide it", async () => {
-    const payload = structuredClone(validSnapshot) as PlayerSnapshotV0;
+    const payload = structuredClone(validSnapshot) as unknown as PlayerSnapshotV0;
     const player = payload.players[0]!;
     player.observedPosition = null;
     player.skills = {

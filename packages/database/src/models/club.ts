@@ -11,10 +11,17 @@ const manualRecordSchema = new Schema(
 
 const clubSchema = new Schema(
   {
-    externalId: { type: String, default: null },
+    clubId: { type: Number, required: true },
+    country: { type: Number, required: true },
+    training: {
+      gk: { type: Number, default: null },
+      def: { type: Number, default: null },
+      mid: { type: Number, default: null },
+      att: { type: Number, default: null }
+    },
     name: { type: String, required: true, trim: true },
     observed: {
-      externalId: { type: String, default: null },
+      clubId: { type: Number, default: null },
       name: { type: String, required: true, trim: true },
       season: { type: Number, default: null },
       week: { type: Number, default: null },
@@ -35,11 +42,8 @@ const clubSchema = new Schema(
 );
 
 clubSchema.index(
-  { externalId: 1 },
-  {
-    unique: true,
-    partialFilterExpression: { externalId: { $type: "string" } }
-  }
+  { clubId: 1 },
+  { unique: true }
 );
 
 type ClubDocument = InferSchemaType<typeof clubSchema>;

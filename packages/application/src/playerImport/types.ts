@@ -14,7 +14,7 @@ export interface ImportPlayerSnapshotResult {
   warnings: ImportIssue[];
   importEventId: string;
   snapshotId: string | null;
-  clubId: ClubId;
+  clubId: ClubId | null;
   playerIds: string[];
   importedPlayerCount: number;
 }
@@ -43,7 +43,8 @@ export interface NormalizedPlayerSnapshot {
     locale: string | null;
   };
   club: {
-    externalId: string | null;
+    clubId: number;
+    country: number;
     name: string;
     season: number | null;
     week: number | null;

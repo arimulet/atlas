@@ -119,7 +119,8 @@ function normalizeYouthAcademySnapshot(
       locale: normalizeOptionalString(snapshot.source.locale)
     },
     club: {
-      externalId: normalizeOptionalString(snapshot.club.externalId),
+      clubId: snapshot.club.clubId,
+      country: snapshot.club.country,
       name: snapshot.club.name.trim(),
       season: snapshot.snapshot.season ?? null,
       week: snapshot.snapshot.week ?? null,

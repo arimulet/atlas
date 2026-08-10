@@ -44,7 +44,7 @@ describe("Real Youth Academy Planning use case", () => {
 
     const planning = await getRealYouthAcademyPlanning(importResult.clubId!);
 
-    expect(planning.clubId).toBe(importResult.clubId);
+    expect(planning.clubId).toBe(importResult.clubId!);
     expect(planning.snapshotId).toBe(importResult.snapshotId);
     expect(planning.snapshotDate).toBe("2026-08-08");
     expect(planning.manual.academyInvestment).toBe("ambitious");
@@ -79,7 +79,7 @@ describe("Real Youth Academy Planning use case", () => {
     const firstPayload = structuredClone(validYouthSnapshot);
     firstPayload.academy.players[0]!.weeksRemaining = 20;
     firstPayload.academy.players[0]!.estimatedLevel = "average";
-    const firstImportResult = await importYouthAcademySnapshot({ payload: firstPayload });
+    await importYouthAcademySnapshot({ payload: firstPayload });
 
     // Segunda importacion: avanza el tiempo
     const secondPayload = structuredClone(validYouthSnapshot);
@@ -97,6 +97,8 @@ describe("Real Youth Academy Planning use case", () => {
 
   it("handles empty planning gracefully when a club has no youth snapshots", async () => {
     const club = await ClubModel.create({
+      clubId: 999,
+      country: 1,
       name: "Club Sin Cantera",
       observed: { name: "Club Sin Cantera" },
       manual: {},

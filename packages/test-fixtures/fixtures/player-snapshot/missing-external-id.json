@@ -6,8 +6,15 @@
     "locale": "es-AR"
   },
   "club": {
-    "externalId": "club-001",
-    "name": "River Plate Forever"
+    "name": "River Plate Forever",
+    "clubId": 12345,
+    "country": 11,
+    "training": {
+      "gk": 1,
+      "def": 2,
+      "mid": 3,
+      "att": 4
+    }
   },
   "snapshot": {
     "snapshotDate": "2026-08-05",

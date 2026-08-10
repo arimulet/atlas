@@ -1,4 +1,4 @@
-import { ClubId, KeyValue } from "../types.js";
+import { ClubId } from "../types.js";
 
 export type OperatingPreferenceKey = "academy.investment" | "economy.riskTolerance" | "market.strategy" | "training.priority";
 export type OperatingPreferenceValue = "aggressive" | "ambitious" | "balanced" | "conservative" | "development" | "minimal" | "opportunistic" | "performance";
