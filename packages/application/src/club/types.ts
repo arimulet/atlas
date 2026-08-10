@@ -1,5 +1,5 @@
 import { Category, ClubId, Confidence, FindingType, KeyValue, Severity } from "../types.js";
-import { type PersistedClub } from "@atlas/database";
+import { type PersistedClub, type PersistedCountry } from "@atlas/database";
 import { type ClubOperatingSettings } from "../clubOperatingSettings/types.js";
 import { MarketStrategy, type MarketPlanningCategory } from "../marketPlanning/types.js";
 
@@ -26,6 +26,7 @@ export interface ValidatedManualProfileUpdate {
 
 export interface ClubDashboard {
   club: PersistedClub;
+  countryDetails: PersistedCountry | null;
   settings: ClubOperatingSettings;
   snapshots: {
     available: boolean;
