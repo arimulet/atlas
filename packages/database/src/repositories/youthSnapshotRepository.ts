@@ -37,6 +37,7 @@ export class MongoYouthSnapshotRepository {
         externalId: player.externalId,
         name: player.name,
         age: player.age,
+        initialWeeksRemaining: player.initialWeeksRemaining ?? null,
         weeksInAcademy: player.weeksInAcademy ?? null,
         weeksRemaining: player.weeksRemaining ?? null,
         estimatedLevel: player.estimatedLevel ?? null,
@@ -97,6 +98,7 @@ function mapYouthSnapshot(snapshot: {
     externalId?: string | null;
     name: string;
     age: number;
+    initialWeeksRemaining?: number | null;
     weeksInAcademy?: number | null;
     weeksRemaining?: number | null;
     estimatedLevel?: string | null;
@@ -133,6 +135,7 @@ function mapYouthSnapshot(snapshot: {
       externalId: player.externalId ?? null,
       name: player.name,
       age: player.age,
+      initialWeeksRemaining: player.initialWeeksRemaining ?? null,
       weeksInAcademy: player.weeksInAcademy ?? null,
       weeksRemaining: player.weeksRemaining ?? null,
       estimatedLevel: player.estimatedLevel ?? null,

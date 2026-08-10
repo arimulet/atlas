@@ -14,10 +14,9 @@
     "players": [
       {
         "name": "Pedro Gomez",
-        "age": 16,
-        "weeksInAcademy": 8,
-        "weeksRemaining": 8,
-        "estimatedLevel": "solid",
+        "age": 15,
+        "weeksRemaining": 12,
+        "estimatedLevel": "weak",
         "status": "in_academy"
       }
     ]
