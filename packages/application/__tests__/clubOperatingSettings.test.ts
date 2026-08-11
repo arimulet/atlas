@@ -39,7 +39,12 @@ describe("Club operating settings use cases", () => {
       currency: null,
       season: null,
       week: null,
-      preferences: {}
+      preferences: {
+        "economy.riskTolerance": "balanced",
+        "training.priority": "balanced",
+        "academy.investment": "balanced",
+        "market.strategy": "balanced"
+      }
     });
     expect(settings.effective).toEqual({
       currency: null,
@@ -127,7 +132,7 @@ describe("Club operating settings use cases", () => {
     ).rejects.toThrow("Invalid value for operating preference market.strategy.");
   });
 
-  it("persists only manual preference overrides and derives effective defaults on read", async () => {
+  it("persists manual preference overrides and merges them with initial configuration defaults", async () => {
     const club = await clubs.save({
       clubId: 1,
       country: 1,
@@ -148,7 +153,10 @@ describe("Club operating settings use cases", () => {
     const settings = await getClubOperatingSettings(club.id);
 
     expect(settings.settings.preferences).toEqual({
-      "economy.riskTolerance": "aggressive"
+      "economy.riskTolerance": "aggressive",
+      "training.priority": "balanced",
+      "academy.investment": "balanced",
+      "market.strategy": "balanced"
     });
     expect(settings.effective.preferences).toEqual({
       "economy.riskTolerance": "aggressive",
