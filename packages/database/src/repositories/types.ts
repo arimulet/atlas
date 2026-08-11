@@ -38,7 +38,7 @@ export interface PersistedClubSettingsRecord {
 
 export interface PersistedPlayer {
   id: string;
-  externalId: string | null;
+  playerId: number;
   name: string;
 }
 

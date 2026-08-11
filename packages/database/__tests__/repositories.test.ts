@@ -48,7 +48,7 @@ describe("Mongo repositories", () => {
   it("saves a valid normalized snapshot", async () => {
     const club = await clubs.save({ clubId: 1, country: 1, name: "River Plate Forever", currency: { name: "ARS", rate: 100 } });
     const player = await players.resolveHistoricalIdentity({
-      externalId: "player-001",
+      playerId: 1001,
       name: "Tomas Alvarez"
     });
 
@@ -62,7 +62,7 @@ describe("Mongo repositories", () => {
     expect(saved.players).toHaveLength(1);
     expect(saved.players[0]).toMatchObject({
       playerId: player.id,
-      externalId: "player-001",
+      externalId: "1001",
       name: "Tomas Alvarez",
       wage: { amount: 12000, currency: "ARS" }
     });
@@ -140,7 +140,7 @@ describe("Mongo repositories", () => {
   it("retrieves a snapshot by id", async () => {
     const club = await clubs.save({ clubId: 1, country: 1, name: "River Plate Forever", currency: { name: "ARS", rate: 100 } });
     const player = await players.resolveHistoricalIdentity({
-      externalId: "player-001",
+      playerId: 1001,
       name: "Tomas Alvarez"
     });
     const saved = await snapshots.save(
@@ -157,7 +157,7 @@ describe("Mongo repositories", () => {
     const club = await clubs.save({ clubId: 1, country: 1, name: "River Plate Forever", currency: { name: "ARS", rate: 100 } });
     const otherClub = await clubs.save({ clubId: 2, country: 1, name: "Atlas Wanderers", currency: { name: "ARS", rate: 100 } });
     const player = await players.resolveHistoricalIdentity({
-      externalId: "player-001",
+      playerId: 1001,
       name: "Tomas Alvarez"
     });
 
@@ -183,7 +183,7 @@ describe("Mongo repositories", () => {
   it("retrieves snapshots by club and date", async () => {
     const club = await clubs.save({ clubId: 1, country: 1, name: "River Plate Forever", currency: { name: "ARS", rate: 100 } });
     const player = await players.resolveHistoricalIdentity({
-      externalId: "player-001",
+      playerId: 1001,
       name: "Tomas Alvarez"
     });
     const snapshotDate = new Date("2026-08-05T00:00:00.000Z");
@@ -197,13 +197,13 @@ describe("Mongo repositories", () => {
     expect(found.map((snapshot) => snapshot.id)).toEqual([saved.id]);
   });
 
-  it("reuses a player identity across snapshots when externalId matches", async () => {
+  it("reuses a player identity across snapshots when playerId matches", async () => {
     const first = await players.resolveHistoricalIdentity({
-      externalId: "player-001",
+      playerId: 1001,
       name: "Tomas Alvarez"
     });
     const second = await players.resolveHistoricalIdentity({
-      externalId: "player-001",
+      playerId: 1001,
       name: "T. Alvarez"
     });
 
@@ -211,18 +211,8 @@ describe("Mongo repositories", () => {
     expect(await PlayerModel.countDocuments()).toBe(1);
   });
 
-  it("does not automatically merge players without externalId", async () => {
-    const first = await players.resolveHistoricalIdentity({
-      externalId: null,
-      name: "Tomas Alvarez"
-    });
-    const second = await players.resolveHistoricalIdentity({
-      externalId: null,
-      name: "Tomas Alvarez"
-    });
-
-    expect(second.id).not.toBe(first.id);
-    expect(await PlayerModel.countDocuments({ externalId: null })).toBe(2);
+  it("requires playerId when creating a player", async () => {
+    await expect(PlayerModel.create({ name: "Tomas Alvarez" })).rejects.toThrow(/playerId/);
   });
 
   it("persists an import event with warnings", async () => {
@@ -310,7 +300,7 @@ function buildSnapshotInput(overrides: {
     players: [
       {
         playerId: overrides.playerId,
-        externalId: "player-001",
+        externalId: "1001",
         name: "Tomas Alvarez",
         age: 22,
         wage: { amount: 12000, currency: "ARS" },

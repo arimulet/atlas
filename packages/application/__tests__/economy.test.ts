@@ -127,7 +127,7 @@ describe("Squad economy use case", () => {
         ...readValidSnapshot().players,
         {
           ...readValidSnapshot().players[0],
-          externalId: "partial-player",
+          externalId: "2001",
           name: "Partial Player",
           wage: { amount: 0, currency: "ARS" },
           estimatedValue: { amount: 0, currency: "ARS" }
@@ -173,7 +173,7 @@ describe("Squad economy use case", () => {
         },
         {
           ...readValidSnapshot().players[0],
-          externalId: "low-cost-player",
+          externalId: "2002",
           name: "Low Cost Player",
           wage: { amount: 1000, currency: "ARS" },
           estimatedValue: { amount: 300000, currency: "ARS" }

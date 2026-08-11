@@ -90,12 +90,13 @@ export const importPlayerSnapshot = async (
     currency
   });
   const players = await Promise.all(
-    normalized.players.map((player) =>
-      playerRepository.resolveHistoricalIdentity({
-        externalId: player.externalId,
-        name: player.name
-      })
-    )
+    normalized.players.map((player) => {
+      const playerId = parsePlayerId(player.externalId);
+
+      return playerId === null
+        ? Promise.resolve(null)
+        : playerRepository.resolveHistoricalIdentity({ playerId, name: player.name });
+    })
   );
   const snapshot = await snapshotRepository.save({
     clubId: club.id,
@@ -132,7 +133,7 @@ export const importPlayerSnapshot = async (
     importEventId: importEvent.id,
     snapshotId: snapshot.id,
     clubId: club.id,
-    playerIds: players.map((player) => player.id),
+    playerIds: players.flatMap((player) => (player ? [player.id] : [])),
     importedPlayerCount: players.length
   };
 };
@@ -332,6 +333,16 @@ function filterResolvedWarnings(
 function normalizeOptionalString(value: string | null | undefined): string | null {
   const normalized = value?.trim();
   return normalized ? normalized : null;
+}
+
+function parsePlayerId(value: string | null): number | null {
+  if (!value || !/^\d+$/.test(value)) {
+    return null;
+  }
+
+  const playerId = Number(value);
+
+  return Number.isSafeInteger(playerId) && playerId > 0 ? playerId : null;
 }
 
 function readStringProperty(input: unknown, property: string): string | null {
