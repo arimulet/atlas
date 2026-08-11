@@ -8,6 +8,7 @@ import playerRoutes from "@atlas/api//routes/players";
 import economyRoutes from "@atlas/api//routes/economy";
 import { clubParamsSchema } from "@atlas/api/schemas";
 
+export function buildServer() {
   const server = Fastify({ logger: true });
 
   server.get("/health", async () => ({ status: "ok", service: "atlas-api" }));
@@ -45,6 +46,11 @@ import { clubParamsSchema } from "@atlas/api/schemas";
       diagnostic: null
     });
   });
+
+  return server;
+}
+
+const server = buildServer();
 
 if (process.env.NODE_ENV !== "test" && process.env.ATLAS_API_AUTOSTART !== "false") {
   const port = Number(process.env.PORT ?? 3000);

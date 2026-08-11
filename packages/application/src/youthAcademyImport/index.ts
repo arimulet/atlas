@@ -121,6 +121,12 @@ function normalizeYouthAcademySnapshot(
     club: {
       clubId: snapshot.club.clubId,
       country: snapshot.club.country,
+      training: snapshot.club.training ? {
+        GK: snapshot.club.training.gk ?? null,
+        DEF: snapshot.club.training.def ?? null,
+        MID: snapshot.club.training.mid ?? null,
+        ATT: snapshot.club.training.att ?? null
+      } : undefined,
       name: snapshot.club.name.trim(),
       season: snapshot.snapshot.season ?? null,
       week: snapshot.snapshot.week ?? null,

@@ -11,6 +11,7 @@
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "noUncheckedIndexedAccess": true,
+    "noEmit": true,
     "baseUrl": ".",
     "paths": {
       "@atlas/application": ["packages/application/src/index.ts"],
