@@ -17,6 +17,12 @@ export interface ClubObservedProfile {
   money: Money;
   season?: number;
   week?: number;
+  training?: {
+    gk: number | null;
+    def: number | null;
+    mid: number | null;
+    att: number | null;
+  } | null;
 }
 
 export interface CountryReference {
@@ -119,7 +125,13 @@ export class SokkerXmlProvider {
       countryId: teamData.countryID,
       money: convertMoney(teamData.money),
       season: teamData.season,
-      week: teamData.week
+      week: teamData.week,
+      training: {
+        gk: teamData.trainingTypeGk ?? null,
+        def: teamData.trainingTypeDef ?? null,
+        mid: teamData.trainingTypeMid ?? null,
+        att: teamData.trainingTypeAtt ?? null
+      }
     };
 
     const playersArray = Array.isArray(playersData) ? playersData : (playersData ? [playersData] : []);
@@ -158,7 +170,13 @@ export class SokkerXmlProvider {
       club: {
         clubId: teamData.teamID,
         country: teamData.countryID,
-        name: teamData.name
+        name: teamData.name,
+        training: {
+          gk: teamData.trainingTypeGk ?? null,
+          def: teamData.trainingTypeDef ?? null,
+          mid: teamData.trainingTypeMid ?? null,
+          att: teamData.trainingTypeAtt ?? null
+        }
       },
       snapshot: {
         snapshotDate: new Date().toISOString().split("T")[0]!,
