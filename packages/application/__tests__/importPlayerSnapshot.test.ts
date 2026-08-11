@@ -76,14 +76,15 @@ describe("ImportPlayerSnapshot", () => {
     expect(importEvent?.warnings.map((warning) => warning.path)).toContain("players.0.externalId");
   });
 
-  it("accepts a player without externalId without reusing a doubtful identity", async () => {
+  it("accepts a player without externalId without creating an invalid player entity", async () => {
     const first = await importPlayerSnapshot({ payload: missingExternalIdSnapshot });
     const second = await importPlayerSnapshot({ payload: missingExternalIdSnapshot });
 
     expect(first.status).toBe("accepted-with-warnings");
     expect(second.status).toBe("accepted-with-warnings");
-    expect(first.playerIds[0]).not.toBe(second.playerIds[0]);
-    expect(await PlayerModel.countDocuments({ externalId: null })).toBe(2);
+    expect(first.playerIds).toEqual([]);
+    expect(second.playerIds).toEqual([]);
+    expect(await PlayerModel.countDocuments()).toBe(0);
   });
 
   it("accepts a missing skill as a non-blocking warning", async () => {

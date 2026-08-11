@@ -3,28 +3,23 @@ import { PlayerModel } from "../models/player.js";
 import type { PersistedPlayer } from "./types.js";
 
 export interface ResolvePlayerIdentityInput {
-  externalId: string | null;
+  playerId: number;
   name: string;
 }
 
 export class MongoPlayerRepository {
   async resolveHistoricalIdentity(input: ResolvePlayerIdentityInput): Promise<PersistedPlayer> {
-    if (!input.externalId) {
-      const player = await PlayerModel.create({ externalId: null, name: input.name });
-      return mapPlayer(player.toObject());
-    }
-
     const player = await PlayerModel.findOneAndUpdate(
-      { externalId: input.externalId },
-      { $set: { name: input.name }, $setOnInsert: { externalId: input.externalId } },
-      { new: true, upsert: true }
+      { playerId: input.playerId },
+      { $set: { name: input.name }, $setOnInsert: { playerId: input.playerId } },
+      { new: true, upsert: true, runValidators: true }
     );
 
     return mapPlayer(player.toObject());
   }
 
-  async findByExternalId(externalId: string): Promise<PersistedPlayer | null> {
-    const player = await PlayerModel.findOne({ externalId });
+  async findByPlayerId(playerId: number): Promise<PersistedPlayer | null> {
+    const player = await PlayerModel.findOne({ playerId });
     return player ? mapPlayer(player.toObject()) : null;
   }
 
@@ -36,12 +31,12 @@ export class MongoPlayerRepository {
 
 function mapPlayer(player: {
   _id: Types.ObjectId;
-  externalId?: string | null;
+  playerId: number;
   name: string;
 }): PersistedPlayer {
   return {
     id: player._id.toString(),
-    externalId: player.externalId ?? null,
+    playerId: player.playerId,
     name: player.name
   };
 }
