@@ -18,11 +18,7 @@ export const ClubProfilePanel = ({ dashboard }: ClubProfilePanelProps) => {
           value={formatDateTime(dashboard.club.observedAt)}
           source="observed"
         />
-        <SourcedItem
-          label="Training priority"
-          value={formatTrainingPriority(Number(dashboard.settings.effective.preferences["training.priority"]))}
-          source={dashboard.settings.settings.preferences["training.priority"] ? "manual" : "effective"}
-        />
+
         <SourcedItem
           label="Training GK"
           value={dashboard.club.training?.GK ? formatTrainingPriority(dashboard.club.training.GK) : "Not set"}
