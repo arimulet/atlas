@@ -24,16 +24,18 @@ export function validateWeek(value: number | null | undefined): number | null {
   return value;
 }
 
-export function validateCurrency(value: string | null | undefined): string | null {
-  const normalized = normalizeNullableString(value)?.toUpperCase() ?? null;
-
-  if (normalized === null) {
-    return null;
+export function validateCurrency(
+  value: { name: string; rate: number } | null | undefined
+): { name: string; rate: number } {
+  if (!value) {
+    throw new Error("Currency is required.");
   }
 
-  if (!/^[A-Z]{3}$/.test(normalized)) {
-    throw new Error("Operating currency must be a 3-letter ISO currency code.");
+  const name = normalizeNullableString(value.name);
+
+  if (!name || typeof value.rate !== "number") {
+    throw new Error("Currency must include a valid name and rate.");
   }
 
-  return normalized;
+  return { name, rate: value.rate };
 }

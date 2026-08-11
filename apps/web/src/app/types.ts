@@ -73,6 +73,11 @@ export interface ManualRecord {
   updatedAt: string;
 }
 
+export interface CurrencySettings {
+  name: string;
+  rate: number;
+}
+
 export type OperatingPreferenceKey =
   "economy.riskTolerance" | "training.priority" | "academy.investment" | "market.strategy";
 
@@ -87,14 +92,14 @@ export interface ClubDashboard {
     sourceType: string | null;
     observedAt: string | null;
     settings: {
-      currency: string | null;
+      currency: CurrencySettings;
       assumptions: ManualRecord[];
       preferences: ManualRecord[];
     };
     profile: {
       externalId: string | null;
       name: string;
-      currency: string | null;
+      currency: CurrencySettings;
       season: number | null;
       week: number | null;
     };
@@ -111,13 +116,13 @@ export interface ClubDashboard {
       week: number | null;
     };
     settings: {
-      currency: string | null;
+      currency: CurrencySettings;
       season: number | null;
       week: number | null;
       preferences: Partial<Record<OperatingPreferenceKey, string>>;
     };
     effective: {
-      currency: string | null;
+      currency: CurrencySettings;
       season: number | null;
       week: number | null;
       preferences: Record<OperatingPreferenceKey, string>;
@@ -361,8 +366,8 @@ export interface SquadEconomy {
       estimatedValueCurrency: string | null;
     };
   };
-  settings: {
-    currency: string | null;
+  manual: {
+    currency: CurrencySettings;
     riskTolerance: string;
   };
   derived: {

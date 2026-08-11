@@ -6,7 +6,7 @@ import { PlayerDevelopmentPanelProps } from "./types";
 import { PlayerDevelopmentCard } from "./components/PlayerDevelopmentCard";
 import { Section } from "@atlas/web/app/components/Section";
 import { IssueList } from "@atlas/web/app/components/IssueList";
-import { formatTrainingPriority } from "@atlas/web/app/formatters";
+import { formatLabel } from "@atlas/web/app/formatters";
 
 export const PlayerDevelopmentPanel = ({
   playerDevelopment,
@@ -81,7 +81,7 @@ export const PlayerDevelopmentPanel = ({
           <dl className="summary-grid">
             <SummaryItem
               label="training.priority"
-              value={formatTrainingPriority(Number(playerDevelopment.settings.trainingPriority))}
+              value={formatLabel(playerDevelopment.settings.trainingPriority)}
             />
             <SummaryItem label="Causalidad" value="No atribuida" />
           </dl>

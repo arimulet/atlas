@@ -69,7 +69,7 @@ export const getSquadEconomy = async (clubId: ClubId): Promise<SquadEconomy> => 
 
 function buildEmptySquadEconomy(
   clubId: ClubId,
-  currency: string | null,
+  currency: { name: string; rate: number },
   riskTolerance: EconomyRiskTolerance,
   countryDetails: PersistedCountry | null
 ): SquadEconomy {
@@ -93,8 +93,8 @@ function buildEmptySquadEconomy(
       riskTolerance
     },
     derived: {
-      totalWage: { amount: 0, currency, isComplete: false },
-      totalEstimatedValue: { amount: 0, currency, isComplete: false },
+      totalWage: { amount: 0, currency: currency?.name ?? null, isComplete: false },
+      totalEstimatedValue: { amount: 0, currency: currency?.name ?? null, isComplete: false },
       wageToValueRatio: null,
       playerDetails: [],
       concentration: {
@@ -189,7 +189,7 @@ function buildDerived(
 
 function buildHistorical(
   snapshots: PersistedSnapshot[],
-  effectiveCurrency: string | null,
+  effectiveCurrency: { name: string; rate: number },
   warnings: SquadEconomyWarning[]
 ): SquadEconomy["historical"] {
   const comparable = snapshots.filter((snapshot) =>
@@ -214,7 +214,7 @@ function buildHistorical(
       evidence: [
         { kind: "observed", label: "Snapshots del club", value: snapshots.length },
         { kind: "observed", label: "Snapshots comparables", value: comparable.length },
-        { kind: "manual", label: "Moneda efectiva", value: effectiveCurrency }
+        { kind: "manual", label: "Moneda efectiva", value: effectiveCurrency?.name ?? null }
       ]
     });
   }
@@ -260,20 +260,17 @@ function buildWarnings(
   snapshot: PersistedSnapshot,
   observed: SquadEconomy["observed"],
   derived: SquadEconomy["derived"],
-  effectiveCurrency: string | null
+  effectiveCurrency: { name: string; rate: number }
 ): SquadEconomyWarning[] {
   const warnings: SquadEconomyWarning[] = [];
 
-  if (
-    !effectiveCurrency &&
-    (!observed.coverage.wageCurrency || !observed.coverage.estimatedValueCurrency)
-  ) {
+  if (!observed.coverage.wageCurrency || !observed.coverage.estimatedValueCurrency) {
     warnings.push({
       code: "missing_currency",
       message:
         "Falta moneda efectiva u observada; los importes se muestran como evidencia monetaria no comparable.",
       evidence: [
-        { kind: "manual", label: "Moneda efectiva", value: effectiveCurrency },
+        { kind: "manual", label: "Moneda efectiva", value: effectiveCurrency.name },
         { kind: "observed", label: "Moneda salario", value: observed.coverage.wageCurrency },
         { kind: "observed", label: "Moneda valor", value: observed.coverage.estimatedValueCurrency }
       ]
@@ -612,11 +609,11 @@ function buildConcentration(
 
 function isComparableSnapshot(
   snapshot: PersistedSnapshot,
-  effectiveCurrency: string | null
+  effectiveCurrency: { name: string; rate: number }
 ): boolean {
   const currencies = snapshot.players.flatMap((player) => [
-    player.wage.currency ?? effectiveCurrency,
-    player.estimatedValue.currency ?? effectiveCurrency
+    player.wage.currency ?? effectiveCurrency?.name,
+    player.estimatedValue.currency ?? effectiveCurrency?.name
   ]);
 
   return currencies.every((currency) => currency && currency === currencies[0]);
