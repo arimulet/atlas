@@ -3,7 +3,6 @@ import { PreferenceItem } from "@atlas/web/app/components/PreferenceItem";
 import { SourcedItem } from "@atlas/web/app/components/SourcedItem";
 import { OperatingSettingsPanelProps } from "./types";
 import { Section } from "../../../Section";
-import { formatTrainingPriority } from "@atlas/web/app/formatters";
 
 const preferenceLabels: Record<OperatingPreferenceKey, string> = {
   "economy.riskTolerance": "Economy risk",
@@ -15,41 +14,20 @@ const preferenceLabels: Record<OperatingPreferenceKey, string> = {
 export const OperatingSettingsPanel = ({ dashboard }: OperatingSettingsPanelProps) => {
   return (
     <Section title="Operating Settings" subtitle="Effective reading">
-      <div className="settings-columns">
-        <dl className="source-list">
-          <SourcedItem
-            label="Currency"
-            value={dashboard.settings.settings.currency}
-            source="manual"
-          />
-          <SourcedItem
-            label="Season"
-            value={dashboard.settings.observed.season}
-            source="observed"
-          />
-          <SourcedItem label="Week" value={dashboard.settings.observed.week} source="observed" />
-        </dl>
-        <dl className="source-list effective-list">
-          <SourcedItem
-            label="Currency"
-            value={dashboard.settings.effective.currency}
-            source="effective"
-          />
-          <SourcedItem
-            label="Season"
-            value={dashboard.settings.effective.season}
-            source="effective"
-          />
-          <SourcedItem label="Week" value={dashboard.settings.effective.week} source="effective" />
-        </dl>
-      </div>
+      <dl className="source-list">
+        <SourcedItem
+          label="Currency"
+          value={dashboard.club.settings.currency?.name}
+          source="manual"
+        />
+      </dl>
       <div className="preferences-grid">
         {(Object.keys(preferenceLabels) as OperatingPreferenceKey[]).map((key) => (
           <PreferenceItem
             key={key}
             label={preferenceLabels[key]}
             manual={dashboard.settings.settings.preferences[key]}
-            effective={key === "training.priority" ? formatTrainingPriority(Number(dashboard.settings.effective.preferences[key])) : dashboard.settings.effective.preferences[key]}
+            effective={dashboard.settings.effective.preferences[key]}
           />
         ))}
       </div>

@@ -26,7 +26,14 @@ const clubSchema = new Schema(
     sourceType: { type: String, default: null },
     observedAt: { type: Date, default: null },
     settings: {
-      currency: { type: String, default: null },
+      currency: {
+        type: {
+          name: { type: String, required: true },
+          rate: { type: Number, required: true }
+        },
+        _id: false,
+        required: true
+      },
       season: { type: Number, default: null },
       week: { type: Number, default: null },
       assumptions: { type: [manualRecordSchema], default: [] },

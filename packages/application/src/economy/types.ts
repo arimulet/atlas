@@ -19,7 +19,7 @@ export interface SquadEconomy {
     };
   };
   manual: {
-    currency: string | null;
+    currency: { name: string; rate: number };
     riskTolerance: EconomyRiskTolerance;
   };
   derived: {

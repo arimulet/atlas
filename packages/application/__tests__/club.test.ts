@@ -80,7 +80,7 @@ describe("Club dashboard use case", () => {
     await updateClubOperatingSettings({
       clubId: importResult.clubId!,
       settings: {
-        currency: "ARS",
+        currency: { name: "ARS", rate: 100 },
         week: 6,
         preferences: {
           "market.strategy": "opportunistic"
@@ -96,11 +96,11 @@ describe("Club dashboard use case", () => {
       week: 4
     });
     expect(dashboard.club.settings).toMatchObject({
-      currency: "ARS",
+      currency: { name: "ARS", rate: 100 },
       week: 6
     });
     expect(dashboard.settings.effective).toMatchObject({
-      currency: "ARS",
+      currency: { name: "ARS", rate: 100 },
       season: 78,
       week: 6,
       preferences: {
@@ -418,7 +418,8 @@ describe("Club dashboard use case", () => {
       country: 1,
       name: "Club Sin Snapshots",
       season: null,
-      week: null
+      week: null,
+      currency: { name: "ARS", rate: 100 }
     });
 
     const dashboard = await getClubDashboard(club.id);
@@ -476,7 +477,8 @@ describe("Club profile use cases", () => {
       country: 1,
       name: "River Plate Forever",
       season: 78,
-      week: 4
+      week: 4,
+      currency: { name: "ARS", rate: 100 }
     });
 
     const profile = await getClubProfile(club.id);
@@ -484,7 +486,7 @@ describe("Club profile use cases", () => {
     expect(profile).toMatchObject({
       name: "River Plate Forever",
       settings: {
-        currency: null
+        currency: { name: "ARS", rate: 100 }
       },
       season: 78,
       week: 4
@@ -497,13 +499,14 @@ describe("Club profile use cases", () => {
       country: 1,
       name: "River Plate Forever",
       season: 78,
-      week: 4
+      week: 4,
+      currency: { name: "ARS", rate: 100 }
     });
 
     const profile = await updateClubProfile({
       clubId: club.id,
       settings: {
-        currency: "ARS",
+        currency: { name: "ARS", rate: 100 },
         week: 6,
         assumptions: [{ key: "wage-growth", value: "Use conservative wage growth." }],
         preferences: [{ key: "market-style", value: "Avoid short-term flips." }]
@@ -512,7 +515,7 @@ describe("Club profile use cases", () => {
 
     expect(profile.week).toBe(4);
     expect(profile.settings.week).toBe(6);
-    expect(profile.settings.currency).toBe("ARS");
+    expect(profile.settings.currency).toEqual({ name: "ARS", rate: 100 });
     expect(profile.settings.assumptions[0]?.key).toBe("wage-growth");
     expect(profile.settings.preferences[0]?.key).toBe("market-style");
   });

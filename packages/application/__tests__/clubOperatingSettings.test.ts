@@ -29,14 +29,15 @@ describe("Club operating settings use cases", () => {
       country: 1,
       name: "River Plate Forever",
       season: 78,
-      week: 4
+      week: 4,
+      currency: { name: "ARS", rate: 100 }
     });
 
     const settings = await getClubOperatingSettings(club.id);
 
     expect(settings.observed).toEqual({ season: 78, week: 4 });
     expect(settings.settings).toEqual({
-      currency: null,
+      currency: { name: "ARS", rate: 100 },
       season: null,
       week: null,
       preferences: {
@@ -47,7 +48,7 @@ describe("Club operating settings use cases", () => {
       }
     });
     expect(settings.effective).toEqual({
-      currency: null,
+      currency: { name: "ARS", rate: 100 },
       season: 78,
       week: 4,
       preferences: {
@@ -65,13 +66,14 @@ describe("Club operating settings use cases", () => {
       country: 1,
       name: "River Plate Forever",
       season: 78,
-      week: 4
+      week: 4,
+      currency: { name: "ARS", rate: 100 }
     });
 
     const settings = await updateClubOperatingSettings({
       clubId: club.id,
       settings: {
-        currency: " ars ",
+        currency: { name: " ars ", rate: 100 },
         season: 79,
         week: 6,
         preferences: {
@@ -85,7 +87,7 @@ describe("Club operating settings use cases", () => {
 
     expect(settings.observed).toEqual({ season: 78, week: 4 });
     expect(settings.settings).toMatchObject({
-      currency: "ARS",
+      currency: { name: "ars", rate: 100 },
       season: 79,
       week: 6,
       preferences: {
@@ -96,14 +98,14 @@ describe("Club operating settings use cases", () => {
       }
     });
     expect(settings.effective).toMatchObject({
-      currency: "ARS",
+      currency: { name: "ars", rate: 100 },
       season: 79,
       week: 6
     });
 
     const persisted = await ClubModel.findById(club.id).lean();
     expect(persisted?.season).toBe(78);
-    expect(persisted?.settings?.currency).toBe("ARS");
+    expect(persisted?.settings?.currency).toEqual({ name: "ars", rate: 100 });
     expect(persisted?.settings?.preferences.map((preference) => preference.key).sort()).toEqual([
       "academy.investment",
       "economy.riskTolerance",
@@ -113,11 +115,11 @@ describe("Club operating settings use cases", () => {
   });
 
   it("validates currency, season, week and preference values clearly", async () => {
-    const club = await clubs.save({ clubId: 1, country: 1, name: "River Plate Forever" });
+    const club = await clubs.save({ clubId: 1, country: 1, name: "River Plate Forever", currency: { name: "ARS", rate: 100 } });
 
     await expect(
-      updateClubOperatingSettings({ clubId: club.id, settings: { currency: "pesos" } })
-    ).rejects.toThrow("Operating currency must be a 3-letter ISO currency code.");
+      updateClubOperatingSettings({ clubId: club.id, settings: { currency: { name: "", rate: 100 } } })
+    ).rejects.toThrow("Currency must include a valid name and rate.");
     await expect(
       updateClubOperatingSettings({ clubId: club.id, settings: { season: 0 } })
     ).rejects.toThrow("Operating season must be an integer between 1 and 999.");
@@ -138,7 +140,8 @@ describe("Club operating settings use cases", () => {
       country: 1,
       name: "River Plate Forever",
       season: 78,
-      week: 4
+      week: 4,
+      currency: { name: "ARS", rate: 100 }
     });
 
     await updateClubOperatingSettings({
@@ -172,13 +175,14 @@ describe("Club operating settings use cases", () => {
       country: 1,
       name: "River Plate Forever",
       season: 78,
-      week: 4
+      week: 4,
+      currency: { name: "ARS", rate: 100 }
     });
 
     await updateClubOperatingSettings({
       clubId: club.id,
       settings: {
-        currency: "ARS",
+        currency: { name: "ARS", rate: 100 },
         season: 79,
         week: 6
       }
@@ -193,7 +197,7 @@ describe("Club operating settings use cases", () => {
     });
 
     expect(settings.settings).toMatchObject({
-      currency: "ARS",
+      currency: { name: "ARS", rate: 100 },
       season: 79,
       week: 6,
       preferences: {

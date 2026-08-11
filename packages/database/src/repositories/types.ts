@@ -23,7 +23,7 @@ export interface PersistedClub {
 }
 
 export interface PersistedClubSettings {
-  currency: string | null;
+  currency: { name: string; rate: number };
   season?: number | null;
   week?: number | null;
   assumptions: PersistedClubSettingsRecord[];

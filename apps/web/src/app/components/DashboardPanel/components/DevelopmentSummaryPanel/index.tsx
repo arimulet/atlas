@@ -2,7 +2,7 @@ import { SummaryItem } from "@atlas/web/app/components/SummaryItem";
 import { DevelopmentSummaryPanelProps } from "./types";
 import { TraceKind } from "../../../TraceKind";
 import { Section } from "../../../Section";
-import { formatTrainingPriority } from "@atlas/web/app/formatters";
+import { formatLabel } from "@atlas/web/app/formatters";
 
 function labelDevelopmentSignal(signal: string): string {
   if (signal === "improvement") return "Mejora observada";
@@ -38,7 +38,7 @@ export const DevelopmentSummaryPanel = ({
           type="observed"
           label={`observado: ${summary.observed.snapshotCount} snapshots`}
         />
-        <TraceKind type="manual" label={`manual: ${formatTrainingPriority(Number(summary.settings.trainingPriority))}`} />
+        <TraceKind type="manual" label={`manual: ${formatLabel(summary.settings.trainingPriority)}`} />
         <TraceKind type="derived" label="derivado: conteos por evolucion" />
         <TraceKind label="inferido: senal ejecutiva" type="inferred" />
       </div>
