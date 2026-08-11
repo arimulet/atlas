@@ -35,13 +35,16 @@ export class MongoClubRepository {
     const $set: Record<string, unknown> = {
       name: input.name,
       country: input.country,
-      training: input.training ?? null,
       season: input.season ?? null,
       week: input.week ?? null,
       lastSnapshotDate: input.lastSnapshotDate ?? null,
       sourceType: input.sourceType ?? null,
       observedAt: input.observedAt ?? null
     };
+
+    if (input.training !== undefined) {
+      $set.training = input.training;
+    }
 
     if (!input.clubId) {
       const club = await ClubModel.create({

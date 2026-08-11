@@ -29,6 +29,12 @@ export interface NormalizedYouthAcademySnapshot {
   club: {
     clubId: number;
     country: number;
+    training?: {
+      GK: number | null;
+      DEF: number | null;
+      MID: number | null;
+      ATT: number | null;
+    } | null;
     name: string;
     season: number | null;
     week: number | null;

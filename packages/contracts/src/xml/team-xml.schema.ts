@@ -8,6 +8,10 @@ export const sokkerTeamXmlSchema = z.object({
       name: z.string(),
       countryID: sokkerNumber,
       money: sokkerNumber,
+      trainingTypeGk: sokkerNumber.optional(),
+      trainingTypeDef: sokkerNumber.optional(),
+      trainingTypeMid: sokkerNumber.optional(),
+      trainingTypeAtt: sokkerNumber.optional(),
       // We assume these might be present or can be inferred
       season: sokkerNumber.optional(),
       week: sokkerNumber.optional()

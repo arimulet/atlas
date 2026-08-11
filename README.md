@@ -30,7 +30,7 @@ npm run dev:api
 
 ## Data Import
 
-The official data import flow uses the internal XML import form within the ATLAS web application. Users can export XML data from Sokker and import it directly into ATLAS. The legacy browser extension has been removed.
+The official data import flow uses the internal XML import form within the ATLAS web application. Users can export XML data from Sokker and import it directly into ATLAS.
 
 ## Technical Baseline
 
