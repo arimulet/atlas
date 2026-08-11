@@ -24,8 +24,7 @@ const skillSetSchema = new Schema(
 
 const playerSnapshotSchema = new Schema(
   {
-    playerId: { type: Schema.Types.ObjectId, ref: "Player", default: null },
-    externalId: { type: String, default: null },
+    playerId: { type: Number, required: true, min: 1 },
     name: { type: String, required: true },
     age: { type: Number, required: true, min: 1 },
     wage: { type: moneySchema, required: true },

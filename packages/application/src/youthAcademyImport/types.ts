@@ -53,11 +53,10 @@ export interface NormalizedYouthAcademySnapshot {
       currency: string | null;
     } | null;
     players: Array<{
-      externalId: string | null;
+      playerId: number;
       name: string;
       age: number;
       initialWeeksRemaining: number | null;
-      weeksInAcademy: number | null;
       weeksRemaining: number | null;
       estimatedLevel: string | null;
       status: "in_academy" | "ready_for_promotion" | "promoted";

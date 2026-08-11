@@ -24,7 +24,7 @@
   },
   "players": [
     {
-      "externalId": null,
+      "playerId": 2001,
       "name": "Nicolas Benitez",
       "age": 18,
       "wage": {

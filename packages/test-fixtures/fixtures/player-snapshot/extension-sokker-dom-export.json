@@ -24,7 +24,7 @@
   },
   "players": [
     {
-      "externalId": "101",
+      "playerId": 101,
       "name": "Tomas Alvarez",
       "age": 22,
       "wage": {

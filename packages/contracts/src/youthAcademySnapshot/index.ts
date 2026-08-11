@@ -51,20 +51,6 @@ function collectWarnings(snapshot: YouthAcademySnapshotV0): ImportIssue[] {
   snapshot.academy.players.forEach((player, index) => {
     const prefix = `academy.players.${index}`;
 
-    if (!player.externalId) {
-      warnings.push({
-        path: `${prefix}.externalId`,
-        message: "Missing externalId; youth player identity may require manual review."
-      });
-    }
-
-    if (player.weeksInAcademy === undefined || player.weeksInAcademy === null) {
-      warnings.push({
-        path: `${prefix}.weeksInAcademy`,
-        message: "Missing weeksInAcademy; development time in academy is unknown."
-      });
-    }
-
     if (player.weeksRemaining === undefined || player.weeksRemaining === null) {
       warnings.push({
         path: `${prefix}.weeksRemaining`,

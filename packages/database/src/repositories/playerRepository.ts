@@ -4,22 +4,26 @@ import type { PersistedPlayer } from "./types.js";
 
 export interface ResolvePlayerIdentityInput {
   playerId: number;
+  clubId: number;
   name: string;
 }
 
 export class MongoPlayerRepository {
   async resolveHistoricalIdentity(input: ResolvePlayerIdentityInput): Promise<PersistedPlayer> {
     const player = await PlayerModel.findOneAndUpdate(
-      { playerId: input.playerId },
-      { $set: { name: input.name }, $setOnInsert: { playerId: input.playerId } },
+      { clubId: input.clubId, playerId: input.playerId },
+      {
+        $set: { name: input.name },
+        $setOnInsert: { clubId: input.clubId, playerId: input.playerId }
+      },
       { new: true, upsert: true, runValidators: true }
     );
 
     return mapPlayer(player.toObject());
   }
 
-  async findByPlayerId(playerId: number): Promise<PersistedPlayer | null> {
-    const player = await PlayerModel.findOne({ playerId });
+  async findByPlayerId(input: { playerId: number; clubId: number }): Promise<PersistedPlayer | null> {
+    const player = await PlayerModel.findOne({ playerId: input.playerId, clubId: input.clubId });
     return player ? mapPlayer(player.toObject()) : null;
   }
 
@@ -32,11 +36,13 @@ export class MongoPlayerRepository {
 function mapPlayer(player: {
   _id: Types.ObjectId;
   playerId: number;
+  clubId: number;
   name: string;
 }): PersistedPlayer {
   return {
     id: player._id.toString(),
     playerId: player.playerId,
+    clubId: player.clubId,
     name: player.name
   };
 }

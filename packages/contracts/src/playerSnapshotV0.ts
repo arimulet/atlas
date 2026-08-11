@@ -41,7 +41,7 @@ export const playerSnapshotV0Schema = z.object({
   }),
   players: z.array(
     z.object({
-      externalId: nullableString,
+      playerId: z.number().int().positive(),
       name: z.string().min(1),
       age: z.number().int().positive(),
       wage: moneySchema,
@@ -134,13 +134,6 @@ function collectWarnings(snapshot: PlayerSnapshotV0): ImportIssue[] {
 
   snapshot.players.forEach((player, index) => {
     const prefix = `players.${index}`;
-
-    if (!player.externalId) {
-      warnings.push({
-        path: `${prefix}.externalId`,
-        message: "Missing externalId; player identity may require manual review."
-      });
-    }
 
     if (player.form === undefined || player.form === null) {
       warnings.push({ path: `${prefix}.form`, message: "Missing form; current performance context is incomplete." });

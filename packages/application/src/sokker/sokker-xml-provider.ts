@@ -138,7 +138,7 @@ export class SokkerXmlProvider {
     const players: PlayerSnapshotV0["players"] = playersArray.map(p => {
       const name = p.surname ? `${p.name} ${p.surname}` : p.name;
       return {
-        externalId: String(p.ID),
+        playerId: p.ID,
         name: name,
         age: p.age,
         wage: convertMoney(p.wage),
@@ -187,7 +187,7 @@ export class SokkerXmlProvider {
         players: juniorsArray.map(j => {
           const name = j.surname ? `${j.name} ${j.surname}` : j.name;
           return {
-            externalId: String(j.ID),
+            playerId: j.ID,
             name: name,
             age: j.age,
             weeksRemaining: j.weeks, // Assuming weeks means weeks remaining based on XML docs

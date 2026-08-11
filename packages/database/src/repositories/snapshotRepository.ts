@@ -27,8 +27,7 @@ export class MongoSnapshotRepository {
       source: input.source,
       sourceVersion: input.sourceVersion ?? null,
       players: input.players.map((player) => ({
-        ...player,
-        playerId: player.playerId ? new Types.ObjectId(player.playerId) : null
+        ...player
       }))
     });
 
@@ -74,8 +73,7 @@ function mapSnapshot(snapshot: {
   sourceVersion?: string | null;
   players: Array<{
     _id: Types.ObjectId;
-    playerId?: Types.ObjectId | null;
-    externalId?: string | null;
+    playerId: number;
     name: string;
     age: number;
     wage: { amount: number; currency?: string | null };
@@ -117,8 +115,7 @@ function mapSnapshot(snapshot: {
     sourceVersion: snapshot.sourceVersion ?? null,
     players: snapshot.players.map((player) => ({
       id: player._id.toString(),
-      playerId: player.playerId?.toString() ?? null,
-      externalId: player.externalId ?? null,
+      playerId: player.playerId,
       name: player.name,
       age: player.age,
       wage: {

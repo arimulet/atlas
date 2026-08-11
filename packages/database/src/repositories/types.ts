@@ -39,6 +39,7 @@ export interface PersistedClubSettingsRecord {
 export interface PersistedPlayer {
   id: string;
   playerId: number;
+  clubId: number;
   name: string;
 }
 
@@ -72,8 +73,7 @@ export interface SnapshotSkillSet {
 
 export interface PersistedPlayerSnapshot {
   id: string;
-  playerId: string | null;
-  externalId: string | null;
+  playerId: number;
   name: string;
   age: number;
   wage: SnapshotMoney;
@@ -107,11 +107,10 @@ export interface PersistedSnapshot {
 
 export interface PersistedYouthPlayerSnapshot {
   id: string;
-  externalId: string | null;
+  playerId: number;
   name: string;
   age: number;
   initialWeeksRemaining: number | null;
-  weeksInAcademy: number | null;
   weeksRemaining: number | null;
   estimatedLevel: string | null;
   status: "in_academy" | "ready_for_promotion" | "promoted";

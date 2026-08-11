@@ -34,18 +34,11 @@ export const getRealYouthAcademyPlanning = async (
 
   const warnings: YouthAcademyWarning[] = [];
   const observedPlayers: YouthAcademyObservedPlayer[] = latest.players.map((p) => {
-    let weeksInAcademy: number | null = null;
-    
-    if (p.initialWeeksRemaining !== null && p.weeksRemaining !== null) {
-      weeksInAcademy = Math.max(1, p.initialWeeksRemaining - p.weeksRemaining + 1);
-    }
-    
     return {
       id: p.id,
-      externalId: p.externalId,
+      playerId: p.playerId,
       name: p.name,
       age: p.age,
-      weeksInAcademy,
       weeksRemaining: p.weeksRemaining,
       estimatedLevel: p.estimatedLevel,
       status: p.status
@@ -148,10 +141,6 @@ function classifyYouthPlayer(player: YouthAcademyObservedPlayer): RealYouthAcade
     { kind: "observed", label: "Edad", value: player.age }
   ];
 
-  if (player.weeksInAcademy !== null) {
-    evidence.push({ kind: "observed", label: "Semanas en escuela", value: player.weeksInAcademy });
-  }
-
   if (player.weeksRemaining !== null) {
     evidence.push({ kind: "observed", label: "Semanas restantes", value: player.weeksRemaining });
   }
@@ -204,18 +193,6 @@ function classifyYouthPlayer(player: YouthAcademyObservedPlayer): RealYouthAcade
       message: "Prospecto destacado con alto talento estimado.",
       evidence
     });
-  } else if (player.weeksInAcademy !== null && player.weeksInAcademy >= 16 && !isHigh) {
-    category = "stagnation_risk";
-    severity = "medium";
-    confidence = "medium";
-    rationale = "El juvenil acumula 16 o mas semanas en la escuela con nivel estimado modesto o estancado.";
-    signals.push({
-      code: "youth_stagnation_risk",
-      severity: "medium",
-      confidence: "medium",
-      message: "Riesgo de estancamiento en la escuela juvenil.",
-      evidence
-    });
   } else if (player.weeksRemaining === null || !player.estimatedLevel) {
     if (player.weeksRemaining === null) {
       warnings.push({
@@ -235,10 +212,9 @@ function classifyYouthPlayer(player: YouthAcademyObservedPlayer): RealYouthAcade
 
   return {
     id: player.id,
-    externalId: player.externalId,
+    playerId: player.playerId,
     name: player.name,
     age: player.age,
-    weeksInAcademy: player.weeksInAcademy,
     weeksRemaining: player.weeksRemaining,
     projectedPromotionAge,
     estimatedLevel: player.estimatedLevel,
