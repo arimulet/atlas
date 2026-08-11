@@ -9,7 +9,7 @@ export interface ClubOperatingSettings {
     season: number | null;
     week: number | null;
   };
-  manual: {
+  settings: {
     currency: string | null;
     season: number | null;
     week: number | null;
@@ -25,7 +25,7 @@ export interface ClubOperatingSettings {
 
 export interface UpdateClubOperatingSettingsInput {
   clubId: ClubId;
-  manual: {
+  settings: {
     currency?: string | null;
     season?: number | null;
     week?: number | null;

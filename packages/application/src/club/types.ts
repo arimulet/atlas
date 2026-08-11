@@ -5,7 +5,7 @@ import { MarketStrategy, type MarketPlanningCategory } from "../marketPlanning/t
 
 export interface UpdateClubProfileInput {
   clubId: string;
-  manual: {
+  settings: {
     name?: string | null;
     currency?: string | null;
     season?: number | null;
@@ -76,7 +76,7 @@ export interface ClubDashboardDevelopmentSummary {
     latestSnapshotDate: string | null;
     playerCount: number;
   };
-  manual: {
+  settings: {
     trainingPriority: string;
   };
   derived: {
@@ -109,7 +109,7 @@ export interface ClubDashboardMarketSummary {
     playerCount: number;
     playersWithStableIdentity: number;
   };
-  manual: {
+  settings: {
     marketStrategy: MarketStrategy;
   };
   derived: {
@@ -144,7 +144,7 @@ export interface ClubDashboardYouthPipelineSummary {
     youngSeniorPlayerCount: number;
     youthAgeThreshold: number;
   };
-  manual: {
+  settings: {
     academyInvestment: string;
   };
   derived: {

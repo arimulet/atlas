@@ -79,7 +79,7 @@ describe("Club dashboard use case", () => {
 
     await updateClubOperatingSettings({
       clubId: importResult.clubId!,
-      manual: {
+      settings: {
         currency: "ARS",
         week: 6,
         preferences: {
@@ -90,12 +90,12 @@ describe("Club dashboard use case", () => {
 
     const dashboard = await getClubDashboard(importResult.clubId!);
 
-    expect(dashboard.club.observed).toMatchObject({
+    expect(dashboard.club).toMatchObject({
       name: "River Plate Forever",
       season: 78,
       week: 4
     });
-    expect(dashboard.club.manual).toMatchObject({
+    expect(dashboard.club.settings).toMatchObject({
       currency: "ARS",
       week: 6
     });
@@ -167,7 +167,7 @@ describe("Club dashboard use case", () => {
         latestSnapshotDate: "2026-08-05",
         playerCount: 1
       },
-      manual: {
+      settings: {
         trainingPriority: "balanced"
       },
       derived: {
@@ -237,7 +237,7 @@ describe("Club dashboard use case", () => {
         latestSnapshotDate: "2026-08-05",
         playerCount: 1
       },
-      manual: {
+      settings: {
         marketStrategy: "balanced"
       },
       derived: {
@@ -268,7 +268,7 @@ describe("Club dashboard use case", () => {
     await importPlayerSnapshot({ payload: second });
     await updateClubOperatingSettings({
       clubId: importResult.clubId!,
-      manual: { preferences: { "market.strategy": "conservative" } }
+      settings: { preferences: { "market.strategy": "conservative" } }
     });
 
     const dashboard = await getClubDashboard(importResult.clubId!);
@@ -295,7 +295,7 @@ describe("Club dashboard use case", () => {
     });
     await updateClubOperatingSettings({
       clubId: importResult.clubId!,
-      manual: { preferences: { "academy.investment": "ambitious" } }
+      settings: { preferences: { "academy.investment": "ambitious" } }
     });
 
     const dashboard = await getClubDashboard(importResult.clubId!);
@@ -308,7 +308,7 @@ describe("Club dashboard use case", () => {
         youngSeniorPlayerCount: 1,
         youthAgeThreshold: 23
       },
-      manual: {
+      settings: {
         academyInvestment: "ambitious"
       },
       derived: {
@@ -360,7 +360,7 @@ describe("Club dashboard use case", () => {
     await importPlayerSnapshot({ payload: second });
     await updateClubOperatingSettings({
       clubId: importResult.clubId!,
-      manual: { preferences: { "academy.investment": "ambitious" } }
+      settings: { preferences: { "academy.investment": "ambitious" } }
     });
 
     const dashboard = await getClubDashboard(importResult.clubId!);
@@ -481,15 +481,17 @@ describe("Club profile use cases", () => {
 
     const profile = await getClubProfile(club.id);
 
-    expect(profile.profile).toMatchObject({
+    expect(profile).toMatchObject({
       name: "River Plate Forever",
-      currency: null,
+      settings: {
+        currency: null
+      },
       season: 78,
       week: 4
     });
   });
 
-  it("updates manual assumptions and preferences separately from observed values", async () => {
+  it("updates settings assumptions and preferences separately from observed values", async () => {
     const club = await clubs.save({
       clubId: 1,
       country: 1,
@@ -500,7 +502,7 @@ describe("Club profile use cases", () => {
 
     const profile = await updateClubProfile({
       clubId: club.id,
-      manual: {
+      settings: {
         currency: "ARS",
         week: 6,
         assumptions: [{ key: "wage-growth", value: "Use conservative wage growth." }],
@@ -508,12 +510,11 @@ describe("Club profile use cases", () => {
       }
     });
 
-    expect(profile.observed.week).toBe(4);
-    expect(profile.manual.week).toBe(6);
-    expect(profile.profile.week).toBe(6);
-    expect(profile.profile.currency).toBe("ARS");
-    expect(profile.manual.assumptions[0]?.key).toBe("wage-growth");
-    expect(profile.manual.preferences[0]?.key).toBe("market-style");
+    expect(profile.week).toBe(4);
+    expect(profile.settings.week).toBe(6);
+    expect(profile.settings.currency).toBe("ARS");
+    expect(profile.settings.assumptions[0]?.key).toBe("wage-growth");
+    expect(profile.settings.preferences[0]?.key).toBe("market-style");
   });
 });
 

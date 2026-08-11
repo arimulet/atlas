@@ -1,7 +1,7 @@
 import {
   MongoClubRepository,
   type PersistedClub,
-  type PersistedClubManualRecord
+  type PersistedClubSettingsRecord
 } from "@atlas/database";
 import {
   ClubOperatingSettings,
@@ -48,16 +48,16 @@ export const updateClubOperatingSettings = async (
     throw new Error(`Club not found: ${input.clubId}`);
   }
 
-  const manual = validateManualOperatingSettings(input.manual);
+  const settings = validatesettingsOperatingSettings(input.settings);
   const nextPreferences =
-    input.manual.preferences === undefined
+    input.settings.preferences === undefined
       ? undefined
-      : mergeOperatingPreferenceRecords(club.manual.preferences, manual.preferences ?? {});
+      : mergeOperatingPreferenceRecords(club.settings.preferences, settings.preferences ?? {});
   const update = {
     clubId: input.clubId,
-    ...(input.manual.currency !== undefined ? { currency: manual.currency } : {}),
-    ...(input.manual.season !== undefined ? { season: manual.season } : {}),
-    ...(input.manual.week !== undefined ? { week: manual.week } : {}),
+    ...(input.settings.currency !== undefined ? { currency: settings.currency } : {}),
+    ...(input.settings.season !== undefined ? { season: settings.season } : {}),
+    ...(input.settings.week !== undefined ? { week: settings.week } : {}),
     ...(nextPreferences !== undefined ? { preferences: nextPreferences } : {})
   };
 
@@ -67,41 +67,41 @@ export const updateClubOperatingSettings = async (
 };
 
 export function buildClubOperatingSettings(club: PersistedClub): ClubOperatingSettings {
-  const manualPreferences = readOperatingPreferences(club.manual.preferences);
+  const settingsPreferences = readOperatingPreferences(club.settings.preferences);
 
   return {
     clubId: club.id,
     observed: {
-      season: club.observed.season,
-      week: club.observed.week
+      season: club.season,
+      week: club.week
     },
-    manual: {
-      currency: club.manual.currency,
-      season: club.manual.season,
-      week: club.manual.week,
-      preferences: manualPreferences
+    settings: {
+      currency: club.settings.currency,
+      season: club.settings.season ?? null,
+      week: club.settings.week ?? null,
+      preferences: settingsPreferences
     },
     effective: {
-      currency: club.manual.currency,
-      season: club.manual.season ?? club.observed.season,
-      week: club.manual.week ?? club.observed.week,
+      currency: club.settings.currency,
+      season: club.settings.season ?? club.season,
+      week: club.settings.week ?? club.week,
       preferences: {
         ...operatingPreferenceDefaults,
-        ...manualPreferences
+        ...settingsPreferences
       }
     }
   };
 }
 
-function validateManualOperatingSettings(
-  manual: UpdateClubOperatingSettingsInput["manual"]
+function validatesettingsOperatingSettings(
+  settings: UpdateClubOperatingSettingsInput["settings"]
 ): ValidatedManualOperatingSettingsUpdate {
   const validated: ValidatedManualOperatingSettingsUpdate = {};
 
-  if ("currency" in manual) validated.currency = validateCurrency(manual.currency);
-  if ("season" in manual) validated.season = validateSeason(manual.season);
-  if ("week" in manual) validated.week = validateWeek(manual.week);
-  if (manual.preferences) validated.preferences = validateOperatingPreferences(manual.preferences);
+  if ("currency" in settings) validated.currency = validateCurrency(settings.currency);
+  if ("season" in settings) validated.season = validateSeason(settings.season);
+  if ("week" in settings) validated.week = validateWeek(settings.week);
+  if (settings.preferences) validated.preferences = validateOperatingPreferences(settings.preferences);
 
   return validated;
 }
@@ -121,7 +121,7 @@ function validateOperatingPreferences(
 
       const options = preferenceOptions[key];
 
-      if (!options.includes(value as never)) {
+      if (!options.includes(value as OperatingPreferenceValue)) {
         throw new Error(`Invalid value for operating preference ${key}.`);
       }
 
@@ -131,7 +131,7 @@ function validateOperatingPreferences(
 }
 
 function readOperatingPreferences(
-  preferences: PersistedClubManualRecord[]
+  preferences: PersistedClubSettingsRecord[]
 ): Partial<Record<OperatingPreferenceKey, OperatingPreferenceValue>> {
   const result: Partial<Record<OperatingPreferenceKey, OperatingPreferenceValue>> = {};
 
@@ -142,8 +142,8 @@ function readOperatingPreferences(
 
     const value = preference.value;
 
-    if (preferenceOptions[preference.key].includes(value as never)) {
-      result[preference.key] = value as OperatingPreferenceValue;
+    if (preferenceOptions[preference.key as OperatingPreferenceKey].includes(value as OperatingPreferenceValue)) {
+      result[preference.key as OperatingPreferenceKey] = value as OperatingPreferenceValue;
     }
   }
 
@@ -151,7 +151,7 @@ function readOperatingPreferences(
 }
 
 function mergeOperatingPreferenceRecords(
-  existing: PersistedClubManualRecord[],
+  existing: PersistedClubSettingsRecord[],
   updates: Partial<Record<OperatingPreferenceKey, OperatingPreferenceValue | null>>
 ) {
   const operatingKeys = new Set(Object.keys(operatingPreferenceDefaults));

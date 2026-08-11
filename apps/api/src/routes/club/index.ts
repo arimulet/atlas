@@ -48,7 +48,7 @@ async function clubRoutes(server: FastifyInstance) {
     const { clubId } = request.params;
     const body = updateClubProfileBodySchema.parse(request.body);
 
-    const profile = await updateClubProfile({ clubId, manual: body.manual ?? {} });
+    const profile = await updateClubProfile({ clubId, settings: body.settings ?? {} });
 
     return profile;
   });
@@ -68,7 +68,7 @@ async function clubRoutes(server: FastifyInstance) {
 
       const operatingSettings = await updateClubOperatingSettings({
         clubId,
-        manual: body.manual ?? {}
+        settings: body.settings ?? {}
       });
 
       return operatingSettings;
