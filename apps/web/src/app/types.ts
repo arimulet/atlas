@@ -98,6 +98,12 @@ export interface ClubDashboard {
       season: number | null;
       week: number | null;
     };
+    training: {
+      GK: number | null;
+      DEF: number | null;
+      MID: number | null;
+      ATT: number | null;
+    } | null;
   };
   settings: {
     observed: {

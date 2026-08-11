@@ -3,6 +3,7 @@ import { PreferenceItem } from "@atlas/web/app/components/PreferenceItem";
 import { SourcedItem } from "@atlas/web/app/components/SourcedItem";
 import { OperatingSettingsPanelProps } from "./types";
 import { Section } from "../../../Section";
+import { formatTrainingPriority } from "@atlas/web/app/formatters";
 
 const preferenceLabels: Record<OperatingPreferenceKey, string> = {
   "economy.riskTolerance": "Economy risk",
@@ -48,7 +49,7 @@ export const OperatingSettingsPanel = ({ dashboard }: OperatingSettingsPanelProp
             key={key}
             label={preferenceLabels[key]}
             manual={dashboard.settings.settings.preferences[key]}
-            effective={dashboard.settings.effective.preferences[key]}
+            effective={key === "training.priority" ? formatTrainingPriority(Number(dashboard.settings.effective.preferences[key])) : dashboard.settings.effective.preferences[key]}
           />
         ))}
       </div>

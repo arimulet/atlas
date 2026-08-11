@@ -44,3 +44,18 @@ export function formatLabel(value: string): string {
     .map((part) => part[0]?.toUpperCase() + part.slice(1))
     .join(" ");
 }
+
+export function formatTrainingPriority(value: number): string {
+  if (value === null || value === undefined || Number.isNaN(value)) return "Not set";
+  const mapping: Record<number, string> = {
+    1: "Condicion",
+    2: "Porteria",
+    3: "Creacion",
+    4: "Pases",
+    5: "Tecnica",
+    6: "Defensa",
+    7: "Anotacion",
+    8: "Rapidez"
+  };
+  return mapping[value] || value.toString();
+}
