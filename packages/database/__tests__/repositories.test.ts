@@ -79,46 +79,21 @@ describe("Mongo repositories", () => {
       observedAt: new Date("2026-08-05T20:00:00.000Z")
     });
 
-    expect(club.observed).toMatchObject({
+    expect(club).toMatchObject({
       clubId: 1,
       name: "River Plate Forever",
       season: 78,
       week: 4,
       sourceType: "sokker-dom-export"
     });
-    expect(club.manual).toMatchObject({
-      name: null,
+    expect(club.settings).toMatchObject({
       currency: null,
       season: null,
       week: null,
       assumptions: [],
       preferences: []
     });
-    expect(club.profile).toMatchObject({
-      clubId: 1,
-      name: "River Plate Forever",
-      currency: null,
-      season: 78,
-      week: 4
-    });
-    expect(club.settings).toMatchObject({
-      observed: {
-        season: 78,
-        week: 4
-      },
-      manual: {
-        currency: null,
-        season: null,
-        week: null,
-        preferences: []
-      },
-      effective: {
-        currency: null,
-        season: 78,
-        week: 4,
-        preferences: []
-      }
-    });
+    // The settings assertions above replace this block.
   });
 
   it("updates manual club configuration without changing observed Sokker data", async () => {
@@ -131,35 +106,26 @@ describe("Mongo repositories", () => {
 
     const updated = await clubs.updateManualProfile({
       clubId: club.id,
-      name: "River Project",
       currency: "ARS",
       season: 79,
       assumptions: [{ key: "market-risk", value: "Keep liquidity buffer before buying." }],
       preferences: [{ key: "training-focus", value: "Prioritize playmaking trainees." }]
     });
 
-    expect(updated.observed).toMatchObject({
+    expect(updated).toMatchObject({
       clubId: 1,
       name: "River Plate Forever",
       season: 78,
       week: 4
     });
-    expect(updated.manual).toMatchObject({
-      name: "River Project",
+    expect(updated.settings).toMatchObject({
       currency: "ARS",
       season: 79,
       week: null
     });
-    expect(updated.manual.assumptions[0]).toMatchObject({
+    expect(updated.settings.assumptions[0]).toMatchObject({
       key: "market-risk",
       value: "Keep liquidity buffer before buying."
-    });
-    expect(updated.profile).toMatchObject({
-      clubId: 1,
-      name: "River Project",
-      currency: "ARS",
-      season: 79,
-      week: 4
     });
   });
 

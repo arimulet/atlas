@@ -40,7 +40,7 @@ describe("Squad economy use case", () => {
 
     await updateClubOperatingSettings({
       clubId: importResult.clubId!,
-      manual: {
+      settings: {
         currency: "ARS",
         preferences: { "economy.riskTolerance": "conservative" }
       }

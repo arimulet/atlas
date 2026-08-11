@@ -74,7 +74,7 @@ export const YouthPipelinePlanningPanel = ({
           <dl className="summary-grid">
             <SummaryItem
               label="academy.investment"
-              value={youthPipelinePlanning.manual.academyInvestment}
+              value={youthPipelinePlanning.settings.academyInvestment}
             />
             <SummaryItem label="Alcance" value="Plantel senior" />
           </dl>

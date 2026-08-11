@@ -95,7 +95,7 @@ export const getClubProfile = async (clubId: ClubId): Promise<PersistedClub> => 
 export const updateClubProfile = async (input: UpdateClubProfileInput): Promise<PersistedClub> => {
   return clubRepository.updateManualProfile({
     clubId: input.clubId,
-    ...validateManualProfileUpdate(input.manual)
+    ...validateManualProfileUpdate(input.settings)
   });
 };
 
@@ -165,7 +165,7 @@ function buildDevelopmentSummary(
       latestSnapshotDate: development.observed.latestSnapshotDate,
       playerCount: development.observed.players.length
     },
-    manual: {
+    settings: {
       trainingPriority: development.manual.trainingPriority
     },
     derived: counts,
@@ -267,7 +267,7 @@ function buildMarketSummary(
       playerCount: marketPlanning.observed.coverage.playerCount,
       playersWithStableIdentity: marketPlanning.observed.coverage.playersWithStableIdentity
     },
-    manual: {
+    settings: {
       marketStrategy: marketPlanning.manual.marketStrategy
     },
     derived,
@@ -356,7 +356,7 @@ function buildYouthPipelineSummary(
       youngSeniorPlayerCount: youthPipeline.observed.coverage.youngSeniorPlayerCount,
       youthAgeThreshold: youthPipeline.observed.youthAgeThreshold
     },
-    manual: {
+    settings: {
       academyInvestment: youthPipeline.manual.academyInvestment
     },
     derived,

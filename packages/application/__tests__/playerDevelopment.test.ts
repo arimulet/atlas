@@ -96,7 +96,7 @@ describe("Player development use case", () => {
     await importPlayerSnapshot({ payload: second });
     await updateClubOperatingSettings({
       clubId: importResult.clubId!,
-      manual: { preferences: { "training.priority": "development" } }
+      settings: { preferences: { "training.priority": "development" } }
     });
 
     const development = await getPlayerDevelopment(importResult.clubId!);
@@ -338,7 +338,7 @@ describe("Youth pipeline planning use case", () => {
     await importPlayerSnapshot({ payload: second });
     await updateClubOperatingSettings({
       clubId: importResult.clubId!,
-      manual: { preferences: { "academy.investment": "ambitious" } }
+      settings: { preferences: { "academy.investment": "ambitious" } }
     });
 
     const pipeline = await getYouthPipelinePlanning(importResult.clubId!);

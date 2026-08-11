@@ -18,7 +18,7 @@ export const OperatingSettingsPanel = ({ dashboard }: OperatingSettingsPanelProp
         <dl className="source-list">
           <SourcedItem
             label="Currency"
-            value={dashboard.settings.manual.currency}
+            value={dashboard.settings.settings.currency}
             source="manual"
           />
           <SourcedItem
@@ -47,7 +47,7 @@ export const OperatingSettingsPanel = ({ dashboard }: OperatingSettingsPanelProp
           <PreferenceItem
             key={key}
             label={preferenceLabels[key]}
-            manual={dashboard.settings.manual.preferences[key]}
+            manual={dashboard.settings.settings.preferences[key]}
             effective={dashboard.settings.effective.preferences[key]}
           />
         ))}

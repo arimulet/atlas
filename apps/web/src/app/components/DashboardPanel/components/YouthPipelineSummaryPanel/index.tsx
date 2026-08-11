@@ -40,7 +40,7 @@ export const YouthPipelineSummaryPanel = ({
           type="observed"
           label={`observado: edad <= ${summary.observed.youthAgeThreshold} en plantel senior`}
         />
-        <TraceKind type="manual" label={`manual: ${summary.manual.academyInvestment}`} />
+        <TraceKind type="manual" label={`manual: ${summary.settings.academyInvestment}`} />
         <TraceKind type="derived" label="derivado: clasificacion senior" />
         <TraceKind type="inferred" label="inferido: senal prudente" />
       </div>

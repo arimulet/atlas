@@ -72,7 +72,7 @@ export function SquadMarketPlanningPanel({
           <dl className="summary-grid">
             <SummaryItem
               label="market.strategy"
-              value={squadMarketPlanning.manual.marketStrategy}
+              value={squadMarketPlanning.settings.marketStrategy}
             />
             <SummaryItem label="Alcance" value="Plantel propio" />
           </dl>
