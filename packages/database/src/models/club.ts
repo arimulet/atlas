@@ -30,7 +30,15 @@ const clubSchema = new Schema(
       season: { type: Number, default: null },
       week: { type: Number, default: null },
       assumptions: { type: [manualRecordSchema], default: [] },
-      preferences: { type: [manualRecordSchema], default: [] }
+      preferences: { 
+        type: [manualRecordSchema], 
+        default: () => [
+          { key: "economy.riskTolerance", value: "balanced", updatedAt: new Date() },
+          { key: "training.priority", value: "balanced", updatedAt: new Date() },
+          { key: "academy.investment", value: "balanced", updatedAt: new Date() },
+          { key: "market.strategy", value: "balanced", updatedAt: new Date() }
+        ] 
+      }
     }
   },
   { timestamps: true }

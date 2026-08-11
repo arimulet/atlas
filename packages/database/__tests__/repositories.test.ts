@@ -91,7 +91,12 @@ describe("Mongo repositories", () => {
       season: null,
       week: null,
       assumptions: [],
-      preferences: []
+      preferences: [
+        { key: "economy.riskTolerance", value: "balanced" },
+        { key: "training.priority", value: "balanced" },
+        { key: "academy.investment", value: "balanced" },
+        { key: "market.strategy", value: "balanced" }
+      ]
     });
     // The settings assertions above replace this block.
   });
