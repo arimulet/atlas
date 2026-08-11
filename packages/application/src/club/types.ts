@@ -93,7 +93,7 @@ export interface ClubDashboardDevelopmentSummary {
 }
 
 export interface ClubDashboardDevelopmentPlayer {
-  playerId: string | null;
+  playerId: number | null;
   name: string;
   signal: FindingType;
   severity: Severity;
@@ -126,7 +126,7 @@ export interface ClubDashboardMarketSummary {
 }
 
 export interface ClubDashboardMarketPlayer {
-  playerId: string | null;
+  playerId: number | null;
   name: string;
   signal: MarketPlanningCategory;
   severity: Severity;
@@ -161,7 +161,7 @@ export interface ClubDashboardYouthPipelineSummary {
 }
 
 export interface ClubDashboardYouthPipelinePlayer {
-  playerId: string | null;
+  playerId: number | null;
   name: string;
   signal: Category;
   severity: Severity;

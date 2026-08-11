@@ -34,18 +34,12 @@ export const getRealYouthAcademyPlanning = async (
 
   const warnings: YouthAcademyWarning[] = [];
   const observedPlayers: YouthAcademyObservedPlayer[] = latest.players.map((p) => {
-    let weeksInAcademy: number | null = null;
-    
-    if (p.initialWeeksRemaining !== null && p.weeksRemaining !== null) {
-      weeksInAcademy = Math.max(1, p.initialWeeksRemaining - p.weeksRemaining + 1);
-    }
-    
     return {
       id: p.id,
-      externalId: p.externalId,
+      playerId: p.playerId,
       name: p.name,
       age: p.age,
-      weeksInAcademy,
+      initialWeeksRemaining: p.initialWeeksRemaining,
       weeksRemaining: p.weeksRemaining,
       estimatedLevel: p.estimatedLevel,
       status: p.status
@@ -148,12 +142,17 @@ function classifyYouthPlayer(player: YouthAcademyObservedPlayer): RealYouthAcade
     { kind: "observed", label: "Edad", value: player.age }
   ];
 
-  if (player.weeksInAcademy !== null) {
-    evidence.push({ kind: "observed", label: "Semanas en escuela", value: player.weeksInAcademy });
-  }
-
   if (player.weeksRemaining !== null) {
     evidence.push({ kind: "observed", label: "Semanas restantes", value: player.weeksRemaining });
+  }
+
+  const weeksInAcademy =
+    player.initialWeeksRemaining !== null && player.weeksRemaining !== null
+      ? player.initialWeeksRemaining - player.weeksRemaining + 1
+      : null;
+
+  if (weeksInAcademy !== null) {
+    evidence.push({ kind: "derived", label: "Semanas en academia", value: weeksInAcademy });
   }
 
   if (player.estimatedLevel) {
@@ -204,16 +203,16 @@ function classifyYouthPlayer(player: YouthAcademyObservedPlayer): RealYouthAcade
       message: "Prospecto destacado con alto talento estimado.",
       evidence
     });
-  } else if (player.weeksInAcademy !== null && player.weeksInAcademy >= 16 && !isHigh) {
+  } else if (weeksInAcademy !== null && weeksInAcademy >= 16 && !isHigh) {
     category = "stagnation_risk";
     severity = "medium";
     confidence = "medium";
-    rationale = "El juvenil acumula 16 o mas semanas en la escuela con nivel estimado modesto o estancado.";
+    rationale = "Juvenil con permanencia prolongada en academia y nivel estimado no alto.";
     signals.push({
       code: "youth_stagnation_risk",
-      severity: "medium",
-      confidence: "medium",
-      message: "Riesgo de estancamiento en la escuela juvenil.",
+      severity,
+      confidence,
+      message: "Riesgo de estancamiento por permanencia prolongada sin nivel alto.",
       evidence
     });
   } else if (player.weeksRemaining === null || !player.estimatedLevel) {
@@ -235,11 +234,12 @@ function classifyYouthPlayer(player: YouthAcademyObservedPlayer): RealYouthAcade
 
   return {
     id: player.id,
-    externalId: player.externalId,
+    playerId: player.playerId,
     name: player.name,
     age: player.age,
-    weeksInAcademy: player.weeksInAcademy,
+    initialWeeksRemaining: player.initialWeeksRemaining,
     weeksRemaining: player.weeksRemaining,
+    weeksInAcademy,
     projectedPromotionAge,
     estimatedLevel: player.estimatedLevel,
     status: player.status,

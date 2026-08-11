@@ -23,7 +23,7 @@
   },
   "players": [
     {
-      "externalId": "1003",
+      "playerId": 1003,
       "name": "Lucas Moreira",
       "age": 20,
       "wage": {

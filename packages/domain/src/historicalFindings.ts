@@ -30,7 +30,7 @@ export interface HistoricalFinding {
   subject:
     | {
         kind: "player";
-        externalId: string;
+        playerId: number;
         playerName: string;
       }
     | {
@@ -98,7 +98,7 @@ export function generateHistoricalFindings(
 
   const playerSeries = buildPlayerSeries(orderedSnapshots);
   const findings = trends.players.flatMap((trend) =>
-    generatePlayerFindings(trend, playerSeries.get(trend.identity.externalId) ?? [], period)
+    generatePlayerFindings(trend, playerSeries.get(trend.identity.playerId) ?? [], period)
   );
   const squadFinding = generateSquadFinding(trends, period);
 
@@ -247,7 +247,7 @@ function playerFinding(
     confidence: confidenceValue,
     subject: {
       kind: "player",
-      externalId: trend.identity.externalId,
+      playerId: trend.identity.playerId,
       playerName: trend.playerName
     },
     evidence: findingEvidence,
@@ -291,15 +291,15 @@ interface PlayerSeriesPoint {
   skills: Required<SkillSet>;
 }
 
-function buildPlayerSeries(snapshots: SnapshotComparisonSnapshot[]): Map<string, PlayerSeriesPoint[]> {
-  const series = new Map<string, PlayerSeriesPoint[]>();
+function buildPlayerSeries(snapshots: SnapshotComparisonSnapshot[]): Map<number, PlayerSeriesPoint[]> {
+  const series = new Map<number, PlayerSeriesPoint[]>();
 
   for (const snapshot of snapshots) {
     const matchable = matchablePlayers(snapshot.players);
 
-    for (const [externalId, player] of matchable) {
-      series.set(externalId, [
-        ...(series.get(externalId) ?? []),
+    for (const [playerId, player] of matchable) {
+      series.set(playerId, [
+        ...(series.get(playerId) ?? []),
         { estimatedValue: player.estimatedValue.amount, skills: player.skills }
       ]);
     }
@@ -308,19 +308,19 @@ function buildPlayerSeries(snapshots: SnapshotComparisonSnapshot[]): Map<string,
   return series;
 }
 
-function matchablePlayers(players: SnapshotComparisonPlayer[]): Map<string, SnapshotComparisonPlayer> {
-  const byExternalId = new Map<string, SnapshotComparisonPlayer[]>();
+function matchablePlayers(players: SnapshotComparisonPlayer[]): Map<number, SnapshotComparisonPlayer> {
+  const byPlayerId = new Map<number, SnapshotComparisonPlayer[]>();
 
   for (const player of players) {
-    if (player.externalId) {
-      byExternalId.set(player.externalId, [...(byExternalId.get(player.externalId) ?? []), player]);
+    if (player.playerId) {
+      byPlayerId.set(player.playerId, [...(byPlayerId.get(player.playerId) ?? []), player]);
     }
   }
 
   return new Map(
-    [...byExternalId.entries()]
+    [...byPlayerId.entries()]
       .filter(([, playersWithIdentity]) => playersWithIdentity.length === 1)
-      .map(([externalId, playersWithIdentity]) => [externalId, playersWithIdentity[0]!])
+      .map(([playerId, playersWithIdentity]) => [playerId, playersWithIdentity[0]!])
   );
 }
 

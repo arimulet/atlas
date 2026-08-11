@@ -14,7 +14,7 @@ describe("generateHistoricalFindings", () => {
         type: "player_sustained_asset_appreciation",
         severity: "info",
         confidence: "high",
-        subject: { kind: "player", externalId: "p-1", playerName: "Tomas Alvarez" },
+        subject: { kind: "player", playerId: 1001, playerName: "Tomas Alvarez" },
         period: {
           fromSnapshotId: "s-1",
           toSnapshotId: "s-3",
@@ -93,8 +93,8 @@ describe("generateHistoricalFindings", () => {
   it("does not generate findings when data is insufficient or player identity is ambiguous", () => {
     const singleSnapshot = generateHistoricalFindings([snapshot({ id: "s-1" })]);
     const ambiguous = generateHistoricalFindings([
-      snapshot({ id: "s-1", externalId: null, estimatedValue: 400000 }),
-      snapshot({ id: "s-2", externalId: null, estimatedValue: 500000 })
+      snapshot({ id: "s-1", playerId: null, estimatedValue: 400000 }),
+      snapshot({ id: "s-2", playerId: null, estimatedValue: 500000 })
     ]);
 
     expect(singleSnapshot.findings).toEqual([]);
@@ -109,7 +109,7 @@ function snapshot(overrides: {
   id?: string;
   clubId?: string;
   snapshotDate?: string;
-  externalId?: string | null;
+  playerId?: number | null;
   wage?: number;
   estimatedValue?: number;
   pace?: number | null;
@@ -121,8 +121,7 @@ function snapshot(overrides: {
     players: [
       {
         id: `${overrides.id ?? "s-1"}-player-1`,
-        playerId: "player-1",
-        externalId: overrides.externalId === undefined ? "p-1" : overrides.externalId,
+        playerId: overrides.playerId === undefined ? 1001 : overrides.playerId,
         name: "Tomas Alvarez",
         age: 24,
         wage: { amount: overrides.wage ?? 12000, currency: "ARS" },

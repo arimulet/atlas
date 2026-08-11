@@ -49,11 +49,12 @@ describe("Mongo repositories", () => {
     const club = await clubs.save({ clubId: 1, country: 1, name: "River Plate Forever", currency: { name: "ARS", rate: 100 } });
     const player = await players.resolveHistoricalIdentity({
       playerId: 1001,
+      clubId: club.clubId,
       name: "Tomas Alvarez"
     });
 
     const saved = await snapshots.save(
-      buildSnapshotInput({ clubId: club.id, playerId: player.id })
+      buildSnapshotInput({ clubId: club.id, playerId: player.playerId })
     );
 
     expect(saved.id).toEqual(expect.any(String));
@@ -61,8 +62,7 @@ describe("Mongo repositories", () => {
     expect(saved.schemaVersion).toBe("atlas.player-snapshot.v0");
     expect(saved.players).toHaveLength(1);
     expect(saved.players[0]).toMatchObject({
-      playerId: player.id,
-      externalId: "1001",
+      playerId: player.playerId,
       name: "Tomas Alvarez",
       wage: { amount: 12000, currency: "ARS" }
     });
@@ -141,10 +141,11 @@ describe("Mongo repositories", () => {
     const club = await clubs.save({ clubId: 1, country: 1, name: "River Plate Forever", currency: { name: "ARS", rate: 100 } });
     const player = await players.resolveHistoricalIdentity({
       playerId: 1001,
+      clubId: club.clubId,
       name: "Tomas Alvarez"
     });
     const saved = await snapshots.save(
-      buildSnapshotInput({ clubId: club.id, playerId: player.id })
+      buildSnapshotInput({ clubId: club.id, playerId: player.playerId })
     );
 
     const found = await snapshots.findById(saved.id);
@@ -158,18 +159,19 @@ describe("Mongo repositories", () => {
     const otherClub = await clubs.save({ clubId: 2, country: 1, name: "Atlas Wanderers", currency: { name: "ARS", rate: 100 } });
     const player = await players.resolveHistoricalIdentity({
       playerId: 1001,
+      clubId: club.clubId,
       name: "Tomas Alvarez"
     });
 
     await snapshots.save(
       buildSnapshotInput({
         clubId: club.id,
-        playerId: player.id,
+        playerId: player.playerId,
         snapshotDate: new Date("2026-08-06T00:00:00.000Z")
       })
     );
-    await snapshots.save(buildSnapshotInput({ clubId: club.id, playerId: player.id }));
-    await snapshots.save(buildSnapshotInput({ clubId: otherClub.id, playerId: player.id }));
+    await snapshots.save(buildSnapshotInput({ clubId: club.id, playerId: player.playerId }));
+    await snapshots.save(buildSnapshotInput({ clubId: otherClub.id, playerId: player.playerId }));
 
     const list = await snapshots.listByClub(club.id);
 
@@ -184,12 +186,13 @@ describe("Mongo repositories", () => {
     const club = await clubs.save({ clubId: 1, country: 1, name: "River Plate Forever", currency: { name: "ARS", rate: 100 } });
     const player = await players.resolveHistoricalIdentity({
       playerId: 1001,
+      clubId: club.clubId,
       name: "Tomas Alvarez"
     });
     const snapshotDate = new Date("2026-08-05T00:00:00.000Z");
 
     const saved = await snapshots.save(
-      buildSnapshotInput({ clubId: club.id, playerId: player.id, snapshotDate })
+      buildSnapshotInput({ clubId: club.id, playerId: player.playerId, snapshotDate })
     );
 
     const found = await snapshots.findByClubAndDate(club.id, snapshotDate);
@@ -200,10 +203,12 @@ describe("Mongo repositories", () => {
   it("reuses a player identity across snapshots when playerId matches", async () => {
     const first = await players.resolveHistoricalIdentity({
       playerId: 1001,
+      clubId: 1,
       name: "Tomas Alvarez"
     });
     const second = await players.resolveHistoricalIdentity({
       playerId: 1001,
+      clubId: 1,
       name: "T. Alvarez"
     });
 
@@ -211,8 +216,33 @@ describe("Mongo repositories", () => {
     expect(await PlayerModel.countDocuments()).toBe(1);
   });
 
+  it("keeps player identities separated by clubId", async () => {
+    const first = await players.resolveHistoricalIdentity({
+      playerId: 1001,
+      clubId: 1,
+      name: "Tomas Alvarez"
+    });
+    const second = await players.resolveHistoricalIdentity({
+      playerId: 1001,
+      clubId: 2,
+      name: "Tomas Alvarez"
+    });
+
+    expect(second.id).not.toBe(first.id);
+    expect(second.clubId).toBe(2);
+    expect(await PlayerModel.countDocuments()).toBe(2);
+  });
+
   it("requires playerId when creating a player", async () => {
-    await expect(PlayerModel.create({ name: "Tomas Alvarez" })).rejects.toThrow(/playerId/);
+    await expect(PlayerModel.create({ clubId: 1, name: "Tomas Alvarez" })).rejects.toThrow(
+      /playerId/
+    );
+  });
+
+  it("requires clubId when creating a player", async () => {
+    await expect(PlayerModel.create({ playerId: 1001, name: "Tomas Alvarez" })).rejects.toThrow(
+      /clubId/
+    );
   });
 
   it("persists an import event with warnings", async () => {
@@ -257,10 +287,9 @@ describe("Mongo repositories", () => {
     expect(saved.weeklyInvestment).toEqual({ amount: 15000, currency: "ARS" });
     expect(saved.players).toHaveLength(1);
     expect(saved.players[0]).toMatchObject({
-      externalId: "youth-101",
+      playerId: 5001,
       name: "Matias Cantero",
       age: 16,
-      weeksInAcademy: 12,
       weeksRemaining: 4,
       estimatedLevel: "good",
       status: "in_academy"
@@ -281,7 +310,7 @@ describe("Mongo repositories", () => {
 
 function buildSnapshotInput(overrides: {
   clubId: string;
-  playerId: string;
+  playerId: number;
   snapshotDate?: Date;
 }): SaveSnapshotInput {
   return {
@@ -300,7 +329,6 @@ function buildSnapshotInput(overrides: {
     players: [
       {
         playerId: overrides.playerId,
-        externalId: "1001",
         name: "Tomas Alvarez",
         age: 22,
         wage: { amount: 12000, currency: "ARS" },
@@ -344,10 +372,9 @@ function buildYouthSnapshotInput(overrides: {
     weeklyInvestment: { amount: 15000, currency: "ARS" },
     players: [
       {
-        externalId: "youth-101",
+        playerId: 5001,
         name: "Matias Cantero",
         age: 16,
-        weeksInAcademy: 12,
         initialWeeksRemaining: null,
         weeksRemaining: 4,
         estimatedLevel: "good",

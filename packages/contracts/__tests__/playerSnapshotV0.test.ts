@@ -30,7 +30,6 @@ describe("atlas.player-snapshot.v0", () => {
     expect(result.status).toBe("accepted-with-warnings");
     expect(result.errors).toEqual([]);
     expect(result.warnings.length).toBeGreaterThan(0);
-    expect(result.warnings.map((warning) => warning.path)).toContain("players.0.externalId");
     expect(result.warnings.map((warning) => warning.path)).toContain("players.0.skills.technique");
   });
 });

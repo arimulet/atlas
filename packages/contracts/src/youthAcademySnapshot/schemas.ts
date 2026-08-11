@@ -14,10 +14,9 @@ export const moneySchema = z.object({
 export const youthPlayerStatusSchema = z.enum(["in_academy", "ready_for_promotion", "promoted"]);
 
 export const youthPlayerItemSchema = z.object({
-  externalId: nullableString,
+  playerId: z.number().int().positive(),
   name: z.string().min(1),
   age: z.number().int().positive(),
-  weeksInAcademy: z.number().int().nonnegative().nullable().optional(),
   weeksRemaining: z.number().int().nonnegative().nullable().optional(),
   estimatedLevel: z
     .union([z.string().min(1), z.number().finite()])

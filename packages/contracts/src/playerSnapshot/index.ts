@@ -52,18 +52,6 @@ function collectWarnings(snapshot: PlayerSnapshotV0): ImportIssue[] {
   snapshot.players.forEach((player, index) => {
     const prefix = `players.${index}`;
 
-    if (!player.externalId) {
-      warnings.push({
-        path: `${prefix}.externalId`,
-        message: "Missing externalId; player identity may require manual review."
-      });
-    } else if (!/^\d+$/.test(player.externalId)) {
-      warnings.push({
-        path: `${prefix}.externalId`,
-        message: "Invalid playerId; expected a positive numeric identifier."
-      });
-    }
-
     if (player.form === undefined || player.form === null) {
       warnings.push({
         path: `${prefix}.form`,

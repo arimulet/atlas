@@ -34,11 +34,10 @@ export class MongoYouthSnapshotRepository {
       sourceVersion: input.sourceVersion ?? null,
       weeklyInvestment: input.weeklyInvestment ?? null,
       players: input.players.map((player) => ({
-        externalId: player.externalId,
+        playerId: player.playerId,
         name: player.name,
         age: player.age,
         initialWeeksRemaining: player.initialWeeksRemaining ?? null,
-        weeksInAcademy: player.weeksInAcademy ?? null,
         weeksRemaining: player.weeksRemaining ?? null,
         estimatedLevel: player.estimatedLevel ?? null,
         status: player.status ?? "in_academy"
@@ -95,11 +94,10 @@ function mapYouthSnapshot(snapshot: {
   } | null;
   players: Array<{
     _id: Types.ObjectId;
-    externalId?: string | null;
+    playerId: number;
     name: string;
     age: number;
     initialWeeksRemaining?: number | null;
-    weeksInAcademy?: number | null;
     weeksRemaining?: number | null;
     estimatedLevel?: string | null;
     status?: "in_academy" | "ready_for_promotion" | "promoted";
@@ -132,11 +130,10 @@ function mapYouthSnapshot(snapshot: {
       : null,
     players: snapshot.players.map((player) => ({
       id: player._id.toString(),
-      externalId: player.externalId ?? null,
+      playerId: player.playerId,
       name: player.name,
       age: player.age,
       initialWeeksRemaining: player.initialWeeksRemaining ?? null,
-      weeksInAcademy: player.weeksInAcademy ?? null,
       weeksRemaining: player.weeksRemaining ?? null,
       estimatedLevel: player.estimatedLevel ?? null,
       status: player.status ?? "in_academy"

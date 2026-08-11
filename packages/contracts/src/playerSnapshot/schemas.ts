@@ -49,7 +49,7 @@ export const playerSnapshotV0Schema = z.object({
   }),
   players: z.array(
     z.object({
-      externalId: nullableString,
+      playerId: z.number().int().positive(),
       name: z.string().min(1),
       age: z.number().int().positive(),
       wage: moneySchema,

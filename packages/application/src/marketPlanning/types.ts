@@ -28,8 +28,7 @@ export interface SquadMarketPlanning {
 }
 
 export interface SquadMarketObservedPlayer {
-  playerId: string | null;
-  externalId: string | null;
+  playerId: number;
   snapshotPlayerId: string;
   name: string;
   age: number;
@@ -42,7 +41,7 @@ export interface SquadMarketObservedPlayer {
 }
 
 export interface SquadMarketPlayerPlan {
-  playerId: string | null;
+  playerId: number;
   snapshotPlayerId: string;
   name: string;
   age: number;

@@ -51,7 +51,6 @@ function mapPlayer(player: PersistedPlayerSnapshot): SnapshotComparisonPlayer {
   return {
     id: player.id,
     playerId: player.playerId,
-    externalId: player.externalId,
     name: player.name,
     age: player.age,
     wage: player.wage,
