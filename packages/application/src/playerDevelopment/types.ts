@@ -20,8 +20,7 @@ export interface PlayerDevelopment {
 }
 
 export interface PlayerDevelopmentObservedPlayer {
-  playerId: string | null;
-  externalId: string | null;
+  playerId: number;
   snapshotPlayerId: string;
   name: string;
   age: number;
@@ -31,8 +30,7 @@ export interface PlayerDevelopmentObservedPlayer {
 }
 
 export interface PlayerDevelopmentPlayerSummary {
-  playerId: string | null;
-  externalId: string | null;
+  playerId: number;
   name: string;
   age: number;
   role: {
@@ -127,8 +125,7 @@ export interface YouthPipelinePlanning {
 }
 
 export interface YouthPipelineObservedPlayer {
-  playerId: string | null;
-  externalId: string | null;
+  playerId: number;
   snapshotPlayerId: string;
   name: string;
   age: number;
@@ -142,7 +139,7 @@ export interface YouthPipelineObservedPlayer {
 }
 
 export interface YouthPipelinePlayerPlan {
-  playerId?: string;
+  playerId: number;
   snapshotPlayerId: string;
   name: string;
   age: number;

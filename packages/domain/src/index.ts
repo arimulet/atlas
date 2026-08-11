@@ -44,7 +44,7 @@ export interface Player {
 
 export interface PlayerSnapshot {
   id: string;
-  playerId: string;
+  playerId: number;
   snapshotId: string;
   age: number;
   wage: Money;

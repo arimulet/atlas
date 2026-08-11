@@ -32,7 +32,7 @@ describe("calculateHistoricalTrends", () => {
     expect(trends.squad.wageTotal.evidence.deltaAbsolute).toBe(3000);
     expect(trends.squad.mainVariations).toContainEqual(
       expect.objectContaining({
-        externalId: "p-1",
+        playerId: 1001,
         metric: "estimatedValue",
         deltaAbsolute: 50000,
         direction: "up"
@@ -65,8 +65,8 @@ describe("calculateHistoricalTrends", () => {
 
   it("does not merge players with ambiguous identities", () => {
     const trends = calculateHistoricalTrends([
-      snapshot({ id: "s-1", player: { externalId: null } }),
-      snapshot({ id: "s-2", player: { externalId: null, wage: 15000 } })
+      snapshot({ id: "s-1", player: { playerId: null } }),
+      snapshot({ id: "s-2", player: { playerId: null, wage: 15000 } })
     ]);
 
     expect(trends.players).toHaveLength(0);
@@ -95,6 +95,7 @@ function snapshot(overrides: {
   snapshotDate?: string;
   player?: {
     externalId?: string | null;
+    playerId?: number | null;
     wage?: number;
     estimatedValue?: number;
     pace?: number | null;
@@ -107,8 +108,7 @@ function snapshot(overrides: {
     players: [
       {
         id: `${overrides.id ?? "s-1"}-player-1`,
-        playerId: "player-1",
-        externalId: overrides.player?.externalId === undefined ? "p-1" : overrides.player.externalId,
+        playerId: overrides.player?.playerId === undefined ? 1001 : overrides.player.playerId,
         name: "Tomas Alvarez",
         age: 24,
         wage: { amount: overrides.player?.wage ?? 12000, currency: "ARS" },

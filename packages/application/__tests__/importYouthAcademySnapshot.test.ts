@@ -61,7 +61,7 @@ describe("ImportYouthAcademySnapshot", () => {
     expect(snapshot?.weeklyInvestment).toMatchObject({ amount: 15000, currency: "ARS" });
     expect(snapshot?.players).toHaveLength(1);
     expect(snapshot?.players[0]).toMatchObject({
-      externalId: "youth-101",
+      playerId: 5001,
       name: "Matias Cantero",
       age: 16,
       initialWeeksRemaining: 4,
@@ -101,16 +101,13 @@ describe("ImportYouthAcademySnapshot", () => {
     );
   });
 
-  it("accepts youth player without externalId as a non-blocking warning", async () => {
+  it("rejects youth player without playerId", async () => {
     const result = await importYouthAcademySnapshot({ payload: missingExternalIdSnapshot });
 
-    expect(result.status).toBe("accepted-with-warnings");
-    expect(result.errors).toEqual([]);
-    expect(result.warnings.map((w) => w.path)).toContain("academy.players.0.externalId");
-
-    const snapshot = await YouthSnapshotModel.findById(result.snapshotId).lean();
-    expect(snapshot?.players[0]?.externalId).toBeNull();
-    expect(snapshot?.players[0]?.name).toBe("Pedro Gomez");
+    expect(result.status).toBe("rejected");
+    expect(result.snapshotId).toBeNull();
+    expect(result.errors.map((error) => error.path)).toContain("academy.players.0.playerId");
+    expect(await YouthSnapshotModel.countDocuments()).toBe(0);
   });
 
   it("associates successive youth snapshots to the same club", async () => {

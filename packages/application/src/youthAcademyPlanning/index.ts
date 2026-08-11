@@ -39,6 +39,7 @@ export const getRealYouthAcademyPlanning = async (
       playerId: p.playerId,
       name: p.name,
       age: p.age,
+      initialWeeksRemaining: p.initialWeeksRemaining,
       weeksRemaining: p.weeksRemaining,
       estimatedLevel: p.estimatedLevel,
       status: p.status
@@ -145,6 +146,15 @@ function classifyYouthPlayer(player: YouthAcademyObservedPlayer): RealYouthAcade
     evidence.push({ kind: "observed", label: "Semanas restantes", value: player.weeksRemaining });
   }
 
+  const weeksInAcademy =
+    player.initialWeeksRemaining !== null && player.weeksRemaining !== null
+      ? player.initialWeeksRemaining - player.weeksRemaining + 1
+      : null;
+
+  if (weeksInAcademy !== null) {
+    evidence.push({ kind: "derived", label: "Semanas en academia", value: weeksInAcademy });
+  }
+
   if (player.estimatedLevel) {
     evidence.push({ kind: "observed", label: "Nivel estimado", value: player.estimatedLevel });
   }
@@ -193,6 +203,18 @@ function classifyYouthPlayer(player: YouthAcademyObservedPlayer): RealYouthAcade
       message: "Prospecto destacado con alto talento estimado.",
       evidence
     });
+  } else if (weeksInAcademy !== null && weeksInAcademy >= 16 && !isHigh) {
+    category = "stagnation_risk";
+    severity = "medium";
+    confidence = "medium";
+    rationale = "Juvenil con permanencia prolongada en academia y nivel estimado no alto.";
+    signals.push({
+      code: "youth_stagnation_risk",
+      severity,
+      confidence,
+      message: "Riesgo de estancamiento por permanencia prolongada sin nivel alto.",
+      evidence
+    });
   } else if (player.weeksRemaining === null || !player.estimatedLevel) {
     if (player.weeksRemaining === null) {
       warnings.push({
@@ -215,7 +237,9 @@ function classifyYouthPlayer(player: YouthAcademyObservedPlayer): RealYouthAcade
     playerId: player.playerId,
     name: player.name,
     age: player.age,
+    initialWeeksRemaining: player.initialWeeksRemaining,
     weeksRemaining: player.weeksRemaining,
+    weeksInAcademy,
     projectedPromotionAge,
     estimatedLevel: player.estimatedLevel,
     status: player.status,

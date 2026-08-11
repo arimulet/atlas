@@ -2,8 +2,7 @@ import type { Money, SkillSet } from "./index.js";
 
 export interface SnapshotComparisonPlayer {
   id: string;
-  playerId: string | null;
-  externalId: string | null;
+  playerId: number | null;
   name: string;
   age: number;
   wage: Money;
@@ -36,7 +35,7 @@ export interface SkillChange extends NumericChange {
 export interface MatchedPlayerComparison {
   status: "matched";
   identity: {
-    externalId: string;
+    playerId: number;
   };
   basePlayer: SnapshotComparisonPlayer;
   targetPlayer: SnapshotComparisonPlayer;
@@ -110,22 +109,22 @@ export function compareSnapshots(
   const matchedPlayers: MatchedPlayerComparison[] = [];
   const absentPlayers: SnapshotComparisonPlayer[] = [];
   const newPlayers: SnapshotComparisonPlayer[] = [];
-  const matchedTargetExternalIds = new Set<string>();
+  const matchedTargetPlayerIds = new Set<number>();
 
-  for (const [externalId, basePlayer] of baseIndex.matchable) {
-    const targetPlayer = targetIndex.matchable.get(externalId);
+  for (const [playerId, basePlayer] of baseIndex.matchable) {
+    const targetPlayer = targetIndex.matchable.get(playerId);
 
     if (!targetPlayer) {
       absentPlayers.push(basePlayer);
       continue;
     }
 
-    matchedTargetExternalIds.add(externalId);
-    matchedPlayers.push(comparePlayer(externalId, basePlayer, targetPlayer));
+    matchedTargetPlayerIds.add(playerId);
+    matchedPlayers.push(comparePlayer(playerId, basePlayer, targetPlayer));
   }
 
-  for (const [externalId, targetPlayer] of targetIndex.matchable) {
-    if (!matchedTargetExternalIds.has(externalId)) {
+  for (const [playerId, targetPlayer] of targetIndex.matchable) {
+    if (!matchedTargetPlayerIds.has(playerId)) {
       newPlayers.push(targetPlayer);
     }
   }
@@ -160,32 +159,32 @@ export function compareSnapshots(
 }
 
 function indexByStableIdentity(players: SnapshotComparisonPlayer[]): {
-  matchable: Map<string, SnapshotComparisonPlayer>;
+  matchable: Map<number, SnapshotComparisonPlayer>;
   ambiguous: Array<{
     player: SnapshotComparisonPlayer;
     reason: SnapshotComparisonAmbiguousPlayer["reason"];
   }>;
 } {
-  const byExternalId = new Map<string, SnapshotComparisonPlayer[]>();
+  const byPlayerId = new Map<number, SnapshotComparisonPlayer[]>();
   const ambiguous: Array<{
     player: SnapshotComparisonPlayer;
     reason: SnapshotComparisonAmbiguousPlayer["reason"];
   }> = [];
 
   for (const player of players) {
-    if (!player.externalId) {
+    if (!player.playerId) {
       ambiguous.push({ player, reason: "missing-stable-identity" });
       continue;
     }
 
-    byExternalId.set(player.externalId, [...(byExternalId.get(player.externalId) ?? []), player]);
+    byPlayerId.set(player.playerId, [...(byPlayerId.get(player.playerId) ?? []), player]);
   }
 
-  const matchable = new Map<string, SnapshotComparisonPlayer>();
+  const matchable = new Map<number, SnapshotComparisonPlayer>();
 
-  for (const [externalId, playersWithIdentity] of byExternalId) {
+  for (const [playerId, playersWithIdentity] of byPlayerId) {
     if (playersWithIdentity.length === 1) {
-      matchable.set(externalId, playersWithIdentity[0]!);
+      matchable.set(playerId, playersWithIdentity[0]!);
       continue;
     }
 
@@ -201,13 +200,13 @@ function indexByStableIdentity(players: SnapshotComparisonPlayer[]): {
 }
 
 function comparePlayer(
-  externalId: string,
+  playerId: number,
   basePlayer: SnapshotComparisonPlayer,
   targetPlayer: SnapshotComparisonPlayer
 ): MatchedPlayerComparison {
   return {
     status: "matched",
-    identity: { externalId },
+    identity: { playerId },
     basePlayer,
     targetPlayer,
     changes: {

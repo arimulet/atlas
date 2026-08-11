@@ -78,7 +78,7 @@ export const getSquadMarketPlanning = async (clubId: ClubId): Promise<SquadMarke
         playersWithEstimatedValue: latest.players.filter(
           (player) => player.estimatedValue.amount > 0
         ).length,
-        playersWithStableIdentity: latest.players.filter((player) => Boolean(player.externalId))
+        playersWithStableIdentity: latest.players.filter((player) => Boolean(player.playerId))
           .length
       }
     },
@@ -416,11 +416,11 @@ function buildPlayerWarnings(
     });
   }
 
-  if (!player.externalId) {
+  if (!player.playerId) {
     warnings.push({
       code: "ambiguous_identity",
       message: "Falta identidad stable; el historial del jugador puede no ser comparable.",
-      evidence: [{ kind: "observed", label: "External id", value: player.externalId ?? undefined }]
+      evidence: [{ kind: "observed", label: "Player id", value: player.playerId ?? undefined }]
     });
   }
 
@@ -604,10 +604,6 @@ function findSamePlayerSnapshot(
   target: PersistedPlayerSnapshot,
   snapshot: PersistedSnapshot
 ): PersistedPlayerSnapshot | null {
-  if (target.externalId) {
-    return snapshot.players.find((player) => player.externalId === target.externalId) ?? null;
-  }
-
   if (target.playerId) {
     return snapshot.players.find((player) => player.playerId === target.playerId) ?? null;
   }
@@ -706,10 +702,6 @@ function buildDevelopmentIndex(
   const index = new Map<string, PlayerDevelopmentPlayerSummary>();
 
   for (const player of players) {
-    if (player.externalId) {
-      index.set(`external:${player.externalId}`, player);
-    }
-
     if (player.playerId) {
       index.set(`player:${player.playerId}`, player);
     }
@@ -722,10 +714,6 @@ function findDevelopmentSummary(
   player: PersistedPlayerSnapshot,
   index: Map<string, PlayerDevelopmentPlayerSummary>
 ): PlayerDevelopmentPlayerSummary | null {
-  if (player.externalId) {
-    return index.get(`external:${player.externalId}`) ?? null;
-  }
-
   if (player.playerId) {
     return index.get(`player:${player.playerId}`) ?? null;
   }
@@ -736,7 +724,6 @@ function findDevelopmentSummary(
 function mapObservedPlayer(player: PersistedPlayerSnapshot): SquadMarketObservedPlayer {
   return {
     playerId: player.playerId,
-    externalId: player.externalId,
     snapshotPlayerId: player.id,
     name: player.name,
     age: player.age,

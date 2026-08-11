@@ -49,7 +49,7 @@ export interface SquadEconomy {
 }
 
 export interface SquadEconomyObservedPlayer {
-  playerId: string | null;
+  playerId: number | null;
   snapshotPlayerId: string;
   name: string;
   age: number;
@@ -58,7 +58,7 @@ export interface SquadEconomyObservedPlayer {
 }
 
 export interface SquadEconomyConcentration {
-  playerId: string | null;
+  playerId: number | null;
   snapshotPlayerId: string;
   name: string;
   amount: number;
@@ -67,7 +67,7 @@ export interface SquadEconomyConcentration {
 }
 
 export interface SquadEconomyPlayerDetail {
-  playerId: string | null;
+  playerId: number | null;
   snapshotPlayerId: string;
   name: string;
   age: number;
