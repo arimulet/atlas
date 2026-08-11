@@ -14,23 +14,18 @@ const clubSchema = new Schema(
     clubId: { type: Number, required: true },
     country: { type: Number, required: true },
     training: {
-      gk: { type: Number, default: null },
-      def: { type: Number, default: null },
-      mid: { type: Number, default: null },
-      att: { type: Number, default: null }
+      GK: { type: Number, default: null },
+      DEF: { type: Number, default: null },
+      MID: { type: Number, default: null },
+      ATT: { type: Number, default: null }
     },
     name: { type: String, required: true, trim: true },
-    observed: {
-      clubId: { type: Number, default: null },
-      name: { type: String, required: true, trim: true },
-      season: { type: Number, default: null },
-      week: { type: Number, default: null },
-      lastSnapshotDate: { type: Date, default: null },
-      sourceType: { type: String, default: null },
-      observedAt: { type: Date, default: null }
-    },
-    manual: {
-      name: { type: String, default: null },
+    season: { type: Number, default: null },
+    week: { type: Number, default: null },
+    lastSnapshotDate: { type: Date, default: null },
+    sourceType: { type: String, default: null },
+    observedAt: { type: Date, default: null },
+    settings: {
       currency: { type: String, default: null },
       season: { type: Number, default: null },
       week: { type: Number, default: null },
@@ -46,7 +41,7 @@ clubSchema.index(
   { unique: true }
 );
 
-type ClubDocument = InferSchemaType<typeof clubSchema>;
+export type ClubDocument = InferSchemaType<typeof clubSchema>;
 
 export const ClubModel =
   (mongoose.models.Club as Model<ClubDocument> | undefined) ??

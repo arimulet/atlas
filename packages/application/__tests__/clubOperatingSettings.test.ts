@@ -35,7 +35,7 @@ describe("Club operating settings use cases", () => {
     const settings = await getClubOperatingSettings(club.id);
 
     expect(settings.observed).toEqual({ season: 78, week: 4 });
-    expect(settings.manual).toEqual({
+    expect(settings.settings).toEqual({
       currency: null,
       season: null,
       week: null,
@@ -65,7 +65,7 @@ describe("Club operating settings use cases", () => {
 
     const settings = await updateClubOperatingSettings({
       clubId: club.id,
-      manual: {
+      settings: {
         currency: " ars ",
         season: 79,
         week: 6,
@@ -79,7 +79,7 @@ describe("Club operating settings use cases", () => {
     });
 
     expect(settings.observed).toEqual({ season: 78, week: 4 });
-    expect(settings.manual).toMatchObject({
+    expect(settings.settings).toMatchObject({
       currency: "ARS",
       season: 79,
       week: 6,
@@ -97,9 +97,9 @@ describe("Club operating settings use cases", () => {
     });
 
     const persisted = await ClubModel.findById(club.id).lean();
-    expect(persisted?.observed?.season).toBe(78);
-    expect(persisted?.manual?.currency).toBe("ARS");
-    expect(persisted?.manual?.preferences.map((preference) => preference.key).sort()).toEqual([
+    expect(persisted?.season).toBe(78);
+    expect(persisted?.settings?.currency).toBe("ARS");
+    expect(persisted?.settings?.preferences.map((preference) => preference.key).sort()).toEqual([
       "academy.investment",
       "economy.riskTolerance",
       "market.strategy",
@@ -111,18 +111,18 @@ describe("Club operating settings use cases", () => {
     const club = await clubs.save({ clubId: 1, country: 1, name: "River Plate Forever" });
 
     await expect(
-      updateClubOperatingSettings({ clubId: club.id, manual: { currency: "pesos" } })
+      updateClubOperatingSettings({ clubId: club.id, settings: { currency: "pesos" } })
     ).rejects.toThrow("Operating currency must be a 3-letter ISO currency code.");
     await expect(
-      updateClubOperatingSettings({ clubId: club.id, manual: { season: 0 } })
+      updateClubOperatingSettings({ clubId: club.id, settings: { season: 0 } })
     ).rejects.toThrow("Operating season must be an integer between 1 and 999.");
     await expect(
-      updateClubOperatingSettings({ clubId: club.id, manual: { week: 17 } })
+      updateClubOperatingSettings({ clubId: club.id, settings: { week: 17 } })
     ).rejects.toThrow("Operating week must be an integer between 1 and 16.");
     await expect(
       updateClubOperatingSettings({
         clubId: club.id,
-        manual: { preferences: { "market.strategy": "reckless" as "balanced" } }
+        settings: { preferences: { "market.strategy": "reckless" as "balanced" } }
       })
     ).rejects.toThrow("Invalid value for operating preference market.strategy.");
   });
@@ -138,7 +138,7 @@ describe("Club operating settings use cases", () => {
 
     await updateClubOperatingSettings({
       clubId: club.id,
-      manual: {
+      settings: {
         preferences: {
           "economy.riskTolerance": "aggressive"
         }
@@ -147,7 +147,7 @@ describe("Club operating settings use cases", () => {
 
     const settings = await getClubOperatingSettings(club.id);
 
-    expect(settings.manual.preferences).toEqual({
+    expect(settings.settings.preferences).toEqual({
       "economy.riskTolerance": "aggressive"
     });
     expect(settings.effective.preferences).toEqual({
@@ -169,7 +169,7 @@ describe("Club operating settings use cases", () => {
 
     await updateClubOperatingSettings({
       clubId: club.id,
-      manual: {
+      settings: {
         currency: "ARS",
         season: 79,
         week: 6
@@ -177,14 +177,14 @@ describe("Club operating settings use cases", () => {
     });
     const settings = await updateClubOperatingSettings({
       clubId: club.id,
-      manual: {
+      settings: {
         preferences: {
           "market.strategy": "opportunistic"
         }
       }
     });
 
-    expect(settings.manual).toMatchObject({
+    expect(settings.settings).toMatchObject({
       currency: "ARS",
       season: 79,
       week: 6,

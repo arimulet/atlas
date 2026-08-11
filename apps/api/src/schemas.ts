@@ -9,21 +9,21 @@ export const sokkerSyncRequestSchema = z.object({
   password: z.string().min(1)
 });
 
-const manualRecordSchema = z.object({
+const settingsRecordSchema = z.object({
   key: z.string(),
   value: z.string()
 });
 
 export const updateClubProfileBodySchema = z
   .object({
-    manual: z
+    settings: z
       .object({
         name: z.string().nullable().optional(),
         currency: z.string().nullable().optional(),
         season: z.number().int().nullable().optional(),
         week: z.number().int().nullable().optional(),
-        assumptions: z.array(manualRecordSchema).optional(),
-        preferences: z.array(manualRecordSchema).optional()
+        assumptions: z.array(settingsRecordSchema).optional(),
+        preferences: z.array(settingsRecordSchema).optional()
       })
       .optional()
   })
@@ -31,7 +31,7 @@ export const updateClubProfileBodySchema = z
 
 export const updateClubOperatingSettingsBodySchema = z
   .object({
-    manual: z
+    settings: z
       .object({
         currency: z.string().nullable().optional(),
         season: z.number().int().nullable().optional(),

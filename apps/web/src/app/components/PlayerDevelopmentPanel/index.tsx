@@ -80,7 +80,7 @@ export const PlayerDevelopmentPanel = ({
           <dl className="summary-grid">
             <SummaryItem
               label="training.priority"
-              value={playerDevelopment.manual.trainingPriority}
+              value={playerDevelopment.settings.trainingPriority}
             />
             <SummaryItem label="Causalidad" value="No atribuida" />
           </dl>

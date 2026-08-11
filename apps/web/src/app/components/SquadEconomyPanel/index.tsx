@@ -75,9 +75,9 @@ export const SquadEconomyPanel = ({ squadEconomy, status, onBack }: SquadEconomy
           <dl className="summary-grid">
             <SummaryItem
               label="Moneda operativa"
-              value={formatNullable(squadEconomy.manual.currency)}
+              value={formatNullable(squadEconomy.settings.currency)}
             />
-            <SummaryItem label="Tolerancia de riesgo" value={squadEconomy.manual.riskTolerance} />
+            <SummaryItem label="Tolerancia de riesgo" value={squadEconomy.settings.riskTolerance} />
           </dl>
         </Section>
       </section>

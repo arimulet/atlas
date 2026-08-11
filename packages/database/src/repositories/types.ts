@@ -5,77 +5,35 @@ export interface PersistedImportIssue {
 
 export interface PersistedClub {
   id: string;
-  observed: PersistedClubObservedProfile;
-  manual: PersistedClubManualProfile;
-  profile: PersistedClubEffectiveProfile;
-  settings: PersistedClubOperatingSettings;
   clubId: number;
   country: number;
-  training: {
-    gk: number | null;
-    def: number | null;
-    mid: number | null;
-    att: number | null;
+  training: { 
+    GK: number | null;
+    DEF: number | null;
+    MID: number | null;
+    ATT: number | null;
   } | null;
-  name: string;
-}
-
-export interface PersistedClubObservedProfile {
-  clubId: number | null;
   name: string;
   season: number | null;
   week: number | null;
   lastSnapshotDate: Date | null;
   sourceType: string | null;
   observedAt: Date | null;
+  settings: PersistedClubSettings;
 }
 
-export interface PersistedClubManualProfile {
-  name: string | null;
+export interface PersistedClubSettings {
   currency: string | null;
-  season: number | null;
-  week: number | null;
-  assumptions: PersistedClubManualRecord[];
-  preferences: PersistedClubManualRecord[];
+  season?: number | null;
+  week?: number | null;
+  assumptions: PersistedClubSettingsRecord[];
+  preferences: PersistedClubSettingsRecord[];
 }
 
-export interface PersistedClubManualRecord {
+export interface PersistedClubSettingsRecord {
   key: string;
   value: string;
   updatedAt: Date;
-}
-
-export interface PersistedClubEffectiveProfile {
-  clubId: number | null;
-  name: string;
-  currency: string | null;
-  season: number | null;
-  week: number | null;
-}
-
-export interface PersistedClubOperatingSettings {
-  observed: PersistedClubObservedOperatingSettings;
-  manual: PersistedClubManualOperatingSettings;
-  effective: PersistedClubEffectiveOperatingSettings;
-}
-
-export interface PersistedClubObservedOperatingSettings {
-  season: number | null;
-  week: number | null;
-}
-
-export interface PersistedClubManualOperatingSettings {
-  currency: string | null;
-  season: number | null;
-  week: number | null;
-  preferences: PersistedClubManualRecord[];
-}
-
-export interface PersistedClubEffectiveOperatingSettings {
-  currency: string | null;
-  season: number | null;
-  week: number | null;
-  preferences: PersistedClubManualRecord[];
 }
 
 export interface PersistedPlayer {

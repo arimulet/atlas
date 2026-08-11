@@ -79,20 +79,15 @@ export type OperatingPreferenceKey =
 export interface ClubDashboard {
   club: {
     id: string;
-    observed: {
-      externalId: string | null;
-      name: string;
-      season: number | null;
-      week: number | null;
-      lastSnapshotDate: string | null;
-      sourceType: string | null;
-      observedAt: string | null;
-    };
-    manual: {
-      name: string | null;
+    externalId: string | null;
+    name: string;
+    season: number | null;
+    week: number | null;
+    lastSnapshotDate: string | null;
+    sourceType: string | null;
+    observedAt: string | null;
+    settings: {
       currency: string | null;
-      season: number | null;
-      week: number | null;
       assumptions: ManualRecord[];
       preferences: ManualRecord[];
     };
@@ -109,7 +104,7 @@ export interface ClubDashboard {
       season: number | null;
       week: number | null;
     };
-    manual: {
+    settings: {
       currency: string | null;
       season: number | null;
       week: number | null;
@@ -143,7 +138,7 @@ export interface ClubDashboardDevelopmentSummary {
     latestSnapshotDate: string | null;
     playerCount: number;
   };
-  manual: {
+  settings: {
     trainingPriority: string;
   };
   derived: {
@@ -176,7 +171,7 @@ export interface ClubDashboardMarketSummary {
     playerCount: number;
     playersWithStableIdentity: number;
   };
-  manual: {
+  settings: {
     marketStrategy: string;
   };
   derived: {
@@ -211,7 +206,7 @@ export interface ClubDashboardYouthPipelineSummary {
     youngSeniorPlayerCount: number;
     youthAgeThreshold: number;
   };
-  manual: {
+  settings: {
     academyInvestment: string;
   };
   derived: {
@@ -267,7 +262,7 @@ export interface SquadMarketPlanning {
       playersWithStableIdentity: number;
     };
   };
-  manual: {
+  settings: {
     marketStrategy: string;
   };
   derived: {
@@ -360,7 +355,7 @@ export interface SquadEconomy {
       estimatedValueCurrency: string | null;
     };
   };
-  manual: {
+  settings: {
     currency: string | null;
     riskTolerance: string;
   };
@@ -459,7 +454,7 @@ export interface PlayerDevelopment {
     latestSnapshotDate: string | null;
     players: PlayerDevelopmentObservedPlayer[];
   };
-  manual: {
+  settings: {
     trainingPriority: string;
   };
   derived: {
@@ -556,7 +551,7 @@ export interface YouthPipelinePlanning {
       playersWithCompleteSkills: number;
     };
   };
-  manual: {
+  settings: {
     academyInvestment: string;
   };
   derived: {
@@ -664,7 +659,7 @@ export interface RealYouthAcademyPlanning {
     };
     weeklyInvestment: { amount: number; currency: string | null } | null;
   };
-  manual: {
+  settings: {
     academyInvestment: string;
   };
   derived: {

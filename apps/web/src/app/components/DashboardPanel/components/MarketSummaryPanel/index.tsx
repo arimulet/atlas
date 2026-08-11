@@ -37,7 +37,7 @@ export const MarketSummaryPanel = ({
           type="observed"
           label={`observado: ${summary.observed.snapshotCount} snapshots`}
         />
-        <TraceKind type="manual" label={`manual: ${summary.manual.marketStrategy}`} />
+        <TraceKind type="manual" label={`manual: ${summary.settings.marketStrategy}`} />
         <TraceKind type="derived" label="derivado: categorias internas" />
         <TraceKind type="inferred" label="inferido: senal ejecutiva" />
       </div>

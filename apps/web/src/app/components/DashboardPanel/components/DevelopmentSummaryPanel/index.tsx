@@ -37,7 +37,7 @@ export const DevelopmentSummaryPanel = ({
           type="observed"
           label={`observado: ${summary.observed.snapshotCount} snapshots`}
         />
-        <TraceKind type="manual" label={`manual: {summary.manual.trainingPriority}`} />
+        <TraceKind type="manual" label={`manual: {summary.settings.trainingPriority}`} />
         <TraceKind type="derived" label="derivado: conteos por evolucion" />
         <TraceKind label="inferido: senal ejecutiva" type="inferred" />
       </div>

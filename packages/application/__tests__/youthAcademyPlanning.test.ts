@@ -35,7 +35,7 @@ describe("Real Youth Academy Planning use case", () => {
 
     await updateClubOperatingSettings({
       clubId: importResult.clubId!,
-      manual: {
+      settings: {
         preferences: {
           "academy.investment": "ambitious"
         }
@@ -101,7 +101,7 @@ describe("Real Youth Academy Planning use case", () => {
       country: 1,
       name: "Club Sin Cantera",
       observed: { name: "Club Sin Cantera" },
-      manual: {},
+      settings: {},
       profile: { name: "Club Sin Cantera" }
     });
 

@@ -69,7 +69,7 @@ describe("Squad market planning use case", () => {
     await importPlayerSnapshot({ payload: second });
     await updateClubOperatingSettings({
       clubId: importResult.clubId!,
-      manual: { preferences: { "market.strategy": "conservative" } }
+      settings: { preferences: { "market.strategy": "conservative" } }
     });
 
     const planning = await getSquadMarketPlanning(importResult.clubId!);
