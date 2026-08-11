@@ -117,7 +117,7 @@ describe("ImportPlayerSnapshot", () => {
     const first = await importPlayerSnapshot({ payload: validSnapshot });
     await ClubModel.findByIdAndUpdate(first.clubId, {
       $set: {
-        "settings.currency": "ARS",
+        "settings.currency": { name: "ARS", rate: 100 },
         "settings.assumptions": [
           {
             key: "liquidity-buffer",
@@ -140,7 +140,7 @@ describe("ImportPlayerSnapshot", () => {
     const snapshots = await SnapshotModel.find({ clubId: first.clubId }).sort({ snapshotDate: 1 }).lean();
 
     expect(club?.week).toBe(5);
-    expect(club?.settings?.currency).toBe("ARS");
+    expect(club?.settings?.currency).toMatchObject({ name: "ARS", rate: 100 });
     expect(club?.settings?.assumptions[0]?.key).toBe("liquidity-buffer");
     expect(snapshots.map((snapshot) => snapshot._id.toString())).toEqual([
       first.snapshotId,

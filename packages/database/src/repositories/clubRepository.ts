@@ -19,11 +19,12 @@ export interface SaveClubInput {
   lastSnapshotDate?: Date | null;
   sourceType?: string | null;
   observedAt?: Date | null;
+  currency: { name: string; rate: number };
 }
 
 export interface UpdateClubManualProfileInput {
   clubId: ClubId;
-  currency?: string | null;
+  currency?: { name: string; rate: number };
   season?: number | null;
   week?: number | null;
   assumptions?: Array<{ key: string; value: string }>;
@@ -54,11 +55,15 @@ export class MongoClubRepository {
       return mapClub(club.toObject());
     }
 
+    const $setOnInsert: Record<string, unknown> = { clubId: input.clubId };
+
+    $setOnInsert["settings.currency"] = { name: input.currency.name, rate: input.currency.rate };
+
     const club = await ClubModel.findOneAndUpdate(
       { clubId: input.clubId },
       {
         $set,
-        $setOnInsert: { clubId: input.clubId }
+        $setOnInsert
       },
       { new: true, upsert: true }
     );
@@ -75,7 +80,11 @@ export class MongoClubRepository {
     const updatedAt = new Date();
     const $set: Record<string, unknown> = {};
 
-    if ("currency" in input) $set["settings.currency"] = normalizeOptionalString(input.currency);
+    if ("currency" in input) {
+      if (input.currency) {
+        $set["settings.currency"] = { name: input.currency.name, rate: input.currency.rate };
+      }
+    }
     if ("season" in input) $set["settings.season"] = input.season ?? null;
     if ("week" in input) $set["settings.week"] = input.week ?? null;
     if (input.assumptions) {
@@ -122,7 +131,7 @@ function mapClub(club: {
   sourceType?: string | null;
   observedAt?: Date | null;
   settings?: {
-    currency?: string | null;
+    currency?: { name: string; rate: number };
     season?: number | null;
     week?: number | null;
     assumptions?: Array<{ key: string; value: string; updatedAt: Date }>;
@@ -148,7 +157,10 @@ function mapClub(club: {
     sourceType: club.sourceType ?? null,
     observedAt: club.observedAt ?? null,
     settings: {
-      currency: club.settings?.currency ?? null,
+      currency: {
+        name: club.settings?.currency?.name ?? "UNK",
+        rate: club.settings?.currency?.rate ?? 1
+      },
       season: club.settings?.season ?? null,
       week: club.settings?.week ?? null,
       assumptions: club.settings?.assumptions ?? [],
@@ -157,7 +169,3 @@ function mapClub(club: {
   };
 }
 
-function normalizeOptionalString(value: string | null | undefined): string | null {
-  const normalized = value?.trim();
-  return normalized ? normalized : null;
-}

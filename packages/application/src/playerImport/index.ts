@@ -9,7 +9,8 @@ import {
   MongoImportEventRepository,
   MongoPlayerRepository,
   MongoSnapshotRepository,
-  PersistedPlayerSnapshot
+  PersistedPlayerSnapshot,
+  MongoCountryRepository
 } from "@atlas/database";
 import {
   BasicDiagnostic,
@@ -42,6 +43,7 @@ const clubRepository = new MongoClubRepository();
 const importEventRepository = new MongoImportEventRepository();
 const playerRepository = new MongoPlayerRepository();
 const snapshotRepository = new MongoSnapshotRepository();
+const countryRepository = new MongoCountryRepository();
 
 export const importPlayerSnapshot = async (
   input: ImportPlayerSnapshotInput
@@ -80,7 +82,13 @@ export const importPlayerSnapshot = async (
     warnings
   });
 
-  const club = await clubRepository.save(normalized.club);
+  const country = await countryRepository.getById(normalized.club.country);
+  const currency = country ? { name: country.currencyName, rate: country.currencyRate } : { name: "UNK", rate: 1 };
+
+  const club = await clubRepository.save({
+    ...normalized.club,
+    currency
+  });
   const players = await Promise.all(
     normalized.players.map((player) =>
       playerRepository.resolveHistoricalIdentity({

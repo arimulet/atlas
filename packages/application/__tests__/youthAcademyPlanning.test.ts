@@ -101,7 +101,7 @@ describe("Real Youth Academy Planning use case", () => {
       country: 1,
       name: "Club Sin Cantera",
       observed: { name: "Club Sin Cantera" },
-      settings: {},
+      settings: { currency: { name: "ARS", rate: 100 } },
       profile: { name: "Club Sin Cantera" }
     });
 

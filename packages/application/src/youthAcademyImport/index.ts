@@ -6,7 +6,8 @@ import {
 import {
   MongoClubRepository,
   MongoImportEventRepository,
-  MongoYouthSnapshotRepository
+  MongoYouthSnapshotRepository,
+  MongoCountryRepository
 } from "@atlas/database";
 import type {
   ImportYouthAcademySnapshotInput,
@@ -18,6 +19,7 @@ import type {
 const clubRepository = new MongoClubRepository();
 const importEventRepository = new MongoImportEventRepository();
 const youthSnapshotRepository = new MongoYouthSnapshotRepository();
+const countryRepository = new MongoCountryRepository();
 
 export const importYouthAcademySnapshot = async (
   input: ImportYouthAcademySnapshotInput
@@ -56,7 +58,13 @@ export const importYouthAcademySnapshot = async (
     warnings
   });
 
-  const club = await clubRepository.save(normalized.club);
+  const country = await countryRepository.getById(normalized.club.country);
+  const currency = country ? { name: country.currencyName, rate: country.currencyRate } : { name: "UNK", rate: 1 };
+
+  const club = await clubRepository.save({
+    ...normalized.club,
+    currency
+  });
 
   const history = await youthSnapshotRepository.listByClub(club.id);
   const previousSnapshot = history.at(-1);

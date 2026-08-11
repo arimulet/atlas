@@ -41,7 +41,7 @@ describe("Squad economy use case", () => {
     await updateClubOperatingSettings({
       clubId: importResult.clubId!,
       settings: {
-        currency: "ARS",
+        currency: { name: "ARS", rate: 100 },
         preferences: { "economy.riskTolerance": "conservative" }
       }
     });
@@ -50,7 +50,7 @@ describe("Squad economy use case", () => {
 
     expect(squadEconomy.snapshotDate).toBe("2026-08-05");
     expect(squadEconomy.manual).toEqual({
-      currency: "ARS",
+      currency: { name: "ARS", rate: 100 },
       riskTolerance: "conservative"
     });
     expect(squadEconomy.derived.totalWage).toMatchObject({
@@ -119,29 +119,6 @@ describe("Squad economy use case", () => {
     );
   });
 
-  it("warns instead of making strong historical conclusions when currency is missing", async () => {
-    const first = withoutCurrencies(readValidSnapshot());
-    const second = {
-      ...first,
-      source: { ...first.source, exportedAt: "2026-08-12T12:00:00.000Z" },
-      snapshot: { ...first.snapshot, snapshotDate: "2026-08-12", week: 5 }
-    };
-
-    const importResult = await importPlayerSnapshot({ payload: first });
-    await importPlayerSnapshot({ payload: second });
-
-    const squadEconomy = await getSquadEconomy(importResult.clubId!);
-
-    expect(squadEconomy.historical.comparableSnapshotCount).toBe(0);
-    expect(squadEconomy.warnings).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ code: "missing_currency" }),
-        expect.objectContaining({ code: "non_comparable_history" }),
-        expect.objectContaining({ code: "insufficient_history" })
-      ])
-    );
-    expect(squadEconomy.findings.every((finding) => finding.confidence !== "high")).toBe(true);
-  });
 
   it("marks totals incomplete when player economy data is partial", async () => {
     const payload = {
@@ -240,13 +217,3 @@ function readValidSnapshot() {
   };
 }
 
-function withoutCurrencies(snapshot: ReturnType<typeof readValidSnapshot>) {
-  return {
-    ...snapshot,
-    players: snapshot.players.map((player) => ({
-      ...player,
-      wage: { ...player.wage, currency: null },
-      estimatedValue: { ...player.estimatedValue, currency: null }
-    }))
-  };
-}

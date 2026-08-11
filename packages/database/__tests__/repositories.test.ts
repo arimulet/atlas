@@ -46,7 +46,7 @@ describe("Mongo repositories", () => {
   });
 
   it("saves a valid normalized snapshot", async () => {
-    const club = await clubs.save({ clubId: 1, country: 1, name: "River Plate Forever" });
+    const club = await clubs.save({ clubId: 1, country: 1, name: "River Plate Forever", currency: { name: "ARS", rate: 100 } });
     const player = await players.resolveHistoricalIdentity({
       externalId: "player-001",
       name: "Tomas Alvarez"
@@ -76,7 +76,8 @@ describe("Mongo repositories", () => {
       week: 4,
       lastSnapshotDate: new Date("2026-08-05T00:00:00.000Z"),
       sourceType: "sokker-dom-export",
-      observedAt: new Date("2026-08-05T20:00:00.000Z")
+      observedAt: new Date("2026-08-05T20:00:00.000Z"),
+      currency: { name: "ARS", rate: 100 }
     });
 
     expect(club).toMatchObject({
@@ -87,7 +88,7 @@ describe("Mongo repositories", () => {
       sourceType: "sokker-dom-export"
     });
     expect(club.settings).toMatchObject({
-      currency: null,
+      currency: { name: "ARS", rate: 100 },
       season: null,
       week: null,
       assumptions: [],
@@ -103,15 +104,17 @@ describe("Mongo repositories", () => {
 
   it("updates manual club configuration without changing observed Sokker data", async () => {
     const club = await clubs.save({
-      clubId: 1, country: 1,
+      clubId: 1,
+      country: 1,
       name: "River Plate Forever",
       season: 78,
-      week: 4
+      week: 4,
+      currency: { name: "ARS", rate: 100 }
     });
 
     const updated = await clubs.updateManualProfile({
       clubId: club.id,
-      currency: "ARS",
+      currency: { name: "ARS", rate: 100 },
       season: 79,
       assumptions: [{ key: "market-risk", value: "Keep liquidity buffer before buying." }],
       preferences: [{ key: "training-focus", value: "Prioritize playmaking trainees." }]
@@ -124,7 +127,7 @@ describe("Mongo repositories", () => {
       week: 4
     });
     expect(updated.settings).toMatchObject({
-      currency: "ARS",
+      currency: { name: "ARS", rate: 100 },
       season: 79,
       week: null
     });
@@ -135,7 +138,7 @@ describe("Mongo repositories", () => {
   });
 
   it("retrieves a snapshot by id", async () => {
-    const club = await clubs.save({ clubId: 1, country: 1, name: "River Plate Forever" });
+    const club = await clubs.save({ clubId: 1, country: 1, name: "River Plate Forever", currency: { name: "ARS", rate: 100 } });
     const player = await players.resolveHistoricalIdentity({
       externalId: "player-001",
       name: "Tomas Alvarez"
@@ -151,8 +154,8 @@ describe("Mongo repositories", () => {
   });
 
   it("lists snapshots for a club", async () => {
-    const club = await clubs.save({ clubId: 1, country: 1, name: "River Plate Forever" });
-    const otherClub = await clubs.save({ clubId: 2, country: 1, name: "Atlas Wanderers" });
+    const club = await clubs.save({ clubId: 1, country: 1, name: "River Plate Forever", currency: { name: "ARS", rate: 100 } });
+    const otherClub = await clubs.save({ clubId: 2, country: 1, name: "Atlas Wanderers", currency: { name: "ARS", rate: 100 } });
     const player = await players.resolveHistoricalIdentity({
       externalId: "player-001",
       name: "Tomas Alvarez"
@@ -178,7 +181,7 @@ describe("Mongo repositories", () => {
   });
 
   it("retrieves snapshots by club and date", async () => {
-    const club = await clubs.save({ clubId: 1, country: 1, name: "River Plate Forever" });
+    const club = await clubs.save({ clubId: 1, country: 1, name: "River Plate Forever", currency: { name: "ARS", rate: 100 } });
     const player = await players.resolveHistoricalIdentity({
       externalId: "player-001",
       name: "Tomas Alvarez"
@@ -248,7 +251,7 @@ describe("Mongo repositories", () => {
   });
 
   it("saves and retrieves a valid youth academy snapshot", async () => {
-    const club = await clubs.save({ clubId: 1, country: 1, name: "River Plate Forever" });
+    const club = await clubs.save({ clubId: 1, country: 1, name: "River Plate Forever", currency: { name: "ARS", rate: 100 } });
     const snapshotDate = new Date("2026-08-08T00:00:00.000Z");
 
     const input: SaveYouthSnapshotInput = buildYouthSnapshotInput({
