@@ -10,11 +10,10 @@ const moneySchema = new Schema(
 
 const youthPlayerSchema = new Schema(
   {
-    externalId: { type: String, default: null },
+    playerId: { type: Number, required: true, min: 1 },
     name: { type: String, required: true },
     age: { type: Number, required: true, min: 1 },
     initialWeeksRemaining: { type: Number, default: null },
-    weeksInAcademy: { type: Number, default: null },
     weeksRemaining: { type: Number, default: null },
     estimatedLevel: { type: String, default: null },
     status: {

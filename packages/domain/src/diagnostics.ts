@@ -48,8 +48,7 @@ export interface BasicDiagnosticSnapshot {
 
 export interface BasicDiagnosticPlayerSnapshot {
   id: string;
-  playerId: string | null;
-  externalId: string | null;
+  playerId: number | null;
   name: string;
   age: number;
   wage: Money;
@@ -379,7 +378,7 @@ function createFollowUpFindings(players: ClassifiedPlayer[]): BasicDiagnosticFin
       {
         code: "follow-up.incomplete-player-data",
         category: "follow-up",
-        severity: missingFields.includes("externalId") ? "medium" : "low",
+        severity: missingFields.includes("playerId") ? "medium" : "low",
         description: `${player.name} requires follow-up because imported data is incomplete.`,
         evidence: missingFields.map((field) =>
           trace("observed", `${player.name} missing ${field}`, null)
@@ -389,11 +388,11 @@ function createFollowUpFindings(players: ClassifiedPlayer[]): BasicDiagnosticFin
             "incomplete-data-confidence",
             "Missing observed fields lower diagnostic confidence."
           ),
-          ...(missingFields.includes("externalId")
+          ...(missingFields.includes("playerId")
             ? [
                 assumption(
-                  "missing-external-id",
-                  "Player identity must not be merged automatically without externalId or manual review."
+                  "missing-player-id",
+                  "Player identity must not be merged automatically without playerId or manual review."
                 )
               ]
             : [])
@@ -441,7 +440,7 @@ function roleScore(role: PlayerRole, skills: Required<SkillSet>): number {
 
 function missingFollowUpFields(player: BasicDiagnosticPlayerSnapshot): string[] {
   return [
-    player.externalId ? null : "externalId",
+    player.playerId ? null : "playerId",
     player.form === null ? "form" : null,
     player.availabilityStatus === null ? "availabilityStatus" : null,
     player.observedPosition ? null : "observedPosition",
@@ -458,7 +457,7 @@ function hasMissingMoneyCurrency(player: BasicDiagnosticPlayerSnapshot): boolean
 }
 
 function playerIdentifier(classified: Pick<ClassifiedPlayer, "player">): string {
-  return classified.player.playerId ?? classified.player.id;
+  return classified.player.playerId?.toString() ?? classified.player.id;
 }
 
 function median(values: number[]): number {

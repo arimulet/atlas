@@ -90,13 +90,13 @@ export const importPlayerSnapshot = async (
     currency
   });
   const players = await Promise.all(
-    normalized.players.map((player) => {
-      const playerId = parsePlayerId(player.externalId);
-
-      return playerId === null
-        ? Promise.resolve(null)
-        : playerRepository.resolveHistoricalIdentity({ playerId, name: player.name });
-    })
+    normalized.players.map((player) =>
+      playerRepository.resolveHistoricalIdentity({
+        playerId: player.playerId,
+        clubId: normalized.club.clubId,
+        name: player.name
+      })
+    )
   );
   const snapshot = await snapshotRepository.save({
     clubId: club.id,
@@ -106,9 +106,8 @@ export const importPlayerSnapshot = async (
     week: normalized.snapshot.week,
     importedAt: importEvent.importedAt,
     source: normalized.source,
-    players: normalized.players.map((player, index) => ({
-      playerId: players[index]?.id ?? null,
-      externalId: player.externalId,
+    players: normalized.players.map((player) => ({
+      playerId: player.playerId,
       name: player.name,
       age: player.age,
       wage: player.wage,
@@ -204,7 +203,6 @@ function mapPlayerSnapshot(player: PersistedPlayerSnapshot): BasicDiagnosticPlay
   return {
     id: player.id,
     playerId: player.playerId,
-    externalId: player.externalId,
     name: player.name,
     age: player.age,
     wage: player.wage,
@@ -231,7 +229,6 @@ function sumMoney(
 
 function hasIncompleteData(player: PersistedPlayerSnapshot): boolean {
   return (
-    !player.externalId ||
     player.form === null ||
     player.availabilityStatus === null ||
     !player.observedPosition ||
@@ -283,7 +280,7 @@ function normalizePlayer(
     normalizeOptionalString(player.observedPosition) ?? deriveObservedPosition(skills);
 
   return {
-    externalId: normalizeOptionalString(player.externalId),
+    playerId: player.playerId,
     name: player.name.trim(),
     age: player.age,
     wage: {
@@ -333,16 +330,6 @@ function filterResolvedWarnings(
 function normalizeOptionalString(value: string | null | undefined): string | null {
   const normalized = value?.trim();
   return normalized ? normalized : null;
-}
-
-function parsePlayerId(value: string | null): number | null {
-  if (!value || !/^\d+$/.test(value)) {
-    return null;
-  }
-
-  const playerId = Number(value);
-
-  return Number.isSafeInteger(playerId) && playerId > 0 ? playerId : null;
 }
 
 function readStringProperty(input: unknown, property: string): string | null {

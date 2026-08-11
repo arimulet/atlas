@@ -20,7 +20,7 @@
   },
   "players": [
     {
-      "externalId": "1002",
+      "playerId": 1002,
       "age": 19,
       "wage": {
         "amount": 8000,

@@ -39,14 +39,14 @@ describe("generateBasicDiagnostic", () => {
         players: [
           player({
             id: "ps-1",
-            playerId: "p-1",
+            playerId: 1001,
             name: "Balanced Midfielder",
             wageAmount: 10000,
             valueAmount: 600000
           }),
           player({
             id: "ps-2",
-            playerId: "p-2",
+            playerId: 1002,
             name: "Expensive Veteran",
             wageAmount: 30000,
             valueAmount: 450000
@@ -60,7 +60,7 @@ describe("generateBasicDiagnostic", () => {
     expect(finding).toMatchObject({
       code: "economic-risk.high-wage-low-value-ratio",
       severity: "medium",
-      affectedPlayerIds: ["p-2"]
+      affectedPlayerIds: ["1002"]
     });
     expect(finding?.evidence.map((trace) => trace.label)).toContain(
       "Expensive Veteran value-to-wage ratio"
@@ -113,7 +113,7 @@ describe("generateBasicDiagnostic", () => {
       severity: "low",
       confidence: "high"
     });
-    expect(finding?.affectedPlayerIds).toEqual(["player-001"]);
+    expect(finding?.affectedPlayerIds).toEqual(["1001"]);
   });
 
   it("marks follow-up when data is missing", () => {
@@ -121,7 +121,7 @@ describe("generateBasicDiagnostic", () => {
       buildSnapshot({
         players: [
           player({
-            externalId: null,
+            playerId: null,
             form: null,
             availabilityStatus: null,
             observedPosition: null,
@@ -140,7 +140,7 @@ describe("generateBasicDiagnostic", () => {
       confidence: "low"
     });
     expect(finding?.assumptions.map((assumption) => assumption.code)).toContain(
-      "missing-external-id"
+      "missing-player-id"
     );
     expect(finding?.evidence.map((trace) => trace.label)).toContain(
       "Tomas Alvarez missing skills.technique"
@@ -149,7 +149,7 @@ describe("generateBasicDiagnostic", () => {
 
   it("includes evidence and assumptions in every finding", () => {
     const diagnostic = generateBasicDiagnostic(
-      buildSnapshot({ players: [player({ externalId: null })] })
+      buildSnapshot({ players: [player({ playerId: null })] })
     );
 
     expect(diagnostic.findings.length).toBeGreaterThan(0);
@@ -161,7 +161,7 @@ describe("generateBasicDiagnostic", () => {
 
   it("does not generate recommendations without explanation", () => {
     const diagnostic = generateBasicDiagnostic(
-      buildSnapshot({ players: [player({ externalId: null })] })
+      buildSnapshot({ players: [player({ playerId: null })] })
     );
 
     diagnostic.findings
@@ -185,8 +185,7 @@ function buildSnapshot(overrides: Partial<BasicDiagnosticSnapshot> = {}): BasicD
 function player(overrides: PartialPlayer = {}): BasicDiagnosticPlayerSnapshot {
   return {
     id: overrides.id ?? "player-snapshot-001",
-    playerId: overrides.playerId === undefined ? "player-001" : overrides.playerId,
-    externalId: overrides.externalId === undefined ? "external-player-001" : overrides.externalId,
+    playerId: overrides.playerId === undefined ? 1001 : overrides.playerId,
     name: overrides.name ?? "Tomas Alvarez",
     age: overrides.age ?? 22,
     wage: {
@@ -217,8 +216,7 @@ function player(overrides: PartialPlayer = {}): BasicDiagnosticPlayerSnapshot {
 
 interface PartialPlayer {
   id?: string;
-  playerId?: string | null;
-  externalId?: string | null;
+  playerId?: number | null;
   name?: string;
   age?: number;
   wageAmount?: number;

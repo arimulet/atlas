@@ -32,10 +32,10 @@ export interface RealYouthAcademyPlanning {
 
 export interface YouthAcademyObservedPlayer {
   id: string;
-  externalId: string | null;
+  playerId: number;
   name: string;
   age: number;
-  weeksInAcademy: number | null;
+  initialWeeksRemaining: number | null;
   weeksRemaining: number | null;
   estimatedLevel: string | null;
   status: "in_academy" | "ready_for_promotion" | "promoted";
@@ -43,11 +43,12 @@ export interface YouthAcademyObservedPlayer {
 
 export interface RealYouthAcademyPlayerPlan {
   id: string;
-  externalId: string | null;
+  playerId: number;
   name: string;
   age: number;
-  weeksInAcademy: number | null;
+  initialWeeksRemaining: number | null;
   weeksRemaining: number | null;
+  weeksInAcademy: number | null;
   projectedPromotionAge: number | null;
   estimatedLevel: string | null;
   status: "in_academy" | "ready_for_promotion" | "promoted";

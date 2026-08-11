@@ -21,6 +21,7 @@
   "academy": {
     "players": [
       {
+        "playerId": null,
         "name": "Pedro Gomez",
         "age": 15,
         "weeksRemaining": 12,

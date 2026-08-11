@@ -24,7 +24,7 @@
   },
   "players": [
     {
-      "externalId": "38643161",
+      "playerId": 38643161,
       "name": "Ryan Ahlburg",
       "age": 34,
       "wage": {
@@ -50,7 +50,7 @@
       }
     },
     {
-      "externalId": "39409355",
+      "playerId": 39409355,
       "name": "Ottaviano Arixi",
       "age": 21,
       "wage": {

@@ -149,7 +149,7 @@ export const getYouthPipelinePlanning = async (
       coverage: {
         seniorPlayerCount: latest.players.length,
         youngSeniorPlayerCount: youngPlayers.length,
-        playersWithStableIdentity: youngPlayers.filter((player) => Boolean(player.externalId))
+        playersWithStableIdentity: youngPlayers.filter((player) => Boolean(player.playerId))
           .length,
         playersWithCompleteSkills: youngPlayers.filter(hasCompleteSkills).length
       }
@@ -186,7 +186,7 @@ function buildPlayerSummary(
   player: PersistedPlayerSnapshot,
   snapshots: PersistedSnapshot[],
   latest: PersistedSnapshot,
-  latestIdentityIndex: Map<string, PersistedPlayerSnapshot[]>,
+  latestIdentityIndex: Map<number, PersistedPlayerSnapshot[]>,
   trainingPriority: string
 ): PlayerDevelopmentPlayerSummary {
   const role = resolveRole(player);
@@ -211,7 +211,6 @@ function buildPlayerSummary(
 
   return {
     playerId: player.playerId,
-    externalId: player.externalId,
     name: player.name,
     age: player.age,
     role,
@@ -251,29 +250,29 @@ function buildGlobalWarnings(snapshots: PersistedSnapshot[]): PlayerDevelopmentW
 function buildPlayerWarnings(
   player: PersistedPlayerSnapshot,
   snapshots: PersistedSnapshot[],
-  latestIdentityIndex: Map<string, PersistedPlayerSnapshot[]>
+  latestIdentityIndex: Map<number, PersistedPlayerSnapshot[]>
 ): PlayerDevelopmentWarning[] {
   const warnings: PlayerDevelopmentWarning[] = [];
   const missingSkills = skillKeys.filter((skill) => player.skills[skill] === null);
 
-  if (!player.externalId) {
+  if (!player.playerId) {
     warnings.push({
       code: "ambiguous_identity",
       message: "Falta identidad estable; no se fusiona historial automaticamente.",
       evidence: [
         { kind: "observed", label: "Jugador", value: player.name },
-        { kind: "observed", label: "External id", value: player.externalId }
+        { kind: "observed", label: "Player id", value: player.playerId }
       ]
     });
   }
 
-  if (player.externalId && (latestIdentityIndex.get(player.externalId)?.length ?? 0) > 1) {
+  if (player.playerId && (latestIdentityIndex.get(player.playerId)?.length ?? 0) > 1) {
     warnings.push({
       code: "ambiguous_identity",
       message: "La identidad estable aparece duplicada en el snapshot actual.",
       evidence: [
         { kind: "observed", label: "Jugador", value: player.name },
-        { kind: "observed", label: "External id", value: player.externalId }
+        { kind: "observed", label: "Player id", value: player.playerId }
       ]
     });
   }
@@ -512,7 +511,7 @@ function findPreviousComparablePlayer(
   player: PersistedPlayerSnapshot,
   snapshots: PersistedSnapshot[]
 ): ComparablePlayerPoint | null {
-  if (!player.externalId) {
+  if (!player.playerId) {
     return null;
   }
 
@@ -520,7 +519,7 @@ function findPreviousComparablePlayer(
 
   for (const snapshot of previousSnapshots) {
     const matches = snapshot.players.filter(
-      (candidate) => candidate.externalId === player.externalId
+      (candidate) => candidate.playerId === player.playerId
     );
 
     if (matches.length === 1) {
@@ -537,12 +536,12 @@ function findPreviousComparablePlayer(
 
 function buildIdentityIndex(
   players: PersistedPlayerSnapshot[]
-): Map<string, PersistedPlayerSnapshot[]> {
-  const index = new Map<string, PersistedPlayerSnapshot[]>();
+): Map<number, PersistedPlayerSnapshot[]> {
+  const index = new Map<number, PersistedPlayerSnapshot[]>();
 
   for (const player of players) {
-    if (player.externalId) {
-      index.set(player.externalId, [...(index.get(player.externalId) ?? []), player]);
+    if (player.playerId) {
+      index.set(player.playerId, [...(index.get(player.playerId) ?? []), player]);
     }
   }
 
@@ -552,7 +551,6 @@ function buildIdentityIndex(
 function mapObservedPlayer(player: PersistedPlayerSnapshot): PlayerDevelopmentObservedPlayer {
   return {
     playerId: player.playerId,
-    externalId: player.externalId,
     snapshotPlayerId: player.id,
     name: player.name,
     age: player.age,
@@ -703,7 +701,6 @@ function buildDevelopmentIndex(
   const index = new Map<string, PlayerDevelopmentPlayerSummary>();
 
   for (const player of players) {
-    if (player.externalId) index.set(`external:${player.externalId}`, player);
     if (player.playerId) index.set(`player:${player.playerId}`, player);
   }
 
@@ -733,7 +730,7 @@ function buildPlayerPlan(input: {
   const strongestSignal = signals[0] ?? null;
 
   return {
-    playerId: input.player.playerId ?? undefined,
+    playerId: input.player.playerId,
     snapshotPlayerId: input.player.id,
     name: input.player.name,
     age: input.player.age,
@@ -806,8 +803,6 @@ function findPlayerHistory(
   return snapshots
     .map((snapshot) => {
       const matchingPlayer = snapshot.players.find((candidate) => {
-        if (player.externalId && candidate.externalId)
-          return candidate.externalId === player.externalId;
         if (player.playerId && candidate.playerId) return candidate.playerId === player.playerId;
         return false;
       });
@@ -840,11 +835,11 @@ function buildYouthWarnings(
   const warnings: YouthPipelineWarning[] = [];
   const missingSkills = skillKeys.filter((skill) => player.skills[skill] === null);
 
-  if (!player.externalId) {
+  if (!player.playerId) {
     warnings.push({
       code: "ambiguous_identity",
       message: "Falta identidad estable; el historial del joven puede no ser comparable.",
-      evidence: [{ kind: "observed", label: "External id", value: player.externalId ?? undefined }]
+      evidence: [{ kind: "observed", label: "Player id", value: player.playerId ?? undefined }]
     });
   }
 
@@ -1175,7 +1170,6 @@ function findDevelopmentSummary(
   player: PersistedPlayerSnapshot,
   index: Map<string, PlayerDevelopmentPlayerSummary>
 ): PlayerDevelopmentPlayerSummary | null {
-  if (player.externalId) return index.get(`external:${player.externalId}`) ?? null;
   if (player.playerId) return index.get(`player:${player.playerId}`) ?? null;
   return null;
 }
@@ -1198,7 +1192,6 @@ function categoryPriority(category: Category): number {
 function mapObservedYouth(player: PersistedPlayerSnapshot): YouthPipelineObservedPlayer {
   return {
     playerId: player.playerId,
-    externalId: player.externalId,
     snapshotPlayerId: player.id,
     name: player.name,
     age: player.age,

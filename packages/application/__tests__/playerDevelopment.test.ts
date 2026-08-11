@@ -209,7 +209,7 @@ describe("Player development use case", () => {
     });
   });
 
-  it("warns instead of comparing when stable identity is missing", async () => {
+  it("compares by playerId when externalId is missing", async () => {
     const first = withoutExternalIds(readValidSnapshot());
     const second = {
       ...first,
@@ -223,20 +223,13 @@ describe("Player development use case", () => {
     const development = await getPlayerDevelopment(importResult.clubId!);
 
     expect(development.derived.players[0]?.recentEvolution).toMatchObject({
-      direction: "insufficient_data",
-      comparableSkills: 0,
-      confidence: "low"
+      direction: "stable",
+      comparableSkills: 8,
+      confidence: "medium"
     });
-    expect(development.derived.players[0]?.warnings).toEqual(
+    expect(development.derived.players[0]?.warnings).not.toEqual(
       expect.arrayContaining([expect.objectContaining({ code: "ambiguous_identity" })])
     );
-    expect(development.derived.players[0]?.signals).toEqual(
-      expect.arrayContaining([expect.objectContaining({ code: "needs_more_history" })])
-    );
-    expect(development.derived.players[0]?.findings[0]).toMatchObject({
-      type: "insufficient_data",
-      confidence: "low"
-    });
   });
 
   it("marks missing skills as insufficient data without inventing values", async () => {

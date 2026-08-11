@@ -64,7 +64,7 @@ export interface NormalizedPlayerSnapshot {
     week: number | null;
   };
   players: Array<{
-    externalId: string | null;
+    playerId: number;
     name: string;
     age: number;
     wage: { amount: number; currency: string | null };

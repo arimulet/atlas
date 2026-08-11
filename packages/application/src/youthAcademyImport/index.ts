@@ -72,7 +72,7 @@ export const importYouthAcademySnapshot = async (
   if (previousSnapshot) {
     for (const player of normalized.academy.players) {
       const previousPlayer = previousSnapshot.players.find(
-        (p) => (p.externalId && p.externalId === player.externalId) || p.name === player.name
+        (p) => p.playerId === player.playerId || p.name === player.name
       );
       
       if (previousPlayer?.initialWeeksRemaining != null) {
@@ -155,11 +155,10 @@ function normalizeYouthAcademySnapshot(
           }
         : null,
       players: snapshot.academy.players.map((player) => ({
-        externalId: normalizeOptionalString(player.externalId),
+        playerId: player.playerId,
         name: player.name.trim(),
         age: player.age,
         initialWeeksRemaining: player.weeksRemaining ?? null,
-        weeksInAcademy: player.weeksInAcademy ?? null,
         weeksRemaining: player.weeksRemaining ?? null,
         estimatedLevel: player.estimatedLevel ? player.estimatedLevel.trim() : null,
         status: player.status ?? "in_academy"

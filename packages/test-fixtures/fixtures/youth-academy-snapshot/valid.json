@@ -29,11 +29,10 @@
     },
     "players": [
       {
-        "externalId": "youth-101",
+        "playerId": 5001,
         "name": "Matias Cantero",
         "age": 16,
         "weeksRemaining": 4,
-        "weeksInAcademy": 10,
         "estimatedLevel": "good",
         "status": "in_academy"
       }
