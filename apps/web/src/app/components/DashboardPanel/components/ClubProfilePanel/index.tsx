@@ -9,8 +9,8 @@ export const ClubProfilePanel = ({ dashboard }: ClubProfilePanelProps) => {
       <dl className="source-list">
         <SourcedItem label="Name" value={dashboard.club.name} source="effective" />
         <SourcedItem
-          label="External id"
-          value={dashboard.club.externalId}
+          label="Club ID"
+          value={dashboard.club.clubId}
           source="observed"
         />
         <SourcedItem

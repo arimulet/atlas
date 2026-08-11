@@ -84,7 +84,7 @@ export type OperatingPreferenceKey =
 export interface ClubDashboard {
   club: {
     id: string;
-    externalId: string | null;
+    clubId: number;
     name: string;
     season: number | null;
     week: number | null;
