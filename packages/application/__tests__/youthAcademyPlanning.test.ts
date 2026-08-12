@@ -78,14 +78,14 @@ describe("Real Youth Academy Planning use case", () => {
     // Primera importacion: ancla las semanas iniciales
     const firstPayload = structuredClone(validYouthSnapshot);
     firstPayload.academy.players[0]!.weeksRemaining = 20;
-    firstPayload.academy.players[0]!.estimatedLevel = "average";
+    firstPayload.academy.players[0]!.skill = 5;
     await importYouthAcademySnapshot({ payload: firstPayload });
 
     // Segunda importacion: avanza el tiempo
     const secondPayload = structuredClone(validYouthSnapshot);
     secondPayload.snapshot.snapshotDate = "2026-11-28";
     secondPayload.academy.players[0]!.weeksRemaining = 4; // 20 - 4 + 1 = 17 semanas
-    secondPayload.academy.players[0]!.estimatedLevel = "average";
+    secondPayload.academy.players[0]!.skill = 5;
 
     const importResult = await importYouthAcademySnapshot({ payload: secondPayload });
     const planning = await getRealYouthAcademyPlanning(importResult.clubId!);

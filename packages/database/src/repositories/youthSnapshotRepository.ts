@@ -18,7 +18,7 @@ export interface SaveYouthSnapshotInput {
   source: SnapshotSource;
   sourceVersion?: string | null;
   weeklyInvestment?: SnapshotMoney | null;
-  players: Array<Omit<PersistedYouthPlayerSnapshot, "id">>;
+  players: Array<Omit<PersistedYouthPlayerSnapshot, "id" | "skill"> & { skill: number }>;
 }
 
 export class MongoYouthSnapshotRepository {
@@ -39,7 +39,7 @@ export class MongoYouthSnapshotRepository {
         age: player.age,
         initialWeeksRemaining: player.initialWeeksRemaining ?? null,
         weeksRemaining: player.weeksRemaining ?? null,
-        estimatedLevel: player.estimatedLevel ?? null,
+        skill: player.skill,
         status: player.status ?? "in_academy"
       }))
     });
@@ -99,7 +99,7 @@ function mapYouthSnapshot(snapshot: {
     age: number;
     initialWeeksRemaining?: number | null;
     weeksRemaining?: number | null;
-    estimatedLevel?: string | null;
+    skill?: number | null;
     status?: "in_academy" | "ready_for_promotion" | "promoted";
   }>;
 }): PersistedYouthSnapshot {
@@ -135,7 +135,7 @@ function mapYouthSnapshot(snapshot: {
       age: player.age,
       initialWeeksRemaining: player.initialWeeksRemaining ?? null,
       weeksRemaining: player.weeksRemaining ?? null,
-      estimatedLevel: player.estimatedLevel ?? null,
+      skill: player.skill ?? null,
       status: player.status ?? "in_academy"
     }))
   };

@@ -15,7 +15,7 @@ const youthPlayerSchema = new Schema(
     age: { type: Number, required: true, min: 1 },
     initialWeeksRemaining: { type: Number, default: null },
     weeksRemaining: { type: Number, default: null },
-    estimatedLevel: { type: String, default: null },
+    skill: { type: Number, required: true, min: 0 },
     status: {
       type: String,
       enum: ["in_academy", "ready_for_promotion", "promoted"],

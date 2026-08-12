@@ -160,7 +160,7 @@ function normalizeYouthAcademySnapshot(
         age: player.age,
         initialWeeksRemaining: player.weeksRemaining ?? null,
         weeksRemaining: player.weeksRemaining ?? null,
-        estimatedLevel: player.estimatedLevel ? player.estimatedLevel.trim() : null,
+        skill: player.skill,
         status: player.status ?? "in_academy"
       }))
     }
