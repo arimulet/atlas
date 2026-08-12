@@ -18,7 +18,7 @@ import {
   generateBasicDiagnostic,
   inferPlayerRoleFromSkills
 } from "@atlas/domain";
-import type { PlayerRole } from "@atlas/domain";
+import type { ObservedPosition } from "@atlas/domain";
 import {
   GenerateBasicDiagnosticInput,
   ImportPlayerSnapshotInput,
@@ -300,7 +300,7 @@ function normalizeSkills(skills: PlayerSnapshotV0["players"][number]["skills"]) 
   ) as Record<SkillKey, number | null>;
 }
 
-function deriveObservedPosition(skills: Record<SkillKey, number | null>): PlayerRole | null {
+function deriveObservedPosition(skills: Record<SkillKey, number | null>): ObservedPosition | null {
   const inferred = inferPlayerRoleFromSkills(skills);
 
   return inferred.role === "undefined" ? null : inferred.role;

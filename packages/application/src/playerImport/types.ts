@@ -1,5 +1,5 @@
 import { type ImportIssue, type PlayerSnapshotV0 } from "@atlas/contracts";
-import type { BasicDiagnostic, PlayerRole } from "@atlas/domain";
+import type { BasicDiagnostic, ObservedPosition } from "@atlas/domain";
 import { ClubId, Money, SkillKey } from "../types.js";
 
 export type ImportPlayerSnapshotStatus = "accepted" | "accepted-with-warnings" | "rejected";
@@ -72,7 +72,7 @@ export interface NormalizedPlayerSnapshot {
     training: { position: number; advanced: boolean };
     form: number | null;
     availabilityStatus: PlayerSnapshotV0["players"][number]["availabilityStatus"] | null;
-    observedPosition: PlayerRole | null;
+    observedPosition: ObservedPosition | null;
     skills: Record<SkillKey, number | null>;
   }>;
 }

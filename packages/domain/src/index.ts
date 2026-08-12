@@ -5,6 +5,8 @@ export type AvailabilityStatus = "available" | "injured" | "suspended" | "unknow
 export type PlayerRole =
   | "goalkeeper" | "defender" | "midfielder" | "winger" | "striker" | "trainee" | "undefined";
 
+export type ObservedPosition = Exclude<PlayerRole, "trainee" | "undefined">;
+
 export interface Money {
   amount: number;
   currency: string | null;
@@ -51,7 +53,7 @@ export interface PlayerSnapshot {
   value: Money;
   form?: number | null;
   availabilityStatus?: AvailabilityStatus;
-  observedPosition?: PlayerRole | null;
+  observedPosition?: ObservedPosition | null;
   skills: SkillSet;
   roles: PlayerRole[];
 }

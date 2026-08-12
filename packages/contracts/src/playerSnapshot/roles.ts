@@ -10,4 +10,7 @@ export const playerRoleSchema = z.enum([
   "undefined"
 ]);
 
+export const observedPositionSchema = playerRoleSchema.exclude(["trainee", "undefined"]);
+
 export type PlayerRole = z.infer<typeof playerRoleSchema>;
+export type ObservedPosition = z.infer<typeof observedPositionSchema>;
