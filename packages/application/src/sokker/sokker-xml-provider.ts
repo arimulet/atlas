@@ -174,7 +174,7 @@ export class SokkerXmlProvider {
         },
         form: p.skillForm ?? 10,
         availabilityStatus: "available", // To be refined
-        observedPosition: "undefined", // To be refined
+        observedPosition: null,
         skills: {
           stamina: p.skillStamina,
           pace: p.skillPace,

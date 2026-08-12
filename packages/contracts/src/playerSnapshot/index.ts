@@ -1,4 +1,7 @@
 import { playerSnapshotV0Schema } from "./schemas";
+
+export { playerRoleSchema } from "./roles.js";
+export type { PlayerRole } from "./roles.js";
 import { ImportIssue, PlayerSnapshotV0, PlayerSnapshotValidationResult } from "./types";
 
 const skillKeys = [

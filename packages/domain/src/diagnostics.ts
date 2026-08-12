@@ -55,7 +55,7 @@ export interface BasicDiagnosticPlayerSnapshot {
   value: Money;
   form: number | null;
   availabilityStatus: AvailabilityStatus | null;
-  observedPosition: string | null;
+  observedPosition: PlayerRole | null;
   skills: Required<SkillSet>;
 }
 

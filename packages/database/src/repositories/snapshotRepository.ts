@@ -81,7 +81,7 @@ function mapSnapshot(snapshot: {
     training: { position: number; advanced: boolean };
     form?: number | null;
     availabilityStatus?: PersistedPlayerSnapshot["availabilityStatus"];
-    observedPosition?: string | null;
+    observedPosition?: PersistedPlayerSnapshot["observedPosition"];
     skills: {
       stamina?: number | null;
       pace?: number | null;

@@ -1,5 +1,7 @@
 import mongoose, { Schema, model, type InferSchemaType, type Model } from "mongoose";
 
+const playerRoleValues = ["goalkeeper", "defender", "midfielder", "winger", "striker", "trainee", "undefined"] as const;
+
 const trainingSchema = new Schema(
   {
     position: { type: Number, required: true, min: 0 },
@@ -35,7 +37,7 @@ const playerSnapshotSchema = new Schema(
       enum: ["available", "injured", "suspended", "unknown", null],
       default: null
     },
-    observedPosition: { type: String, default: null },
+    observedPosition: { type: String, enum: [...playerRoleValues, null], default: null },
     skills: { type: skillSetSchema, required: true },
     roles: [{ type: String }],
     training: { type: trainingSchema, required: true }
