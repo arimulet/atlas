@@ -181,10 +181,6 @@ export function inferPlayerRoleFromSkills(skills: Required<SkillSet>): {
     number
   ];
 
-  if (score < 5) {
-    return { role: "undefined", score };
-  }
-
   return { role, score };
 }
 
