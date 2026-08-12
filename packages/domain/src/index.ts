@@ -48,7 +48,7 @@ export interface PlayerSnapshot {
   snapshotId: string;
   age: number;
   wage: Money;
-  estimatedValue: Money;
+  value: Money;
   form?: number | null;
   availabilityStatus?: AvailabilityStatus;
   observedPosition?: string | null;
@@ -65,7 +65,7 @@ export interface YouthPlayerSnapshot {
   age: number;
   weeksInAcademy?: number | null;
   weeksRemaining?: number | null;
-  estimatedLevel?: string | null;
+  level: number;
   status: YouthPlayerStatus;
 }
 

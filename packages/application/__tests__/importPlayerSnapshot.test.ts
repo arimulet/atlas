@@ -112,8 +112,23 @@ describe("ImportPlayerSnapshot", () => {
     expect(snapshot?.source?.exportedAt.toISOString()).toBe("2026-08-05T20:00:00.000Z");
     expect(snapshot?.players).toHaveLength(1);
     expect(snapshot?.players[0]?.name).toBe("Tomas Alvarez");
-    expect(snapshot?.players[0]?.wage).toMatchObject({ amount: 12000, currency: "ARS" });
+    expect(snapshot?.players[0]?.wage).toBe(12000);
+    expect(snapshot?.players[0]?.value).toBe(450000);
     expect(importEvent?.snapshotId?.toString()).toBe(result.snapshotId);
+  });
+
+  it("imports XML players without an assigned training position", async () => {
+    const payload = structuredClone(validSnapshot) as unknown as PlayerSnapshotV0;
+    payload.source.type = "sokker-xml-import";
+    payload.players[0]!.training.position = 0;
+
+    const result = await importPlayerSnapshot({ payload });
+
+    expect(result.status).toBe("accepted");
+    expect(result.errors).toEqual([]);
+
+    const snapshot = await SnapshotModel.findById(result.snapshotId).lean();
+    expect(snapshot?.players[0]?.training.position).toBe(0);
   });
 
   it("links future snapshots to the same observed club while preserving manual profile settings", async () => {

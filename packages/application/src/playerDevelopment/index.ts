@@ -109,8 +109,9 @@ export const getYouthPipelinePlanning = async (
     throw new Error(`Club not found: ${clubId}`);
   }
 
-  const academyInvestment =
-    buildClubOperatingSettings(club).effective.preferences["academy.investment"];
+  const operatingSettings = buildClubOperatingSettings(club);
+  const academyInvestment = operatingSettings.effective.preferences["academy.investment"];
+  const effectiveCurrency = operatingSettings.effective.currency;
   const snapshots = await snapshotRepository.listByClub(clubId);
   const latest = snapshots.at(-1) ?? null;
 
@@ -133,6 +134,7 @@ export const getYouthPipelinePlanning = async (
         player,
         snapshots,
         academyInvestment,
+        currency: effectiveCurrency.name,
         developmentSummary: findDevelopmentSummary(player, developmentIndex),
         marketPlan: marketIndex.get(player.id) ?? null
       })
@@ -145,7 +147,7 @@ export const getYouthPipelinePlanning = async (
     snapshotDate: formatDate(latest.snapshotDate),
     observed: {
       youthAgeThreshold: YOUTH_PIPELINE_AGE_THRESHOLD,
-      players: youngPlayers.map(mapObservedYouth),
+      players: youngPlayers.map((player) => mapObservedYouth(player, effectiveCurrency.name)),
       coverage: {
         seniorPlayerCount: latest.players.length,
         youngSeniorPlayerCount: youngPlayers.length,
@@ -715,10 +717,11 @@ function buildPlayerPlan(input: {
   player: PersistedPlayerSnapshot;
   snapshots: PersistedSnapshot[];
   academyInvestment: string;
+  currency: string;
   developmentSummary: PlayerDevelopmentPlayerSummary | null;
   marketPlan: SquadMarketPlayerPlan | null;
 }): YouthPipelinePlayerPlan {
-  const context = buildPlayerContext(input.player, input.snapshots, input.developmentSummary);
+  const context = buildPlayerContext(input.player, input.snapshots, input.developmentSummary, input.currency);
   const warnings = buildYouthWarnings(
     input.player,
     input.snapshots,
@@ -748,7 +751,8 @@ function buildPlayerPlan(input: {
 function buildPlayerContext(
   player: PersistedPlayerSnapshot,
   snapshots: PersistedSnapshot[],
-  developmentSummary: PlayerDevelopmentPlayerSummary | null
+  developmentSummary: PlayerDevelopmentPlayerSummary | null,
+  currency: string
 ): YouthPipelinePlayerContext {
   const history = findPlayerHistory(player, snapshots);
   const first = history[0] ?? null;
@@ -760,7 +764,7 @@ function buildPlayerContext(
 
   if (history.length < 2) limits.push("Historial corto para evolucion individual.");
   if (!hasCompleteSkills(player)) limits.push("Habilidades visibles incompletas.");
-  if (player.wage.amount <= 0 || player.estimatedValue.amount <= 0) {
+  if (player.wage <= 0 || player.value <= 0) {
     limits.push("Valor o salario faltante limita lectura patrimonial.");
   }
 
@@ -775,20 +779,20 @@ function buildPlayerContext(
       comparableSkills: developmentSummary?.recentEvolution.comparableSkills ?? 0
     },
     valueAndWage: {
-      wage: player.wage.amount,
-      wageCurrency: player.wage.currency ?? undefined,
-      estimatedValue: player.estimatedValue.amount,
-      estimatedValueCurrency: player.estimatedValue.currency ?? undefined,
+      wage: player.wage,
+      wageCurrency: currency,
+      value: player.value,
+      valueCurrency: currency,
       valueDeltaPercent:
         first && latest
           ? (calculatePercentDelta(
-              first.player.estimatedValue.amount,
-              latest.player.estimatedValue.amount
+              first.player.value,
+              latest.player.value
             ) ?? undefined)
           : undefined,
       wageDeltaPercent:
         first && latest
-          ? (calculatePercentDelta(first.player.wage.amount, latest.player.wage.amount) ??
+          ? (calculatePercentDelta(first.player.wage, latest.player.wage) ??
             undefined)
           : undefined
     },
@@ -901,13 +905,13 @@ function buildYouthWarnings(
     });
   }
 
-  if (context.valueAndWage.wage <= 0 || context.valueAndWage.estimatedValue <= 0) {
+  if (context.valueAndWage.wage <= 0 || context.valueAndWage.value <= 0) {
     warnings.push({
       code: "missing_value_or_wage",
       message: "Falta salario o valor estimado positivo; el contexto patrimonial queda limitado.",
       evidence: [
         { kind: "observed", label: "Salario", value: context.valueAndWage.wage },
-        { kind: "observed", label: "Valor estimado", value: context.valueAndWage.estimatedValue }
+        { kind: "observed", label: "Valor estimado", value: context.valueAndWage.value }
       ]
     });
   }
@@ -918,6 +922,7 @@ function buildYouthWarnings(
 function buildYouthSignals(input: {
   player: PersistedPlayerSnapshot;
   academyInvestment: string;
+  currency: string;
   developmentSummary: PlayerDevelopmentPlayerSummary | null;
   marketPlan: SquadMarketPlayerPlan | null;
   context: YouthPipelinePlayerContext;
@@ -956,8 +961,8 @@ function buildYouthSignals(input: {
           label: "Variacion valor %",
           value: input.context.valueAndWage.valueDeltaPercent
         },
-        { kind: "observed", label: "Salario", value: input.player.wage.amount },
-        { kind: "observed", label: "Valor estimado", value: input.player.estimatedValue.amount },
+        { kind: "observed", label: "Salario", value: input.player.wage },
+        { kind: "observed", label: "Valor estimado", value: input.player.value },
         { kind: "manual", label: "academy.investment", value: input.academyInvestment }
       ]
     });
@@ -1189,15 +1194,15 @@ function categoryPriority(category: Category): number {
   return 1;
 }
 
-function mapObservedYouth(player: PersistedPlayerSnapshot): YouthPipelineObservedPlayer {
+function mapObservedYouth(player: PersistedPlayerSnapshot, currency: string): YouthPipelineObservedPlayer {
   return {
     playerId: player.playerId,
     snapshotPlayerId: player.id,
     name: player.name,
     age: player.age,
     role: resolveRole(player),
-    wage: player.wage,
-    estimatedValue: player.estimatedValue,
+    wage: { amount: player.wage, currency },
+    value: { amount: player.value, currency },
     skills: player.skills
   };
 }

@@ -8,7 +8,7 @@ describe("calculateHistoricalTrends", () => {
       snapshot({
         id: "s-2",
         snapshotDate: "2026-08-12",
-        player: { wage: 15000, estimatedValue: 500000, pace: 11 }
+        player: { wage: 15000, value: 500000, pace: 11 }
       })
     ]);
 
@@ -33,7 +33,7 @@ describe("calculateHistoricalTrends", () => {
     expect(trends.squad.mainVariations).toContainEqual(
       expect.objectContaining({
         playerId: 1001,
-        metric: "estimatedValue",
+        metric: "value",
         deltaAbsolute: 50000,
         direction: "up"
       })
@@ -55,8 +55,8 @@ describe("calculateHistoricalTrends", () => {
 
   it("classifies down and stable trends", () => {
     const trends = calculateHistoricalTrends([
-      snapshot({ id: "s-1", player: { wage: 12000, estimatedValue: 450000 } }),
-      snapshot({ id: "s-2", player: { wage: 12000, estimatedValue: 430000 } })
+      snapshot({ id: "s-1", player: { wage: 12000, value: 450000 } }),
+      snapshot({ id: "s-2", player: { wage: 12000, value: 430000 } })
     ]);
 
     expect(trends.players[0]?.value.direction).toBe("down");
@@ -97,7 +97,7 @@ function snapshot(overrides: {
     externalId?: string | null;
     playerId?: number | null;
     wage?: number;
-    estimatedValue?: number;
+    value?: number;
     pace?: number | null;
   };
 } = {}): SnapshotComparisonSnapshot {
@@ -112,7 +112,7 @@ function snapshot(overrides: {
         name: "Tomas Alvarez",
         age: 24,
         wage: { amount: overrides.player?.wage ?? 12000, currency: "ARS" },
-        estimatedValue: { amount: overrides.player?.estimatedValue ?? 450000, currency: "ARS" },
+        value: { amount: overrides.player?.value ?? 450000, currency: "ARS" },
         skills: {
           stamina: 9,
           pace: overrides.player?.pace === undefined ? 10 : overrides.player.pace,

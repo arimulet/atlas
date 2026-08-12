@@ -31,8 +31,8 @@ interface DashboardSnapshotFixture {
 interface DashboardSnapshotPlayerFixture {
   name: string;
   age: number;
-  wage: { amount: number; currency: string | null };
-  estimatedValue: { amount: number; currency: string | null };
+  wage: number;
+  value: number;
   skills: {
     stamina?: number | null;
     pace?: number | null;
@@ -254,8 +254,8 @@ describe("Club dashboard use case", () => {
   it("summarizes internal sale candidates for the operational dashboard", async () => {
     const first = withPlayer(readValidSnapshot(), {
       age: 31,
-      wage: { amount: 40000, currency: "ARS" },
-      estimatedValue: { amount: 450000, currency: "ARS" }
+      wage: 40000,
+      value: 450000
     });
     const second = {
       ...first,
@@ -540,7 +540,7 @@ describe("CompareClubSnapshots", () => {
     const target = await importPlayerSnapshot({
       payload: payload({
         snapshotDate: "2026-08-12",
-        player: { wage: 15000, estimatedValue: 500000, pace: 11 }
+        player: { wage: 15000, value: 500000, pace: 11 }
       })
     });
 
@@ -559,7 +559,7 @@ describe("CompareClubSnapshots", () => {
     expect(comparison.baseSnapshotId).toBe(base.snapshotId);
     expect(comparison.targetSnapshotId).toBe(target.snapshotId);
     expect(comparison.matchedPlayers[0]?.changes.wage?.delta).toBe(3000);
-    expect(comparison.matchedPlayers[0]?.changes.estimatedValue?.delta).toBe(50000);
+    expect(comparison.matchedPlayers[0]?.changes.value?.delta).toBe(50000);
     expect(comparison.matchedPlayers[0]?.changes.skills).toContainEqual({
       skill: "pace",
       before: 10,
@@ -587,7 +587,7 @@ function payload(overrides: {
   snapshotDate: string;
   player?: {
     wage?: number;
-    estimatedValue?: number;
+    value?: number;
     pace?: number;
   };
 }): PlayerSnapshotV0 {
@@ -596,8 +596,8 @@ function payload(overrides: {
   cloned.source.exportedAt = `${overrides.snapshotDate}T20:00:00.000Z`;
 
   const player = cloned.players[0]!;
-  player.wage.amount = overrides.player?.wage ?? player.wage.amount;
-  player.estimatedValue.amount = overrides.player?.estimatedValue ?? player.estimatedValue.amount;
+  player.wage = overrides.player?.wage ?? player.wage;
+  player.value = overrides.player?.value ?? player.value;
   player.skills.pace = overrides.player?.pace ?? player.skills.pace;
 
   return cloned;

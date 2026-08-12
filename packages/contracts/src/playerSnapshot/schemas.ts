@@ -7,11 +7,6 @@ const isoDate = /^\d{4}-\d{2}-\d{2}$/;
 
 const nullableString = z.string().min(1).nullable().optional();
 
-export const moneySchema = z.object({
-  amount: z.number().finite().nonnegative(),
-  currency: z.string().min(1).nullable().optional()
-});
-
 export const skillSetSchema = z.object({
   stamina: z.number().finite().nonnegative().nullable().optional(),
   pace: z.number().finite().nonnegative().nullable().optional(),
@@ -53,8 +48,12 @@ export const playerSnapshotV0Schema = z.object({
       playerId: z.number().int().positive(),
       name: z.string().min(1),
       age: z.number().int().positive(),
-      wage: moneySchema,
-      estimatedValue: moneySchema,
+      wage: z.number().finite().nonnegative(),
+      value: z.number().finite().nonnegative(),
+      training: z.object({
+        position: z.number().int().nonnegative(),
+        advanced: z.boolean()
+      }),
       form: z.number().finite().nonnegative().nullable().optional(),
       availabilityStatus: z
         .enum(["available", "injured", "suspended", "unknown"])

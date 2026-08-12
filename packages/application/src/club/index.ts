@@ -568,8 +568,8 @@ function mapPlayer(player: PersistedPlayerSnapshot): SnapshotComparisonPlayer {
     playerId: player.playerId,
     name: player.name,
     age: player.age,
-    wage: player.wage,
-    estimatedValue: player.estimatedValue,
+    wage: { amount: player.wage, currency: null },
+    value: { amount: player.value, currency: null },
     skills: player.skills
   };
 }

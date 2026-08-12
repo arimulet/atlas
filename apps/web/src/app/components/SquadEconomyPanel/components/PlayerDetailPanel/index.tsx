@@ -28,9 +28,9 @@ export const PlayerDetailPanel = ({ players, countryDetails }: PlayerDetailPanel
           <div className="player-detail-row" role="row" key={player.snapshotPlayerId}>
             <strong role="cell">{player.name}</strong>
             <span role="cell">{formatConvertedMoney(player.wage.amount, countryDetails)}</span>
-            <span role="cell">{formatConvertedMoney(player.estimatedValue.amount, countryDetails)}</span>
+            <span role="cell">{formatConvertedMoney(player.value.amount, countryDetails)}</span>
             <span role="cell">{formatPercent(player.wageShare)}</span>
-            <span role="cell">{formatPercent(player.estimatedValueShare)}</span>
+            <span role="cell">{formatPercent(player.valueShare)}</span>
             <span role="cell">{formatRatio(player.wageToValueRatio)}</span>
             <span role="cell">
               {player.warnings.length > 0

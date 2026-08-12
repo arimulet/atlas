@@ -192,7 +192,7 @@ function player(overrides: PartialPlayer = {}): BasicDiagnosticPlayerSnapshot {
       amount: overrides.wageAmount ?? 12000,
       currency: overrides.currency === undefined ? "ARS" : overrides.currency
     },
-    estimatedValue: {
+    value: {
       amount: overrides.valueAmount ?? 450000,
       currency: overrides.currency === undefined ? "ARS" : overrides.currency
     },

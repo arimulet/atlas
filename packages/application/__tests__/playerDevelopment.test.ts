@@ -27,8 +27,8 @@ interface SnapshotPlayerFixture {
   externalId: string | null;
   name: string;
   age: number;
-  wage: { amount: number; currency: string | null };
-  estimatedValue: { amount: number; currency: string | null };
+  wage: number;
+  value: number;
   skills: FixtureSkillSet;
 }
 

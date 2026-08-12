@@ -6,11 +6,6 @@ const isoDate = /^\d{4}-\d{2}-\d{2}$/;
 
 const nullableString = z.string().min(1).nullable().optional();
 
-export const moneySchema = z.object({
-  amount: z.number().finite().nonnegative(),
-  currency: z.string().min(1).nullable().optional()
-});
-
 export const skillSetSchema = z.object({
   stamina: z.number().finite().nonnegative().nullable().optional(),
   pace: z.number().finite().nonnegative().nullable().optional(),
@@ -44,8 +39,8 @@ export const playerSnapshotV0Schema = z.object({
       playerId: z.number().int().positive(),
       name: z.string().min(1),
       age: z.number().int().positive(),
-      wage: moneySchema,
-      estimatedValue: moneySchema,
+      wage: z.number().finite().nonnegative(),
+      value: z.number().finite().nonnegative(),
       form: z.number().finite().nonnegative().nullable().optional(),
       availabilityStatus: z
         .enum(["available", "injured", "suspended", "unknown"])
@@ -150,17 +145,6 @@ function collectWarnings(snapshot: PlayerSnapshotV0): ImportIssue[] {
       warnings.push({
         path: `${prefix}.observedPosition`,
         message: "Missing observedPosition; role analysis may depend on assumptions."
-      });
-    }
-
-    if (!player.wage.currency) {
-      warnings.push({ path: `${prefix}.wage.currency`, message: "Missing wage currency." });
-    }
-
-    if (!player.estimatedValue.currency) {
-      warnings.push({
-        path: `${prefix}.estimatedValue.currency`,
-        message: "Missing estimated value currency."
       });
     }
 

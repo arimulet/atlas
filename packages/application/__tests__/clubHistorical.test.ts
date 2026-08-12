@@ -34,7 +34,7 @@ describe("CalculateClubHistoricalTrends", () => {
     await importPlayerSnapshot({
       payload: payload({
         snapshotDate: "2026-08-12",
-        player: { wage: 15000, estimatedValue: 500000, pace: 11 }
+        player: { wage: 15000, value: 500000, pace: 11 }
       })
     });
 
@@ -81,15 +81,15 @@ describe("GenerateClubHistoricalFindings", () => {
 
   it("generates historical findings from persisted club snapshots", async () => {
     const base = await importPlayerSnapshot({
-      payload: payload({ snapshotDate: "2026-08-05", player: { estimatedValue: 400000 } })
+      payload: payload({ snapshotDate: "2026-08-05", player: { value: 400000 } })
     });
     await importPlayerSnapshot({
-      payload: payload({ snapshotDate: "2026-08-12", player: { estimatedValue: 450000 } })
+      payload: payload({ snapshotDate: "2026-08-12", player: { value: 450000 } })
     });
     await importPlayerSnapshot({
       payload: payload({
         snapshotDate: "2026-08-19",
-        player: { estimatedValue: 500000, pace: 11 }
+        player: { value: 500000, pace: 11 }
       })
     });
 
@@ -110,7 +110,7 @@ function payload(overrides: {
   snapshotDate: string;
   player?: {
     wage?: number;
-    estimatedValue?: number;
+    value?: number;
     pace?: number;
   };
 }): PlayerSnapshotV0 {
@@ -119,8 +119,8 @@ function payload(overrides: {
   cloned.source.exportedAt = `${overrides.snapshotDate}T20:00:00.000Z`;
 
   const player = cloned.players[0]!;
-  player.wage.amount = overrides.player?.wage ?? player.wage.amount;
-  player.estimatedValue.amount = overrides.player?.estimatedValue ?? player.estimatedValue.amount;
+  player.wage = overrides.player?.wage ?? player.wage;
+  player.value = overrides.player?.value ?? player.value;
   player.skills.pace = overrides.player?.pace ?? player.skills.pace;
 
   return cloned;

@@ -24,7 +24,7 @@ export const HistoricalPanel = ({ squadEconomy }: HistoricalPanelProps) => {
         />
         <SummaryItem
           label="Variacion valor"
-          value={formatPercent(squadEconomy.historical.changes.totalEstimatedValueDeltaPercent)}
+          value={formatPercent(squadEconomy.historical.changes.totalValueDeltaPercent)}
         />
         <SummaryItem
           label="Cambio ratio"

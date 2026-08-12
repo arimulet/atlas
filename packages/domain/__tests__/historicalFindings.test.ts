@@ -4,9 +4,9 @@ import { generateHistoricalFindings, type SnapshotComparisonSnapshot } from "../
 describe("generateHistoricalFindings", () => {
   it("detects sustained patrimonial appreciation with evidence and action", () => {
     const findings = generateHistoricalFindings([
-      snapshot({ id: "s-1", snapshotDate: "2026-08-01", estimatedValue: 400000 }),
-      snapshot({ id: "s-2", snapshotDate: "2026-08-08", estimatedValue: 450000 }),
-      snapshot({ id: "s-3", snapshotDate: "2026-08-15", estimatedValue: 500000, pace: 11 })
+      snapshot({ id: "s-1", snapshotDate: "2026-08-01", value: 400000 }),
+      snapshot({ id: "s-2", snapshotDate: "2026-08-08", value: 450000 }),
+      snapshot({ id: "s-3", snapshotDate: "2026-08-15", value: 500000, pace: 11 })
     ]);
 
     expect(findings.findings).toContainEqual(
@@ -29,8 +29,8 @@ describe("generateHistoricalFindings", () => {
 
   it("detects patrimonial deterioration", () => {
     const findings = generateHistoricalFindings([
-      snapshot({ id: "s-1", estimatedValue: 500000 }),
-      snapshot({ id: "s-2", estimatedValue: 425000 })
+      snapshot({ id: "s-1", value: 500000 }),
+      snapshot({ id: "s-2", value: 425000 })
     ]);
 
     expect(findings.findings[0]).toMatchObject({
@@ -40,7 +40,7 @@ describe("generateHistoricalFindings", () => {
       evidence: expect.arrayContaining([
         expect.objectContaining({
           kind: "derived",
-          metric: "estimatedValue.deltaPercentage",
+          metric: "value.deltaPercentage",
           value: -15
         })
       ])
@@ -49,9 +49,9 @@ describe("generateHistoricalFindings", () => {
 
   it("detects stagnation only with enough historical evidence", () => {
     const findings = generateHistoricalFindings([
-      snapshot({ id: "s-1", estimatedValue: 500000 }),
-      snapshot({ id: "s-2", estimatedValue: 505000 }),
-      snapshot({ id: "s-3", estimatedValue: 500000 })
+      snapshot({ id: "s-1", value: 500000 }),
+      snapshot({ id: "s-2", value: 505000 }),
+      snapshot({ id: "s-3", value: 500000 })
     ]);
 
     expect(findings.findings[0]?.type).toBe("player_stagnation");
@@ -59,8 +59,8 @@ describe("generateHistoricalFindings", () => {
 
   it("detects risky wage against weak asset evolution", () => {
     const findings = generateHistoricalFindings([
-      snapshot({ id: "s-1", wage: 10000, estimatedValue: 500000 }),
-      snapshot({ id: "s-2", wage: 13000, estimatedValue: 500000 })
+      snapshot({ id: "s-1", wage: 10000, value: 500000 }),
+      snapshot({ id: "s-2", wage: 13000, value: 500000 })
     ]);
 
     expect(findings.findings[0]).toMatchObject({
@@ -74,13 +74,13 @@ describe("generateHistoricalFindings", () => {
 
   it("generates aggregate squad findings when value deteriorates and wage does not fall", () => {
     const findings = generateHistoricalFindings([
-      snapshot({ id: "s-1", estimatedValue: 500000, wage: 10000 }),
-      snapshot({ id: "s-2", estimatedValue: 430000, wage: 11000 })
+      snapshot({ id: "s-1", value: 500000, wage: 10000 }),
+      snapshot({ id: "s-2", value: 430000, wage: 11000 })
     ]);
 
     const squadFinding = findings.findings.find((finding) => finding.type === "squad_asset_evolution");
     const valueEvidence = squadFinding?.evidence.find(
-      (entry) => entry.metric === "squad.estimatedValue.deltaPercentage"
+      (entry) => entry.metric === "squad.value.deltaPercentage"
     );
 
     expect(squadFinding).toMatchObject({
@@ -93,8 +93,8 @@ describe("generateHistoricalFindings", () => {
   it("does not generate findings when data is insufficient or player identity is ambiguous", () => {
     const singleSnapshot = generateHistoricalFindings([snapshot({ id: "s-1" })]);
     const ambiguous = generateHistoricalFindings([
-      snapshot({ id: "s-1", playerId: null, estimatedValue: 400000 }),
-      snapshot({ id: "s-2", playerId: null, estimatedValue: 500000 })
+      snapshot({ id: "s-1", playerId: null, value: 400000 }),
+      snapshot({ id: "s-2", playerId: null, value: 500000 })
     ]);
 
     expect(singleSnapshot.findings).toEqual([]);
@@ -111,7 +111,7 @@ function snapshot(overrides: {
   snapshotDate?: string;
   playerId?: number | null;
   wage?: number;
-  estimatedValue?: number;
+  value?: number;
   pace?: number | null;
 } = {}): SnapshotComparisonSnapshot {
   return {
@@ -125,7 +125,7 @@ function snapshot(overrides: {
         name: "Tomas Alvarez",
         age: 24,
         wage: { amount: overrides.wage ?? 12000, currency: "ARS" },
-        estimatedValue: { amount: overrides.estimatedValue ?? 450000, currency: "ARS" },
+        value: { amount: overrides.value ?? 450000, currency: "ARS" },
         skills: {
           stamina: 9,
           pace: overrides.pace === undefined ? 10 : overrides.pace,

@@ -9,6 +9,9 @@ export function SquadMarketPlanningPanel({
   status,
   onBack
 }: SquadMarketPlanningPanelProps) {
+  const playersWithValue = squadMarketPlanning?.observed.coverage.playersWithValue ?? 0;
+  const marketStrategy = squadMarketPlanning?.manual?.marketStrategy ?? "balanced";
+
   if (status === "loading") {
     return <Section description="Cargando planificacion interna de mercado..." />;
   }
@@ -63,7 +66,7 @@ export function SquadMarketPlanningPanel({
             />
             <SummaryItem
               label="Con valor"
-              value={squadMarketPlanning.observed.coverage.playersWithEstimatedValue.toString()}
+              value={playersWithValue.toString()}
             />
           </dl>
         </Section>
@@ -72,7 +75,7 @@ export function SquadMarketPlanningPanel({
           <dl className="summary-grid">
             <SummaryItem
               label="market.strategy"
-              value={squadMarketPlanning.settings.marketStrategy}
+              value={marketStrategy}
             />
             <SummaryItem label="Alcance" value="Plantel propio" />
           </dl>

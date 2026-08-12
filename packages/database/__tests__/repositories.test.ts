@@ -66,7 +66,8 @@ describe("Mongo repositories", () => {
     expect(saved.players[0]).toMatchObject({
       playerId: player.playerId,
       name: "Tomas Alvarez",
-      wage: { amount: 12000, currency: "ARS" }
+      wage: 12000,
+      value: 450000
     });
   });
 
@@ -288,7 +289,7 @@ describe("Mongo repositories", () => {
       name: "Matias Cantero",
       age: 16,
       weeksRemaining: 4,
-      estimatedLevel: "good",
+      estimatedLevel: "8",
       status: "in_academy"
     });
 
@@ -328,8 +329,9 @@ function buildSnapshotInput(overrides: {
         playerId: overrides.playerId,
         name: "Tomas Alvarez",
         age: 22,
-        wage: { amount: 12000, currency: "ARS" },
-        estimatedValue: { amount: 450000, currency: "ARS" },
+        wage: 12000,
+        value: 450000,
+        training: { position: 3, advanced: false },
         form: 10,
         availabilityStatus: "available",
         observedPosition: "midfielder",
@@ -374,7 +376,7 @@ function buildYouthSnapshotInput(overrides: {
         age: 16,
         initialWeeksRemaining: null,
         weeksRemaining: 4,
-        estimatedLevel: "good",
+        estimatedLevel: "8",
         status: "in_academy"
       }
     ]
