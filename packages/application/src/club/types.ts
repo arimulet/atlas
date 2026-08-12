@@ -8,7 +8,6 @@ export interface UpdateClubProfileInput {
   settings: {
     name?: string | null;
     currency?: { name: string; rate: number };
-    season?: number | null;
     week?: number | null;
     assumptions?: KeyValue[];
     preferences?: KeyValue[];
@@ -18,7 +17,6 @@ export interface UpdateClubProfileInput {
 export interface ValidatedManualProfileUpdate {
   name?: string | null;
   currency?: { name: string; rate: number };
-  season?: number | null;
   week?: number | null;
   assumptions?: KeyValue[];
   preferences?: KeyValue[];

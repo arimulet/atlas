@@ -56,7 +56,8 @@ async function importsRoutes(server: FastifyInstance) {
           clubId: Number(xmlData.clubProfile.externalId),
           country: xmlData.clubProfile.countryId,
           name: xmlData.clubProfile.name,
-          training: xmlData.clubProfile.training
+          training: xmlData.clubProfile.training,
+          gameWeek: xmlData.clubProfile.gameWeek
         },
         snapshot: {
           snapshotDate: xmlData.importedAt.toISOString().split("T")[0],

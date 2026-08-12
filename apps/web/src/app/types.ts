@@ -86,7 +86,7 @@ export interface ClubDashboard {
     id: string;
     clubId: number;
     name: string;
-    season: number | null;
+    gameWeek: number | null;
     week: number | null;
     lastSnapshotDate: string | null;
     sourceType: string | null;
@@ -100,7 +100,6 @@ export interface ClubDashboard {
       externalId: string | null;
       name: string;
       currency: CurrencySettings;
-      season: number | null;
       week: number | null;
     };
     training: {
@@ -112,18 +111,15 @@ export interface ClubDashboard {
   };
   settings: {
     observed: {
-      season: number | null;
       week: number | null;
     };
     settings: {
       currency: CurrencySettings;
-      season: number | null;
       week: number | null;
       preferences: Partial<Record<OperatingPreferenceKey, string>>;
     };
     effective: {
       currency: CurrencySettings;
-      season: number | null;
       week: number | null;
       preferences: Record<OperatingPreferenceKey, string>;
     };
@@ -728,4 +724,3 @@ export interface RealYouthAcademyEvidence {
   label: string;
   value: string | number | null;
 }
-

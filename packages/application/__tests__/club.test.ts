@@ -92,7 +92,6 @@ describe("Club dashboard use case", () => {
 
     expect(dashboard.club).toMatchObject({
       name: "River Plate Forever",
-      season: 78,
       week: 4
     });
     expect(dashboard.club.settings).toMatchObject({
@@ -101,7 +100,6 @@ describe("Club dashboard use case", () => {
     });
     expect(dashboard.settings.effective).toMatchObject({
       currency: { name: "ARS", rate: 100 },
-      season: 78,
       week: 6,
       preferences: {
         "economy.riskTolerance": "balanced",
@@ -417,7 +415,6 @@ describe("Club dashboard use case", () => {
       clubId: 999,
       country: 1,
       name: "Club Sin Snapshots",
-      season: null,
       week: null,
       currency: { name: "ARS", rate: 100 }
     });
@@ -476,7 +473,6 @@ describe("Club profile use cases", () => {
       clubId: 1,
       country: 1,
       name: "River Plate Forever",
-      season: 78,
       week: 4,
       currency: { name: "ARS", rate: 100 }
     });
@@ -488,7 +484,6 @@ describe("Club profile use cases", () => {
       settings: {
         currency: { name: "ARS", rate: 100 }
       },
-      season: 78,
       week: 4
     });
   });
@@ -498,7 +493,6 @@ describe("Club profile use cases", () => {
       clubId: 1,
       country: 1,
       name: "River Plate Forever",
-      season: 78,
       week: 4,
       currency: { name: "ARS", rate: 100 }
     });

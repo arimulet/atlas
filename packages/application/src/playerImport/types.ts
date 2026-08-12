@@ -52,7 +52,7 @@ export interface NormalizedPlayerSnapshot {
       ATT: number | null;
     } | null;
     name: string;
-    season: number | null;
+    gameWeek?: number | null;
     week: number | null;
     lastSnapshotDate: Date;
     sourceType: PlayerSnapshotV0["source"]["type"];

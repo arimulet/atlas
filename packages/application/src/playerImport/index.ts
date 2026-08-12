@@ -257,7 +257,7 @@ function normalizePlayerSnapshot(snapshot: PlayerSnapshotV0): NormalizedPlayerSn
         ATT: snapshot.club.training.att ?? null
       } : undefined,
       name: snapshot.club.name.trim(),
-      season: snapshot.snapshot.season ?? null,
+      gameWeek: snapshot.club.gameWeek ?? undefined,
       week: snapshot.snapshot.week ?? null,
       lastSnapshotDate: new Date(`${snapshot.snapshot.snapshotDate}T00:00:00.000Z`),
       sourceType: snapshot.source.type,
