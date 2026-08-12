@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   generateBasicDiagnostic,
   type BasicDiagnosticPlayerSnapshot,
-  type BasicDiagnosticSnapshot
+  type BasicDiagnosticSnapshot,
+  type ObservedPosition
 } from "../src/index.js";
 
 describe("generateBasicDiagnostic", () => {
@@ -39,16 +40,16 @@ describe("generateBasicDiagnostic", () => {
         players: [
           player({
             id: "ps-1",
-            playerId: "p-1",
+            playerId: 1001,
             name: "Balanced Midfielder",
             wageAmount: 10000,
             valueAmount: 600000
           }),
           player({
             id: "ps-2",
-            playerId: "p-2",
+            playerId: 1002,
             name: "Expensive Veteran",
-            wageAmount: 30000,
+            wageAmount: 120000,
             valueAmount: 450000
           })
         ]
@@ -60,11 +61,9 @@ describe("generateBasicDiagnostic", () => {
     expect(finding).toMatchObject({
       code: "economic-risk.high-wage-low-value-ratio",
       severity: "medium",
-      affectedPlayerIds: ["p-2"]
+      affectedPlayerIds: ["1002"]
     });
-    expect(finding?.evidence.map((trace) => trace.label)).toContain(
-      "Expensive Veteran value-to-wage ratio"
-    );
+    expect(finding?.evidence.map((trace) => trace.code)).toContain("player.value-to-wage-ratio");
   });
 
   it("detects asset risk from age and value", () => {
@@ -74,7 +73,7 @@ describe("generateBasicDiagnostic", () => {
           player({
             name: "Senior Asset",
             age: 32,
-            valueAmount: 700000,
+            valueAmount: 2400000,
             observedPosition: "defender"
           })
         ]
@@ -113,7 +112,7 @@ describe("generateBasicDiagnostic", () => {
       severity: "low",
       confidence: "high"
     });
-    expect(finding?.affectedPlayerIds).toEqual(["player-001"]);
+    expect(finding?.affectedPlayerIds).toEqual(["1001"]);
   });
 
   it("marks follow-up when data is missing", () => {
@@ -121,7 +120,7 @@ describe("generateBasicDiagnostic", () => {
       buildSnapshot({
         players: [
           player({
-            externalId: null,
+            playerId: null,
             form: null,
             availabilityStatus: null,
             observedPosition: null,
@@ -140,16 +139,14 @@ describe("generateBasicDiagnostic", () => {
       confidence: "low"
     });
     expect(finding?.assumptions.map((assumption) => assumption.code)).toContain(
-      "missing-external-id"
+      "missing-player-id"
     );
-    expect(finding?.evidence.map((trace) => trace.label)).toContain(
-      "Tomas Alvarez missing skills.technique"
-    );
+    expect(finding?.evidence.map((trace) => trace.code)).toContain("player.missing-field");
   });
 
   it("includes evidence and assumptions in every finding", () => {
     const diagnostic = generateBasicDiagnostic(
-      buildSnapshot({ players: [player({ externalId: null })] })
+      buildSnapshot({ players: [player({ playerId: null })] })
     );
 
     expect(diagnostic.findings.length).toBeGreaterThan(0);
@@ -161,15 +158,14 @@ describe("generateBasicDiagnostic", () => {
 
   it("does not generate recommendations without explanation", () => {
     const diagnostic = generateBasicDiagnostic(
-      buildSnapshot({ players: [player({ externalId: null })] })
+      buildSnapshot({ players: [player({ playerId: null })] })
     );
 
     diagnostic.findings
       .flatMap((finding) => finding.recommendations)
       .forEach((recommendation) => {
         expect(recommendation.traceKind).toBe("recommended");
-        expect(recommendation.description.length).toBeGreaterThan(0);
-        expect(recommendation.rationale.length).toBeGreaterThan(0);
+        expect(recommendation.code.length).toBeGreaterThan(0);
       });
   });
 });
@@ -185,15 +181,14 @@ function buildSnapshot(overrides: Partial<BasicDiagnosticSnapshot> = {}): BasicD
 function player(overrides: PartialPlayer = {}): BasicDiagnosticPlayerSnapshot {
   return {
     id: overrides.id ?? "player-snapshot-001",
-    playerId: overrides.playerId === undefined ? "player-001" : overrides.playerId,
-    externalId: overrides.externalId === undefined ? "external-player-001" : overrides.externalId,
+    playerId: overrides.playerId === undefined ? 1001 : overrides.playerId,
     name: overrides.name ?? "Tomas Alvarez",
     age: overrides.age ?? 22,
     wage: {
       amount: overrides.wageAmount ?? 12000,
       currency: overrides.currency === undefined ? "ARS" : overrides.currency
     },
-    estimatedValue: {
+    value: {
       amount: overrides.valueAmount ?? 450000,
       currency: overrides.currency === undefined ? "ARS" : overrides.currency
     },
@@ -217,8 +212,7 @@ function player(overrides: PartialPlayer = {}): BasicDiagnosticPlayerSnapshot {
 
 interface PartialPlayer {
   id?: string;
-  playerId?: string | null;
-  externalId?: string | null;
+  playerId?: number | null;
   name?: string;
   age?: number;
   wageAmount?: number;
@@ -226,7 +220,7 @@ interface PartialPlayer {
   currency?: string | null;
   form?: number | null;
   availabilityStatus?: BasicDiagnosticPlayerSnapshot["availabilityStatus"];
-  observedPosition?: string | null;
+  observedPosition?: ObservedPosition | null;
   stamina?: number | null;
   pace?: number | null;
   technique?: number | null;

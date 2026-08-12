@@ -52,6 +52,27 @@ describe("ImportPlayerSnapshot", () => {
     expect(result.importedPlayerCount).toBe(1);
   });
 
+  it("derives striker from the highest role score even below the old threshold", async () => {
+    const payload = structuredClone(validSnapshot) as unknown as PlayerSnapshotV0;
+    payload.players[0]!.skills = {
+      stamina: 0,
+      pace: 6,
+      technique: 4,
+      passing: 2,
+      keeper: 0,
+      defender: 3,
+      playmaker: 0,
+      striker: 4
+    };
+
+    const result = await importPlayerSnapshot({ payload });
+
+    const snapshot = await SnapshotModel.findById(result.snapshotId).lean();
+
+    expect(result.status).toBe("accepted");
+    expect(snapshot?.players[0]?.observedPosition).toBe("striker");
+  });
+
   it("rejects invalid JSON and persists the rejected import event", async () => {
     const result = await importPlayerSnapshot({ payload: invalidSnapshot });
 
@@ -73,17 +94,20 @@ describe("ImportPlayerSnapshot", () => {
     expect(result.warnings.length).toBeGreaterThan(0);
 
     const importEvent = await ImportEventModel.findById(result.importEventId).lean();
-    expect(importEvent?.warnings.map((warning) => warning.path)).toContain("players.0.externalId");
+    expect(importEvent?.warnings.map((warning) => warning.path)).toContain(
+      "players.0.skills.technique"
+    );
   });
 
-  it("accepts a player without externalId without reusing a doubtful identity", async () => {
+  it("rejects a player without playerId without creating an invalid player entity", async () => {
     const first = await importPlayerSnapshot({ payload: missingExternalIdSnapshot });
     const second = await importPlayerSnapshot({ payload: missingExternalIdSnapshot });
 
-    expect(first.status).toBe("accepted-with-warnings");
-    expect(second.status).toBe("accepted-with-warnings");
-    expect(first.playerIds[0]).not.toBe(second.playerIds[0]);
-    expect(await PlayerModel.countDocuments({ externalId: null })).toBe(2);
+    expect(first.status).toBe("rejected");
+    expect(second.status).toBe("rejected");
+    expect(first.playerIds).toEqual([]);
+    expect(second.playerIds).toEqual([]);
+    expect(await PlayerModel.countDocuments()).toBe(0);
   });
 
   it("accepts a missing skill as a non-blocking warning", async () => {
@@ -109,16 +133,31 @@ describe("ImportPlayerSnapshot", () => {
     expect(snapshot?.source?.exportedAt.toISOString()).toBe("2026-08-05T20:00:00.000Z");
     expect(snapshot?.players).toHaveLength(1);
     expect(snapshot?.players[0]?.name).toBe("Tomas Alvarez");
-    expect(snapshot?.players[0]?.wage).toMatchObject({ amount: 12000, currency: "ARS" });
+    expect(snapshot?.players[0]?.wage).toBe(12000);
+    expect(snapshot?.players[0]?.value).toBe(450000);
     expect(importEvent?.snapshotId?.toString()).toBe(result.snapshotId);
+  });
+
+  it("imports XML players without an assigned training position", async () => {
+    const payload = structuredClone(validSnapshot) as unknown as PlayerSnapshotV0;
+    payload.source.type = "sokker-xml-import";
+    payload.players[0]!.training.position = 0;
+
+    const result = await importPlayerSnapshot({ payload });
+
+    expect(result.status).toBe("accepted");
+    expect(result.errors).toEqual([]);
+
+    const snapshot = await SnapshotModel.findById(result.snapshotId).lean();
+    expect(snapshot?.players[0]?.training.position).toBe(0);
   });
 
   it("links future snapshots to the same observed club while preserving manual profile settings", async () => {
     const first = await importPlayerSnapshot({ payload: validSnapshot });
     await ClubModel.findByIdAndUpdate(first.clubId, {
       $set: {
-        "manual.currency": "ARS",
-        "manual.assumptions": [
+        "settings.currency": { name: "ARS", rate: 100 },
+        "settings.assumptions": [
           {
             key: "liquidity-buffer",
             value: "Keep cash available for market windows.",
@@ -128,7 +167,7 @@ describe("ImportPlayerSnapshot", () => {
       }
     });
 
-    const payload = structuredClone(validSnapshot) as PlayerSnapshotV0;
+    const payload = structuredClone(validSnapshot) as unknown as PlayerSnapshotV0;
     payload.snapshot.snapshotDate = "2026-08-06";
     payload.snapshot.week = 5;
 
@@ -139,9 +178,9 @@ describe("ImportPlayerSnapshot", () => {
     const club = await ClubModel.findById(first.clubId).lean();
     const snapshots = await SnapshotModel.find({ clubId: first.clubId }).sort({ snapshotDate: 1 }).lean();
 
-    expect(club?.observed?.week).toBe(5);
-    expect(club?.manual?.currency).toBe("ARS");
-    expect(club?.manual?.assumptions[0]?.key).toBe("liquidity-buffer");
+    expect(club?.week).toBe(5);
+    expect(club?.settings?.currency).toMatchObject({ name: "ARS", rate: 100 });
+    expect(club?.settings?.assumptions[0]?.key).toBe("liquidity-buffer");
     expect(snapshots.map((snapshot) => snapshot._id.toString())).toEqual([
       first.snapshotId,
       second.snapshotId
@@ -156,7 +195,7 @@ describe("ImportPlayerSnapshot", () => {
 
     const snapshot = await SnapshotModel.findById(result.snapshotId).lean();
     expect(snapshot?.source?.type).toBe("sokker-dom-export");
-    expect(snapshot?.players[0]?.externalId).toBe("101");
+    expect(snapshot?.players[0]?.playerId).toBe(101);
   });
 
   it("imports the representative Sokker player-box JSON generated by the extension parser", async () => {
@@ -167,13 +206,13 @@ describe("ImportPlayerSnapshot", () => {
 
     const snapshot = await SnapshotModel.findById(result.snapshotId).lean();
     expect(snapshot?.snapshotDate.toISOString()).toBe("2026-08-06T00:00:00.000Z");
-    expect(snapshot?.players.map((player) => player.externalId)).toEqual(["38643161", "39409355"]);
-    expect(snapshot?.players[0]?.observedPosition).toBe("defender");
+    expect(snapshot?.players.map((player) => player.playerId)).toEqual([38643161, 39409355]);
+    expect(snapshot?.players[0]?.observedPosition).toBe("winger");
     expect(snapshot?.players[1]?.availabilityStatus).toBe("injured");
   });
 
   it("derives observedPosition during import when the squad page does not provide it", async () => {
-    const payload = structuredClone(validSnapshot) as PlayerSnapshotV0;
+    const payload = structuredClone(validSnapshot) as unknown as PlayerSnapshotV0;
     const player = payload.players[0]!;
     player.observedPosition = null;
     player.skills = {

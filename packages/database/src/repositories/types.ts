@@ -1,3 +1,5 @@
+export type ObservedPosition = "goalkeeper" | "defender" | "midfielder" | "winger" | "striker";
+
 export interface PersistedImportIssue {
   path: string;
   message: string;
@@ -5,75 +7,40 @@ export interface PersistedImportIssue {
 
 export interface PersistedClub {
   id: string;
-  observed: PersistedClubObservedProfile;
-  manual: PersistedClubManualProfile;
-  profile: PersistedClubEffectiveProfile;
-  settings: PersistedClubOperatingSettings;
-  externalId: string | null;
+  clubId: number;
+  country: number;
+  training: { 
+    GK: number | null;
+    DEF: number | null;
+    MID: number | null;
+    ATT: number | null;
+  } | null;
   name: string;
-}
-
-export interface PersistedClubObservedProfile {
-  externalId: string | null;
-  name: string;
-  season: number | null;
+  gameWeek: number | null;
   week: number | null;
   lastSnapshotDate: Date | null;
   sourceType: string | null;
   observedAt: Date | null;
+  settings: PersistedClubSettings;
 }
 
-export interface PersistedClubManualProfile {
-  name: string | null;
-  currency: string | null;
-  season: number | null;
-  week: number | null;
-  assumptions: PersistedClubManualRecord[];
-  preferences: PersistedClubManualRecord[];
+export interface PersistedClubSettings {
+  currency: { name: string; rate: number };
+  week?: number | null;
+  assumptions: PersistedClubSettingsRecord[];
+  preferences: PersistedClubSettingsRecord[];
 }
 
-export interface PersistedClubManualRecord {
+export interface PersistedClubSettingsRecord {
   key: string;
   value: string;
   updatedAt: Date;
 }
 
-export interface PersistedClubEffectiveProfile {
-  externalId: string | null;
-  name: string;
-  currency: string | null;
-  season: number | null;
-  week: number | null;
-}
-
-export interface PersistedClubOperatingSettings {
-  observed: PersistedClubObservedOperatingSettings;
-  manual: PersistedClubManualOperatingSettings;
-  effective: PersistedClubEffectiveOperatingSettings;
-}
-
-export interface PersistedClubObservedOperatingSettings {
-  season: number | null;
-  week: number | null;
-}
-
-export interface PersistedClubManualOperatingSettings {
-  currency: string | null;
-  season: number | null;
-  week: number | null;
-  preferences: PersistedClubManualRecord[];
-}
-
-export interface PersistedClubEffectiveOperatingSettings {
-  currency: string | null;
-  season: number | null;
-  week: number | null;
-  preferences: PersistedClubManualRecord[];
-}
-
 export interface PersistedPlayer {
   id: string;
-  externalId: string | null;
+  playerId: number;
+  clubId: number;
   name: string;
 }
 
@@ -107,17 +74,19 @@ export interface SnapshotSkillSet {
 
 export interface PersistedPlayerSnapshot {
   id: string;
-  playerId: string | null;
-  externalId: string | null;
+  playerId: number;
   name: string;
   age: number;
-  wage: SnapshotMoney;
-  estimatedValue: SnapshotMoney;
+  wage: number;
+  value: number;
+  training: {
+    position: number;
+    advanced: boolean;
+  };
   form: number | null;
   availabilityStatus: "available" | "injured" | "suspended" | "unknown" | null;
-  observedPosition: string | null;
+  observedPosition: ObservedPosition | null;
   skills: SnapshotSkillSet;
-  roles: string[];
 }
 
 export interface SnapshotSource {
@@ -132,10 +101,52 @@ export interface PersistedSnapshot {
   clubId: string;
   schemaVersion: string;
   snapshotDate: Date;
-  season: number | null;
+  gameWeek: number | null;
   week: number | null;
   importedAt: Date;
   source: SnapshotSource;
   sourceVersion: string | null;
   players: PersistedPlayerSnapshot[];
+}
+
+export interface PersistedYouthPlayerSnapshot {
+  id: string;
+  playerId: number;
+  name: string;
+  age: number;
+  initialWeeksRemaining: number | null;
+  weeksRemaining: number | null;
+  skill: number | null;
+  status: "in_academy" | "ready_for_promotion" | "promoted";
+}
+
+export interface PersistedYouthSnapshot {
+  id: string;
+  clubId: string;
+  schemaVersion: string;
+  snapshotDate: Date;
+  gameWeek: number | null;
+  week: number | null;
+  importedAt: Date;
+  source: SnapshotSource;
+  sourceVersion: string | null;
+  weeklyInvestment: SnapshotMoney | null;
+  players: PersistedYouthPlayerSnapshot[];
+}
+
+export type PersistedYouthAcademySnapshot = PersistedYouthSnapshot;
+
+export interface PersistedCountry {
+  id: string;
+  countryId: number;
+  name: string;
+  currencyName: string;
+  currencyRate: number;
+}
+
+export interface SaveCountryInput {
+  countryId: number;
+  name: string;
+  currencyName: string;
+  currencyRate: number;
 }

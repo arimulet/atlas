@@ -11,38 +11,51 @@ const manualRecordSchema = new Schema(
 
 const clubSchema = new Schema(
   {
-    externalId: { type: String, default: null },
-    name: { type: String, required: true, trim: true },
-    observed: {
-      externalId: { type: String, default: null },
-      name: { type: String, required: true, trim: true },
-      season: { type: Number, default: null },
-      week: { type: Number, default: null },
-      lastSnapshotDate: { type: Date, default: null },
-      sourceType: { type: String, default: null },
-      observedAt: { type: Date, default: null }
+    clubId: { type: Number, required: true },
+    country: { type: Number, required: true },
+    training: {
+      GK: { type: Number, default: null },
+      DEF: { type: Number, default: null },
+      MID: { type: Number, default: null },
+      ATT: { type: Number, default: null }
     },
-    manual: {
-      name: { type: String, default: null },
-      currency: { type: String, default: null },
-      season: { type: Number, default: null },
+    name: { type: String, required: true, trim: true },
+    gameWeek: { type: Number, default: null },
+    week: { type: Number, default: null },
+    lastSnapshotDate: { type: Date, default: null },
+    sourceType: { type: String, default: null },
+    observedAt: { type: Date, default: null },
+    settings: {
+      currency: {
+        type: {
+          name: { type: String, required: true },
+          rate: { type: Number, required: true }
+        },
+        _id: false,
+        required: true
+      },
       week: { type: Number, default: null },
       assumptions: { type: [manualRecordSchema], default: [] },
-      preferences: { type: [manualRecordSchema], default: [] }
+      preferences: { 
+        type: [manualRecordSchema], 
+        default: () => [
+          { key: "economy.riskTolerance", value: "balanced", updatedAt: new Date() },
+          { key: "training.priority", value: "balanced", updatedAt: new Date() },
+          { key: "academy.investment", value: "balanced", updatedAt: new Date() },
+          { key: "market.strategy", value: "balanced", updatedAt: new Date() }
+        ] 
+      }
     }
   },
   { timestamps: true }
 );
 
 clubSchema.index(
-  { externalId: 1 },
-  {
-    unique: true,
-    partialFilterExpression: { externalId: { $type: "string" } }
-  }
+  { clubId: 1 },
+  { unique: true }
 );
 
-type ClubDocument = InferSchemaType<typeof clubSchema>;
+export type ClubDocument = InferSchemaType<typeof clubSchema>;
 
 export const ClubModel =
   (mongoose.models.Club as Model<ClubDocument> | undefined) ??

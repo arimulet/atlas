@@ -1,14 +1,11 @@
-import { formatDateTime } from "../../../../formatters";
-import { SummaryItem } from "../../../SummaryItem";
+import { formatDateTime } from "@atlas/web/app/formatters";
+import { SummaryItem } from "@atlas/web/app/components/SummaryItem";
 import { SnapshotAvailabilityPanelProps } from "./types";
+import { Section } from "../../../Section";
 
 export const SnapshotAvailabilityPanel = ({ dashboard }: SnapshotAvailabilityPanelProps) => {
   return (
-    <section className="panel">
-      <div className="panel-heading">
-        <p className="eyebrow">Snapshots</p>
-        <h2>Historical availability</h2>
-      </div>
+    <Section title="Snapshots" subtitle="Historical availability">
       <dl className="summary-grid">
         <SummaryItem label="Snapshots" value={dashboard.snapshots.count.toString()} />
         <SummaryItem
@@ -29,6 +26,6 @@ export const SnapshotAvailabilityPanel = ({ dashboard }: SnapshotAvailabilityPan
           Latest import: {formatDateTime(dashboard.snapshots.latest.importedAt)}.
         </p>
       ) : null}
-    </section>
+    </Section>
   );
-}
+};

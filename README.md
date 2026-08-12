@@ -10,7 +10,6 @@ This repository contains only the software implementation:
 
 - `apps/web`: React + Vite web application.
 - `apps/api`: Node.js + Fastify API.
-- `apps/extension`: Manifest V3 browser extension for manual Sokker DOM export.
 - `packages/contracts`: Zod JSON contracts and import validation.
 - `packages/domain`: minimal domain types.
 - `packages/application`: use-case boundary for application logic.
@@ -27,26 +26,11 @@ npm test
 npm run build
 npm run dev:web
 npm run dev:api
-npm run dev:extension
 ```
 
-## Browser Extension
+## Data Import
 
-Build and validate the unpacked extension with:
-
-```bash
-npm run extension:build
-```
-
-Create the clean local installation folder with:
-
-```bash
-npm run extension:package
-```
-
-Then load `artifacts/extension/atlas-snapshot-exporter` in the browser extension development screen. The popup only reads the active Sokker page after the user clicks `Generate preview`; it shows the JSON preview before downloading and does not automate Sokker clicks, navigation, login, or network sync.
-
-See `docs/extension-local-packaging.md` for installation, usage and manual verification steps.
+The official data import flow uses the internal XML import form within the ATLAS web application. Users can export XML data from Sokker and import it directly into ATLAS.
 
 ## Technical Baseline
 

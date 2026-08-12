@@ -30,7 +30,17 @@ describe("atlas.player-snapshot.v0", () => {
     expect(result.status).toBe("accepted-with-warnings");
     expect(result.errors).toEqual([]);
     expect(result.warnings.length).toBeGreaterThan(0);
-    expect(result.warnings.map((warning) => warning.path)).toContain("players.0.externalId");
     expect(result.warnings.map((warning) => warning.path)).toContain("players.0.skills.technique");
+  });
+
+  it("accepts XML players without an assigned training position", () => {
+    const snapshot = structuredClone(validSnapshot);
+    snapshot.source.type = "sokker-xml-import";
+    snapshot.players[0]!.training.position = 0;
+
+    const result = validatePlayerSnapshotV0(snapshot);
+
+    expect(result.status).toBe("accepted");
+    expect(result.errors).toEqual([]);
   });
 });

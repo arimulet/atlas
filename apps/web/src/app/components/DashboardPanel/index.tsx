@@ -1,12 +1,12 @@
-import { EmptyDashboardPanel } from "../EmptyDashboardPanel";
-import { ModuleGrid } from "../ModuleGrid";
+import { EmptyDashboardPanel } from "@atlas/web/app/components/EmptyDashboardPanel";
 import { ClubProfilePanel } from "./components/ClubProfilePanel";
 import { DevelopmentSummaryPanel } from "./components/DevelopmentSummaryPanel";
 import { MarketSummaryPanel } from "./components/MarketSummaryPanel";
 import { OperatingSettingsPanel } from "./components/OperatingSettingsPanel";
 import { SnapshotAvailabilityPanel } from "./components/SnapshotAvailabilityPanel";
 import { YouthPipelineSummaryPanel } from "./components/YouthPipelineSummaryPanel";
-
+import { Section } from "@atlas/web/app/components/Section";
+import { ModuleCard } from "@atlas/web/app/components/ModuleCard";
 import { DashboardPanelProps } from "./types";
 
 export const DashboardPanel = ({
@@ -15,25 +15,21 @@ export const DashboardPanel = ({
   onOpenSquadEconomy,
   onOpenPlayerDevelopment,
   onOpenSquadMarketPlanning,
-  onOpenYouthPipelinePlanning
+  onOpenYouthPipelinePlanning,
+  onOpenRealYouthAcademy
 }: DashboardPanelProps) => {
   if (status === "loading") {
-    return (
-      <section className="panel">
-        <p className="loading">Loading club dashboard...</p>
-      </section>
-    );
+    return <Section description="Loading club dashboard..." />;
   }
 
   if (status === "error") {
     return (
-      <section className="panel issue-panel error">
-        <div className="panel-heading">
-          <p className="eyebrow">Club Dashboard</p>
-          <h2>Club could not be loaded</h2>
-        </div>
-        <p className="muted">Import a fresh snapshot to select the active club again.</p>
-      </section>
+      <Section
+        tone="error"
+        title="Club Dashboard"
+        subtitle="Club could not be loaded"
+        description="Import a fresh snapshot to select the active club again."
+      />
     );
   }
 
@@ -58,29 +54,52 @@ export const DashboardPanel = ({
         dashboard={dashboard}
         onOpenYouthPipelinePlanning={onOpenYouthPipelinePlanning}
       />
-      <section className="panel">
-        <div className="panel-heading">
-          <p className="eyebrow">Access</p>
-          <h2>Operational areas</h2>
+      <Section title="Access" subtitle="Operational areas">
+        <div className="module-grid">
+          {dashboard.operationalAreas.map((area) => (
+            <ModuleCard
+              key={area.key}
+              label={area.label}
+              summary={area.summary}
+              status={area.status}
+            >
+              {area.key === "squad-economy" && area.status === "available" ? (
+                <button type="button" onClick={onOpenSquadEconomy}>
+                  Abrir Economia de plantilla
+                </button>
+              ) : null}
+              {area.key === "player-development" && area.status === "available" ? (
+                <button type="button" onClick={onOpenPlayerDevelopment}>
+                  Abrir desarrollo
+                </button>
+              ) : null}
+              {area.key === "squad-market-planning" && area.status === "available" ? (
+                <button type="button" onClick={onOpenSquadMarketPlanning}>
+                  Abrir planificacion
+                </button>
+              ) : null}
+              {area.key === "youth-pipeline-planning" && area.status === "available" ? (
+                <button type="button" onClick={onOpenYouthPipelinePlanning}>
+                  Abrir pipeline juvenil senior
+                </button>
+              ) : null}
+              {area.key === "academy" && onOpenRealYouthAcademy ? (
+                <button type="button" onClick={onOpenRealYouthAcademy}>
+                  Abrir cantera real
+                </button>
+              ) : null}
+            </ModuleCard>
+          ))}
         </div>
-        <ModuleGrid
+
+        {/* <ModuleGrid
           areas={dashboard.operationalAreas}
           onOpenSquadEconomy={onOpenSquadEconomy}
           onOpenPlayerDevelopment={onOpenPlayerDevelopment}
           onOpenSquadMarketPlanning={onOpenSquadMarketPlanning}
           onOpenYouthPipelinePlanning={onOpenYouthPipelinePlanning}
-        />
-      </section>
+        /> */}
+      </Section>
     </section>
   );
-}
-
-
-
-
-
-
-
-
-
-
+};

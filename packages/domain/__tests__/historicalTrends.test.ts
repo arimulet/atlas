@@ -8,7 +8,7 @@ describe("calculateHistoricalTrends", () => {
       snapshot({
         id: "s-2",
         snapshotDate: "2026-08-12",
-        player: { wage: 15000, estimatedValue: 500000, pace: 11 }
+        player: { wage: 15000, value: 500000, pace: 11 }
       })
     ]);
 
@@ -32,8 +32,8 @@ describe("calculateHistoricalTrends", () => {
     expect(trends.squad.wageTotal.evidence.deltaAbsolute).toBe(3000);
     expect(trends.squad.mainVariations).toContainEqual(
       expect.objectContaining({
-        externalId: "p-1",
-        metric: "estimatedValue",
+        playerId: 1001,
+        metric: "value",
         deltaAbsolute: 50000,
         direction: "up"
       })
@@ -55,8 +55,8 @@ describe("calculateHistoricalTrends", () => {
 
   it("classifies down and stable trends", () => {
     const trends = calculateHistoricalTrends([
-      snapshot({ id: "s-1", player: { wage: 12000, estimatedValue: 450000 } }),
-      snapshot({ id: "s-2", player: { wage: 12000, estimatedValue: 430000 } })
+      snapshot({ id: "s-1", player: { wage: 12000, value: 450000 } }),
+      snapshot({ id: "s-2", player: { wage: 12000, value: 430000 } })
     ]);
 
     expect(trends.players[0]?.value.direction).toBe("down");
@@ -65,8 +65,8 @@ describe("calculateHistoricalTrends", () => {
 
   it("does not merge players with ambiguous identities", () => {
     const trends = calculateHistoricalTrends([
-      snapshot({ id: "s-1", player: { externalId: null } }),
-      snapshot({ id: "s-2", player: { externalId: null, wage: 15000 } })
+      snapshot({ id: "s-1", player: { playerId: null } }),
+      snapshot({ id: "s-2", player: { playerId: null, wage: 15000 } })
     ]);
 
     expect(trends.players).toHaveLength(0);
@@ -95,8 +95,9 @@ function snapshot(overrides: {
   snapshotDate?: string;
   player?: {
     externalId?: string | null;
+    playerId?: number | null;
     wage?: number;
-    estimatedValue?: number;
+    value?: number;
     pace?: number | null;
   };
 } = {}): SnapshotComparisonSnapshot {
@@ -107,12 +108,11 @@ function snapshot(overrides: {
     players: [
       {
         id: `${overrides.id ?? "s-1"}-player-1`,
-        playerId: "player-1",
-        externalId: overrides.player?.externalId === undefined ? "p-1" : overrides.player.externalId,
+        playerId: overrides.player?.playerId === undefined ? 1001 : overrides.player.playerId,
         name: "Tomas Alvarez",
         age: 24,
         wage: { amount: overrides.player?.wage ?? 12000, currency: "ARS" },
-        estimatedValue: { amount: overrides.player?.estimatedValue ?? 450000, currency: "ARS" },
+        value: { amount: overrides.player?.value ?? 450000, currency: "ARS" },
         skills: {
           stamina: 9,
           pace: overrides.player?.pace === undefined ? 10 : overrides.player.pace,

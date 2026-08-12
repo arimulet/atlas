@@ -2,6 +2,7 @@ import type {
   ClubDashboard,
   ImportResponse,
   PlayerDevelopment,
+  RealYouthAcademyPlanning,
   SquadEconomy,
   SquadMarketPlanning,
   YouthPipelinePlanning
@@ -9,57 +10,70 @@ import type {
 
 export async function fetchClubDashboard(clubId: string): Promise<ClubDashboard> {
   const response = await fetch(`/api/clubs/${clubId}/dashboard`);
-  const body = (await response.json()) as { dashboard?: ClubDashboard };
+  const body = (await response.json()) as ClubDashboard;
 
-  if (!response.ok || !body.dashboard) {
+  if (!response.ok || !body) {
     throw new Error("Dashboard API returned an unexpected response.");
   }
 
-  return body.dashboard;
+  return body;
 }
 
 export async function fetchSquadEconomy(clubId: string): Promise<SquadEconomy> {
-  const response = await fetch(`/api/clubs/${clubId}/squad-economy`);
-  const body = (await response.json()) as { squadEconomy?: SquadEconomy };
+  const response = await fetch(`/api/clubs/${clubId}/economy`);
+  const body = (await response.json()) as SquadEconomy;
 
-  if (!response.ok || !body.squadEconomy) {
+  if (!response.ok || !body) {
     throw new Error("Squad economy API returned an unexpected response.");
   }
 
-  return body.squadEconomy;
+  return body;
 }
 
 export async function fetchPlayerDevelopment(clubId: string): Promise<PlayerDevelopment> {
-  const response = await fetch(`/api/clubs/${clubId}/player-development`);
-  const body = (await response.json()) as { playerDevelopment?: PlayerDevelopment };
+  const response = await fetch(`/api/clubs/${clubId}/players/development`);
+  const body = (await response.json()) as PlayerDevelopment;
 
-  if (!response.ok || !body.playerDevelopment) {
+  if (!response.ok || !body) {
     throw new Error("Player development API returned an unexpected response.");
   }
 
-  return body.playerDevelopment;
+  return body;
 }
 
 export async function fetchSquadMarketPlanning(clubId: string): Promise<SquadMarketPlanning> {
-  const response = await fetch(`/api/clubs/${clubId}/squad-market-planning`);
-  const body = (await response.json()) as { squadMarketPlanning?: SquadMarketPlanning };
+  const response = await fetch(`/api/clubs/${clubId}/economy/squad-market-planning`);
+  const body = (await response.json()) as SquadMarketPlanning;
 
-  if (!response.ok || !body.squadMarketPlanning) {
+  if (!response.ok || !body) {
     throw new Error("Squad market planning API returned an unexpected response.");
   }
 
-  return body.squadMarketPlanning;
+  return body;
 }
 
 export async function fetchYouthPipelinePlanning(clubId: string): Promise<YouthPipelinePlanning> {
-  const response = await fetch(`/api/clubs/${clubId}/youth-pipeline-planning`);
-  const body = (await response.json()) as { youthPipelinePlanning?: YouthPipelinePlanning };
+  const response = await fetch(`/api/clubs/${clubId}/players/youth-pipeline-planning`);
+  const body = (await response.json()) as YouthPipelinePlanning;
 
-  if (!response.ok || !body.youthPipelinePlanning) {
+  if (!response.ok || !body) {
     throw new Error("Youth pipeline planning API returned an unexpected response.");
   }
 
-  return body.youthPipelinePlanning;
+  return body;
+}
+
+export async function fetchRealYouthAcademyPlanning(
+  clubId: string
+): Promise<RealYouthAcademyPlanning> {
+  const response = await fetch(`/api/clubs/${clubId}/players/youth-academy`);
+  const body = (await response.json()) as RealYouthAcademyPlanning;
+
+  if (!response.ok || !body) {
+    throw new Error("Real youth academy planning API returned an unexpected response.");
+  }
+
+  return body;
 }
 
 export async function importPlayerSnapshot(payload: unknown): Promise<{
@@ -67,6 +81,19 @@ export async function importPlayerSnapshot(payload: unknown): Promise<{
   body: ImportResponse;
 }> {
   const response = await fetch("/api/imports/player-snapshot", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+
+  return { response, body: await readImportResponse(response) };
+}
+
+export async function syncSokkerXml(payload: unknown): Promise<{
+  response: Response;
+  body: ImportResponse;
+}> {
+  const response = await fetch("/api/imports/sokker-sync", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload)

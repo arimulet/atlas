@@ -1,15 +1,11 @@
 import { z } from "zod";
+import { observedPositionSchema } from "./playerSnapshot/roles.js";
 
 export const PLAYER_SNAPSHOT_SCHEMA_VERSION = "atlas.player-snapshot.v0" as const;
 
 const isoDate = /^\d{4}-\d{2}-\d{2}$/;
 
 const nullableString = z.string().min(1).nullable().optional();
-
-export const moneySchema = z.object({
-  amount: z.number().finite().nonnegative(),
-  currency: z.string().min(1).nullable().optional()
-});
 
 export const skillSetSchema = z.object({
   stamina: z.number().finite().nonnegative().nullable().optional(),
@@ -36,22 +32,22 @@ export const playerSnapshotV0Schema = z.object({
   }),
   snapshot: z.object({
     snapshotDate: z.string().regex(isoDate),
-    season: z.number().int().positive().nullable().optional(),
+    gameWeek: z.number().int().positive().nullable().optional(),
     week: z.number().int().positive().nullable().optional()
   }),
   players: z.array(
     z.object({
-      externalId: nullableString,
+      playerId: z.number().int().positive(),
       name: z.string().min(1),
       age: z.number().int().positive(),
-      wage: moneySchema,
-      estimatedValue: moneySchema,
+      wage: z.number().finite().nonnegative(),
+      value: z.number().finite().nonnegative(),
       form: z.number().finite().nonnegative().nullable().optional(),
       availabilityStatus: z
         .enum(["available", "injured", "suspended", "unknown"])
         .nullable()
         .optional(),
-      observedPosition: nullableString,
+      observedPosition: observedPositionSchema.nullable().optional(),
       skills: skillSetSchema
     })
   )
@@ -135,13 +131,6 @@ function collectWarnings(snapshot: PlayerSnapshotV0): ImportIssue[] {
   snapshot.players.forEach((player, index) => {
     const prefix = `players.${index}`;
 
-    if (!player.externalId) {
-      warnings.push({
-        path: `${prefix}.externalId`,
-        message: "Missing externalId; player identity may require manual review."
-      });
-    }
-
     if (player.form === undefined || player.form === null) {
       warnings.push({ path: `${prefix}.form`, message: "Missing form; current performance context is incomplete." });
     }
@@ -157,17 +146,6 @@ function collectWarnings(snapshot: PlayerSnapshotV0): ImportIssue[] {
       warnings.push({
         path: `${prefix}.observedPosition`,
         message: "Missing observedPosition; role analysis may depend on assumptions."
-      });
-    }
-
-    if (!player.wage.currency) {
-      warnings.push({ path: `${prefix}.wage.currency`, message: "Missing wage currency." });
-    }
-
-    if (!player.estimatedValue.currency) {
-      warnings.push({
-        path: `${prefix}.estimatedValue.currency`,
-        message: "Missing estimated value currency."
       });
     }
 

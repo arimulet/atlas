@@ -1,9 +1,11 @@
 import mongoose, { Schema, model, type InferSchemaType, type Model } from "mongoose";
 
-const moneySchema = new Schema(
+const observedPositionValues = ["goalkeeper", "defender", "midfielder", "winger", "striker"] as const;
+
+const trainingSchema = new Schema(
   {
-    amount: { type: Number, required: true, min: 0 },
-    currency: { type: String, default: null }
+    position: { type: Number, required: true, min: 0 },
+    advanced: { type: Boolean, required: true }
   },
   { _id: false }
 );
@@ -24,21 +26,21 @@ const skillSetSchema = new Schema(
 
 const playerSnapshotSchema = new Schema(
   {
-    playerId: { type: Schema.Types.ObjectId, ref: "Player", default: null },
-    externalId: { type: String, default: null },
+    playerId: { type: Number, required: true, min: 1 },
     name: { type: String, required: true },
     age: { type: Number, required: true, min: 1 },
-    wage: { type: moneySchema, required: true },
-    estimatedValue: { type: moneySchema, required: true },
+    wage: { type: Number, required: true, min: 0 },
+    value: { type: Number, required: true, min: 0 },
     form: { type: Number, default: null },
     availabilityStatus: {
       type: String,
       enum: ["available", "injured", "suspended", "unknown", null],
       default: null
     },
-    observedPosition: { type: String, default: null },
+    observedPosition: { type: String, enum: [...observedPositionValues, null], default: null },
     skills: { type: skillSetSchema, required: true },
-    roles: [{ type: String }]
+
+    training: { type: trainingSchema, required: true }
   },
   { _id: true }
 );
@@ -48,7 +50,7 @@ const snapshotSchema = new Schema(
     clubId: { type: Schema.Types.ObjectId, ref: "Club", required: true, index: true },
     schemaVersion: { type: String, required: true },
     snapshotDate: { type: Date, required: true, index: true },
-    season: { type: Number, default: null },
+    gameWeek: { type: Number, default: null },
     week: { type: Number, default: null },
     importedAt: { type: Date, required: true, default: () => new Date() },
     source: {

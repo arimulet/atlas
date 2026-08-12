@@ -1,4 +1,4 @@
-import type { SkillSet } from "./index.js";
+import type { Severity, SkillSet } from "./index.js";
 import {
   calculateHistoricalTrends,
   type HistoricalTrends,
@@ -13,7 +13,7 @@ export type HistoricalFindingType =
   | "risky_wage_against_historical_evolution"
   | "squad_asset_evolution";
 
-export type HistoricalFindingSeverity = "info" | "low" | "medium" | "high";
+export type HistoricalFindingSeverity = Severity;
 export type HistoricalFindingConfidence = "low" | "medium" | "high";
 
 export interface HistoricalFindingEvidence {
@@ -30,7 +30,7 @@ export interface HistoricalFinding {
   subject:
     | {
         kind: "player";
-        externalId: string;
+        playerId: number;
         playerName: string;
       }
     | {
@@ -98,7 +98,7 @@ export function generateHistoricalFindings(
 
   const playerSeries = buildPlayerSeries(orderedSnapshots);
   const findings = trends.players.flatMap((trend) =>
-    generatePlayerFindings(trend, playerSeries.get(trend.identity.externalId) ?? [], period)
+    generatePlayerFindings(trend, playerSeries.get(trend.identity.playerId) ?? [], period)
   );
   const squadFinding = generateSquadFinding(trends, period);
 
@@ -126,12 +126,12 @@ function generatePlayerFindings(
     trend.value.isComparable &&
     valuePercentage !== null &&
     valuePercentage >= 10 &&
-    isStrictlyIncreasing(series.map((point) => point.estimatedValue))
+    isStrictlyIncreasing(series.map((point) => point.value))
   ) {
     return [
       playerFinding(trend, "player_sustained_asset_appreciation", "info", confidence(trend), period, [
-        evidence("derived", "estimatedValue.deltaPercentage", "Estimated value grew across the analysed period.", valuePercentage),
-        evidence("observed", "estimatedValue.sequence", "Estimated value increased in every comparable snapshot.", series.length),
+        evidence("derived", "value.deltaPercentage", "Estimated value grew across the analysed period.", valuePercentage),
+        evidence("observed", "value.sequence", "Estimated value increased in every comparable snapshot.", series.length),
         evidence("derived", "skills.totalDelta", "Total observed skill level changed during the period.", skillDelta)
       ], "Monitor retention versus market timing; protect development unless liquidity needs justify selling.")
     ];
@@ -149,7 +149,7 @@ function generatePlayerFindings(
         confidence(trend),
         period,
         [
-          evidence("derived", "estimatedValue.deltaPercentage", "Estimated value deteriorated during the analysed period.", valuePercentage),
+          evidence("derived", "value.deltaPercentage", "Estimated value deteriorated during the analysed period.", valuePercentage),
           evidence("derived", "skills.totalDelta", "Total observed skill level changed during the period.", skillDelta)
         ],
         "Review role, training fit and sale timing before further patrimonial loss accumulates."
@@ -166,7 +166,7 @@ function generatePlayerFindings(
   ) {
     return [
       playerFinding(trend, "player_stagnation", "low", confidence(trend), period, [
-        evidence("derived", "estimatedValue.deltaPercentage", "Estimated value remained materially flat.", valuePercentage),
+        evidence("derived", "value.deltaPercentage", "Estimated value remained materially flat.", valuePercentage),
         evidence("derived", "skills.totalDelta", "No net observed skill growth was detected.", skillDelta)
       ], "Reassess training priority and squad role; keep only if tactical utility justifies the opportunity cost.")
     ];
@@ -187,7 +187,7 @@ function generatePlayerFindings(
         period,
         [
           evidence("derived", "wage.deltaPercentage", "Wage increased materially during the analysed period.", wagePercentage),
-          evidence("derived", "estimatedValue.deltaPercentage", "Asset evolution does not justify the wage growth.", valuePercentage)
+          evidence("derived", "value.deltaPercentage", "Asset evolution does not justify the wage growth.", valuePercentage)
         ],
         "Review contract burden against expected contribution; consider sale or role change if trend persists."
       )
@@ -220,7 +220,7 @@ function generateSquadFinding(
       confidence: trends.squad.valueTotal.evidence.dataPoints >= 3 ? "high" : "medium",
       subject: { kind: "squad", clubId: trends.clubId },
       evidence: [
-        evidence("derived", "squad.estimatedValue.deltaPercentage", "Squad estimated value deteriorated.", valuePercentage),
+        evidence("derived", "squad.value.deltaPercentage", "Squad estimated value deteriorated.", valuePercentage),
         evidence("derived", "squad.wage.deltaPercentage", "Squad wage did not decrease alongside value.", wagePercentage)
       ],
       period,
@@ -247,7 +247,7 @@ function playerFinding(
     confidence: confidenceValue,
     subject: {
       kind: "player",
-      externalId: trend.identity.externalId,
+      playerId: trend.identity.playerId,
       playerName: trend.playerName
     },
     evidence: findingEvidence,
@@ -287,20 +287,20 @@ function analysisPeriod(snapshots: SnapshotComparisonSnapshot[]): HistoricalFind
 }
 
 interface PlayerSeriesPoint {
-  estimatedValue: number;
+  value: number;
   skills: Required<SkillSet>;
 }
 
-function buildPlayerSeries(snapshots: SnapshotComparisonSnapshot[]): Map<string, PlayerSeriesPoint[]> {
-  const series = new Map<string, PlayerSeriesPoint[]>();
+function buildPlayerSeries(snapshots: SnapshotComparisonSnapshot[]): Map<number, PlayerSeriesPoint[]> {
+  const series = new Map<number, PlayerSeriesPoint[]>();
 
   for (const snapshot of snapshots) {
     const matchable = matchablePlayers(snapshot.players);
 
-    for (const [externalId, player] of matchable) {
-      series.set(externalId, [
-        ...(series.get(externalId) ?? []),
-        { estimatedValue: player.estimatedValue.amount, skills: player.skills }
+    for (const [playerId, player] of matchable) {
+      series.set(playerId, [
+        ...(series.get(playerId) ?? []),
+        { value: player.value.amount, skills: player.skills }
       ]);
     }
   }
@@ -308,19 +308,19 @@ function buildPlayerSeries(snapshots: SnapshotComparisonSnapshot[]): Map<string,
   return series;
 }
 
-function matchablePlayers(players: SnapshotComparisonPlayer[]): Map<string, SnapshotComparisonPlayer> {
-  const byExternalId = new Map<string, SnapshotComparisonPlayer[]>();
+function matchablePlayers(players: SnapshotComparisonPlayer[]): Map<number, SnapshotComparisonPlayer> {
+  const byPlayerId = new Map<number, SnapshotComparisonPlayer[]>();
 
   for (const player of players) {
-    if (player.externalId) {
-      byExternalId.set(player.externalId, [...(byExternalId.get(player.externalId) ?? []), player]);
+    if (player.playerId) {
+      byPlayerId.set(player.playerId, [...(byPlayerId.get(player.playerId) ?? []), player]);
     }
   }
 
   return new Map(
-    [...byExternalId.entries()]
+    [...byPlayerId.entries()]
       .filter(([, playersWithIdentity]) => playersWithIdentity.length === 1)
-      .map(([externalId, playersWithIdentity]) => [externalId, playersWithIdentity[0]!])
+      .map(([playerId, playersWithIdentity]) => [playerId, playersWithIdentity[0]!])
   );
 }
 

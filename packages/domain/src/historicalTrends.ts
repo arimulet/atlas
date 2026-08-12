@@ -34,7 +34,7 @@ export interface SkillTrend extends NumericTrend {
 
 export interface PlayerHistoricalTrend {
   identity: {
-    externalId: string;
+    playerId: number;
   };
   playerName: string;
   value: MoneyTrend;
@@ -48,9 +48,9 @@ export interface SquadHistoricalTrendSummary {
   wageTotal: MoneyTrend;
   playerCount: NumericTrend;
   mainVariations: Array<{
-    externalId: string;
+    playerId: number;
     playerName: string;
-    metric: "estimatedValue" | "wage";
+    metric: "value" | "wage";
     deltaAbsolute: number;
     deltaPercentage: number | null;
     direction: Exclude<TrendDirection, "insufficient_data" | "stable">;
@@ -111,28 +111,28 @@ export function calculateHistoricalTrends(
 function buildPlayerTrends(
   snapshots: SnapshotComparisonSnapshot[]
 ): PlayerHistoricalTrend[] {
-  const byExternalId = new Map<string, Array<{ snapshot: SnapshotComparisonSnapshot; player: SnapshotComparisonPlayer }>>();
+  const byPlayerId = new Map<number, Array<{ snapshot: SnapshotComparisonSnapshot; player: SnapshotComparisonPlayer }>>();
 
   for (const snapshot of snapshots) {
     const index = indexSnapshotPlayers(snapshot.players);
 
-    for (const [externalId, player] of index.matchable) {
-      byExternalId.set(externalId, [...(byExternalId.get(externalId) ?? []), { snapshot, player }]);
+    for (const [playerId, player] of index.matchable) {
+      byPlayerId.set(playerId, [...(byPlayerId.get(playerId) ?? []), { snapshot, player }]);
     }
   }
 
-  return [...byExternalId.entries()]
-    .sort(([left], [right]) => left.localeCompare(right))
-    .map(([externalId, points]) => {
+  return [...byPlayerId.entries()]
+    .sort(([left], [right]) => left - right)
+    .map(([playerId, points]) => {
       const orderedPoints = points.sort((left, right) =>
         left.snapshot.snapshotDate.localeCompare(right.snapshot.snapshotDate)
       );
       const finalPoint = orderedPoints.at(-1);
 
       return {
-        identity: { externalId },
+        identity: { playerId },
         playerName: finalPoint?.player.name ?? orderedPoints[0]!.player.name,
-        value: moneyTrend(orderedPoints, "estimatedValue"),
+        value: moneyTrend(orderedPoints, "value"),
         wage: moneyTrend(orderedPoints, "wage"),
         skills: skillKeys.map((skill) => skillTrend(orderedPoints, skill)),
         warnings:
@@ -150,8 +150,8 @@ function buildSquadTrendSummary(
 ): SquadHistoricalTrendSummary {
   const totalValuePoints = snapshots.map((snapshot) => ({
     snapshot,
-    value: sumMoney(snapshot.players, "estimatedValue"),
-    currency: commonCurrency(snapshot.players.map((player) => player.estimatedValue))
+    value: sumMoney(snapshot.players, "value"),
+    currency: commonCurrency(snapshot.players.map((player) => player.value))
   }));
   const totalWagePoints = snapshots.map((snapshot) => ({
     snapshot,
@@ -174,7 +174,7 @@ function buildSquadTrendSummary(
 
 function moneyTrend(
   points: Array<{ snapshot: SnapshotComparisonSnapshot; player: SnapshotComparisonPlayer }>,
-  field: "estimatedValue" | "wage"
+  field: "value" | "wage"
 ): MoneyTrend {
   return moneyTrendFromValues(
     points.map((point) => ({
@@ -194,18 +194,15 @@ function aggregateMoneyTrend(
 function moneyTrendFromValues(
   points: Array<{ snapshot: SnapshotComparisonSnapshot; value: number; currency: string | null }>
 ): MoneyTrend {
-  const currencies = new Set(points.map((point) => point.currency).filter(Boolean));
-  const comparable = currencies.size === 1;
-  const trend = numericTrend(
-    points.map((point) => ({ snapshot: point.snapshot, value: point.value })),
-    comparable ? [] : ["Currency changed or is missing, monetary trend is not comparable."]
-  );
-
   return {
-    ...trend,
-    direction: comparable ? trend.direction : "insufficient_data",
-    currency: comparable ? [...currencies][0] ?? null : null,
-    isComparable: comparable
+    ...numericTrend(
+      points.map((point) => ({ snapshot: point.snapshot, value: point.value })),
+      []
+    ),
+    currency: commonCurrency(
+      points.map((point) => ({ amount: point.value, currency: point.currency }))
+    ),
+    isComparable: true
   };
 }
 
@@ -291,7 +288,7 @@ function mainVariations(
 ): SquadHistoricalTrendSummary["mainVariations"] {
   return players
     .flatMap((player) => [
-      variation(player, "estimatedValue", player.value),
+      variation(player, "value", player.value),
       variation(player, "wage", player.wage)
     ])
     .filter((entry): entry is SquadHistoricalTrendSummary["mainVariations"][number] => entry !== null)
@@ -301,7 +298,7 @@ function mainVariations(
 
 function variation(
   player: PlayerHistoricalTrend,
-  metric: "estimatedValue" | "wage",
+  metric: "value" | "wage",
   trend: MoneyTrend
 ): SquadHistoricalTrendSummary["mainVariations"][number] | null {
   if (
@@ -312,7 +309,7 @@ function variation(
   }
 
   return {
-    externalId: player.identity.externalId,
+    playerId: player.identity.playerId,
     playerName: player.playerName,
     metric,
     deltaAbsolute: trend.evidence.deltaAbsolute ?? 0,
@@ -333,32 +330,32 @@ function collectSnapshotWarnings(snapshots: SnapshotComparisonSnapshot[]): strin
 }
 
 function indexSnapshotPlayers(players: SnapshotComparisonPlayer[]): {
-  matchable: Map<string, SnapshotComparisonPlayer>;
+  matchable: Map<number, SnapshotComparisonPlayer>;
   ambiguous: Array<{
     player: SnapshotComparisonPlayer;
     reason: "missing-stable-identity" | "duplicate-stable-identity";
   }>;
 } {
-  const byExternalId = new Map<string, SnapshotComparisonPlayer[]>();
+  const byPlayerId = new Map<number, SnapshotComparisonPlayer[]>();
   const ambiguous: Array<{
     player: SnapshotComparisonPlayer;
     reason: "missing-stable-identity" | "duplicate-stable-identity";
   }> = [];
 
   for (const player of players) {
-    if (!player.externalId) {
+    if (!player.playerId) {
       ambiguous.push({ player, reason: "missing-stable-identity" });
       continue;
     }
 
-    byExternalId.set(player.externalId, [...(byExternalId.get(player.externalId) ?? []), player]);
+    byPlayerId.set(player.playerId, [...(byPlayerId.get(player.playerId) ?? []), player]);
   }
 
-  const matchable = new Map<string, SnapshotComparisonPlayer>();
+  const matchable = new Map<number, SnapshotComparisonPlayer>();
 
-  for (const [externalId, playersWithIdentity] of byExternalId) {
+  for (const [playerId, playersWithIdentity] of byPlayerId) {
     if (playersWithIdentity.length === 1) {
-      matchable.set(externalId, playersWithIdentity[0]!);
+      matchable.set(playerId, playersWithIdentity[0]!);
       continue;
     }
 
@@ -375,7 +372,7 @@ function indexSnapshotPlayers(players: SnapshotComparisonPlayer[]): {
 
 function sumMoney(
   players: SnapshotComparisonPlayer[],
-  field: "estimatedValue" | "wage"
+  field: "value" | "wage"
 ): number {
   return players.reduce((total, player) => total + player[field].amount, 0);
 }

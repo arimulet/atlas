@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { ClubModel, MongoClubRepository } from "@atlas/database";
-import { getClubOperatingSettings, updateClubOperatingSettings } from "../src/index.js";
+import { getClubOperatingSettings, updateClubOperatingSettings } from "../src/clubOperatingSettings/index.js";
 
 let mongo: MongoMemoryServer;
 
@@ -25,24 +25,28 @@ describe("Club operating settings use cases", () => {
 
   it("reads effective defaults without mixing them into observed Sokker data", async () => {
     const club = await clubs.save({
-      externalId: "club-001",
+      clubId: 1,
+      country: 1,
       name: "River Plate Forever",
-      season: 78,
-      week: 4
+      week: 4,
+      currency: { name: "ARS", rate: 100 }
     });
 
-    const settings = await getClubOperatingSettings({ clubId: club.id });
+    const settings = await getClubOperatingSettings(club.id);
 
-    expect(settings.observed).toEqual({ season: 78, week: 4 });
-    expect(settings.manual).toEqual({
-      currency: null,
-      season: null,
+    expect(settings.observed).toEqual({ week: 4 });
+    expect(settings.settings).toEqual({
+      currency: { name: "ARS", rate: 100 },
       week: null,
-      preferences: {}
+      preferences: {
+        "economy.riskTolerance": "balanced",
+        "training.priority": "balanced",
+        "academy.investment": "balanced",
+        "market.strategy": "balanced"
+      }
     });
     expect(settings.effective).toEqual({
-      currency: null,
-      season: 78,
+      currency: { name: "ARS", rate: 100 },
       week: 4,
       preferences: {
         "economy.riskTolerance": "balanced",
@@ -55,17 +59,17 @@ describe("Club operating settings use cases", () => {
 
   it("updates manual operating settings and keeps observed settings unchanged", async () => {
     const club = await clubs.save({
-      externalId: "club-001",
+      clubId: 1,
+      country: 1,
       name: "River Plate Forever",
-      season: 78,
-      week: 4
+      week: 4,
+      currency: { name: "ARS", rate: 100 }
     });
 
     const settings = await updateClubOperatingSettings({
       clubId: club.id,
-      manual: {
-        currency: " ars ",
-        season: 79,
+      settings: {
+        currency: { name: " ars ", rate: 100 },
         week: 6,
         preferences: {
           "economy.riskTolerance": "conservative",
@@ -76,10 +80,9 @@ describe("Club operating settings use cases", () => {
       }
     });
 
-    expect(settings.observed).toEqual({ season: 78, week: 4 });
-    expect(settings.manual).toMatchObject({
-      currency: "ARS",
-      season: 79,
+    expect(settings.observed).toEqual({ week: 4 });
+    expect(settings.settings).toMatchObject({
+      currency: { name: "ars", rate: 100 },
       week: 6,
       preferences: {
         "economy.riskTolerance": "conservative",
@@ -89,15 +92,14 @@ describe("Club operating settings use cases", () => {
       }
     });
     expect(settings.effective).toMatchObject({
-      currency: "ARS",
-      season: 79,
+      currency: { name: "ars", rate: 100 },
       week: 6
     });
 
     const persisted = await ClubModel.findById(club.id).lean();
-    expect(persisted?.observed?.season).toBe(78);
-    expect(persisted?.manual?.currency).toBe("ARS");
-    expect(persisted?.manual?.preferences.map((preference) => preference.key).sort()).toEqual([
+    expect(persisted?.week).toBe(4);
+    expect(persisted?.settings?.currency).toEqual({ name: "ars", rate: 100 });
+    expect(persisted?.settings?.preferences.map((preference) => preference.key).sort()).toEqual([
       "academy.investment",
       "economy.riskTolerance",
       "market.strategy",
@@ -105,47 +107,48 @@ describe("Club operating settings use cases", () => {
     ]);
   });
 
-  it("validates currency, season, week and preference values clearly", async () => {
-    const club = await clubs.save({ externalId: "club-001", name: "River Plate Forever" });
+  it("validates currency, week and preference values clearly", async () => {
+    const club = await clubs.save({ clubId: 1, country: 1, name: "River Plate Forever", currency: { name: "ARS", rate: 100 } });
 
     await expect(
-      updateClubOperatingSettings({ clubId: club.id, manual: { currency: "pesos" } })
-    ).rejects.toThrow("Operating currency must be a 3-letter ISO currency code.");
+      updateClubOperatingSettings({ clubId: club.id, settings: { currency: { name: "", rate: 100 } } })
+    ).rejects.toThrow("Currency must include a valid name and rate.");
     await expect(
-      updateClubOperatingSettings({ clubId: club.id, manual: { season: 0 } })
-    ).rejects.toThrow("Operating season must be an integer between 1 and 999.");
-    await expect(
-      updateClubOperatingSettings({ clubId: club.id, manual: { week: 17 } })
+      updateClubOperatingSettings({ clubId: club.id, settings: { week: 17 } })
     ).rejects.toThrow("Operating week must be an integer between 1 and 16.");
     await expect(
       updateClubOperatingSettings({
         clubId: club.id,
-        manual: { preferences: { "market.strategy": "reckless" as "balanced" } }
+        settings: { preferences: { "market.strategy": "reckless" as "balanced" } }
       })
     ).rejects.toThrow("Invalid value for operating preference market.strategy.");
   });
 
-  it("persists only manual preference overrides and derives effective defaults on read", async () => {
+  it("persists manual preference overrides and merges them with initial configuration defaults", async () => {
     const club = await clubs.save({
-      externalId: "club-001",
+      clubId: 1,
+      country: 1,
       name: "River Plate Forever",
-      season: 78,
-      week: 4
+      week: 4,
+      currency: { name: "ARS", rate: 100 }
     });
 
     await updateClubOperatingSettings({
       clubId: club.id,
-      manual: {
+      settings: {
         preferences: {
           "economy.riskTolerance": "aggressive"
         }
       }
     });
 
-    const settings = await getClubOperatingSettings({ clubId: club.id });
+    const settings = await getClubOperatingSettings(club.id);
 
-    expect(settings.manual.preferences).toEqual({
-      "economy.riskTolerance": "aggressive"
+    expect(settings.settings.preferences).toEqual({
+      "economy.riskTolerance": "aggressive",
+      "training.priority": "balanced",
+      "academy.investment": "balanced",
+      "market.strategy": "balanced"
     });
     expect(settings.effective.preferences).toEqual({
       "economy.riskTolerance": "aggressive",
@@ -157,32 +160,31 @@ describe("Club operating settings use cases", () => {
 
   it("preserves existing manual scalar settings during partial preference updates", async () => {
     const club = await clubs.save({
-      externalId: "club-001",
+      clubId: 1,
+      country: 1,
       name: "River Plate Forever",
-      season: 78,
-      week: 4
+      week: 4,
+      currency: { name: "ARS", rate: 100 }
     });
 
     await updateClubOperatingSettings({
       clubId: club.id,
-      manual: {
-        currency: "ARS",
-        season: 79,
+      settings: {
+        currency: { name: "ARS", rate: 100 },
         week: 6
       }
     });
     const settings = await updateClubOperatingSettings({
       clubId: club.id,
-      manual: {
+      settings: {
         preferences: {
           "market.strategy": "opportunistic"
         }
       }
     });
 
-    expect(settings.manual).toMatchObject({
-      currency: "ARS",
-      season: 79,
+    expect(settings.settings).toMatchObject({
+      currency: { name: "ARS", rate: 100 },
       week: 6,
       preferences: {
         "market.strategy": "opportunistic"

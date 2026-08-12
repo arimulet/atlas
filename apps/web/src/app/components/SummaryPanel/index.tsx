@@ -1,26 +1,32 @@
-import { formatMoney } from "../../formatters";
+import { formatMoney } from "@atlas/web/app/formatters";
 
-import { SummaryItem } from "../SummaryItem";
+import { SummaryItem } from "@atlas/web/app/components/SummaryItem";
 import { SummaryPanelProps } from "./types";
+import { Section } from "../Section";
 
 export const SummaryPanel = ({ summary }: SummaryPanelProps) => {
   return (
-    <section className="panel">
-      <div className="panel-heading">
-        <p className="eyebrow">Imported Data</p>
-        <h2>Squad summary</h2>
-      </div>
+    <Section title="Imported Data" subtitle="Squad summary">
       <dl className="summary-grid">
         <SummaryItem label="Club" value={summary.club} />
         <SummaryItem label="Snapshot date" value={summary.snapshotDate} />
         <SummaryItem label="Players" value={summary.playerCount.toString()} />
         <SummaryItem
           label="Total estimated value"
-          value={formatMoney(summary.totalEstimatedValue)}
+          value={formatMoney(summary.totalValue, {
+            currencyName: summary.currency.name,
+            currencyRate: summary.currency.rate
+          })}
         />
-        <SummaryItem label="Total wage" value={formatMoney(summary.totalWage)} />
+        <SummaryItem
+          label="Total wage"
+          value={formatMoney(summary.totalWage, {
+            currencyName: summary.currency.name,
+            currencyRate: summary.currency.rate
+          })}
+        />
         <SummaryItem label="Incomplete players" value={summary.incompletePlayerCount.toString()} />
       </dl>
-    </section>
+    </Section>
   );
-}
+};

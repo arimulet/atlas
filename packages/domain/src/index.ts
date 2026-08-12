@@ -3,7 +3,9 @@ export type DataTraceKind = "observed" | "derived" | "assumed" | "recommended";
 export type AvailabilityStatus = "available" | "injured" | "suspended" | "unknown";
 
 export type PlayerRole =
-  "goalkeeper" | "defender" | "midfielder" | "winger" | "striker" | "trainee" | "undefined";
+  | "goalkeeper" | "defender" | "midfielder" | "winger" | "striker" | "trainee" | "undefined";
+
+export type ObservedPosition = Exclude<PlayerRole, "trainee" | "undefined">;
 
 export interface Money {
   amount: number;
@@ -44,16 +46,42 @@ export interface Player {
 
 export interface PlayerSnapshot {
   id: string;
-  playerId: string;
+  playerId: number;
   snapshotId: string;
   age: number;
   wage: Money;
-  estimatedValue: Money;
+  value: Money;
   form?: number | null;
   availabilityStatus?: AvailabilityStatus;
-  observedPosition?: string | null;
+  observedPosition?: ObservedPosition | null;
   skills: SkillSet;
-  roles: PlayerRole[];
+
+}
+
+export type YouthPlayerStatus = "in_academy" | "ready_for_promotion" | "promoted";
+
+export interface YouthPlayerSnapshot {
+  id: string;
+  externalId?: string | null;
+  name: string;
+  age: number;
+  weeksInAcademy?: number | null;
+  weeksRemaining?: number | null;
+  skill: number;
+  status: YouthPlayerStatus;
+}
+
+export interface YouthAcademySnapshot {
+  id: string;
+  clubId: string;
+  snapshotDate: string;
+  importedAt: string;
+  source: string;
+  sourceVersion?: string | null;
+  gameWeek?: number | null;
+  week?: number | null;
+  weeklyInvestment?: Money | null;
+  players: YouthPlayerSnapshot[];
 }
 
 export interface Assumption {
@@ -65,10 +93,12 @@ export interface Assumption {
 export interface Finding {
   code: string;
   title: string;
-  severity: "info" | "low" | "medium" | "high";
+  severity: Severity;
   evidence: string[];
   assumptions: Assumption[];
 }
+
+export type Severity = "info" | "low" | "medium" | "high";
 
 export interface Diagnostic {
   id: string;

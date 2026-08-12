@@ -1,5 +1,6 @@
-import { SummaryItem } from "../../../SummaryItem";
+import { SummaryItem } from "@atlas/web/app/components/SummaryItem";
 import { HistoricalPanelProps } from "./types";
+import { Section } from "../../../Section";
 
 function formatPercent(value: number | null): string {
   return value === null ? "No disponible" : `${(value * 100).toFixed(1)}%`;
@@ -9,14 +10,9 @@ function formatRatio(value: number | null): string {
   return value === null ? "No disponible" : value.toFixed(4);
 }
 
-
 export const HistoricalPanel = ({ squadEconomy }: HistoricalPanelProps) => {
   return (
-    <section className="panel">
-      <div className="panel-heading">
-        <p className="eyebrow">Derivado</p>
-        <h2>Historico comparable</h2>
-      </div>
+    <Section title="Derivado" subtitle="Historico comparable">
       <dl className="summary-grid">
         <SummaryItem
           label="Snapshots comparables"
@@ -28,13 +24,13 @@ export const HistoricalPanel = ({ squadEconomy }: HistoricalPanelProps) => {
         />
         <SummaryItem
           label="Variacion valor"
-          value={formatPercent(squadEconomy.historical.changes.totalEstimatedValueDeltaPercent)}
+          value={formatPercent(squadEconomy.historical.changes.totalValueDeltaPercent)}
         />
         <SummaryItem
           label="Cambio ratio"
           value={formatRatio(squadEconomy.historical.changes.wageToValueRatioDelta)}
         />
       </dl>
-    </section>
+    </Section>
   );
-}
+};

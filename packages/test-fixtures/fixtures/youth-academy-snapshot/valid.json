@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "atlas.youth-academy-snapshot.v0",
+  "source": {
+    "type": "sokker-dom-export",
+    "exportedAt": "2026-08-08T00:00:00.000Z",
+    "pageUrl": "https://sokker.org/app/juniors",
+    "locale": "es-AR"
+  },
+  "club": {
+    "name": "River Plate Forever",
+    "clubId": 12345,
+    "country": 11,
+    "training": {
+      "gk": 1,
+      "def": 2,
+      "mid": 3,
+      "att": 4
+    }
+  },
+  "snapshot": {
+    "snapshotDate": "2026-08-08",
+    "gameWeek": 1203,
+    "week": 6
+  },
+  "academy": {
+    "weeklyInvestment": {
+      "amount": 15000,
+      "currency": "ARS"
+    },
+    "players": [
+      {
+        "playerId": 5001,
+        "name": "Matias Cantero",
+        "age": 16,
+        "weeksRemaining": 4,
+        "skill": 8,
+        "status": "in_academy"
+      }
+    ]
+  }
+}

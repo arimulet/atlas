@@ -1,17 +1,19 @@
-import { AssumptionListProps } from "./types";
+import { describeDiagnosticAssumption } from "@atlas/web/app/diagnostic-copy";
+import { DetailBlock } from "../DetailBlock";
+import { TraceKind } from "../TraceKind";
+import type { AssumptionListProps } from "./types";
 
-export const AssumptionList = ({ assumptions }: AssumptionListProps) => {
+export const AssumptionList = ({ assumptions, currency }: AssumptionListProps) => {
   return (
-    <div className="detail-block">
-      <h4>Assumptions</h4>
+    <DetailBlock title="Assumptions">
       <ul>
         {assumptions.map((assumption) => (
           <li key={assumption.code}>
-            <span className="trace-kind assumed">{assumption.traceKind}</span>
-            <span>{assumption.description}</span>
+            <TraceKind label={assumption.traceKind} type="assumed" />
+            <span>{describeDiagnosticAssumption(assumption, currency)}</span>
           </li>
         ))}
       </ul>
-    </div>
+    </DetailBlock>
   );
-}
+};

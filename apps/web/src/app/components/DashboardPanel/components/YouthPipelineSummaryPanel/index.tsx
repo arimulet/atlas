@@ -1,5 +1,7 @@
-import { SummaryItem } from "../../../SummaryItem";
+import { SummaryItem } from "@atlas/web/app/components/SummaryItem";
 import { YouthPipelineSummaryPanelProps } from "./types";
+import { TraceKind } from "../../../TraceKind";
+import { Section } from "../../../Section";
 
 function labelYouthSignal(signal: string): string {
   if (signal === "standout_prospect") return "Prospecto destacado";
@@ -8,7 +10,6 @@ function labelYouthSignal(signal: string): string {
   return "Datos insuficientes";
 }
 
-
 export const YouthPipelineSummaryPanel = ({
   dashboard,
   onOpenYouthPipelinePlanning
@@ -16,12 +17,12 @@ export const YouthPipelineSummaryPanel = ({
   const summary = dashboard.youthPipelineSummary;
 
   return (
-    <section className="panel development-summary-panel">
-      <div className="panel-heading">
-        <p className="eyebrow">Pipeline juvenil senior</p>
-        <h2>Jovenes del plantel senior</h2>
-      </div>
-      <p className="muted">{summary.inferred.headline}</p>
+    <Section
+      className="development-summary-panel"
+      title="Pipeline juvenil senior"
+      subtitle="Plantel senior (sin escuela juvenil real)"
+      description={summary.inferred.headline}
+    >
       <dl className="summary-grid development-counts">
         <SummaryItem label="Destacados" value={summary.derived.standoutProspects.toString()} />
         <SummaryItem label="Seguimiento" value={summary.derived.followUpPlayers.toString()} />
@@ -35,12 +36,13 @@ export const YouthPipelineSummaryPanel = ({
         />
       </dl>
       <div className="trace-row" aria-label="Origen de la lectura de pipeline juvenil senior">
-        <span className="trace-kind observed">
-          observado: edad {"<="} {summary.observed.youthAgeThreshold}
-        </span>
-        <span className="trace-kind manual">manual: {summary.manual.academyInvestment}</span>
-        <span className="trace-kind derived">derivado: clasificacion senior</span>
-        <span className="trace-kind inferred">inferido: senal prudente</span>
+        <TraceKind
+          type="observed"
+          label={`observado: edad <= ${summary.observed.youthAgeThreshold} en plantel senior`}
+        />
+        <TraceKind type="manual" label={`manual: ${summary.settings.academyInvestment}`} />
+        <TraceKind type="derived" label="derivado: clasificacion senior" />
+        <TraceKind type="inferred" label="inferido: senal prudente" />
       </div>
       {summary.inferred.warning ? (
         <p className="inline-warning">{summary.inferred.warning}</p>
@@ -57,9 +59,17 @@ export const YouthPipelineSummaryPanel = ({
             </article>
           ))}
         </div>
+      ) : summary.observed.snapshotCount === 0 ? (
+        <p className="muted">
+          Importa un snapshot de plantilla para analizar jovenes observados en el plantel senior.
+        </p>
+      ) : summary.observed.youngSeniorPlayerCount === 0 ? (
+        <p className="muted">
+          No se observan jugadores jovenes (edad &lt;= {summary.observed.youthAgeThreshold}) en el plantel senior. Esta lectura no modela escuela juvenil real ni juveniles externos.
+        </p>
       ) : (
         <p className="muted">
-          Esta lectura no usa escuela juvenil real; requiere jovenes ya presentes en plantilla.
+          Esta lectura corresponde solo a jovenes observados en el plantel senior (sin escuela juvenil real). Requiere historial comparable para senales mas concluyentes.
         </p>
       )}
       {summary.available ? (
@@ -67,6 +77,6 @@ export const YouthPipelineSummaryPanel = ({
           Abrir pipeline juvenil senior
         </button>
       ) : null}
-    </section>
+    </Section>
   );
-}
+};

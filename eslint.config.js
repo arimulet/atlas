@@ -8,6 +8,12 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
+    rules: {
+      "no-unused-vars": "off", // Apagas la regla base de JavaScript
+      "@typescript-eslint/no-unused-vars": "warn" // Cambias la regla de TS a warning
+    }
+  },
+  {
     files: ["scripts/**/*.mjs"],
     languageOptions: {
       globals: {
@@ -23,6 +29,21 @@ export default tseslint.config(
         projectService: true,
         tsconfigRootDir: import.meta.dirname
       }
+    }
+  },
+  {
+    files: ["**/*.cjs"],
+    languageOptions: {
+      globals: {
+        console: "readonly",
+        process: "readonly",
+        __dirname: "readonly",
+        require: "readonly",
+        module: "readonly"
+      }
+    },
+    rules: {
+      "@typescript-eslint/no-require-imports": "off"
     }
   }
 );

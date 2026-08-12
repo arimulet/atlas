@@ -2,21 +2,29 @@ import { Types } from "mongoose";
 import { ClubModel } from "../models/club.js";
 import type { PersistedClub } from "./types.js";
 
+export type ClubId = string | number;
+
 export interface SaveClubInput {
-  externalId: string | null;
+  clubId: number;
+  country: number;
+  training?: {
+    GK: number | null;
+    DEF: number | null;
+    MID: number | null;
+    ATT: number | null;
+  } | null;
   name: string;
-  season?: number | null;
+  gameWeek?: number | null;
   week?: number | null;
   lastSnapshotDate?: Date | null;
   sourceType?: string | null;
   observedAt?: Date | null;
+  currency: { name: string; rate: number };
 }
 
 export interface UpdateClubManualProfileInput {
-  clubId: string;
-  name?: string | null;
-  currency?: string | null;
-  season?: number | null;
+  clubId: ClubId;
+  currency?: { name: string; rate: number };
   week?: number | null;
   assumptions?: Array<{ key: string; value: string }>;
   preferences?: Array<{ key: string; value: string }>;
@@ -24,33 +32,40 @@ export interface UpdateClubManualProfileInput {
 
 export class MongoClubRepository {
   async save(input: SaveClubInput): Promise<PersistedClub> {
-    const observed = {
-      externalId: input.externalId,
+    const $set: Record<string, unknown> = {
       name: input.name,
-      season: input.season ?? null,
+      country: input.country,
       week: input.week ?? null,
       lastSnapshotDate: input.lastSnapshotDate ?? null,
       sourceType: input.sourceType ?? null,
       observedAt: input.observedAt ?? null
     };
 
-    if (!input.externalId) {
+    if (input.gameWeek !== undefined) {
+      $set.gameWeek = input.gameWeek;
+    }
+
+    if (input.training !== undefined) {
+      $set.training = input.training;
+    }
+
+    if (!input.clubId) {
       const club = await ClubModel.create({
-        externalId: input.externalId,
-        name: input.name,
-        observed
+        clubId: input.clubId,
+        ...$set
       });
       return mapClub(club.toObject());
     }
 
+    const $setOnInsert: Record<string, unknown> = { clubId: input.clubId };
+
+    $setOnInsert["settings.currency"] = { name: input.currency.name, rate: input.currency.rate };
+
     const club = await ClubModel.findOneAndUpdate(
-      { externalId: input.externalId },
+      { clubId: input.clubId },
       {
-        $set: {
-          name: input.name,
-          observed
-        },
-        $setOnInsert: { externalId: input.externalId }
+        $set,
+        $setOnInsert
       },
       { new: true, upsert: true }
     );
@@ -67,19 +82,21 @@ export class MongoClubRepository {
     const updatedAt = new Date();
     const $set: Record<string, unknown> = {};
 
-    if ("name" in input) $set["manual.name"] = normalizeOptionalString(input.name);
-    if ("currency" in input) $set["manual.currency"] = normalizeOptionalString(input.currency);
-    if ("season" in input) $set["manual.season"] = input.season ?? null;
-    if ("week" in input) $set["manual.week"] = input.week ?? null;
+    if ("currency" in input) {
+      if (input.currency) {
+        $set["settings.currency"] = { name: input.currency.name, rate: input.currency.rate };
+      }
+    }
+    if ("week" in input) $set["settings.week"] = input.week ?? null;
     if (input.assumptions) {
-      $set["manual.assumptions"] = input.assumptions.map((record) => ({ ...record, updatedAt }));
+      $set["settings.assumptions"] = input.assumptions.map((record) => ({ ...record, updatedAt }));
     }
     if (input.preferences) {
-      $set["manual.preferences"] = input.preferences.map((record) => ({ ...record, updatedAt }));
+      $set["settings.preferences"] = input.preferences.map((record) => ({ ...record, updatedAt }));
     }
 
     if (Object.keys($set).length === 0) {
-      const club = await this.findById(input.clubId);
+      const club = await this.findById(input.clubId.toString());
 
       if (!club) {
         throw new Error(`Club not found: ${input.clubId}`);
@@ -100,79 +117,54 @@ export class MongoClubRepository {
 
 function mapClub(club: {
   _id: Types.ObjectId;
-  externalId?: string | null;
-  name: string;
-  observed?: {
-    externalId?: string | null;
-    name?: string | null;
-    season?: number | null;
-    week?: number | null;
-    lastSnapshotDate?: Date | null;
-    sourceType?: string | null;
-    observedAt?: Date | null;
+  clubId?: number | null;
+  country?: number | null;
+  training?: {
+    GK?: number | null;
+    DEF?: number | null;
+    MID?: number | null;
+    ATT?: number | null;
   } | null;
-  manual?: {
-    name?: string | null;
-    currency?: string | null;
-    season?: number | null;
+  name: string;
+  gameWeek?: number | null;
+  week?: number | null;
+  lastSnapshotDate?: Date | null;
+  sourceType?: string | null;
+  observedAt?: Date | null;
+  settings?: {
+    currency?: { name: string; rate: number };
     week?: number | null;
     assumptions?: Array<{ key: string; value: string; updatedAt: Date }>;
     preferences?: Array<{ key: string; value: string; updatedAt: Date }>;
   } | null;
 }): PersistedClub {
-  const observed = {
-    externalId: club.observed?.externalId ?? club.externalId ?? null,
-    name: club.observed?.name ?? club.name,
-    season: club.observed?.season ?? null,
-    week: club.observed?.week ?? null,
-    lastSnapshotDate: club.observed?.lastSnapshotDate ?? null,
-    sourceType: club.observed?.sourceType ?? null,
-    observedAt: club.observed?.observedAt ?? null
-  };
-  const manual = {
-    name: club.manual?.name ?? null,
-    currency: club.manual?.currency ?? null,
-    season: club.manual?.season ?? null,
-    week: club.manual?.week ?? null,
-    assumptions: club.manual?.assumptions ?? [],
-    preferences: club.manual?.preferences ?? []
-  };
-
   return {
     id: club._id.toString(),
-    observed,
-    manual,
-    profile: {
-      externalId: observed.externalId,
-      name: manual.name ?? observed.name,
-      currency: manual.currency,
-      season: manual.season ?? observed.season,
-      week: manual.week ?? observed.week
-    },
+    clubId: club.clubId ?? 0,
+    country: club.country ?? 0,
+    name: club.name,
+    training: club.training
+      ? {
+          GK: club.training.GK ?? null,
+          DEF: club.training.DEF ?? null,
+          MID: club.training.MID ?? null,
+          ATT: club.training.ATT ?? null
+        }
+      : null,
+    gameWeek: club.gameWeek ?? null,
+    week: club.week ?? null,
+    lastSnapshotDate: club.lastSnapshotDate ?? null,
+    sourceType: club.sourceType ?? null,
+    observedAt: club.observedAt ?? null,
     settings: {
-      observed: {
-        season: observed.season,
-        week: observed.week
+      currency: {
+        name: club.settings?.currency?.name ?? "UNK",
+        rate: club.settings?.currency?.rate ?? 1
       },
-      manual: {
-        currency: manual.currency,
-        season: manual.season,
-        week: manual.week,
-        preferences: manual.preferences
-      },
-      effective: {
-        currency: manual.currency,
-        season: manual.season ?? observed.season,
-        week: manual.week ?? observed.week,
-        preferences: manual.preferences
-      }
-    },
-    externalId: observed.externalId,
-    name: manual.name ?? observed.name
+      week: club.settings?.week ?? null,
+      assumptions: club.settings?.assumptions ?? [],
+      preferences: club.settings?.preferences ?? []
+    }
   };
 }
 
-function normalizeOptionalString(value: string | null | undefined): string | null {
-  const normalized = value?.trim();
-  return normalized ? normalized : null;
-}

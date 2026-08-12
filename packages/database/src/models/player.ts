@@ -2,17 +2,17 @@ import mongoose, { Schema, model, type InferSchemaType, type Model } from "mongo
 
 const playerSchema = new Schema(
   {
-    externalId: { type: String, default: null },
+    playerId: { type: Number, required: true, min: 1 },
+    clubId: { type: Number, required: true, min: 1 },
     name: { type: String, required: true, trim: true }
   },
   { timestamps: true }
 );
 
 playerSchema.index(
-  { externalId: 1 },
+  { clubId: 1, playerId: 1 },
   {
-    unique: true,
-    partialFilterExpression: { externalId: { $type: "string" } }
+    unique: true
   }
 );
 

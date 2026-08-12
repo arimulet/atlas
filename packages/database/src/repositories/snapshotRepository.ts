@@ -1,12 +1,13 @@
 import { Types } from "mongoose";
 import { SnapshotModel } from "../models/snapshot.js";
 import type { PersistedPlayerSnapshot, PersistedSnapshot, SnapshotSource } from "./types.js";
+import { ClubId } from "./clubRepository.js";
 
 export interface SaveSnapshotInput {
   clubId: string;
   schemaVersion: string;
   snapshotDate: Date;
-  season: number | null;
+  gameWeek: number | null;
   week: number | null;
   importedAt: Date;
   source: SnapshotSource;
@@ -20,14 +21,13 @@ export class MongoSnapshotRepository {
       clubId: new Types.ObjectId(input.clubId),
       schemaVersion: input.schemaVersion,
       snapshotDate: input.snapshotDate,
-      season: input.season,
+      gameWeek: input.gameWeek,
       week: input.week,
       importedAt: input.importedAt,
       source: input.source,
       sourceVersion: input.sourceVersion ?? null,
       players: input.players.map((player) => ({
-        ...player,
-        playerId: player.playerId ? new Types.ObjectId(player.playerId) : null
+        ...player
       }))
     });
 
@@ -39,7 +39,7 @@ export class MongoSnapshotRepository {
     return snapshot ? mapSnapshot(snapshot.toObject()) : null;
   }
 
-  async listByClub(clubId: string): Promise<PersistedSnapshot[]> {
+  async listByClub(clubId: ClubId): Promise<PersistedSnapshot[]> {
     const snapshots = await SnapshotModel.find({ clubId: new Types.ObjectId(clubId) }).sort({
       snapshotDate: 1
     });
@@ -61,7 +61,7 @@ function mapSnapshot(snapshot: {
   clubId: Types.ObjectId;
   schemaVersion: string;
   snapshotDate: Date;
-  season?: number | null;
+  gameWeek?: number | null;
   week?: number | null;
   importedAt: Date;
   source?: {
@@ -73,15 +73,15 @@ function mapSnapshot(snapshot: {
   sourceVersion?: string | null;
   players: Array<{
     _id: Types.ObjectId;
-    playerId?: Types.ObjectId | null;
-    externalId?: string | null;
+    playerId: number;
     name: string;
     age: number;
-    wage: { amount: number; currency?: string | null };
-    estimatedValue: { amount: number; currency?: string | null };
+    wage: number;
+    value: number;
+    training: { position: number; advanced: boolean };
     form?: number | null;
     availabilityStatus?: PersistedPlayerSnapshot["availabilityStatus"];
-    observedPosition?: string | null;
+    observedPosition?: PersistedPlayerSnapshot["observedPosition"];
     skills: {
       stamina?: number | null;
       pace?: number | null;
@@ -92,7 +92,7 @@ function mapSnapshot(snapshot: {
       playmaker?: number | null;
       striker?: number | null;
     };
-    roles?: string[];
+
   }>;
 }): PersistedSnapshot {
   if (!snapshot.source) {
@@ -104,7 +104,7 @@ function mapSnapshot(snapshot: {
     clubId: snapshot.clubId.toString(),
     schemaVersion: snapshot.schemaVersion,
     snapshotDate: snapshot.snapshotDate,
-    season: snapshot.season ?? null,
+    gameWeek: snapshot.gameWeek ?? null,
     week: snapshot.week ?? null,
     importedAt: snapshot.importedAt,
     source: {
@@ -116,17 +116,14 @@ function mapSnapshot(snapshot: {
     sourceVersion: snapshot.sourceVersion ?? null,
     players: snapshot.players.map((player) => ({
       id: player._id.toString(),
-      playerId: player.playerId?.toString() ?? null,
-      externalId: player.externalId ?? null,
+      playerId: player.playerId,
       name: player.name,
       age: player.age,
-      wage: {
-        amount: player.wage.amount,
-        currency: player.wage.currency ?? null
-      },
-      estimatedValue: {
-        amount: player.estimatedValue.amount,
-        currency: player.estimatedValue.currency ?? null
+      wage: player.wage,
+      value: player.value,
+      training: {
+        position: player.training.position,
+        advanced: player.training.advanced
       },
       form: player.form ?? null,
       availabilityStatus: player.availabilityStatus ?? null,
@@ -141,7 +138,7 @@ function mapSnapshot(snapshot: {
         playmaker: player.skills.playmaker ?? null,
         striker: player.skills.striker ?? null
       },
-      roles: player.roles ?? []
+
     }))
   };
 }

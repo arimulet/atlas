@@ -1,8 +1,10 @@
-import { formatNullable } from "../../../../formatters";
-import { YouthPipelinePlayerPlan } from "../../../../types";
-import { IssuePanel } from "../../../IssuePanel";
-import { SummaryItem } from "../../../SummaryItem";
-import { EvidenceList } from "../../../EvidenceList";
+import { formatNullable } from "@atlas/web/app/formatters";
+import { YouthPipelinePlayerPlan } from "@atlas/web/app/types";
+import { SummaryItem } from "@atlas/web/app/components/SummaryItem";
+import { EvidenceList } from "@atlas/web/app/components/EvidenceList";
+import { TraceKind } from "@atlas/web/app/components/TraceKind";
+import { Section } from "@atlas/web/app/components/Section";
+import { IssueList } from "@atlas/web/app/components/IssueList";
 import { YouthPlayerCardProps } from "./types";
 
 function labelCategory(category: YouthPipelinePlayerPlan["category"]): string {
@@ -33,11 +35,11 @@ export const YouthPlayerCard = ({ player }: YouthPlayerCardProps) => {
       <p className="muted">{player.rationale}</p>
       <div className="trace-row">
         <span className="confidence">Confianza: {player.confidence}</span>
-        <span className="trace-kind derived">
-          ventana: {player.context.window.from ?? "sin inicio"} -{" "}
-          {player.context.window.to ?? "sin cierre"}
-        </span>
-        <span className="trace-kind derived">snapshots: {player.context.window.snapshotCount}</span>
+        <TraceKind
+          type="derived"
+          label={`ventana: ${player.context.window.from ?? "sin inicio"} - ${player.context.window.to ?? "sin cierre"}`}
+        />
+        <TraceKind type="derived" label={`snapshots: ${player.context.window.snapshotCount}`} />
       </div>
 
       <dl className="summary-grid compact-summary">
@@ -52,7 +54,7 @@ export const YouthPlayerCard = ({ player }: YouthPlayerCardProps) => {
         <SummaryItem
           label="Valor estimado"
           value={`${formatNullable(player.context.valueAndWage.estimatedValue)} ${
-            player.context.valueAndWage.estimatedValueCurrency ?? ""
+            player.context.valueAndWage.valueCurrency ?? ""
           }`.trim()}
         />
         <SummaryItem
@@ -73,21 +75,14 @@ export const YouthPlayerCard = ({ player }: YouthPlayerCardProps) => {
 
       <div className="trace-row" aria-label={`Limites de lectura de ${player.name}`}>
         {player.context.limits.map((limit) => (
-          <span className="trace-kind inferred" key={limit}>
-            {limit}
-          </span>
+          <TraceKind key={limit} type="inferred" label={limit} />
         ))}
       </div>
 
       {player.warnings.length > 0 ? (
-        <IssuePanel
-          title="Advertencias del jugador"
-          tone="warning"
-          issues={player.warnings.map((warning) => ({
-            path: warning.code,
-            message: warning.message
-          }))}
-        />
+        <Section title="Advertencias del jugador" tone="warning">
+          <IssueList issues={player.warnings} />
+        </Section>
       ) : null}
 
       <div className="finding-list">
@@ -104,4 +99,4 @@ export const YouthPlayerCard = ({ player }: YouthPlayerCardProps) => {
       </div>
     </article>
   );
-}
+};

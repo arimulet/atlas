@@ -1,10 +1,10 @@
-import { formatNullable } from "../../../../formatters";
-import { SquadMarketPlayerPlan } from "../../../../types";
-import { EvidenceList } from "../../../EvidenceList";
-import { IssuePanel } from "../../../IssuePanel";
-import { TimingList } from "../TimingList";
+import { formatNullable } from "@atlas/web/app/formatters";
+import { SquadMarketPlayerPlan } from "@atlas/web/app/types";
+import { EvidenceList } from "@atlas/web/app/components/EvidenceList";
+import { TimingList } from "@atlas/web/app/components/SquadMarketPlanningPanel/components/TimingList";
+import { Section } from "@atlas/web/app/components/Section";
+import { IssueList } from "@atlas/web/app/components/IssueList";
 import { MarketPlayerCardProps } from "./types";
-
 
 function labelCategory(category: SquadMarketPlayerPlan["category"]): string {
   if (category === "sale_candidate") return "venta";
@@ -12,7 +12,6 @@ function labelCategory(category: SquadMarketPlayerPlan["category"]): string {
   if (category === "follow_up") return "seguimiento";
   return "sin senal";
 }
-
 
 export const MarketPlayerCard = ({ player }: MarketPlayerCardProps) => {
   return (
@@ -43,14 +42,9 @@ export const MarketPlayerCard = ({ player }: MarketPlayerCardProps) => {
       </div>
 
       {player.warnings.length > 0 ? (
-        <IssuePanel
-          title="Advertencias del jugador"
-          tone="warning"
-          issues={player.warnings.map((warning) => ({
-            path: warning.code,
-            message: warning.message
-          }))}
-        />
+        <Section title="Advertencias del jugador" tone="warning">
+          <IssueList issues={player.warnings} />
+        </Section>
       ) : null}
 
       <div className="finding-list">
@@ -67,4 +61,4 @@ export const MarketPlayerCard = ({ player }: MarketPlayerCardProps) => {
       </div>
     </article>
   );
-}
+};

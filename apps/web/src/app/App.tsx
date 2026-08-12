@@ -1,21 +1,22 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
   fetchClubDashboard,
   fetchPlayerDevelopment,
+  fetchRealYouthAcademyPlanning,
   fetchSquadMarketPlanning,
   fetchSquadEconomy,
   fetchYouthPipelinePlanning,
-  importPlayerSnapshot
-} from "./api";
-import { DashboardPanel } from "./components/DashboardPanel";
-import { DiagnosticPanel } from "./components/DiagnosticPanel";
-import { IssuePanel } from "./components/IssuePanel";
-import { PlayerDevelopmentPanel } from "./components/PlayerDevelopmentPanel";
-import { SquadMarketPlanningPanel } from "./components/SquadMarketPlanningPanel";
-import { SquadEconomyPanel } from "./components/SquadEconomyPanel";
-import { SummaryPanel } from "./components/SummaryPanel";
-import { YouthPipelinePlanningPanel } from "./components/YouthPipelinePlanningPanel";
+  syncSokkerXml
+} from "@atlas/web/app/api";
+import { DashboardPanel } from "@atlas/web/app/components/DashboardPanel";
+import { DiagnosticPanel } from "@atlas/web/app/components/DiagnosticPanel";
+import { PlayerDevelopmentPanel } from "@atlas/web/app/components/PlayerDevelopmentPanel";
+import { SquadMarketPlanningPanel } from "@atlas/web/app/components/SquadMarketPlanningPanel";
+import { SquadEconomyPanel } from "@atlas/web/app/components/SquadEconomyPanel";
+import { SummaryPanel } from "@atlas/web/app/components/SummaryPanel";
+import { YouthPipelinePlanningPanel } from "@atlas/web/app/components/YouthPipelinePlanningPanel";
+import { YouthAcademyPlanningPanel } from "@atlas/web/app/components/YouthAcademyPlanningPanel";
 import type {
   ClubDashboard,
   DashboardStatus,
@@ -24,16 +25,18 @@ import type {
   ImportResponse,
   ImportStatus,
   PlayerDevelopment,
+  RealYouthAcademyPlanning,
   SquadEconomy,
   SquadMarketPlanning,
   YouthPipelinePlanning
 } from "./types";
-
+import { Section } from "./components/Section";
+import { IssueList } from "./components/IssueList";
+import { SokkerSyncModal } from "./components/SokkerSyncModal";
 
 const lastClubStorageKey = "atlas.lastClubId";
 
 export function App() {
-  const inputRef = useRef<HTMLInputElement>(null);
   const [activeClubId, setActiveClubId] = useState<string | null>(() =>
     window.localStorage.getItem(lastClubStorageKey)
   );
@@ -47,6 +50,7 @@ export function App() {
     | "player-development"
     | "squad-market-planning"
     | "youth-pipeline-planning"
+    | "real-youth-academy"
   >("dashboard");
   const [squadEconomyStatus, setSquadEconomyStatus] = useState<DashboardStatus>("idle");
   const [squadEconomy, setSquadEconomy] = useState<SquadEconomy | null>(null);
@@ -57,16 +61,28 @@ export function App() {
   const [squadMarketPlanning, setSquadMarketPlanning] = useState<SquadMarketPlanning | null>(null);
   const [youthPipelinePlanningStatus, setYouthPipelinePlanningStatus] =
     useState<DashboardStatus>("idle");
-  const [youthPipelinePlanning, setYouthPipelinePlanning] =
-    useState<YouthPipelinePlanning | null>(null);
+  const [youthPipelinePlanning, setYouthPipelinePlanning] = useState<YouthPipelinePlanning | null>(
+    null
+  );
+  const [realYouthAcademyStatus, setRealYouthAcademyStatus] = useState<DashboardStatus>("idle");
+  const [realYouthAcademy, setRealYouthAcademy] = useState<RealYouthAcademyPlanning | null>(null);
+
   const [status, setStatus] = useState<ImportStatus>("idle");
-  const [fileName, setFileName] = useState<string | null>(null);
   const [message, setMessage] = useState("Club dashboard ready.");
   const [result, setResult] = useState<ImportResponse | null>(null);
   const [errors, setErrors] = useState<ImportIssue[]>([]);
-  const [isDragging, setIsDragging] = useState(false);
 
-  const findingsByCategory = useMemo(() => groupFindingsByCategory(result), [result]);
+  const [isSokkerModalOpen, setIsSokkerModalOpen] = useState(false);
+
+  const findingsByCategory = useMemo(() => {
+    const groups = new Map<string, DiagnosticFinding[]>();
+
+    result?.diagnostic?.findings.forEach((finding) => {
+      groups.set(finding.category, [...(groups.get(finding.category) ?? []), finding]);
+    });
+
+    return [...groups.entries()];
+  }, [result]);
 
   const loadDashboard = useCallback(async (clubId: string) => {
     setDashboardStatus("loading");
@@ -148,27 +164,42 @@ export function App() {
     }
   }, [activeClubId]);
 
+  const openRealYouthAcademy = useCallback(async () => {
+    if (!activeClubId) {
+      return;
+    }
+
+    setActiveView("real-youth-academy");
+    setRealYouthAcademyStatus("loading");
+
+    try {
+      setRealYouthAcademy(await fetchRealYouthAcademyPlanning(activeClubId));
+      setRealYouthAcademyStatus("ready");
+    } catch {
+      setRealYouthAcademy(null);
+      setRealYouthAcademyStatus("error");
+    }
+  }, [activeClubId]);
+
   useEffect(() => {
     if (activeClubId) {
       void loadDashboard(activeClubId);
     }
   }, [activeClubId, loadDashboard]);
 
-  const importFile = useCallback(
-    async (file: File) => {
+  const handleSokkerSync = useCallback(
+    async (login: string, pass: string) => {
       setStatus("loading");
-      setFileName(file.name);
-      setMessage("Importing snapshot...");
+      setMessage("Sincronizando con Sokker XML...");
       setResult(null);
       setErrors([]);
 
       try {
-        const payload = JSON.parse(await file.text()) as unknown;
-        const { response, body } = await importPlayerSnapshot(payload);
+        const { response, body } = await syncSokkerXml({ login, password: pass });
 
         if (!response.ok || body.importResult.status === "rejected") {
           setStatus("error");
-          setMessage("Import rejected.");
+          setMessage("Sincronización rechazada.");
           setResult(body);
           setErrors(body.importResult.errors);
           return;
@@ -183,17 +214,18 @@ export function App() {
         setStatus("success");
         setMessage(
           body.importResult.status === "accepted-with-warnings"
-            ? "Snapshot imported with warnings."
-            : "Snapshot imported successfully."
+            ? "Sincronización completada con advertencias."
+            : "Sincronización completada exitosamente."
         );
         setResult(body);
+        setIsSokkerModalOpen(false);
       } catch (error) {
         setStatus("error");
-        setMessage("Could not read this JSON file.");
+        setMessage("Error de conexión al sincronizar.");
         setErrors([
           {
-            path: "file",
-            message: error instanceof Error ? error.message : "Unknown import error."
+            path: "api",
+            message: error instanceof Error ? error.message : "Unknown sync error."
           }
         ]);
       }
@@ -236,6 +268,12 @@ export function App() {
             status={youthPipelinePlanningStatus}
             onBack={() => setActiveView("dashboard")}
           />
+        ) : activeView === "real-youth-academy" ? (
+          <YouthAcademyPlanningPanel
+            realYouthAcademyPlanning={realYouthAcademy}
+            status={realYouthAcademyStatus}
+            onBack={() => setActiveView("dashboard")}
+          />
         ) : (
           <DashboardPanel
             dashboard={dashboard}
@@ -244,51 +282,35 @@ export function App() {
             onOpenPlayerDevelopment={() => void openPlayerDevelopment()}
             onOpenSquadMarketPlanning={() => void openSquadMarketPlanning()}
             onOpenYouthPipelinePlanning={() => void openYouthPipelinePlanning()}
+            onOpenRealYouthAcademy={() => void openRealYouthAcademy()}
           />
         )}
 
         {activeView === "dashboard" ? (
           <section
-            className={`dropzone ${isDragging ? "dragging" : ""}`}
-            onDragEnter={(event) => {
-              event.preventDefault();
-              setIsDragging(true);
-            }}
-            onDragOver={(event) => event.preventDefault()}
-            onDragLeave={() => setIsDragging(false)}
-            onDrop={(event) => {
-              event.preventDefault();
-              setIsDragging(false);
-              const file = event.dataTransfer.files[0];
-
-              if (file) {
-                void importFile(file);
-              }
+            className="dropzone"
+            style={{
+              marginTop: "16px",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              borderStyle: "solid"
             }}
           >
-            <input
-              ref={inputRef}
-              className="file-input"
-              data-testid="snapshot-file-input"
-              type="file"
-              accept="application/json,.json"
-              onChange={(event) => {
-                const file = event.target.files?.[0];
-
-                if (file) {
-                  void importFile(file);
-                }
-              }}
-            />
             <div>
-              <p className="eyebrow">Operational Intake</p>
-              <h2>Import player snapshot JSON</h2>
+              <p className="eyebrow">Integración Oficial</p>
+              <h2>Sincronización Sokker XML</h2>
               <p>
-                {fileName ? `Selected: ${fileName}` : "Drop a file here or select a JSON export."}
+                Conecta directamente con Sokker para descargar tus juveniles, profesionales y estado
+                económico en tiempo real.
               </p>
             </div>
-            <button type="button" onClick={() => inputRef.current?.click()}>
-              Select JSON
+            <button
+              type="button"
+              onClick={() => setIsSokkerModalOpen(true)}
+              style={{ background: "var(--accent-color, #007bff)", color: "#fff", border: "none" }}
+            >
+              Iniciar Sincronización
             </button>
           </section>
         ) : null}
@@ -298,11 +320,22 @@ export function App() {
         ) : null}
 
         {activeView === "dashboard" && errors.length > 0 ? (
-          <IssuePanel title="Blocking errors" tone="error" issues={errors} />
+          <Section title="Blocking errors" tone="error">
+            <IssueList
+              issues={errors.map((error) => ({ code: error.path, message: error.message }))}
+            />
+          </Section>
         ) : null}
 
         {activeView === "dashboard" && result?.importResult.warnings.length ? (
-          <IssuePanel title="Warnings" tone="warning" issues={result.importResult.warnings} />
+          <Section title="Warnings" tone="warning">
+            <IssueList
+              issues={result.importResult.warnings.map((warning) => ({
+                code: warning.path,
+                message: warning.message
+              }))}
+            />
+          </Section>
         ) : null}
 
         {activeView === "dashboard" && result?.summary ? (
@@ -310,21 +343,19 @@ export function App() {
         ) : null}
 
         {activeView === "dashboard" ? (
-          <DiagnosticPanel findingsByCategory={findingsByCategory} />
+          <DiagnosticPanel
+            findingsByCategory={findingsByCategory}
+            currency={result?.summary?.currency ?? null}
+          />
         ) : null}
+
+        <SokkerSyncModal
+          isOpen={isSokkerModalOpen}
+          onClose={() => setIsSokkerModalOpen(false)}
+          onSync={handleSokkerSync}
+          isLoading={status === "loading"}
+        />
       </section>
     </main>
   );
-}
-
-function groupFindingsByCategory(
-  result: ImportResponse | null
-): Array<[string, DiagnosticFinding[]]> {
-  const groups = new Map<string, DiagnosticFinding[]>();
-
-  result?.diagnostic?.findings.forEach((finding) => {
-    groups.set(finding.category, [...(groups.get(finding.category) ?? []), finding]);
-  });
-
-  return [...groups.entries()];
 }

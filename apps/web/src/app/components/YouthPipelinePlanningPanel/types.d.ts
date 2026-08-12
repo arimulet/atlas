@@ -1,4 +1,4 @@
-import type { YouthPipelinePlanning } from "../../types";
+import type { YouthPipelinePlanning } from "@atlas/web/app/types";
 
 export interface YouthPipelinePlanningPanelProps {
   youthPipelinePlanning: YouthPipelinePlanning | null;

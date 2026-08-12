@@ -2,12 +2,11 @@ import type { Money, SkillSet } from "./index.js";
 
 export interface SnapshotComparisonPlayer {
   id: string;
-  playerId: string | null;
-  externalId: string | null;
+  playerId: number | null;
   name: string;
   age: number;
   wage: Money;
-  estimatedValue: Money;
+  value: Money;
   skills: Required<SkillSet>;
 }
 
@@ -36,14 +35,14 @@ export interface SkillChange extends NumericChange {
 export interface MatchedPlayerComparison {
   status: "matched";
   identity: {
-    externalId: string;
+    playerId: number;
   };
   basePlayer: SnapshotComparisonPlayer;
   targetPlayer: SnapshotComparisonPlayer;
   changes: {
     age: NumericChange | null;
     wage: MoneyChange | null;
-    estimatedValue: MoneyChange | null;
+    value: MoneyChange | null;
     skills: SkillChange[];
   };
 }
@@ -57,9 +56,9 @@ export interface SnapshotComparisonAmbiguousPlayer {
 export interface SnapshotComparisonSummary {
   playerCountBefore: number;
   playerCountAfter: number;
-  totalEstimatedValueBefore: number;
-  totalEstimatedValueAfter: number;
-  totalEstimatedValueDelta: number;
+  totalValueBefore: number;
+  totalValueAfter: number;
+  totalValueDelta: number;
   totalWageBefore: number;
   totalWageAfter: number;
   totalWageDelta: number;
@@ -110,22 +109,22 @@ export function compareSnapshots(
   const matchedPlayers: MatchedPlayerComparison[] = [];
   const absentPlayers: SnapshotComparisonPlayer[] = [];
   const newPlayers: SnapshotComparisonPlayer[] = [];
-  const matchedTargetExternalIds = new Set<string>();
+  const matchedTargetPlayerIds = new Set<number>();
 
-  for (const [externalId, basePlayer] of baseIndex.matchable) {
-    const targetPlayer = targetIndex.matchable.get(externalId);
+  for (const [playerId, basePlayer] of baseIndex.matchable) {
+    const targetPlayer = targetIndex.matchable.get(playerId);
 
     if (!targetPlayer) {
       absentPlayers.push(basePlayer);
       continue;
     }
 
-    matchedTargetExternalIds.add(externalId);
-    matchedPlayers.push(comparePlayer(externalId, basePlayer, targetPlayer));
+    matchedTargetPlayerIds.add(playerId);
+    matchedPlayers.push(comparePlayer(playerId, basePlayer, targetPlayer));
   }
 
-  for (const [externalId, targetPlayer] of targetIndex.matchable) {
-    if (!matchedTargetExternalIds.has(externalId)) {
+  for (const [playerId, targetPlayer] of targetIndex.matchable) {
+    if (!matchedTargetPlayerIds.has(playerId)) {
       newPlayers.push(targetPlayer);
     }
   }
@@ -143,11 +142,11 @@ export function compareSnapshots(
     summary: {
       playerCountBefore: baseSnapshot.players.length,
       playerCountAfter: targetSnapshot.players.length,
-      totalEstimatedValueBefore: sumMoney(baseSnapshot.players, "estimatedValue"),
-      totalEstimatedValueAfter: sumMoney(targetSnapshot.players, "estimatedValue"),
-      totalEstimatedValueDelta:
-        sumMoney(targetSnapshot.players, "estimatedValue") -
-        sumMoney(baseSnapshot.players, "estimatedValue"),
+      totalValueBefore: sumMoney(baseSnapshot.players, "value"),
+      totalValueAfter: sumMoney(targetSnapshot.players, "value"),
+      totalValueDelta:
+        sumMoney(targetSnapshot.players, "value") -
+        sumMoney(baseSnapshot.players, "value"),
       totalWageBefore: sumMoney(baseSnapshot.players, "wage"),
       totalWageAfter: sumMoney(targetSnapshot.players, "wage"),
       totalWageDelta:
@@ -160,32 +159,32 @@ export function compareSnapshots(
 }
 
 function indexByStableIdentity(players: SnapshotComparisonPlayer[]): {
-  matchable: Map<string, SnapshotComparisonPlayer>;
+  matchable: Map<number, SnapshotComparisonPlayer>;
   ambiguous: Array<{
     player: SnapshotComparisonPlayer;
     reason: SnapshotComparisonAmbiguousPlayer["reason"];
   }>;
 } {
-  const byExternalId = new Map<string, SnapshotComparisonPlayer[]>();
+  const byPlayerId = new Map<number, SnapshotComparisonPlayer[]>();
   const ambiguous: Array<{
     player: SnapshotComparisonPlayer;
     reason: SnapshotComparisonAmbiguousPlayer["reason"];
   }> = [];
 
   for (const player of players) {
-    if (!player.externalId) {
+    if (!player.playerId) {
       ambiguous.push({ player, reason: "missing-stable-identity" });
       continue;
     }
 
-    byExternalId.set(player.externalId, [...(byExternalId.get(player.externalId) ?? []), player]);
+    byPlayerId.set(player.playerId, [...(byPlayerId.get(player.playerId) ?? []), player]);
   }
 
-  const matchable = new Map<string, SnapshotComparisonPlayer>();
+  const matchable = new Map<number, SnapshotComparisonPlayer>();
 
-  for (const [externalId, playersWithIdentity] of byExternalId) {
+  for (const [playerId, playersWithIdentity] of byPlayerId) {
     if (playersWithIdentity.length === 1) {
-      matchable.set(externalId, playersWithIdentity[0]!);
+      matchable.set(playerId, playersWithIdentity[0]!);
       continue;
     }
 
@@ -201,19 +200,19 @@ function indexByStableIdentity(players: SnapshotComparisonPlayer[]): {
 }
 
 function comparePlayer(
-  externalId: string,
+  playerId: number,
   basePlayer: SnapshotComparisonPlayer,
   targetPlayer: SnapshotComparisonPlayer
 ): MatchedPlayerComparison {
   return {
     status: "matched",
-    identity: { externalId },
+    identity: { playerId },
     basePlayer,
     targetPlayer,
     changes: {
       age: numericChange(basePlayer.age, targetPlayer.age),
       wage: moneyChange(basePlayer.wage, targetPlayer.wage),
-      estimatedValue: moneyChange(basePlayer.estimatedValue, targetPlayer.estimatedValue),
+      value: moneyChange(basePlayer.value, targetPlayer.value),
       skills: skillKeys
         .map((skill) => {
           const before = basePlayer.skills[skill];
@@ -235,7 +234,7 @@ function numericChange(before: number, after: number): NumericChange | null {
 }
 
 function moneyChange(before: Money, after: Money): MoneyChange | null {
-  if (before.amount === after.amount && before.currency === after.currency) {
+  if (before.amount === after.amount) {
     return null;
   }
 
@@ -244,10 +243,10 @@ function moneyChange(before: Money, after: Money): MoneyChange | null {
     after: after.amount,
     delta: after.amount - before.amount,
     currency: before.currency === after.currency ? before.currency : null,
-    isComparable: before.currency !== null && before.currency === after.currency
+    isComparable: true
   };
 }
 
-function sumMoney(players: SnapshotComparisonPlayer[], field: "estimatedValue" | "wage"): number {
+function sumMoney(players: SnapshotComparisonPlayer[], field: "value" | "wage"): number {
   return players.reduce((total, player) => total + player[field].amount, 0);
 }

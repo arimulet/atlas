@@ -1,13 +1,16 @@
-import { SummaryItem } from "../../../SummaryItem";
+import { SummaryItem } from "@atlas/web/app/components/SummaryItem";
 import { EvidencePanelProps } from "./types";
+import { Section } from "../../../Section";
 
 export const EvidencePanel = ({ squadEconomy }: EvidencePanelProps) => {
+  const currencyDisplay = squadEconomy.countryDetails
+    ? squadEconomy.countryDetails.currencyName
+    : squadEconomy.observed.coverage.wageCurrency ??
+      squadEconomy.observed.coverage.valueCurrency ??
+      "No disponible";
+
   return (
-    <section className="panel">
-      <div className="panel-heading">
-        <p className="eyebrow">Observado</p>
-        <h2>Cobertura de datos</h2>
-      </div>
+    <Section title="Observado" subtitle="Cobertura de datos">
       <dl className="summary-grid">
         <SummaryItem
           label="Jugadores"
@@ -19,17 +22,13 @@ export const EvidencePanel = ({ squadEconomy }: EvidencePanelProps) => {
         />
         <SummaryItem
           label="Con valor"
-          value={squadEconomy.observed.coverage.playersWithEstimatedValue.toString()}
+          value={squadEconomy.observed.coverage.playersWithValue.toString()}
         />
         <SummaryItem
           label="Moneda observada"
-          value={
-            squadEconomy.observed.coverage.wageCurrency ??
-            squadEconomy.observed.coverage.estimatedValueCurrency ??
-            "No disponible"
-          }
+          value={currencyDisplay}
         />
       </dl>
-    </section>
+    </Section>
   );
-}
+};

@@ -1,13 +1,13 @@
-import { PlayerDevelopmentPlayerSummary } from "../../../../types";
-import { EvidenceList } from "../../../EvidenceList";
-import { IssuePanel } from "../../../IssuePanel";
-import { SummaryItem } from "../../../SummaryItem";
+import { PlayerDevelopmentPlayerSummary, Severity } from "@atlas/web/app/types";
+import { EvidenceList } from "@atlas/web/app/components/EvidenceList";
+import { SummaryItem } from "@atlas/web/app/components/SummaryItem";
 import { PlayerDevelopmentCardProps } from "./types";
-
+import { Section } from "@atlas/web/app/components/Section";
+import { IssueList } from "@atlas/web/app/components/IssueList";
 
 function severityForDirection(
   direction: PlayerDevelopmentPlayerSummary["recentEvolution"]["direction"]
-): "info" | "low" | "medium" | "high" {
+): Severity {
   if (direction === "up") return "low";
   if (direction === "down") return "medium";
   return "info";
@@ -73,14 +73,9 @@ export const PlayerDevelopmentCard = ({ player }: PlayerDevelopmentCardProps) =>
       </div>
 
       {player.warnings.length > 0 ? (
-        <IssuePanel
-          title="Advertencias del jugador"
-          tone="warning"
-          issues={player.warnings.map((warning) => ({
-            path: warning.code,
-            message: warning.message
-          }))}
-        />
+        <Section title="Advertencias del jugador" tone="warning">
+          <IssueList issues={player.warnings} />
+        </Section>
       ) : null}
 
       <div className="finding-list">
@@ -98,4 +93,4 @@ export const PlayerDevelopmentCard = ({ player }: PlayerDevelopmentCardProps) =>
       </div>
     </article>
   );
-}
+};

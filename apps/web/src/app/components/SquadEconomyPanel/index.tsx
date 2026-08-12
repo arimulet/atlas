@@ -1,8 +1,9 @@
-import { formatMoney, formatNullable } from "../../formatters";
-import { EvidenceList } from "../EvidenceList";
+import { formatMoney, formatNullable } from "@atlas/web/app/formatters";
+import { EvidenceList } from "@atlas/web/app/components/EvidenceList";
+import { SummaryItem } from "@atlas/web/app/components/SummaryItem";
+import { Section } from "@atlas/web/app/components/Section";
+import { IssueList } from "@atlas/web/app/components/IssueList";
 
-import { IssuePanel } from "../IssuePanel";
-import { SummaryItem } from "../SummaryItem";
 import { ConcentrationPanel } from "./components/ConcentrationPanel";
 import { EvidencePanel } from "./components/EvidencePanel";
 import { HistoricalPanel } from "./components/HistoricalPanel";
@@ -16,24 +17,22 @@ function formatRatio(value: number | null): string {
 export const SquadEconomyPanel = ({ squadEconomy, status, onBack }: SquadEconomyPanelProps) => {
   if (status === "loading") {
     return (
-      <section className="panel">
-        <p className="loading">Cargando Economia de plantilla...</p>
-      </section>
+      <Section description="Cargando Economia de plantilla..." />
     );
   }
 
   if (status === "error" || !squadEconomy) {
     return (
-      <section className="panel issue-panel error">
-        <div className="panel-heading">
-          <p className="eyebrow">Economia de plantilla</p>
-          <h2>No se pudo cargar el modulo</h2>
-        </div>
-        <p className="muted">Volver al dashboard e intentar nuevamente.</p>
+      <Section
+        tone="error"
+        title="Economia de plantilla"
+        subtitle="No se pudo cargar el modulo"
+        description="Volver al dashboard e intentar nuevamente."
+      >
         <button type="button" onClick={onBack}>
           Volver al dashboard
         </button>
-      </section>
+      </Section>
     );
   }
 
@@ -49,28 +48,18 @@ export const SquadEconomyPanel = ({ squadEconomy, status, onBack }: SquadEconomy
         </button>
       </div>
 
-      <section className="panel">
-        <div className="panel-heading">
-          <p className="eyebrow">Alcance</p>
-          <h2>Lectura derivada de plantilla</h2>
-        </div>
-        <p className="muted">
-          Este modulo usa salarios, valores estimados, snapshots y tolerancia de riesgo. No
-          representa caja, ingresos, gastos no salariales, estadio, sponsors, transferencias
-          externas ni liquidez real.
-        </p>
-      </section>
+      <Section
+        title="Alcance"
+        subtitle="Lectura derivada de plantilla"
+        description="Este modulo usa salarios, valores estimados, snapshots y tolerancia de riesgo. No representa caja, ingresos, gastos no salariales, estadio, sponsors, transferencias externas ni liquidez real."
+      />
 
-      <section className="panel">
-        <div className="panel-heading">
-          <p className="eyebrow">Derivado</p>
-          <h2>Resumen economico observado</h2>
-        </div>
+      <Section title="Derivado" subtitle="Resumen economico observado">
         <dl className="summary-grid">
-          <SummaryItem label="Masa salarial" value={formatMoney(squadEconomy.derived.totalWage)} />
+          <SummaryItem label="Masa salarial" value={formatMoney(squadEconomy.derived.totalWage, squadEconomy.countryDetails)} />
           <SummaryItem
             label="Valor estimado total"
-            value={formatMoney(squadEconomy.derived.totalEstimatedValue)}
+            value={formatMoney(squadEconomy.derived.totalValue, squadEconomy.countryDetails)}
           />
           <SummaryItem
             label="Relacion salario/valor"
@@ -78,56 +67,45 @@ export const SquadEconomyPanel = ({ squadEconomy, status, onBack }: SquadEconomy
           />
           <SummaryItem label="Snapshot" value={squadEconomy.snapshotDate ?? "No disponible"} />
         </dl>
-      </section>
+      </Section>
 
       <section className="economy-columns">
         <EvidencePanel squadEconomy={squadEconomy} />
-        <section className="panel">
-          <div className="panel-heading">
-            <p className="eyebrow">Manual</p>
-            <h2>Settings efectivos</h2>
-          </div>
+        <Section title="Manual" subtitle="Settings efectivos">
           <dl className="summary-grid">
             <SummaryItem
               label="Moneda operativa"
-              value={formatNullable(squadEconomy.manual.currency)}
+              value={formatNullable(squadEconomy.manual.currency?.name)}
             />
             <SummaryItem label="Tolerancia de riesgo" value={squadEconomy.manual.riskTolerance} />
           </dl>
-        </section>
+        </Section>
       </section>
 
       <section className="economy-columns">
         <ConcentrationPanel
           title="Concentracion salarial"
           items={squadEconomy.derived.concentration.wage}
+          countryDetails={squadEconomy.countryDetails}
         />
         <ConcentrationPanel
           title="Concentracion de valor"
-          items={squadEconomy.derived.concentration.estimatedValue}
+          items={squadEconomy.derived.concentration.value}
+          countryDetails={squadEconomy.countryDetails}
         />
       </section>
 
-      <PlayerDetailPanel players={squadEconomy.derived.playerDetails} />
+      <PlayerDetailPanel players={squadEconomy.derived.playerDetails} countryDetails={squadEconomy.countryDetails} />
 
       <HistoricalPanel squadEconomy={squadEconomy} />
 
       {squadEconomy.warnings.length > 0 ? (
-        <IssuePanel
-          title="Advertencias de evidencia"
-          tone="warning"
-          issues={squadEconomy.warnings.map((warning) => ({
-            path: warning.code,
-            message: warning.message
-          }))}
-        />
+        <Section title="Advertencias de evidencia" tone="warning">
+          <IssueList issues={squadEconomy.warnings} />
+        </Section>
       ) : null}
 
-      <section className="panel">
-        <div className="panel-heading">
-          <p className="eyebrow">Inferido</p>
-          <h2>Hallazgos explicables</h2>
-        </div>
+      <Section title="Inferido" subtitle="Hallazgos explicables">
         <div className="finding-list">
           {squadEconomy.findings.length > 0 ? (
             squadEconomy.findings.map((finding) => (
@@ -145,7 +123,7 @@ export const SquadEconomyPanel = ({ squadEconomy, status, onBack }: SquadEconomy
             <p className="muted">Sin hallazgos fuertes con la evidencia disponible.</p>
           )}
         </div>
-      </section>
+      </Section>
     </section>
   );
-}
+};

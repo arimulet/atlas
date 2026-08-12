@@ -1,21 +1,19 @@
-import { TraceListProps } from "./types";
+import { describeDiagnosticTrace } from "@atlas/web/app/diagnostic-copy";
+import { DetailBlock } from "../DetailBlock";
+import { TraceKind } from "../TraceKind";
+import type { TraceListProps } from "./types";
 
-export const TraceList = ({ title, traces }: TraceListProps) => {
+export const TraceList = ({ title, traces, currency }: TraceListProps) => {
   return (
-    <div className="detail-block">
-      <h4>{title}</h4>
+    <DetailBlock title={title}>
       <ul>
         {traces.map((trace) => (
-          <li key={`${trace.kind}-${trace.label}-${trace.value}`}>
-            <span className={`trace-kind ${trace.kind}`}>{trace.kind}</span>
-            <span>
-              {trace.label}
-              {trace.value !== null ? `: ${trace.value}` : ""}
-            </span>
+          <li key={trace.kind + "-" + trace.code + "-" + trace.value}>
+            <TraceKind type={trace.kind} label={trace.kind} />
+            <span>{describeDiagnosticTrace(trace, currency)}</span>
           </li>
         ))}
       </ul>
-    </div>
+    </DetailBlock>
   );
-}
-
+};
