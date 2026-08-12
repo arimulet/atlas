@@ -4,11 +4,25 @@ import {
   sokkerCountriesXmlSchema,
   sokkerTeamXmlSchema,
   sokkerPlayersXmlSchema,
-  sokkerJuniorsXmlSchema
+  sokkerJuniorsXmlSchema,
+  sokkerVarsXmlSchema
 } from "@atlas/contracts";
 import type { PlayerSnapshotV0 } from "@atlas/contracts";
 import type { YouthAcademySnapshotV0 } from "@atlas/contracts";
 import type { Money } from "../types.js";
+
+const SEASON_61_BASE_GAME_WEEK = 977;
+const WEEKS_PER_SEASON = 13;
+
+export function normalizeSeasonWeek(gameWeek: number): number {
+  if (Number.isInteger(gameWeek) === false || gameWeek < SEASON_61_BASE_GAME_WEEK) {
+    throw new Error(
+      "Unsupported Sokker game week " + gameWeek + "; expected an integer at or after " + SEASON_61_BASE_GAME_WEEK + "."
+    );
+  }
+
+  return ((gameWeek - SEASON_61_BASE_GAME_WEEK) % WEEKS_PER_SEASON) + 1;
+}
 
 export interface ClubObservedProfile {
   externalId: string;
@@ -16,7 +30,8 @@ export interface ClubObservedProfile {
   countryId: number;
   money: Money;
   season?: number;
-  week?: number;
+  gameWeek: number;
+  week: number;
   training?: {
     gk: number | null;
     def: number | null;
@@ -58,11 +73,12 @@ export class SokkerXmlProvider {
     const auth = await this.httpClient.login(credentials);
 
     // 2. Fetch XMLs concurrently
-    const [teamXmlRaw, countriesXmlRaw, playersXmlRaw, juniorsXmlRaw] = await Promise.all([
+    const [teamXmlRaw, countriesXmlRaw, playersXmlRaw, juniorsXmlRaw, varsXmlRaw] = await Promise.all([
       this.httpClient.fetchXml(`team-${auth.teamId}.xml`, auth.sessionId),
       this.httpClient.fetchXml("countries.xml", auth.sessionId),
       this.httpClient.fetchXml(`players-${auth.teamId}.xml`, auth.sessionId),
-      this.httpClient.fetchXml("juniors.xml", auth.sessionId)
+      this.httpClient.fetchXml("juniors.xml", auth.sessionId),
+      this.httpClient.fetchXml("vars.xml", auth.sessionId)
     ]);
 
     // 3. Parse XML to JSON
@@ -70,9 +86,10 @@ export class SokkerXmlProvider {
     const countriesJson = this.parser.parse(countriesXmlRaw);
     const playersJson = this.parser.parse(playersXmlRaw);
     const juniorsJson = this.parser.parse(juniorsXmlRaw);
+    const varsJson = this.parser.parse(varsXmlRaw);
 
     // 4. Validate and extract data
-    let teamData, countriesData, playersData, juniorsData;
+    let teamData, countriesData, playersData, juniorsData, varsData;
     try {
       teamData = sokkerTeamXmlSchema.parse(teamJson).teamdata.team;
     } catch (e) {
@@ -102,6 +119,13 @@ export class SokkerXmlProvider {
       throw new Error(`Juniors validation failed. Received keys: ${JSON.stringify(Object.keys(juniorsJson))}. Error: ${message}`);
     }
 
+    try {
+      varsData = sokkerVarsXmlSchema.parse(varsJson).vars;
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
+      throw new Error("Vars validation failed. Received keys: " + JSON.stringify(Object.keys(varsJson)) + ". Error: " + message);
+    }
+
     // 5. Data Mapping & Currency Conversion
     
     // Normalize countries into CountryReference
@@ -125,7 +149,8 @@ export class SokkerXmlProvider {
       countryId: teamData.countryID,
       money: convertMoney(teamData.money),
       season: teamData.season,
-      week: teamData.week,
+      gameWeek: varsData.week,
+      week: normalizeSeasonWeek(varsData.week),
       training: {
         gk: teamData.trainingTypeGk ?? null,
         def: teamData.trainingTypeDef ?? null,
@@ -181,7 +206,7 @@ export class SokkerXmlProvider {
       snapshot: {
         snapshotDate: new Date().toISOString().split("T")[0]!,
         season: teamData.season,
-        week: teamData.week
+        week: normalizeSeasonWeek(varsData.week)
       },
       academy: {
         players: juniorsArray.map(j => {

@@ -29,7 +29,6 @@ import {
   formatDate,
   normalizeNullableString,
   validateCurrency,
-  validateSeason,
   validateWeek
 } from "@atlas/utils";
 import {
@@ -123,7 +122,6 @@ function validateManualProfileUpdate(
 
   if ("name" in manual) validated.name = normalizeNullableString(manual.name);
   if ("currency" in manual) validated.currency = validateCurrency(manual.currency);
-  if ("season" in manual) validated.season = validateSeason(manual.season);
   if ("week" in manual) validated.week = validateWeek(manual.week);
   if (manual.assumptions) validated.assumptions = validateManualRecords(manual.assumptions);
   if (manual.preferences) validated.preferences = validateManualRecords(manual.preferences);

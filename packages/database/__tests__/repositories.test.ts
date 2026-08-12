@@ -72,7 +72,6 @@ describe("Mongo repositories", () => {
     const club = await clubs.save({
       clubId: 1, country: 1,
       name: "River Plate Forever",
-      season: 78,
       week: 4,
       lastSnapshotDate: new Date("2026-08-05T00:00:00.000Z"),
       sourceType: "sokker-dom-export",
@@ -83,13 +82,11 @@ describe("Mongo repositories", () => {
     expect(club).toMatchObject({
       clubId: 1,
       name: "River Plate Forever",
-      season: 78,
       week: 4,
       sourceType: "sokker-dom-export"
     });
     expect(club.settings).toMatchObject({
       currency: { name: "ARS", rate: 100 },
-      season: null,
       week: null,
       assumptions: [],
       preferences: [
@@ -107,7 +104,6 @@ describe("Mongo repositories", () => {
       clubId: 1,
       country: 1,
       name: "River Plate Forever",
-      season: 78,
       week: 4,
       currency: { name: "ARS", rate: 100 }
     });
@@ -115,7 +111,6 @@ describe("Mongo repositories", () => {
     const updated = await clubs.updateManualProfile({
       clubId: club.id,
       currency: { name: "ARS", rate: 100 },
-      season: 79,
       assumptions: [{ key: "market-risk", value: "Keep liquidity buffer before buying." }],
       preferences: [{ key: "training-focus", value: "Prioritize playmaking trainees." }]
     });
@@ -123,12 +118,10 @@ describe("Mongo repositories", () => {
     expect(updated).toMatchObject({
       clubId: 1,
       name: "River Plate Forever",
-      season: 78,
       week: 4
     });
     expect(updated.settings).toMatchObject({
       currency: { name: "ARS", rate: 100 },
-      season: 79,
       week: null
     });
     expect(updated.settings.assumptions[0]).toMatchObject({
