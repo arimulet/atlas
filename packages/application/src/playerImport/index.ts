@@ -102,7 +102,7 @@ export const importPlayerSnapshot = async (
     clubId: club.id,
     schemaVersion: normalized.schemaVersion,
     snapshotDate: normalized.snapshot.snapshotDate,
-    season: normalized.snapshot.season,
+    gameWeek: normalized.snapshot.gameWeek,
     week: normalized.snapshot.week,
     importedAt: importEvent.importedAt,
     source: normalized.source,
@@ -257,7 +257,7 @@ function normalizePlayerSnapshot(snapshot: PlayerSnapshotV0): NormalizedPlayerSn
         ATT: snapshot.club.training.att ?? null
       } : undefined,
       name: snapshot.club.name.trim(),
-      gameWeek: snapshot.club.gameWeek ?? undefined,
+      gameWeek: snapshot.snapshot.gameWeek ?? snapshot.club.gameWeek ?? undefined,
       week: snapshot.snapshot.week ?? null,
       lastSnapshotDate: new Date(`${snapshot.snapshot.snapshotDate}T00:00:00.000Z`),
       sourceType: snapshot.source.type,
@@ -265,7 +265,7 @@ function normalizePlayerSnapshot(snapshot: PlayerSnapshotV0): NormalizedPlayerSn
     },
     snapshot: {
       snapshotDate: new Date(`${snapshot.snapshot.snapshotDate}T00:00:00.000Z`),
-      season: snapshot.snapshot.season ?? null,
+      gameWeek: snapshot.snapshot.gameWeek ?? null,
       week: snapshot.snapshot.week ?? null
     },
     players: snapshot.players.map(normalizePlayer)

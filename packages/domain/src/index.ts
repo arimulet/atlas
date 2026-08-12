@@ -76,7 +76,7 @@ export interface YouthAcademySnapshot {
   importedAt: string;
   source: string;
   sourceVersion?: string | null;
-  season?: number | null;
+  gameWeek?: number | null;
   week?: number | null;
   weeklyInvestment?: Money | null;
   players: YouthPlayerSnapshot[];

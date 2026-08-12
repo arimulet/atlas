@@ -60,6 +60,8 @@ describe("Mongo repositories", () => {
     expect(saved.id).toEqual(expect.any(String));
     expect(saved.clubId).toBe(club.id);
     expect(saved.schemaVersion).toBe("atlas.player-snapshot.v0");
+    expect(saved.gameWeek).toBe(1201);
+    expect(saved.week).toBe(4);
     expect(saved.players).toHaveLength(1);
     expect(saved.players[0]).toMatchObject({
       playerId: player.playerId,
@@ -277,6 +279,8 @@ describe("Mongo repositories", () => {
     expect(saved.id).toEqual(expect.any(String));
     expect(saved.clubId).toBe(club.id);
     expect(saved.schemaVersion).toBe("atlas.youth-academy-snapshot.v0");
+    expect(saved.gameWeek).toBe(1203);
+    expect(saved.week).toBe(6);
     expect(saved.weeklyInvestment).toEqual({ amount: 15000, currency: "ARS" });
     expect(saved.players).toHaveLength(1);
     expect(saved.players[0]).toMatchObject({
@@ -310,7 +314,7 @@ function buildSnapshotInput(overrides: {
     clubId: overrides.clubId,
     schemaVersion: "atlas.player-snapshot.v0",
     snapshotDate: overrides.snapshotDate ?? new Date("2026-08-05T00:00:00.000Z"),
-    season: 78,
+    gameWeek: 1201,
     week: 4,
     importedAt: new Date("2026-08-05T20:00:00.000Z"),
     source: {
@@ -353,7 +357,7 @@ function buildYouthSnapshotInput(overrides: {
     clubId: overrides.clubId,
     schemaVersion: "atlas.youth-academy-snapshot.v0",
     snapshotDate: overrides.snapshotDate ?? new Date("2026-08-08T00:00:00.000Z"),
-    season: 78,
+    gameWeek: 1203,
     week: 6,
     importedAt: new Date("2026-08-08T10:00:00.000Z"),
     source: {

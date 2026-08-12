@@ -47,7 +47,7 @@ const snapshotSchema = new Schema(
     clubId: { type: Schema.Types.ObjectId, ref: "Club", required: true, index: true },
     schemaVersion: { type: String, required: true },
     snapshotDate: { type: Date, required: true, index: true },
-    season: { type: Number, default: null },
+    gameWeek: { type: Number, default: null },
     week: { type: Number, default: null },
     importedAt: { type: Date, required: true, default: () => new Date() },
     source: {

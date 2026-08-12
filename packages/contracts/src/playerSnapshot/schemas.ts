@@ -45,7 +45,7 @@ export const playerSnapshotV0Schema = z.object({
   }),
   snapshot: z.object({
     snapshotDate: z.string().regex(isoDate),
-    season: z.number().int().positive().nullable().optional(),
+    gameWeek: z.number().int().positive().nullable().optional(),
     week: z.number().int().positive().nullable().optional()
   }),
   players: z.array(

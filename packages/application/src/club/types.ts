@@ -61,7 +61,7 @@ export interface ClubDashboardSnapshotSummary {
   clubId: string;
   snapshotDate: string;
   importedAt: string;
-  season: number | null;
+  gameWeek: number | null;
   week: number | null;
   playerCount: number;
 }
