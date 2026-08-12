@@ -16,7 +16,7 @@ export interface RealYouthAcademyPlanning {
     coverage: {
       totalYouthCount: number;
       youthsWithWeeksRemaining: number;
-      youthsWithEstimatedLevel: number;
+      youthsWithSkill: number;
     };
     weeklyInvestment: Money | null;
   };
@@ -37,7 +37,7 @@ export interface YouthAcademyObservedPlayer {
   age: number;
   initialWeeksRemaining: number | null;
   weeksRemaining: number | null;
-  estimatedLevel: string | null;
+  skill: number | null;
   status: "in_academy" | "ready_for_promotion" | "promoted";
 }
 
@@ -50,7 +50,7 @@ export interface RealYouthAcademyPlayerPlan {
   weeksRemaining: number | null;
   weeksInAcademy: number | null;
   projectedPromotionAge: number | null;
-  estimatedLevel: string | null;
+  skill: number | null;
   status: "in_academy" | "ready_for_promotion" | "promoted";
   category: YouthAcademyCategory;
   severity: Severity;

@@ -33,7 +33,7 @@
         "name": "Matias Cantero",
         "age": 16,
         "weeksRemaining": 4,
-        "estimatedLevel": "good",
+        "skill": 8,
         "status": "in_academy"
       }
     ]

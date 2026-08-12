@@ -116,7 +116,7 @@ export interface PersistedYouthPlayerSnapshot {
   age: number;
   initialWeeksRemaining: number | null;
   weeksRemaining: number | null;
-  estimatedLevel: string | null;
+  skill: number | null;
   status: "in_academy" | "ready_for_promotion" | "promoted";
 }
 

@@ -18,11 +18,7 @@ export const youthPlayerItemSchema = z.object({
   name: z.string().min(1),
   age: z.number().int().positive(),
   weeksRemaining: z.number().int().nonnegative().nullable().optional(),
-  estimatedLevel: z
-    .union([z.string().min(1), z.number().finite()])
-    .transform((val) => (val == null ? null : String(val)))
-    .nullable()
-    .optional(),
+  skill: z.number().finite().nonnegative(),
   status: youthPlayerStatusSchema.nullable().optional()
 });
 

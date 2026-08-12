@@ -66,7 +66,7 @@ describe("ImportYouthAcademySnapshot", () => {
       age: 16,
       initialWeeksRemaining: 4,
       weeksRemaining: 4,
-      estimatedLevel: "good",
+      skill: 8,
       status: "in_academy"
     });
     expect(importEvent?.snapshotId?.toString()).toBe(result.snapshotId);
