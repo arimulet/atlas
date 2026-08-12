@@ -1,79 +1,75 @@
 {
-  "schemaVersion": "atlas.player-snapshot.v0",
-  "source": {
-    "type": "sokker-dom-export",
-    "exportedAt": "2026-08-05T20:30:00.000Z",
-    "pageUrl": "https://sokker.org/es/app/squad/club/100",
-    "locale": "es"
-  },
-  "club": {
-    "name": "River Plate Forever",
-    "clubId": 100,
-    "country": 11,
-    "training": {
-      "gk": 1,
-      "def": 2,
-      "mid": 3,
-      "att": 4
-    }
-  },
-  "snapshot": {
-    "snapshotDate": "2026-08-06",
-    "season": 78,
-    "week": 7
-  },
-  "players": [
-    {
-      "playerId": 38643161,
-      "name": "Ryan Ahlburg",
-      "age": 34,
-      "wage": {
-        "amount": 33450,
-        "currency": "USD"
-      },
-      "estimatedValue": {
-        "amount": 1549000,
-        "currency": "USD"
-      },
-      "form": 6,
-      "availabilityStatus": "available",
-      "observedPosition": "defender",
-      "skills": {
-        "stamina": 11,
-        "pace": 14,
-        "technique": 16,
-        "passing": 16,
-        "keeper": 0,
-        "defender": 10,
-        "playmaker": 16,
-        "striker": 6
-      }
-    },
-    {
-      "playerId": 39409355,
-      "name": "Ottaviano Arixi",
-      "age": 21,
-      "wage": {
-        "amount": 7250,
-        "currency": "ARS"
-      },
-      "estimatedValue": {
-        "amount": 890000,
-        "currency": "ARS"
-      },
-      "form": 9,
-      "availabilityStatus": "injured",
-      "observedPosition": "striker",
-      "skills": {
-        "stamina": 8,
-        "pace": 13,
-        "technique": 12,
-        "passing": 7,
-        "keeper": 0,
-        "defender": 4,
-        "playmaker": 8,
-        "striker": 14
-      }
-    }
-  ]
+    "schemaVersion":  "atlas.player-snapshot.v0",
+    "source":  {
+                   "type":  "sokker-dom-export",
+                   "exportedAt":  "2026-08-05T20:30:00.000Z",
+                   "pageUrl":  "https://sokker.org/es/app/squad/club/100",
+                   "locale":  "es"
+               },
+    "club":  {
+                 "name":  "River Plate Forever",
+                 "clubId":  100,
+                 "country":  11,
+                 "training":  {
+                                  "gk":  1,
+                                  "def":  2,
+                                  "mid":  3,
+                                  "att":  4
+                              }
+             },
+    "snapshot":  {
+                     "snapshotDate":  "2026-08-06",
+                     "season":  78,
+                     "week":  7
+                 },
+    "players":  [
+                    {
+                        "playerId":  38643161,
+                        "name":  "Ryan Ahlburg",
+                        "age":  34,
+                        "wage":  33450,
+                        "value":  1549000,
+                        "form":  6,
+                        "availabilityStatus":  "available",
+                        "observedPosition":  "defender",
+                        "skills":  {
+                                       "stamina":  11,
+                                       "pace":  14,
+                                       "technique":  16,
+                                       "passing":  16,
+                                       "keeper":  0,
+                                       "defender":  10,
+                                       "playmaker":  16,
+                                       "striker":  6
+                                   },
+                        "training":  {
+                                         "position":  3,
+                                         "advanced":  false
+                                     }
+                    },
+                    {
+                        "playerId":  39409355,
+                        "name":  "Ottaviano Arixi",
+                        "age":  21,
+                        "wage":  7250,
+                        "value":  890000,
+                        "form":  9,
+                        "availabilityStatus":  "injured",
+                        "observedPosition":  "striker",
+                        "skills":  {
+                                       "stamina":  8,
+                                       "pace":  13,
+                                       "technique":  12,
+                                       "passing":  7,
+                                       "keeper":  0,
+                                       "defender":  4,
+                                       "playmaker":  8,
+                                       "striker":  14
+                                   },
+                        "training":  {
+                                         "position":  3,
+                                         "advanced":  false
+                                     }
+                    }
+                ]
 }

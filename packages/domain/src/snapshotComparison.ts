@@ -6,7 +6,7 @@ export interface SnapshotComparisonPlayer {
   name: string;
   age: number;
   wage: Money;
-  estimatedValue: Money;
+  value: Money;
   skills: Required<SkillSet>;
 }
 
@@ -42,7 +42,7 @@ export interface MatchedPlayerComparison {
   changes: {
     age: NumericChange | null;
     wage: MoneyChange | null;
-    estimatedValue: MoneyChange | null;
+    value: MoneyChange | null;
     skills: SkillChange[];
   };
 }
@@ -56,9 +56,9 @@ export interface SnapshotComparisonAmbiguousPlayer {
 export interface SnapshotComparisonSummary {
   playerCountBefore: number;
   playerCountAfter: number;
-  totalEstimatedValueBefore: number;
-  totalEstimatedValueAfter: number;
-  totalEstimatedValueDelta: number;
+  totalValueBefore: number;
+  totalValueAfter: number;
+  totalValueDelta: number;
   totalWageBefore: number;
   totalWageAfter: number;
   totalWageDelta: number;
@@ -142,11 +142,11 @@ export function compareSnapshots(
     summary: {
       playerCountBefore: baseSnapshot.players.length,
       playerCountAfter: targetSnapshot.players.length,
-      totalEstimatedValueBefore: sumMoney(baseSnapshot.players, "estimatedValue"),
-      totalEstimatedValueAfter: sumMoney(targetSnapshot.players, "estimatedValue"),
-      totalEstimatedValueDelta:
-        sumMoney(targetSnapshot.players, "estimatedValue") -
-        sumMoney(baseSnapshot.players, "estimatedValue"),
+      totalValueBefore: sumMoney(baseSnapshot.players, "value"),
+      totalValueAfter: sumMoney(targetSnapshot.players, "value"),
+      totalValueDelta:
+        sumMoney(targetSnapshot.players, "value") -
+        sumMoney(baseSnapshot.players, "value"),
       totalWageBefore: sumMoney(baseSnapshot.players, "wage"),
       totalWageAfter: sumMoney(targetSnapshot.players, "wage"),
       totalWageDelta:
@@ -212,7 +212,7 @@ function comparePlayer(
     changes: {
       age: numericChange(basePlayer.age, targetPlayer.age),
       wage: moneyChange(basePlayer.wage, targetPlayer.wage),
-      estimatedValue: moneyChange(basePlayer.estimatedValue, targetPlayer.estimatedValue),
+      value: moneyChange(basePlayer.value, targetPlayer.value),
       skills: skillKeys
         .map((skill) => {
           const before = basePlayer.skills[skill];
@@ -234,7 +234,7 @@ function numericChange(before: number, after: number): NumericChange | null {
 }
 
 function moneyChange(before: Money, after: Money): MoneyChange | null {
-  if (before.amount === after.amount && before.currency === after.currency) {
+  if (before.amount === after.amount) {
     return null;
   }
 
@@ -243,10 +243,10 @@ function moneyChange(before: Money, after: Money): MoneyChange | null {
     after: after.amount,
     delta: after.amount - before.amount,
     currency: before.currency === after.currency ? before.currency : null,
-    isComparable: before.currency !== null && before.currency === after.currency
+    isComparable: true
   };
 }
 
-function sumMoney(players: SnapshotComparisonPlayer[], field: "estimatedValue" | "wage"): number {
+function sumMoney(players: SnapshotComparisonPlayer[], field: "value" | "wage"): number {
   return players.reduce((total, player) => total + player[field].amount, 0);
 }

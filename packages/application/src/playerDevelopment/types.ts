@@ -134,7 +134,7 @@ export interface YouthPipelineObservedPlayer {
     source: RoleSource;
   };
   wage: Money;
-  estimatedValue: Money;
+  value: Money;
   skills: SnapshotSkillSet;
 }
 
@@ -169,8 +169,8 @@ export interface YouthPipelinePlayerContext {
   valueAndWage: {
     wage: number;
     wageCurrency?: string;
-    estimatedValue: number;
-    estimatedValueCurrency?: string;
+    value: number;
+    valueCurrency?: string;
     valueDeltaPercent?: number;
     wageDeltaPercent?: number;
   };

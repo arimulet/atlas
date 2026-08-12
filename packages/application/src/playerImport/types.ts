@@ -23,7 +23,7 @@ export interface ImportedSquadSummary {
   playerCount: number;
   snapshotDate: string;
   club: string;
-  totalEstimatedValue: Money;
+  totalValue: Money;
   totalWage: Money;
   incompletePlayerCount: number;
 }
@@ -67,8 +67,9 @@ export interface NormalizedPlayerSnapshot {
     playerId: number;
     name: string;
     age: number;
-    wage: { amount: number; currency: string | null };
-    estimatedValue: { amount: number; currency: string | null };
+    wage: number;
+    value: number;
+    training: { position: number; advanced: boolean };
     form: number | null;
     availabilityStatus: PlayerSnapshotV0["players"][number]["availabilityStatus"] | null;
     observedPosition: string | null;

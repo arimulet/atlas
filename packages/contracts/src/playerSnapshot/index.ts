@@ -73,17 +73,6 @@ function collectWarnings(snapshot: PlayerSnapshotV0): ImportIssue[] {
       });
     }
 
-    if (!player.wage.currency) {
-      warnings.push({ path: `${prefix}.wage.currency`, message: "Missing wage currency." });
-    }
-
-    if (!player.estimatedValue.currency) {
-      warnings.push({
-        path: `${prefix}.estimatedValue.currency`,
-        message: "Missing estimated value currency."
-      });
-    }
-
     skillKeys.forEach((skill) => {
       if (player.skills[skill] === undefined || player.skills[skill] === null) {
         warnings.push({

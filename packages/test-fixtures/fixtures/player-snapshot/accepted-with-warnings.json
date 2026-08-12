@@ -1,49 +1,47 @@
 {
-  "schemaVersion": "atlas.player-snapshot.v0",
-  "source": {
-    "type": "sokker-dom-export",
-    "exportedAt": "2026-08-05T20:00:00Z",
-    "locale": "es-AR"
-  },
-  "club": {
-    "externalId": null,
-    "name": "River Plate Forever",
-    "clubId": 12345,
-    "country": 11,
-    "training": {
-      "gk": 1,
-      "def": 2,
-      "mid": 3,
-      "att": 4
-    }
-  },
-  "snapshot": {
-    "snapshotDate": "2026-08-05",
-    "season": null,
-    "week": null
-  },
-  "players": [
-    {
-      "playerId": 2001,
-      "name": "Nicolas Benitez",
-      "age": 18,
-      "wage": {
-        "amount": 6000,
-        "currency": null
-      },
-      "estimatedValue": {
-        "amount": 220000,
-        "currency": null
-      },
-      "skills": {
-        "stamina": 7,
-        "pace": 9,
-        "technique": null,
-        "passing": 6,
-        "keeper": 1,
-        "defender": 4,
-        "playmaker": 6
-      }
-    }
-  ]
+    "schemaVersion":  "atlas.player-snapshot.v0",
+    "source":  {
+                   "type":  "sokker-dom-export",
+                   "exportedAt":  "2026-08-05T20:00:00Z",
+                   "locale":  "es-AR"
+               },
+    "club":  {
+                 "externalId":  null,
+                 "name":  "River Plate Forever",
+                 "clubId":  12345,
+                 "country":  11,
+                 "training":  {
+                                  "gk":  1,
+                                  "def":  2,
+                                  "mid":  3,
+                                  "att":  4
+                              }
+             },
+    "snapshot":  {
+                     "snapshotDate":  "2026-08-05",
+                     "season":  null,
+                     "week":  null
+                 },
+    "players":  [
+                    {
+                        "playerId":  2001,
+                        "name":  "Nicolas Benitez",
+                        "age":  18,
+                        "wage":  6000,
+                        "value":  220000,
+                        "skills":  {
+                                       "stamina":  7,
+                                       "pace":  9,
+                                       "technique":  null,
+                                       "passing":  6,
+                                       "keeper":  1,
+                                       "defender":  4,
+                                       "playmaker":  6
+                                   },
+                        "training":  {
+                                         "position":  3,
+                                         "advanced":  false
+                                     }
+                    }
+                ]
 }

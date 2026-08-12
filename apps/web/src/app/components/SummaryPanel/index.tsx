@@ -13,7 +13,7 @@ export const SummaryPanel = ({ summary }: SummaryPanelProps) => {
         <SummaryItem label="Players" value={summary.playerCount.toString()} />
         <SummaryItem
           label="Total estimated value"
-          value={formatMoney(summary.totalEstimatedValue)}
+          value={formatMoney(summary.totalValue)}
         />
         <SummaryItem label="Total wage" value={formatMoney(summary.totalWage)} />
         <SummaryItem label="Incomplete players" value={summary.incompletePlayerCount.toString()} />

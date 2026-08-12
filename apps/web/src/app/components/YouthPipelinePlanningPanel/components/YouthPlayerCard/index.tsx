@@ -54,7 +54,7 @@ export const YouthPlayerCard = ({ player }: YouthPlayerCardProps) => {
         <SummaryItem
           label="Valor estimado"
           value={`${formatNullable(player.context.valueAndWage.estimatedValue)} ${
-            player.context.valueAndWage.estimatedValueCurrency ?? ""
+            player.context.valueAndWage.valueCurrency ?? ""
           }`.trim()}
         />
         <SummaryItem

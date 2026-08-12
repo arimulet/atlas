@@ -16,6 +16,7 @@ export const PlayerDevelopmentPanel = ({
   const [evolutionFilter, setEvolutionFilter] = useState<PlayerDevelopmentFindingType | "all">(
     "all"
   );
+  const trainingPriority = playerDevelopment?.manual?.trainingPriority ?? "balanced";
 
   if (status === "loading") {
     return <Section description="Cargando desarrollo de jugadores..." />;
@@ -81,7 +82,7 @@ export const PlayerDevelopmentPanel = ({
           <dl className="summary-grid">
             <SummaryItem
               label="training.priority"
-              value={formatLabel(playerDevelopment.settings.trainingPriority)}
+              value={formatLabel(trainingPriority)}
             />
             <SummaryItem label="Causalidad" value="No atribuida" />
           </dl>

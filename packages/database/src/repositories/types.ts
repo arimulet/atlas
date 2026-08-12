@@ -75,8 +75,12 @@ export interface PersistedPlayerSnapshot {
   playerId: number;
   name: string;
   age: number;
-  wage: SnapshotMoney;
-  estimatedValue: SnapshotMoney;
+  wage: number;
+  value: number;
+  training: {
+    position: number;
+    advanced: boolean;
+  };
   form: number | null;
   availabilityStatus: "available" | "injured" | "suspended" | "unknown" | null;
   observedPosition: string | null;

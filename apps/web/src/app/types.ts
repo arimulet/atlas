@@ -23,7 +23,7 @@ export interface SquadSummary {
   playerCount: number;
   snapshotDate: string;
   club: string;
-  totalEstimatedValue: MoneyTotal;
+  totalValue: MoneyTotal;
   totalWage: MoneyTotal;
   incompletePlayerCount: number;
 }
@@ -265,11 +265,11 @@ export interface SquadMarketPlanning {
     coverage: {
       playerCount: number;
       playersWithWage: number;
-      playersWithEstimatedValue: number;
+      playersWithValue: number;
       playersWithStableIdentity: number;
     };
   };
-  settings: {
+  manual: {
     marketStrategy: string;
   };
   derived: {
@@ -290,7 +290,7 @@ export interface SquadMarketObservedPlayer {
     source: "observed" | "inferred" | "unknown";
   };
   wage: { amount: number; currency: string | null };
-  estimatedValue: { amount: number; currency: string | null };
+  value: { amount: number; currency: string | null };
 }
 
 export interface SquadMarketPlayerPlan {
@@ -357,9 +357,9 @@ export interface SquadEconomy {
     coverage: {
       playerCount: number;
       playersWithWage: number;
-      playersWithEstimatedValue: number;
+      playersWithValue: number;
       wageCurrency: string | null;
-      estimatedValueCurrency: string | null;
+      valueCurrency: string | null;
     };
   };
   manual: {
@@ -368,12 +368,12 @@ export interface SquadEconomy {
   };
   derived: {
     totalWage: MoneyTotal;
-    totalEstimatedValue: MoneyTotal;
+    totalValue: MoneyTotal;
     wageToValueRatio: number | null;
     playerDetails: SquadEconomyPlayerDetail[];
     concentration: {
       wage: SquadEconomyConcentration[];
-      estimatedValue: SquadEconomyConcentration[];
+      value: SquadEconomyConcentration[];
     };
   };
   historical: {
@@ -383,8 +383,8 @@ export interface SquadEconomy {
     changes: {
       totalWageDelta: number | null;
       totalWageDeltaPercent: number | null;
-      totalEstimatedValueDelta: number | null;
-      totalEstimatedValueDeltaPercent: number | null;
+      totalValueDelta: number | null;
+      totalValueDeltaPercent: number | null;
       wageToValueRatioDelta: number | null;
     };
   };
@@ -398,7 +398,7 @@ export interface SquadEconomyObservedPlayer {
   name: string;
   age: number;
   wage: { amount: number; currency: string | null };
-  estimatedValue: { amount: number; currency: string | null };
+  value: { amount: number; currency: string | null };
 }
 
 export interface SquadEconomyConcentration {
@@ -416,9 +416,9 @@ export interface SquadEconomyPlayerDetail {
   name: string;
   age: number;
   wage: { amount: number; currency: string | null };
-  estimatedValue: { amount: number; currency: string | null };
+  value: { amount: number; currency: string | null };
   wageShare: number | null;
-  estimatedValueShare: number | null;
+  valueShare: number | null;
   wageToValueRatio: number | null;
   warnings: SquadEconomyWarning[];
 }
@@ -427,7 +427,7 @@ export interface SquadEconomyHistoricalSnapshot {
   snapshotId: string;
   snapshotDate: string;
   totalWage: MoneyTotal;
-  totalEstimatedValue: MoneyTotal;
+  totalValue: MoneyTotal;
   wageToValueRatio: number | null;
 }
 
@@ -461,7 +461,7 @@ export interface PlayerDevelopment {
     latestSnapshotDate: string | null;
     players: PlayerDevelopmentObservedPlayer[];
   };
-  settings: {
+  manual: {
     trainingPriority: string;
   };
   derived: {
@@ -558,7 +558,7 @@ export interface YouthPipelinePlanning {
       playersWithCompleteSkills: number;
     };
   };
-  settings: {
+  manual: {
     academyInvestment: string;
   };
   derived: {
@@ -579,7 +579,7 @@ export interface YouthPipelineObservedPlayer {
     source: "observed" | "inferred" | "unknown";
   };
   wage: { amount: number; currency: string | null };
-  estimatedValue: { amount: number; currency: string | null };
+  value: { amount: number; currency: string | null };
   skills: Record<string, number | null>;
 }
 
@@ -619,7 +619,7 @@ export interface YouthPipelinePlayerContext {
     wage: number;
     wageCurrency: string | null;
     estimatedValue: number;
-    estimatedValueCurrency: string | null;
+    valueCurrency: string | null;
     valueDeltaPercent: number | null;
     wageDeltaPercent: number | null;
   };
@@ -666,7 +666,7 @@ export interface RealYouthAcademyPlanning {
     };
     weeklyInvestment: { amount: number; currency: string | null } | null;
   };
-  settings: {
+  manual: {
     academyInvestment: string;
   };
   derived: {

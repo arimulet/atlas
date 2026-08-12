@@ -53,7 +53,7 @@ export const getSquadMarketPlanning = async (clubId: ClubId): Promise<SquadMarke
     economy.derived.playerDetails.map((player) => [player.snapshotPlayerId, player])
   );
   const developmentByIdentity = buildDevelopmentIndex(development.derived.players);
-  const observedPlayers = latest.players.map(mapObservedPlayer);
+  const observedPlayers = latest.players.map((player) => mapObservedPlayer(player, settings.effective.currency.name));
   const players = latest.players
     .map((player) =>
       buildPlayerPlan({
@@ -74,9 +74,9 @@ export const getSquadMarketPlanning = async (clubId: ClubId): Promise<SquadMarke
       players: observedPlayers,
       coverage: {
         playerCount: latest.players.length,
-        playersWithWage: latest.players.filter((player) => player.wage.amount > 0).length,
-        playersWithEstimatedValue: latest.players.filter(
-          (player) => player.estimatedValue.amount > 0
+        playersWithWage: latest.players.filter((player) => player.wage > 0).length,
+        playersWithValue: latest.players.filter(
+          (player) => player.value > 0
         ).length,
         playersWithStableIdentity: latest.players.filter((player) => Boolean(player.playerId))
           .length
@@ -101,7 +101,7 @@ function buildEmptyPlanning(clubId: ClubId, marketStrategy: MarketStrategy): Squ
       coverage: {
         playerCount: 0,
         playersWithWage: 0,
-        playersWithEstimatedValue: 0,
+        playersWithValue: 0,
         playersWithStableIdentity: 0
       }
     },
@@ -189,7 +189,7 @@ function buildSignals(input: {
 
   if (
     input.player.age >= 30 &&
-    input.player.estimatedValue.amount > 0 &&
+    input.player.value > 0 &&
     input.historicalTrend.valueDeltaPercent !== null &&
     input.historicalTrend.valueDeltaPercent <= -0.08
   ) {
@@ -218,7 +218,7 @@ function buildSignals(input: {
         { kind: "manual", label: "market.strategy", value: input.marketStrategy }
       ]
     });
-  } else if (input.player.age >= 30 && input.player.estimatedValue.amount > 0) {
+  } else if (input.player.age >= 30 && input.player.value > 0) {
     signals.push({
       code: "senior_asset_review",
       severity: input.player.age >= 32 ? "high" : "medium",
@@ -227,7 +227,7 @@ function buildSignals(input: {
         "Jugador veterano con valor estimado observado; conviene revisar timing patrimonial sin asumir precio real de venta.",
       evidence: [
         { kind: "observed", label: "Edad", value: input.player.age },
-        { kind: "observed", label: "Valor estimado", value: input.player.estimatedValue.amount },
+        { kind: "observed", label: "Valor estimado", value: input.player.value },
         { kind: "manual", label: "market.strategy", value: input.marketStrategy }
       ]
     });
@@ -242,8 +242,8 @@ function buildSignals(input: {
       message:
         "El costo salarial relativo es alto frente al valor estimado interno; es senal de revision, no orden de venta.",
       evidence: [
-        { kind: "observed", label: "Salario", value: input.player.wage.amount },
-        { kind: "observed", label: "Valor estimado", value: input.player.estimatedValue.amount },
+        { kind: "observed", label: "Salario", value: input.player.wage },
+        { kind: "observed", label: "Valor estimado", value: input.player.value },
         { kind: "derived", label: "Ratio salario/valor", value: wageToValueRatio },
         { kind: "manual", label: "market.strategy", value: input.marketStrategy }
       ]
@@ -299,7 +299,7 @@ function buildSignals(input: {
 
   if (
     input.player.age <= 23 &&
-    input.player.estimatedValue.amount > 0 &&
+    input.player.value > 0 &&
     improvedSkills > declinedSkills &&
     (input.historicalTrend.valueDeltaPercent === null ||
       input.historicalTrend.valueDeltaPercent >= -0.05)
@@ -312,7 +312,7 @@ function buildSignals(input: {
         "Jugador joven con mejora observada y valor estimado positivo; senal interna para proteger el activo.",
       evidence: [
         { kind: "observed", label: "Edad", value: input.player.age },
-        { kind: "observed", label: "Valor estimado", value: input.player.estimatedValue.amount },
+        { kind: "observed", label: "Valor estimado", value: input.player.value },
         { kind: "derived", label: "Habilidades que subieron", value: improvedSkills },
         { kind: "manual", label: "market.strategy", value: input.marketStrategy }
       ]
@@ -405,13 +405,13 @@ function buildPlayerWarnings(
 ): SquadMarketWarning[] {
   const warnings: SquadMarketWarning[] = [];
 
-  if (player.wage.amount <= 0 || player.estimatedValue.amount <= 0) {
+  if (player.wage <= 0 || player.value <= 0) {
     warnings.push({
       code: "missing_market_core_data",
       message: "Falta salario o valor estimado positivo para clasificar con prudencia.",
       evidence: [
-        { kind: "observed", label: "Salario", value: player.wage.amount },
-        { kind: "observed", label: "Valor estimado", value: player.estimatedValue.amount }
+        { kind: "observed", label: "Salario", value: player.wage },
+        { kind: "observed", label: "Valor estimado", value: player.value }
       ]
     });
   }
@@ -498,7 +498,7 @@ function buildGlobalWarnings(
   }
 
   if (
-    latest.players.some((player) => player.wage.amount <= 0 || player.estimatedValue.amount <= 0)
+    latest.players.some((player) => player.wage <= 0 || player.value <= 0)
   ) {
     warnings.push({
       code: "partial_market_data",
@@ -510,7 +510,7 @@ function buildGlobalWarnings(
           kind: "observed",
           label: "Datos completos",
           value: latest.players.filter(
-            (player) => player.wage.amount > 0 && player.estimatedValue.amount > 0
+            (player) => player.wage > 0 && player.value > 0
           ).length
         }
       ]
@@ -592,10 +592,10 @@ function buildPlayerHistoricalTrend(
     to: formatDate(latest.snapshotDate),
     snapshotCount: playerSnapshots.length,
     valueDeltaPercent: calculatePercentDelta(
-      first.player.estimatedValue.amount,
-      latest.player.estimatedValue.amount
+      first.player.value,
+      latest.player.value
     ),
-    wageDeltaPercent: calculatePercentDelta(first.player.wage.amount, latest.player.wage.amount),
+    wageDeltaPercent: calculatePercentDelta(first.player.wage, latest.player.wage),
     ...calculateSkillDirection(first.player, latest.player)
   };
 }
@@ -721,15 +721,15 @@ function findDevelopmentSummary(
   return null;
 }
 
-function mapObservedPlayer(player: PersistedPlayerSnapshot): SquadMarketObservedPlayer {
+function mapObservedPlayer(player: PersistedPlayerSnapshot, currency: string): SquadMarketObservedPlayer {
   return {
     playerId: player.playerId,
     snapshotPlayerId: player.id,
     name: player.name,
     age: player.age,
     role: resolveRole(player),
-    wage: player.wage,
-    estimatedValue: player.estimatedValue
+    wage: { amount: player.wage, currency },
+    value: { amount: player.value, currency }
   };
 }
 

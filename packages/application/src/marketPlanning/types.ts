@@ -13,7 +13,7 @@ export interface SquadMarketPlanning {
     coverage: {
       playerCount: number;
       playersWithWage: number;
-      playersWithEstimatedValue: number;
+      playersWithValue: number;
       playersWithStableIdentity: number;
     };
   };
@@ -37,7 +37,7 @@ export interface SquadMarketObservedPlayer {
     source: RoleSource;
   };
   wage: Money;
-  estimatedValue: Money;
+  value: Money;
 }
 
 export interface SquadMarketPlayerPlan {

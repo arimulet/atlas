@@ -9,6 +9,8 @@ export const YouthPipelinePlanningPanel = ({
   status,
   onBack
 }: YouthPipelinePlanningPanelProps) => {
+  const academyInvestment = youthPipelinePlanning?.manual?.academyInvestment ?? "balanced";
+
   if (status === "loading") {
     return <Section description="Cargando pipeline juvenil senior..." />;
   }
@@ -74,7 +76,7 @@ export const YouthPipelinePlanningPanel = ({
           <dl className="summary-grid">
             <SummaryItem
               label="academy.investment"
-              value={youthPipelinePlanning.settings.academyInvestment}
+              value={academyInvestment}
             />
             <SummaryItem label="Alcance" value="Plantel senior" />
           </dl>

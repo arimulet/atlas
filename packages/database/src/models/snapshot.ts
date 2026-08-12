@@ -1,9 +1,9 @@
 import mongoose, { Schema, model, type InferSchemaType, type Model } from "mongoose";
 
-const moneySchema = new Schema(
+const trainingSchema = new Schema(
   {
-    amount: { type: Number, required: true, min: 0 },
-    currency: { type: String, default: null }
+    position: { type: Number, required: true, min: 0 },
+    advanced: { type: Boolean, required: true }
   },
   { _id: false }
 );
@@ -27,8 +27,8 @@ const playerSnapshotSchema = new Schema(
     playerId: { type: Number, required: true, min: 1 },
     name: { type: String, required: true },
     age: { type: Number, required: true, min: 1 },
-    wage: { type: moneySchema, required: true },
-    estimatedValue: { type: moneySchema, required: true },
+    wage: { type: Number, required: true, min: 0 },
+    value: { type: Number, required: true, min: 0 },
     form: { type: Number, default: null },
     availabilityStatus: {
       type: String,
@@ -37,7 +37,8 @@ const playerSnapshotSchema = new Schema(
     },
     observedPosition: { type: String, default: null },
     skills: { type: skillSetSchema, required: true },
-    roles: [{ type: String }]
+    roles: [{ type: String }],
+    training: { type: trainingSchema, required: true }
   },
   { _id: true }
 );

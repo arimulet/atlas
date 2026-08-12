@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { sokkerNumber } from "./utils.js";
+import { sokkerBoolean, sokkerNumber } from "./utils.js";
 
 export const sokkerPlayerXmlSchema = z.object({
   ID: sokkerNumber,
@@ -8,6 +8,8 @@ export const sokkerPlayerXmlSchema = z.object({
   age: sokkerNumber,
   value: sokkerNumber,
   wage: sokkerNumber,
+  trainingPosition: sokkerNumber,
+  isInTrainingSlot: sokkerBoolean,
   skillForm: sokkerNumber.optional(),
   skillStamina: sokkerNumber.optional(),
   skillPace: sokkerNumber.optional(),

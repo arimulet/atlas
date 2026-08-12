@@ -59,7 +59,7 @@ export const SquadEconomyPanel = ({ squadEconomy, status, onBack }: SquadEconomy
           <SummaryItem label="Masa salarial" value={formatMoney(squadEconomy.derived.totalWage, squadEconomy.countryDetails)} />
           <SummaryItem
             label="Valor estimado total"
-            value={formatMoney(squadEconomy.derived.totalEstimatedValue, squadEconomy.countryDetails)}
+            value={formatMoney(squadEconomy.derived.totalValue, squadEconomy.countryDetails)}
           />
           <SummaryItem
             label="Relacion salario/valor"
@@ -90,7 +90,7 @@ export const SquadEconomyPanel = ({ squadEconomy, status, onBack }: SquadEconomy
         />
         <ConcentrationPanel
           title="Concentracion de valor"
-          items={squadEconomy.derived.concentration.estimatedValue}
+          items={squadEconomy.derived.concentration.value}
           countryDetails={squadEconomy.countryDetails}
         />
       </section>

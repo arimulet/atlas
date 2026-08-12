@@ -1,35 +1,33 @@
 {
-  "schemaVersion": "atlas.player-snapshot.v0",
-  "source": {
-    "type": "sokker-dom-export",
-    "exportedAt": "2026-08-05T20:00:00Z"
-  },
-  "club": {
-    "name": "River Plate Forever",
-    "clubId": 12345,
-    "country": 11,
-    "training": {
-      "gk": 1,
-      "def": 2,
-      "mid": 3,
-      "att": 4
-    }
-  },
-  "snapshot": {
-    "snapshotDate": "2026-08-05"
-  },
-  "players": [
-    {
-      "playerId": 1002,
-      "age": 19,
-      "wage": {
-        "amount": 8000,
-        "currency": "ARS"
-      },
-      "estimatedValue": {
-        "amount": 320000,
-        "currency": "ARS"
-      }
-    }
-  ]
+    "schemaVersion":  "atlas.player-snapshot.v0",
+    "source":  {
+                   "type":  "sokker-dom-export",
+                   "exportedAt":  "2026-08-05T20:00:00Z"
+               },
+    "club":  {
+                 "name":  "River Plate Forever",
+                 "clubId":  12345,
+                 "country":  11,
+                 "training":  {
+                                  "gk":  1,
+                                  "def":  2,
+                                  "mid":  3,
+                                  "att":  4
+                              }
+             },
+    "snapshot":  {
+                     "snapshotDate":  "2026-08-05"
+                 },
+    "players":  [
+                    {
+                        "playerId":  1002,
+                        "age":  19,
+                        "wage":  8000,
+                        "value":  320000,
+                        "training":  {
+                                         "position":  3,
+                                         "advanced":  false
+                                     }
+                    }
+                ]
 }

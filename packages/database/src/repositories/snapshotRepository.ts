@@ -76,8 +76,9 @@ function mapSnapshot(snapshot: {
     playerId: number;
     name: string;
     age: number;
-    wage: { amount: number; currency?: string | null };
-    estimatedValue: { amount: number; currency?: string | null };
+    wage: number;
+    value: number;
+    training: { position: number; advanced: boolean };
     form?: number | null;
     availabilityStatus?: PersistedPlayerSnapshot["availabilityStatus"];
     observedPosition?: string | null;
@@ -118,13 +119,11 @@ function mapSnapshot(snapshot: {
       playerId: player.playerId,
       name: player.name,
       age: player.age,
-      wage: {
-        amount: player.wage.amount,
-        currency: player.wage.currency ?? null
-      },
-      estimatedValue: {
-        amount: player.estimatedValue.amount,
-        currency: player.estimatedValue.currency ?? null
+      wage: player.wage,
+      value: player.value,
+      training: {
+        position: player.training.position,
+        advanced: player.training.advanced
       },
       form: player.form ?? null,
       availabilityStatus: player.availabilityStatus ?? null,
