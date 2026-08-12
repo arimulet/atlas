@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { playerRoleSchema } from "./playerSnapshot/roles.js";
+import { observedPositionSchema } from "./playerSnapshot/roles.js";
 
 export const PLAYER_SNAPSHOT_SCHEMA_VERSION = "atlas.player-snapshot.v0" as const;
 
@@ -47,7 +47,7 @@ export const playerSnapshotV0Schema = z.object({
         .enum(["available", "injured", "suspended", "unknown"])
         .nullable()
         .optional(),
-      observedPosition: playerRoleSchema.nullable().optional(),
+      observedPosition: observedPositionSchema.nullable().optional(),
       skills: skillSetSchema
     })
   )

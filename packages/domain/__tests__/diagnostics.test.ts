@@ -3,7 +3,7 @@ import {
   generateBasicDiagnostic,
   type BasicDiagnosticPlayerSnapshot,
   type BasicDiagnosticSnapshot,
-  type PlayerRole
+  type ObservedPosition
 } from "../src/index.js";
 
 describe("generateBasicDiagnostic", () => {
@@ -225,7 +225,7 @@ interface PartialPlayer {
   currency?: string | null;
   form?: number | null;
   availabilityStatus?: BasicDiagnosticPlayerSnapshot["availabilityStatus"];
-  observedPosition?: PlayerRole | null;
+  observedPosition?: ObservedPosition | null;
   stamina?: number | null;
   pace?: number | null;
   technique?: number | null;

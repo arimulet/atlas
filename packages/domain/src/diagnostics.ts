@@ -1,4 +1,4 @@
-import type { AvailabilityStatus, DataTraceKind, Money, PlayerRole, Severity, SkillSet } from "./index.js";
+import type { AvailabilityStatus, DataTraceKind, Money, ObservedPosition, PlayerRole, Severity, SkillSet } from "./index.js";
 
 export type DiagnosticCategory =
   "squad-balance" | "economic-risk" | "asset-risk" | "training-potential" | "follow-up";
@@ -55,7 +55,7 @@ export interface BasicDiagnosticPlayerSnapshot {
   value: Money;
   form: number | null;
   availabilityStatus: AvailabilityStatus | null;
-  observedPosition: PlayerRole | null;
+  observedPosition: ObservedPosition | null;
   skills: Required<SkillSet>;
 }
 
@@ -410,12 +410,13 @@ function createFollowUpFindings(players: ClassifiedPlayer[]): BasicDiagnosticFin
   });
 }
 
-function roleFromObservedPosition(position: string | null): PlayerRole | null {
+function roleFromObservedPosition(position: ObservedPosition | null): ObservedPosition | null {
   if (!position) {
     return null;
   }
 
-  return roleAliases[position.trim().toLowerCase()] ?? null;
+  const role = roleAliases[position.trim().toLowerCase()] ?? null;
+  return role === "trainee" || role === "undefined" ? null : role;
 }
 
 function roleScores(
