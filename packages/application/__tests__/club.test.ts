@@ -115,7 +115,7 @@ describe("Club dashboard use case", () => {
     });
     expect(dashboard.snapshots.latest).toMatchObject({
       snapshotDate: "2026-08-05",
-      season: 78,
+      gameWeek: 1201,
       week: 4,
       playerCount: 1
     });

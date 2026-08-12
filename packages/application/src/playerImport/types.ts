@@ -60,7 +60,7 @@ export interface NormalizedPlayerSnapshot {
   };
   snapshot: {
     snapshotDate: Date;
-    season: number | null;
+    gameWeek: number | null;
     week: number | null;
   };
   players: Array<{

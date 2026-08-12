@@ -61,7 +61,7 @@ async function importsRoutes(server: FastifyInstance) {
         },
         snapshot: {
           snapshotDate: xmlData.importedAt.toISOString().split("T")[0],
-          season: xmlData.clubProfile.season,
+          gameWeek: xmlData.clubProfile.gameWeek,
           week: xmlData.clubProfile.week
         },
         players: xmlData.players

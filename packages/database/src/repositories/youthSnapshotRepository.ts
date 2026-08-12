@@ -12,7 +12,7 @@ export interface SaveYouthSnapshotInput {
   clubId: string;
   schemaVersion: string;
   snapshotDate: Date;
-  season: number | null;
+  gameWeek: number | null;
   week: number | null;
   importedAt: Date;
   source: SnapshotSource;
@@ -27,7 +27,7 @@ export class MongoYouthSnapshotRepository {
       clubId: new Types.ObjectId(input.clubId),
       schemaVersion: input.schemaVersion,
       snapshotDate: input.snapshotDate,
-      season: input.season,
+      gameWeek: input.gameWeek,
       week: input.week,
       importedAt: input.importedAt,
       source: input.source,
@@ -78,7 +78,7 @@ function mapYouthSnapshot(snapshot: {
   clubId: Types.ObjectId;
   schemaVersion: string;
   snapshotDate: Date;
-  season?: number | null;
+  gameWeek?: number | null;
   week?: number | null;
   importedAt: Date;
   source?: {
@@ -112,7 +112,7 @@ function mapYouthSnapshot(snapshot: {
     clubId: snapshot.clubId.toString(),
     schemaVersion: snapshot.schemaVersion,
     snapshotDate: snapshot.snapshotDate,
-    season: snapshot.season ?? null,
+    gameWeek: snapshot.gameWeek ?? null,
     week: snapshot.week ?? null,
     importedAt: snapshot.importedAt,
     source: {

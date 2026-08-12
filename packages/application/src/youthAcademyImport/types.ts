@@ -36,7 +36,7 @@ export interface NormalizedYouthAcademySnapshot {
       ATT: number | null;
     } | null;
     name: string;
-    season: number | null;
+    gameWeek: number | null;
     week: number | null;
     lastSnapshotDate: Date;
     sourceType: string;
@@ -44,7 +44,7 @@ export interface NormalizedYouthAcademySnapshot {
   };
   snapshot: {
     snapshotDate: Date;
-    season: number | null;
+    gameWeek: number | null;
     week: number | null;
   };
   academy: {

@@ -205,7 +205,7 @@ export class SokkerXmlProvider {
       },
       snapshot: {
         snapshotDate: new Date().toISOString().split("T")[0]!,
-        season: teamData.season,
+        gameWeek: varsData.week,
         week: normalizeSeasonWeek(varsData.week)
       },
       academy: {

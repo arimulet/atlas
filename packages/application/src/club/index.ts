@@ -511,7 +511,7 @@ function mapSnapshotSummary(snapshot: PersistedSnapshot): ClubDashboardSnapshotS
     clubId: snapshot.clubId,
     snapshotDate: snapshot.snapshotDate.toISOString().slice(0, 10),
     importedAt: snapshot.importedAt.toISOString(),
-    season: snapshot.season,
+    gameWeek: snapshot.gameWeek,
     week: snapshot.week,
     playerCount: snapshot.players.length
   };

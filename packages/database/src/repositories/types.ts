@@ -96,7 +96,7 @@ export interface PersistedSnapshot {
   clubId: string;
   schemaVersion: string;
   snapshotDate: Date;
-  season: number | null;
+  gameWeek: number | null;
   week: number | null;
   importedAt: Date;
   source: SnapshotSource;
@@ -120,7 +120,7 @@ export interface PersistedYouthSnapshot {
   clubId: string;
   schemaVersion: string;
   snapshotDate: Date;
-  season: number | null;
+  gameWeek: number | null;
   week: number | null;
   importedAt: Date;
   source: SnapshotSource;
