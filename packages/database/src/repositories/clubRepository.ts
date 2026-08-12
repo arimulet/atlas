@@ -14,7 +14,7 @@ export interface SaveClubInput {
     ATT: number | null;
   } | null;
   name: string;
-  season?: number | null;
+  gameWeek?: number | null;
   week?: number | null;
   lastSnapshotDate?: Date | null;
   sourceType?: string | null;
@@ -25,7 +25,6 @@ export interface SaveClubInput {
 export interface UpdateClubManualProfileInput {
   clubId: ClubId;
   currency?: { name: string; rate: number };
-  season?: number | null;
   week?: number | null;
   assumptions?: Array<{ key: string; value: string }>;
   preferences?: Array<{ key: string; value: string }>;
@@ -36,12 +35,15 @@ export class MongoClubRepository {
     const $set: Record<string, unknown> = {
       name: input.name,
       country: input.country,
-      season: input.season ?? null,
       week: input.week ?? null,
       lastSnapshotDate: input.lastSnapshotDate ?? null,
       sourceType: input.sourceType ?? null,
       observedAt: input.observedAt ?? null
     };
+
+    if (input.gameWeek !== undefined) {
+      $set.gameWeek = input.gameWeek;
+    }
 
     if (input.training !== undefined) {
       $set.training = input.training;
@@ -85,7 +87,6 @@ export class MongoClubRepository {
         $set["settings.currency"] = { name: input.currency.name, rate: input.currency.rate };
       }
     }
-    if ("season" in input) $set["settings.season"] = input.season ?? null;
     if ("week" in input) $set["settings.week"] = input.week ?? null;
     if (input.assumptions) {
       $set["settings.assumptions"] = input.assumptions.map((record) => ({ ...record, updatedAt }));
@@ -125,14 +126,13 @@ function mapClub(club: {
     ATT?: number | null;
   } | null;
   name: string;
-  season?: number | null;
+  gameWeek?: number | null;
   week?: number | null;
   lastSnapshotDate?: Date | null;
   sourceType?: string | null;
   observedAt?: Date | null;
   settings?: {
     currency?: { name: string; rate: number };
-    season?: number | null;
     week?: number | null;
     assumptions?: Array<{ key: string; value: string; updatedAt: Date }>;
     preferences?: Array<{ key: string; value: string; updatedAt: Date }>;
@@ -151,7 +151,7 @@ function mapClub(club: {
           ATT: club.training.ATT ?? null
         }
       : null,
-    season: club.season ?? null,
+    gameWeek: club.gameWeek ?? null,
     week: club.week ?? null,
     lastSnapshotDate: club.lastSnapshotDate ?? null,
     sourceType: club.sourceType ?? null,
@@ -161,7 +161,6 @@ function mapClub(club: {
         name: club.settings?.currency?.name ?? "UNK",
         rate: club.settings?.currency?.rate ?? 1
       },
-      season: club.settings?.season ?? null,
       week: club.settings?.week ?? null,
       assumptions: club.settings?.assumptions ?? [],
       preferences: club.settings?.preferences ?? []

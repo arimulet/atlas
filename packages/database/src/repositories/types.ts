@@ -14,7 +14,7 @@ export interface PersistedClub {
     ATT: number | null;
   } | null;
   name: string;
-  season: number | null;
+  gameWeek: number | null;
   week: number | null;
   lastSnapshotDate: Date | null;
   sourceType: string | null;
@@ -24,7 +24,6 @@ export interface PersistedClub {
 
 export interface PersistedClubSettings {
   currency: { name: string; rate: number };
-  season?: number | null;
   week?: number | null;
   assumptions: PersistedClubSettingsRecord[];
   preferences: PersistedClubSettingsRecord[];

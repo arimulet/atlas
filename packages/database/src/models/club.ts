@@ -20,7 +20,7 @@ const clubSchema = new Schema(
       ATT: { type: Number, default: null }
     },
     name: { type: String, required: true, trim: true },
-    season: { type: Number, default: null },
+    gameWeek: { type: Number, default: null },
     week: { type: Number, default: null },
     lastSnapshotDate: { type: Date, default: null },
     sourceType: { type: String, default: null },
@@ -34,7 +34,6 @@ const clubSchema = new Schema(
         _id: false,
         required: true
       },
-      season: { type: Number, default: null },
       week: { type: Number, default: null },
       assumptions: { type: [manualRecordSchema], default: [] },
       preferences: { 

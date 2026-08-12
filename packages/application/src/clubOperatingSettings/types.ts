@@ -6,18 +6,15 @@ export type OperatingPreferenceValue = "aggressive" | "ambitious" | "balanced" |
 export interface ClubOperatingSettings {
   clubId: string;
   observed: {
-    season: number | null;
     week: number | null;
   };
   settings: {
     currency: { name: string; rate: number };
-    season: number | null;
     week: number | null;
     preferences: Partial<Record<OperatingPreferenceKey, OperatingPreferenceValue>>;
   };
   effective: {
     currency: { name: string; rate: number };
-    season: number | null;
     week: number | null;
     preferences: Record<OperatingPreferenceKey, OperatingPreferenceValue>;
   };
@@ -27,7 +24,6 @@ export interface UpdateClubOperatingSettingsInput {
   clubId: ClubId;
   settings: {
     currency?: { name: string; rate: number };
-    season?: number | null;
     week?: number | null;
     preferences?: Partial<Record<OperatingPreferenceKey, OperatingPreferenceValue | null>>;
   };
@@ -35,7 +31,6 @@ export interface UpdateClubOperatingSettingsInput {
 
 export interface ValidatedManualOperatingSettingsUpdate {
   currency?: { name: string; rate: number };
-  season?: number | null;
   week?: number | null;
   preferences?: Partial<Record<OperatingPreferenceKey, OperatingPreferenceValue | null>>;
 }
