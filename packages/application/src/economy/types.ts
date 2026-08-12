@@ -1,4 +1,4 @@
-import { type SnapshotMoney, type PersistedCountry } from "@atlas/database";
+import { type PersistedCountry } from "@atlas/database";
 import { ClubId, Confidence, EvidenceKind, Money, Severity } from "@atlas/application";
 
 export type EconomyRiskTolerance = "conservative" | "balanced" | "aggressive";
@@ -13,9 +13,9 @@ export interface SquadEconomy {
     coverage: {
       playerCount: number;
       playersWithWage: number;
-      playersWithEstimatedValue: number;
+      playersWithValue: number;
       wageCurrency: string | null;
-      estimatedValueCurrency: string | null;
+      valueCurrency: string | null;
     };
   };
   manual: {
@@ -24,12 +24,12 @@ export interface SquadEconomy {
   };
   derived: {
     totalWage: Money;
-    totalEstimatedValue: Money;
+    totalValue: Money;
     wageToValueRatio: number | null;
     playerDetails: SquadEconomyPlayerDetail[];
     concentration: {
       wage: SquadEconomyConcentration[];
-      estimatedValue: SquadEconomyConcentration[];
+      value: SquadEconomyConcentration[];
     };
   };
   historical: {
@@ -39,8 +39,8 @@ export interface SquadEconomy {
     changes: {
       totalWageDelta: number | null;
       totalWageDeltaPercent: number | null;
-      totalEstimatedValueDelta: number | null;
-      totalEstimatedValueDeltaPercent: number | null;
+      totalValueDelta: number | null;
+      totalValueDeltaPercent: number | null;
       wageToValueRatioDelta: number | null;
     };
   };
@@ -53,8 +53,8 @@ export interface SquadEconomyObservedPlayer {
   snapshotPlayerId: string;
   name: string;
   age: number;
-  wage: SnapshotMoney;
-  estimatedValue: SnapshotMoney;
+  wage: Money;
+  value: Money;
 }
 
 export interface SquadEconomyConcentration {
@@ -71,10 +71,10 @@ export interface SquadEconomyPlayerDetail {
   snapshotPlayerId: string;
   name: string;
   age: number;
-  wage: SnapshotMoney;
-  estimatedValue: SnapshotMoney;
+  wage: Money;
+  value: Money;
   wageShare: number | null;
-  estimatedValueShare: number | null;
+  valueShare: number | null;
   wageToValueRatio: number | null;
   warnings: SquadEconomyWarning[];
 }
@@ -83,7 +83,7 @@ export interface SquadEconomyHistoricalSnapshot {
   snapshotId: string;
   snapshotDate: string;
   totalWage: Money;
-  totalEstimatedValue: Money;
+  totalValue: Money;
   wageToValueRatio: number | null;
 }
 

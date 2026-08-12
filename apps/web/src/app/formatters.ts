@@ -1,6 +1,13 @@
 import type { MoneyTotal } from "@atlas/web/app/types";
 
-export function formatMoney(total: MoneyTotal, countryDetails?: { currencyName: string, currencyRate: number } | null): string {
+export function formatMoney(
+  total: MoneyTotal | null | undefined,
+  countryDetails?: { currencyName: string, currencyRate: number } | null
+): string {
+  if (!total) {
+    return "Not available";
+  }
+
   let value: string;
   if (countryDetails) {
     const convertedAmount = Math.round(total.amount * countryDetails.currencyRate);

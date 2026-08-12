@@ -6,7 +6,7 @@ export const EvidencePanel = ({ squadEconomy }: EvidencePanelProps) => {
   const currencyDisplay = squadEconomy.countryDetails
     ? squadEconomy.countryDetails.currencyName
     : squadEconomy.observed.coverage.wageCurrency ??
-      squadEconomy.observed.coverage.estimatedValueCurrency ??
+      squadEconomy.observed.coverage.valueCurrency ??
       "No disponible";
 
   return (
@@ -22,7 +22,7 @@ export const EvidencePanel = ({ squadEconomy }: EvidencePanelProps) => {
         />
         <SummaryItem
           label="Con valor"
-          value={squadEconomy.observed.coverage.playersWithEstimatedValue.toString()}
+          value={squadEconomy.observed.coverage.playersWithValue.toString()}
         />
         <SummaryItem
           label="Moneda observada"

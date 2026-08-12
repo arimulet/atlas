@@ -5,7 +5,6 @@ import {
   MongoSnapshotRepository,
   type PersistedPlayerSnapshot,
   type PersistedSnapshot,
-  type SnapshotMoney,
   type PersistedCountry
 } from "@atlas/database";
 import {
@@ -44,9 +43,9 @@ export const getSquadEconomy = async (clubId: ClubId): Promise<SquadEconomy> => 
     return buildEmptySquadEconomy(clubId, settings.effective.currency, riskTolerance, countryDetails);
   }
 
-  const observed = buildObserved(latest);
-  const derived = buildDerived(latest, observed);
-  const warnings = buildWarnings(latest, observed, derived, settings.effective.currency);
+  const observed = buildObserved(latest, settings.effective.currency);
+  const derived = buildDerived(latest, observed, settings.effective.currency);
+  const warnings = buildWarnings(latest, observed, derived);
   const historical = buildHistorical(snapshots, settings.effective.currency, warnings);
   const findings = buildFindings(derived, historical, riskTolerance, warnings);
 
@@ -83,9 +82,9 @@ function buildEmptySquadEconomy(
       coverage: {
         playerCount: 0,
         playersWithWage: 0,
-        playersWithEstimatedValue: 0,
+        playersWithValue: 0,
         wageCurrency: null,
-        estimatedValueCurrency: null
+        valueCurrency: null
       }
     },
     manual: {
@@ -94,12 +93,12 @@ function buildEmptySquadEconomy(
     },
     derived: {
       totalWage: { amount: 0, currency: currency?.name ?? null, isComplete: false },
-      totalEstimatedValue: { amount: 0, currency: currency?.name ?? null, isComplete: false },
+      totalValue: { amount: 0, currency: currency?.name ?? null, isComplete: false },
       wageToValueRatio: null,
       playerDetails: [],
       concentration: {
         wage: [],
-        estimatedValue: []
+        value: []
       }
     },
     historical: {
@@ -109,8 +108,8 @@ function buildEmptySquadEconomy(
       changes: {
         totalWageDelta: null,
         totalWageDeltaPercent: null,
-        totalEstimatedValueDelta: null,
-        totalEstimatedValueDeltaPercent: null,
+        totalValueDelta: null,
+        totalValueDeltaPercent: null,
         wageToValueRatioDelta: null
       }
     },
@@ -125,14 +124,14 @@ function buildEmptySquadEconomy(
   };
 }
 
-function buildObserved(snapshot: PersistedSnapshot): SquadEconomy["observed"] {
+function buildObserved(snapshot: PersistedSnapshot, currency: { name: string; rate: number }): SquadEconomy["observed"] {
   const players = snapshot.players.map((player) => ({
     playerId: player.playerId,
     snapshotPlayerId: player.id,
     name: player.name,
     age: player.age,
-    wage: player.wage,
-    estimatedValue: player.estimatedValue
+    wage: toMoney(player.wage, currency.name),
+    value: toMoney(player.value, currency.name)
   }));
 
   return {
@@ -140,48 +139,49 @@ function buildObserved(snapshot: PersistedSnapshot): SquadEconomy["observed"] {
     coverage: {
       playerCount: players.length,
       playersWithWage: players.filter((player) => hasPositiveAmount(player.wage)).length,
-      playersWithEstimatedValue: players.filter((player) =>
-        hasPositiveAmount(player.estimatedValue)
+      playersWithValue: players.filter((player) =>
+        hasPositiveAmount(player.value)
       ).length,
-      wageCurrency: readSingleCurrency(players.map((player) => player.wage.currency)),
-      estimatedValueCurrency: readSingleCurrency(
-        players.map((player) => player.estimatedValue.currency)
-      )
+      wageCurrency: currency.name,
+      valueCurrency: currency.name
     }
   };
 }
 
 function buildDerived(
   snapshot: PersistedSnapshot,
-  observed: SquadEconomy["observed"]
+  observed: SquadEconomy["observed"],
+  currency: { name: string; rate: number }
 ): SquadEconomy["derived"] {
-  const totalWage = sumMoney(snapshot.players.map((player) => player.wage));
-  const totalEstimatedValue = sumMoney(snapshot.players.map((player) => player.estimatedValue));
+  const totalWage = sumMoney(snapshot.players.map((player) => player.wage), currency.name);
+  const totalValue = sumMoney(snapshot.players.map((player) => player.value), currency.name);
 
   return {
     totalWage: {
       ...totalWage,
       isComplete: observed.coverage.playersWithWage === observed.coverage.playerCount
     },
-    totalEstimatedValue: {
-      ...totalEstimatedValue,
-      isComplete: observed.coverage.playersWithEstimatedValue === observed.coverage.playerCount
+    totalValue: {
+      ...totalValue,
+      isComplete: observed.coverage.playersWithValue === observed.coverage.playerCount
     },
     wageToValueRatio:
-      totalEstimatedValue.amount > 0
-        ? roundRatio(totalWage.amount / totalEstimatedValue.amount)
+      totalValue.amount > 0
+        ? roundRatio(totalWage.amount / totalValue.amount)
         : null,
     playerDetails: buildPlayerDetails(
       snapshot.players,
       totalWage.amount,
-      totalEstimatedValue.amount
+      totalValue.amount,
+      currency.name
     ),
     concentration: {
-      wage: buildConcentration(snapshot.players, "wage", totalWage.amount),
-      estimatedValue: buildConcentration(
+      wage: buildConcentration(snapshot.players, "wage", totalWage.amount, currency.name),
+      value: buildConcentration(
         snapshot.players,
-        "estimatedValue",
-        totalEstimatedValue.amount
+        "value",
+        totalValue.amount,
+        currency.name
       )
     }
   };
@@ -192,9 +192,7 @@ function buildHistorical(
   effectiveCurrency: { name: string; rate: number },
   warnings: SquadEconomyWarning[]
 ): SquadEconomy["historical"] {
-  const comparable = snapshots.filter((snapshot) =>
-    isComparableSnapshot(snapshot, effectiveCurrency)
-  );
+  const comparable = snapshots;
   const current = comparable.at(-1) ?? null;
   const previous = comparable.at(-2) ?? null;
 
@@ -219,8 +217,8 @@ function buildHistorical(
     });
   }
 
-  const currentSummary = current ? buildHistoricalSnapshot(current) : null;
-  const previousSummary = previous ? buildHistoricalSnapshot(previous) : null;
+  const currentSummary = current ? buildHistoricalSnapshot(current, effectiveCurrency) : null;
+  const previousSummary = previous ? buildHistoricalSnapshot(previous, effectiveCurrency) : null;
 
   return {
     comparableSnapshotCount: comparable.length,
@@ -234,12 +232,12 @@ function buildHistorical(
               previousSummary.totalWage.amount,
               currentSummary.totalWage.amount
             ),
-            totalEstimatedValueDelta:
-              currentSummary.totalEstimatedValue.amount -
-              previousSummary.totalEstimatedValue.amount,
-            totalEstimatedValueDeltaPercent: percentDelta(
-              previousSummary.totalEstimatedValue.amount,
-              currentSummary.totalEstimatedValue.amount
+            totalValueDelta:
+              currentSummary.totalValue.amount -
+              previousSummary.totalValue.amount,
+            totalValueDeltaPercent: percentDelta(
+              previousSummary.totalValue.amount,
+              currentSummary.totalValue.amount
             ),
             wageToValueRatioDelta:
               currentSummary.wageToValueRatio !== null && previousSummary.wageToValueRatio !== null
@@ -249,8 +247,8 @@ function buildHistorical(
         : {
             totalWageDelta: null,
             totalWageDeltaPercent: null,
-            totalEstimatedValueDelta: null,
-            totalEstimatedValueDeltaPercent: null,
+            totalValueDelta: null,
+            totalValueDeltaPercent: null,
             wageToValueRatioDelta: null
           }
   };
@@ -260,24 +258,10 @@ function buildWarnings(
   snapshot: PersistedSnapshot,
   observed: SquadEconomy["observed"],
   derived: SquadEconomy["derived"],
-  effectiveCurrency: { name: string; rate: number }
 ): SquadEconomyWarning[] {
   const warnings: SquadEconomyWarning[] = [];
 
-  if (!observed.coverage.wageCurrency || !observed.coverage.estimatedValueCurrency) {
-    warnings.push({
-      code: "missing_currency",
-      message:
-        "Falta moneda efectiva u observada; los importes se muestran como evidencia monetaria no comparable.",
-      evidence: [
-        { kind: "manual", label: "Moneda efectiva", value: effectiveCurrency.name },
-        { kind: "observed", label: "Moneda salario", value: observed.coverage.wageCurrency },
-        { kind: "observed", label: "Moneda valor", value: observed.coverage.estimatedValueCurrency }
-      ]
-    });
-  }
-
-  if (!derived.totalWage.isComplete || !derived.totalEstimatedValue.isComplete) {
+  if (!derived.totalWage.isComplete || !derived.totalValue.isComplete) {
     warnings.push({
       code: "partial_player_economy_data",
       message:
@@ -288,24 +272,8 @@ function buildWarnings(
         {
           kind: "observed",
           label: "Con valor estimado",
-          value: observed.coverage.playersWithEstimatedValue
+          value: observed.coverage.playersWithValue
         }
-      ]
-    });
-  }
-
-  if (
-    observed.coverage.wageCurrency &&
-    observed.coverage.estimatedValueCurrency &&
-    observed.coverage.wageCurrency !== observed.coverage.estimatedValueCurrency
-  ) {
-    warnings.push({
-      code: "mixed_money_currency",
-      message:
-        "Salarios y valores estimados usan monedas distintas; el ratio salario/valor no es comparable.",
-      evidence: [
-        { kind: "observed", label: "Moneda salario", value: observed.coverage.wageCurrency },
-        { kind: "observed", label: "Moneda valor", value: observed.coverage.estimatedValueCurrency }
       ]
     });
   }
@@ -321,7 +289,7 @@ function buildFindings(
 ): SquadEconomyFinding[] {
   const findings: SquadEconomyFinding[] = [];
   const topWage = derived.concentration.wage[0] ?? null;
-  const topValue = derived.concentration.estimatedValue[0] ?? null;
+  const topValue = derived.concentration.value[0] ?? null;
   const confidence = calculateConfidence(warnings);
 
   if (topWage && topWage.share !== null && topWage.share >= concentrationLimit(riskTolerance)) {
@@ -342,7 +310,7 @@ function buildFindings(
         {
           kind: "observed",
           label: "Valor estimado",
-          value: topWageDetail?.estimatedValue.amount ?? null
+          value: topWageDetail?.value.amount ?? null
         },
         { kind: "derived", label: "Participacion salarial", value: roundPercent(topWage.share) },
         {
@@ -396,7 +364,7 @@ function buildFindings(
         {
           kind: "observed",
           label: "Valor estimado",
-          value: highestRelativeCost.estimatedValue.amount
+          value: highestRelativeCost.value.amount
         },
         {
           kind: "derived",
@@ -411,15 +379,15 @@ function buildFindings(
 
   if (
     historical.changes.totalWageDeltaPercent !== null &&
-    historical.changes.totalEstimatedValueDeltaPercent !== null &&
+    historical.changes.totalValueDeltaPercent !== null &&
     historical.changes.totalWageDeltaPercent > 0.15 &&
-    historical.changes.totalEstimatedValueDeltaPercent < 0.05
+    historical.changes.totalValueDeltaPercent < 0.05
   ) {
     findings.push({
       code: "wage_growth_without_asset_growth",
       severity: severityForDeterioration(
         historical.changes.totalWageDeltaPercent,
-        historical.changes.totalEstimatedValueDeltaPercent,
+        historical.changes.totalValueDeltaPercent,
         riskTolerance
       ),
       confidence:
@@ -441,7 +409,7 @@ function buildFindings(
         {
           kind: "derived",
           label: "Variacion valor estimado",
-          value: roundPercent(historical.changes.totalEstimatedValueDeltaPercent)
+          value: roundPercent(historical.changes.totalValueDeltaPercent)
         },
         {
           kind: "derived",
@@ -462,7 +430,7 @@ function buildFindings(
       description: "No aparecen senales fuertes con la evidencia actual de Economia de plantilla.",
       evidence: [
         { kind: "derived", label: "Masa salarial", value: derived.totalWage.amount },
-        { kind: "derived", label: "Valor estimado", value: derived.totalEstimatedValue.amount }
+        { kind: "derived", label: "Valor estimado", value: derived.totalValue.amount }
       ]
     });
   }
@@ -473,18 +441,19 @@ function buildFindings(
 function buildPlayerDetails(
   players: PersistedPlayerSnapshot[],
   totalWage: number,
-  totalEstimatedValue: number
+  totalValue: number,
+  currency: string
 ): SquadEconomyPlayerDetail[] {
   return players
     .map((player) => {
-      const wageShare = totalWage > 0 ? roundRatio(player.wage.amount / totalWage) : null;
-      const estimatedValueShare =
-        totalEstimatedValue > 0
-          ? roundRatio(player.estimatedValue.amount / totalEstimatedValue)
+      const wageShare = totalWage > 0 ? roundRatio(player.wage / totalWage) : null;
+      const valueShare =
+        totalValue > 0
+          ? roundRatio(player.value / totalValue)
           : null;
       const wageToValueRatio =
-        player.estimatedValue.amount > 0
-          ? roundRatio(player.wage.amount / player.estimatedValue.amount)
+        player.value > 0
+          ? roundRatio(player.wage / player.value)
           : null;
 
       return {
@@ -492,12 +461,12 @@ function buildPlayerDetails(
         snapshotPlayerId: player.id,
         name: player.name,
         age: player.age,
-        wage: player.wage,
-        estimatedValue: player.estimatedValue,
+        wage: toMoney(player.wage, currency),
+        value: toMoney(player.value, currency),
         wageShare,
-        estimatedValueShare,
+        valueShare,
         wageToValueRatio,
-        warnings: buildPlayerWarnings(player, wageShare, estimatedValueShare, wageToValueRatio)
+        warnings: buildPlayerWarnings(player, wageShare, valueShare, wageToValueRatio)
       };
     })
     .sort((first, second) => {
@@ -511,53 +480,27 @@ function buildPlayerDetails(
 function buildPlayerWarnings(
   player: PersistedPlayerSnapshot,
   wageShare: number | null,
-  estimatedValueShare: number | null,
+  valueShare: number | null,
   wageToValueRatio: number | null
 ): SquadEconomyWarning[] {
   const warnings: SquadEconomyWarning[] = [];
 
-  if (!hasPositiveAmount(player.wage) || !hasPositiveAmount(player.estimatedValue)) {
+  if (player.wage <= 0 || player.value <= 0) {
     warnings.push({
       code: "partial_player_detail",
       message: "El detalle del jugador tiene salario o valor estimado incompleto.",
       evidence: [
-        { kind: "observed", label: "Salario", value: player.wage.amount },
-        { kind: "observed", label: "Valor estimado", value: player.estimatedValue.amount }
-      ]
-    });
-  }
-
-  if (!player.wage.currency || !player.estimatedValue.currency) {
-    warnings.push({
-      code: "missing_player_currency",
-      message: "Falta moneda observada en salario o valor estimado del jugador.",
-      evidence: [
-        { kind: "observed", label: "Moneda salario", value: player.wage.currency },
-        { kind: "observed", label: "Moneda valor", value: player.estimatedValue.currency }
-      ]
-    });
-  }
-
-  if (
-    player.wage.currency &&
-    player.estimatedValue.currency &&
-    player.wage.currency !== player.estimatedValue.currency
-  ) {
-    warnings.push({
-      code: "mixed_player_currency",
-      message: "Salario y valor estimado del jugador no estan en la misma moneda.",
-      evidence: [
-        { kind: "observed", label: "Moneda salario", value: player.wage.currency },
-        { kind: "observed", label: "Moneda valor", value: player.estimatedValue.currency }
+        { kind: "observed", label: "Salario", value: player.wage },
+        { kind: "observed", label: "Valor estimado", value: player.value }
       ]
     });
   }
 
   if (
     wageShare !== null &&
-    estimatedValueShare !== null &&
+    valueShare !== null &&
     wageToValueRatio !== null &&
-    wageShare > estimatedValueShare * 2
+    wageShare > valueShare * 2
   ) {
     warnings.push({
       code: "relative_cost_above_value_share",
@@ -567,7 +510,7 @@ function buildPlayerWarnings(
         {
           kind: "derived",
           label: "Participacion de valor",
-          value: roundPercent(estimatedValueShare)
+          value: roundPercent(valueShare)
         },
         { kind: "derived", label: "Ratio salario/valor", value: wageToValueRatio }
       ]
@@ -577,61 +520,49 @@ function buildPlayerWarnings(
   return warnings;
 }
 
-function buildHistoricalSnapshot(snapshot: PersistedSnapshot): SquadEconomyHistoricalSnapshot {
-  const observed = buildObserved(snapshot);
-  const derived = buildDerived(snapshot, observed);
+function buildHistoricalSnapshot(snapshot: PersistedSnapshot, currency: { name: string; rate: number }): SquadEconomyHistoricalSnapshot {
+  const observed = buildObserved(snapshot, currency);
+  const derived = buildDerived(snapshot, observed, currency);
 
   return {
     snapshotId: snapshot.id,
     snapshotDate: formatDate(snapshot.snapshotDate),
     totalWage: derived.totalWage,
-    totalEstimatedValue: derived.totalEstimatedValue,
+    totalValue: derived.totalValue,
     wageToValueRatio: derived.wageToValueRatio
   };
 }
 
 function buildConcentration(
   players: PersistedPlayerSnapshot[],
-  field: "wage" | "estimatedValue",
-  total: number
+  field: "wage" | "value",
+  total: number,
+  currency: string
 ): SquadEconomyConcentration[] {
   return players
     .map((player) => ({
       playerId: player.playerId,
       snapshotPlayerId: player.id,
       name: player.name,
-      amount: player[field].amount,
-      currency: player[field].currency,
-      share: total > 0 ? roundRatio(player[field].amount / total) : null
+      amount: player[field],
+      currency,
+      share: total > 0 ? roundRatio(player[field] / total) : null
     }))
     .sort((first, second) => second.amount - first.amount);
 }
 
-function isComparableSnapshot(
-  snapshot: PersistedSnapshot,
-  effectiveCurrency: { name: string; rate: number }
-): boolean {
-  const currencies = snapshot.players.flatMap((player) => [
-    player.wage.currency ?? effectiveCurrency?.name,
-    player.estimatedValue.currency ?? effectiveCurrency?.name
-  ]);
-
-  return currencies.every((currency) => currency && currency === currencies[0]);
-}
-
-function sumMoney(values: SnapshotMoney[]): Money {
+function sumMoney(values: number[], currency: string): Money {
   return {
-    amount: values.reduce((total, money) => total + money.amount, 0),
-    currency: readSingleCurrency(values.map((money) => money.currency))
+    amount: values.reduce((total, money) => total + money, 0),
+    currency
   };
 }
 
-function readSingleCurrency(currencies: Array<string | null>): string | null {
-  const unique = new Set(currencies.filter(Boolean));
-  return unique.size === 1 ? ([...unique][0] ?? null) : null;
+function toMoney(amount: number, currency: string): Money {
+  return { amount, currency };
 }
 
-function hasPositiveAmount(money: SnapshotMoney): boolean {
+function hasPositiveAmount(money: { amount: number }): boolean {
   return money.amount > 0;
 }
 
@@ -681,8 +612,6 @@ function severityForDeterioration(
 
 function calculateConfidence(warnings: SquadEconomyWarning[]): Confidence {
   const strongWarningCodes = new Set([
-    "missing_currency",
-    "mixed_money_currency",
     "non_comparable_history",
     "partial_player_economy_data"
   ]);

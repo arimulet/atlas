@@ -20,8 +20,8 @@ interface SnapshotFixture {
     externalId: string | null;
     name: string;
     age: number;
-    wage: { amount: number; currency: string | null };
-    estimatedValue: { amount: number; currency: string | null };
+    wage: number;
+    value: number;
     skills: FixtureSkillSet;
   }>;
 }
@@ -61,8 +61,8 @@ describe("Squad market planning use case", () => {
   it("classifies an older high-cost player as a prudent sale candidate", async () => {
     const first = withPlayer(readValidSnapshot(), {
       age: 31,
-      wage: { amount: 40000, currency: "ARS" },
-      estimatedValue: { amount: 450000, currency: "ARS" }
+      wage: 40000,
+      value: 450000
     });
     const second = withSnapshotDate(first, "2026-08-12", 5, {});
     const importResult = await importPlayerSnapshot({ payload: first });
@@ -123,8 +123,8 @@ describe("Squad market planning use case", () => {
 
   it("keeps the category insufficient when core value or wage data is missing", async () => {
     const payload = withPlayer(readValidSnapshot(), {
-      wage: { amount: 0, currency: "ARS" },
-      estimatedValue: { amount: 0, currency: "ARS" }
+      wage: 0,
+      value: 0
     });
     const importResult = await importPlayerSnapshot({ payload });
 
@@ -145,14 +145,14 @@ describe("Squad market planning use case", () => {
   it("explains near-term timing for an older player with declining internal value", async () => {
     const first = withPlayer(readValidSnapshot(), {
       age: 31,
-      wage: { amount: 26000, currency: "ARS" },
-      estimatedValue: { amount: 600000, currency: "ARS" }
+      wage: 26000,
+      value: 600000
     });
     const second = withSnapshotDate(first, "2026-08-12", 5, {});
     const third = withPlayer(withSnapshotDate(first, "2026-08-19", 6, {}), {
       age: 31,
-      wage: { amount: 30000, currency: "ARS" },
-      estimatedValue: { amount: 480000, currency: "ARS" }
+      wage: 30000,
+      value: 480000
     });
     const importResult = await importPlayerSnapshot({ payload: first });
     await importPlayerSnapshot({ payload: second });
@@ -182,11 +182,11 @@ describe("Squad market planning use case", () => {
   it("keeps contradictory timing at low confidence", async () => {
     const first = withPlayer(readValidSnapshot(), {
       age: 22,
-      estimatedValue: { amount: 700000, currency: "ARS" }
+      value: 700000
     });
     const second = withPlayer(withSnapshotDate(first, "2026-08-12", 5, { pace: 11 }), {
       age: 22,
-      estimatedValue: { amount: 600000, currency: "ARS" }
+      value: 600000
     });
     const importResult = await importPlayerSnapshot({ payload: first });
     await importPlayerSnapshot({ payload: second });

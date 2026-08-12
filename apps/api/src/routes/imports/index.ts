@@ -85,6 +85,10 @@ async function importsRoutes(server: FastifyInstance) {
         playerResult.importResult.status = "accepted-with-warnings";
       }
 
+      if (playerResult.importResult.status === "rejected") {
+        reply.code(422);
+      }
+
       return playerResult;
     } catch (error) {
       reply.code(422);

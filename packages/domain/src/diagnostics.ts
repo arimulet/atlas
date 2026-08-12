@@ -52,7 +52,7 @@ export interface BasicDiagnosticPlayerSnapshot {
   name: string;
   age: number;
   wage: Money;
-  estimatedValue: Money;
+  value: Money;
   form: number | null;
   availabilityStatus: AvailabilityStatus | null;
   observedPosition: string | null;
@@ -240,7 +240,7 @@ function createEconomicRiskFindings(players: ClassifiedPlayer[]): BasicDiagnosti
     const valueToWageRatio =
       player.wage.amount === 0
         ? Number.POSITIVE_INFINITY
-        : player.estimatedValue.amount / player.wage.amount;
+        : player.value.amount / player.wage.amount;
     const isRisk = player.wage.amount >= highWageThreshold && valueToWageRatio < 25;
 
     if (!isRisk) {
@@ -255,7 +255,7 @@ function createEconomicRiskFindings(players: ClassifiedPlayer[]): BasicDiagnosti
         description: `${player.name} has a high wage relative to the squad and estimated value.`,
         evidence: [
           trace("observed", `${player.name} wage`, player.wage.amount),
-          trace("observed", `${player.name} estimated value`, player.estimatedValue.amount),
+          trace("observed", `${player.name} estimated value`, player.value.amount),
           trace("derived", "squad median wage", medianWage),
           trace("derived", `${player.name} value-to-wage ratio`, round(valueToWageRatio))
         ],
@@ -269,7 +269,7 @@ function createEconomicRiskFindings(players: ClassifiedPlayer[]): BasicDiagnosti
             "A value-to-wage ratio below 25 is treated as inefficient for MVP diagnostics."
           )
         ],
-        confidence: hasMissingMoneyCurrency(player) ? "medium" : "high",
+        confidence: "high",
         affectedPlayerIds: [playerIdentifier({ player })],
         recommendations: [
           recommendation(
@@ -284,7 +284,7 @@ function createEconomicRiskFindings(players: ClassifiedPlayer[]): BasicDiagnosti
 
 function createAssetRiskFindings(players: ClassifiedPlayer[]): BasicDiagnosticFinding[] {
   return players.flatMap(({ player }) => {
-    const isRisk = player.age >= 30 && player.estimatedValue.amount >= 300000;
+    const isRisk = player.age >= 30 && player.value.amount >= 300000;
 
     if (!isRisk) {
       return [];
@@ -294,11 +294,11 @@ function createAssetRiskFindings(players: ClassifiedPlayer[]): BasicDiagnosticFi
       {
         code: "asset-risk.senior-high-value",
         category: "asset-risk",
-        severity: player.age >= 33 || player.estimatedValue.amount >= 600000 ? "high" : "medium",
+        severity: player.age >= 33 || player.value.amount >= 600000 ? "high" : "medium",
         description: `${player.name} combines senior age with meaningful estimated value.`,
         evidence: [
           trace("observed", `${player.name} age`, player.age),
-          trace("observed", `${player.name} estimated value`, player.estimatedValue.amount)
+          trace("observed", `${player.name} estimated value`, player.value.amount)
         ],
         assumptions: [
           assumption(
@@ -310,7 +310,7 @@ function createAssetRiskFindings(players: ClassifiedPlayer[]): BasicDiagnosticFi
             "Estimated value of 300000 or more is treated as material for MVP diagnostics."
           )
         ],
-        confidence: player.estimatedValue.currency ? "medium" : "low",
+        confidence: "medium",
         affectedPlayerIds: [playerIdentifier({ player })],
         recommendations: [
           recommendation(
@@ -444,16 +444,10 @@ function missingFollowUpFields(player: BasicDiagnosticPlayerSnapshot): string[] 
     player.form === null ? "form" : null,
     player.availabilityStatus === null ? "availabilityStatus" : null,
     player.observedPosition ? null : "observedPosition",
-    player.wage.currency ? null : "wage.currency",
-    player.estimatedValue.currency ? null : "estimatedValue.currency",
     ...trackedSkillKeys.map((skillKey) =>
       player.skills[skillKey] === null ? `skills.${skillKey}` : null
     )
   ].filter((field): field is string => field !== null);
-}
-
-function hasMissingMoneyCurrency(player: BasicDiagnosticPlayerSnapshot): boolean {
-  return !player.wage.currency || !player.estimatedValue.currency;
 }
 
 function playerIdentifier(classified: Pick<ClassifiedPlayer, "player">): string {

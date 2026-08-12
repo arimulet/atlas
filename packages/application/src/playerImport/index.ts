@@ -111,12 +111,13 @@ export const importPlayerSnapshot = async (
       name: player.name,
       age: player.age,
       wage: player.wage,
-      estimatedValue: player.estimatedValue,
+      value: player.value,
       form: player.form,
       availabilityStatus: player.availabilityStatus ?? null,
       observedPosition: player.observedPosition,
       skills: player.skills,
-      roles: [] as string[]
+      roles: [] as string[],
+      training: player.training
     }))
   });
 
@@ -167,7 +168,7 @@ export const importPlayerSnapshotMvp = async (
       playerCount: snapshot.players.length,
       snapshotDate: snapshot.snapshotDate.toISOString().slice(0, 10),
       club: club?.name ?? "Unknown club",
-      totalEstimatedValue: sumMoney(snapshot.players, "estimatedValue"),
+      totalValue: sumMoney(snapshot.players, "value"),
       totalWage: sumMoney(snapshot.players, "wage"),
       incompletePlayerCount: snapshot.players.filter(hasIncompleteData).length
     },
@@ -205,8 +206,8 @@ function mapPlayerSnapshot(player: PersistedPlayerSnapshot): BasicDiagnosticPlay
     playerId: player.playerId,
     name: player.name,
     age: player.age,
-    wage: player.wage,
-    estimatedValue: player.estimatedValue,
+    wage: { amount: player.wage, currency: null },
+    value: { amount: player.value, currency: null },
     form: player.form,
     availabilityStatus: player.availabilityStatus,
     observedPosition: player.observedPosition,
@@ -216,14 +217,12 @@ function mapPlayerSnapshot(player: PersistedPlayerSnapshot): BasicDiagnosticPlay
 
 function sumMoney(
   players: PersistedPlayerSnapshot[],
-  field: "estimatedValue" | "wage"
+  field: "value" | "wage"
 ): Money {
-  const currencies = new Set(players.map((player) => player[field].currency).filter(Boolean));
-
   return {
-    amount: players.reduce((total, player) => total + player[field].amount, 0),
-    currency: currencies.size === 1 ? ([...currencies][0] ?? null) : null,
-    isComplete: players.every((player) => player[field].currency !== null) && currencies.size <= 1
+    amount: players.reduce((total, player) => total + player[field], 0),
+    currency: null,
+    isComplete: players.every((player) => player[field] > 0)
   };
 }
 
@@ -232,8 +231,6 @@ function hasIncompleteData(player: PersistedPlayerSnapshot): boolean {
     player.form === null ||
     player.availabilityStatus === null ||
     !player.observedPosition ||
-    !player.wage.currency ||
-    !player.estimatedValue.currency ||
     Object.values(player.skills).some((skill) => skill === null)
   );
 }
@@ -283,13 +280,11 @@ function normalizePlayer(
     playerId: player.playerId,
     name: player.name.trim(),
     age: player.age,
-    wage: {
-      amount: player.wage.amount,
-      currency: normalizeOptionalString(player.wage.currency)
-    },
-    estimatedValue: {
-      amount: player.estimatedValue.amount,
-      currency: normalizeOptionalString(player.estimatedValue.currency)
+    wage: player.wage,
+    value: player.value,
+    training: {
+      position: player.training.position,
+      advanced: player.training.advanced
     },
     form: player.form ?? null,
     availabilityStatus: player.availabilityStatus ?? null,

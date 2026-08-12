@@ -31,7 +31,8 @@ export const YouthAcademyPlanningPanel = ({
     );
   }
 
-  const { observed, settings, derived, warnings } = realYouthAcademyPlanning;
+  const { observed, manual, derived, warnings } = realYouthAcademyPlanning;
+  const academyInvestment = manual?.academyInvestment ?? "balanced";
 
   const filteredPlayers =
     filterCategory === "all"
@@ -88,7 +89,7 @@ export const YouthAcademyPlanningPanel = ({
 
         <Section title="Manual" subtitle="Preferencia del club">
           <dl className="summary-grid">
-            <SummaryItem label="academy.investment" value={settings.academyInvestment} />
+            <SummaryItem label="academy.investment" value={academyInvestment} />
             <SummaryItem label="Origen de datos" value="Cantera real (Sokker DOM)" />
           </dl>
         </Section>

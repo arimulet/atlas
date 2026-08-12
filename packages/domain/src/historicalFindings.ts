@@ -126,12 +126,12 @@ function generatePlayerFindings(
     trend.value.isComparable &&
     valuePercentage !== null &&
     valuePercentage >= 10 &&
-    isStrictlyIncreasing(series.map((point) => point.estimatedValue))
+    isStrictlyIncreasing(series.map((point) => point.value))
   ) {
     return [
       playerFinding(trend, "player_sustained_asset_appreciation", "info", confidence(trend), period, [
-        evidence("derived", "estimatedValue.deltaPercentage", "Estimated value grew across the analysed period.", valuePercentage),
-        evidence("observed", "estimatedValue.sequence", "Estimated value increased in every comparable snapshot.", series.length),
+        evidence("derived", "value.deltaPercentage", "Estimated value grew across the analysed period.", valuePercentage),
+        evidence("observed", "value.sequence", "Estimated value increased in every comparable snapshot.", series.length),
         evidence("derived", "skills.totalDelta", "Total observed skill level changed during the period.", skillDelta)
       ], "Monitor retention versus market timing; protect development unless liquidity needs justify selling.")
     ];
@@ -149,7 +149,7 @@ function generatePlayerFindings(
         confidence(trend),
         period,
         [
-          evidence("derived", "estimatedValue.deltaPercentage", "Estimated value deteriorated during the analysed period.", valuePercentage),
+          evidence("derived", "value.deltaPercentage", "Estimated value deteriorated during the analysed period.", valuePercentage),
           evidence("derived", "skills.totalDelta", "Total observed skill level changed during the period.", skillDelta)
         ],
         "Review role, training fit and sale timing before further patrimonial loss accumulates."
@@ -166,7 +166,7 @@ function generatePlayerFindings(
   ) {
     return [
       playerFinding(trend, "player_stagnation", "low", confidence(trend), period, [
-        evidence("derived", "estimatedValue.deltaPercentage", "Estimated value remained materially flat.", valuePercentage),
+        evidence("derived", "value.deltaPercentage", "Estimated value remained materially flat.", valuePercentage),
         evidence("derived", "skills.totalDelta", "No net observed skill growth was detected.", skillDelta)
       ], "Reassess training priority and squad role; keep only if tactical utility justifies the opportunity cost.")
     ];
@@ -187,7 +187,7 @@ function generatePlayerFindings(
         period,
         [
           evidence("derived", "wage.deltaPercentage", "Wage increased materially during the analysed period.", wagePercentage),
-          evidence("derived", "estimatedValue.deltaPercentage", "Asset evolution does not justify the wage growth.", valuePercentage)
+          evidence("derived", "value.deltaPercentage", "Asset evolution does not justify the wage growth.", valuePercentage)
         ],
         "Review contract burden against expected contribution; consider sale or role change if trend persists."
       )
@@ -220,7 +220,7 @@ function generateSquadFinding(
       confidence: trends.squad.valueTotal.evidence.dataPoints >= 3 ? "high" : "medium",
       subject: { kind: "squad", clubId: trends.clubId },
       evidence: [
-        evidence("derived", "squad.estimatedValue.deltaPercentage", "Squad estimated value deteriorated.", valuePercentage),
+        evidence("derived", "squad.value.deltaPercentage", "Squad estimated value deteriorated.", valuePercentage),
         evidence("derived", "squad.wage.deltaPercentage", "Squad wage did not decrease alongside value.", wagePercentage)
       ],
       period,
@@ -287,7 +287,7 @@ function analysisPeriod(snapshots: SnapshotComparisonSnapshot[]): HistoricalFind
 }
 
 interface PlayerSeriesPoint {
-  estimatedValue: number;
+  value: number;
   skills: Required<SkillSet>;
 }
 
@@ -300,7 +300,7 @@ function buildPlayerSeries(snapshots: SnapshotComparisonSnapshot[]): Map<number,
     for (const [playerId, player] of matchable) {
       series.set(playerId, [
         ...(series.get(playerId) ?? []),
-        { estimatedValue: player.estimatedValue.amount, skills: player.skills }
+        { value: player.value.amount, skills: player.skills }
       ]);
     }
   }

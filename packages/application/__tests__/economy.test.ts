@@ -58,7 +58,7 @@ describe("Squad economy use case", () => {
       currency: "ARS",
       isComplete: true
     });
-    expect(squadEconomy.derived.totalEstimatedValue).toMatchObject({
+    expect(squadEconomy.derived.totalValue).toMatchObject({
       amount: 450000,
       currency: "ARS",
       isComplete: true
@@ -71,7 +71,7 @@ describe("Squad economy use case", () => {
     expect(squadEconomy.derived.playerDetails[0]).toMatchObject({
       name: "Tomas Alvarez",
       wageShare: 1,
-      estimatedValueShare: 1,
+      valueShare: 1,
       wageToValueRatio: 0.0267,
       warnings: []
     });
@@ -93,8 +93,8 @@ describe("Squad economy use case", () => {
       snapshot: { ...first.snapshot, snapshotDate: "2026-08-12", week: 5 },
       players: first.players.map((player) => ({
         ...player,
-        wage: { ...player.wage, amount: 15000 },
-        estimatedValue: { ...player.estimatedValue, amount: 460000 }
+        wage: 15000,
+        value: 460000
       }))
     };
 
@@ -109,8 +109,8 @@ describe("Squad economy use case", () => {
     expect(squadEconomy.historical.changes).toMatchObject({
       totalWageDelta: 3000,
       totalWageDeltaPercent: 0.25,
-      totalEstimatedValueDelta: 10000,
-      totalEstimatedValueDeltaPercent: 0.0222
+      totalValueDelta: 10000,
+      totalValueDeltaPercent: 0.0222
     });
     expect(squadEconomy.findings).toEqual(
       expect.arrayContaining([
@@ -129,8 +129,8 @@ describe("Squad economy use case", () => {
           ...readValidSnapshot().players[0],
           externalId: "2001",
           name: "Partial Player",
-          wage: { amount: 0, currency: "ARS" },
-          estimatedValue: { amount: 0, currency: "ARS" }
+          wage: 0,
+          value: 0
         }
       ]
     };
@@ -142,10 +142,10 @@ describe("Squad economy use case", () => {
     expect(squadEconomy.observed.coverage).toMatchObject({
       playerCount: 2,
       playersWithWage: 1,
-      playersWithEstimatedValue: 1
+      playersWithValue: 1
     });
     expect(squadEconomy.derived.totalWage.isComplete).toBe(false);
-    expect(squadEconomy.derived.totalEstimatedValue.isComplete).toBe(false);
+    expect(squadEconomy.derived.totalValue.isComplete).toBe(false);
     expect(squadEconomy.warnings).toEqual(
       expect.arrayContaining([expect.objectContaining({ code: "partial_player_economy_data" })])
     );
@@ -168,15 +168,15 @@ describe("Squad economy use case", () => {
       players: [
         {
           ...readValidSnapshot().players[0],
-          wage: { amount: 40000, currency: "ARS" },
-          estimatedValue: { amount: 450000, currency: "ARS" }
+          wage: 40000,
+          value: 450000
         },
         {
           ...readValidSnapshot().players[0],
           externalId: "2002",
           name: "Low Cost Player",
-          wage: { amount: 1000, currency: "ARS" },
-          estimatedValue: { amount: 300000, currency: "ARS" }
+          wage: 1000,
+          value: 300000
         }
       ]
     };
@@ -211,8 +211,8 @@ function readValidSnapshot() {
     players: Array<{
       externalId: string | null;
       name: string;
-      wage: { amount: number; currency: string | null };
-      estimatedValue: { amount: number; currency: string | null };
+      wage: number;
+      value: number;
     }>;
   };
 }

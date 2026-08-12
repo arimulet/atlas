@@ -166,8 +166,12 @@ export class SokkerXmlProvider {
         playerId: p.ID,
         name: name,
         age: p.age,
-        wage: convertMoney(p.wage),
-        estimatedValue: convertMoney(p.value),
+        wage: p.wage,
+        value: p.value,
+        training: {
+          position: p.trainingPosition,
+          advanced: p.isInTrainingSlot
+        },
         form: p.skillForm ?? 10,
         availabilityStatus: "available", // To be refined
         observedPosition: "undefined", // To be refined
@@ -216,7 +220,7 @@ export class SokkerXmlProvider {
             name: name,
             age: j.age,
             weeksRemaining: j.weeks, // Assuming weeks means weeks remaining based on XML docs
-            estimatedLevel: String(j.skill),
+            level: j.skill,
             status: "in_academy" // Inferred or mapped later
           };
         })
