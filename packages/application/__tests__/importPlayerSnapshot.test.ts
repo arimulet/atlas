@@ -52,6 +52,27 @@ describe("ImportPlayerSnapshot", () => {
     expect(result.importedPlayerCount).toBe(1);
   });
 
+  it("derives striker from the highest role score even below the old threshold", async () => {
+    const payload = structuredClone(validSnapshot) as unknown as PlayerSnapshotV0;
+    payload.players[0]!.skills = {
+      stamina: 0,
+      pace: 6,
+      technique: 4,
+      passing: 2,
+      keeper: 0,
+      defender: 3,
+      playmaker: 0,
+      striker: 4
+    };
+
+    const result = await importPlayerSnapshot({ payload });
+
+    const snapshot = await SnapshotModel.findById(result.snapshotId).lean();
+
+    expect(result.status).toBe("accepted");
+    expect(snapshot?.players[0]?.observedPosition).toBe("striker");
+  });
+
   it("rejects invalid JSON and persists the rejected import event", async () => {
     const result = await importPlayerSnapshot({ payload: invalidSnapshot });
 
