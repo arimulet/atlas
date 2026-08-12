@@ -39,7 +39,7 @@ const playerSnapshotSchema = new Schema(
     },
     observedPosition: { type: String, enum: [...observedPositionValues, null], default: null },
     skills: { type: skillSetSchema, required: true },
-    roles: [{ type: String }],
+
     training: { type: trainingSchema, required: true }
   },
   { _id: true }

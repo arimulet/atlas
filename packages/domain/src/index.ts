@@ -55,7 +55,7 @@ export interface PlayerSnapshot {
   availabilityStatus?: AvailabilityStatus;
   observedPosition?: ObservedPosition | null;
   skills: SkillSet;
-  roles: PlayerRole[];
+
 }
 
 export type YouthPlayerStatus = "in_academy" | "ready_for_promotion" | "promoted";
