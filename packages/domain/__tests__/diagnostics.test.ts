@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   generateBasicDiagnostic,
   type BasicDiagnosticPlayerSnapshot,
-  type BasicDiagnosticSnapshot
+  type BasicDiagnosticSnapshot,
+  type PlayerRole
 } from "../src/index.js";
 
 describe("generateBasicDiagnostic", () => {
@@ -224,7 +225,7 @@ interface PartialPlayer {
   currency?: string | null;
   form?: number | null;
   availabilityStatus?: BasicDiagnosticPlayerSnapshot["availabilityStatus"];
-  observedPosition?: string | null;
+  observedPosition?: PlayerRole | null;
   stamina?: number | null;
   pace?: number | null;
   technique?: number | null;

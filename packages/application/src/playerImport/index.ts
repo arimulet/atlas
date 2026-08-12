@@ -18,6 +18,7 @@ import {
   generateBasicDiagnostic,
   inferPlayerRoleFromSkills
 } from "@atlas/domain";
+import type { PlayerRole } from "@atlas/domain";
 import {
   GenerateBasicDiagnosticInput,
   ImportPlayerSnapshotInput,
@@ -273,8 +274,8 @@ function normalizePlayer(
   player: PlayerSnapshotV0["players"][number]
 ): NormalizedPlayerSnapshot["players"][number] {
   const skills = normalizeSkills(player.skills);
-  const observedPosition =
-    normalizeOptionalString(player.observedPosition) ?? deriveObservedPosition(skills);
+  // Sokker XML does not provide the observed role; derive it consistently from skills.
+  const observedPosition = deriveObservedPosition(skills);
 
   return {
     playerId: player.playerId,
@@ -299,7 +300,7 @@ function normalizeSkills(skills: PlayerSnapshotV0["players"][number]["skills"]) 
   ) as Record<SkillKey, number | null>;
 }
 
-function deriveObservedPosition(skills: Record<SkillKey, number | null>): string | null {
+function deriveObservedPosition(skills: Record<SkillKey, number | null>): PlayerRole | null {
   const inferred = inferPlayerRoleFromSkills(skills);
 
   return inferred.role === "undefined" ? null : inferred.role;
