@@ -10,7 +10,7 @@ export function formatMoney(
 
   let value: string;
   if (countryDetails) {
-    const convertedAmount = Math.round(total.amount * countryDetails.currencyRate);
+    const convertedAmount = Math.round(total.amount / countryDetails.currencyRate);
     value = `${countryDetails.currencyName} ${convertedAmount.toLocaleString("en-US")}`;
   } else {
     value = `${total.currency ?? "mixed"} ${total.amount.toLocaleString("en-US")}`;
@@ -21,7 +21,7 @@ export function formatMoney(
 
 export function formatConvertedMoney(amount: number, countryDetails?: { currencyName: string, currencyRate: number } | null): string {
   if (countryDetails) {
-    const convertedAmount = Math.round(amount * countryDetails.currencyRate);
+    const convertedAmount = Math.round(amount / countryDetails.currencyRate);
     return `${countryDetails.currencyName} ${convertedAmount.toLocaleString("en-US")}`;
   }
   return `UNK ${amount.toLocaleString("en-US")}`;

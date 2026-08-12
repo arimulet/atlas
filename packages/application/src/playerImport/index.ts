@@ -84,7 +84,9 @@ export const importPlayerSnapshot = async (
   });
 
   const country = await countryRepository.getById(normalized.club.country);
-  const currency = country ? { name: country.currencyName, rate: country.currencyRate } : { name: "UNK", rate: 1 };
+  const currency = country
+    ? { name: country.currencyName, rate: country.currencyRate }
+    : { name: "UNK", rate: 1 };
 
   const club = await clubRepository.save({
     ...normalized.club,
@@ -169,8 +171,9 @@ export const importPlayerSnapshotMvp = async (
       playerCount: snapshot.players.length,
       snapshotDate: snapshot.snapshotDate.toISOString().slice(0, 10),
       club: club?.name ?? "Unknown club",
-      totalValue: sumMoney(snapshot.players, "value"),
-      totalWage: sumMoney(snapshot.players, "wage"),
+      currency: club?.settings.currency ?? { name: "UNK", rate: 1 },
+      totalValue: sumMoney(snapshot.players, "value", club?.settings.currency.name ?? "UNK"),
+      totalWage: sumMoney(snapshot.players, "wage", club?.settings.currency.name ?? "UNK"),
       incompletePlayerCount: snapshot.players.filter(hasIncompleteData).length
     },
     diagnostic
@@ -218,11 +221,12 @@ function mapPlayerSnapshot(player: PersistedPlayerSnapshot): BasicDiagnosticPlay
 
 function sumMoney(
   players: PersistedPlayerSnapshot[],
-  field: "value" | "wage"
+  field: "value" | "wage",
+  currency: string
 ): Money {
   return {
     amount: players.reduce((total, player) => total + player[field], 0),
-    currency: null,
+    currency,
     isComplete: players.every((player) => player[field] > 0)
   };
 }
@@ -248,12 +252,14 @@ function normalizePlayerSnapshot(snapshot: PlayerSnapshotV0): NormalizedPlayerSn
     club: {
       clubId: snapshot.club.clubId,
       country: snapshot.club.country,
-      training: snapshot.club.training ? {
-        GK: snapshot.club.training.gk ?? null,
-        DEF: snapshot.club.training.def ?? null,
-        MID: snapshot.club.training.mid ?? null,
-        ATT: snapshot.club.training.att ?? null
-      } : undefined,
+      training: snapshot.club.training
+        ? {
+            GK: snapshot.club.training.gk ?? null,
+            DEF: snapshot.club.training.def ?? null,
+            MID: snapshot.club.training.mid ?? null,
+            ATT: snapshot.club.training.att ?? null
+          }
+        : undefined,
       name: snapshot.club.name.trim(),
       gameWeek: snapshot.snapshot.gameWeek ?? snapshot.club.gameWeek ?? undefined,
       week: snapshot.snapshot.week ?? null,
