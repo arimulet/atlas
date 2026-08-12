@@ -557,7 +557,7 @@ function mapObservedPlayer(player: PersistedPlayerSnapshot): PlayerDevelopmentOb
     name: player.name,
     age: player.age,
     observedPosition: player.observedPosition,
-    roles: player.roles,
+
     skills: player.skills
   };
 }
@@ -565,10 +565,6 @@ function mapObservedPlayer(player: PersistedPlayerSnapshot): PlayerDevelopmentOb
 function resolveRole(player: PersistedPlayerSnapshot): PlayerDevelopmentPlayerSummary["role"] {
   if (player.observedPosition) {
     return { label: player.observedPosition, source: "observed" };
-  }
-
-  if (player.roles[0]) {
-    return { label: player.roles[0], source: "inferred" };
   }
 
   return { label: "Undefined", source: "unknown" };

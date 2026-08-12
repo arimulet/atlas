@@ -117,7 +117,7 @@ export const importPlayerSnapshot = async (
       availabilityStatus: player.availabilityStatus ?? null,
       observedPosition: player.observedPosition,
       skills: player.skills,
-      roles: [] as string[],
+
       training: player.training
     }))
   });

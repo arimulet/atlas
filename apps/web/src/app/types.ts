@@ -477,7 +477,7 @@ export interface PlayerDevelopmentObservedPlayer {
   name: string;
   age: number;
   observedPosition: string | null;
-  roles: string[];
+
   skills: Record<string, number | null>;
 }
 
