@@ -41,7 +41,7 @@ export const getRealYouthAcademyPlanning = async (
       age: p.age,
       initialWeeksRemaining: p.initialWeeksRemaining,
       weeksRemaining: p.weeksRemaining,
-      estimatedLevel: p.estimatedLevel,
+      skill: p.skill,
       status: p.status
     };
   });
@@ -78,7 +78,7 @@ export const getRealYouthAcademyPlanning = async (
       coverage: {
         totalYouthCount: observedPlayers.length,
         youthsWithWeeksRemaining: observedPlayers.filter((p) => p.weeksRemaining !== null).length,
-        youthsWithEstimatedLevel: observedPlayers.filter((p) => p.estimatedLevel !== null).length
+        youthsWithSkill: observedPlayers.length
       },
       weeklyInvestment: latest.weeklyInvestment
     },
@@ -106,7 +106,7 @@ function buildEmptyPlanning(
       coverage: {
         totalYouthCount: 0,
         youthsWithWeeksRemaining: 0,
-        youthsWithEstimatedLevel: 0
+        youthsWithSkill: 0
       },
       weeklyInvestment: null
     },
@@ -155,8 +155,8 @@ function classifyYouthPlayer(player: YouthAcademyObservedPlayer): RealYouthAcade
     evidence.push({ kind: "derived", label: "Semanas en academia", value: weeksInAcademy });
   }
 
-  if (player.estimatedLevel) {
-    evidence.push({ kind: "observed", label: "Nivel estimado", value: player.estimatedLevel });
+  if (player.skill !== null) {
+    evidence.push({ kind: "observed", label: "Skill", value: player.skill });
   }
 
   const projectedPromotionAge =
@@ -177,7 +177,7 @@ function classifyYouthPlayer(player: YouthAcademyObservedPlayer): RealYouthAcade
     player.status === "ready_for_promotion" ||
     (player.weeksRemaining !== null && player.weeksRemaining <= 0);
 
-  const isHigh = isHighLevel(player.estimatedLevel);
+  const isHigh = isHighLevel(player.skill);
 
   if (isReady) {
     category = "ready_for_promotion";
@@ -195,7 +195,7 @@ function classifyYouthPlayer(player: YouthAcademyObservedPlayer): RealYouthAcade
     category = "standout_prospect";
     severity = "low";
     confidence = player.weeksRemaining !== null ? "high" : "medium";
-    rationale = "Prospecto destacado con nivel estimado elevado y proyeccion favorable de ascenso.";
+    rationale = "Prospecto destacado con skill elevado y proyeccion favorable de ascenso.";
     signals.push({
       code: "standout_youth_prospect",
       severity: "low",
@@ -207,7 +207,7 @@ function classifyYouthPlayer(player: YouthAcademyObservedPlayer): RealYouthAcade
     category = "stagnation_risk";
     severity = "medium";
     confidence = "medium";
-    rationale = "Juvenil con permanencia prolongada en academia y nivel estimado no alto.";
+    rationale = "Juvenil con permanencia prolongada en academia y skill no alto.";
     signals.push({
       code: "youth_stagnation_risk",
       severity,
@@ -215,7 +215,7 @@ function classifyYouthPlayer(player: YouthAcademyObservedPlayer): RealYouthAcade
       message: "Riesgo de estancamiento por permanencia prolongada sin nivel alto.",
       evidence
     });
-  } else if (player.weeksRemaining === null || !player.estimatedLevel) {
+  } else if (player.weeksRemaining === null || player.skill === null) {
     if (player.weeksRemaining === null) {
       warnings.push({
         code: "missing_weeks_remaining",
@@ -223,10 +223,10 @@ function classifyYouthPlayer(player: YouthAcademyObservedPlayer): RealYouthAcade
         evidence
       });
     }
-    if (!player.estimatedLevel) {
+    if (player.skill === null) {
       warnings.push({
-        code: "missing_estimated_level",
-        message: "Falta nivel estimado; la confianza en la evaluacion de talento es menor.",
+        code: "missing_skill",
+        message: "Falta skill; la confianza en la evaluacion de talento es menor.",
         evidence
       });
     }
@@ -241,7 +241,7 @@ function classifyYouthPlayer(player: YouthAcademyObservedPlayer): RealYouthAcade
     weeksRemaining: player.weeksRemaining,
     weeksInAcademy,
     projectedPromotionAge,
-    estimatedLevel: player.estimatedLevel,
+    skill: player.skill,
     status: player.status,
     category,
     severity,
@@ -252,32 +252,8 @@ function classifyYouthPlayer(player: YouthAcademyObservedPlayer): RealYouthAcade
   };
 }
 
-function isHighLevel(estimatedLevel?: string | null): boolean {
-  if (!estimatedLevel) return false;
-  const normalized = estimatedLevel.trim().toLowerCase();
-  const highKeywords = [
-    "good",
-    "great",
-    "solid",
-    "formidable",
-    "outstanding",
-    "brilliant",
-    "magnificent",
-    "master",
-    "superb",
-    "godlike",
-    "bueno",
-    "excelente",
-    "formidable",
-    "destacado"
-  ];
-
-  if (highKeywords.includes(normalized)) {
-    return true;
-  }
-
-  const num = Number.parseFloat(normalized);
-  return !Number.isNaN(num) && num >= 8;
+function isHighLevel(skill: number | null): boolean {
+  return skill !== null && skill >= 8;
 }
 
 export * from "./types.js";

@@ -58,7 +58,7 @@ export interface NormalizedYouthAcademySnapshot {
       age: number;
       initialWeeksRemaining: number | null;
       weeksRemaining: number | null;
-      estimatedLevel: string | null;
+      skill: number;
       status: "in_academy" | "ready_for_promotion" | "promoted";
     }>;
   };

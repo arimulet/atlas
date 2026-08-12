@@ -20,6 +20,16 @@ describe("validateYouthAcademySnapshotV0", () => {
     expect(result.warnings).toEqual([]);
   });
 
+  it("rejects a youth snapshot without the required numeric skill", () => {
+    const payload = structuredClone(validSnapshot) as { academy: { players: Array<Record<string, unknown>> } };
+    delete payload.academy.players[0]!.skill;
+
+    const result = validateYouthAcademySnapshotV0(payload);
+
+    expect(result.status).toBe("rejected");
+    expect(result.errors.map((error) => error.path)).toContain("academy.players.0.skill");
+    expect(result.warnings.map((warning) => warning.path)).toContain("academy.players.0.skill");
+  });
   it("rejects an invalid youth academy snapshot with errors", () => {
     const result = validateYouthAcademySnapshotV0(invalidSnapshot);
 

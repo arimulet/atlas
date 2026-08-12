@@ -289,7 +289,7 @@ describe("Mongo repositories", () => {
       name: "Matias Cantero",
       age: 16,
       weeksRemaining: 4,
-      estimatedLevel: "8",
+      skill: 8,
       status: "in_academy"
     });
 
@@ -376,7 +376,7 @@ function buildYouthSnapshotInput(overrides: {
         age: 16,
         initialWeeksRemaining: null,
         weeksRemaining: 4,
-        estimatedLevel: "8",
+        skill: 8,
         status: "in_academy"
       }
     ]

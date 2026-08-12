@@ -220,7 +220,7 @@ export class SokkerXmlProvider {
             name: name,
             age: j.age,
             weeksRemaining: j.weeks, // Assuming weeks means weeks remaining based on XML docs
-            level: j.skill,
+            skill: j.skill,
             status: "in_academy" // Inferred or mapped later
           };
         })

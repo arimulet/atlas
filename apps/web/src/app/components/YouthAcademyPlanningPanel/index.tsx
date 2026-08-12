@@ -73,8 +73,8 @@ export const YouthAcademyPlanningPanel = ({
               value={observed.coverage.youthsWithWeeksRemaining.toString()}
             />
             <SummaryItem
-              label="Con nivel estimado"
-              value={observed.coverage.youthsWithEstimatedLevel.toString()}
+              label="Con skill"
+              value={observed.coverage.youthsWithSkill.toString()}
             />
             <SummaryItem
               label="Inversion semanal"
@@ -223,7 +223,7 @@ function RealYouthPlayerCard({ player }: { player: RealYouthAcademyPlayerPlan })
           label="Semanas para ascenso"
           value={player.weeksRemaining !== null ? `${player.weeksRemaining} sem.` : "No inf."}
         />
-        <SummaryItem label="Nivel/Talento estimado" value={player.estimatedLevel ?? "No inf."} />
+        <SummaryItem label="Skill" value={player.skill?.toString() ?? "No inf."} />
         <SummaryItem label="Estado de cantera" value={player.status} />
       </div>
 

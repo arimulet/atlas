@@ -67,7 +67,7 @@ export interface YouthPlayerSnapshot {
   age: number;
   weeksInAcademy?: number | null;
   weeksRemaining?: number | null;
-  level: number;
+  skill: number;
   status: YouthPlayerStatus;
 }
 

@@ -25,7 +25,7 @@
         "name": "Pedro Gomez",
         "age": 15,
         "weeksRemaining": 12,
-        "estimatedLevel": "weak",
+        "skill": 3,
         "status": "in_academy"
       }
     ]

@@ -26,7 +26,8 @@
       {
         "playerId": 5002,
         "name": "Juan Perez",
-        "age": 17
+        "age": 17,
+        "skill": 5
       }
     ]
   }

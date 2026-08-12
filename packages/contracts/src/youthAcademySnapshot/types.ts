@@ -22,5 +22,5 @@ export type YouthAcademySnapshotValidationResult =
       status: "rejected";
       data: null;
       errors: ImportIssue[];
-      warnings: [];
+      warnings: ImportIssue[];
     };

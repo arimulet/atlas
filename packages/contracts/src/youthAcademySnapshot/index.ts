@@ -8,14 +8,22 @@ export const validateYouthAcademySnapshotV0 = (
   const parsed = youthAcademySnapshotV0Schema.safeParse(input);
 
   if (!parsed.success) {
+    const errors = parsed.error.issues.map((issue) => ({
+      path: issue.path.join("."),
+      message: issue.message
+    }));
+    const warnings = errors
+      .filter((issue) => issue.path.endsWith(".skill"))
+      .map((issue) => ({
+        path: issue.path,
+        message: "Missing skill; potential talent assessment confidence is lower."
+      }));
+
     return {
       status: "rejected",
       data: null,
-      errors: parsed.error.issues.map((issue) => ({
-        path: issue.path.join("."),
-        message: issue.message
-      })),
-      warnings: []
+      errors,
+      warnings
     };
   }
 
@@ -58,10 +66,11 @@ function collectWarnings(snapshot: YouthAcademySnapshotV0): ImportIssue[] {
       });
     }
 
-    if (!player.estimatedLevel) {
+
+    if (player.skill === undefined || player.skill === null) {
       warnings.push({
-        path: `${prefix}.estimatedLevel`,
-        message: "Missing estimatedLevel; potential talent assessment confidence is lower."
+        path: `${prefix}.skill`,
+        message: "Missing skill; potential talent assessment confidence is lower."
       });
     }
 
