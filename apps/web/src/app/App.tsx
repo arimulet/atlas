@@ -37,7 +37,6 @@ import { SokkerSyncModal } from "./components/SokkerSyncModal";
 const lastClubStorageKey = "atlas.lastClubId";
 
 export function App() {
-
   const [activeClubId, setActiveClubId] = useState<string | null>(() =>
     window.localStorage.getItem(lastClubStorageKey)
   );
@@ -188,8 +187,6 @@ export function App() {
     }
   }, [activeClubId, loadDashboard]);
 
-
-
   const handleSokkerSync = useCallback(
     async (login: string, pass: string) => {
       setStatus("loading");
@@ -289,16 +286,30 @@ export function App() {
           />
         )}
 
-
-
         {activeView === "dashboard" ? (
-          <section className="dropzone" style={{ marginTop: "16px", display: "flex", justifyContent: "space-between", alignItems: "center", borderStyle: "solid" }}>
+          <section
+            className="dropzone"
+            style={{
+              marginTop: "16px",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              borderStyle: "solid"
+            }}
+          >
             <div>
               <p className="eyebrow">Integración Oficial</p>
               <h2>Sincronización Sokker XML</h2>
-              <p>Conecta directamente con Sokker para descargar tus juveniles, profesionales y estado económico en tiempo real.</p>
+              <p>
+                Conecta directamente con Sokker para descargar tus juveniles, profesionales y estado
+                económico en tiempo real.
+              </p>
             </div>
-            <button type="button" onClick={() => setIsSokkerModalOpen(true)} style={{ background: "var(--accent-color, #007bff)", color: "#fff", border: "none" }}>
+            <button
+              type="button"
+              onClick={() => setIsSokkerModalOpen(true)}
+              style={{ background: "var(--accent-color, #007bff)", color: "#fff", border: "none" }}
+            >
               Iniciar Sincronización
             </button>
           </section>
@@ -332,10 +343,13 @@ export function App() {
         ) : null}
 
         {activeView === "dashboard" ? (
-          <DiagnosticPanel findingsByCategory={findingsByCategory} />
+          <DiagnosticPanel
+            findingsByCategory={findingsByCategory}
+            currency={result?.summary?.currency ?? null}
+          />
         ) : null}
 
-        <SokkerSyncModal 
+        <SokkerSyncModal
           isOpen={isSokkerModalOpen}
           onClose={() => setIsSokkerModalOpen(false)}
           onSync={handleSokkerSync}

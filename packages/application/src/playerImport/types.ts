@@ -23,6 +23,7 @@ export interface ImportedSquadSummary {
   playerCount: number;
   snapshotDate: string;
   club: string;
+  currency: { name: string; rate: number };
   totalValue: Money;
   totalWage: Money;
   incompletePlayerCount: number;

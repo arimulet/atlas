@@ -49,7 +49,7 @@ describe("generateBasicDiagnostic", () => {
             id: "ps-2",
             playerId: 1002,
             name: "Expensive Veteran",
-            wageAmount: 30000,
+            wageAmount: 120000,
             valueAmount: 450000
           })
         ]
@@ -63,9 +63,7 @@ describe("generateBasicDiagnostic", () => {
       severity: "medium",
       affectedPlayerIds: ["1002"]
     });
-    expect(finding?.evidence.map((trace) => trace.label)).toContain(
-      "Expensive Veteran value-to-wage ratio"
-    );
+    expect(finding?.evidence.map((trace) => trace.code)).toContain("player.value-to-wage-ratio");
   });
 
   it("detects asset risk from age and value", () => {
@@ -75,7 +73,7 @@ describe("generateBasicDiagnostic", () => {
           player({
             name: "Senior Asset",
             age: 32,
-            valueAmount: 700000,
+            valueAmount: 2400000,
             observedPosition: "defender"
           })
         ]
@@ -143,9 +141,7 @@ describe("generateBasicDiagnostic", () => {
     expect(finding?.assumptions.map((assumption) => assumption.code)).toContain(
       "missing-player-id"
     );
-    expect(finding?.evidence.map((trace) => trace.label)).toContain(
-      "Tomas Alvarez missing skills.technique"
-    );
+    expect(finding?.evidence.map((trace) => trace.code)).toContain("player.missing-field");
   });
 
   it("includes evidence and assumptions in every finding", () => {
@@ -169,8 +165,7 @@ describe("generateBasicDiagnostic", () => {
       .flatMap((finding) => finding.recommendations)
       .forEach((recommendation) => {
         expect(recommendation.traceKind).toBe("recommended");
-        expect(recommendation.description.length).toBeGreaterThan(0);
-        expect(recommendation.rationale.length).toBeGreaterThan(0);
+        expect(recommendation.code.length).toBeGreaterThan(0);
       });
   });
 });

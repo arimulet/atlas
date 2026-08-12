@@ -1,33 +1,45 @@
-import type { AvailabilityStatus, DataTraceKind, Money, ObservedPosition, PlayerRole, Severity, SkillSet } from "./index.js";
+import type {
+  AvailabilityStatus,
+  DataTraceKind,
+  Money,
+  ObservedPosition,
+  PlayerRole,
+  Severity,
+  SkillSet
+} from "./index.js";
 
 export type DiagnosticCategory =
   "squad-balance" | "economic-risk" | "asset-risk" | "training-potential" | "follow-up";
 
 export type DiagnosticConfidence = "low" | "medium" | "high";
 
+export type DiagnosticParameterValue = string | number | null;
+export type DiagnosticParameters = Record<string, DiagnosticParameterValue>;
+
 export interface DiagnosticTrace {
   kind: DataTraceKind;
-  label: string;
+  code: string;
   value: string | number | null;
+  parameters?: DiagnosticParameters;
 }
 
 export interface DiagnosticAssumption {
   code: string;
-  description: string;
   traceKind: "assumed";
+  parameters?: DiagnosticParameters;
 }
 
 export interface DiagnosticRecommendation {
+  code: string;
   traceKind: "recommended";
-  description: string;
-  rationale: string;
+  parameters?: DiagnosticParameters;
 }
 
 export interface BasicDiagnosticFinding {
   code: string;
   category: DiagnosticCategory;
   severity: Severity;
-  description: string;
+  parameters?: DiagnosticParameters;
   evidence: DiagnosticTrace[];
   assumptions: DiagnosticAssumption[];
   confidence: DiagnosticConfidence;
@@ -66,6 +78,10 @@ interface ClassifiedPlayer {
   roleEvidence: DiagnosticTrace[];
   roleAssumptions: DiagnosticAssumption[];
 }
+
+const ORIGINAL_HIGH_WAGE_THRESHOLD = 80_000;
+const ORIGINAL_ASSET_VALUE_THRESHOLD = 1_200_000;
+const ORIGINAL_HIGH_ASSET_VALUE_THRESHOLD = 2_400_000;
 
 const minimumPlayersByRole: Partial<Record<PlayerRole, number>> = {
   goalkeeper: 1,
@@ -133,8 +149,13 @@ function classifyPlayer(player: BasicDiagnosticPlayerSnapshot): ClassifiedPlayer
       role: observedRole,
       roleScore: roleScore(observedRole, player.skills),
       roleEvidence: [
-        trace("observed", `${player.name} observed position`, player.observedPosition),
-        trace("derived", `${player.name} role score`, roleScore(observedRole, player.skills))
+        trace("observed", "player.observed-position", player.observedPosition, {
+          playerName: player.name
+        }),
+        trace("derived", "player.role-score", roleScore(observedRole, player.skills), {
+          playerName: player.name,
+          role: observedRole
+        })
       ],
       roleAssumptions: []
     };
@@ -147,13 +168,10 @@ function classifyPlayer(player: BasicDiagnosticPlayerSnapshot): ClassifiedPlayer
       player,
       role: "undefined",
       roleScore: score,
-      roleEvidence: [trace("derived", `${player.name} best role score`, score)],
-      roleAssumptions: [
-        assumption(
-          "role-from-skills",
-          "Observed position is missing; role is inferred from visible skills."
-        )
-      ]
+      roleEvidence: [
+        trace("derived", "player.best-role-score", score, { playerName: player.name })
+      ],
+      roleAssumptions: [assumption("role-from-skills")]
     };
   }
 
@@ -161,13 +179,8 @@ function classifyPlayer(player: BasicDiagnosticPlayerSnapshot): ClassifiedPlayer
     player,
     role,
     roleScore: score,
-    roleEvidence: [trace("derived", `${player.name} inferred ${role} score`, score)],
-    roleAssumptions: [
-      assumption(
-        "role-from-skills",
-        "Observed position is missing; role is inferred from visible skills."
-      )
-    ]
+    roleEvidence: [trace("derived", "player.role-score", score, { playerName: player.name, role })],
+    roleAssumptions: [assumption("role-from-skills")]
   };
 }
 
@@ -199,26 +212,23 @@ function createSquadBalanceFindings(players: ClassifiedPlayer[]): BasicDiagnosti
         code: `squad-balance.${role}.deficit`,
         category: "squad-balance",
         severity: missingCount >= 2 ? "high" : "medium",
-        description: `Squad has ${matchingPlayers.length} ${role} player(s), below the baseline of ${minimum}.`,
+        parameters: { role, currentCount: matchingPlayers.length, minimum, missingCount },
         evidence: [
-          trace("derived", `${role} players`, matchingPlayers.length),
-          trace("assumed", `${role} baseline`, minimum)
+          trace("derived", "squad.role.count", matchingPlayers.length, { role }),
+          trace("assumed", "squad.role.baseline", minimum, { role })
         ],
-        assumptions: [
-          assumption(
-            "role-baseline",
-            "Baseline role counts are initial MVP thresholds, not tactical advice."
-          )
-        ],
+        assumptions: [assumption("role-baseline", { role, minimum })],
         confidence: matchingPlayers.some((classified) => classified.roleAssumptions.length > 0)
           ? "medium"
           : "high",
         affectedPlayerIds: matchingPlayers.map(playerIdentifier),
         recommendations: [
-          recommendation(
-            `Review ${role} depth before making squad decisions.`,
-            `The current count is ${missingCount} below the explicit baseline.`
-          )
+          recommendation("review-role-depth", {
+            role,
+            currentCount: matchingPlayers.length,
+            minimum,
+            missingCount
+          })
         ]
       }
     ];
@@ -230,7 +240,7 @@ function createEconomicRiskFindings(players: ClassifiedPlayer[]): BasicDiagnosti
     .map(({ player }) => player.wage.amount)
     .sort((first, second) => first - second);
   const medianWage = median(wages);
-  const highWageThreshold = Math.max(20000, medianWage * 1.5);
+  const highWageThreshold = Math.max(ORIGINAL_HIGH_WAGE_THRESHOLD, medianWage * 1.5);
 
   return players.flatMap(({ player }) => {
     const valueToWageRatio =
@@ -248,30 +258,38 @@ function createEconomicRiskFindings(players: ClassifiedPlayer[]): BasicDiagnosti
         code: "economic-risk.high-wage-low-value-ratio",
         category: "economic-risk",
         severity: player.wage.amount >= highWageThreshold * 1.5 ? "high" : "medium",
-        description: `${player.name} has a high wage relative to the squad and estimated value.`,
+        parameters: {
+          playerName: player.name,
+          wage: player.wage.amount,
+          value: player.value.amount,
+          ratio: round(valueToWageRatio)
+        },
         evidence: [
-          trace("observed", `${player.name} wage`, player.wage.amount),
-          trace("observed", `${player.name} estimated value`, player.value.amount),
-          trace("derived", "squad median wage", medianWage),
-          trace("derived", `${player.name} value-to-wage ratio`, round(valueToWageRatio))
+          trace("observed", "player.wage", player.wage.amount, { playerName: player.name }),
+          trace("observed", "player.estimated-value", player.value.amount, {
+            playerName: player.name
+          }),
+          trace("derived", "squad.median-wage", medianWage),
+          trace("derived", "player.value-to-wage-ratio", round(valueToWageRatio), {
+            playerName: player.name
+          })
         ],
         assumptions: [
-          assumption(
-            "economic-threshold",
-            "High wage risk starts at max(20000, 1.5x squad median wage)."
-          ),
-          assumption(
-            "value-to-wage-threshold",
-            "A value-to-wage ratio below 25 is treated as inefficient for MVP diagnostics."
-          )
+          assumption("economic-threshold", {
+            minimumWage: ORIGINAL_HIGH_WAGE_THRESHOLD,
+            medianMultiplier: 1.5
+          }),
+          assumption("value-to-wage-threshold", { maximumRatio: 25 })
         ],
         confidence: "high",
         affectedPlayerIds: [playerIdentifier({ player })],
         recommendations: [
-          recommendation(
-            `Review ${player.name}'s wage burden before renewal or squad planning.`,
-            "The recommendation is based on observed wage, observed estimated value and the explicit MVP ratio threshold."
-          )
+          recommendation("review-wage-burden", {
+            playerName: player.name,
+            wage: player.wage.amount,
+            value: player.value.amount,
+            ratio: round(valueToWageRatio)
+          })
         ]
       }
     ];
@@ -280,7 +298,7 @@ function createEconomicRiskFindings(players: ClassifiedPlayer[]): BasicDiagnosti
 
 function createAssetRiskFindings(players: ClassifiedPlayer[]): BasicDiagnosticFinding[] {
   return players.flatMap(({ player }) => {
-    const isRisk = player.age >= 30 && player.value.amount >= 300000;
+    const isRisk = player.age >= 30 && player.value.amount >= ORIGINAL_ASSET_VALUE_THRESHOLD;
 
     if (!isRisk) {
       return [];
@@ -290,29 +308,28 @@ function createAssetRiskFindings(players: ClassifiedPlayer[]): BasicDiagnosticFi
       {
         code: "asset-risk.senior-high-value",
         category: "asset-risk",
-        severity: player.age >= 33 || player.value.amount >= 600000 ? "high" : "medium",
-        description: `${player.name} combines senior age with meaningful estimated value.`,
+        severity:
+          player.age >= 33 || player.value.amount >= ORIGINAL_HIGH_ASSET_VALUE_THRESHOLD
+            ? "high"
+            : "medium",
+        parameters: { playerName: player.name, age: player.age, value: player.value.amount },
         evidence: [
-          trace("observed", `${player.name} age`, player.age),
-          trace("observed", `${player.name} estimated value`, player.value.amount)
+          trace("observed", "player.age", player.age, { playerName: player.name }),
+          trace("observed", "player.estimated-value", player.value.amount, {
+            playerName: player.name
+          })
         ],
         assumptions: [
-          assumption(
-            "asset-age-threshold",
-            "Players aged 30 or more are flagged for MVP asset risk review."
-          ),
-          assumption(
-            "asset-value-threshold",
-            "Estimated value of 300000 or more is treated as material for MVP diagnostics."
-          )
+          assumption("asset-age-threshold", { minimumAge: 30 }),
+          assumption("asset-value-threshold", { minimumValue: ORIGINAL_ASSET_VALUE_THRESHOLD })
         ],
         confidence: "medium",
         affectedPlayerIds: [playerIdentifier({ player })],
         recommendations: [
-          recommendation(
-            `Track ${player.name}'s value evolution before delaying a market decision.`,
-            "The recommendation is explained by the combination of observed age and observed estimated value."
-          )
+          recommendation("track-player-value-evolution", {
+            playerName: player.name,
+            value: player.value.amount
+          })
         ]
       }
     ];
@@ -332,31 +349,20 @@ function createTrainingPotentialFindings(players: ClassifiedPlayer[]): BasicDiag
         code: "training-potential.young-role-fit",
         category: "training-potential",
         severity: "low",
-        description: `${player.name} is young and already shows a strong role fit.`,
+        parameters: { playerName: player.name, age: player.age, role: classified.role, roleScore },
         evidence: [
-          trace("observed", `${player.name} age`, player.age),
+          trace("observed", "player.age", player.age, { playerName: player.name }),
           ...classified.roleEvidence,
-          trace("derived", `${player.name} role`, classified.role)
+          trace("derived", "player.role", classified.role, { playerName: player.name })
         ],
         assumptions: [
           ...classified.roleAssumptions,
-          assumption(
-            "training-age-threshold",
-            "Players aged 23 or less are considered trainable in the MVP."
-          ),
-          assumption(
-            "training-role-score-threshold",
-            "A role score of 8 or more indicates initial training potential."
-          )
+          assumption("training-age-threshold", { maximumAge: 23 }),
+          assumption("training-role-score-threshold", { minimumScore: 8 })
         ],
         confidence: classified.roleAssumptions.length > 0 ? "medium" : "high",
         affectedPlayerIds: [playerIdentifier(classified)],
-        recommendations: [
-          recommendation(
-            `Consider ${player.name} for focused training review.`,
-            "The recommendation is based on observed age and the explicit derived role-fit score."
-          )
-        ]
+        recommendations: [recommendation("review-player-training", { playerName: player.name })]
       }
     ];
   });
@@ -375,31 +381,22 @@ function createFollowUpFindings(players: ClassifiedPlayer[]): BasicDiagnosticFin
         code: "follow-up.incomplete-player-data",
         category: "follow-up",
         severity: missingFields.includes("playerId") ? "medium" : "low",
-        description: `${player.name} requires follow-up because imported data is incomplete.`,
+        parameters: { playerName: player.name, missingFields: missingFields.join(", ") },
         evidence: missingFields.map((field) =>
-          trace("observed", `${player.name} missing ${field}`, null)
+          trace("observed", "player.missing-field", null, { playerName: player.name, field })
         ),
+
         assumptions: [
-          assumption(
-            "incomplete-data-confidence",
-            "Missing observed fields lower diagnostic confidence."
-          ),
-          ...(missingFields.includes("playerId")
-            ? [
-                assumption(
-                  "missing-player-id",
-                  "Player identity must not be merged automatically without playerId or manual review."
-                )
-              ]
-            : [])
+          assumption("incomplete-data-confidence"),
+          ...(missingFields.includes("playerId") ? [assumption("missing-player-id")] : [])
         ],
         confidence: "low",
         affectedPlayerIds: [playerIdentifier({ player })],
         recommendations: [
-          recommendation(
-            `Review source data for ${player.name} before relying on historical comparisons.`,
-            "The recommendation is explained by the listed missing observed fields."
-          )
+          recommendation("review-player-source-data", {
+            playerName: player.name,
+            missingFields: missingFields.join(", ")
+          })
         ]
       }
     ];
@@ -483,14 +480,19 @@ function round(value: number): number {
   return Math.round(value * 100) / 100;
 }
 
-function trace(kind: DataTraceKind, label: string, value: string | number | null): DiagnosticTrace {
-  return { kind, label, value };
+function trace(
+  kind: DataTraceKind,
+  code: string,
+  value: string | number | null,
+  parameters?: DiagnosticParameters
+): DiagnosticTrace {
+  return { kind, code, value, ...(parameters ? { parameters } : {}) };
 }
 
-function assumption(code: string, description: string): DiagnosticAssumption {
-  return { code, description, traceKind: "assumed" };
+function assumption(code: string, parameters?: DiagnosticParameters): DiagnosticAssumption {
+  return { code, traceKind: "assumed", ...(parameters ? { parameters } : {}) };
 }
 
-function recommendation(description: string, rationale: string): DiagnosticRecommendation {
-  return { traceKind: "recommended", description, rationale };
+function recommendation(code: string, parameters?: DiagnosticParameters): DiagnosticRecommendation {
+  return { code, traceKind: "recommended", ...(parameters ? { parameters } : {}) };
 }

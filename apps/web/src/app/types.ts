@@ -23,35 +23,47 @@ export interface SquadSummary {
   playerCount: number;
   snapshotDate: string;
   club: string;
+  currency: CurrencySettings;
   totalValue: MoneyTotal;
   totalWage: MoneyTotal;
   incompletePlayerCount: number;
 }
 
+export type DiagnosticParameterValue = string | number | null;
+export type DiagnosticParameters = Record<string, DiagnosticParameterValue>;
+
 export interface DiagnosticTrace {
   kind: "observed" | "derived" | "assumed" | "recommended";
-  label: string;
+  code: string;
   value: string | number | null;
+  parameters?: DiagnosticParameters;
 }
 
 export interface DiagnosticAssumption {
   code: string;
-  description: string;
   traceKind: "assumed";
+  parameters?: DiagnosticParameters;
+}
+
+export interface DiagnosticRecommendation {
+  code: string;
+  traceKind: "recommended";
+  parameters?: DiagnosticParameters;
 }
 
 export interface DiagnosticFinding {
   code: string;
   category: string;
   severity: Severity;
-  description: string;
+  parameters?: DiagnosticParameters;
   evidence: DiagnosticTrace[];
   assumptions: DiagnosticAssumption[];
   confidence: "low" | "medium" | "high";
   affectedPlayerIds: string[];
+  recommendations: DiagnosticRecommendation[];
 }
 
-export type Severity =  "info" | "low" | "medium" | "high";
+export type Severity = "info" | "low" | "medium" | "high";
 
 export interface ImportResponse {
   importResult: {

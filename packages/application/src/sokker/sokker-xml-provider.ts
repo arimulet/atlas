@@ -137,10 +137,10 @@ export class SokkerXmlProvider {
     }));
 
     // Do not convert money; store the base value from XML.
-    // The frontend will convert it using the Country model.
+    // The web layer converts it to the club currency using the Country model.
     const convertMoney = (amount: number): Money => ({
       amount,
-      currency: null // Will be populated by the frontend or API layer using the Country collection
+      currency: null // Converted only when displayed by the web layer using the Country collection
     });
 
     const clubProfile: ClubObservedProfile = {
