@@ -1,4 +1,5 @@
 import { type SnapshotSkillSet, type PersistedPlayerSnapshot } from "@atlas/database";
+import type { PlayerRole } from "@atlas/domain";
 import { Category, ClubId, Confidence, DeltaDirection, EvidenceKind, FindingType, Money, RoleSource, Severity, SkillKey } from "../types.js";
 
 export interface PlayerDevelopment {
@@ -24,7 +25,7 @@ export interface PlayerDevelopmentObservedPlayer {
   snapshotPlayerId: string;
   name: string;
   age: number;
-  observedPosition: string | null;
+  observedPosition: PlayerRole | null;
   roles: string[];
   skills: SnapshotSkillSet;
 }

@@ -51,7 +51,7 @@ export interface PlayerSnapshot {
   value: Money;
   form?: number | null;
   availabilityStatus?: AvailabilityStatus;
-  observedPosition?: string | null;
+  observedPosition?: PlayerRole | null;
   skills: SkillSet;
   roles: PlayerRole[];
 }

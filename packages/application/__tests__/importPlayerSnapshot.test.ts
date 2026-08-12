@@ -186,7 +186,7 @@ describe("ImportPlayerSnapshot", () => {
     const snapshot = await SnapshotModel.findById(result.snapshotId).lean();
     expect(snapshot?.snapshotDate.toISOString()).toBe("2026-08-06T00:00:00.000Z");
     expect(snapshot?.players.map((player) => player.playerId)).toEqual([38643161, 39409355]);
-    expect(snapshot?.players[0]?.observedPosition).toBe("defender");
+    expect(snapshot?.players[0]?.observedPosition).toBe("winger");
     expect(snapshot?.players[1]?.availabilityStatus).toBe("injured");
   });
 

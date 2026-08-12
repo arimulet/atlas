@@ -1,3 +1,5 @@
+export type PlayerRole = "goalkeeper" | "defender" | "midfielder" | "winger" | "striker" | "trainee" | "undefined";
+
 export interface PersistedImportIssue {
   path: string;
   message: string;
@@ -83,7 +85,7 @@ export interface PersistedPlayerSnapshot {
   };
   form: number | null;
   availabilityStatus: "available" | "injured" | "suspended" | "unknown" | null;
-  observedPosition: string | null;
+  observedPosition: PlayerRole | null;
   skills: SnapshotSkillSet;
   roles: string[];
 }
