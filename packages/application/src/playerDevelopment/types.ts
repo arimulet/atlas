@@ -26,7 +26,7 @@ export interface PlayerDevelopmentObservedPlayer {
   name: string;
   age: number;
   observedPosition: ObservedPosition | null;
-  roles: string[];
+
   skills: SnapshotSkillSet;
 }
 

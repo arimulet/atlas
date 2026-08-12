@@ -87,7 +87,6 @@ export interface PersistedPlayerSnapshot {
   availabilityStatus: "available" | "injured" | "suspended" | "unknown" | null;
   observedPosition: ObservedPosition | null;
   skills: SnapshotSkillSet;
-  roles: string[];
 }
 
 export interface SnapshotSource {

@@ -345,7 +345,7 @@ function buildSnapshotInput(overrides: {
           playmaker: 9,
           striker: 4
         },
-        roles: []
+
       }
     ]
   };

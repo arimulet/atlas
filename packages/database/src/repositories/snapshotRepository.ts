@@ -92,7 +92,7 @@ function mapSnapshot(snapshot: {
       playmaker?: number | null;
       striker?: number | null;
     };
-    roles?: string[];
+
   }>;
 }): PersistedSnapshot {
   if (!snapshot.source) {
@@ -138,7 +138,7 @@ function mapSnapshot(snapshot: {
         playmaker: player.skills.playmaker ?? null,
         striker: player.skills.striker ?? null
       },
-      roles: player.roles ?? []
+
     }))
   };
 }

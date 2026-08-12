@@ -738,10 +738,6 @@ function resolveRole(player: PersistedPlayerSnapshot): SquadMarketObservedPlayer
     return { label: player.observedPosition, source: "observed" };
   }
 
-  if (player.roles[0]) {
-    return { label: player.roles[0], source: "inferred" };
-  }
-
   return { label: "Undefined", source: "unknown" };
 }
 
