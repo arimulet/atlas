@@ -1,67 +1,32 @@
-import { SUPPORED_SKILLS } from "./constants.js";
-import type { Confidence, EvidenceKind, Severity, SkillSet } from "./types.js";
+import { SUPPORTED_SKILLS } from "../constants.js";
+import type { Confidence, EvidenceKind, Severity } from "../types.js";
 import {
   calculateHistoricalTrends,
   type HistoricalTrends,
   type PlayerHistoricalTrend
-} from "./historicalTrends.js";
-import type { SnapshotComparisonPlayer, SnapshotComparisonSnapshot } from "./snapshotComparison.js";
+} from "../historicalTrends/index.js";
+import type {
+  SnapshotComparisonPlayer,
+  SnapshotComparisonSnapshot
+} from "../snapshotComparison.js";
+import { HISTORICAL_FINDING_TAXONOMY } from "./constants.js";
+import type {
+  HistoricalFinding,
+  HistoricalFindingEvidence,
+  HistoricalFindingPeriod,
+  HistoricalFindings,
+  PlayerSeriesPoint
+} from "./types.js";
 
-export type HistoricalFindingType =
-  | "player_sustained_asset_appreciation"
-  | "player_asset_or_sporting_deterioration"
-  | "player_stagnation"
-  | "risky_wage_against_historical_evolution"
-  | "squad_asset_evolution";
-
-export interface HistoricalFindingEvidence {
-  kind: EvidenceKind;
-  metric: string;
-  description: string;
-  value?: number | string | null;
-}
-
-export interface HistoricalFinding {
-  type: HistoricalFindingType;
-  severity: Severity;
-  confidence: Confidence;
-  subject:
-    | {
-        kind: "player";
-        playerId: number;
-        playerName: string;
-      }
-    | {
-        kind: "squad";
-        clubId: string;
-      };
-  evidence: HistoricalFindingEvidence[];
-  period: {
-    fromSnapshotId: string;
-    toSnapshotId: string;
-    fromDate: string;
-    toDate: string;
-    dataPoints: number;
-  };
-  actionSuggested: string;
-}
-
-export interface HistoricalFindings {
-  clubId: string;
-  snapshotIds: string[];
-  snapshotDates: string[];
-  taxonomy: HistoricalFindingType[];
-  findings: HistoricalFinding[];
-  warnings: string[];
-}
-
-const taxonomy: HistoricalFindingType[] = [
-  "player_sustained_asset_appreciation",
-  "player_asset_or_sporting_deterioration",
-  "player_stagnation",
-  "risky_wage_against_historical_evolution",
-  "squad_asset_evolution"
-];
+export type {
+  HistoricalFinding,
+  HistoricalFindingEvidence,
+  HistoricalFindingPeriod,
+  HistoricalFindings,
+  HistoricalFindingType,
+  PlayerSeriesPoint
+} from "./types.js";
+export { HISTORICAL_FINDING_TAXONOMY } from "./constants.js";
 
 export function generateHistoricalFindings(
   snapshots: SnapshotComparisonSnapshot[]
@@ -77,7 +42,7 @@ export function generateHistoricalFindings(
       clubId: trends.clubId,
       snapshotIds: trends.snapshotIds,
       snapshotDates: trends.snapshotDates,
-      taxonomy,
+      taxonomy: HISTORICAL_FINDING_TAXONOMY,
       findings: [],
       warnings: ["At least two snapshots are required for historical findings.", ...trends.warnings]
     };
@@ -93,7 +58,7 @@ export function generateHistoricalFindings(
     clubId: trends.clubId,
     snapshotIds: trends.snapshotIds,
     snapshotDates: trends.snapshotDates,
-    taxonomy,
+    taxonomy: HISTORICAL_FINDING_TAXONOMY,
     findings: squadFinding ? [...findings, squadFinding] : findings,
     warnings: trends.squad.warnings
   };
@@ -102,7 +67,7 @@ export function generateHistoricalFindings(
 function generatePlayerFindings(
   trend: PlayerHistoricalTrend,
   series: PlayerSeriesPoint[],
-  period: HistoricalFinding["period"]
+  period: HistoricalFindingPeriod
 ): HistoricalFinding[] {
   const valuePercentage = trend.value.evidence.deltaPercentage;
   const wagePercentage = trend.wage.evidence.deltaPercentage;
@@ -116,11 +81,34 @@ function generatePlayerFindings(
     isStrictlyIncreasing(series.map((point) => point.value))
   ) {
     return [
-      playerFinding(trend, "player_sustained_asset_appreciation", "info", confidence(trend), period, [
-        evidence("derived", "value.deltaPercentage", "Estimated value grew across the analysed period.", valuePercentage),
-        evidence("observed", "value.sequence", "Estimated value increased in every comparable snapshot.", series.length),
-        evidence("derived", "skills.totalDelta", "Total observed skill level changed during the period.", skillDelta)
-      ], "Monitor retention versus market timing; protect development unless liquidity needs justify selling.")
+      playerFinding(
+        trend,
+        "player_sustained_asset_appreciation",
+        "info",
+        confidence(trend),
+        period,
+        [
+          evidence(
+            "derived",
+            "value.deltaPercentage",
+            "Estimated value grew across the analysed period.",
+            valuePercentage
+          ),
+          evidence(
+            "observed",
+            "value.sequence",
+            "Estimated value increased in every comparable snapshot.",
+            series.length
+          ),
+          evidence(
+            "derived",
+            "skills.totalDelta",
+            "Total observed skill level changed during the period.",
+            skillDelta
+          )
+        ],
+        "Monitor retention versus market timing; protect development unless liquidity needs justify selling."
+      )
     ];
   }
 
@@ -136,8 +124,18 @@ function generatePlayerFindings(
         confidence(trend),
         period,
         [
-          evidence("derived", "value.deltaPercentage", "Estimated value deteriorated during the analysed period.", valuePercentage),
-          evidence("derived", "skills.totalDelta", "Total observed skill level changed during the period.", skillDelta)
+          evidence(
+            "derived",
+            "value.deltaPercentage",
+            "Estimated value deteriorated during the analysed period.",
+            valuePercentage
+          ),
+          evidence(
+            "derived",
+            "skills.totalDelta",
+            "Total observed skill level changed during the period.",
+            skillDelta
+          )
         ],
         "Review role, training fit and sale timing before further patrimonial loss accumulates."
       )
@@ -152,10 +150,28 @@ function generatePlayerFindings(
     skillDelta === 0
   ) {
     return [
-      playerFinding(trend, "player_stagnation", "low", confidence(trend), period, [
-        evidence("derived", "value.deltaPercentage", "Estimated value remained materially flat.", valuePercentage),
-        evidence("derived", "skills.totalDelta", "No net observed skill growth was detected.", skillDelta)
-      ], "Reassess training priority and squad role; keep only if tactical utility justifies the opportunity cost.")
+      playerFinding(
+        trend,
+        "player_stagnation",
+        "low",
+        confidence(trend),
+        period,
+        [
+          evidence(
+            "derived",
+            "value.deltaPercentage",
+            "Estimated value remained materially flat.",
+            valuePercentage
+          ),
+          evidence(
+            "derived",
+            "skills.totalDelta",
+            "No net observed skill growth was detected.",
+            skillDelta
+          )
+        ],
+        "Reassess training priority and squad role; keep only if tactical utility justifies the opportunity cost."
+      )
     ];
   }
 
@@ -169,12 +185,24 @@ function generatePlayerFindings(
       playerFinding(
         trend,
         "risky_wage_against_historical_evolution",
-        wagePercentage >= 30 && (valuePercentage === null || valuePercentage <= 0) ? "high" : "medium",
+        wagePercentage >= 30 && (valuePercentage === null || valuePercentage <= 0)
+          ? "high"
+          : "medium",
         confidence(trend),
         period,
         [
-          evidence("derived", "wage.deltaPercentage", "Wage increased materially during the analysed period.", wagePercentage),
-          evidence("derived", "value.deltaPercentage", "Asset evolution does not justify the wage growth.", valuePercentage)
+          evidence(
+            "derived",
+            "wage.deltaPercentage",
+            "Wage increased materially during the analysed period.",
+            wagePercentage
+          ),
+          evidence(
+            "derived",
+            "value.deltaPercentage",
+            "Asset evolution does not justify the wage growth.",
+            valuePercentage
+          )
         ],
         "Review contract burden against expected contribution; consider sale or role change if trend persists."
       )
@@ -186,7 +214,7 @@ function generatePlayerFindings(
 
 function generateSquadFinding(
   trends: HistoricalTrends,
-  period: HistoricalFinding["period"]
+  period: HistoricalFindingPeriod
 ): HistoricalFinding | null {
   const valuePercentage = trends.squad.valueTotal.evidence.deltaPercentage;
   const wagePercentage = trends.squad.wageTotal.evidence.deltaPercentage;
@@ -207,8 +235,18 @@ function generateSquadFinding(
       confidence: trends.squad.valueTotal.evidence.dataPoints >= 3 ? "high" : "medium",
       subject: { kind: "squad", clubId: trends.clubId },
       evidence: [
-        evidence("derived", "squad.value.deltaPercentage", "Squad estimated value deteriorated.", valuePercentage),
-        evidence("derived", "squad.wage.deltaPercentage", "Squad wage did not decrease alongside value.", wagePercentage)
+        evidence(
+          "derived",
+          "squad.value.deltaPercentage",
+          "Squad estimated value deteriorated.",
+          valuePercentage
+        ),
+        evidence(
+          "derived",
+          "squad.wage.deltaPercentage",
+          "Squad wage did not decrease alongside value.",
+          wagePercentage
+        )
       ],
       period,
       actionSuggested:
@@ -221,10 +259,10 @@ function generateSquadFinding(
 
 function playerFinding(
   trend: PlayerHistoricalTrend,
-  type: HistoricalFindingType,
+  type: HistoricalFinding["type"],
   severity: Severity,
   confidenceValue: Confidence,
-  period: HistoricalFinding["period"],
+  period: HistoricalFindingPeriod,
   findingEvidence: HistoricalFindingEvidence[],
   actionSuggested: string
 ): HistoricalFinding {
@@ -260,7 +298,7 @@ function evidence(
   return { kind, metric, description, value };
 }
 
-function analysisPeriod(snapshots: SnapshotComparisonSnapshot[]): HistoricalFinding["period"] {
+function analysisPeriod(snapshots: SnapshotComparisonSnapshot[]): HistoricalFindingPeriod {
   const first = snapshots[0]!;
   const last = snapshots.at(-1)!;
 
@@ -273,12 +311,9 @@ function analysisPeriod(snapshots: SnapshotComparisonSnapshot[]): HistoricalFind
   };
 }
 
-interface PlayerSeriesPoint {
-  value: number;
-  skills: Required<SkillSet>;
-}
-
-function buildPlayerSeries(snapshots: SnapshotComparisonSnapshot[]): Map<number, PlayerSeriesPoint[]> {
+function buildPlayerSeries(
+  snapshots: SnapshotComparisonSnapshot[]
+): Map<number, PlayerSeriesPoint[]> {
   const series = new Map<number, PlayerSeriesPoint[]>();
 
   for (const snapshot of snapshots) {
@@ -295,7 +330,9 @@ function buildPlayerSeries(snapshots: SnapshotComparisonSnapshot[]): Map<number,
   return series;
 }
 
-function matchablePlayers(players: SnapshotComparisonPlayer[]): Map<number, SnapshotComparisonPlayer> {
+function matchablePlayers(
+  players: SnapshotComparisonPlayer[]
+): Map<number, SnapshotComparisonPlayer> {
   const byPlayerId = new Map<number, SnapshotComparisonPlayer[]>();
 
   for (const player of players) {
@@ -312,7 +349,9 @@ function matchablePlayers(players: SnapshotComparisonPlayer[]): Map<number, Snap
 }
 
 function isStrictlyIncreasing(values: number[]): boolean {
-  return values.length >= 3 && values.every((value, index) => index === 0 || value > values[index - 1]!);
+  return (
+    values.length >= 3 && values.every((value, index) => index === 0 || value > values[index - 1]!)
+  );
 }
 
 function totalSkillDelta(series: PlayerSeriesPoint[]): number {
@@ -323,7 +362,7 @@ function totalSkillDelta(series: PlayerSeriesPoint[]): number {
     return 0;
   }
 
-  return SUPPORED_SKILLS.reduce((total, skill) => {
+  return SUPPORTED_SKILLS.reduce((total, skill) => {
     const before = first.skills[skill];
     const after = last.skills[skill];
 

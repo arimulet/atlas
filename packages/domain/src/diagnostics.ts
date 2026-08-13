@@ -1,4 +1,4 @@
-import { SUPPORED_SKILLS } from "./constants.js";
+import { SUPPORTED_SKILLS } from "./constants.js";
 import type {
   AvailabilityStatus,
   DataTraceKind,
@@ -428,7 +428,7 @@ function missingFollowUpFields(player: BasicDiagnosticPlayerSnapshot): string[] 
     player.form === null ? "form" : null,
     player.availabilityStatus === null ? "availabilityStatus" : null,
     player.observedPosition ? null : "observedPosition",
-    ...SUPPORED_SKILLS.map((skillKey) =>
+    ...SUPPORTED_SKILLS.map((skillKey) =>
       player.skills[skillKey] === null ? `skills.${skillKey}` : null
     )
   ].filter((field): field is string => field !== null);

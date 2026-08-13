@@ -1,4 +1,4 @@
-import { SUPPORED_SKILLS } from "./constants.js";
+import { SUPPORTED_SKILLS } from "./constants.js";
 import type { Money, SkillKey, SkillSet } from "./types.js";
 
 export interface SnapshotComparisonPlayer {
@@ -203,7 +203,7 @@ function comparePlayer(
       age: numericChange(basePlayer.age, targetPlayer.age),
       wage: moneyChange(basePlayer.wage, targetPlayer.wage),
       value: moneyChange(basePlayer.value, targetPlayer.value),
-      skills: SUPPORED_SKILLS
+      skills: SUPPORTED_SKILLS
         .map((skill) => {
           const before = basePlayer.skills[skill];
           const after = targetPlayer.skills[skill];

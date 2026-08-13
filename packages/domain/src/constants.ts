@@ -1,6 +1,6 @@
 import type { SkillKey } from "./types.js";
 
-export const SUPPORED_SKILLS: readonly SkillKey[] = [
+export const SUPPORTED_SKILLS: readonly SkillKey[] = [
   "stamina",
   "pace",
   "technique",

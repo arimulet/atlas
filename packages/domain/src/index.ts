@@ -22,7 +22,7 @@ export type {
 export * from "./constants.js";
 
 export * from "./diagnostics.js";
-export * from "./historicalFindings.js";
-export * from "./historicalTrends.js";
+export * from "./historicalFindings/index.js";
+export * from "./historicalTrends/index.js";
 export * from "./snapshotComparison.js";
 export * from "./training/index.js";
