@@ -1,4 +1,5 @@
-import type { Money, SkillSet } from "./index.js";
+import { SUPPORED_SKILLS } from "./constants.js";
+import type { Money, SkillKey } from "./types.js";
 import type { SnapshotComparisonPlayer, SnapshotComparisonSnapshot } from "./snapshotComparison.js";
 
 export type TrendDirection = "up" | "down" | "stable" | "insufficient_data";
@@ -29,7 +30,7 @@ export interface MoneyTrend extends NumericTrend {
 }
 
 export interface SkillTrend extends NumericTrend {
-  skill: keyof Required<SkillSet>;
+  skill: SkillKey;
 }
 
 export interface PlayerHistoricalTrend {
@@ -66,17 +67,6 @@ export interface HistoricalTrends {
   squad: SquadHistoricalTrendSummary;
   warnings: string[];
 }
-
-const skillKeys = [
-  "stamina",
-  "pace",
-  "technique",
-  "passing",
-  "keeper",
-  "defender",
-  "playmaker",
-  "striker"
-] as const;
 
 export function calculateHistoricalTrends(
   snapshots: SnapshotComparisonSnapshot[]
@@ -134,7 +124,7 @@ function buildPlayerTrends(
         playerName: finalPoint?.player.name ?? orderedPoints[0]!.player.name,
         value: moneyTrend(orderedPoints, "value"),
         wage: moneyTrend(orderedPoints, "wage"),
-        skills: skillKeys.map((skill) => skillTrend(orderedPoints, skill)),
+        skills: SUPPORED_SKILLS.map((skill) => skillTrend(orderedPoints, skill)),
         warnings:
           orderedPoints.length < 2
             ? ["Player needs at least two comparable snapshots for trend calculation."]
@@ -208,7 +198,7 @@ function moneyTrendFromValues(
 
 function skillTrend(
   points: Array<{ snapshot: SnapshotComparisonSnapshot; player: SnapshotComparisonPlayer }>,
-  skill: keyof Required<SkillSet>
+  skill: SkillKey
 ): SkillTrend {
   const comparablePoints = points
     .map((point) => ({ snapshot: point.snapshot, value: point.player.skills[skill] }))

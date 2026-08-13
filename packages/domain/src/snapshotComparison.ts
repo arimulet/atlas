@@ -1,4 +1,5 @@
-import type { Money, SkillSet } from "./index.js";
+import { SUPPORED_SKILLS } from "./constants.js";
+import type { Money, SkillKey, SkillSet } from "./types.js";
 
 export interface SnapshotComparisonPlayer {
   id: string;
@@ -29,7 +30,7 @@ export interface MoneyChange extends NumericChange {
 }
 
 export interface SkillChange extends NumericChange {
-  skill: keyof Required<SkillSet>;
+  skill: SkillKey;
 }
 
 export interface MatchedPlayerComparison {
@@ -79,17 +80,6 @@ export interface SnapshotComparison {
   ambiguousPlayers: SnapshotComparisonAmbiguousPlayer[];
   summary: SnapshotComparisonSummary;
 }
-
-const skillKeys = [
-  "stamina",
-  "pace",
-  "technique",
-  "passing",
-  "keeper",
-  "defender",
-  "playmaker",
-  "striker"
-] as const;
 
 export function compareSnapshots(
   baseSnapshot: SnapshotComparisonSnapshot,
@@ -213,7 +203,7 @@ function comparePlayer(
       age: numericChange(basePlayer.age, targetPlayer.age),
       wage: moneyChange(basePlayer.wage, targetPlayer.wage),
       value: moneyChange(basePlayer.value, targetPlayer.value),
-      skills: skillKeys
+      skills: SUPPORED_SKILLS
         .map((skill) => {
           const before = basePlayer.skills[skill];
           const after = targetPlayer.skills[skill];

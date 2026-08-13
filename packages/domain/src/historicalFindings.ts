@@ -1,4 +1,5 @@
-import type { Severity, SkillSet } from "./index.js";
+import { SUPPORED_SKILLS } from "./constants.js";
+import type { Confidence, EvidenceKind, Severity, SkillSet } from "./types.js";
 import {
   calculateHistoricalTrends,
   type HistoricalTrends,
@@ -13,11 +14,8 @@ export type HistoricalFindingType =
   | "risky_wage_against_historical_evolution"
   | "squad_asset_evolution";
 
-export type HistoricalFindingSeverity = Severity;
-export type HistoricalFindingConfidence = "low" | "medium" | "high";
-
 export interface HistoricalFindingEvidence {
-  kind: "observed" | "derived" | "inference";
+  kind: EvidenceKind;
   metric: string;
   description: string;
   value?: number | string | null;
@@ -25,8 +23,8 @@ export interface HistoricalFindingEvidence {
 
 export interface HistoricalFinding {
   type: HistoricalFindingType;
-  severity: HistoricalFindingSeverity;
-  confidence: HistoricalFindingConfidence;
+  severity: Severity;
+  confidence: Confidence;
   subject:
     | {
         kind: "player";
@@ -64,17 +62,6 @@ const taxonomy: HistoricalFindingType[] = [
   "risky_wage_against_historical_evolution",
   "squad_asset_evolution"
 ];
-
-const skillKeys = [
-  "stamina",
-  "pace",
-  "technique",
-  "passing",
-  "keeper",
-  "defender",
-  "playmaker",
-  "striker"
-] as const;
 
 export function generateHistoricalFindings(
   snapshots: SnapshotComparisonSnapshot[]
@@ -235,8 +222,8 @@ function generateSquadFinding(
 function playerFinding(
   trend: PlayerHistoricalTrend,
   type: HistoricalFindingType,
-  severity: HistoricalFindingSeverity,
-  confidenceValue: HistoricalFindingConfidence,
+  severity: Severity,
+  confidenceValue: Confidence,
   period: HistoricalFinding["period"],
   findingEvidence: HistoricalFindingEvidence[],
   actionSuggested: string
@@ -256,7 +243,7 @@ function playerFinding(
   };
 }
 
-function confidence(trend: PlayerHistoricalTrend): HistoricalFindingConfidence {
+function confidence(trend: PlayerHistoricalTrend): Confidence {
   if (trend.warnings.length > 0 || trend.value.evidence.warnings.length > 0) {
     return "low";
   }
@@ -265,7 +252,7 @@ function confidence(trend: PlayerHistoricalTrend): HistoricalFindingConfidence {
 }
 
 function evidence(
-  kind: HistoricalFindingEvidence["kind"],
+  kind: EvidenceKind,
   metric: string,
   description: string,
   value?: HistoricalFindingEvidence["value"]
@@ -336,7 +323,7 @@ function totalSkillDelta(series: PlayerSeriesPoint[]): number {
     return 0;
   }
 
-  return skillKeys.reduce((total, skill) => {
+  return SUPPORED_SKILLS.reduce((total, skill) => {
     const before = first.skills[skill];
     const after = last.skills[skill];
 
