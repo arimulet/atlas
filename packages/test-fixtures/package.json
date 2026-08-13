@@ -10,10 +10,6 @@
     "./player-snapshot/missing-external-id.json": "./fixtures/player-snapshot/missing-external-id.json",
     "./player-snapshot/missing-skill.json": "./fixtures/player-snapshot/missing-skill.json",
     "./player-snapshot/extension-sokker-dom-export.json": "./fixtures/player-snapshot/extension-sokker-dom-export.json",
-    "./player-snapshot/sokker-squad-player-box-export.json": "./fixtures/player-snapshot/sokker-squad-player-box-export.json",
-    "./youth-academy-snapshot/valid.json": "./fixtures/youth-academy-snapshot/valid.json",
-    "./youth-academy-snapshot/invalid.json": "./fixtures/youth-academy-snapshot/invalid.json",
-    "./youth-academy-snapshot/accepted-with-warnings.json": "./fixtures/youth-academy-snapshot/accepted-with-warnings.json",
-    "./youth-academy-snapshot/missing-external-id.json": "./fixtures/youth-academy-snapshot/missing-external-id.json"
+    "./player-snapshot/sokker-squad-player-box-export.json": "./fixtures/player-snapshot/sokker-squad-player-box-export.json"
   }
 }

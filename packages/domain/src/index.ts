@@ -71,19 +71,6 @@ export interface YouthPlayerSnapshot {
   status: YouthPlayerStatus;
 }
 
-export interface YouthAcademySnapshot {
-  id: string;
-  clubId: string;
-  snapshotDate: string;
-  importedAt: string;
-  source: string;
-  sourceVersion?: string | null;
-  gameWeek?: number | null;
-  week?: number | null;
-  weeklyInvestment?: Money | null;
-  players: YouthPlayerSnapshot[];
-}
-
 export interface Assumption {
   code: string;
   description: string;

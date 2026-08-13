@@ -1,13 +1,14 @@
 import mongoose from "mongoose";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import validYouthSnapshot from "@atlas/test-fixtures/youth-academy-snapshot/valid.json" with {
+import validSnapshot from "@atlas/test-fixtures/player-snapshot/valid.json" with {
   type: "json"
 };
-import { ClubModel, ImportEventModel, YouthSnapshotModel } from "@atlas/database";
+import { ClubModel, ImportEventModel, SnapshotModel } from "@atlas/database";
 import { getRealYouthAcademyPlanning } from "../src/youthAcademyPlanning/index.js";
-import { importYouthAcademySnapshot } from "../src/youthAcademyImport/index.js";
+import { importPlayerSnapshot } from "../src/playerImport/index.js";
 import { updateClubOperatingSettings } from "../src/clubOperatingSettings/index.js";
+import type { PlayerSnapshotV0 } from "@atlas/contracts";
 
 let mongo: MongoMemoryServer;
 
@@ -21,7 +22,7 @@ describe("Real Youth Academy Planning use case", () => {
     await Promise.all([
       ClubModel.deleteMany({}),
       ImportEventModel.deleteMany({}),
-      YouthSnapshotModel.deleteMany({})
+      SnapshotModel.deleteMany({})
     ]);
   });
 
@@ -31,7 +32,7 @@ describe("Real Youth Academy Planning use case", () => {
   });
 
   it("returns real youth academy planning from the latest youth snapshot and effective settings", async () => {
-    const importResult = await importYouthAcademySnapshot({ payload: validYouthSnapshot });
+    const importResult = await importPlayerSnapshot({ payload: snapshotWithJuniors() });
 
     await updateClubOperatingSettings({
       clubId: importResult.clubId!,
@@ -46,7 +47,7 @@ describe("Real Youth Academy Planning use case", () => {
 
     expect(planning.clubId).toBe(importResult.clubId!);
     expect(planning.snapshotId).toBe(importResult.snapshotId);
-    expect(planning.snapshotDate).toBe("2026-08-08");
+    expect(planning.snapshotDate).toBe("2026-08-05");
     expect(planning.manual.academyInvestment).toBe("ambitious");
     expect(planning.observed.coverage.totalYouthCount).toBe(1);
     expect(planning.derived.players).toHaveLength(1);
@@ -62,11 +63,11 @@ describe("Real Youth Academy Planning use case", () => {
   });
 
   it("classifies a youth ready for promotion when weeksRemaining is 0 or status is ready_for_promotion", async () => {
-    const payload = structuredClone(validYouthSnapshot);
-    payload.academy.players[0]!.weeksRemaining = 0;
-    payload.academy.players[0]!.status = "ready_for_promotion";
+    const payload = snapshotWithJuniors({
+      juniors: [{ weeksRemaining: 0, status: "ready_for_promotion" }]
+    });
 
-    const importResult = await importYouthAcademySnapshot({ payload });
+    const importResult = await importPlayerSnapshot({ payload });
     const planning = await getRealYouthAcademyPlanning(importResult.clubId!);
 
     expect(planning.derived.categoryCounts.ready_for_promotion).toBe(1);
@@ -76,18 +77,18 @@ describe("Real Youth Academy Planning use case", () => {
 
   it("classifies stagnation risk for youth with 16+ weeks in academy and non-high level", async () => {
     // Primera importacion: ancla las semanas iniciales
-    const firstPayload = structuredClone(validYouthSnapshot);
-    firstPayload.academy.players[0]!.weeksRemaining = 20;
-    firstPayload.academy.players[0]!.skill = 5;
-    await importYouthAcademySnapshot({ payload: firstPayload });
+    const firstPayload = snapshotWithJuniors({
+      juniors: [{ weeksRemaining: 20, skill: 5 }]
+    });
+    await importPlayerSnapshot({ payload: firstPayload });
 
     // Segunda importacion: avanza el tiempo
-    const secondPayload = structuredClone(validYouthSnapshot);
+    const secondPayload = snapshotWithJuniors({
+      juniors: [{ weeksRemaining: 4, skill: 5 }]
+    });
     secondPayload.snapshot.snapshotDate = "2026-11-28";
-    secondPayload.academy.players[0]!.weeksRemaining = 4; // 20 - 4 + 1 = 17 semanas
-    secondPayload.academy.players[0]!.skill = 5;
 
-    const importResult = await importYouthAcademySnapshot({ payload: secondPayload });
+    const importResult = await importPlayerSnapshot({ payload: secondPayload });
     const planning = await getRealYouthAcademyPlanning(importResult.clubId!);
 
     expect(planning.derived.categoryCounts.stagnation_risk).toBe(1);
@@ -113,3 +114,25 @@ describe("Real Youth Academy Planning use case", () => {
     expect(planning.warnings[0]?.code).toBe("no_youth_snapshots");
   });
 });
+
+function snapshotWithJuniors(options?: {
+  juniors?: Array<Partial<NonNullable<PlayerSnapshotV0["juniors"]>[number]>>;
+}): PlayerSnapshotV0 {
+  const snapshot = structuredClone(validSnapshot) as PlayerSnapshotV0;
+  const baseJunior: NonNullable<PlayerSnapshotV0["juniors"]>[number] = {
+    playerId: 5001,
+    name: "Matias Cantero",
+    age: 16,
+    initialWeeksRemaining: null,
+    weeksRemaining: 4,
+    skill: 8,
+    status: "in_academy"
+  };
+
+  snapshot.juniors = (options?.juniors ?? [{}]).map((junior) => ({
+    ...baseJunior,
+    ...junior
+  }));
+
+  return snapshot;
+}

@@ -5,6 +5,7 @@ import acceptedWithWarningsSnapshot from "@atlas/test-fixtures/player-snapshot/a
   type: "json"
 };
 import { validatePlayerSnapshotV0 } from "../src/index.js";
+import type { PlayerSnapshotV0 } from "../src/index.js";
 
 describe("atlas.player-snapshot.v0", () => {
   it("accepts valid JSON", () => {
@@ -37,6 +38,26 @@ describe("atlas.player-snapshot.v0", () => {
     const snapshot = structuredClone(validSnapshot);
     snapshot.source.type = "sokker-xml-import";
     snapshot.players[0]!.training.position = 0;
+
+    const result = validatePlayerSnapshotV0(snapshot);
+
+    expect(result.status).toBe("accepted");
+    expect(result.errors).toEqual([]);
+  });
+
+  it("accepts juniors inside the player snapshot", () => {
+    const snapshot = structuredClone(validSnapshot) as PlayerSnapshotV0;
+    snapshot.juniors = [
+      {
+        playerId: 5001,
+        name: "Matias Cantero",
+        age: 16,
+        initialWeeksRemaining: 4,
+        weeksRemaining: 4,
+        skill: 8,
+        status: "in_academy"
+      }
+    ];
 
     const result = validatePlayerSnapshotV0(snapshot);
 

@@ -8,7 +8,6 @@ import {
   sokkerVarsXmlSchema
 } from "@atlas/contracts";
 import type { PlayerSnapshotV0 } from "@atlas/contracts";
-import type { YouthAcademySnapshotV0 } from "@atlas/contracts";
 import type { Money } from "../types.js";
 
 const SEASON_61_BASE_GAME_WEEK = 977;
@@ -50,7 +49,7 @@ export interface CountryReference {
 export interface XmlImportResult {
   clubProfile: ClubObservedProfile;
   players: PlayerSnapshotV0["players"];
-  juniors: YouthAcademySnapshotV0;
+  juniors: NonNullable<PlayerSnapshotV0["juniors"]>;
   source: string;
   importedAt: Date;
   countries: CountryReference[];
@@ -189,43 +188,18 @@ export class SokkerXmlProvider {
     });
 
     const juniorsArray = Array.isArray(juniorsData) ? juniorsData : (juniorsData ? [juniorsData] : []);
-    const juniors: YouthAcademySnapshotV0 = {
-      schemaVersion: "atlas.youth-academy-snapshot.v0",
-      source: {
-        type: "sokker-dom-export", // Assuming we use same type or we can use sokker-xml-import
-        exportedAt: new Date().toISOString(),
-        locale: null
-      },
-      club: {
-        clubId: teamData.teamID,
-        country: teamData.countryID,
-        name: teamData.name,
-        training: {
-          gk: teamData.trainingTypeGk ?? null,
-          def: teamData.trainingTypeDef ?? null,
-          mid: teamData.trainingTypeMid ?? null,
-          att: teamData.trainingTypeAtt ?? null
-        }
-      },
-      snapshot: {
-        snapshotDate: new Date().toISOString().split("T")[0]!,
-        gameWeek: varsData.week,
-        week: normalizeSeasonWeek(varsData.week)
-      },
-      academy: {
-        players: juniorsArray.map(j => {
-          const name = j.surname ? `${j.name} ${j.surname}` : j.name;
-          return {
-            playerId: j.ID,
-            name: name,
-            age: j.age,
-            weeksRemaining: j.weeks, // Assuming weeks means weeks remaining based on XML docs
-            skill: j.skill,
-            status: "in_academy" // Inferred or mapped later
-          };
-        })
-      }
-    };
+    const juniors: NonNullable<PlayerSnapshotV0["juniors"]> = juniorsArray.map(j => {
+      const name = j.surname ? `${j.name} ${j.surname}` : j.name;
+      return {
+        playerId: j.ID,
+        name,
+        age: j.age,
+        initialWeeksRemaining: j.weeks,
+        weeksRemaining: j.weeks,
+        skill: j.skill,
+        status: "in_academy"
+      };
+    });
 
     return {
       clubProfile,

@@ -1,6 +1,11 @@
 import { Types } from "mongoose";
 import { SnapshotModel } from "../models/snapshot.js";
-import type { PersistedPlayerSnapshot, PersistedSnapshot, SnapshotSource } from "./types.js";
+import type {
+  PersistedJuniorSnapshot,
+  PersistedPlayerSnapshot,
+  PersistedSnapshot,
+  SnapshotSource
+} from "./types.js";
 import { ClubId } from "./clubRepository.js";
 
 export interface SaveSnapshotInput {
@@ -13,6 +18,7 @@ export interface SaveSnapshotInput {
   source: SnapshotSource;
   sourceVersion?: string | null;
   players: Array<Omit<PersistedPlayerSnapshot, "id">>;
+  juniors?: Array<Omit<PersistedJuniorSnapshot, "id" | "skill"> & { skill: number }>;
 }
 
 export class MongoSnapshotRepository {
@@ -28,6 +34,15 @@ export class MongoSnapshotRepository {
       sourceVersion: input.sourceVersion ?? null,
       players: input.players.map((player) => ({
         ...player
+      })),
+      juniors: (input.juniors ?? []).map((junior) => ({
+        playerId: junior.playerId,
+        name: junior.name,
+        age: junior.age,
+        initialWeeksRemaining: junior.initialWeeksRemaining ?? null,
+        weeksRemaining: junior.weeksRemaining ?? null,
+        skill: junior.skill,
+        status: junior.status ?? "in_academy"
       }))
     });
 
@@ -92,7 +107,16 @@ function mapSnapshot(snapshot: {
       playmaker?: number | null;
       striker?: number | null;
     };
-
+  }>;
+  juniors?: Array<{
+    _id: Types.ObjectId;
+    playerId: number;
+    name: string;
+    age: number;
+    initialWeeksRemaining?: number | null;
+    weeksRemaining?: number | null;
+    skill?: number | null;
+    status?: "in_academy" | "ready_for_promotion" | "promoted";
   }>;
 }): PersistedSnapshot {
   if (!snapshot.source) {
@@ -137,8 +161,17 @@ function mapSnapshot(snapshot: {
         defender: player.skills.defender ?? null,
         playmaker: player.skills.playmaker ?? null,
         striker: player.skills.striker ?? null
-      },
-
+      }
+    })),
+    juniors: (snapshot.juniors ?? []).map((junior) => ({
+      id: junior._id.toString(),
+      playerId: junior.playerId,
+      name: junior.name,
+      age: junior.age,
+      initialWeeksRemaining: junior.initialWeeksRemaining ?? null,
+      weeksRemaining: junior.weeksRemaining ?? null,
+      skill: junior.skill ?? null,
+      status: junior.status ?? "in_academy"
     }))
   };
 }

@@ -1,4 +1,4 @@
-import { ClubId, Confidence, EvidenceKind, Money, Severity } from "@atlas/application";
+import { ClubId, Confidence, EvidenceKind, Severity } from "@atlas/application";
 
 export type YouthAcademyCategory =
   | "standout_prospect"
@@ -18,7 +18,7 @@ export interface RealYouthAcademyPlanning {
       youthsWithWeeksRemaining: number;
       youthsWithSkill: number;
     };
-    weeklyInvestment: Money | null;
+    source: "snapshot.juniors";
   };
   manual: {
     academyInvestment: string;

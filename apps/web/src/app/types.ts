@@ -676,7 +676,7 @@ export interface RealYouthAcademyPlanning {
       youthsWithWeeksRemaining: number;
       youthsWithSkill: number;
     };
-    weeklyInvestment: { amount: number; currency: string | null } | null;
+    source: "snapshot.juniors";
   };
   manual: {
     academyInvestment: string;

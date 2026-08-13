@@ -1,8 +1,6 @@
 import {
   importPlayerSnapshotMvp,
-  importYouthAcademySnapshot,
   validatePlayerSnapshotImport,
-  validateYouthAcademySnapshotImport,
   SokkerXmlProvider
 } from "@atlas/application";
 import { sokkerSyncRequestSchema } from "../../schemas.js";
@@ -17,20 +15,6 @@ async function importsRoutes(server: FastifyInstance) {
     const result = await importPlayerSnapshotMvp({ payload: request.body });
 
     if (result.importResult.status === "rejected") {
-      reply.code(422);
-    }
-
-    return result;
-  });
-
-  server.post("/youth-academy/validate", async (request) => {
-    return validateYouthAcademySnapshotImport({ payload: request.body });
-  });
-
-  server.post("/youth-academy", async (request, reply) => {
-    const result = await importYouthAcademySnapshot({ payload: request.body });
-
-    if (result.status === "rejected") {
       reply.code(422);
     }
 
@@ -64,26 +48,11 @@ async function importsRoutes(server: FastifyInstance) {
           gameWeek: xmlData.clubProfile.gameWeek,
           week: xmlData.clubProfile.week
         },
-        players: xmlData.players
+        players: xmlData.players,
+        juniors: xmlData.juniors
       };
 
       const playerResult = await importPlayerSnapshotMvp({ payload: playerSnapshotPayload });
-
-      // Import Juniors
-      const youthResult = await importYouthAcademySnapshot({ payload: xmlData.juniors });
-
-      // Merge youth errors/warnings into playerResult so the frontend sees them
-      playerResult.importResult.errors.push(...youthResult.errors);
-      playerResult.importResult.warnings.push(...youthResult.warnings);
-
-      if (youthResult.status === "rejected") {
-        playerResult.importResult.status = "rejected";
-      } else if (
-        youthResult.status === "accepted-with-warnings" &&
-        playerResult.importResult.status === "accepted"
-      ) {
-        playerResult.importResult.status = "accepted-with-warnings";
-      }
 
       if (playerResult.importResult.status === "rejected") {
         reply.code(422);

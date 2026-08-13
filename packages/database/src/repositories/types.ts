@@ -89,6 +89,17 @@ export interface PersistedPlayerSnapshot {
   skills: SnapshotSkillSet;
 }
 
+export interface PersistedJuniorSnapshot {
+  id: string;
+  playerId: number;
+  name: string;
+  age: number;
+  initialWeeksRemaining: number | null;
+  weeksRemaining: number | null;
+  skill: number | null;
+  status: "in_academy" | "ready_for_promotion" | "promoted";
+}
+
 export interface SnapshotSource {
   type: string;
   exportedAt: Date;
@@ -107,6 +118,7 @@ export interface PersistedSnapshot {
   source: SnapshotSource;
   sourceVersion: string | null;
   players: PersistedPlayerSnapshot[];
+  juniors: PersistedJuniorSnapshot[];
 }
 
 export interface PersistedYouthPlayerSnapshot {
@@ -119,22 +131,6 @@ export interface PersistedYouthPlayerSnapshot {
   skill: number | null;
   status: "in_academy" | "ready_for_promotion" | "promoted";
 }
-
-export interface PersistedYouthSnapshot {
-  id: string;
-  clubId: string;
-  schemaVersion: string;
-  snapshotDate: Date;
-  gameWeek: number | null;
-  week: number | null;
-  importedAt: Date;
-  source: SnapshotSource;
-  sourceVersion: string | null;
-  weeklyInvestment: SnapshotMoney | null;
-  players: PersistedYouthPlayerSnapshot[];
-}
-
-export type PersistedYouthAcademySnapshot = PersistedYouthSnapshot;
 
 export interface PersistedCountry {
   id: string;

@@ -76,6 +76,15 @@ export interface NormalizedPlayerSnapshot {
     observedPosition: ObservedPosition | null;
     skills: Record<SkillKey, number | null>;
   }>;
+  juniors: Array<{
+    playerId: number;
+    name: string;
+    age: number;
+    initialWeeksRemaining: number | null;
+    weeksRemaining: number | null;
+    skill: number;
+    status: "in_academy" | "ready_for_promotion" | "promoted";
+  }>;
 }
 
 export interface ValidatePlayerSnapshotInput {

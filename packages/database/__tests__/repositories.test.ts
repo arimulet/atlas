@@ -8,12 +8,9 @@ import {
   MongoImportEventRepository,
   MongoPlayerRepository,
   MongoSnapshotRepository,
-  MongoYouthSnapshotRepository,
   PlayerModel,
   SnapshotModel,
-  YouthSnapshotModel,
-  type SaveSnapshotInput,
-  type SaveYouthSnapshotInput
+  type SaveSnapshotInput
 } from "../src/index.js";
 
 let mongo: MongoMemoryServer;
@@ -22,7 +19,6 @@ const clubs = new MongoClubRepository();
 const importEvents = new MongoImportEventRepository();
 const players = new MongoPlayerRepository();
 const snapshots = new MongoSnapshotRepository();
-const youthSnapshots = new MongoYouthSnapshotRepository();
 
 describe("Mongo repositories", () => {
   beforeAll(async () => {
@@ -35,8 +31,7 @@ describe("Mongo repositories", () => {
       ClubModel.deleteMany({}),
       ImportEventModel.deleteMany({}),
       PlayerModel.deleteMany({}),
-      SnapshotModel.deleteMany({}),
-      YouthSnapshotModel.deleteMany({})
+      SnapshotModel.deleteMany({})
     ]);
   });
 
@@ -68,6 +63,15 @@ describe("Mongo repositories", () => {
       name: "Tomas Alvarez",
       wage: 12000,
       value: 450000
+    });
+    expect(saved.juniors).toHaveLength(1);
+    expect(saved.juniors[0]).toMatchObject({
+      playerId: 5001,
+      name: "Matias Cantero",
+      age: 16,
+      weeksRemaining: 4,
+      skill: 8,
+      status: "in_academy"
     });
   });
 
@@ -265,45 +269,6 @@ describe("Mongo repositories", () => {
       }
     ]);
   });
-
-  it("saves and retrieves a valid youth academy snapshot", async () => {
-    const club = await clubs.save({ clubId: 1, country: 1, name: "River Plate Forever", currency: { name: "ARS", rate: 100 } });
-    const snapshotDate = new Date("2026-08-08T00:00:00.000Z");
-
-    const input: SaveYouthSnapshotInput = buildYouthSnapshotInput({
-      clubId: club.id,
-      snapshotDate
-    });
-
-    const saved = await youthSnapshots.save(input);
-
-    expect(saved.id).toEqual(expect.any(String));
-    expect(saved.clubId).toBe(club.id);
-    expect(saved.schemaVersion).toBe("atlas.youth-academy-snapshot.v0");
-    expect(saved.gameWeek).toBe(1203);
-    expect(saved.week).toBe(6);
-    expect(saved.weeklyInvestment).toEqual({ amount: 15000, currency: "ARS" });
-    expect(saved.players).toHaveLength(1);
-    expect(saved.players[0]).toMatchObject({
-      playerId: 5001,
-      name: "Matias Cantero",
-      age: 16,
-      weeksRemaining: 4,
-      skill: 8,
-      status: "in_academy"
-    });
-
-    const found = await youthSnapshots.findById(saved.id);
-    expect(found?.id).toBe(saved.id);
-
-    const list = await youthSnapshots.listByClub(club.id);
-    expect(list).toHaveLength(1);
-    expect(list[0]?.id).toBe(saved.id);
-
-    const byDate = await youthSnapshots.findByClubAndDate(club.id, snapshotDate);
-    expect(byDate).toHaveLength(1);
-    expect(byDate[0]?.id).toBe(saved.id);
-  });
 });
 
 function buildSnapshotInput(overrides: {
@@ -344,37 +309,15 @@ function buildSnapshotInput(overrides: {
           defender: 5,
           playmaker: 9,
           striker: 4
-        },
-
+        }
       }
-    ]
-  };
-}
-
-function buildYouthSnapshotInput(overrides: {
-  clubId: string;
-  snapshotDate?: Date;
-}): SaveYouthSnapshotInput {
-  return {
-    clubId: overrides.clubId,
-    schemaVersion: "atlas.youth-academy-snapshot.v0",
-    snapshotDate: overrides.snapshotDate ?? new Date("2026-08-08T00:00:00.000Z"),
-    gameWeek: 1203,
-    week: 6,
-    importedAt: new Date("2026-08-08T10:00:00.000Z"),
-    source: {
-      type: "sokker-dom-export",
-      exportedAt: new Date("2026-08-08T10:00:00.000Z"),
-      pageUrl: "https://sokker.org/app/juniors",
-      locale: "es-AR"
-    },
-    weeklyInvestment: { amount: 15000, currency: "ARS" },
-    players: [
+    ],
+    juniors: [
       {
         playerId: 5001,
         name: "Matias Cantero",
         age: 16,
-        initialWeeksRemaining: null,
+        initialWeeksRemaining: 4,
         weeksRemaining: 4,
         skill: 8,
         status: "in_academy"
