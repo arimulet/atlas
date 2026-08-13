@@ -1,7 +1,8 @@
-import {
+﻿import {
   ADVANCED_BASE_EFFICIENCY,
   AGE_TRAINING_FACTOR,
   BASE_TRAINING_AGE,
+  DEFAULT_TALENT_PROFILE_MINIMUM_OBSERVATIONS,
   FIRST_EFFICIENCY_THRESHOLD,
   FIRST_SEGMENT_EFFICIENCY,
   FRIENDLY_MATCH_WEIGHT,
@@ -10,15 +11,23 @@ import {
   MAX_SKILL_LEVEL,
   MAX_TRAINING_EFFICIENCY,
   SKILL_LEVEL_TRAINING_FACTOR,
-  SKILL_TRAINING_BASE_LEVEL
+  SKILL_TRAINING_BASE_LEVEL,
+  SUPPORTED_TRAINING_SKILLS
 } from "./constants.js";
 import type {
+  EffectiveTrainingCyclesSource,
   SkillTrainingCostInput,
   SkillTrainingCostResult,
+  SkillTrainingCostSkill,
   SkillProgressObservation,
   SkillProgressObservationConfidence,
   SkillProgressObservationInput,
   SkillProgressObservationStatus,
+  TalentProfile,
+  TalentProfileEffectiveTrainingCyclesSource,
+  TalentProfileInput,
+  TalentProfileSegment,
+  TalentSkillProfile,
   TrainingEfficiencyInput,
   TrainingEfficiencyResult,
   TrainingPosition,
@@ -28,6 +37,7 @@ import type {
 export {
   AGE_TRAINING_FACTOR,
   BASE_TRAINING_AGE,
+  DEFAULT_TALENT_PROFILE_MINIMUM_OBSERVATIONS,
   MAX_SKILL_LEVEL,
   MAX_TRAINING_EFFICIENCY,
   SKILL_LEVEL_TRAINING_FACTOR,
@@ -43,6 +53,13 @@ export type {
   SkillProgressObservationConfidence,
   SkillProgressObservationInput,
   SkillProgressObservationStatus,
+  TalentProfile,
+  TalentProfileEffectiveTrainingCyclesSource,
+  TalentProfileEvidenceReference,
+  TalentProfileInput,
+  TalentProfileSegment,
+  TalentProfileStatus,
+  TalentSkillProfile,
   TrainingEfficiencyInput,
   TrainingEfficiencyResult,
   TrainingPosition,
@@ -329,5 +346,197 @@ function assertValidTargetSkillLevel(targetSkillLevel: number): void {
     targetSkillLevel > MAX_SKILL_LEVEL
   ) {
     throw new Error(`targetSkillLevel must be an integer between 0 and ${MAX_SKILL_LEVEL}.`);
+  }
+}
+
+export function buildTalentProfile(input: TalentProfileInput): TalentProfile {
+  assertPlayerId(input.playerId);
+
+  const minimumComparableObservations =
+    input.minimumComparableObservations ?? DEFAULT_TALENT_PROFILE_MINIMUM_OBSERVATIONS;
+  assertMinimumComparableObservations(minimumComparableObservations);
+
+  const observations = [...input.observations];
+  for (const observation of observations) {
+    assertObservationPlayer(observation, input.playerId);
+  }
+
+  const skills = createEmptySkillProfiles();
+  for (const skill of SUPPORTED_TRAINING_SKILLS) {
+    const skillObservations = observations.filter((observation) => observation.skill === skill);
+    skills[skill] = buildSkillProfile(skill, skillObservations, minimumComparableObservations);
+  }
+
+  return {
+    playerId: input.playerId,
+    minimumComparableObservations,
+    skills
+  };
+}
+
+function buildSkillProfile(
+  skill: SkillTrainingCostSkill,
+  observations: SkillProgressObservation[],
+  minimumComparableObservations: number
+): TalentSkillProfile {
+  const progressionObservations = observations.filter(isProgressionObservation);
+  const censoredCount = observations.filter(
+    (observation) => observation.status === "censored"
+  ).length;
+  const segments = buildSegments(progressionObservations, minimumComparableObservations);
+
+  return {
+    skill,
+    observations,
+    progressionCount: progressionObservations.length,
+    censoredCount,
+    segments
+  };
+}
+
+function buildSegments(
+  observations: SkillProgressObservation[],
+  minimumComparableObservations: number
+): TalentProfileSegment[] {
+  const grouped = new Map<string, SkillProgressObservation[]>();
+
+  for (const observation of observations) {
+    const key = segmentKey(observation);
+    grouped.set(key, [...(grouped.get(key) ?? []), observation]);
+  }
+
+  return [...grouped.values()]
+    .map((segmentObservations) => buildSegment(segmentObservations, minimumComparableObservations))
+    .sort(compareSegments);
+}
+
+function buildSegment(
+  observations: SkillProgressObservation[],
+  minimumComparableObservations: number
+): TalentProfileSegment {
+  const first = observations[0]!;
+  const calendarWeeks = observations.map((observation) => observation.calendarWeeksPerLevel!);
+  const effectiveWeeks = observations.map((observation) => observation.effectiveWeeksPerLevel!);
+  const confidence = calculateSegmentConfidence(observations, minimumComparableObservations);
+  const comparableObservationCount = observations.length;
+
+  return {
+    targetSkillLevel: first.toLevel,
+    ageAtStart: first.ageAtStart,
+    trainingType: first.trainingType,
+    assignedPosition: first.assignedPosition,
+    comparableObservationCount,
+    evidence: observations.map((observation) => ({
+      startSnapshotId: observation.startSnapshotId,
+      endSnapshotId: observation.endSnapshotId
+    })),
+    calendarWeeksPerLevel: median(calendarWeeks),
+    effectiveWeeksPerLevel: median(effectiveWeeks),
+    effectiveTrainingCyclesSource: effectiveTrainingCyclesSource(observations),
+    status:
+      comparableObservationCount >= minimumComparableObservations
+        ? "sufficient_data"
+        : "insufficient_data",
+    confidence
+  };
+}
+
+function isProgressionObservation(observation: SkillProgressObservation): boolean {
+  return (
+    observation.status === "progressed" &&
+    observation.levelDelta > 0 &&
+    observation.calendarWeeksPerLevel !== null &&
+    observation.effectiveWeeksPerLevel !== null
+  );
+}
+
+function segmentKey(observation: SkillProgressObservation): string {
+  return [
+    observation.toLevel,
+    observation.ageAtStart,
+    observation.trainingType ?? "unknown-training-type",
+    observation.assignedPosition ?? "unknown-position"
+  ].join("|");
+}
+
+function compareSegments(left: TalentProfileSegment, right: TalentProfileSegment): number {
+  return (
+    left.targetSkillLevel - right.targetSkillLevel ||
+    left.ageAtStart - right.ageAtStart ||
+    String(left.trainingType).localeCompare(String(right.trainingType)) ||
+    positionSortValue(left.assignedPosition) - positionSortValue(right.assignedPosition)
+  );
+}
+
+function positionSortValue(position: TrainingPosition | null): number {
+  return position ?? -1;
+}
+
+function calculateSegmentConfidence(
+  observations: SkillProgressObservation[],
+  minimumComparableObservations: number
+): SkillProgressObservationConfidence {
+  if (observations.length < minimumComparableObservations) {
+    return "low";
+  }
+
+  if (
+    observations.length >= 3 &&
+    observations.every((observation) => observation.confidence === "high")
+  ) {
+    return "high";
+  }
+
+  if (observations.every((observation) => observation.confidence !== "low")) {
+    return "medium";
+  }
+
+  return "low";
+}
+
+function effectiveTrainingCyclesSource(
+  observations: SkillProgressObservation[]
+): TalentProfileEffectiveTrainingCyclesSource {
+  const sources = new Set<EffectiveTrainingCyclesSource>(
+    observations.map((observation) => observation.effectiveTrainingCyclesSource)
+  );
+
+  return sources.size === 1 ? [...sources][0]! : "mixed";
+}
+
+function median(values: number[]): number {
+  const ordered = [...values].sort((left, right) => left - right);
+  const middle = Math.floor(ordered.length / 2);
+
+  return ordered.length % 2 === 0
+    ? (ordered[middle - 1]! + ordered[middle]!) / 2
+    : ordered[middle]!;
+}
+
+function createEmptySkillProfiles(): Record<SkillTrainingCostSkill, TalentSkillProfile> {
+  const skills = {} as Record<SkillTrainingCostSkill, TalentSkillProfile>;
+
+  for (const skill of SUPPORTED_TRAINING_SKILLS) {
+    skills[skill] = {
+      skill,
+      observations: [],
+      progressionCount: 0,
+      censoredCount: 0,
+      segments: []
+    };
+  }
+
+  return skills;
+}
+
+function assertMinimumComparableObservations(value: number): void {
+  if (!Number.isInteger(value) || value <= 0) {
+    throw new Error("minimumComparableObservations must be a positive integer.");
+  }
+}
+
+function assertObservationPlayer(observation: SkillProgressObservation, playerId: number): void {
+  if (observation.playerId !== playerId) {
+    throw new Error("All observations must belong to the profile playerId.");
   }
 }

@@ -9,10 +9,12 @@ import {
   calculateEquivalentTrainingMinutes,
   calculateFormationTrainingEfficiency,
   calculateRelativeTrainingSpeed,
+  buildTalentProfile,
   calculateSkillProgressObservation,
   calculateSkillTrainingCostFactor,
   calculateSkillTrainingSpeedFactor,
   calculateTrainingEfficiency,
+  DEFAULT_TALENT_PROFILE_MINIMUM_OBSERVATIONS,
   type SkillProgressObservationInput
 } from "../src/index.js";
 
@@ -408,5 +410,168 @@ describe("skill progress observation", () => {
     expect(() =>
       calculateSkillProgressObservation({ ...baseInput, skill: "stamina" as never })
     ).toThrow("skill must be one of");
+  });
+});
+
+function observation(overrides: Partial<SkillProgressObservationInput> = {}) {
+  const talentBaseInput: SkillProgressObservationInput = {
+    ...baseInput,
+    trainingEfficiencies: undefined
+  };
+
+  return calculateSkillProgressObservation({ ...talentBaseInput, ...overrides });
+}
+
+describe("talent profile", () => {
+  it("uses two comparable observations as the default minimum", () => {
+    const profile = buildTalentProfile({ playerId: 42, observations: [] });
+
+    expect(DEFAULT_TALENT_PROFILE_MINIMUM_OBSERVATIONS).toBe(2);
+    expect(profile.minimumComparableObservations).toBe(2);
+    expect(profile.skills.pace.segments).toEqual([]);
+    expect(profile.skills.scoring.observations).toEqual([]);
+  });
+
+  it("groups observations by skill and comparable context", () => {
+    const profile = buildTalentProfile({
+      playerId: 42,
+      observations: [
+        observation({ calendarCycles: 3, startSnapshotId: "s-1", endSnapshotId: "s-2" }),
+        observation({ calendarCycles: 5, startSnapshotId: "s-2", endSnapshotId: "s-3" }),
+        observation({
+          skill: "scoring",
+          startSnapshotId: "s-3",
+          endSnapshotId: "s-4"
+        }),
+        observation({
+          assignedPosition: 1,
+          startSnapshotId: "s-4",
+          endSnapshotId: "s-5"
+        })
+      ]
+    });
+
+    expect(profile.skills.pace.observations).toHaveLength(3);
+    expect(profile.skills.pace.segments).toHaveLength(2);
+    expect(profile.skills.scoring.progressionCount).toBe(1);
+    expect(profile.skills.scoring.segments[0]?.targetSkillLevel).toBe(9);
+  });
+
+  it("summarizes comparable observations using medians", () => {
+    const profile = buildTalentProfile({
+      playerId: 42,
+      observations: [
+        observation({ calendarCycles: 3, startSnapshotId: "s-1", endSnapshotId: "s-2" }),
+        observation({ calendarCycles: 5, startSnapshotId: "s-2", endSnapshotId: "s-3" })
+      ]
+    });
+
+    expect(profile.skills.pace.segments).toHaveLength(1);
+    expect(profile.skills.pace.segments[0]).toMatchObject({
+      targetSkillLevel: 9,
+      ageAtStart: 18,
+      comparableObservationCount: 2,
+      calendarWeeksPerLevel: 4,
+      effectiveWeeksPerLevel: 4,
+      effectiveTrainingCyclesSource: "assumed-full-effectiveness",
+      status: "sufficient_data",
+      confidence: "medium",
+      evidence: [
+        { startSnapshotId: "s-1", endSnapshotId: "s-2" },
+        { startSnapshotId: "s-2", endSnapshotId: "s-3" }
+      ]
+    });
+  });
+
+  it("keeps censored observations without using them as progression speed", () => {
+    const profile = buildTalentProfile({
+      playerId: 42,
+      observations: [
+        observation({ fromLevel: 8, toLevel: 8 }),
+        observation({ startSnapshotId: "s-2", endSnapshotId: "s-3" })
+      ]
+    });
+
+    expect(profile.skills.pace.censoredCount).toBe(1);
+    expect(profile.skills.pace.progressionCount).toBe(1);
+    expect(profile.skills.pace.segments[0]?.comparableObservationCount).toBe(1);
+    expect(profile.skills.pace.segments[0]?.status).toBe("insufficient_data");
+    expect(profile.skills.pace.segments[0]?.calendarWeeksPerLevel).toBe(3);
+  });
+
+  it("keeps effective training source mixed when observations combine measured and assumed cycles", () => {
+    const profile = buildTalentProfile({
+      playerId: 42,
+      observations: [
+        observation({
+          trainingEfficiencies: [100, 100, 100],
+          startSnapshotId: "s-1",
+          endSnapshotId: "s-2"
+        }),
+        observation({ startSnapshotId: "s-2", endSnapshotId: "s-3" })
+      ]
+    });
+
+    expect(profile.skills.pace.segments[0]?.effectiveTrainingCyclesSource).toBe("mixed");
+  });
+
+  it("preserves age and target level as separate profile segments", () => {
+    const profile = buildTalentProfile({
+      playerId: 42,
+      observations: [
+        observation({ startSnapshotId: "s-1", endSnapshotId: "s-2" }),
+        observation({
+          ageAtStart: 19,
+          ageAtEnd: 19.1,
+          startSnapshotId: "s-2",
+          endSnapshotId: "s-3"
+        }),
+        observation({
+          fromLevel: 9,
+          toLevel: 10,
+          ageAtStart: 19,
+          ageAtEnd: 19.1,
+          startSnapshotId: "s-3",
+          endSnapshotId: "s-4"
+        })
+      ]
+    });
+
+    expect(
+      profile.skills.pace.segments.map((segment) => [segment.targetSkillLevel, segment.ageAtStart])
+    ).toEqual([
+      [9, 18],
+      [9, 19],
+      [10, 19]
+    ]);
+  });
+
+  it("rejects observations from another player", () => {
+    expect(() =>
+      buildTalentProfile({
+        playerId: 42,
+        observations: [observation({ playerId: 43 })]
+      })
+    ).toThrow("All observations must belong to the profile playerId.");
+  });
+
+  it("allows a custom minimum observation threshold", () => {
+    const profile = buildTalentProfile({
+      playerId: 42,
+      minimumComparableObservations: 3,
+      observations: [
+        observation({ startSnapshotId: "s-1", endSnapshotId: "s-2" }),
+        observation({ startSnapshotId: "s-2", endSnapshotId: "s-3" })
+      ]
+    });
+
+    expect(profile.skills.pace.segments[0]?.status).toBe("insufficient_data");
+    expect(profile.skills.pace.segments[0]?.confidence).toBe("low");
+  });
+
+  it("rejects an invalid minimum observation threshold", () => {
+    expect(() =>
+      buildTalentProfile({ playerId: 42, observations: [], minimumComparableObservations: 0 })
+    ).toThrow("minimumComparableObservations must be a positive integer.");
   });
 });
