@@ -45,6 +45,23 @@ const playerSnapshotSchema = new Schema(
   { _id: true }
 );
 
+const juniorSnapshotSchema = new Schema(
+  {
+    playerId: { type: Number, required: true, min: 1 },
+    name: { type: String, required: true },
+    age: { type: Number, required: true, min: 1 },
+    initialWeeksRemaining: { type: Number, default: null },
+    weeksRemaining: { type: Number, default: null },
+    skill: { type: Number, required: true, min: 0 },
+    status: {
+      type: String,
+      enum: ["in_academy", "ready_for_promotion", "promoted"],
+      default: "in_academy"
+    }
+  },
+  { _id: true }
+);
+
 const snapshotSchema = new Schema(
   {
     clubId: { type: Schema.Types.ObjectId, ref: "Club", required: true, index: true },
@@ -63,7 +80,8 @@ const snapshotSchema = new Schema(
       locale: { type: String, default: null }
     },
     sourceVersion: { type: String, default: null },
-    players: [playerSnapshotSchema]
+    players: [playerSnapshotSchema],
+    juniors: [juniorSnapshotSchema]
   },
   { timestamps: true }
 );

@@ -54,7 +54,7 @@ export const YouthAcademyPlanningPanel = ({
       <Section
         title="Escuela Juvenil de Sokker"
         subtitle="Formacion de juveniles fuera del plantel senior"
-        description="Este modulo analiza la cantera real del club: semanas en la escuela, proyeccion de ascenso al primer equipo, estimacion de talento y costo de inversion formativa."
+        description="Este modulo analiza la cantera real del club: semanas en la escuela, proyeccion de ascenso al primer equipo y estimacion de talento."
       />
 
       <section className="economy-columns">
@@ -76,14 +76,7 @@ export const YouthAcademyPlanningPanel = ({
               label="Con skill"
               value={observed.coverage.youthsWithSkill.toString()}
             />
-            <SummaryItem
-              label="Inversion semanal"
-              value={
-                observed.weeklyInvestment
-                  ? `${observed.weeklyInvestment.amount} ${observed.weeklyInvestment.currency ?? ""}`
-                  : "No informada"
-              }
-            />
+            <SummaryItem label="Origen" value={observed.source} />
           </dl>
         </Section>
 

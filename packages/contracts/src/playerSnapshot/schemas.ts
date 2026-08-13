@@ -19,6 +19,16 @@ export const skillSetSchema = z.object({
   striker: z.number().finite().nonnegative().nullable().optional()
 });
 
+export const juniorSnapshotItemSchema = z.object({
+  playerId: z.number().int().positive(),
+  name: z.string().min(1),
+  age: z.number().int().positive(),
+  initialWeeksRemaining: z.number().int().nonnegative().nullable().optional(),
+  weeksRemaining: z.number().int().nonnegative().nullable().optional(),
+  skill: z.number().finite().nonnegative(),
+  status: z.enum(["in_academy", "ready_for_promotion", "promoted"]).nullable().optional()
+});
+
 export const playerSnapshotV0Schema = z.object({
   schemaVersion: z.literal(PLAYER_SNAPSHOT_SCHEMA_VERSION),
   source: z.object({
@@ -63,5 +73,6 @@ export const playerSnapshotV0Schema = z.object({
       observedPosition: observedPositionSchema.nullable().optional(),
       skills: skillSetSchema
     })
-  )
+  ),
+  juniors: z.array(juniorSnapshotItemSchema).optional()
 });

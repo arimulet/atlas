@@ -1,4 +1,4 @@
-import { MongoClubRepository, MongoYouthSnapshotRepository } from "@atlas/database";
+import { MongoClubRepository, MongoSnapshotRepository } from "@atlas/database";
 import type {
   RealYouthAcademyPlayerPlan,
   RealYouthAcademyPlanning,
@@ -11,7 +11,7 @@ import type {
 import { ClubId, buildClubOperatingSettings } from "@atlas/application";
 
 const clubRepository = new MongoClubRepository();
-const youthSnapshotRepository = new MongoYouthSnapshotRepository();
+const snapshotRepository = new MongoSnapshotRepository();
 
 export const getRealYouthAcademyPlanning = async (
   clubId: ClubId
@@ -25,15 +25,16 @@ export const getRealYouthAcademyPlanning = async (
   const settings = buildClubOperatingSettings(club);
   const academyInvestment = settings.effective.preferences["academy.investment"] ?? "balanced";
 
-  const snapshots = await youthSnapshotRepository.listByClub(clubId);
-  const latest = snapshots.at(-1) ?? null;
+  const snapshots = await snapshotRepository.listByClub(clubId);
+  const snapshotsWithJuniors = snapshots.filter((snapshot) => snapshot.juniors.length > 0);
+  const latest = snapshotsWithJuniors.at(-1) ?? null;
 
   if (!latest) {
     return buildEmptyPlanning(clubId, academyInvestment);
   }
 
   const warnings: YouthAcademyWarning[] = [];
-  const observedPlayers: YouthAcademyObservedPlayer[] = latest.players.map((p) => {
+  const observedPlayers: YouthAcademyObservedPlayer[] = latest.juniors.map((p) => {
     return {
       id: p.id,
       playerId: p.playerId,
@@ -60,12 +61,14 @@ export const getRealYouthAcademyPlanning = async (
     categoryCounts[plan.category]++;
   }
 
-  if (snapshots.length < 2) {
+  if (snapshotsWithJuniors.length < 2) {
     warnings.push({
       code: "insufficient_youth_snapshots",
       message:
         "Hay pocos snapshots de cantera; las proyecciones de promocion dependen de los datos observados actuales.",
-      evidence: [{ kind: "observed", label: "Snapshots de cantera", value: snapshots.length }]
+      evidence: [
+        { kind: "observed", label: "Snapshots de cantera", value: snapshotsWithJuniors.length }
+      ]
     });
   }
 
@@ -80,7 +83,7 @@ export const getRealYouthAcademyPlanning = async (
         youthsWithWeeksRemaining: observedPlayers.filter((p) => p.weeksRemaining !== null).length,
         youthsWithSkill: observedPlayers.length
       },
-      weeklyInvestment: latest.weeklyInvestment
+      source: "snapshot.juniors"
     },
     manual: {
       academyInvestment
@@ -108,7 +111,7 @@ function buildEmptyPlanning(
         youthsWithWeeksRemaining: 0,
         youthsWithSkill: 0
       },
-      weeklyInvestment: null
+      source: "snapshot.juniors"
     },
     manual: {
       academyInvestment

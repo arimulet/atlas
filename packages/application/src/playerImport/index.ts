@@ -101,6 +101,23 @@ export const importPlayerSnapshot = async (
       })
     )
   );
+
+  const history = await snapshotRepository.listByClub(club.id);
+  const previousSnapshot = history.at(-1);
+
+  if (previousSnapshot) {
+    for (const junior of normalized.juniors) {
+      const previousJunior = previousSnapshot.juniors.find(
+        (snapshotJunior) =>
+          snapshotJunior.playerId === junior.playerId || snapshotJunior.name === junior.name
+      );
+
+      if (previousJunior?.initialWeeksRemaining != null) {
+        junior.initialWeeksRemaining = previousJunior.initialWeeksRemaining;
+      }
+    }
+  }
+
   const snapshot = await snapshotRepository.save({
     clubId: club.id,
     schemaVersion: normalized.schemaVersion,
@@ -121,7 +138,8 @@ export const importPlayerSnapshot = async (
       skills: player.skills,
 
       training: player.training
-    }))
+    })),
+    juniors: normalized.juniors
   });
 
   await importEventRepository.attachResult(importEvent.id, {
@@ -272,7 +290,16 @@ function normalizePlayerSnapshot(snapshot: PlayerSnapshotV0): NormalizedPlayerSn
       gameWeek: snapshot.snapshot.gameWeek ?? null,
       week: snapshot.snapshot.week ?? null
     },
-    players: snapshot.players.map(normalizePlayer)
+    players: snapshot.players.map(normalizePlayer),
+    juniors: (snapshot.juniors ?? []).map((junior) => ({
+      playerId: junior.playerId,
+      name: junior.name.trim(),
+      age: junior.age,
+      initialWeeksRemaining: junior.initialWeeksRemaining ?? junior.weeksRemaining ?? null,
+      weeksRemaining: junior.weeksRemaining ?? null,
+      skill: junior.skill ?? 0,
+      status: junior.status ?? "in_academy"
+    }))
   };
 }
 
