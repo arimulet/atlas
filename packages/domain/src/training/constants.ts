@@ -1,4 +1,4 @@
-import type { SkillTrainingCostSkill } from "./types.js";
+﻿import type { SkillTrainingCostSkill } from "./types.js";
 
 export const BASE_TRAINING_AGE = 16;
 export const AGE_TRAINING_FACTOR = 1.094;
@@ -13,6 +13,7 @@ export const ADVANCED_BASE_EFFICIENCY = 50;
 export const SKILL_LEVEL_TRAINING_FACTOR = 1.094;
 export const MAX_SKILL_LEVEL = 18;
 export const MAX_TRAINING_EFFICIENCY = 100;
+export const BASE_TRAINING_POINTS = 47;
 export const DEFAULT_TALENT_PROFILE_MINIMUM_OBSERVATIONS = 2;
 
 export const SUPPORTED_TRAINING_SKILLS: readonly SkillTrainingCostSkill[] = [

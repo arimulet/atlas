@@ -115,3 +115,39 @@ export interface TalentProfile {
   minimumComparableObservations: number;
   skills: Record<SkillTrainingCostSkill, TalentSkillProfile>;
 }
+
+export interface RequiredTrainingPointsInput {
+  talent: number;
+  age: number;
+  skill: SkillTrainingCostSkill;
+  targetSkillLevel: number;
+}
+
+export interface RequiredTrainingPointsResult {
+  talent: number;
+  age: number;
+  skill: SkillTrainingCostSkill;
+  targetSkillLevel: number;
+  ageCostFactor: number;
+  skillCostFactor: number;
+  baseTrainingPoints: number;
+  requiredTrainingPoints: number;
+}
+
+export interface TalentEstimationInput {
+  observedTrainingPoints: number;
+  age: number;
+  skill: SkillTrainingCostSkill;
+  targetSkillLevel: number;
+}
+
+export interface TalentEstimationResult {
+  observedTrainingPoints: number;
+  age: number;
+  skill: SkillTrainingCostSkill;
+  targetSkillLevel: number;
+  ageCostFactor: number;
+  skillCostFactor: number;
+  baseTrainingPoints: number;
+  estimatedTalent: number;
+}
