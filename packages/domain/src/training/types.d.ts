@@ -72,3 +72,46 @@ export interface SkillProgressObservation {
   endSnapshotId: string;
   confidence: SkillProgressObservationConfidence;
 }
+
+export type TalentProfileStatus = "sufficient_data" | "insufficient_data";
+
+export type TalentProfileEffectiveTrainingCyclesSource = EffectiveTrainingCyclesSource | "mixed";
+
+export interface TalentProfileInput {
+  playerId: number;
+  observations: readonly SkillProgressObservation[];
+  minimumComparableObservations?: number;
+}
+
+export interface TalentProfileEvidenceReference {
+  startSnapshotId: string;
+  endSnapshotId: string;
+}
+
+export interface TalentProfileSegment {
+  targetSkillLevel: number;
+  ageAtStart: number;
+  trainingType: TrainingType | null;
+  assignedPosition: TrainingPosition | null;
+  comparableObservationCount: number;
+  evidence: TalentProfileEvidenceReference[];
+  calendarWeeksPerLevel: number;
+  effectiveWeeksPerLevel: number;
+  effectiveTrainingCyclesSource: TalentProfileEffectiveTrainingCyclesSource;
+  status: TalentProfileStatus;
+  confidence: SkillProgressObservationConfidence;
+}
+
+export interface TalentSkillProfile {
+  skill: SkillTrainingCostSkill;
+  observations: SkillProgressObservation[];
+  progressionCount: number;
+  censoredCount: number;
+  segments: TalentProfileSegment[];
+}
+
+export interface TalentProfile {
+  playerId: number;
+  minimumComparableObservations: number;
+  skills: Record<SkillTrainingCostSkill, TalentSkillProfile>;
+}

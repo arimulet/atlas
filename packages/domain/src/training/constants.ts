@@ -13,6 +13,16 @@ export const ADVANCED_BASE_EFFICIENCY = 50;
 export const SKILL_LEVEL_TRAINING_FACTOR = 1.094;
 export const MAX_SKILL_LEVEL = 18;
 export const MAX_TRAINING_EFFICIENCY = 100;
+export const DEFAULT_TALENT_PROFILE_MINIMUM_OBSERVATIONS = 2;
+
+export const SUPPORTED_TRAINING_SKILLS: readonly SkillTrainingCostSkill[] = [
+  "pace",
+  "scoring",
+  "defending",
+  "technique",
+  "playmaking",
+  "passing"
+];
 
 export const SKILL_TRAINING_BASE_LEVEL: Readonly<Record<SkillTrainingCostSkill, number>> = {
   pace: 4,
