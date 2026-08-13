@@ -2,8 +2,8 @@
 @use "@atlas/web/app/styles/components.scss";
 
 :root {
-  color: #1f2933;
-  background: #f3f5f4;
+  color: var(--text-primary);
+  background: var(--bg-primary);
   font-family:
     Inter,
     ui-sans-serif,

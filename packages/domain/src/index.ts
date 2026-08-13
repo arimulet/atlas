@@ -99,3 +99,4 @@ export * from "./historicalTrends.js";
 export * from "./snapshotComparison.js";
 export * from "./trainingEfficiency.js";
 export * from "./trainingAge.js";
+export * from "./skillTrainingCost.js";
