@@ -1,4 +1,4 @@
-export type TrainingType = "formation" | "advanced";
+﻿export type TrainingType = "formation" | "advanced";
 
 export interface TrainingEfficiencyInput {
   officialMinutes: number;
@@ -150,4 +150,66 @@ export interface TalentEstimationResult {
   skillCostFactor: number;
   baseTrainingPoints: number;
   estimatedTalent: number;
+}
+
+export type TrainingSkillLevels = Partial<Record<SkillTrainingCostSkill, number>>;
+
+export type TrainingSkillLevels = Partial<Record<SkillTrainingCostSkill, number>>;
+
+export interface TrainingWeekInput {
+  playerId: number;
+  week: number;
+  skill: SkillTrainingCostSkill;
+  officialMinutes: number;
+  friendlyMinutes: number;
+  advancedTraining: boolean;
+  playerAge: number;
+  skillLevelBefore: number;
+  skillLevelAfter: number;
+  skillLevelsBefore?: TrainingSkillLevels;
+  skillLevelsAfter?: TrainingSkillLevels;
+}
+
+export interface TrainingWeek extends Omit<
+  TrainingWeekInput,
+  "skillLevelsBefore" | "skillLevelsAfter"
+> {
+  skillLevelsBefore: TrainingSkillLevels;
+  skillLevelsAfter: TrainingSkillLevels;
+  trainingEfficiency: number;
+  trainingPoints: number;
+}
+export type SkillUpObservationCompleteness =
+  "complete" | "left-censored" | "missing-weeks" | "ambiguous";
+
+export interface SkillUp {
+  playerId: number;
+  skill: SkillTrainingCostSkill;
+  fromLevel: number;
+  toLevel: number;
+  levelDelta: number;
+  week: number;
+}
+
+export interface TrainingHistory {
+  playerId: number;
+  weeks: readonly TrainingWeek[];
+}
+
+export interface SkillUpObservation {
+  playerId: number;
+  skill: SkillTrainingCostSkill;
+  fromLevel: number;
+  toLevel: number;
+  levelDelta: number;
+  startWeek: number;
+  popWeek: number;
+  accumulatedTrainingPoints: number;
+  weeksObserved: number;
+  weeksWithRelevantTraining: number;
+  ageAtStart: number;
+  ageAtPop: number;
+  completeness: SkillUpObservationCompleteness;
+  eligibleForTalentEstimation: boolean;
+  trainingWeeks: readonly TrainingWeek[];
 }
