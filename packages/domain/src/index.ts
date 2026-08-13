@@ -3,7 +3,7 @@ export type DataTraceKind = "observed" | "derived" | "assumed" | "recommended";
 export type AvailabilityStatus = "available" | "injured" | "suspended" | "unknown";
 
 export type PlayerRole =
-  | "goalkeeper" | "defender" | "midfielder" | "winger" | "striker" | "trainee" | "undefined";
+  "goalkeeper" | "defender" | "midfielder" | "winger" | "striker" | "trainee" | "undefined";
 
 export type ObservedPosition = Exclude<PlayerRole, "trainee" | "undefined">;
 
@@ -55,7 +55,6 @@ export interface PlayerSnapshot {
   availabilityStatus?: AvailabilityStatus;
   observedPosition?: ObservedPosition | null;
   skills: SkillSet;
-
 }
 
 export type YouthPlayerStatus = "in_academy" | "ready_for_promotion" | "promoted";
@@ -98,3 +97,4 @@ export * from "./diagnostics.js";
 export * from "./historicalFindings.js";
 export * from "./historicalTrends.js";
 export * from "./snapshotComparison.js";
+export * from "./trainingEfficiency.js";
