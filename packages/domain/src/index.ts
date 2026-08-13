@@ -97,6 +97,4 @@ export * from "./diagnostics.js";
 export * from "./historicalFindings.js";
 export * from "./historicalTrends.js";
 export * from "./snapshotComparison.js";
-export * from "./trainingEfficiency.js";
-export * from "./trainingAge.js";
-export * from "./skillTrainingCost.js";
+export * from "./training/index.js";
