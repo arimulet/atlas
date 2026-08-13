@@ -98,3 +98,4 @@ export * from "./historicalFindings.js";
 export * from "./historicalTrends.js";
 export * from "./snapshotComparison.js";
 export * from "./trainingEfficiency.js";
+export * from "./trainingAge.js";
