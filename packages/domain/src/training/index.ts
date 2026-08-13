@@ -33,6 +33,13 @@ import type {
   TrainingEfficiencyResult,
   TrainingPosition,
   TrainingType,
+  TrainingSkillLevels,
+  TrainingHistory,
+  TrainingWeek,
+  TrainingWeekInput,
+  SkillUp,
+  SkillUpObservation,
+  SkillUpObservationCompleteness,
   RequiredTrainingPointsInput,
   RequiredTrainingPointsResult,
   TalentEstimationInput,
@@ -70,6 +77,13 @@ export type {
   TrainingEfficiencyResult,
   TrainingPosition,
   TrainingType,
+  TrainingSkillLevels,
+  TrainingHistory,
+  TrainingWeek,
+  TrainingWeekInput,
+  SkillUp,
+  SkillUpObservation,
+  SkillUpObservationCompleteness,
   RequiredTrainingPointsInput,
   RequiredTrainingPointsResult,
   TalentEstimationInput,
@@ -165,6 +179,273 @@ export function calculateSkillTrainingSpeedFactor(input: SkillTrainingCostInput)
   return 1 / calculateSkillTrainingCostFactor(input).costFactor;
 }
 
+export function calculateWeeklyTrainingPoints(trainingEfficiency: number): number {
+  assertEfficiency(trainingEfficiency, "trainingEfficiency");
+
+  return trainingEfficiency;
+}
+
+export function createTrainingWeek(input: TrainingWeekInput): TrainingWeek {
+  assertPlayerId(input.playerId);
+  assertPositiveInteger(input.week, "week");
+  assertSupportedSkill(input.skill);
+  assertNonNegativeFinite(input.officialMinutes, "officialMinutes");
+  assertNonNegativeFinite(input.friendlyMinutes, "friendlyMinutes");
+  assertBoolean(input.advancedTraining, "advancedTraining");
+  assertAge(input.playerAge, "playerAge");
+  assertSkillLevel(input.skillLevelBefore, "skillLevelBefore");
+  assertSkillLevel(input.skillLevelAfter, "skillLevelAfter");
+
+  const efficiency = calculateTrainingEfficiency({
+    officialMinutes: input.officialMinutes,
+    friendlyMinutes: input.friendlyMinutes,
+    advancedTraining: input.advancedTraining
+  }).trainingEfficiency;
+
+  const skillLevelsBefore = Object.freeze(
+    normalizeSkillLevels(input.skillLevelsBefore, input.skill, input.skillLevelBefore)
+  );
+  const skillLevelsAfter = Object.freeze(
+    normalizeSkillLevels(input.skillLevelsAfter, input.skill, input.skillLevelAfter)
+  );
+
+  return Object.freeze({
+    playerId: input.playerId,
+    week: input.week,
+    skill: input.skill,
+    officialMinutes: input.officialMinutes,
+    friendlyMinutes: input.friendlyMinutes,
+    advancedTraining: input.advancedTraining,
+    playerAge: input.playerAge,
+    skillLevelBefore: input.skillLevelBefore,
+    skillLevelAfter: input.skillLevelAfter,
+    skillLevelsBefore,
+    skillLevelsAfter,
+    trainingEfficiency: efficiency,
+    trainingPoints: calculateWeeklyTrainingPoints(efficiency)
+  });
+}
+
+export function createTrainingHistory(
+  playerId: number,
+  weeks: readonly TrainingWeek[] = []
+): TrainingHistory {
+  assertPlayerId(playerId);
+
+  let history: TrainingHistory = { playerId, weeks: [] };
+  for (const week of weeks) {
+    history = addTrainingWeek(history, week);
+  }
+
+  return history;
+}
+
+export function addTrainingWeek(history: TrainingHistory, week: TrainingWeek): TrainingHistory {
+  assertPlayerId(history.playerId);
+  assertTrainingWeek(week);
+
+  if (week.playerId !== history.playerId) {
+    throw new Error("Training week playerId must match the history playerId.");
+  }
+
+  if (history.weeks.some((existingWeek) => existingWeek.week === week.week)) {
+    throw new Error(`Training week ${week.week} already exists in the history.`);
+  }
+
+  return {
+    playerId: history.playerId,
+    weeks: [...history.weeks, week].sort(compareTrainingWeeks)
+  };
+}
+
+export function getTrainingWeeks(history: TrainingHistory): TrainingWeek[] {
+  return [...history.weeks].sort(compareTrainingWeeks);
+}
+
+export function getTrainingWeeksBetween(
+  history: TrainingHistory,
+  startWeek: number,
+  endWeek: number
+): TrainingWeek[] {
+  assertPositiveInteger(startWeek, "startWeek");
+  assertPositiveInteger(endWeek, "endWeek");
+
+  if (endWeek < startWeek) {
+    throw new Error("endWeek must be greater than or equal to startWeek.");
+  }
+
+  return getTrainingWeeks(history).filter((week) => week.week >= startWeek && week.week <= endWeek);
+}
+
+export function getTrainingWeeksForSkill(
+  history: TrainingHistory,
+  skill: SkillTrainingCostSkill
+): TrainingWeek[] {
+  assertSupportedSkill(skill);
+
+  return getTrainingWeeks(history).filter((week) => week.skill === skill);
+}
+
+export function detectSkillUps(history: TrainingHistory): SkillUp[] {
+  const weeks = getTrainingWeeks(history);
+  const skillUps: SkillUp[] = [];
+
+  for (let index = 1; index < weeks.length; index += 1) {
+    const previousWeek = weeks[index - 1]!;
+    const currentWeek = weeks[index]!;
+
+    for (const skill of SUPPORTED_TRAINING_SKILLS) {
+      const fromLevel = previousSkillLevel(previousWeek, skill);
+      const toLevel = previousSkillLevel(currentWeek, skill);
+
+      if (fromLevel !== null && toLevel !== null && toLevel > fromLevel) {
+        skillUps.push({
+          playerId: history.playerId,
+          skill,
+          fromLevel,
+          toLevel,
+          levelDelta: toLevel - fromLevel,
+          week: currentWeek.week
+        });
+      }
+    }
+  }
+
+  return skillUps;
+}
+
+export function buildSkillUpObservations(history: TrainingHistory): SkillUpObservation[] {
+  const weeks = getTrainingWeeks(history);
+  const skillUps = detectSkillUps(history);
+  const previousPopBySkill = new Map<SkillTrainingCostSkill, SkillUp>();
+  const observations: SkillUpObservation[] = [];
+
+  for (const skillUp of skillUps) {
+    const previousPop = previousPopBySkill.get(skillUp.skill);
+    const accumulationStart = previousPop?.week ?? weeks[0]?.week;
+
+    if (accumulationStart === undefined) {
+      continue;
+    }
+
+    const firstAccumulationWeek = previousPop ? accumulationStart + 1 : accumulationStart;
+    const trainingWeeks = weeks.filter(
+      (week) => week.week >= firstAccumulationWeek && week.week <= skillUp.week
+    );
+    const hasMissingWeeks = hasMissingWeeksBetween(
+      trainingWeeks,
+      firstAccumulationWeek,
+      skillUp.week
+    );
+    const completeness = determineCompleteness({
+      previousPop,
+      levelDelta: skillUp.levelDelta,
+      hasMissingWeeks
+    });
+    const relevantWeeks = trainingWeeks.filter((week) => week.skill === skillUp.skill);
+
+    observations.push({
+      playerId: skillUp.playerId,
+      skill: skillUp.skill,
+      fromLevel: skillUp.fromLevel,
+      toLevel: skillUp.toLevel,
+      levelDelta: skillUp.levelDelta,
+      startWeek: accumulationStart,
+      popWeek: skillUp.week,
+      accumulatedTrainingPoints: relevantWeeks.reduce(
+        (total, week) => total + week.trainingPoints,
+        0
+      ),
+      weeksObserved: trainingWeeks.length,
+      weeksWithRelevantTraining: relevantWeeks.length,
+      ageAtStart: trainingWeeks[0]?.playerAge ?? 0,
+      ageAtPop: trainingWeeks[trainingWeeks.length - 1]?.playerAge ?? 0,
+      completeness,
+      eligibleForTalentEstimation: completeness === "complete",
+      trainingWeeks
+    });
+
+    previousPopBySkill.set(skillUp.skill, skillUp);
+  }
+
+  return observations;
+}
+
+function previousSkillLevel(week: TrainingWeek, skill: SkillTrainingCostSkill): number | null {
+  return week.skillLevelsAfter[skill] ?? week.skillLevelsBefore[skill] ?? null;
+}
+
+function determineCompleteness(input: {
+  previousPop: SkillUp | undefined;
+  levelDelta: number;
+  hasMissingWeeks: boolean;
+}): SkillUpObservationCompleteness {
+  if (!input.previousPop) {
+    return "left-censored";
+  }
+
+  if (input.levelDelta !== 1) {
+    return "ambiguous";
+  }
+
+  return input.hasMissingWeeks ? "missing-weeks" : "complete";
+}
+
+function hasMissingWeeksBetween(
+  weeks: readonly TrainingWeek[],
+  startWeek: number,
+  endWeek: number
+): boolean {
+  const expectedWeeks = endWeek - startWeek + 1;
+  return (
+    weeks.length !== expectedWeeks || weeks.some((week, index) => week.week !== startWeek + index)
+  );
+}
+
+function normalizeSkillLevels(
+  levels: TrainingSkillLevels | undefined,
+  skill: SkillTrainingCostSkill,
+  fallbackLevel: number
+): TrainingSkillLevels {
+  const normalized = { ...(levels ?? {}) };
+  normalized[skill] ??= fallbackLevel;
+
+  for (const [skillName, level] of Object.entries(normalized)) {
+    assertSupportedSkill(skillName);
+    if (typeof level !== "number") {
+      throw new Error(`skillLevels.${skillName} must be a number.`);
+    }
+    assertSkillLevel(level, `skillLevels.${skillName}`);
+  }
+
+  return normalized;
+}
+
+function compareTrainingWeeks(left: TrainingWeek, right: TrainingWeek): number {
+  return left.week - right.week;
+}
+
+function assertTrainingWeek(week: TrainingWeek): void {
+  assertPlayerId(week.playerId);
+  assertPositiveInteger(week.week, "week");
+  assertSupportedSkill(week.skill);
+  assertNonNegativeFinite(week.officialMinutes, "officialMinutes");
+  assertNonNegativeFinite(week.friendlyMinutes, "friendlyMinutes");
+  assertBoolean(week.advancedTraining, "advancedTraining");
+  assertAge(week.playerAge, "playerAge");
+  assertSkillLevel(week.skillLevelBefore, "skillLevelBefore");
+  assertSkillLevel(week.skillLevelAfter, "skillLevelAfter");
+  normalizeSkillLevels(week.skillLevelsBefore, week.skill, week.skillLevelBefore);
+  normalizeSkillLevels(week.skillLevelsAfter, week.skill, week.skillLevelAfter);
+  assertEfficiency(week.trainingEfficiency, "trainingEfficiency");
+  assertNonNegativeFinite(week.trainingPoints, "trainingPoints");
+}
+
+function assertPositiveInteger(value: number, fieldName: string): void {
+  if (!Number.isInteger(value) || value <= 0) {
+    throw new Error(`${fieldName} must be a positive integer.`);
+  }
+}
 export function calculateRequiredTrainingPoints(
   input: RequiredTrainingPointsInput
 ): RequiredTrainingPointsResult {
