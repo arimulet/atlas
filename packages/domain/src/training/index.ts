@@ -40,6 +40,7 @@ import type {
   SkillUp,
   SkillUpObservation,
   SkillUpObservationCompleteness,
+  TalentObservation,
   RequiredTrainingPointsInput,
   RequiredTrainingPointsResult,
   TalentEstimationInput,
@@ -84,6 +85,7 @@ export type {
   SkillUp,
   SkillUpObservation,
   SkillUpObservationCompleteness,
+  TalentObservation,
   RequiredTrainingPointsInput,
   RequiredTrainingPointsResult,
   TalentEstimationInput,
@@ -446,6 +448,79 @@ function assertPositiveInteger(value: number, fieldName: string): void {
     throw new Error(`${fieldName} must be a positive integer.`);
   }
 }
+export function estimateTalentFromSkillUpObservation(
+  observation: SkillUpObservation
+): TalentObservation {
+  assertCompleteTalentObservation(observation);
+
+  const relevantWeeks = observation.trainingWeeks.filter(
+    (week) => week.skill === observation.skill && week.trainingPoints > 0
+  );
+  const observedTrainingPoints = relevantWeeks.reduce(
+    (total, week) => total + week.trainingPoints,
+    0
+  );
+
+  if (observedTrainingPoints <= 0) {
+    throw new Error("SkillUpObservation must contain positive relevant training points.");
+  }
+
+  const effectiveAgeCostFactor =
+    relevantWeeks.reduce(
+      (total, week) => total + week.trainingPoints * calculateAgeTrainingCostFactor(week.playerAge),
+      0
+    ) / observedTrainingPoints;
+  const effectiveAge = calculateEquivalentTrainingAge(effectiveAgeCostFactor);
+  const skillCost = calculateSkillTrainingCostFactor({
+    skill: observation.skill,
+    targetSkillLevel: observation.toLevel
+  });
+  const estimatedTalent = calculateEstimatedTalent(
+    observedTrainingPoints,
+    effectiveAgeCostFactor,
+    skillCost.costFactor
+  );
+
+  return {
+    playerId: observation.playerId,
+    skill: observation.skill,
+    fromLevel: observation.fromLevel,
+    toLevel: observation.toLevel,
+    startWeek: observation.startWeek,
+    popWeek: observation.popWeek,
+    observedTrainingPoints,
+    ageAtStart: observation.ageAtStart,
+    ageAtPop: observation.ageAtPop,
+    effectiveAge,
+    effectiveAgeCostFactor,
+    skillCostFactor: skillCost.costFactor,
+    baseTrainingPoints: BASE_TRAINING_POINTS,
+    estimatedTalent,
+    sourceObservation: observation
+  };
+}
+
+function assertCompleteTalentObservation(observation: SkillUpObservation): void {
+  if (observation.completeness !== "complete" || !observation.eligibleForTalentEstimation) {
+    throw new Error("Only complete SkillUpObservations can estimate talent.");
+  }
+
+  if (observation.levelDelta !== 1) {
+    throw new Error("Talent estimation requires a one-level SkillUpObservation.");
+  }
+}
+
+function calculateEstimatedTalent(
+  observedTrainingPoints: number,
+  ageCostFactor: number,
+  skillCostFactor: number
+): number {
+  return observedTrainingPoints / (ageCostFactor * skillCostFactor * BASE_TRAINING_POINTS);
+}
+
+function calculateEquivalentTrainingAge(ageCostFactor: number): number {
+  return BASE_TRAINING_AGE + Math.log(ageCostFactor) / Math.log(AGE_TRAINING_FACTOR);
+}
 export function calculateRequiredTrainingPoints(
   input: RequiredTrainingPointsInput
 ): RequiredTrainingPointsResult {
@@ -481,8 +556,11 @@ export function estimateTalent(input: TalentEstimationInput): TalentEstimationRe
     skill: input.skill,
     targetSkillLevel: input.targetSkillLevel
   });
-  const estimatedTalent =
-    input.observedTrainingPoints / (ageCostFactor * skillCost.costFactor * BASE_TRAINING_POINTS);
+  const estimatedTalent = calculateEstimatedTalent(
+    input.observedTrainingPoints,
+    ageCostFactor,
+    skillCost.costFactor
+  );
 
   return {
     observedTrainingPoints: input.observedTrainingPoints,

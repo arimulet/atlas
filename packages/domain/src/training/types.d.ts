@@ -213,3 +213,21 @@ export interface SkillUpObservation {
   eligibleForTalentEstimation: boolean;
   trainingWeeks: readonly TrainingWeek[];
 }
+
+export interface TalentObservation {
+  playerId: number;
+  skill: SkillTrainingCostSkill;
+  fromLevel: number;
+  toLevel: number;
+  startWeek: number;
+  popWeek: number;
+  observedTrainingPoints: number;
+  ageAtStart: number;
+  ageAtPop: number;
+  effectiveAge: number;
+  effectiveAgeCostFactor: number;
+  skillCostFactor: number;
+  baseTrainingPoints: number;
+  estimatedTalent: number;
+  sourceObservation: SkillUpObservation;
+}
