@@ -2,6 +2,7 @@
   ADVANCED_BASE_EFFICIENCY,
   AGE_TRAINING_FACTOR,
   BASE_TRAINING_AGE,
+  BASE_TRAINING_POINTS,
   DEFAULT_TALENT_PROFILE_MINIMUM_OBSERVATIONS,
   FIRST_EFFICIENCY_THRESHOLD,
   FIRST_SEGMENT_EFFICIENCY,
@@ -31,12 +32,17 @@ import type {
   TrainingEfficiencyInput,
   TrainingEfficiencyResult,
   TrainingPosition,
-  TrainingType
+  TrainingType,
+  RequiredTrainingPointsInput,
+  RequiredTrainingPointsResult,
+  TalentEstimationInput,
+  TalentEstimationResult
 } from "./types.js";
 
 export {
   AGE_TRAINING_FACTOR,
   BASE_TRAINING_AGE,
+  BASE_TRAINING_POINTS,
   DEFAULT_TALENT_PROFILE_MINIMUM_OBSERVATIONS,
   MAX_SKILL_LEVEL,
   MAX_TRAINING_EFFICIENCY,
@@ -63,7 +69,11 @@ export type {
   TrainingEfficiencyInput,
   TrainingEfficiencyResult,
   TrainingPosition,
-  TrainingType
+  TrainingType,
+  RequiredTrainingPointsInput,
+  RequiredTrainingPointsResult,
+  TalentEstimationInput,
+  TalentEstimationResult
 } from "./types.js";
 
 export function calculateAgeTrainingCostFactor(age: number): number {
@@ -155,6 +165,55 @@ export function calculateSkillTrainingSpeedFactor(input: SkillTrainingCostInput)
   return 1 / calculateSkillTrainingCostFactor(input).costFactor;
 }
 
+export function calculateRequiredTrainingPoints(
+  input: RequiredTrainingPointsInput
+): RequiredTrainingPointsResult {
+  assertPositiveFinite(input.talent, "talent");
+  assertPositiveFinite(BASE_TRAINING_POINTS, "BASE_TRAINING_POINTS");
+
+  const ageCostFactor = calculateAgeTrainingCostFactor(input.age);
+  const skillCost = calculateSkillTrainingCostFactor({
+    skill: input.skill,
+    targetSkillLevel: input.targetSkillLevel
+  });
+  const requiredTrainingPoints =
+    input.talent * ageCostFactor * skillCost.costFactor * BASE_TRAINING_POINTS;
+
+  return {
+    talent: input.talent,
+    age: input.age,
+    skill: input.skill,
+    targetSkillLevel: input.targetSkillLevel,
+    ageCostFactor,
+    skillCostFactor: skillCost.costFactor,
+    baseTrainingPoints: BASE_TRAINING_POINTS,
+    requiredTrainingPoints
+  };
+}
+
+export function estimateTalent(input: TalentEstimationInput): TalentEstimationResult {
+  assertPositiveFinite(input.observedTrainingPoints, "observedTrainingPoints");
+  assertPositiveFinite(BASE_TRAINING_POINTS, "BASE_TRAINING_POINTS");
+
+  const ageCostFactor = calculateAgeTrainingCostFactor(input.age);
+  const skillCost = calculateSkillTrainingCostFactor({
+    skill: input.skill,
+    targetSkillLevel: input.targetSkillLevel
+  });
+  const estimatedTalent =
+    input.observedTrainingPoints / (ageCostFactor * skillCost.costFactor * BASE_TRAINING_POINTS);
+
+  return {
+    observedTrainingPoints: input.observedTrainingPoints,
+    age: input.age,
+    skill: input.skill,
+    targetSkillLevel: input.targetSkillLevel,
+    ageCostFactor,
+    skillCostFactor: skillCost.costFactor,
+    baseTrainingPoints: BASE_TRAINING_POINTS,
+    estimatedTalent
+  };
+}
 export function calculateSkillProgressObservation(
   input: SkillProgressObservationInput
 ): SkillProgressObservation {
@@ -529,6 +588,11 @@ function createEmptySkillProfiles(): Record<SkillTrainingCostSkill, TalentSkillP
   return skills;
 }
 
+function assertPositiveFinite(value: number, fieldName: string): void {
+  if (!Number.isFinite(value) || value <= 0) {
+    throw new Error(`${fieldName} must be a finite positive number.`);
+  }
+}
 function assertMinimumComparableObservations(value: number): void {
   if (!Number.isInteger(value) || value <= 0) {
     throw new Error("minimumComparableObservations must be a positive integer.");
