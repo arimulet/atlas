@@ -9,6 +9,7 @@ import {
 import type {
   ClubDashboard,
   DashboardStatus,
+  ImportResponse,
   RealYouthAcademyPlanning,
   TrainingPageData
 } from "@atlas/web/app/types";
@@ -39,6 +40,7 @@ export function AppV2({ uiVersion, onUiVersionChange }: AppV2Props) {
     activeClubId ? "loading" : "idle"
   );
   const [training, setTraining] = useState<TrainingPageData | null>(null);
+  const [trainingDiagnostic, setTrainingDiagnostic] = useState<ImportResponse["diagnostic"]>(null);
 
   const loadDashboard = useCallback(async (clubId: string): Promise<boolean> => {
     setDashboardStatus("loading");
@@ -111,6 +113,8 @@ export function AppV2({ uiVersion, onUiVersionChange }: AppV2Props) {
           loadTraining(body.importResult.clubId)
         ]);
 
+        setTrainingDiagnostic(body.diagnostic);
+
         if (!dashboardLoaded || !youthLoaded || !trainingLoaded) {
           throw new Error("Datos actualizados, pero no se pudo recargar el Dashboard.");
         }
@@ -142,7 +146,11 @@ export function AppV2({ uiVersion, onUiVersionChange }: AppV2Props) {
           youthStatus={youthStatus}
         />
       ) : activeView === "training" ? (
-        <TrainingV2 training={training} trainingStatus={trainingStatus} />
+        <TrainingV2
+          training={training}
+          trainingDiagnostic={trainingDiagnostic}
+          trainingStatus={trainingStatus}
+        />
       ) : (
         <div className="v2-placeholder">
           <span className="v2-placeholder__eyebrow">ATLAS UI V2</span>
