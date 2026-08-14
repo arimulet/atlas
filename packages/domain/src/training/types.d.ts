@@ -231,3 +231,26 @@ export interface TalentObservation {
   estimatedTalent: number;
   sourceObservation: SkillUpObservation;
 }
+
+export interface TalentObservationProfileInput {
+  playerId: number;
+  observations: readonly TalentObservation[];
+  minimumObservations?: number;
+}
+
+export interface TalentObservationSkillProfile {
+  skill: SkillTrainingCostSkill;
+  observations: TalentObservation[];
+  observationCount: number;
+  targetSkillLevels: number[];
+  medianEstimatedTalent: number | null;
+  minimumEstimatedTalent: number | null;
+  maximumEstimatedTalent: number | null;
+  status: TalentProfileStatus;
+}
+
+export interface TalentObservationProfile {
+  playerId: number;
+  minimumObservations: number;
+  skills: Record<SkillTrainingCostSkill, TalentObservationSkillProfile>;
+}

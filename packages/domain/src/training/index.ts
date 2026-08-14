@@ -1,4 +1,4 @@
-﻿import {
+import {
   ADVANCED_BASE_EFFICIENCY,
   AGE_TRAINING_FACTOR,
   BASE_TRAINING_AGE,
@@ -41,6 +41,9 @@ import type {
   SkillUpObservation,
   SkillUpObservationCompleteness,
   TalentObservation,
+  TalentObservationProfile,
+  TalentObservationProfileInput,
+  TalentObservationSkillProfile,
   RequiredTrainingPointsInput,
   RequiredTrainingPointsResult,
   TalentEstimationInput,
@@ -86,6 +89,9 @@ export type {
   SkillUpObservation,
   SkillUpObservationCompleteness,
   TalentObservation,
+  TalentObservationProfile,
+  TalentObservationProfileInput,
+  TalentObservationSkillProfile,
   RequiredTrainingPointsInput,
   RequiredTrainingPointsResult,
   TalentEstimationInput,
@@ -498,6 +504,100 @@ export function estimateTalentFromSkillUpObservation(
     estimatedTalent,
     sourceObservation: observation
   };
+}
+
+export function buildTalentObservationProfile(
+  input: TalentObservationProfileInput
+): TalentObservationProfile {
+  assertPlayerId(input.playerId);
+
+  const minimumObservations =
+    input.minimumObservations ?? DEFAULT_TALENT_PROFILE_MINIMUM_OBSERVATIONS;
+  assertMinimumComparableObservations(minimumObservations);
+
+  const observations = [...input.observations];
+  const eventKeys = new Set<string>();
+
+  for (const observation of observations) {
+    assertTalentObservationPlayer(observation, input.playerId);
+
+    const eventKey = `${observation.skill}|${observation.popWeek}`;
+    if (eventKeys.has(eventKey)) {
+      throw new Error(`TalentObservation event ${eventKey} already exists in the profile.`);
+    }
+    eventKeys.add(eventKey);
+  }
+
+  const skills = createEmptyTalentObservationProfiles();
+  for (const skill of SUPPORTED_TRAINING_SKILLS) {
+    const skillObservations = observations.filter((observation) => observation.skill === skill);
+    skills[skill] = buildTalentObservationSkillProfile(
+      skill,
+      skillObservations,
+      minimumObservations
+    );
+  }
+
+  return {
+    playerId: input.playerId,
+    minimumObservations,
+    skills
+  };
+}
+
+function buildTalentObservationSkillProfile(
+  skill: SkillTrainingCostSkill,
+  observations: TalentObservation[],
+  minimumObservations: number
+): TalentObservationSkillProfile {
+  const estimatedTalents = observations.map((observation) => observation.estimatedTalent);
+  const targetSkillLevels = [...new Set(observations.map((observation) => observation.toLevel))].sort(
+    (left, right) => left - right
+  );
+
+  return {
+    skill,
+    observations,
+    observationCount: observations.length,
+    targetSkillLevels,
+    medianEstimatedTalent: observations.length > 0 ? median(estimatedTalents) : null,
+    minimumEstimatedTalent: observations.length > 0 ? Math.min(...estimatedTalents) : null,
+    maximumEstimatedTalent: observations.length > 0 ? Math.max(...estimatedTalents) : null,
+    status: observations.length >= minimumObservations ? "sufficient_data" : "insufficient_data"
+  };
+}
+
+function createEmptyTalentObservationProfiles(): Record<
+  SkillTrainingCostSkill,
+  TalentObservationSkillProfile
+> {
+  const skills = {} as Record<SkillTrainingCostSkill, TalentObservationSkillProfile>;
+
+  for (const skill of SUPPORTED_TRAINING_SKILLS) {
+    skills[skill] = buildTalentObservationSkillProfile(skill, [], 1);
+  }
+
+  return skills;
+}
+
+function assertTalentObservationPlayer(
+  observation: TalentObservation,
+  playerId: number
+): void {
+  assertSupportedSkill(observation.skill);
+  assertPositiveInteger(observation.popWeek, "popWeek");
+  assertPositiveFinite(observation.estimatedTalent, "estimatedTalent");
+
+  if (
+    observation.playerId !== playerId ||
+    observation.sourceObservation.playerId !== playerId
+  ) {
+    throw new Error("All TalentObservations must belong to the profile playerId.");
+  }
+
+  if (observation.skill !== observation.sourceObservation.skill) {
+    throw new Error("TalentObservation skill must match its source SkillUpObservation.");
+  }
 }
 
 function assertCompleteTalentObservation(observation: SkillUpObservation): void {
