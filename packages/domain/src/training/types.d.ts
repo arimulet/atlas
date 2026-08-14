@@ -254,3 +254,28 @@ export interface TalentObservationProfile {
   minimumObservations: number;
   skills: Record<SkillTrainingCostSkill, TalentObservationSkillProfile>;
 }
+export type ExpectedWeeksToSkillUpStatus = "calculable" | "insufficient_data";
+
+export interface ExpectedWeeksToSkillUpInput {
+  profile: TalentObservationProfile;
+  skill: SkillTrainingCostSkill;
+  age: number;
+  currentSkillLevel: number;
+}
+
+export interface ExpectedWeeksToSkillUpResult {
+  playerId: number;
+  skill: SkillTrainingCostSkill;
+  fromLevel: number;
+  targetSkillLevel: number;
+  age: number;
+  talent: number | null;
+  ageCostFactor: number | null;
+  skillCostFactor: number | null;
+  baseTrainingPoints: number;
+  weeklyTrainingPoints: number;
+  requiredTrainingPoints: number | null;
+  expectedWeeks: number | null;
+  sourceObservationCount: number;
+  status: ExpectedWeeksToSkillUpStatus;
+}

@@ -44,6 +44,9 @@ import type {
   TalentObservationProfile,
   TalentObservationProfileInput,
   TalentObservationSkillProfile,
+  ExpectedWeeksToSkillUpInput,
+  ExpectedWeeksToSkillUpResult,
+  ExpectedWeeksToSkillUpStatus,
   RequiredTrainingPointsInput,
   RequiredTrainingPointsResult,
   TalentEstimationInput,
@@ -92,6 +95,9 @@ export type {
   TalentObservationProfile,
   TalentObservationProfileInput,
   TalentObservationSkillProfile,
+  ExpectedWeeksToSkillUpInput,
+  ExpectedWeeksToSkillUpResult,
+  ExpectedWeeksToSkillUpStatus,
   RequiredTrainingPointsInput,
   RequiredTrainingPointsResult,
   TalentEstimationInput,
@@ -600,6 +606,61 @@ function assertTalentObservationPlayer(
   }
 }
 
+export function calculateExpectedWeeksToSkillUp(
+  input: ExpectedWeeksToSkillUpInput
+): ExpectedWeeksToSkillUpResult {
+  assertPlayerId(input.profile.playerId);
+  assertSupportedSkill(input.skill);
+  assertValidTrainingAge(input.age);
+  assertSkillLevel(input.currentSkillLevel, "currentSkillLevel");
+
+  if (input.currentSkillLevel >= MAX_SKILL_LEVEL) {
+    throw new Error("currentSkillLevel must be less than the maximum skill level.");
+  }
+
+  const targetSkillLevel = input.currentSkillLevel + 1;
+  const weeklyTrainingPoints = calculateWeeklyTrainingPoints(MAX_TRAINING_EFFICIENCY);
+  const skillProfile = input.profile.skills[input.skill];
+  const baseResult = {
+    playerId: input.profile.playerId,
+    skill: input.skill,
+    fromLevel: input.currentSkillLevel,
+    targetSkillLevel,
+    age: input.age,
+    baseTrainingPoints: BASE_TRAINING_POINTS,
+    weeklyTrainingPoints,
+    sourceObservationCount: skillProfile.observationCount
+  };
+
+  if (skillProfile.status !== "sufficient_data" || skillProfile.medianEstimatedTalent === null) {
+    return {
+      ...baseResult,
+      talent: null,
+      ageCostFactor: null,
+      skillCostFactor: null,
+      requiredTrainingPoints: null,
+      expectedWeeks: null,
+      status: "insufficient_data"
+    };
+  }
+
+  const requiredTraining = calculateRequiredTrainingPoints({
+    talent: skillProfile.medianEstimatedTalent,
+    age: input.age,
+    skill: input.skill,
+    targetSkillLevel
+  });
+
+  return {
+    ...baseResult,
+    talent: requiredTraining.talent,
+    ageCostFactor: requiredTraining.ageCostFactor,
+    skillCostFactor: requiredTraining.skillCostFactor,
+    requiredTrainingPoints: requiredTraining.requiredTrainingPoints,
+    expectedWeeks: requiredTraining.requiredTrainingPoints / weeklyTrainingPoints,
+    status: "calculable"
+  };
+}
 function assertCompleteTalentObservation(observation: SkillUpObservation): void {
   if (observation.completeness !== "complete" || !observation.eligibleForTalentEstimation) {
     throw new Error("Only complete SkillUpObservations can estimate talent.");
