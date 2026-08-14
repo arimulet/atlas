@@ -7,6 +7,7 @@ import {
   type TrainingDiagnostic,
   type TrainingStatusLabel
 } from "./training-view-model";
+import type { PlayerTrainingProjectionSummary } from "./player-detail-view-model";
 
 export const SQUAD_SKILL_DEFINITIONS = [
   { key: "stamina", shortLabel: "STA", trainingPriority: 1 },
@@ -25,14 +26,20 @@ export interface SquadPlayerRow {
   playerId: string;
   playerName: string;
   age: number;
-  position: string | null;
+  form: number | null;
   skills: Record<SquadSkillKey, number | null>;
   training: {
     position: string | null;
     trainedSkill: string | null;
     advanced: boolean;
     efficiency: number | null;
+    progress: number | null;
     status: TrainingStatusLabel | null;
+  };
+  development: {
+    talent: number | null;
+    nextSkillUp: number | null;
+    etaWeeks: number | null;
   };
 }
 
@@ -41,9 +48,19 @@ export interface CreateSquadPlayerRowsInput {
   training: TrainingPageData | null;
   trainingDiagnostic: TrainingDiagnostic | null;
   trainingStatus: "idle" | "loading" | "ready" | "error";
+  projectionSummaries?: ReadonlyMap<string, PlayerTrainingProjectionSummary>;
 }
 
 export function createSquadPlayerRows(input: CreateSquadPlayerRowsInput): SquadPlayerRow[] {
+  const trainingRows = createTrainingPlayerRows(
+    input.training?.players ?? [],
+    input.trainingStatus === "ready" ? input.trainingDiagnostic : null,
+    input.projectionSummaries
+  );
+  const trainingRowsByPlayerId = new Map(
+    trainingRows.map((trainingRow) => [trainingRow.playerId, trainingRow])
+  );
+
   return (input.training?.players ?? []).map((player) => {
     const observedPlayer = input.development?.observed.players.find(
       (candidate) => candidate.snapshotPlayerId === player.id
@@ -53,23 +70,26 @@ export function createSquadPlayerRows(input: CreateSquadPlayerRowsInput): SquadP
       input.training?.configuration ?? null,
       player.training.position
     );
-    const trainingRow = createTrainingPlayerRows(
-      [player],
-      input.trainingStatus === "ready" ? input.trainingDiagnostic : null
-    )[0];
+    const trainingRow = trainingRowsByPlayerId.get(player.id);
 
     return {
       playerId: observedPlayer?.playerId?.toString() ?? player.id,
       playerName: player.name,
       age: player.age,
-      position: observedPositionCode(observedPlayer?.observedPosition ?? null),
+      form: player.form ?? null,
       skills: createSkillValues(observedPlayer?.skills ?? null),
       training: {
         position: trainingPosition,
         trainedSkill: trainedSkill === null ? null : formatTrainingPriority(trainedSkill),
         advanced: trainingRow?.advanced ?? player.training.advanced,
         efficiency: trainingRow?.efficiency ?? null,
+        progress: trainingRow?.progress ?? null,
         status: trainingRow?.status ?? null
+      },
+      development: {
+        talent: trainingRow?.talent ?? null,
+        nextSkillUp: trainingRow?.nextSkillUp ?? null,
+        etaWeeks: trainingRow?.etaWeeks ?? null
       }
     };
   });
@@ -100,22 +120,6 @@ function createSkillValues(
       striker: null
     }
   );
-}
-
-function observedPositionCode(position: string | null): string | null {
-  if (position === null) {
-    return null;
-  }
-
-  const positionCodes: Record<string, string> = {
-    goalkeeper: "GK",
-    defender: "DEF",
-    midfielder: "MID",
-    winger: "WING",
-    striker: "ATT"
-  };
-
-  return positionCodes[position] ?? position;
 }
 
 function compareDiagnosticSeverity(

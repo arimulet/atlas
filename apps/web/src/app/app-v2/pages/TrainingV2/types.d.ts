@@ -5,6 +5,7 @@ import type {
   TrainingPageData
 } from "@atlas/web/app/types";
 export type { TrainingPlayerRow, TrainingStatusLabel } from "../../view-models/training-view-model";
+import type { PlayerTrainingProjectionSummary } from "../../view-models/player-detail-view-model";
 
 export interface TrainingV2Props {
   development: PlayerDevelopment | null;
@@ -12,4 +13,5 @@ export interface TrainingV2Props {
   trainingDiagnostic: { findings: DiagnosticFinding[] } | null;
   trainingStatus: DashboardStatus;
   onSelectPlayer: (playerId: string) => void;
+  projectionSummaries?: ReadonlyMap<string, PlayerTrainingProjectionSummary>;
 }

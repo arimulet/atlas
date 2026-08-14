@@ -31,6 +31,7 @@ function mapPlayer(player: PersistedPlayerSnapshot): TrainingPageData["players"]
     id: player.id,
     name: player.name,
     age: player.age,
+    form: player.form,
     training: player.training
   };
 }

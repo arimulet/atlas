@@ -2,16 +2,16 @@ import { describeDiagnosticFinding } from "@atlas/web/app/diagnostic-copy";
 import type { DiagnosticFinding, TrainingPageData } from "@atlas/web/app/types";
 import { formatTrainingPriority } from "@atlas/web/app/formatters";
 import type { TrainingPlayerRow, TrainingStatusLabel, TrainingV2Props } from "./types";
+import { formatV2Eta, formatV2Number, formatV2Percentage, formatV2Talent } from "../../formatters";
 import {
   compareDiagnosticSeverity,
   createTrainingPlayerRows,
   TRAINING_POSITIONS
 } from "../../view-models/training-view-model";
-import { createPlayerTrainingProjectionSummaries } from "../../view-models/player-detail-view-model";
 
 export function TrainingV2({
-  development,
   onSelectPlayer,
+  projectionSummaries,
   training,
   trainingDiagnostic,
   trainingStatus
@@ -27,11 +27,10 @@ export function TrainingV2({
       <TrainingPositionSections
         configuration={training?.configuration ?? null}
         diagnostic={trainingDiagnostic}
-        development={development}
         onSelectPlayer={onSelectPlayer}
         players={training?.players ?? []}
+        projectionSummaries={projectionSummaries}
         status={trainingStatus}
-        training={training}
       />
       <RecentTrainingProgress />
     </div>
@@ -125,32 +124,24 @@ function TrainingAttentionItem({ finding }: TrainingAttentionItemProps) {
 interface TrainingPositionSectionsProps {
   configuration: TrainingPageData["configuration"];
   diagnostic: TrainingV2Props["trainingDiagnostic"];
-  development: TrainingV2Props["development"];
   onSelectPlayer: (playerId: string) => void;
   players: TrainingPageData["players"];
+  projectionSummaries: TrainingV2Props["projectionSummaries"];
   status: TrainingV2Props["trainingStatus"];
-  training: TrainingPageData | null;
 }
 
 function TrainingPositionSections({
   configuration,
   diagnostic,
-  development,
   onSelectPlayer,
   players,
-  status,
-  training
+  projectionSummaries,
+  status
 }: TrainingPositionSectionsProps) {
   if (status !== "ready") {
     return null;
   }
 
-  const projectionSummaries = createPlayerTrainingProjectionSummaries({
-    development,
-    training,
-    trainingDiagnostic: diagnostic,
-    trainingStatus: status
-  });
   const rows = createTrainingPlayerRows(players, diagnostic, projectionSummaries);
 
   return (
@@ -276,12 +267,12 @@ function PlayerRow({ onSelectPlayer, player }: PlayerRowProps) {
           {player.advanced ? "\u2713" : "\u2014"}
         </span>
       </td>
-      <td className="v2-training-table__numeric">{formatNumber(player.minutes)}</td>
-      <td className="v2-training-table__numeric">{formatPercentage(player.efficiency)}</td>
-      <td className="v2-training-table__numeric">{formatPercentage(player.progress)}</td>
-      <td className="v2-training-table__numeric">{formatTalent(player.talent)}</td>
-      <td className="v2-training-table__numeric">{formatNumber(player.nextSkillUp)}</td>
-      <td className="v2-training-table__numeric">{formatEta(player.etaWeeks)}</td>
+      <td className="v2-training-table__numeric">{formatV2Number(player.minutes)}</td>
+      <td className="v2-training-table__numeric">{formatV2Percentage(player.efficiency)}</td>
+      <td className="v2-training-table__numeric">{formatV2Percentage(player.progress)}</td>
+      <td className="v2-training-table__numeric">{formatV2Talent(player.talent)}</td>
+      <td className="v2-training-table__numeric">{formatV2Number(player.nextSkillUp)}</td>
+      <td className="v2-training-table__numeric">{formatV2Eta(player.etaWeeks)}</td>
       <td>
         <TrainingStatus status={player.status} />
       </td>
@@ -299,32 +290,6 @@ function TrainingStatus({ status }: TrainingStatusProps) {
       {status ?? "\u2014"}
     </span>
   );
-}
-
-function formatNumber(value: number | null): string {
-  return value === null ? "\u2014" : value.toLocaleString("en-US");
-}
-
-function formatPercentage(value: number | null): string {
-  return value === null
-    ? "\u2014"
-    : `${value.toLocaleString("en-US", { maximumFractionDigits: 1 })}%`;
-}
-
-function formatTalent(value: number | null): string {
-  return value === null ? "\u2014" : value.toLocaleString("en-US", { maximumFractionDigits: 1 });
-}
-
-function formatEta(value: number | null): string {
-  if (value === null) {
-    return "\u2014";
-  }
-
-  if (value < 1) {
-    return "<1w";
-  }
-
-  return `~${value.toLocaleString("en-US", { maximumFractionDigits: 1 })}w`;
 }
 
 function RecentTrainingProgress() {

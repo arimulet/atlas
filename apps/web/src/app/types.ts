@@ -177,6 +177,7 @@ export interface TrainingPagePlayer {
   id: string;
   name: string;
   age: number;
+  form?: number | null;
   training: {
     position: number;
     advanced: boolean;

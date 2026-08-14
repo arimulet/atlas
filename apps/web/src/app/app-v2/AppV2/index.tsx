@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
   fetchClubDashboard,
@@ -21,6 +21,7 @@ import { SquadV2 } from "../pages/SquadV2";
 import { TrainingV2 } from "../pages/TrainingV2";
 import { PlayerDetailV2 } from "../pages/PlayerDetailV2";
 import { YouthV2 } from "../pages/YouthV2";
+import { createPlayerTrainingProjectionSummaries } from "../view-models/player-detail-view-model";
 import type { SokkerImportCredentials } from "../components/SokkerImporterForm/types";
 import type { V2ViewId } from "../types";
 import type { AppV2Props } from "./types";
@@ -49,6 +50,18 @@ export function AppV2({ uiVersion, onUiVersionChange }: AppV2Props) {
   const [playerDevelopment, setPlayerDevelopment] = useState<PlayerDevelopment | null>(null);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
   const [playerDetailReturnView, setPlayerDetailReturnView] = useState<V2ViewId>("training");
+  const projectionSummaries = useMemo(
+    () =>
+      trainingStatus === "ready"
+        ? createPlayerTrainingProjectionSummaries({
+            development: playerDevelopment,
+            training,
+            trainingDiagnostic,
+            trainingStatus
+          })
+        : undefined,
+    [playerDevelopment, training, trainingDiagnostic, trainingStatus]
+  );
 
   const loadDashboard = useCallback(async (clubId: string): Promise<boolean> => {
     setDashboardStatus("loading");
@@ -185,6 +198,7 @@ export function AppV2({ uiVersion, onUiVersionChange }: AppV2Props) {
         <SquadV2
           development={playerDevelopment}
           onSelectPlayer={handleSelectPlayer}
+          projectionSummaries={projectionSummaries}
           training={training}
           trainingDiagnostic={trainingDiagnostic}
           trainingStatus={trainingStatus}
@@ -193,6 +207,7 @@ export function AppV2({ uiVersion, onUiVersionChange }: AppV2Props) {
         <TrainingV2
           development={playerDevelopment}
           onSelectPlayer={handleSelectPlayer}
+          projectionSummaries={projectionSummaries}
           training={training}
           trainingDiagnostic={trainingDiagnostic}
           trainingStatus={trainingStatus}

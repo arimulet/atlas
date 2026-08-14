@@ -1,6 +1,7 @@
 import { describeDiagnosticFinding } from "@atlas/web/app/diagnostic-copy";
 import { formatTrainingPriority } from "@atlas/web/app/formatters";
 import type { DiagnosticFinding } from "@atlas/web/app/types";
+import { formatV2Eta, formatV2Number, formatV2Percentage, formatV2Talent } from "../../formatters";
 import type { SquadAttentionProps, SquadTableProps, SquadV2Props } from "./types";
 import {
   createSquadAttentionFindings,
@@ -23,12 +24,14 @@ const TRAINING_POSITION_TITLES: Record<TrainingPositionCode, string> = {
 export function SquadV2({
   development,
   onSelectPlayer,
+  projectionSummaries,
   training,
   trainingDiagnostic,
   trainingStatus
 }: SquadV2Props) {
   const rows = createSquadPlayerRows({
     development,
+    projectionSummaries,
     training,
     trainingDiagnostic,
     trainingStatus
@@ -157,36 +160,41 @@ function SquadPositionTable({ onSelectPlayer, rows }: SquadPositionTableProps) {
         <colgroup>
           <col className="is-player" />
           <col className="is-age" />
-          <col className="is-position" />
+          <col className="is-form" />
           {SQUAD_SKILL_DEFINITIONS.map((skill) => (
             <col className="is-skill" key={skill.key} />
           ))}
-          <col className="is-training-position" />
           <col className="is-trained-skill" />
           <col className="is-advanced" />
           <col className="is-efficiency" />
+          <col className="is-progress" />
+          <col className="is-talent" />
+          <col className="is-next-skill-up" />
+          <col className="is-eta" />
           <col className="is-status" />
         </colgroup>
         <thead>
           <tr className="v2-squad-table__group-row">
-            <th colSpan={3} scope="colgroup">
+            <th colSpan={2} scope="colgroup">
               Player
             </th>
             <th
               className="is-skills-group"
-              colSpan={SQUAD_SKILL_DEFINITIONS.length}
+              colSpan={SQUAD_SKILL_DEFINITIONS.length + 1}
               scope="colgroup"
             >
               Skills
             </th>
-            <th className="is-training-group" colSpan={5} scope="colgroup">
-              Training
+            <th className="is-training-group" colSpan={8} scope="colgroup">
+              Training / Development
             </th>
           </tr>
           <tr>
             <th scope="col">Player</th>
             <th scope="col">Age</th>
-            <th scope="col">Pos</th>
+            <th scope="col" title="Form">
+              Form
+            </th>
             {SQUAD_SKILL_DEFINITIONS.map((skill) => (
               <th
                 scope="col"
@@ -196,10 +204,23 @@ function SquadPositionTable({ onSelectPlayer, rows }: SquadPositionTableProps) {
                 {skill.shortLabel}
               </th>
             ))}
-            <th scope="col">T.Pos</th>
-            <th scope="col">Skill</th>
-            <th scope="col">Adv</th>
-            <th scope="col">Eff</th>
+            <th scope="col" title="Trained Skill">
+              Skill
+            </th>
+            <th scope="col" title="Advanced">
+              Adv
+            </th>
+            <th scope="col" title="Efficiency">
+              Eff
+            </th>
+            <th scope="col" title="Progress">
+              Prog
+            </th>
+            <th scope="col">Talent</th>
+            <th scope="col" title="Next Skill-up">
+              Next
+            </th>
+            <th scope="col">ETA</th>
             <th scope="col">Status</th>
           </tr>
         </thead>
@@ -210,7 +231,7 @@ function SquadPositionTable({ onSelectPlayer, rows }: SquadPositionTableProps) {
             ))
           ) : (
             <tr>
-              <td className="v2-squad-table__empty" colSpan={16}>
+              <td className="v2-squad-table__empty" colSpan={19}>
                 No players assigned.
               </td>
             </tr>
@@ -239,22 +260,23 @@ function SquadPlayerRowView({ onSelectPlayer, row }: SquadPlayerRowViewProps) {
         </button>
       </th>
       <td className="v2-squad-table__numeric">{row.age}</td>
-      <td className="v2-squad-table__center">{row.position ?? "—"}</td>
+      <td className="v2-squad-table__numeric">{row.form ?? "—"}</td>
       {SQUAD_SKILL_DEFINITIONS.map((skill) => (
         <td className="v2-squad-table__numeric" key={skill.key}>
           {row.skills[skill.key] ?? "—"}
         </td>
       ))}
-      <td className="v2-squad-table__center">
-        <span className="v2-training-position-badge">{row.training.position ?? "—"}</span>
-      </td>
       <td>{row.training.trainedSkill ?? "—"}</td>
       <td className="v2-squad-table__center">
         <span className={`v2-training-advanced${row.training.advanced ? " is-active" : ""}`}>
           {row.training.advanced ? "✓" : "—"}
         </span>
       </td>
-      <td className="v2-squad-table__numeric">{formatPercentage(row.training.efficiency)}</td>
+      <td className="v2-squad-table__numeric">{formatV2Percentage(row.training.efficiency)}</td>
+      <td className="v2-squad-table__numeric">{formatV2Percentage(row.training.progress)}</td>
+      <td className="v2-squad-table__numeric">{formatV2Talent(row.development.talent)}</td>
+      <td className="v2-squad-table__numeric">{formatV2Number(row.development.nextSkillUp)}</td>
+      <td className="v2-squad-table__numeric">{formatV2Eta(row.development.etaWeeks)}</td>
       <td>
         <SquadStatus status={row.training.status} />
       </td>
@@ -281,10 +303,6 @@ interface SquadMessageProps {
 
 function SquadMessage({ children, tone }: SquadMessageProps) {
   return <p className={`v2-squad-panel__message${tone ? ` is-${tone}` : ""}`}>{children}</p>;
-}
-
-function formatPercentage(value: number | null): string {
-  return value === null ? "—" : `${value.toLocaleString("en-US", { maximumFractionDigits: 1 })}%`;
 }
 
 function attentionIcon(severity: DiagnosticFinding["severity"]): string {
