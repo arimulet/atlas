@@ -11,7 +11,7 @@ import type {
   RealYouthAcademyPlanning
 } from "@atlas/web/app/types";
 import { AppShell } from "../components/AppShell";
-import { DashboardV2 } from "../components/DashboardV2";
+import { DashboardV2 } from "../pages/DashboardV2";
 import type { SokkerImportCredentials } from "../components/SokkerImporterForm/types";
 import type { V2ViewId } from "../types";
 import type { AppV2Props } from "./types";
