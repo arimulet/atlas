@@ -1,7 +1,13 @@
-import type { DashboardStatus, DiagnosticFinding, TrainingPageData } from "@atlas/web/app/types";
+import type {
+  DashboardStatus,
+  DiagnosticFinding,
+  PlayerDevelopment,
+  TrainingPageData
+} from "@atlas/web/app/types";
 export type { TrainingPlayerRow, TrainingStatusLabel } from "../../view-models/training-view-model";
 
 export interface TrainingV2Props {
+  development: PlayerDevelopment | null;
   training: TrainingPageData | null;
   trainingDiagnostic: { findings: DiagnosticFinding[] } | null;
   trainingStatus: DashboardStatus;

@@ -159,7 +159,7 @@
 
 .atlas-v2 .v2-training-table {
   border-collapse: collapse;
-  min-width: 720px;
+  min-width: 1040px;
   table-layout: fixed;
   width: 100%;
 }
@@ -190,31 +190,43 @@
 }
 
 .atlas-v2 .v2-training-table col:nth-child(1) {
-  width: 36%;
+  width: 29%;
 }
 
 .atlas-v2 .v2-training-table col:nth-child(2) {
-  width: 7%;
+  width: 6%;
 }
 
 .atlas-v2 .v2-training-table col:nth-child(3) {
-  width: 10%;
+  width: 8%;
 }
 
 .atlas-v2 .v2-training-table col:nth-child(4) {
-  width: 10%;
+  width: 8%;
 }
 
 .atlas-v2 .v2-training-table col:nth-child(5) {
-  width: 12%;
+  width: 10%;
 }
 
 .atlas-v2 .v2-training-table col:nth-child(6) {
-  width: 13%;
+  width: 10%;
 }
 
 .atlas-v2 .v2-training-table col:nth-child(7) {
-  width: 12%;
+  width: 7%;
+}
+
+.atlas-v2 .v2-training-table col:nth-child(8) {
+  width: 8%;
+}
+
+.atlas-v2 .v2-training-table col:nth-child(9) {
+  width: 6%;
+}
+
+.atlas-v2 .v2-training-table col:nth-child(10) {
+  width: 8%;
 }
 
 .atlas-v2 .v2-training-table tbody th {
@@ -249,7 +261,6 @@
 .atlas-v2 .v2-training-table th:first-child,
 .atlas-v2 .v2-training-table td:first-child {
   padding-left: 0;
-  width: 100%;
 }
 
 .atlas-v2 .v2-training-table__empty {
