@@ -42,6 +42,27 @@ export interface PlayerDetailViewModel {
     position: string | null;
     trainedSkill: string | null;
   };
+  talent: {
+    estimated: number | null;
+    confidence?: "low" | "medium" | "high";
+    observations?: number;
+    updatedAt?: string;
+  };
+  projection: {
+    current: {
+      skill: string | null;
+      level: number | null;
+      progress: number | null;
+    };
+    nextSkillUp?: {
+      targetLevel: number;
+      estimatedWeeks: number | null;
+    };
+    horizon?: {
+      weeks: number;
+      projectedLevel: number;
+    };
+  };
   diagnostics: DiagnosticFinding[];
   recentSkillUps: Array<{
     date: string | null;
@@ -87,6 +108,13 @@ export function createPlayerDetailViewModel(
     input.trainingStatus === "ready"
       ? createTrainingRow(player, input.trainingDiagnostic)
       : createTrainingRow(player, null);
+  const trainedSkillDefinition = SKILL_DEFINITIONS.find(
+    (definition) => definition.trainingPriority === trainedSkill
+  );
+  const currentSkillLevel =
+    trainedSkillDefinition === undefined
+      ? null
+      : (observedPlayer?.skills[trainedSkillDefinition.key] ?? null);
 
   return {
     player: {
@@ -103,6 +131,16 @@ export function createPlayerDetailViewModel(
       ...trainingRow,
       position: trainingPositionCode(player.training.position),
       trainedSkill: trainedSkill === null ? null : formatTrainingPriority(trainedSkill)
+    },
+    talent: {
+      estimated: null
+    },
+    projection: {
+      current: {
+        skill: trainedSkill === null ? null : formatTrainingPriority(trainedSkill),
+        level: currentSkillLevel,
+        progress: trainingRow.progress
+      }
     },
     diagnostics: diagnosticFindingsForPlayer(input.trainingDiagnostic, player),
     recentSkillUps: createRecentSkillUps(input.development, observedPlayer?.playerId ?? null),

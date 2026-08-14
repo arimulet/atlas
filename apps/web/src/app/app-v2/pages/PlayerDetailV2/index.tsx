@@ -1,5 +1,7 @@
 import { describeDiagnosticFinding } from "@atlas/web/app/diagnostic-copy";
 import type { PlayerDetailV2Props } from "./types";
+import { ProjectionPanel } from "./ProjectionPanel";
+import { TalentPanel } from "./TalentPanel";
 import {
   createPlayerDetailViewModel,
   type PlayerDetailViewModel
@@ -45,6 +47,10 @@ export function PlayerDetailV2({
       <div className="v2-player-detail__summary-grid">
         <SkillsPanel skills={viewModel.skills} />
         <TrainingPanel training={viewModel.training} />
+      </div>
+      <div className="v2-player-detail__secondary-grid">
+        <TalentPanel talent={viewModel.talent} />
+        <ProjectionPanel projection={viewModel.projection} training={viewModel.training} />
       </div>
       <ProgressPanel rows={viewModel.recentSkillUps} />
       <TrainingHistoryPanel rows={viewModel.trainingHistory} />
