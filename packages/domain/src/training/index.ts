@@ -46,7 +46,6 @@ import type {
   TalentObservationSkillProfile,
   ExpectedWeeksToSkillUpInput,
   ExpectedWeeksToSkillUpResult,
-  ExpectedWeeksToSkillUpStatus,
   RequiredTrainingPointsInput,
   RequiredTrainingPointsResult,
   TalentEstimationInput,

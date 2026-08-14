@@ -33,10 +33,29 @@ import type {
 import { Section } from "./components/Section";
 import { IssueList } from "./components/IssueList";
 import { SokkerSyncModal } from "./components/SokkerSyncModal";
+import { AppV2 } from "./app-v2/AppV2";
+import { UiVersionSwitch } from "./app-v2/components/UiVersionSwitch";
+import type { AppLegacyProps } from "./app-legacy/types";
+import { readUiVersion, uiVersionStorageKey, type UiVersion } from "./ui-version";
 
 const lastClubStorageKey = "atlas.lastClubId";
 
 export function App() {
+  const [uiVersion, setUiVersion] = useState<UiVersion>(() => readUiVersion());
+
+  const handleUiVersionChange = useCallback((version: UiVersion) => {
+    window.localStorage.setItem(uiVersionStorageKey, version);
+    setUiVersion(version);
+  }, []);
+
+  return uiVersion === "legacy" ? (
+    <AppLegacy uiVersion={uiVersion} onUiVersionChange={handleUiVersionChange} />
+  ) : (
+    <AppV2 uiVersion={uiVersion} onUiVersionChange={handleUiVersionChange} />
+  );
+}
+
+export function AppLegacy({ uiVersion, onUiVersionChange }: AppLegacyProps) {
   const [activeClubId, setActiveClubId] = useState<string | null>(() =>
     window.localStorage.getItem(lastClubStorageKey)
   );
@@ -241,7 +260,10 @@ export function App() {
             <p className="eyebrow">ATLAS</p>
             <h1>Club dashboard</h1>
           </div>
-          <div className={`status-pill ${status}`}>{message}</div>
+          <div className="legacy-topbar-actions">
+            <UiVersionSwitch activeVersion={uiVersion} onChange={onUiVersionChange} />
+            <div className={`status-pill ${status}`}>{message}</div>
+          </div>
         </header>
 
         {activeView === "squad-economy" ? (
