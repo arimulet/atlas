@@ -22,10 +22,7 @@
 }
 
 .v2-brand,
-.v2-header__tools,
-.v2-search,
-.v2-icon-button,
-.v2-avatar {
+.v2-header__tools {
   align-items: center;
   display: flex;
 }
@@ -103,68 +100,6 @@
 .atlas-v2 .atlas-v2-import-button:active {
   background: #193128;
   transform: translateY(1px);
-}
-
-.v2-search {
-  background: #121a1f;
-  border: 1px solid var(--atlas-border);
-  border-radius: var(--atlas-radius-sm);
-  gap: 7px;
-  height: 32px;
-  padding: 0 10px;
-  width: 220px;
-}
-
-.v2-search__icon {
-  color: var(--atlas-text-muted);
-  font-size: 1.2rem;
-  line-height: 1;
-}
-
-.v2-search input {
-  background: transparent;
-  border: 0;
-  color: var(--atlas-text);
-  font: inherit;
-  min-width: 0;
-  outline: 0;
-  width: 100%;
-}
-
-.v2-search input::placeholder {
-  color: var(--atlas-text-muted);
-}
-
-.v2-icon-button,
-.v2-avatar {
-  background: transparent;
-  color: var(--atlas-text-secondary);
-  height: 32px;
-  justify-content: center;
-  padding: 0;
-  width: 32px;
-}
-
-.v2-icon-button {
-  font-size: 1.15rem;
-}
-
-.v2-icon-button svg {
-  fill: none;
-  height: 16px;
-  stroke: currentColor;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 1.7;
-  width: 16px;
-}
-
-.v2-avatar {
-  background: #2b5949;
-  border-radius: 50%;
-  color: #dff9ec;
-  font-size: 0.7rem;
-  font-weight: 800;
 }
 
 .v2-sidebar {
