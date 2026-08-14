@@ -1,0 +1,205 @@
+.atlas-v2 {
+  .v2-youth {
+    display: grid;
+    gap: 14px;
+    max-width: 1440px;
+  }
+
+  .v2-youth__header {
+    padding: 2px 0 4px;
+  }
+
+  .v2-youth__header h1 {
+    color: var(--atlas-text);
+    font-size: 1.35rem;
+    line-height: 1.2;
+    margin: 0;
+  }
+
+  .v2-youth-panel {
+    background: var(--atlas-surface);
+    border: 1px solid var(--atlas-border);
+    border-radius: var(--atlas-radius-md);
+    min-width: 0;
+    padding: 14px 16px;
+  }
+
+  .v2-youth-panel--attention {
+    border-color: color-mix(in srgb, var(--semantic-warning-border) 55%, var(--atlas-border));
+  }
+
+  .v2-youth-panel__title {
+    color: var(--atlas-text);
+    font-size: 0.9rem;
+    font-weight: 750;
+    letter-spacing: 0.01em;
+    margin: 0 0 12px;
+  }
+
+  .v2-youth-panel__message {
+    color: var(--atlas-text-secondary);
+    font-size: 0.8rem;
+    line-height: 1.45;
+    margin: 0;
+  }
+
+  .v2-youth-panel__message.is-clear {
+    color: var(--semantic-success-text);
+  }
+
+  .v2-youth-panel__message.is-error {
+    color: var(--semantic-error-text);
+  }
+
+  .v2-youth-attention-list {
+    display: grid;
+    gap: 7px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .v2-youth-attention-item {
+    align-items: center;
+    color: var(--atlas-text-secondary);
+    display: grid;
+    font-size: 0.79rem;
+    gap: 9px;
+    grid-template-columns: 19px minmax(0, 1fr);
+    line-height: 1.35;
+    min-height: 27px;
+  }
+
+  .v2-youth-attention-item strong {
+    color: var(--atlas-text);
+    font-weight: 700;
+  }
+
+  .v2-youth-attention-item__icon {
+    align-items: center;
+    border: 1px solid currentColor;
+    border-radius: 50%;
+    display: inline-flex;
+    font-size: 0.68rem;
+    font-weight: 800;
+    height: 17px;
+    justify-content: center;
+    width: 17px;
+  }
+
+  .v2-youth-attention-item.is-high .v2-youth-attention-item__icon {
+    color: var(--semantic-error-text);
+  }
+
+  .v2-youth-attention-item.is-medium .v2-youth-attention-item__icon {
+    color: var(--semantic-warning-text);
+  }
+
+  .v2-youth-attention-item.is-low .v2-youth-attention-item__icon,
+  .v2-youth-attention-item.is-info .v2-youth-attention-item__icon {
+    color: var(--semantic-info-text);
+  }
+
+  .v2-youth-table-wrap {
+    overflow-x: auto;
+  }
+
+  .v2-youth-table {
+    border-collapse: collapse;
+    min-width: 760px;
+    table-layout: fixed;
+    width: 100%;
+  }
+
+  .v2-youth-table__player-column {
+    width: 25%;
+  }
+
+  .v2-youth-table__age-column,
+  .v2-youth-table__position-column {
+    width: 9%;
+  }
+
+  .v2-youth-table__level-column {
+    width: 19%;
+  }
+
+  .v2-youth-table__weeks-column,
+  .v2-youth-table__progress-column {
+    width: 12%;
+  }
+
+  .v2-youth-table__status-column {
+    width: 14%;
+  }
+
+  .v2-youth-table th,
+  .v2-youth-table td {
+    border-bottom: 1px solid color-mix(in srgb, var(--atlas-border) 72%, transparent);
+    color: var(--atlas-text-secondary);
+    font-size: 0.78rem;
+    min-height: 36px;
+    overflow-wrap: anywhere;
+    padding: 8px 10px;
+    text-align: left;
+    vertical-align: middle;
+  }
+
+  .v2-youth-table thead th {
+    color: var(--atlas-text-muted);
+    font-size: 0.67rem;
+    font-weight: 750;
+    letter-spacing: 0.07em;
+    padding-bottom: 7px;
+    text-transform: uppercase;
+  }
+
+  .v2-youth-table tbody tr:last-child th,
+  .v2-youth-table tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
+  .v2-youth-table tbody th {
+    color: var(--atlas-text);
+    font-weight: 700;
+  }
+
+  .v2-youth-table__center {
+    text-align: center !important;
+  }
+
+  .v2-youth-table__empty {
+    color: var(--atlas-text-muted) !important;
+    height: 36px;
+    text-align: left;
+  }
+
+  .v2-youth-status {
+    border: 1px solid currentColor;
+    border-radius: 4px;
+    display: inline-block;
+    font-size: 0.67rem;
+    font-weight: 750;
+    line-height: 1.2;
+    padding: 3px 6px;
+    white-space: nowrap;
+  }
+
+  .v2-youth-status.is-promotion,
+  .v2-youth-status.is-promoted {
+    color: var(--semantic-info-text);
+  }
+
+  .v2-youth-status.is-attention {
+    color: var(--semantic-warning-text);
+  }
+
+  .v2-youth-status.is-review {
+    color: var(--semantic-info-text);
+  }
+
+  .v2-youth-status.is-in-academy,
+  .v2-youth-status.is-empty {
+    color: var(--atlas-text-muted);
+  }
+}

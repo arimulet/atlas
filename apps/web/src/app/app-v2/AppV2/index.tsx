@@ -20,6 +20,7 @@ import { DashboardV2 } from "../pages/DashboardV2";
 import { SquadV2 } from "../pages/SquadV2";
 import { TrainingV2 } from "../pages/TrainingV2";
 import { PlayerDetailV2 } from "../pages/PlayerDetailV2";
+import { YouthV2 } from "../pages/YouthV2";
 import type { SokkerImportCredentials } from "../components/SokkerImporterForm/types";
 import type { V2ViewId } from "../types";
 import type { AppV2Props } from "./types";
@@ -195,6 +196,8 @@ export function AppV2({ uiVersion, onUiVersionChange }: AppV2Props) {
           trainingDiagnostic={trainingDiagnostic}
           trainingStatus={trainingStatus}
         />
+      ) : activeView === "youth" ? (
+        <YouthV2 youthAcademy={youthAcademy} youthStatus={youthStatus} />
       ) : activeView === "player-detail" && selectedPlayerId !== null ? (
         <PlayerDetailV2
           development={playerDevelopment}
