@@ -143,10 +143,22 @@ export interface ClubDashboard {
     previous: SnapshotSummary | null;
     canCompare: boolean;
   };
+  trainingSummary: ClubDashboardTrainingSummary;
   developmentSummary: ClubDashboardDevelopmentSummary;
   marketSummary: ClubDashboardMarketSummary;
   youthPipelineSummary: ClubDashboardYouthPipelineSummary;
   operationalAreas: OperationalArea[];
+}
+
+export interface ClubDashboardTrainingSummary {
+  available: boolean;
+  observed: {
+    latestSnapshotDate: string | null;
+    playerCount: number;
+    playersWithTrainingData: number;
+    advancedPlayers: number;
+    formationPlayers: number;
+  };
 }
 
 export interface ClubDashboardDevelopmentSummary {
