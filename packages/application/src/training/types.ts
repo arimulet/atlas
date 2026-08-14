@@ -11,5 +11,6 @@ export interface TrainingPagePlayer {
   id: string;
   name: string;
   age: number;
+  form?: number | null;
   training: PersistedPlayerSnapshot["training"];
 }

@@ -141,7 +141,7 @@
 
 .atlas-v2 .v2-squad-table {
   border-collapse: collapse;
-  min-width: 1160px;
+  min-width: 1400px;
   table-layout: fixed;
   width: 100%;
 }
@@ -152,14 +152,11 @@
 .atlas-v2 .v2-squad-table col.is-age {
   width: 48px;
 }
-.atlas-v2 .v2-squad-table col.is-position {
+.atlas-v2 .v2-squad-table col.is-form {
   width: 62px;
 }
 .atlas-v2 .v2-squad-table col.is-skill {
   width: 43px;
-}
-.atlas-v2 .v2-squad-table col.is-training-position {
-  width: 70px;
 }
 .atlas-v2 .v2-squad-table col.is-trained-skill {
   width: 125px;
@@ -169,6 +166,18 @@
 }
 .atlas-v2 .v2-squad-table col.is-efficiency {
   width: 70px;
+}
+.atlas-v2 .v2-squad-table col.is-progress {
+  width: 70px;
+}
+.atlas-v2 .v2-squad-table col.is-talent {
+  width: 68px;
+}
+.atlas-v2 .v2-squad-table col.is-next-skill-up {
+  width: 58px;
+}
+.atlas-v2 .v2-squad-table col.is-eta {
+  width: 58px;
 }
 .atlas-v2 .v2-squad-table col.is-status {
   width: 100px;
@@ -211,7 +220,7 @@
 
 .atlas-v2 .v2-squad-table__group-row .is-skills-group,
 .atlas-v2 .v2-squad-table__group-row .is-training-group,
-.atlas-v2 .v2-squad-table thead tr:nth-child(2) th:nth-child(4),
+.atlas-v2 .v2-squad-table thead tr:nth-child(2) th:nth-child(3),
 .atlas-v2 .v2-squad-table thead tr:nth-child(2) th:nth-child(12) {
   border-left: 1px solid var(--atlas-border);
 }
@@ -226,7 +235,7 @@
   font-weight: 700;
 }
 
-.atlas-v2 .v2-squad-table tbody td:nth-child(4),
+.atlas-v2 .v2-squad-table tbody td:nth-child(3),
 .atlas-v2 .v2-squad-table tbody td:nth-child(12) {
   border-left: 1px solid color-mix(in srgb, var(--atlas-border) 72%, transparent);
 }

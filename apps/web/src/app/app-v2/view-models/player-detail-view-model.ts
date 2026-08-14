@@ -75,6 +75,7 @@ export interface PlayerDetailViewModel {
 
 export interface PlayerTrainingProjectionSummary {
   playerId: string;
+  progress: number | null;
   talent: number | null;
   nextSkillUp: number | null;
   etaWeeks: number | null;
@@ -169,6 +170,7 @@ export function createPlayerTrainingProjectionSummaries(
 
     summaries.set(player.id, {
       playerId: player.id,
+      progress: viewModel.projection.current.progress,
       talent: viewModel.talent.estimated,
       nextSkillUp: viewModel.projection.nextSkillUp?.targetLevel ?? null,
       etaWeeks: viewModel.projection.nextSkillUp?.estimatedWeeks ?? null

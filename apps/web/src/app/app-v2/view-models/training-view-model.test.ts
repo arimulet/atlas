@@ -20,11 +20,16 @@ describe("createTrainingPlayerRows", () => {
         }
       ],
       null,
-      new Map([["player-1", { playerId: "player-1", talent: 3.4, nextSkillUp: 14, etaWeeks: 2 }]])
+      new Map([
+        [
+          "player-1",
+          { playerId: "player-1", progress: 82, talent: 3.4, nextSkillUp: 14, etaWeeks: 2 }
+        ]
+      ])
     );
 
     expect(rows).toEqual([
-      expect.objectContaining({ talent: 3.4, nextSkillUp: 14, etaWeeks: 2 }),
+      expect.objectContaining({ progress: 82, talent: 3.4, nextSkillUp: 14, etaWeeks: 2 }),
       expect.objectContaining({ talent: null, nextSkillUp: null, etaWeeks: null })
     ]);
   });

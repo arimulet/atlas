@@ -47,7 +47,7 @@ export function createTrainingPlayerRows(
       advanced: player.training.advanced,
       minutes: null,
       efficiency: null,
-      progress: null,
+      progress: projectionSummary?.progress ?? null,
       talent: projectionSummary?.talent ?? null,
       nextSkillUp: projectionSummary?.nextSkillUp ?? null,
       etaWeeks: projectionSummary?.etaWeeks ?? null,
