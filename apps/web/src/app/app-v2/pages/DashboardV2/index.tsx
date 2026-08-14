@@ -11,6 +11,7 @@ type Priority = "High" | "Medium" | "Low";
 
 interface WatchPlayer {
   id: string;
+  playerId: string | null;
   name: string;
   reasons: string[];
   severity: Severity;
@@ -18,6 +19,7 @@ interface WatchPlayer {
 
 interface AttentionItem {
   id: string;
+  playerId: string | null;
   name: string | null;
   message: string;
   severity: Severity;
@@ -33,6 +35,7 @@ const severityOrder: Record<Severity, number> = {
 export function DashboardV2({
   dashboard,
   dashboardStatus,
+  onSelectPlayer,
   youthAcademy,
   youthStatus
 }: DashboardV2Props) {
@@ -45,10 +48,18 @@ export function DashboardV2({
         <h1>Dashboard</h1>
       </header>
 
-      <AttentionPanel items={attentionItems} status={dashboardStatus} />
+      <AttentionPanel
+        items={attentionItems}
+        onSelectPlayer={onSelectPlayer}
+        status={dashboardStatus}
+      />
 
       <div className="v2-dashboard__main-grid">
-        <PlayersToWatchPanel players={watchPlayers} status={dashboardStatus} />
+        <PlayersToWatchPanel
+          onSelectPlayer={onSelectPlayer}
+          players={watchPlayers}
+          status={dashboardStatus}
+        />
         <TrainingSnapshot dashboard={dashboard} status={dashboardStatus} />
       </div>
 
@@ -59,10 +70,11 @@ export function DashboardV2({
 
 interface AttentionPanelProps {
   items: AttentionItem[];
+  onSelectPlayer: (playerId: string) => void;
   status: DashboardStatus;
 }
 
-function AttentionPanel({ items, status }: AttentionPanelProps) {
+function AttentionPanel({ items, onSelectPlayer, status }: AttentionPanelProps) {
   return (
     <section
       className="v2-dashboard-panel v2-dashboard-panel--attention"
@@ -87,7 +99,21 @@ function AttentionPanel({ items, status }: AttentionPanelProps) {
                 {item.severity === "info" || item.severity === "low" ? "i" : "!"}
               </span>
               <span>
-                {item.name ? <strong>{item.name}</strong> : null}
+                {item.name ? (
+                  <strong>
+                    {item.playerId ? (
+                      <button
+                        className="v2-dashboard-player-link"
+                        type="button"
+                        onClick={() => onSelectPlayer(item.playerId!)}
+                      >
+                        {item.name}
+                      </button>
+                    ) : (
+                      item.name
+                    )}
+                  </strong>
+                ) : null}
                 {item.name ? " — " : null}
                 {item.message}
               </span>
@@ -101,11 +127,12 @@ function AttentionPanel({ items, status }: AttentionPanelProps) {
 }
 
 interface PlayersToWatchPanelProps {
+  onSelectPlayer: (playerId: string) => void;
   players: WatchPlayer[];
   status: DashboardStatus;
 }
 
-function PlayersToWatchPanel({ players, status }: PlayersToWatchPanelProps) {
+function PlayersToWatchPanel({ onSelectPlayer, players, status }: PlayersToWatchPanelProps) {
   return (
     <section className="v2-dashboard-panel" aria-labelledby="players-to-watch-title">
       <PanelHeading id="players-to-watch-title" title="Players to Watch" />
@@ -128,7 +155,19 @@ function PlayersToWatchPanel({ players, status }: PlayersToWatchPanelProps) {
           </div>
           {players.map((player) => (
             <div className="v2-dashboard-watch-row" role="row" key={player.id}>
-              <strong role="cell">{player.name}</strong>
+              <strong role="cell">
+                {player.playerId ? (
+                  <button
+                    className="v2-dashboard-player-link"
+                    type="button"
+                    onClick={() => onSelectPlayer(player.playerId!)}
+                  >
+                    {player.name}
+                  </button>
+                ) : (
+                  player.name
+                )}
+              </strong>
               <span role="cell">{player.reasons.join(" · ")}</span>
               <span role="cell">
                 <PriorityBadge severity={player.severity} />
@@ -280,6 +319,7 @@ function buildAttentionItems(
 
     items.push({
       id: `development-${player.playerId ?? player.name}`,
+      playerId: player.playerId,
       name: player.name,
       message: developmentReason(player),
       severity: player.severity
@@ -293,6 +333,7 @@ function buildAttentionItems(
 
     items.push({
       id: `youth-pipeline-${player.playerId ?? player.name}`,
+      playerId: player.playerId,
       name: player.name,
       message: youthPipelineReason(player),
       severity: player.severity
@@ -306,6 +347,7 @@ function buildAttentionItems(
 
     items.push({
       id: `academy-${player.id}`,
+      playerId: null,
       name: player.name,
       message: academyReason(player),
       severity: player.severity
@@ -324,6 +366,7 @@ function buildWatchPlayers(
   for (const player of dashboard.developmentSummary.inferred.highlightedPlayers) {
     addWatchPlayer(players, {
       id: player.playerId ?? player.name.toLocaleLowerCase(),
+      playerId: player.playerId,
       name: player.name,
       reasons: [developmentReason(player)],
       severity: player.severity
@@ -333,6 +376,7 @@ function buildWatchPlayers(
   for (const player of dashboard.youthPipelineSummary.inferred.highlightedPlayers) {
     addWatchPlayer(players, {
       id: player.playerId ?? player.name.toLocaleLowerCase(),
+      playerId: player.playerId,
       name: player.name,
       reasons: [youthPipelineReason(player)],
       severity: player.severity
@@ -346,6 +390,7 @@ function buildWatchPlayers(
 
     addWatchPlayer(players, {
       id: player.id,
+      playerId: null,
       name: player.name,
       reasons: [academyReason(player)],
       severity: player.severity
@@ -364,6 +409,7 @@ function addWatchPlayer(players: Map<string, WatchPlayer>, incoming: WatchPlayer
   }
 
   existing.reasons = [...new Set([...existing.reasons, ...incoming.reasons])];
+  existing.playerId ??= incoming.playerId;
   if (severityOrder[incoming.severity] > severityOrder[existing.severity]) {
     existing.severity = incoming.severity;
   }

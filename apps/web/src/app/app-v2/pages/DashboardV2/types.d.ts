@@ -7,6 +7,7 @@ import type {
 export interface DashboardV2Props {
   dashboard: ClubDashboard | null;
   dashboardStatus: DashboardStatus;
+  onSelectPlayer: (playerId: string) => void;
   youthAcademy: RealYouthAcademyPlanning | null;
   youthStatus: DashboardStatus;
 }

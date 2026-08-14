@@ -222,6 +222,21 @@
   font-weight: 700;
 }
 
+.atlas-v2 .v2-training-player-link {
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+  text-align: left;
+}
+
+.atlas-v2 .v2-training-player-link:hover,
+.atlas-v2 .v2-training-player-link:focus-visible {
+  color: var(--atlas-accent);
+}
+
 .atlas-v2 .v2-training-table tbody td {
   color: var(--atlas-text-secondary);
 }

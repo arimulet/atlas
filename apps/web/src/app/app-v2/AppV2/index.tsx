@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import {
   fetchClubDashboard,
+  fetchPlayerDevelopment,
   fetchRealYouthAcademyPlanning,
   fetchTrainingPageData,
   syncSokkerXml
@@ -10,12 +11,14 @@ import type {
   ClubDashboard,
   DashboardStatus,
   ImportResponse,
+  PlayerDevelopment,
   RealYouthAcademyPlanning,
   TrainingPageData
 } from "@atlas/web/app/types";
 import { AppShell } from "../components/AppShell";
 import { DashboardV2 } from "../pages/DashboardV2";
 import { TrainingV2 } from "../pages/TrainingV2";
+import { PlayerDetailV2 } from "../pages/PlayerDetailV2";
 import type { SokkerImportCredentials } from "../components/SokkerImporterForm/types";
 import type { V2ViewId } from "../types";
 import type { AppV2Props } from "./types";
@@ -41,6 +44,8 @@ export function AppV2({ uiVersion, onUiVersionChange }: AppV2Props) {
   );
   const [training, setTraining] = useState<TrainingPageData | null>(null);
   const [trainingDiagnostic, setTrainingDiagnostic] = useState<ImportResponse["diagnostic"]>(null);
+  const [playerDevelopment, setPlayerDevelopment] = useState<PlayerDevelopment | null>(null);
+  const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
 
   const loadDashboard = useCallback(async (clubId: string): Promise<boolean> => {
     setDashboardStatus("loading");
@@ -84,6 +89,16 @@ export function AppV2({ uiVersion, onUiVersionChange }: AppV2Props) {
     }
   }, []);
 
+  const loadPlayerDevelopment = useCallback(async (clubId: string): Promise<boolean> => {
+    try {
+      setPlayerDevelopment(await fetchPlayerDevelopment(clubId));
+      return true;
+    } catch {
+      setPlayerDevelopment(null);
+      return false;
+    }
+  }, []);
+
   useEffect(() => {
     if (!activeClubId) {
       return;
@@ -92,7 +107,8 @@ export function AppV2({ uiVersion, onUiVersionChange }: AppV2Props) {
     void loadDashboard(activeClubId);
     void loadYouthAcademy(activeClubId);
     void loadTraining(activeClubId);
-  }, [activeClubId, loadDashboard, loadTraining, loadYouthAcademy]);
+    void loadPlayerDevelopment(activeClubId);
+  }, [activeClubId, loadDashboard, loadPlayerDevelopment, loadTraining, loadYouthAcademy]);
 
   const handleSokkerImport = useCallback(
     async (credentials: SokkerImportCredentials) => {
@@ -107,15 +123,18 @@ export function AppV2({ uiVersion, onUiVersionChange }: AppV2Props) {
       if (body.importResult.clubId) {
         window.localStorage.setItem(lastClubStorageKey, body.importResult.clubId);
         setActiveClubId(body.importResult.clubId);
-        const [dashboardLoaded, youthLoaded, trainingLoaded] = await Promise.all([
-          loadDashboard(body.importResult.clubId),
-          loadYouthAcademy(body.importResult.clubId),
-          loadTraining(body.importResult.clubId)
-        ]);
+        const [dashboardLoaded, youthLoaded, trainingLoaded, developmentLoaded] = await Promise.all(
+          [
+            loadDashboard(body.importResult.clubId),
+            loadYouthAcademy(body.importResult.clubId),
+            loadTraining(body.importResult.clubId),
+            loadPlayerDevelopment(body.importResult.clubId)
+          ]
+        );
 
         setTrainingDiagnostic(body.diagnostic);
 
-        if (!dashboardLoaded || !youthLoaded || !trainingLoaded) {
+        if (!dashboardLoaded || !youthLoaded || !trainingLoaded || !developmentLoaded) {
           throw new Error("Datos actualizados, pero no se pudo recargar el Dashboard.");
         }
 
@@ -124,8 +143,17 @@ export function AppV2({ uiVersion, onUiVersionChange }: AppV2Props) {
 
       return body;
     },
-    [loadDashboard, loadYouthAcademy]
+    [loadDashboard, loadPlayerDevelopment, loadTraining, loadYouthAcademy]
   );
+
+  const handleSelectPlayer = useCallback((playerId: string) => {
+    setSelectedPlayerId(playerId);
+    setActiveView("player-detail");
+  }, []);
+
+  const handleBackFromPlayerDetail = useCallback(() => {
+    setActiveView("training");
+  }, []);
 
   return (
     <AppShell
@@ -142,11 +170,22 @@ export function AppV2({ uiVersion, onUiVersionChange }: AppV2Props) {
         <DashboardV2
           dashboard={dashboard}
           dashboardStatus={dashboardStatus}
+          onSelectPlayer={handleSelectPlayer}
           youthAcademy={youthAcademy}
           youthStatus={youthStatus}
         />
       ) : activeView === "training" ? (
         <TrainingV2
+          onSelectPlayer={handleSelectPlayer}
+          training={training}
+          trainingDiagnostic={trainingDiagnostic}
+          trainingStatus={trainingStatus}
+        />
+      ) : activeView === "player-detail" && selectedPlayerId !== null ? (
+        <PlayerDetailV2
+          development={playerDevelopment}
+          onBack={handleBackFromPlayerDetail}
+          playerId={selectedPlayerId}
           training={training}
           trainingDiagnostic={trainingDiagnostic}
           trainingStatus={trainingStatus}

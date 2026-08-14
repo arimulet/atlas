@@ -1,6 +1,7 @@
 export type V2ViewId =
   | "dashboard"
   | "training"
+  | "player-detail"
   | "squad-economy"
   | "player-development"
   | "squad-market-planning"
