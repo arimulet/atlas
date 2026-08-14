@@ -3,7 +3,9 @@ import {
   buildSkillUpObservations,
   buildTalentObservationProfile,
   calculateAgeTrainingCostFactor,
+  calculateExpectedWeeksToSkillUp,
   calculateSkillTrainingCostFactor,
+  calculateRequiredTrainingPoints,
   createTrainingHistory,
   createTrainingWeek,
   estimateTalentFromSkillUpObservation,
@@ -207,5 +209,77 @@ describe("talent observation", () => {
         observations: [talentObservation({ playerId: 43 })]
       })
     ).toThrow("All TalentObservations must belong to the profile playerId.");
+  });
+
+  it("calculates expected weeks for the next level at full effectiveness", () => {
+    const profile = buildTalentObservationProfile({
+      playerId: 42,
+      observations: [
+        talentObservation({ estimatedTalent: 4, popWeek: 104 }),
+        talentObservation({ estimatedTalent: 4, popWeek: 204 })
+      ]
+    });
+    const result = calculateExpectedWeeksToSkillUp({
+      profile,
+      skill: "technique",
+      age: 18,
+      currentSkillLevel: 11
+    });
+    const requiredTraining = calculateRequiredTrainingPoints({
+      talent: 4,
+      age: 18,
+      skill: "technique",
+      targetSkillLevel: 12
+    });
+
+    expect(result).toMatchObject({
+      playerId: 42,
+      skill: "technique",
+      fromLevel: 11,
+      targetSkillLevel: 12,
+      age: 18,
+      talent: 4,
+      weeklyTrainingPoints: 100,
+      requiredTrainingPoints: requiredTraining.requiredTrainingPoints,
+      status: "calculable",
+      sourceObservationCount: 2
+    });
+    expect(result.expectedWeeks).toBeCloseTo(requiredTraining.requiredTrainingPoints / 100);
+  });
+
+  it("returns insufficient data instead of inventing a prediction", () => {
+    const profile = buildTalentObservationProfile({
+      playerId: 42,
+      observations: [talentObservation({ estimatedTalent: 4, popWeek: 104 })]
+    });
+    const result = calculateExpectedWeeksToSkillUp({
+      profile,
+      skill: "technique",
+      age: 18,
+      currentSkillLevel: 11
+    });
+
+    expect(result).toMatchObject({
+      targetSkillLevel: 12,
+      weeklyTrainingPoints: 100,
+      sourceObservationCount: 1,
+      status: "insufficient_data",
+      talent: null,
+      requiredTrainingPoints: null,
+      expectedWeeks: null
+    });
+  });
+
+  it("rejects a player already at the maximum skill level", () => {
+    const profile = buildTalentObservationProfile({ playerId: 42, observations: [] });
+
+    expect(() =>
+      calculateExpectedWeeksToSkillUp({
+        profile,
+        skill: "technique",
+        age: 18,
+        currentSkillLevel: 18
+      })
+    ).toThrow("currentSkillLevel must be less than the maximum skill level.");
   });
 });
