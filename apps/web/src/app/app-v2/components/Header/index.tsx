@@ -20,22 +20,6 @@ export function Header({ onOpenSokkerImporter }: HeaderProps) {
           </svg>
           <span>Actualizar</span>
         </button>
-        <label className="v2-search">
-          <span className="v2-search__icon" aria-hidden="true">
-            ⌕
-          </span>
-          <span className="sr-only">Search</span>
-          <input type="search" placeholder="Search..." disabled />
-        </label>
-        <button type="button" className="v2-icon-button" aria-label="Notifications" disabled>
-          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
-            <path d="M10 21h4" />
-          </svg>
-        </button>
-        <button type="button" className="v2-avatar" aria-label="Profile" disabled>
-          AT
-        </button>
       </div>
     </header>
   );
