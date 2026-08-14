@@ -1,7 +1,7 @@
 import { describeDiagnosticFinding } from "@atlas/web/app/diagnostic-copy";
 import { formatTrainingPriority } from "@atlas/web/app/formatters";
 import type { DiagnosticFinding, TrainingPageData, TrainingPagePlayer } from "@atlas/web/app/types";
-import type { TrainingV2Props } from "./types";
+import type { TrainingPlayerRow, TrainingStatusLabel, TrainingV2Props } from "./types";
 
 const TRAINING_POSITIONS = [
   { code: "GK", trainingPosition: 0 },
@@ -23,6 +23,7 @@ export function TrainingV2({ training, trainingDiagnostic, trainingStatus }: Tra
       <TrainingAttention diagnostic={trainingDiagnostic} status={trainingStatus} />
       <TrainingPositionSections
         configuration={training?.configuration ?? null}
+        diagnostic={trainingDiagnostic}
         players={training?.players ?? []}
         status={trainingStatus}
       />
@@ -117,12 +118,14 @@ function TrainingAttentionItem({ finding }: TrainingAttentionItemProps) {
 
 interface TrainingPositionSectionsProps {
   configuration: TrainingPageData["configuration"];
+  diagnostic: TrainingV2Props["trainingDiagnostic"];
   players: TrainingPageData["players"];
   status: TrainingV2Props["trainingStatus"];
 }
 
 function TrainingPositionSections({
   configuration,
+  diagnostic,
   players,
   status
 }: TrainingPositionSectionsProps) {
@@ -130,14 +133,14 @@ function TrainingPositionSections({
     return null;
   }
 
+  const rows = createTrainingPlayerRows(players, diagnostic);
+
   return (
     <div className="v2-training-position-sections">
       {TRAINING_POSITIONS.map((position) => (
         <TrainingPositionSection
           key={position.code}
-          players={players.filter(
-            (player) => player.training.position === position.trainingPosition
-          )}
+          players={rows.filter((player) => player.trainingPosition === position.trainingPosition)}
           position={position}
           trainedSkill={configuration?.[position.code] ?? null}
         />
@@ -147,7 +150,7 @@ function TrainingPositionSections({
 }
 
 interface TrainingPositionSectionProps {
-  players: TrainingPageData["players"];
+  players: TrainingPlayerRow[];
   position: TrainingPosition;
   trainedSkill: number | null;
 }
@@ -174,26 +177,39 @@ function TrainingPositionSection({
 }
 
 interface TrainingPositionTableProps {
-  players: TrainingPageData["players"];
+  players: TrainingPlayerRow[];
 }
 
 function TrainingPositionTable({ players }: TrainingPositionTableProps) {
   return (
     <div className="v2-training-table-wrap">
       <table className="v2-training-table">
+        <colgroup>
+          <col />
+          <col />
+          <col />
+          <col />
+          <col />
+          <col />
+          <col />
+        </colgroup>
         <thead>
           <tr>
             <th scope="col">Player</th>
             <th scope="col">Age</th>
             <th scope="col">Advanced</th>
+            <th scope="col">Minutes</th>
+            <th scope="col">Efficiency</th>
+            <th scope="col">Progress</th>
+            <th scope="col">Status</th>
           </tr>
         </thead>
         <tbody>
           {players.length > 0 ? (
-            players.map((player) => <PlayerRow key={player.id} player={player} />)
+            players.map((player) => <PlayerRow key={player.playerId} player={player} />)
           ) : (
             <tr>
-              <td className="v2-training-table__empty" colSpan={3}>
+              <td className="v2-training-table__empty" colSpan={7}>
                 No players assigned.
               </td>
             </tr>
@@ -205,21 +221,111 @@ function TrainingPositionTable({ players }: TrainingPositionTableProps) {
 }
 
 interface PlayerRowProps {
-  player: TrainingPagePlayer;
+  player: TrainingPlayerRow;
 }
 
 function PlayerRow({ player }: PlayerRowProps) {
   return (
     <tr>
-      <th scope="row">{player.name}</th>
-      <td>{player.age}</td>
+      <th scope="row">{player.playerName}</th>
+      <td className="v2-training-table__numeric">{player.age}</td>
       <td>
-        <span className={`v2-training-advanced${player.training.advanced ? " is-active" : ""}`}>
-          {player.training.advanced ? "\u2713" : "\u2014"}
+        <span
+          className={`v2-training-advanced${player.advanced ? " is-active" : ""}`}
+          aria-label={player.advanced ? "Advanced training" : "No advanced training"}
+        >
+          {player.advanced ? "\u2713" : "\u2014"}
         </span>
+      </td>
+      <td className="v2-training-table__numeric">{formatNumber(player.minutes)}</td>
+      <td className="v2-training-table__numeric">{formatPercentage(player.efficiency)}</td>
+      <td className="v2-training-table__numeric">{formatPercentage(player.progress)}</td>
+      <td>
+        <TrainingStatus status={player.status} />
       </td>
     </tr>
   );
+}
+
+interface TrainingStatusProps {
+  status: TrainingStatusLabel | null;
+}
+
+function TrainingStatus({ status }: TrainingStatusProps) {
+  return (
+    <span className={`v2-training-status${status ? ` is-${status.toLowerCase()}` : " is-empty"}`}>
+      {status ?? "\u2014"}
+    </span>
+  );
+}
+
+function createTrainingPlayerRows(
+  players: TrainingPagePlayer[],
+  diagnostic: TrainingV2Props["trainingDiagnostic"]
+): TrainingPlayerRow[] {
+  return players.map((player) => ({
+    playerId: player.id,
+    playerName: player.name,
+    trainingPosition: player.training.position,
+    age: player.age,
+    advanced: player.training.advanced,
+    minutes: null,
+    efficiency: null,
+    progress: null,
+    status: trainingStatusForPlayer(player, diagnostic)
+  }));
+}
+
+function trainingStatusForPlayer(
+  player: TrainingPagePlayer,
+  diagnostic: TrainingV2Props["trainingDiagnostic"]
+): TrainingStatusLabel | null {
+  const findings =
+    diagnostic?.findings.filter(
+      (finding) =>
+        finding.category === "training-potential" &&
+        (finding.parameters?.playerName === player.name ||
+          finding.affectedPlayerIds.includes(player.id))
+    ) ?? [];
+
+  const highestSeverity = findings.reduce<DiagnosticFinding["severity"] | null>(
+    (current, finding) =>
+      current === null || severityPriority(finding.severity) > severityPriority(current)
+        ? finding.severity
+        : current,
+    null
+  );
+
+  return highestSeverity === null ? null : statusLabelForSeverity(highestSeverity);
+}
+
+function statusLabelForSeverity(severity: DiagnosticFinding["severity"]): TrainingStatusLabel {
+  if (severity === "high") {
+    return "Critical";
+  }
+
+  if (severity === "info") {
+    return "Info";
+  }
+
+  return "Attention";
+}
+
+function severityPriority(severity: DiagnosticFinding["severity"]): number {
+  if (severity === "high") return 4;
+  if (severity === "medium") return 3;
+  if (severity === "low") return 2;
+  return 1;
+}
+
+function formatNumber(value: number | null): string {
+  return value === null ? "\u2014" : value.toLocaleString("en-US");
+}
+
+function formatPercentage(value: number | null): string {
+  return value === null
+    ? "\u2014"
+    : `${value.toLocaleString("en-US", { maximumFractionDigits: 1 })}%`;
 }
 
 function RecentTrainingProgress() {
