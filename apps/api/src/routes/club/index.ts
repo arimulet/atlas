@@ -6,6 +6,7 @@ import {
   getClubOperatingSettings,
   getClubProfile,
   getClubSnapshots,
+  getTrainingPageData,
   updateClubOperatingSettings,
   updateClubProfile
 } from "@atlas/application";
@@ -42,6 +43,12 @@ async function clubRoutes(server: FastifyInstance) {
     const dashboard = await getClubDashboard(clubId);
 
     return dashboard;
+  });
+
+  server.get<{ Params: GetClubDashboardParams }>("/training", async (request) => {
+    const { clubId } = request.params;
+
+    return getTrainingPageData(clubId);
   });
 
   server.patch<{ Params: PatchClubProfileParams }>("/profile", async (request) => {

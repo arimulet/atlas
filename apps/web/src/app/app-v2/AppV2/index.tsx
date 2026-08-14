@@ -3,15 +3,18 @@ import { useCallback, useEffect, useState } from "react";
 import {
   fetchClubDashboard,
   fetchRealYouthAcademyPlanning,
+  fetchTrainingPageData,
   syncSokkerXml
 } from "@atlas/web/app/api";
 import type {
   ClubDashboard,
   DashboardStatus,
-  RealYouthAcademyPlanning
+  RealYouthAcademyPlanning,
+  TrainingPageData
 } from "@atlas/web/app/types";
 import { AppShell } from "../components/AppShell";
 import { DashboardV2 } from "../pages/DashboardV2";
+import { TrainingV2 } from "../pages/TrainingV2";
 import type { SokkerImportCredentials } from "../components/SokkerImporterForm/types";
 import type { V2ViewId } from "../types";
 import type { AppV2Props } from "./types";
@@ -32,6 +35,10 @@ export function AppV2({ uiVersion, onUiVersionChange }: AppV2Props) {
     activeClubId ? "loading" : "idle"
   );
   const [youthAcademy, setYouthAcademy] = useState<RealYouthAcademyPlanning | null>(null);
+  const [trainingStatus, setTrainingStatus] = useState<DashboardStatus>(
+    activeClubId ? "loading" : "idle"
+  );
+  const [training, setTraining] = useState<TrainingPageData | null>(null);
 
   const loadDashboard = useCallback(async (clubId: string): Promise<boolean> => {
     setDashboardStatus("loading");
@@ -61,6 +68,20 @@ export function AppV2({ uiVersion, onUiVersionChange }: AppV2Props) {
     }
   }, []);
 
+  const loadTraining = useCallback(async (clubId: string): Promise<boolean> => {
+    setTrainingStatus("loading");
+
+    try {
+      setTraining(await fetchTrainingPageData(clubId));
+      setTrainingStatus("ready");
+      return true;
+    } catch {
+      setTraining(null);
+      setTrainingStatus("error");
+      return false;
+    }
+  }, []);
+
   useEffect(() => {
     if (!activeClubId) {
       return;
@@ -68,7 +89,8 @@ export function AppV2({ uiVersion, onUiVersionChange }: AppV2Props) {
 
     void loadDashboard(activeClubId);
     void loadYouthAcademy(activeClubId);
-  }, [activeClubId, loadDashboard, loadYouthAcademy]);
+    void loadTraining(activeClubId);
+  }, [activeClubId, loadDashboard, loadTraining, loadYouthAcademy]);
 
   const handleSokkerImport = useCallback(
     async (credentials: SokkerImportCredentials) => {
@@ -83,12 +105,13 @@ export function AppV2({ uiVersion, onUiVersionChange }: AppV2Props) {
       if (body.importResult.clubId) {
         window.localStorage.setItem(lastClubStorageKey, body.importResult.clubId);
         setActiveClubId(body.importResult.clubId);
-        const [dashboardLoaded, youthLoaded] = await Promise.all([
+        const [dashboardLoaded, youthLoaded, trainingLoaded] = await Promise.all([
           loadDashboard(body.importResult.clubId),
-          loadYouthAcademy(body.importResult.clubId)
+          loadYouthAcademy(body.importResult.clubId),
+          loadTraining(body.importResult.clubId)
         ]);
 
-        if (!dashboardLoaded || !youthLoaded) {
+        if (!dashboardLoaded || !youthLoaded || !trainingLoaded) {
           throw new Error("Datos actualizados, pero no se pudo recargar el Dashboard.");
         }
 
@@ -118,6 +141,8 @@ export function AppV2({ uiVersion, onUiVersionChange }: AppV2Props) {
           youthAcademy={youthAcademy}
           youthStatus={youthStatus}
         />
+      ) : activeView === "training" ? (
+        <TrainingV2 training={training} trainingStatus={trainingStatus} />
       ) : (
         <div className="v2-placeholder">
           <span className="v2-placeholder__eyebrow">ATLAS UI V2</span>
