@@ -98,6 +98,21 @@
   font-weight: 700;
 }
 
+.atlas-v2 .v2-dashboard-player-link {
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+  text-align: left;
+}
+
+.atlas-v2 .v2-dashboard-player-link:hover,
+.atlas-v2 .v2-dashboard-player-link:focus-visible {
+  color: var(--atlas-accent);
+}
+
 .v2-dashboard-attention-item__icon {
   align-items: center;
   border: 1px solid currentColor;

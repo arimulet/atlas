@@ -1,0 +1,204 @@
+.atlas-v2 .v2-player-detail {
+  display: grid;
+  gap: 14px;
+  max-width: 1440px;
+}
+
+.atlas-v2 .v2-player-detail__header {
+  padding: 0 0 3px;
+}
+
+.atlas-v2 .v2-player-detail__header h1 {
+  color: var(--atlas-text);
+  font-size: 1.55rem;
+  line-height: 1.1;
+  margin: 8px 0 5px;
+}
+
+.atlas-v2 .v2-player-detail__header p {
+  color: var(--atlas-text-secondary);
+  font-size: 0.8rem;
+  margin: 0;
+}
+
+.atlas-v2 .v2-player-detail__back {
+  background: transparent;
+  border: 0;
+  color: var(--atlas-text-muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.75rem;
+  padding: 0;
+}
+
+.atlas-v2 .v2-player-detail__back:hover,
+.atlas-v2 .v2-player-detail__back:focus-visible {
+  color: var(--atlas-accent);
+}
+
+.atlas-v2 .v2-player-detail-panel {
+  background: var(--atlas-surface);
+  border: 1px solid var(--atlas-border);
+  border-radius: var(--atlas-radius-md);
+  min-width: 0;
+  padding: 14px 16px;
+}
+
+.atlas-v2 .v2-player-detail-panel--attention {
+  border-color: color-mix(in srgb, var(--semantic-warning-border) 55%, var(--atlas-border));
+}
+
+.atlas-v2 .v2-player-detail-panel__title {
+  color: var(--atlas-text);
+  font-size: 0.82rem;
+  font-weight: 750;
+  letter-spacing: 0.07em;
+  margin: 0 0 12px;
+  text-transform: uppercase;
+}
+
+.atlas-v2 .v2-player-detail__summary-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.atlas-v2 .v2-player-detail__message {
+  color: var(--atlas-text-secondary);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.atlas-v2 .v2-player-detail__message--quiet {
+  color: var(--atlas-text-muted);
+}
+
+.atlas-v2 .v2-player-detail__attention-list {
+  display: grid;
+  gap: 7px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.atlas-v2 .v2-player-detail__attention-list li {
+  align-items: baseline;
+  color: var(--atlas-text-secondary);
+  display: flex;
+  font-size: 0.78rem;
+  gap: 8px;
+  line-height: 1.35;
+}
+
+.atlas-v2 .v2-player-detail__attention-list li > span:first-child {
+  color: var(--semantic-warning-text);
+  flex: 0 0 12px;
+  text-align: center;
+}
+
+.atlas-v2 .v2-player-detail__attention-list li.is-low > span:first-child,
+.atlas-v2 .v2-player-detail__attention-list li.is-info > span:first-child {
+  color: var(--semantic-info-text);
+}
+
+.atlas-v2 .v2-player-detail__skills-grid {
+  display: grid;
+  gap: 0 22px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0;
+}
+
+.atlas-v2 .v2-player-detail__skills-grid > div,
+.atlas-v2 .v2-player-detail__data-list > div {
+  align-items: center;
+  border-bottom: 1px solid color-mix(in srgb, var(--atlas-border) 72%, transparent);
+  display: flex;
+  justify-content: space-between;
+  min-height: 34px;
+}
+
+.atlas-v2 .v2-player-detail__skills-grid dt,
+.atlas-v2 .v2-player-detail__data-list dt {
+  color: var(--atlas-text-secondary);
+  font-size: 0.78rem;
+}
+
+.atlas-v2 .v2-player-detail__skills-grid dd,
+.atlas-v2 .v2-player-detail__data-list dd {
+  align-items: center;
+  color: var(--atlas-text);
+  display: flex;
+  font-size: 0.8rem;
+  font-weight: 700;
+  gap: 8px;
+  margin: 0;
+}
+
+.atlas-v2 .v2-player-detail__data-list {
+  margin: 0;
+}
+
+.atlas-v2 .v2-player-detail__table-wrap {
+  overflow-x: auto;
+}
+
+.atlas-v2 .v2-player-detail__table {
+  border-collapse: collapse;
+  min-width: 440px;
+  width: 100%;
+}
+
+.atlas-v2 .v2-player-detail__table th,
+.atlas-v2 .v2-player-detail__table td {
+  border-bottom: 1px solid color-mix(in srgb, var(--atlas-border) 72%, transparent);
+  color: var(--atlas-text-secondary);
+  font-size: 0.76rem;
+  height: 35px;
+  padding: 6px 8px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.atlas-v2 .v2-player-detail__table thead th {
+  color: var(--atlas-text-muted);
+  font-size: 0.64rem;
+  font-weight: 750;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.atlas-v2 .v2-player-detail__table tbody th {
+  color: var(--atlas-text);
+  font-weight: 700;
+}
+
+.atlas-v2 .v2-player-detail__table tr:last-child th,
+.atlas-v2 .v2-player-detail__table tr:last-child td {
+  border-bottom: 0;
+}
+
+.atlas-v2 .v2-player-detail__data-list > div:last-child,
+.atlas-v2 .v2-player-detail__skills-grid > div:nth-last-child(-n + 2) {
+  border-bottom: 0;
+}
+
+@media (max-width: 760px) {
+  .atlas-v2 .v2-player-detail__summary-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 450px) {
+  .atlas-v2 .v2-player-detail__skills-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .atlas-v2 .v2-player-detail__skills-grid > div:nth-last-child(-n + 2) {
+    border-bottom: 1px solid color-mix(in srgb, var(--atlas-border) 72%, transparent);
+  }
+
+  .atlas-v2 .v2-player-detail__skills-grid > div:last-child {
+    border-bottom: 0;
+  }
+}
