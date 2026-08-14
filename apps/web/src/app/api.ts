@@ -5,6 +5,7 @@ import type {
   RealYouthAcademyPlanning,
   SquadEconomy,
   SquadMarketPlanning,
+  TrainingPageData,
   YouthPipelinePlanning
 } from "./types";
 
@@ -14,6 +15,17 @@ export async function fetchClubDashboard(clubId: string): Promise<ClubDashboard>
 
   if (!response.ok || !body) {
     throw new Error("Dashboard API returned an unexpected response.");
+  }
+
+  return body;
+}
+
+export async function fetchTrainingPageData(clubId: string): Promise<TrainingPageData> {
+  const response = await fetch(`/api/clubs/${clubId}/training`);
+  const body = (await response.json()) as TrainingPageData;
+
+  if (!response.ok || !body) {
+    throw new Error("Training API returned an unexpected response.");
   }
 
   return body;

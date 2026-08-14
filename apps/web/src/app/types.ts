@@ -161,6 +161,28 @@ export interface ClubDashboardTrainingSummary {
   };
 }
 
+export interface TrainingPageData {
+  snapshotId: string | null;
+  snapshotDate: string | null;
+  configuration: {
+    GK: number | null;
+    DEF: number | null;
+    MID: number | null;
+    ATT: number | null;
+  } | null;
+  players: TrainingPagePlayer[];
+}
+
+export interface TrainingPagePlayer {
+  id: string;
+  name: string;
+  age: number;
+  training: {
+    position: number;
+    advanced: boolean;
+  };
+}
+
 export interface ClubDashboardDevelopmentSummary {
   available: boolean;
   detailPath: string;
