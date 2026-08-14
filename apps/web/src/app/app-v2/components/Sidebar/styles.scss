@@ -1,0 +1,43 @@
+.v2-sidebar {
+  background: #151e23;
+  border-right: 1px solid var(--atlas-border);
+  display: flex;
+  flex-direction: column;
+  grid-column: 1;
+  grid-row: 2;
+  min-height: 0;
+  padding: 20px 12px 14px;
+
+  &__navigation {
+    min-height: 0;
+  }
+
+  &__label {
+    color: var(--atlas-text-muted);
+    font-size: 0.66rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    margin: 0 10px 9px;
+    text-transform: uppercase;
+  }
+
+  nav {
+    display: grid;
+    gap: 3px;
+  }
+
+  &__footer {
+    border-top: 1px solid var(--atlas-border);
+    margin-top: auto;
+    padding-top: 14px;
+
+    .ui-version-switch {
+      display: flex;
+      width: 100%;
+
+      button {
+        flex: 1;
+      }
+    }
+  }
+}

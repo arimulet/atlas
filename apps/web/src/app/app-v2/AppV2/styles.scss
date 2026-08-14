@@ -1,0 +1,35 @@
+.v2-placeholder {
+  background: var(--atlas-surface);
+  border: 1px solid var(--atlas-border);
+  border-radius: var(--atlas-radius-md);
+  max-width: 900px;
+  padding: 24px;
+
+  &__eyebrow {
+    color: var(--atlas-accent);
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    margin-bottom: 10px;
+  }
+
+  &__section {
+    border-top: 1px solid var(--atlas-border);
+    display: flex;
+    gap: 8px;
+    margin-top: 20px;
+    padding-top: 14px;
+
+    span {
+      color: var(--atlas-text-muted);
+      font-size: 0.76rem;
+    }
+
+    strong {
+      color: var(--atlas-text);
+      font-size: 0.76rem;
+      font-weight: 700;
+    }
+  }
+}

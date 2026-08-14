@@ -12,12 +12,7 @@ const navigationItems: V2NavigationItem[] = [
   { id: "real-youth-academy", label: "Youth Academy", icon: "⚽" }
 ];
 
-export function Sidebar({
-  activeView,
-  onUiVersionChange,
-  onViewChange,
-  uiVersion
-}: SidebarProps) {
+export function Sidebar({ activeView, onUiVersionChange, onViewChange, uiVersion }: SidebarProps) {
   return (
     <aside className="v2-sidebar">
       <div className="v2-sidebar__navigation">
