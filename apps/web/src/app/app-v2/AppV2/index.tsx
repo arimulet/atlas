@@ -17,6 +17,7 @@ import type {
 } from "@atlas/web/app/types";
 import { AppShell } from "../components/AppShell";
 import { DashboardV2 } from "../pages/DashboardV2";
+import { SquadV2 } from "../pages/SquadV2";
 import { TrainingV2 } from "../pages/TrainingV2";
 import { PlayerDetailV2 } from "../pages/PlayerDetailV2";
 import type { SokkerImportCredentials } from "../components/SokkerImporterForm/types";
@@ -46,6 +47,7 @@ export function AppV2({ uiVersion, onUiVersionChange }: AppV2Props) {
   const [trainingDiagnostic, setTrainingDiagnostic] = useState<ImportResponse["diagnostic"]>(null);
   const [playerDevelopment, setPlayerDevelopment] = useState<PlayerDevelopment | null>(null);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
+  const [playerDetailReturnView, setPlayerDetailReturnView] = useState<V2ViewId>("training");
 
   const loadDashboard = useCallback(async (clubId: string): Promise<boolean> => {
     setDashboardStatus("loading");
@@ -146,14 +148,18 @@ export function AppV2({ uiVersion, onUiVersionChange }: AppV2Props) {
     [loadDashboard, loadPlayerDevelopment, loadTraining, loadYouthAcademy]
   );
 
-  const handleSelectPlayer = useCallback((playerId: string) => {
-    setSelectedPlayerId(playerId);
-    setActiveView("player-detail");
-  }, []);
+  const handleSelectPlayer = useCallback(
+    (playerId: string) => {
+      setPlayerDetailReturnView(activeView === "squad" ? "squad" : "training");
+      setSelectedPlayerId(playerId);
+      setActiveView("player-detail");
+    },
+    [activeView]
+  );
 
   const handleBackFromPlayerDetail = useCallback(() => {
-    setActiveView("training");
-  }, []);
+    setActiveView(playerDetailReturnView);
+  }, [playerDetailReturnView]);
 
   return (
     <AppShell
@@ -173,6 +179,14 @@ export function AppV2({ uiVersion, onUiVersionChange }: AppV2Props) {
           onSelectPlayer={handleSelectPlayer}
           youthAcademy={youthAcademy}
           youthStatus={youthStatus}
+        />
+      ) : activeView === "squad" ? (
+        <SquadV2
+          development={playerDevelopment}
+          onSelectPlayer={handleSelectPlayer}
+          training={training}
+          trainingDiagnostic={trainingDiagnostic}
+          trainingStatus={trainingStatus}
         />
       ) : activeView === "training" ? (
         <TrainingV2

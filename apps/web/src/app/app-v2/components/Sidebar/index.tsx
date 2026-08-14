@@ -4,6 +4,7 @@ import { SidebarItem } from "../SidebarItem";
 import { SidebarProps } from "./types";
 
 const navigationItems: V2NavigationItem[] = [
+  { id: "squad", label: "Squad", icon: "S" },
   { id: "training", label: "Training", icon: "T" },
   { id: "dashboard", label: "Dashboard", icon: "⌂" },
   { id: "squad-economy", label: "Squad Economy", icon: "◇" },
