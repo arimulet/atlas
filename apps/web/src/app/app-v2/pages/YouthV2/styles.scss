@@ -106,7 +106,7 @@
 
   .v2-youth-table {
     border-collapse: collapse;
-    min-width: 760px;
+    min-width: 900px;
     table-layout: fixed;
     width: 100%;
   }
@@ -126,11 +126,15 @@
 
   .v2-youth-table__weeks-column,
   .v2-youth-table__progress-column {
-    width: 12%;
+    width: 11%;
+  }
+
+  .v2-youth-table__promotion-column {
+    width: 11%;
   }
 
   .v2-youth-table__status-column {
-    width: 14%;
+    width: 13%;
   }
 
   .v2-youth-table th,

@@ -17,6 +17,7 @@ describe("youth view model", () => {
       level: { value: 8, label: null },
       weeksLeft: 0,
       progress: null,
+      promotion: "Ready",
       status: "Promotion"
     });
   });
@@ -46,6 +47,33 @@ describe("youth view model", () => {
         severity: "info"
       }
     ]);
+  });
+
+  it("uses the persisted promotion status instead of inferring it from weeks", () => {
+    const planning = createPlanning();
+    const academyPlayerPlanning = {
+      ...planning,
+      derived: {
+        ...planning.derived,
+        players: [{ ...planning.derived.players[0]!, status: "in_academy" as const }]
+      }
+    };
+
+    const academyRows = createYouthPlayerRows(academyPlayerPlanning);
+
+    expect(academyRows[0]?.promotion).toBeNull();
+
+    const promotedPlayerPlanning = {
+      ...planning,
+      derived: {
+        ...planning.derived,
+        players: [{ ...planning.derived.players[0]!, status: "promoted" as const }]
+      }
+    };
+
+    const promotedRows = createYouthPlayerRows(promotedPlayerPlanning);
+
+    expect(promotedRows[0]?.promotion).toBe("Promoted");
   });
 });
 

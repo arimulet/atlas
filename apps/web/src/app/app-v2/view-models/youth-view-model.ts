@@ -5,6 +5,7 @@ import type {
 } from "@atlas/web/app/types";
 
 export type YouthStatusLabel = "In academy" | "Promotion" | "Promoted" | "Attention" | "Review";
+export type YouthPromotionLabel = "Ready" | "Promoted";
 
 export interface YouthLevelValue {
   value: number;
@@ -19,6 +20,7 @@ export interface YouthPlayerRow {
   level: YouthLevelValue | null;
   weeksLeft: number | null;
   progress: number | null;
+  promotion: YouthPromotionLabel | null;
   status: YouthStatusLabel | null;
 }
 
@@ -45,6 +47,7 @@ export function createYouthPlayerRows(planning: RealYouthAcademyPlanning | null)
     level: player.skill === null ? null : { value: player.skill, label: null },
     weeksLeft: player.weeksRemaining,
     progress: null,
+    promotion: youthPromotionForPlayer(player),
     status: youthStatusForPlayer(player)
   }));
 }
@@ -127,6 +130,18 @@ function youthStatusForPlayer(player: RealYouthAcademyPlayerPlan): YouthStatusLa
   }
 
   return "In academy";
+}
+
+function youthPromotionForPlayer(player: RealYouthAcademyPlayerPlan): YouthPromotionLabel | null {
+  if (player.status === "ready_for_promotion") {
+    return "Ready";
+  }
+
+  if (player.status === "promoted") {
+    return "Promoted";
+  }
+
+  return null;
 }
 
 function youthWarningMessage(code: string): string {

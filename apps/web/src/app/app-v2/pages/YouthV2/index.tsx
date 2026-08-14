@@ -103,6 +103,7 @@ function YouthPlayers({ planning, rows, status }: YouthPlayersProps) {
             <col className="v2-youth-table__level-column" />
             <col className="v2-youth-table__weeks-column" />
             <col className="v2-youth-table__progress-column" />
+            <col className="v2-youth-table__promotion-column" />
             <col className="v2-youth-table__status-column" />
           </colgroup>
           <thead>
@@ -113,6 +114,7 @@ function YouthPlayers({ planning, rows, status }: YouthPlayersProps) {
               <th scope="col">Current Level</th>
               <th scope="col">Weeks Left</th>
               <th scope="col">Progress</th>
+              <th scope="col">Promotion</th>
               <th scope="col">Status</th>
             </tr>
           </thead>
@@ -141,7 +143,7 @@ function YouthPlayers({ planning, rows, status }: YouthPlayersProps) {
 function YouthTableMessage({ message }: { message: string }) {
   return (
     <tr>
-      <td className="v2-youth-table__empty" colSpan={7}>
+      <td className="v2-youth-table__empty" colSpan={8}>
         {message}
       </td>
     </tr>
@@ -157,6 +159,7 @@ function YouthPlayerTableRow({ row }: { row: YouthPlayerRow }) {
       <td>{formatLevel(row.level)}</td>
       <td className="v2-youth-table__center">{row.weeksLeft ?? "—"}</td>
       <td className="v2-youth-table__center">{formatProgress(row.progress)}</td>
+      <td className="v2-youth-table__center">{row.promotion ?? "—"}</td>
       <td>
         <span
           className={`v2-youth-status${row.status ? ` is-${statusClass(row.status)}` : " is-empty"}`}
