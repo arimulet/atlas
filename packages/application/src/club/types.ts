@@ -33,6 +33,7 @@ export interface ClubDashboard {
     previous: ClubDashboardSnapshotSummary | null;
     canCompare: boolean;
   };
+  trainingSummary: ClubDashboardTrainingSummary;
   developmentSummary: ClubDashboardDevelopmentSummary;
   marketSummary: ClubDashboardMarketSummary;
   youthPipelineSummary: ClubDashboardYouthPipelineSummary;
@@ -52,6 +53,17 @@ export interface ClubDashboard {
     status: ClubDashboardStatus;
     summary: string;
   }>;
+}
+
+export interface ClubDashboardTrainingSummary {
+  available: boolean;
+  observed: {
+    latestSnapshotDate: string | null;
+    playerCount: number;
+    playersWithTrainingData: number;
+    advancedPlayers: number;
+    formationPlayers: number;
+  };
 }
 
 export type ClubDashboardStatus = "available" | "ready" | "planned";

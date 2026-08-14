@@ -1,26 +1,104 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
-import { syncSokkerXml } from "@atlas/web/app/api";
+import {
+  fetchClubDashboard,
+  fetchRealYouthAcademyPlanning,
+  syncSokkerXml
+} from "@atlas/web/app/api";
+import type {
+  ClubDashboard,
+  DashboardStatus,
+  RealYouthAcademyPlanning
+} from "@atlas/web/app/types";
 import { AppShell } from "../components/AppShell";
+import { DashboardV2 } from "../pages/DashboardV2";
 import type { SokkerImportCredentials } from "../components/SokkerImporterForm/types";
 import type { V2ViewId } from "../types";
 import type { AppV2Props } from "./types";
 
+const lastClubStorageKey = "atlas.lastClubId";
+
 export function AppV2({ uiVersion, onUiVersionChange }: AppV2Props) {
   const [activeView, setActiveView] = useState<V2ViewId>("dashboard");
   const [isSokkerImportOpen, setIsSokkerImportOpen] = useState(false);
+  const [activeClubId, setActiveClubId] = useState<string | null>(() =>
+    window.localStorage.getItem(lastClubStorageKey)
+  );
+  const [dashboardStatus, setDashboardStatus] = useState<DashboardStatus>(
+    activeClubId ? "loading" : "idle"
+  );
+  const [dashboard, setDashboard] = useState<ClubDashboard | null>(null);
+  const [youthStatus, setYouthStatus] = useState<DashboardStatus>(
+    activeClubId ? "loading" : "idle"
+  );
+  const [youthAcademy, setYouthAcademy] = useState<RealYouthAcademyPlanning | null>(null);
 
-  const handleSokkerImport = useCallback(async (credentials: SokkerImportCredentials) => {
-    const { response, body } = await syncSokkerXml(credentials);
+  const loadDashboard = useCallback(async (clubId: string): Promise<boolean> => {
+    setDashboardStatus("loading");
 
-    if (!response.ok || body.importResult.status === "rejected") {
-      const message = body.importResult.errors.map((error) => error.message).join(" ");
+    try {
+      setDashboard(await fetchClubDashboard(clubId));
+      setDashboardStatus("ready");
+      return true;
+    } catch {
+      setDashboard(null);
+      setDashboardStatus("error");
+      return false;
+    }
+  }, []);
 
-      throw new Error(message || "No se pudieron actualizar los datos.");
+  const loadYouthAcademy = useCallback(async (clubId: string): Promise<boolean> => {
+    setYouthStatus("loading");
+
+    try {
+      setYouthAcademy(await fetchRealYouthAcademyPlanning(clubId));
+      setYouthStatus("ready");
+      return true;
+    } catch {
+      setYouthAcademy(null);
+      setYouthStatus("error");
+      return false;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!activeClubId) {
+      return;
     }
 
-    return body;
-  }, []);
+    void loadDashboard(activeClubId);
+    void loadYouthAcademy(activeClubId);
+  }, [activeClubId, loadDashboard, loadYouthAcademy]);
+
+  const handleSokkerImport = useCallback(
+    async (credentials: SokkerImportCredentials) => {
+      const { response, body } = await syncSokkerXml(credentials);
+
+      if (!response.ok || body.importResult.status === "rejected") {
+        const message = body.importResult.errors.map((error) => error.message).join(" ");
+
+        throw new Error(message || "No se pudieron actualizar los datos.");
+      }
+
+      if (body.importResult.clubId) {
+        window.localStorage.setItem(lastClubStorageKey, body.importResult.clubId);
+        setActiveClubId(body.importResult.clubId);
+        const [dashboardLoaded, youthLoaded] = await Promise.all([
+          loadDashboard(body.importResult.clubId),
+          loadYouthAcademy(body.importResult.clubId)
+        ]);
+
+        if (!dashboardLoaded || !youthLoaded) {
+          throw new Error("Datos actualizados, pero no se pudo recargar el Dashboard.");
+        }
+
+        setIsSokkerImportOpen(false);
+      }
+
+      return body;
+    },
+    [loadDashboard, loadYouthAcademy]
+  );
 
   return (
     <AppShell
@@ -33,19 +111,27 @@ export function AppV2({ uiVersion, onUiVersionChange }: AppV2Props) {
       onOpenSokkerImport={() => setIsSokkerImportOpen(true)}
       onSokkerImport={handleSokkerImport}
     >
-      <div className="v2-placeholder">
-        <span className="v2-placeholder__eyebrow">ATLAS UI V2</span>
-        <h1>{activeView === "dashboard" ? "Dashboard" : "Módulo en preparación"}</h1>
-        <p>
-          {activeView === "dashboard"
-            ? "Nueva estructura visual lista para trabajar página por página."
-            : "La navegación ya está preparada; el contenido funcional se migrará en una siguiente etapa."}
-        </p>
-        <div className="v2-placeholder__section">
-          <span>Sección seleccionada</span>
-          <strong>{activeView}</strong>
+      {activeView === "dashboard" ? (
+        <DashboardV2
+          dashboard={dashboard}
+          dashboardStatus={dashboardStatus}
+          youthAcademy={youthAcademy}
+          youthStatus={youthStatus}
+        />
+      ) : (
+        <div className="v2-placeholder">
+          <span className="v2-placeholder__eyebrow">ATLAS UI V2</span>
+          <h1>Módulo en preparación</h1>
+          <p>
+            La navegación ya está preparada; el contenido funcional se migrará en una siguiente
+            etapa.
+          </p>
+          <div className="v2-placeholder__section">
+            <span>Sección seleccionada</span>
+            <strong>{activeView}</strong>
+          </div>
         </div>
-      </div>
+      )}
     </AppShell>
   );
 }
