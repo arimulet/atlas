@@ -7,8 +7,10 @@ import {
   createTrainingPlayerRows,
   TRAINING_POSITIONS
 } from "../../view-models/training-view-model";
+import { createPlayerTrainingProjectionSummaries } from "../../view-models/player-detail-view-model";
 
 export function TrainingV2({
+  development,
   onSelectPlayer,
   training,
   trainingDiagnostic,
@@ -25,9 +27,11 @@ export function TrainingV2({
       <TrainingPositionSections
         configuration={training?.configuration ?? null}
         diagnostic={trainingDiagnostic}
+        development={development}
         onSelectPlayer={onSelectPlayer}
         players={training?.players ?? []}
         status={trainingStatus}
+        training={training}
       />
       <RecentTrainingProgress />
     </div>
@@ -121,23 +125,33 @@ function TrainingAttentionItem({ finding }: TrainingAttentionItemProps) {
 interface TrainingPositionSectionsProps {
   configuration: TrainingPageData["configuration"];
   diagnostic: TrainingV2Props["trainingDiagnostic"];
+  development: TrainingV2Props["development"];
   onSelectPlayer: (playerId: string) => void;
   players: TrainingPageData["players"];
   status: TrainingV2Props["trainingStatus"];
+  training: TrainingPageData | null;
 }
 
 function TrainingPositionSections({
   configuration,
   diagnostic,
+  development,
   onSelectPlayer,
   players,
-  status
+  status,
+  training
 }: TrainingPositionSectionsProps) {
   if (status !== "ready") {
     return null;
   }
 
-  const rows = createTrainingPlayerRows(players, diagnostic);
+  const projectionSummaries = createPlayerTrainingProjectionSummaries({
+    development,
+    training,
+    trainingDiagnostic: diagnostic,
+    trainingStatus: status
+  });
+  const rows = createTrainingPlayerRows(players, diagnostic, projectionSummaries);
 
   return (
     <div className="v2-training-position-sections">
@@ -200,6 +214,9 @@ function TrainingPositionTable({ onSelectPlayer, players }: TrainingPositionTabl
           <col />
           <col />
           <col />
+          <col />
+          <col />
+          <col />
         </colgroup>
         <thead>
           <tr>
@@ -209,6 +226,9 @@ function TrainingPositionTable({ onSelectPlayer, players }: TrainingPositionTabl
             <th scope="col">Minutes</th>
             <th scope="col">Efficiency</th>
             <th scope="col">Progress</th>
+            <th scope="col">Talent</th>
+            <th scope="col">Next Skill-up</th>
+            <th scope="col">ETA</th>
             <th scope="col">Status</th>
           </tr>
         </thead>
@@ -219,7 +239,7 @@ function TrainingPositionTable({ onSelectPlayer, players }: TrainingPositionTabl
             ))
           ) : (
             <tr>
-              <td className="v2-training-table__empty" colSpan={7}>
+              <td className="v2-training-table__empty" colSpan={10}>
                 No players assigned.
               </td>
             </tr>
@@ -259,6 +279,9 @@ function PlayerRow({ onSelectPlayer, player }: PlayerRowProps) {
       <td className="v2-training-table__numeric">{formatNumber(player.minutes)}</td>
       <td className="v2-training-table__numeric">{formatPercentage(player.efficiency)}</td>
       <td className="v2-training-table__numeric">{formatPercentage(player.progress)}</td>
+      <td className="v2-training-table__numeric">{formatTalent(player.talent)}</td>
+      <td className="v2-training-table__numeric">{formatNumber(player.nextSkillUp)}</td>
+      <td className="v2-training-table__numeric">{formatEta(player.etaWeeks)}</td>
       <td>
         <TrainingStatus status={player.status} />
       </td>
@@ -286,6 +309,22 @@ function formatPercentage(value: number | null): string {
   return value === null
     ? "\u2014"
     : `${value.toLocaleString("en-US", { maximumFractionDigits: 1 })}%`;
+}
+
+function formatTalent(value: number | null): string {
+  return value === null ? "\u2014" : value.toLocaleString("en-US", { maximumFractionDigits: 1 });
+}
+
+function formatEta(value: number | null): string {
+  if (value === null) {
+    return "\u2014";
+  }
+
+  if (value < 1) {
+    return "<1w";
+  }
+
+  return `~${value.toLocaleString("en-US", { maximumFractionDigits: 1 })}w`;
 }
 
 function RecentTrainingProgress() {

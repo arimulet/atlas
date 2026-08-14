@@ -191,6 +191,7 @@ export function AppV2({ uiVersion, onUiVersionChange }: AppV2Props) {
         />
       ) : activeView === "training" ? (
         <TrainingV2
+          development={playerDevelopment}
           onSelectPlayer={handleSelectPlayer}
           training={training}
           trainingDiagnostic={trainingDiagnostic}

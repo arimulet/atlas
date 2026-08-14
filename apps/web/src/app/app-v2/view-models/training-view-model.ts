@@ -1,4 +1,5 @@
 import type { DiagnosticFinding, TrainingPageData, TrainingPagePlayer } from "@atlas/web/app/types";
+import type { PlayerTrainingProjectionSummary } from "./player-detail-view-model";
 
 export type TrainingStatusLabel = "Critical" | "Attention" | "Info";
 
@@ -11,6 +12,9 @@ export interface TrainingPlayerRow {
   minutes: number | null;
   efficiency: number | null;
   progress: number | null;
+  talent: number | null;
+  nextSkillUp: number | null;
+  etaWeeks: number | null;
   status: TrainingStatusLabel | null;
 }
 
@@ -29,19 +33,27 @@ export type TrainingPositionCode = (typeof TRAINING_POSITIONS)[number]["code"];
 
 export function createTrainingPlayerRows(
   players: TrainingPagePlayer[],
-  diagnostic: TrainingDiagnostic | null
+  diagnostic: TrainingDiagnostic | null,
+  projectionSummaries?: ReadonlyMap<string, PlayerTrainingProjectionSummary>
 ): TrainingPlayerRow[] {
-  return players.map((player) => ({
-    playerId: player.id,
-    playerName: player.name,
-    trainingPosition: player.training.position,
-    age: player.age,
-    advanced: player.training.advanced,
-    minutes: null,
-    efficiency: null,
-    progress: null,
-    status: trainingStatusForPlayer(player, diagnostic)
-  }));
+  return players.map((player) => {
+    const projectionSummary = projectionSummaries?.get(player.id);
+
+    return {
+      playerId: player.id,
+      playerName: player.name,
+      trainingPosition: player.training.position,
+      age: player.age,
+      advanced: player.training.advanced,
+      minutes: null,
+      efficiency: null,
+      progress: null,
+      talent: projectionSummary?.talent ?? null,
+      nextSkillUp: projectionSummary?.nextSkillUp ?? null,
+      etaWeeks: projectionSummary?.etaWeeks ?? null,
+      status: trainingStatusForPlayer(player, diagnostic)
+    };
+  });
 }
 
 export function trainingStatusForPlayer(

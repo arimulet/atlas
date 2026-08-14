@@ -73,6 +73,13 @@ export interface PlayerDetailViewModel {
   trainingHistory: [];
 }
 
+export interface PlayerTrainingProjectionSummary {
+  playerId: string;
+  talent: number | null;
+  nextSkillUp: number | null;
+  etaWeeks: number | null;
+}
+
 export interface CreatePlayerDetailViewModelInput {
   playerId: string;
   training: TrainingPageData | null;
@@ -148,6 +155,29 @@ export function createPlayerDetailViewModel(
   };
 }
 
+export function createPlayerTrainingProjectionSummaries(
+  input: Omit<CreatePlayerDetailViewModelInput, "playerId">
+): ReadonlyMap<string, PlayerTrainingProjectionSummary> {
+  const summaries = new Map<string, PlayerTrainingProjectionSummary>();
+
+  for (const player of input.training?.players ?? []) {
+    const viewModel = createPlayerDetailViewModel({ ...input, playerId: player.id });
+
+    if (!viewModel) {
+      continue;
+    }
+
+    summaries.set(player.id, {
+      playerId: player.id,
+      talent: viewModel.talent.estimated,
+      nextSkillUp: viewModel.projection.nextSkillUp?.targetLevel ?? null,
+      etaWeeks: viewModel.projection.nextSkillUp?.estimatedWeeks ?? null
+    });
+  }
+
+  return summaries;
+}
+
 function createRecentSkillUps(
   development: PlayerDevelopment | null,
   playerId: string | null
@@ -186,6 +216,9 @@ function createTrainingRow(
     minutes: null,
     efficiency: null,
     progress: null,
+    talent: null,
+    nextSkillUp: null,
+    etaWeeks: null,
     status: trainingStatusForPlayer(player, diagnostic)
   };
 }
