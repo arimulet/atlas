@@ -15,13 +15,6 @@
   margin: 0;
 }
 
-.atlas-v2 .v2-training__main-grid {
-  align-items: start;
-  display: grid;
-  gap: 14px;
-  grid-template-columns: minmax(0, 2.8fr) minmax(250px, 1fr);
-}
-
 .atlas-v2 .v2-training-panel {
   background: var(--atlas-surface);
   border: 1px solid var(--atlas-border);
@@ -43,8 +36,7 @@
   text-transform: uppercase;
 }
 
-.atlas-v2 .v2-training-panel__message,
-.atlas-v2 .v2-training-panel__note {
+.atlas-v2 .v2-training-panel__message {
   color: var(--atlas-text-secondary);
   font-size: 0.78rem;
   line-height: 1.45;
@@ -55,44 +47,37 @@
   color: var(--semantic-error-text);
 }
 
-.atlas-v2 .v2-training-panel__note {
-  border-top: 1px solid var(--atlas-border);
-  color: var(--atlas-text-muted);
-  font-size: 0.7rem;
-  margin-top: 10px;
-  padding-top: 9px;
-}
-
-.atlas-v2 .v2-training-position-tables {
+.atlas-v2 .v2-training-attention-list {
   display: grid;
-  gap: 12px;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
-.atlas-v2 .v2-training-position-table {
-  border: 1px solid color-mix(in srgb, var(--atlas-border) 82%, transparent);
-  border-radius: var(--atlas-radius-sm);
-  min-width: 0;
-  padding: 10px 12px;
-}
-
-.atlas-v2 .v2-training-position-table h3 {
-  align-items: center;
+.atlas-v2 .v2-training-attention-item {
+  align-items: baseline;
   color: var(--atlas-text-secondary);
   display: flex;
-  font-size: 0.7rem;
-  font-weight: 700;
+  font-size: 0.78rem;
   gap: 8px;
-  justify-content: space-between;
-  letter-spacing: 0.04em;
-  margin: 0 0 8px;
-  text-transform: uppercase;
+  line-height: 1.35;
 }
 
-.atlas-v2 .v2-training-position-heading {
-  align-items: center;
-  display: inline-flex;
-  gap: 8px;
+.atlas-v2 .v2-training-attention-item > span:first-child {
+  color: var(--atlas-text-muted);
+  flex: 0 0 12px;
+  text-align: center;
+}
+
+.atlas-v2 .v2-training-attention-item.is-high > span:first-child,
+.atlas-v2 .v2-training-attention-item.is-medium > span:first-child {
+  color: var(--semantic-warning-text);
+}
+
+.atlas-v2 .v2-training-attention-item.is-low > span:first-child,
+.atlas-v2 .v2-training-attention-item.is-info > span:first-child {
+  color: var(--semantic-info-text);
 }
 
 .atlas-v2 .v2-training-configuration {
@@ -117,14 +102,6 @@
   white-space: nowrap;
 }
 
-.atlas-v2 .v2-training-position-name {
-  color: var(--atlas-text-secondary);
-  font-size: 0.76rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .atlas-v2 .v2-training-position-badge {
   align-items: center;
   border: 1px solid var(--atlas-border);
@@ -142,13 +119,47 @@
   padding: 3px 5px;
 }
 
+.atlas-v2 .v2-training-position-sections {
+  display: grid;
+  gap: 14px;
+}
+
+.atlas-v2 .v2-training-position-section {
+  background: var(--atlas-surface);
+  border: 1px solid var(--atlas-border);
+  border-radius: var(--atlas-radius-md);
+  min-width: 0;
+  padding: 12px 16px 8px;
+}
+
+.atlas-v2 .v2-training-position-section__header {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  margin-bottom: 9px;
+}
+
+.atlas-v2 .v2-training-position-section__header h2 {
+  color: var(--atlas-text);
+  font-size: 0.86rem;
+  font-weight: 750;
+  margin: 0;
+}
+
+.atlas-v2 .v2-training-position-section__header > span {
+  color: var(--atlas-text-muted);
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+
 .atlas-v2 .v2-training-table-wrap {
   overflow-x: auto;
 }
 
 .atlas-v2 .v2-training-table {
   border-collapse: collapse;
-  min-width: 260px;
+  min-width: 360px;
   width: 100%;
 }
 
@@ -156,8 +167,8 @@
 .atlas-v2 .v2-training-table td {
   border-bottom: 1px solid color-mix(in srgb, var(--atlas-border) 72%, transparent);
   font-size: 0.78rem;
-  min-height: 36px;
-  padding: 8px 8px;
+  height: 36px;
+  padding: 6px 8px;
   text-align: left;
   white-space: nowrap;
 }
@@ -166,6 +177,7 @@
   color: var(--atlas-text-muted);
   font-size: 0.65rem;
   font-weight: 750;
+  height: 27px;
   letter-spacing: 0.07em;
   padding-top: 0;
   text-transform: uppercase;
@@ -188,6 +200,7 @@
 .atlas-v2 .v2-training-table th:first-child,
 .atlas-v2 .v2-training-table td:first-child {
   padding-left: 0;
+  width: 100%;
 }
 
 .atlas-v2 .v2-training-table__empty {
@@ -206,17 +219,7 @@
   color: var(--semantic-success-text);
 }
 
-@media (max-width: 900px) {
-  .atlas-v2 .v2-training__main-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
 @media (max-width: 700px) {
-  .atlas-v2 .v2-training-position-tables {
-    grid-template-columns: 1fr;
-  }
-
   .atlas-v2 .v2-training-configuration {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }

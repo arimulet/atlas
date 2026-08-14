@@ -1,17 +1,18 @@
+import { describeDiagnosticFinding } from "@atlas/web/app/diagnostic-copy";
 import { formatTrainingPriority } from "@atlas/web/app/formatters";
-import type { TrainingPageData, TrainingPagePlayer } from "@atlas/web/app/types";
+import type { DiagnosticFinding, TrainingPageData, TrainingPagePlayer } from "@atlas/web/app/types";
 import type { TrainingV2Props } from "./types";
 
-const trainingPositions = [
-  { code: "GK", label: "Goalkeeper" },
-  { code: "DEF", label: "Defender" },
-  { code: "MID", label: "Midfielder" },
-  { code: "ATT", label: "Attacker" }
+const TRAINING_POSITIONS = [
+  { code: "GK", trainingPosition: 0 },
+  { code: "DEF", trainingPosition: 1 },
+  { code: "MID", trainingPosition: 2 },
+  { code: "ATT", trainingPosition: 3 }
 ] as const;
-type TrainingPosition = (typeof trainingPositions)[number];
-type TrainingPositionCode = TrainingPosition["code"];
 
-export function TrainingV2({ training, trainingStatus }: TrainingV2Props) {
+type TrainingPosition = (typeof TRAINING_POSITIONS)[number];
+
+export function TrainingV2({ training, trainingDiagnostic, trainingStatus }: TrainingV2Props) {
   return (
     <div className="v2-training">
       <header className="v2-training__header">
@@ -19,14 +20,13 @@ export function TrainingV2({ training, trainingStatus }: TrainingV2Props) {
       </header>
 
       <TrainingConfiguration configuration={training?.configuration ?? null} />
-
-      <div className="v2-training__main-grid">
-        <PlayersTraining
-          players={training?.players ?? []}
-          status={trainingStatus}
-        />
-        <TrainingAttention status={trainingStatus} />
-      </div>
+      <TrainingAttention diagnostic={trainingDiagnostic} status={trainingStatus} />
+      <TrainingPositionSections
+        configuration={training?.configuration ?? null}
+        players={training?.players ?? []}
+        status={trainingStatus}
+      />
+      <RecentTrainingProgress />
     </div>
   );
 }
@@ -41,10 +41,9 @@ function TrainingConfiguration({ configuration }: TrainingConfigurationProps) {
       <PanelTitle id="training-configuration-title" title="Training Configuration" />
       {configuration ? (
         <div className="v2-training-configuration">
-          {trainingPositions.map((position) => (
+          {TRAINING_POSITIONS.map((position) => (
             <div className="v2-training-configuration__item" key={position.code}>
               <span className="v2-training-position-badge">{position.code}</span>
-              <span className="v2-training-position-name">{position.label}</span>
               <strong>{skillLabel(configuration[position.code])}</strong>
             </div>
           ))}
@@ -56,83 +55,152 @@ function TrainingConfiguration({ configuration }: TrainingConfigurationProps) {
   );
 }
 
-interface PlayersTrainingProps {
+interface TrainingAttentionProps {
+  diagnostic: TrainingV2Props["trainingDiagnostic"];
+  status: TrainingV2Props["trainingStatus"];
+}
+
+function TrainingAttention({ diagnostic, status }: TrainingAttentionProps) {
+  const trainingFindings =
+    diagnostic?.findings
+      .filter((finding) => finding.category === "training-potential")
+      .sort(compareDiagnosticSeverity)
+      .slice(0, 5) ?? [];
+
+  return (
+    <section
+      className="v2-training-panel v2-training-panel--attention"
+      aria-labelledby="training-attention-title"
+    >
+      <PanelTitle id="training-attention-title" title="Training Attention" />
+      {status === "loading" ? <PanelMessage>Loading diagnostics...</PanelMessage> : null}
+      {status === "error" ? (
+        <PanelMessage tone="error">Training diagnostics are unavailable.</PanelMessage>
+      ) : null}
+      {status === "idle" ? (
+        <PanelMessage>Import a club snapshot to inspect training diagnostics.</PanelMessage>
+      ) : null}
+      {status === "ready" && diagnostic === null ? (
+        <PanelMessage>
+          Training diagnostics are not available in the current snapshot model.
+        </PanelMessage>
+      ) : null}
+      {status === "ready" && diagnostic !== null && trainingFindings.length === 0 ? (
+        <PanelMessage>No training issues detected.</PanelMessage>
+      ) : null}
+      {status === "ready" && trainingFindings.length > 0 ? (
+        <ul className="v2-training-attention-list">
+          {trainingFindings.map((finding) => (
+            <TrainingAttentionItem
+              key={`${finding.code}-${finding.affectedPlayerIds.join("-")}`}
+              finding={finding}
+            />
+          ))}
+        </ul>
+      ) : null}
+    </section>
+  );
+}
+
+interface TrainingAttentionItemProps {
+  finding: DiagnosticFinding;
+}
+
+function TrainingAttentionItem({ finding }: TrainingAttentionItemProps) {
+  return (
+    <li className={`v2-training-attention-item is-${finding.severity}`}>
+      <span aria-hidden="true">{attentionIcon(finding.severity)}</span>
+      <span>{describeDiagnosticFinding(finding)}</span>
+    </li>
+  );
+}
+
+interface TrainingPositionSectionsProps {
+  configuration: TrainingPageData["configuration"];
   players: TrainingPageData["players"];
   status: TrainingV2Props["trainingStatus"];
 }
 
-function PlayersTraining({ players, status }: PlayersTrainingProps) {
+function TrainingPositionSections({
+  configuration,
+  players,
+  status
+}: TrainingPositionSectionsProps) {
+  if (status !== "ready") {
+    return null;
+  }
+
   return (
-    <section className="v2-training-panel v2-training-panel--players" aria-labelledby="players-title">
-      <PanelTitle id="players-title" title="Players Training" />
-      {status === "loading" ? <PanelMessage>Loading training data...</PanelMessage> : null}
-      {status === "error" ? (
-        <PanelMessage tone="error">Training data is unavailable.</PanelMessage>
-      ) : null}
-      {status === "idle" ? (
-        <PanelMessage>Import a club snapshot to inspect training.</PanelMessage>
-      ) : null}
-      {status === "ready" && players.length === 0 ? (
-        <PanelMessage>No players are available in the latest snapshot.</PanelMessage>
-      ) : null}
-      {status === "ready" && players.length > 0 ? (
-        <div className="v2-training-position-tables">
-          {trainingPositions.map((position) => (
-            <TrainingPositionTable
-              key={position.code}
-              players={players.filter(
-                (player) => trainingPositionCode(player.training.position) === position.code
-              )}
-              position={position}
-            />
-          ))}
-        </div>
-      ) : null}
+    <div className="v2-training-position-sections">
+      {TRAINING_POSITIONS.map((position) => (
+        <TrainingPositionSection
+          key={position.code}
+          players={players.filter(
+            (player) => player.training.position === position.trainingPosition
+          )}
+          position={position}
+          trainedSkill={configuration?.[position.code] ?? null}
+        />
+      ))}
+    </div>
+  );
+}
+
+interface TrainingPositionSectionProps {
+  players: TrainingPageData["players"];
+  position: TrainingPosition;
+  trainedSkill: number | null;
+}
+
+function TrainingPositionSection({
+  players,
+  position,
+  trainedSkill
+}: TrainingPositionSectionProps) {
+  return (
+    <section
+      className="v2-training-position-section"
+      aria-labelledby={`training-position-${position.code}`}
+    >
+      <div className="v2-training-position-section__header">
+        <h2 id={`training-position-${position.code}`}>
+          {position.code} · {skillLabel(trainedSkill)}
+        </h2>
+        <span>{players.length} players</span>
+      </div>
+      <TrainingPositionTable players={players} />
     </section>
   );
 }
 
 interface TrainingPositionTableProps {
   players: TrainingPageData["players"];
-  position: TrainingPosition;
 }
 
-function TrainingPositionTable({ players, position }: TrainingPositionTableProps) {
+function TrainingPositionTable({ players }: TrainingPositionTableProps) {
   return (
-    <section
-      className="v2-training-position-table"
-      aria-labelledby={`training-position-${position.code}`}
-    >
-      <h3 id={`training-position-${position.code}`}>
-        <span className="v2-training-position-heading">
-          <span className="v2-training-position-badge">{position.code}</span>
-          <span>{position.label}</span>
-        </span>
-        <span>{players.length} players</span>
-      </h3>
-      <div className="v2-training-table-wrap">
-        <table className="v2-training-table">
-          <thead>
+    <div className="v2-training-table-wrap">
+      <table className="v2-training-table">
+        <thead>
+          <tr>
+            <th scope="col">Player</th>
+            <th scope="col">Age</th>
+            <th scope="col">Advanced</th>
+          </tr>
+        </thead>
+        <tbody>
+          {players.length > 0 ? (
+            players.map((player) => <PlayerRow key={player.id} player={player} />)
+          ) : (
             <tr>
-              <th scope="col">Player</th>
-              <th scope="col">Age</th>
-              <th scope="col">Advanced</th>
+              <td className="v2-training-table__empty" colSpan={3}>
+                No players assigned.
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {players.length > 0 ? (
-              players.map((player) => <PlayerRow key={player.id} player={player} />)
-            ) : (
-              <tr>
-                <td className="v2-training-table__empty" colSpan={3}>
-                  No players assigned
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-    </section>
+          )}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
@@ -147,31 +215,18 @@ function PlayerRow({ player }: PlayerRowProps) {
       <td>{player.age}</td>
       <td>
         <span className={`v2-training-advanced${player.training.advanced ? " is-active" : ""}`}>
-          {player.training.advanced ? "✓" : "—"}
+          {player.training.advanced ? "\u2713" : "\u2014"}
         </span>
       </td>
     </tr>
   );
 }
 
-interface TrainingAttentionProps {
-  status: TrainingV2Props["trainingStatus"];
-}
-
-function TrainingAttention({ status }: TrainingAttentionProps) {
+function RecentTrainingProgress() {
   return (
-    <section className="v2-training-panel v2-training-panel--attention" aria-labelledby="training-attention-title">
-      <PanelTitle id="training-attention-title" title="Training Attention" />
-      {status === "loading" ? <PanelMessage>Loading diagnostics...</PanelMessage> : null}
-      {status === "error" ? (
-        <PanelMessage tone="error">Training diagnostics are unavailable.</PanelMessage>
-      ) : null}
-      {status === "idle" ? (
-        <PanelMessage>Import a club snapshot to inspect training diagnostics.</PanelMessage>
-      ) : null}
-      {status === "ready" ? (
-        <PanelMessage>Training diagnostics are not available in the current snapshot model.</PanelMessage>
-      ) : null}
+    <section className="v2-training-panel" aria-labelledby="recent-progress-title">
+      <PanelTitle id="recent-progress-title" title="Recent Progress" />
+      <PanelMessage>No recent skill-ups detected.</PanelMessage>
     </section>
   );
 }
@@ -198,10 +253,21 @@ function PanelMessage({ children, tone }: PanelMessageProps) {
   return <p className={`v2-training-panel__message${tone ? ` is-${tone}` : ""}`}>{children}</p>;
 }
 
-function trainingPositionCode(position: number): TrainingPositionCode | null {
-  return trainingPositions[position]?.code ?? null;
-}
-
 function skillLabel(skill: number | null): string {
   return skill === null ? "Not set" : formatTrainingPriority(skill);
+}
+
+function attentionIcon(severity: DiagnosticFinding["severity"]): string {
+  return severity === "info" || severity === "low" ? "ℹ" : "⚠";
+}
+
+function compareDiagnosticSeverity(first: DiagnosticFinding, second: DiagnosticFinding): number {
+  const severityOrder: Record<DiagnosticFinding["severity"], number> = {
+    high: 0,
+    medium: 1,
+    low: 2,
+    info: 3
+  };
+
+  return severityOrder[first.severity] - severityOrder[second.severity];
 }
