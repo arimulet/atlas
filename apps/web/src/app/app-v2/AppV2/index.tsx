@@ -4,6 +4,7 @@ import {
   fetchClubDashboard,
   fetchPlayerDevelopment,
   fetchRealYouthAcademyPlanning,
+  fetchYouthPipelinePlanning,
   fetchTrainingPageData,
   syncSokkerXml
 } from "@atlas/web/app/api";
@@ -13,7 +14,8 @@ import type {
   ImportResponse,
   PlayerDevelopment,
   RealYouthAcademyPlanning,
-  TrainingPageData
+  TrainingPageData,
+  YouthPipelinePlanning
 } from "@atlas/web/app/types";
 import { AppShell } from "../components/AppShell";
 import { DashboardV2 } from "../pages/DashboardV2";
@@ -21,6 +23,7 @@ import { SquadV2 } from "../pages/SquadV2";
 import { TrainingV2 } from "../pages/TrainingV2";
 import { PlayerDetailV2 } from "../pages/PlayerDetailV2";
 import { YouthV2 } from "../pages/YouthV2";
+import { DiagnosticsV2 } from "../pages/DiagnosticsV2";
 import { createPlayerTrainingProjectionSummaries } from "../view-models/player-detail-view-model";
 import type { SokkerImportCredentials } from "../components/SokkerImporterForm/types";
 import type { V2ViewId } from "../types";
@@ -42,6 +45,10 @@ export function AppV2({ uiVersion, onUiVersionChange }: AppV2Props) {
     activeClubId ? "loading" : "idle"
   );
   const [youthAcademy, setYouthAcademy] = useState<RealYouthAcademyPlanning | null>(null);
+  const [youthPipelineStatus, setYouthPipelineStatus] = useState<DashboardStatus>(
+    activeClubId ? "loading" : "idle"
+  );
+  const [youthPipeline, setYouthPipeline] = useState<YouthPipelinePlanning | null>(null);
   const [trainingStatus, setTrainingStatus] = useState<DashboardStatus>(
     activeClubId ? "loading" : "idle"
   );
@@ -115,6 +122,20 @@ export function AppV2({ uiVersion, onUiVersionChange }: AppV2Props) {
     }
   }, []);
 
+  const loadYouthPipeline = useCallback(async (clubId: string): Promise<boolean> => {
+    setYouthPipelineStatus("loading");
+
+    try {
+      setYouthPipeline(await fetchYouthPipelinePlanning(clubId));
+      setYouthPipelineStatus("ready");
+      return true;
+    } catch {
+      setYouthPipeline(null);
+      setYouthPipelineStatus("error");
+      return false;
+    }
+  }, []);
+
   useEffect(() => {
     if (!activeClubId) {
       return;
@@ -124,7 +145,15 @@ export function AppV2({ uiVersion, onUiVersionChange }: AppV2Props) {
     void loadYouthAcademy(activeClubId);
     void loadTraining(activeClubId);
     void loadPlayerDevelopment(activeClubId);
-  }, [activeClubId, loadDashboard, loadPlayerDevelopment, loadTraining, loadYouthAcademy]);
+    void loadYouthPipeline(activeClubId);
+  }, [
+    activeClubId,
+    loadDashboard,
+    loadPlayerDevelopment,
+    loadTraining,
+    loadYouthAcademy,
+    loadYouthPipeline
+  ]);
 
   const handleSokkerImport = useCallback(
     async (credentials: SokkerImportCredentials) => {
@@ -139,18 +168,29 @@ export function AppV2({ uiVersion, onUiVersionChange }: AppV2Props) {
       if (body.importResult.clubId) {
         window.localStorage.setItem(lastClubStorageKey, body.importResult.clubId);
         setActiveClubId(body.importResult.clubId);
-        const [dashboardLoaded, youthLoaded, trainingLoaded, developmentLoaded] = await Promise.all(
-          [
-            loadDashboard(body.importResult.clubId),
-            loadYouthAcademy(body.importResult.clubId),
-            loadTraining(body.importResult.clubId),
-            loadPlayerDevelopment(body.importResult.clubId)
-          ]
-        );
+        const [
+          dashboardLoaded,
+          youthLoaded,
+          trainingLoaded,
+          developmentLoaded,
+          youthPipelineLoaded
+        ] = await Promise.all([
+          loadDashboard(body.importResult.clubId),
+          loadYouthAcademy(body.importResult.clubId),
+          loadTraining(body.importResult.clubId),
+          loadPlayerDevelopment(body.importResult.clubId),
+          loadYouthPipeline(body.importResult.clubId)
+        ]);
 
         setTrainingDiagnostic(body.diagnostic);
 
-        if (!dashboardLoaded || !youthLoaded || !trainingLoaded || !developmentLoaded) {
+        if (
+          !dashboardLoaded ||
+          !youthLoaded ||
+          !trainingLoaded ||
+          !developmentLoaded ||
+          !youthPipelineLoaded
+        ) {
           throw new Error("Datos actualizados, pero no se pudo recargar el Dashboard.");
         }
 
@@ -159,12 +199,14 @@ export function AppV2({ uiVersion, onUiVersionChange }: AppV2Props) {
 
       return body;
     },
-    [loadDashboard, loadPlayerDevelopment, loadTraining, loadYouthAcademy]
+    [loadDashboard, loadPlayerDevelopment, loadTraining, loadYouthAcademy, loadYouthPipeline]
   );
 
   const handleSelectPlayer = useCallback(
     (playerId: string) => {
-      setPlayerDetailReturnView(activeView === "squad" ? "squad" : "training");
+      setPlayerDetailReturnView(
+        activeView === "squad" ? "squad" : activeView === "diagnostics" ? "diagnostics" : "training"
+      );
       setSelectedPlayerId(playerId);
       setActiveView("player-detail");
     },
@@ -214,6 +256,19 @@ export function AppV2({ uiVersion, onUiVersionChange }: AppV2Props) {
         />
       ) : activeView === "youth" ? (
         <YouthV2 youthAcademy={youthAcademy} youthStatus={youthStatus} />
+      ) : activeView === "diagnostics" ? (
+        <DiagnosticsV2
+          dashboardStatus={dashboardStatus}
+          development={playerDevelopment}
+          onSelectPlayer={handleSelectPlayer}
+          training={training}
+          trainingDiagnostic={trainingDiagnostic}
+          trainingStatus={trainingStatus}
+          youthAcademy={youthAcademy}
+          youthPipeline={youthPipeline}
+          youthPipelineStatus={youthPipelineStatus}
+          youthStatus={youthStatus}
+        />
       ) : activeView === "player-detail" && selectedPlayerId !== null ? (
         <PlayerDetailV2
           development={playerDevelopment}
