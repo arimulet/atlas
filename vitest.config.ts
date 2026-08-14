@@ -7,7 +7,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@atlas/web/*": path.resolve(__dirname, "apps/web/src/*") // Ajusta según la estructura de tu proyecto
+      "@atlas/web": path.resolve(__dirname, "apps/web/src")
     }
   }
 });
