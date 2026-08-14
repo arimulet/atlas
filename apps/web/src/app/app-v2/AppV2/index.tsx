@@ -19,6 +19,7 @@ import type {
 } from "@atlas/web/app/types";
 import { AppShell } from "../components/AppShell";
 import { DashboardV2 } from "../pages/DashboardV2";
+import { FinancesV2 } from "../pages/FinancesV2";
 import { SquadV2 } from "../pages/SquadV2";
 import { TrainingV2 } from "../pages/TrainingV2";
 import { PlayerDetailV2 } from "../pages/PlayerDetailV2";
@@ -236,6 +237,8 @@ export function AppV2({ uiVersion, onUiVersionChange }: AppV2Props) {
           youthAcademy={youthAcademy}
           youthStatus={youthStatus}
         />
+      ) : activeView === "finances" ? (
+        <FinancesV2 status={dashboardStatus} />
       ) : activeView === "squad" ? (
         <SquadV2
           development={playerDevelopment}
