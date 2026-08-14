@@ -1,1 +1,3 @@
-export type HeaderProps = Record<string, never>;
+export interface HeaderProps {
+  onOpenSokkerImporter: () => void;
+}
