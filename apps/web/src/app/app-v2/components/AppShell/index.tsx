@@ -1,18 +1,23 @@
 import { Header } from "../Header";
 import { MainContent } from "../MainContent";
+import { SokkerImportModal } from "../SokkerImportModal";
 import { Sidebar } from "../Sidebar";
 import { AppShellProps } from "./types";
 
 export function AppShell({
   activeView,
   children,
+  isSokkerImportOpen,
   onUiVersionChange,
   onViewChange,
+  onCloseSokkerImport,
+  onOpenSokkerImport,
+  onSokkerImport,
   uiVersion
 }: AppShellProps) {
   return (
-    <div className="v2-app-shell">
-      <Header />
+    <div className="atlas-v2 v2-app-shell">
+      <Header onOpenSokkerImporter={onOpenSokkerImport} />
       <Sidebar
         activeView={activeView}
         onViewChange={onViewChange}
@@ -20,6 +25,11 @@ export function AppShell({
         onUiVersionChange={onUiVersionChange}
       />
       <MainContent>{children}</MainContent>
+      <SokkerImportModal
+        isOpen={isSokkerImportOpen}
+        onClose={onCloseSokkerImport}
+        onImport={onSokkerImport}
+      />
     </div>
   );
 }
