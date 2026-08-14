@@ -1,4 +1,18 @@
 :root {
+  /* ATLAS UI V2 layout and visual tokens */
+  --atlas-header-height: 56px;
+  --atlas-sidebar-width: 232px;
+  --atlas-bg: #11181c;
+  --atlas-surface: #182126;
+  --atlas-surface-hover: #202c32;
+  --atlas-border: #2b3a41;
+  --atlas-text: #edf5f2;
+  --atlas-text-secondary: #a8b6b6;
+  --atlas-text-muted: #748488;
+  --atlas-accent: #55d39a;
+  --atlas-radius-sm: 6px;
+  --atlas-radius-md: 10px;
+
   /* Surfaces & Backgrounds */
   --bg-primary: #12181b;
   --bg-secondary: #1a2226;

@@ -1,5 +1,6 @@
 @use "./variables.scss";
 @use "@atlas/web/app/styles/components.scss";
+@use "./v2.scss";
 
 :root {
   color: var(--text-primary);
@@ -20,6 +21,10 @@
 
 body {
   margin: 0;
+}
+
+#root {
+  min-height: 100%;
 }
 
 button {
@@ -60,6 +65,38 @@ button {
   display: flex;
   gap: 16px;
   justify-content: space-between;
+}
+
+.legacy-topbar-actions {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+}
+
+.ui-version-switch {
+  align-items: center;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+}
+
+.ui-version-switch button {
+  background: transparent;
+  border-radius: 4px;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 6px 8px;
+}
+
+.ui-version-switch button:hover,
+.ui-version-switch button:focus-visible,
+.ui-version-switch button.active {
+  background: var(--bg-primary);
+  color: var(--text-dark);
 }
 
 .eyebrow {
