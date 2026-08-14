@@ -1,0 +1,338 @@
+.atlas-v2 {
+  .v2-diagnostics {
+    display: grid;
+    gap: 18px;
+    max-width: 1240px;
+
+    &__header {
+      align-items: center;
+      display: flex;
+      min-height: 34px;
+
+      h1 {
+        color: var(--atlas-text);
+        font-size: 1.35rem;
+        letter-spacing: -0.02em;
+        margin: 0;
+      }
+    }
+
+    &__section-label {
+      color: var(--atlas-text-muted);
+      font-size: 0.68rem;
+      letter-spacing: 0.1em;
+      margin: 0;
+      text-transform: uppercase;
+    }
+
+    &__filters {
+      align-items: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px 22px;
+    }
+
+    &__list {
+      min-width: 0;
+    }
+
+    &__list-header {
+      align-items: baseline;
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 9px;
+
+      h2 {
+        color: var(--atlas-text);
+        font-size: 0.9rem;
+        margin: 0;
+      }
+
+      span {
+        color: var(--atlas-text-muted);
+        font-size: 0.72rem;
+      }
+    }
+  }
+
+  .v2-diagnostics-summary {
+    background: var(--atlas-surface);
+    border: 1px solid var(--atlas-border);
+    border-radius: var(--atlas-radius-md);
+    padding: 15px 18px;
+
+    h2 {
+      color: var(--atlas-text-muted);
+      font-size: 0.68rem;
+      letter-spacing: 0.1em;
+      margin: 0 0 12px;
+      text-transform: uppercase;
+    }
+
+    &__content {
+      align-items: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 22px;
+    }
+
+    &__eyebrow {
+      color: var(--atlas-text);
+      font-size: 0.75rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    &__counters {
+      align-items: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px 18px;
+    }
+
+    &__counter {
+      align-items: baseline;
+      display: inline-flex;
+      gap: 6px;
+
+      strong {
+        color: var(--atlas-text);
+        font-size: 1.05rem;
+      }
+
+      span {
+        color: var(--atlas-text-secondary);
+        font-size: 0.76rem;
+      }
+    }
+
+    &__empty {
+      color: var(--atlas-text-muted);
+      font-size: 0.76rem;
+    }
+  }
+
+  .v2-diagnostics-filter-group {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+
+    &__label,
+    > span {
+      color: var(--atlas-text-secondary);
+      font-size: 0.74rem;
+      font-weight: 700;
+    }
+  }
+
+  .v2-diagnostics-filter-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+
+  .v2-diagnostics-filter-button {
+    background: transparent;
+    border: 1px solid var(--atlas-border);
+    border-radius: 999px;
+    color: var(--atlas-text-secondary);
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.72rem;
+    line-height: 1;
+    padding: 7px 10px;
+
+    &:hover,
+    &:focus-visible {
+      border-color: var(--atlas-accent);
+      color: var(--atlas-text);
+      outline: none;
+    }
+
+    &.is-active {
+      background: var(--atlas-accent);
+      border-color: var(--atlas-accent);
+      color: #10251e;
+      font-weight: 800;
+    }
+  }
+
+  .v2-diagnostics-area-filter {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+
+    span {
+      color: var(--atlas-text-secondary);
+      font-size: 0.74rem;
+      font-weight: 700;
+    }
+
+    select {
+      background: var(--atlas-surface);
+      border: 1px solid var(--atlas-border);
+      border-radius: var(--atlas-radius-sm);
+      color: var(--atlas-text);
+      font: inherit;
+      font-size: 0.74rem;
+      min-width: 112px;
+      padding: 7px 9px;
+    }
+  }
+
+  .v2-diagnostics-table-wrap {
+    background: var(--atlas-surface);
+    border: 1px solid var(--atlas-border);
+    border-radius: var(--atlas-radius-md);
+    min-width: 0;
+    overflow-x: auto;
+  }
+
+  .v2-diagnostics-table {
+    border-collapse: collapse;
+    min-width: 760px;
+    table-layout: fixed;
+    width: 100%;
+
+    th,
+    td {
+      border-bottom: 1px solid var(--atlas-border);
+      padding: 9px 12px;
+      text-align: left;
+      vertical-align: middle;
+    }
+
+    th {
+      color: var(--atlas-text-muted);
+      font-size: 0.64rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    td {
+      color: var(--atlas-text-secondary);
+      font-size: 0.76rem;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: 0;
+    }
+
+    th:nth-child(1),
+    td:nth-child(1) {
+      width: 108px;
+    }
+
+    th:nth-child(2),
+    td:nth-child(2) {
+      width: 108px;
+    }
+
+    th:nth-child(3),
+    td:nth-child(3) {
+      width: 170px;
+    }
+  }
+
+  .v2-diagnostics-severity {
+    border-radius: 999px;
+    display: inline-block;
+    font-size: 0.65rem;
+    font-weight: 800;
+    padding: 4px 7px;
+
+    &.is-high {
+      background: var(--semantic-error-bg);
+      color: var(--semantic-error-text);
+    }
+
+    &.is-medium {
+      background: var(--semantic-warning-bg);
+      color: var(--semantic-warning-text);
+    }
+
+    &.is-low {
+      background: var(--semantic-info-bg-light);
+      color: var(--semantic-info-text-dark);
+    }
+
+    &.is-info {
+      background: var(--semantic-info-bg-light);
+      color: var(--semantic-info-text);
+    }
+  }
+
+  .v2-diagnostics-area {
+    color: var(--atlas-text-muted);
+    font-size: 0.7rem;
+  }
+
+  .v2-diagnostics-subject {
+    color: var(--atlas-text-secondary);
+  }
+
+  .v2-diagnostics-subject-link {
+    background: transparent;
+    border: 0;
+    color: var(--atlas-text);
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.76rem;
+    font-weight: 700;
+    padding: 0;
+    text-align: left;
+
+    &:hover,
+    &:focus-visible {
+      color: var(--atlas-accent);
+      outline: none;
+      text-decoration: underline;
+    }
+  }
+
+  .v2-diagnostics-message {
+    color: var(--atlas-text);
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
+
+  .v2-diagnostics-context {
+    color: var(--atlas-text-muted);
+    line-height: 1.35;
+  }
+
+  .v2-diagnostics-message-state {
+    background: var(--atlas-surface);
+    border: 1px solid var(--atlas-border);
+    border-radius: var(--atlas-radius-md);
+    color: var(--atlas-text-secondary);
+    font-size: 0.8rem;
+    margin: 0;
+    padding: 16px 18px;
+
+    &.is-clear {
+      color: var(--semantic-success-text);
+    }
+  }
+}
+
+@media (max-width: 760px) {
+  .atlas-v2 {
+    .v2-diagnostics {
+      gap: 14px;
+    }
+
+    .v2-diagnostics__filters {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .v2-diagnostics__section-label {
+      margin-bottom: 2px;
+    }
+  }
+}
