@@ -2,16 +2,30 @@ import { SidebarItemProps } from "./types";
 
 export function SidebarItem({ item, isActive, onSelect }: SidebarItemProps) {
   return (
-    <button
-      type="button"
+    <a
+      href={item.path}
       className={`v2-sidebar-item${isActive ? " is-active" : ""}`}
       aria-current={isActive ? "page" : undefined}
-      onClick={() => onSelect(item.id)}
+      onClick={(event) => {
+        if (
+          event.defaultPrevented ||
+          event.button !== 0 ||
+          event.metaKey ||
+          event.ctrlKey ||
+          event.shiftKey ||
+          event.altKey
+        ) {
+          return;
+        }
+
+        event.preventDefault();
+        onSelect(item.id);
+      }}
     >
       <span className="v2-sidebar-item__icon" aria-hidden="true">
         {item.icon}
       </span>
       <span>{item.label}</span>
-    </button>
+    </a>
   );
 }

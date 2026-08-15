@@ -1,19 +1,10 @@
-export type V2ViewId =
-  | "dashboard"
-  | "finances"
-  | "squad"
-  | "training"
-  | "youth"
-  | "diagnostics"
-  | "player-detail"
-  | "squad-economy"
-  | "player-development"
-  | "squad-market-planning"
-  | "youth-pipeline-planning"
-  | "real-youth-academy";
+import type { V2MainViewId } from "./routing";
+
+export type V2ViewId = V2MainViewId | "player-detail";
 
 export interface V2NavigationItem {
-  id: V2ViewId;
+  id: V2MainViewId;
   label: string;
   icon: string;
+  path: string;
 }

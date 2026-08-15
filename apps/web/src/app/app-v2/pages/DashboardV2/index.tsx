@@ -6,6 +6,7 @@ import type {
   Severity
 } from "@atlas/web/app/types";
 import type { DashboardV2Props } from "./types";
+import { pathForPlayerDetail } from "../../routing";
 
 type Priority = "High" | "Medium" | "Low";
 
@@ -102,13 +103,15 @@ function AttentionPanel({ items, onSelectPlayer, status }: AttentionPanelProps) 
                 {item.name ? (
                   <strong>
                     {item.playerId ? (
-                      <button
+                      <a
                         className="v2-dashboard-player-link"
-                        type="button"
-                        onClick={() => onSelectPlayer(item.playerId!)}
+                        href={pathForPlayerDetail(item.playerId)}
+                        onClick={(event) =>
+                          handlePlayerLinkClick(event, item.playerId!, onSelectPlayer)
+                        }
                       >
                         {item.name}
-                      </button>
+                      </a>
                     ) : (
                       item.name
                     )}
@@ -157,13 +160,15 @@ function PlayersToWatchPanel({ onSelectPlayer, players, status }: PlayersToWatch
             <div className="v2-dashboard-watch-row" role="row" key={player.id}>
               <strong role="cell">
                 {player.playerId ? (
-                  <button
+                  <a
                     className="v2-dashboard-player-link"
-                    type="button"
-                    onClick={() => onSelectPlayer(player.playerId!)}
+                    href={pathForPlayerDetail(player.playerId)}
+                    onClick={(event) =>
+                      handlePlayerLinkClick(event, player.playerId!, onSelectPlayer)
+                    }
                   >
                     {player.name}
-                  </button>
+                  </a>
                 ) : (
                   player.name
                 )}
@@ -467,4 +472,17 @@ function priorityFromSeverity(severity: Severity): Priority {
   if (severity === "high") return "High";
   if (severity === "medium") return "Medium";
   return "Low";
+}
+
+function handlePlayerLinkClick(
+  event: React.MouseEvent<HTMLAnchorElement>,
+  playerId: string,
+  onSelectPlayer: (playerId: string) => void
+): void {
+  if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+    return;
+  }
+
+  event.preventDefault();
+  onSelectPlayer(playerId);
 }

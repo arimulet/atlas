@@ -8,4 +8,5 @@ export interface PlayerDetailV2Props {
   trainingDiagnostic: TrainingDiagnostic | null;
   trainingStatus: DashboardStatus;
   onBack: () => void;
+  onBackToSquad: () => void;
 }

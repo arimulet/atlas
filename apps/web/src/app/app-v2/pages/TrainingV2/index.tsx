@@ -2,6 +2,7 @@ import { describeDiagnosticFinding } from "@atlas/web/app/diagnostic-copy";
 import type { DiagnosticFinding, TrainingPageData } from "@atlas/web/app/types";
 import { formatTrainingPriority } from "@atlas/web/app/formatters";
 import type { TrainingPlayerRow, TrainingStatusLabel, TrainingV2Props } from "./types";
+import { pathForPlayerDetail } from "../../routing";
 import { formatV2Eta, formatV2Number, formatV2Percentage, formatV2Talent } from "../../formatters";
 import {
   compareDiagnosticSeverity,
@@ -250,13 +251,26 @@ function PlayerRow({ onSelectPlayer, player }: PlayerRowProps) {
   return (
     <tr>
       <th scope="row">
-        <button
+        <a
           className="v2-training-player-link"
-          type="button"
-          onClick={() => onSelectPlayer(player.playerId)}
+          href={pathForPlayerDetail(player.playerId)}
+          onClick={(event) => {
+            if (
+              event.button !== 0 ||
+              event.metaKey ||
+              event.ctrlKey ||
+              event.shiftKey ||
+              event.altKey
+            ) {
+              return;
+            }
+
+            event.preventDefault();
+            onSelectPlayer(player.playerId);
+          }}
         >
           {player.playerName}
-        </button>
+        </a>
       </th>
       <td className="v2-training-table__numeric">{player.age}</td>
       <td>

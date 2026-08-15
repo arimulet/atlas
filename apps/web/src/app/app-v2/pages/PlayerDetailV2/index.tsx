@@ -13,7 +13,8 @@ export function PlayerDetailV2({
   playerId,
   training,
   trainingDiagnostic,
-  trainingStatus
+  trainingStatus,
+  onBackToSquad
 }: PlayerDetailV2Props) {
   const viewModel = createPlayerDetailViewModel({
     playerId,
@@ -24,13 +25,21 @@ export function PlayerDetailV2({
   });
 
   if (!viewModel) {
+    const isLoading = trainingStatus === "loading";
+
     return (
       <div className="v2-player-detail">
-        <button className="v2-player-detail__back" type="button" onClick={onBack}>
-          ← Back
+        <button
+          className="v2-player-detail__back"
+          type="button"
+          onClick={isLoading ? onBack : onBackToSquad}
+        >
+          {isLoading ? "← Back" : "Back to Squad"}
         </button>
         <section className="v2-player-detail-panel">
-          <p className="v2-player-detail__message">Player data is not available.</p>
+          <p className="v2-player-detail__message">
+            {isLoading ? "Loading player..." : "Player not found."}
+          </p>
         </section>
       </div>
     );

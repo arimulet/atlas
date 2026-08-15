@@ -94,10 +94,11 @@ export function createPlayerDetailViewModel(
 ): PlayerDetailViewModel | null {
   const player = input.training?.players.find(
     (candidate) =>
-      candidate.id === input.playerId ||
+      identifiersMatch(candidate.id, input.playerId) ||
       input.development?.observed.players.some(
         (observed) =>
-          observed.snapshotPlayerId === candidate.id && observed.playerId === input.playerId
+          identifiersMatch(observed.snapshotPlayerId, candidate.id) &&
+          identifiersMatch(observed.playerId, input.playerId)
       )
   );
 
@@ -106,7 +107,7 @@ export function createPlayerDetailViewModel(
   }
 
   const observedPlayer = input.development?.observed.players.find(
-    (candidate) => candidate.snapshotPlayerId === player.id
+    (candidate) => identifiersMatch(candidate.snapshotPlayerId, player.id)
   );
   const trainedSkill = trainedSkillForPosition(
     input.training?.configuration ?? null,
@@ -184,7 +185,9 @@ function createRecentSkillUps(
   development: PlayerDevelopment | null,
   playerId: string | null
 ): PlayerDetailViewModel["recentSkillUps"] {
-  const summary = development?.derived.players.find((candidate) => candidate.playerId === playerId);
+  const summary = development?.derived.players.find((candidate) =>
+    identifiersMatch(candidate.playerId, playerId)
+  );
 
   return (summary?.skillChanges ?? [])
     .filter(
@@ -223,4 +226,13 @@ function createTrainingRow(
     etaWeeks: null,
     status: trainingStatusForPlayer(player, diagnostic)
   };
+}
+
+function identifiersMatch(
+  left: string | number | null | undefined,
+  right: string | number | null | undefined
+): boolean {
+  return left !== null && left !== undefined && right !== null && right !== undefined
+    ? String(left) === String(right)
+    : false;
 }
