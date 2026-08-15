@@ -77,6 +77,13 @@ export interface ImportResponse {
   diagnostic: {
     findings: DiagnosticFinding[];
   } | null;
+  matches?: {
+    discovered: number;
+    finished: number;
+    imported: number;
+    skipped: number;
+    failed: number;
+  };
 }
 
 export interface ManualRecord {

@@ -10,3 +10,5 @@ export * from "./youthAcademyPlanning/index.js";
 export * from "./training/index.js";
 export * from "./types.js";
 export * from "./sokker/index.js";
+export * from "./matches/import-club-matches.js";
+export * from "./matches/sokker-match-parser.js";

@@ -1,9 +1,10 @@
 import {
+  importClubMatches,
   importPlayerSnapshotMvp,
   validatePlayerSnapshotImport,
   SokkerXmlProvider
 } from "@atlas/application";
-import { sokkerSyncRequestSchema } from "../../schemas.js";
+import { sokkerMatchesImportRequestSchema, sokkerSyncRequestSchema } from "../../schemas.js";
 import { FastifyInstance } from "fastify";
 
 async function importsRoutes(server: FastifyInstance) {
@@ -27,7 +28,7 @@ async function importsRoutes(server: FastifyInstance) {
       const provider = new SokkerXmlProvider();
 
       const xmlData = await provider.importFullTeamData(credentials);
-      
+
       // Reconstruct payload for player snapshot
       const playerSnapshotPayload = {
         schemaVersion: "atlas.player-snapshot.v0",
@@ -58,7 +59,12 @@ async function importsRoutes(server: FastifyInstance) {
         reply.code(422);
       }
 
-      return playerResult;
+      const matches = await importClubMatches({
+        clubId: Number(xmlData.clubProfile.externalId),
+        credentials
+      });
+
+      return { ...playerResult, matches };
     } catch (error) {
       reply.code(422);
 
@@ -88,6 +94,22 @@ async function importsRoutes(server: FastifyInstance) {
         },
         summary: null,
         diagnostic: null
+      };
+    }
+  });
+
+  server.post("/sokker-matches", async (request, reply) => {
+    try {
+      const input = sokkerMatchesImportRequestSchema.parse(request.body);
+      return await importClubMatches({
+        clubId: input.clubId,
+        credentials: { login: input.login, password: input.password }
+      });
+    } catch (error) {
+      reply.code(422);
+      return {
+        status: "rejected",
+        errors: [{ path: "api", message: error instanceof Error ? error.message : String(error) }]
       };
     }
   });
