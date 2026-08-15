@@ -13,7 +13,8 @@ export function AppShell({
   onCloseSokkerImport,
   onOpenSokkerImport,
   onSokkerImport,
-  uiVersion
+  uiVersion,
+  navigationKey
 }: AppShellProps) {
   return (
     <div className="atlas-v2 v2-app-shell">
@@ -24,7 +25,7 @@ export function AppShell({
         uiVersion={uiVersion}
         onUiVersionChange={onUiVersionChange}
       />
-      <MainContent>{children}</MainContent>
+      <MainContent navigationKey={navigationKey}>{children}</MainContent>
       <SokkerImportModal
         isOpen={isSokkerImportOpen}
         onClose={onCloseSokkerImport}

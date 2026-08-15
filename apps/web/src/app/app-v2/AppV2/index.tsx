@@ -28,12 +28,14 @@ import { DiagnosticsV2 } from "../pages/DiagnosticsV2";
 import { createPlayerTrainingProjectionSummaries } from "../view-models/player-detail-view-model";
 import type { SokkerImportCredentials } from "../components/SokkerImporterForm/types";
 import type { V2ViewId } from "../types";
+import { pathForMainView, pathForPlayerDetail, useV2Router } from "../routing";
 import type { AppV2Props } from "./types";
 
 const lastClubStorageKey = "atlas.lastClubId";
 
 export function AppV2({ uiVersion, onUiVersionChange }: AppV2Props) {
-  const [activeView, setActiveView] = useState<V2ViewId>("dashboard");
+  const { goBack, navigate, route } = useV2Router();
+  const activeView: V2ViewId = route.kind === "player-detail" ? "player-detail" : route.view;
   const [isSokkerImportOpen, setIsSokkerImportOpen] = useState(false);
   const [activeClubId, setActiveClubId] = useState<string | null>(() =>
     window.localStorage.getItem(lastClubStorageKey)
@@ -56,8 +58,6 @@ export function AppV2({ uiVersion, onUiVersionChange }: AppV2Props) {
   const [training, setTraining] = useState<TrainingPageData | null>(null);
   const [trainingDiagnostic, setTrainingDiagnostic] = useState<ImportResponse["diagnostic"]>(null);
   const [playerDevelopment, setPlayerDevelopment] = useState<PlayerDevelopment | null>(null);
-  const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
-  const [playerDetailReturnView, setPlayerDetailReturnView] = useState<V2ViewId>("training");
   const projectionSummaries = useMemo(
     () =>
       trainingStatus === "ready"
@@ -205,24 +205,21 @@ export function AppV2({ uiVersion, onUiVersionChange }: AppV2Props) {
 
   const handleSelectPlayer = useCallback(
     (playerId: string) => {
-      setPlayerDetailReturnView(
-        activeView === "squad" ? "squad" : activeView === "diagnostics" ? "diagnostics" : "training"
-      );
-      setSelectedPlayerId(playerId);
-      setActiveView("player-detail");
+      navigate(pathForPlayerDetail(playerId));
     },
-    [activeView]
+    [navigate]
   );
 
   const handleBackFromPlayerDetail = useCallback(() => {
-    setActiveView(playerDetailReturnView);
-  }, [playerDetailReturnView]);
+    goBack(pathForMainView("squad"));
+  }, [goBack]);
 
   return (
     <AppShell
-      activeView={activeView}
+      activeView={route.kind === "main" ? route.view : null}
       isSokkerImportOpen={isSokkerImportOpen}
-      onViewChange={setActiveView}
+      navigationKey={route.path}
+      onViewChange={(view) => navigate(pathForMainView(view))}
       uiVersion={uiVersion}
       onUiVersionChange={onUiVersionChange}
       onCloseSokkerImport={() => setIsSokkerImportOpen(false)}
@@ -272,11 +269,12 @@ export function AppV2({ uiVersion, onUiVersionChange }: AppV2Props) {
           youthPipelineStatus={youthPipelineStatus}
           youthStatus={youthStatus}
         />
-      ) : activeView === "player-detail" && selectedPlayerId !== null ? (
+      ) : activeView === "player-detail" ? (
         <PlayerDetailV2
           development={playerDevelopment}
           onBack={handleBackFromPlayerDetail}
-          playerId={selectedPlayerId}
+          onBackToSquad={() => navigate(pathForMainView("squad"), { replace: true })}
+          playerId={route.kind === "player-detail" ? route.playerId : ""}
           training={training}
           trainingDiagnostic={trainingDiagnostic}
           trainingStatus={trainingStatus}

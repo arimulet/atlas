@@ -1,20 +1,16 @@
-import { UiVersionSwitch } from "../UiVersionSwitch";
+import { pathForMainView } from "../../routing";
 import type { V2NavigationItem } from "../../types";
+import { UiVersionSwitch } from "../UiVersionSwitch";
 import { SidebarItem } from "../SidebarItem";
 import { SidebarProps } from "./types";
 
 const navigationItems: V2NavigationItem[] = [
-  { id: "finances", label: "Finances", icon: "$" },
-  { id: "squad", label: "Squad", icon: "S" },
-  { id: "training", label: "Training", icon: "T" },
-  { id: "youth", label: "Youth", icon: "Y" },
-  { id: "diagnostics", label: "Diagnostics", icon: "!" },
-  { id: "dashboard", label: "Dashboard", icon: "⌂" },
-  { id: "squad-economy", label: "Squad Economy", icon: "◇" },
-  { id: "player-development", label: "Player Development", icon: "♙" },
-  { id: "squad-market-planning", label: "Squad Market Planning", icon: "↗" },
-  { id: "youth-pipeline-planning", label: "Youth Pipeline Planning", icon: "◈" },
-  { id: "real-youth-academy", label: "Youth Academy", icon: "⚽" }
+  { id: "dashboard", label: "Dashboard", icon: "⌂", path: pathForMainView("dashboard") },
+  { id: "squad", label: "Squad", icon: "S", path: pathForMainView("squad") },
+  { id: "training", label: "Training", icon: "T", path: pathForMainView("training") },
+  { id: "youth", label: "Youth", icon: "Y", path: pathForMainView("youth") },
+  { id: "finances", label: "Finances", icon: "$", path: pathForMainView("finances") },
+  { id: "diagnostics", label: "Diagnostics", icon: "!", path: pathForMainView("diagnostics") }
 ];
 
 export function Sidebar({ activeView, onUiVersionChange, onViewChange, uiVersion }: SidebarProps) {

@@ -7,6 +7,7 @@ import {
   type DiagnosticViewModel
 } from "../../view-models/diagnostics-view-model";
 import type { DiagnosticsV2Props } from "./types";
+import { pathForPlayerDetail } from "../../routing";
 
 type SeverityFilter = "all" | Severity;
 type AreaFilter = "all" | DiagnosticArea;
@@ -223,7 +224,8 @@ interface DiagnosticRowProps {
 }
 
 function DiagnosticRow({ diagnostic, onSelectPlayer, showContext }: DiagnosticRowProps) {
-  const canNavigateToPlayer = diagnostic.subject?.type === "player" && diagnostic.subject.id;
+  const playerId = diagnostic.subject?.type === "player" ? diagnostic.subject.id : undefined;
+  const canNavigateToPlayer = playerId !== undefined;
 
   return (
     <tr>
@@ -237,13 +239,26 @@ function DiagnosticRow({ diagnostic, onSelectPlayer, showContext }: DiagnosticRo
       </td>
       <td>
         {canNavigateToPlayer ? (
-          <button
+          <a
             className="v2-diagnostics-subject-link"
-            type="button"
-            onClick={() => onSelectPlayer(diagnostic.subject!.id!)}
+            href={pathForPlayerDetail(playerId)}
+            onClick={(event) => {
+              if (
+                event.button !== 0 ||
+                event.metaKey ||
+                event.ctrlKey ||
+                event.shiftKey ||
+                event.altKey
+              ) {
+                return;
+              }
+
+              event.preventDefault();
+              onSelectPlayer(playerId);
+            }}
           >
             {diagnostic.subject?.label}
-          </button>
+          </a>
         ) : (
           <span className="v2-diagnostics-subject">{diagnostic.subject?.label ?? "—"}</span>
         )}

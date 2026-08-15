@@ -3,6 +3,7 @@ import { formatTrainingPriority } from "@atlas/web/app/formatters";
 import type { DiagnosticFinding } from "@atlas/web/app/types";
 import { formatV2Eta, formatV2Number, formatV2Percentage, formatV2Talent } from "../../formatters";
 import type { SquadAttentionProps, SquadTableProps, SquadV2Props } from "./types";
+import { pathForPlayerDetail } from "../../routing";
 import {
   createSquadAttentionFindings,
   createSquadPlayerRows,
@@ -251,13 +252,26 @@ function SquadPlayerRowView({ onSelectPlayer, row }: SquadPlayerRowViewProps) {
   return (
     <tr>
       <th scope="row">
-        <button
+        <a
           className="v2-squad-player-link"
-          type="button"
-          onClick={() => onSelectPlayer(row.playerId)}
+          href={pathForPlayerDetail(row.playerId)}
+          onClick={(event) => {
+            if (
+              event.button !== 0 ||
+              event.metaKey ||
+              event.ctrlKey ||
+              event.shiftKey ||
+              event.altKey
+            ) {
+              return;
+            }
+
+            event.preventDefault();
+            onSelectPlayer(row.playerId);
+          }}
         >
           {row.playerName}
-        </button>
+        </a>
       </th>
       <td className="v2-squad-table__numeric">{row.age}</td>
       <td className="v2-squad-table__numeric">{row.form ?? "—"}</td>

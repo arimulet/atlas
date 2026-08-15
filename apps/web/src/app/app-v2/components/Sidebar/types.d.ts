@@ -1,9 +1,9 @@
 import type { UiVersion } from "@atlas/web/app/ui-version";
-import type { V2ViewId } from "../../types";
+import type { V2MainViewId } from "../../routing";
 
 export interface SidebarProps {
-  activeView: V2ViewId;
+  activeView: V2MainViewId | null;
   onUiVersionChange: (version: UiVersion) => void;
-  onViewChange: (view: V2ViewId) => void;
+  onViewChange: (view: V2MainViewId) => void;
   uiVersion: UiVersion;
 }
