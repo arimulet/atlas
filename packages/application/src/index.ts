@@ -12,3 +12,4 @@ export * from "./types.js";
 export * from "./sokker/index.js";
 export * from "./matches/import-club-matches.js";
 export * from "./matches/sokker-match-parser.js";
+export * from "./matches/get-club-matches.js";
