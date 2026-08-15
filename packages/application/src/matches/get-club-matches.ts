@@ -38,7 +38,7 @@ export interface WeeklyPlayerMinutes {
   status: null;
 }
 
-const MATCH_TYPE_ORDER: MatchesPageMatchType[] = ["OFFICIAL", "FRIENDLY", "NOT_ELIGIBLE"];
+const MATCH_TYPE_ORDER: MatchesPageMatchType[] = ["OFFICIAL", "FRIENDLY"];
 const RECENT_MATCH_LIMIT = 8;
 
 const clubRepository = new MongoClubRepository();
