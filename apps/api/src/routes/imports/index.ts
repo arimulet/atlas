@@ -1,9 +1,9 @@
 import {
+  createSokkerDataProvider,
   importClubMatches,
   importPlayerSnapshotMvp,
   validatePlayerSnapshotImport
 } from "@atlas/application";
-import { SokkerXMLProvider } from "@atlas/application/sokker/SokkerXMLProvider";
 import { sokkerMatchesImportRequestSchema, sokkerSyncRequestSchema } from "../../schemas.js";
 import { FastifyInstance } from "fastify";
 
@@ -25,9 +25,8 @@ async function importsRoutes(server: FastifyInstance) {
   server.post("/sokker-sync", async (request, reply) => {
     try {
       const credentials = sokkerSyncRequestSchema.parse(request.body);
-      const provider = new SokkerXMLProvider();
-
-      const xmlData = await provider.importFullTeamData(credentials);
+      const provider = createSokkerDataProvider({ source: "xml", credentials });
+      const xmlData = await provider.getFullTeamData();
 
       // Reconstruct payload for player snapshot
       const playerSnapshotPayload = {

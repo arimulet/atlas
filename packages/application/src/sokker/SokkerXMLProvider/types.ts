@@ -1,45 +1,18 @@
-import type { PlayerSnapshotV0 } from "@atlas/contracts";
+import type {
+  SokkerClubProfileDto,
+  SokkerCountryDto,
+  SokkerAuthResult,
+  SokkerCredentials,
+  SokkerImportResultDto,
+  SokkerPlayerDto,
+  SokkerTeamDto
+} from "../../importer/types.js";
 
-import type { Money } from "../../types.js";
+export type { SokkerAuthResult, SokkerCredentials };
 
-export interface SokkerCredentials {
-  login: string;
-  password: string;
-}
+export type ClubObservedProfile = SokkerClubProfileDto;
+export type CountryReference = SokkerCountryDto;
+export type XmlImportResult = SokkerImportResultDto;
 
-export interface SokkerAuthResult {
-  sessionId: string;
-  teamId: string;
-}
-
-export interface ClubObservedProfile {
-  externalId: string;
-  name: string;
-  countryId: number;
-  money: Money;
-  season?: number;
-  gameWeek: number;
-  week: number;
-  training?: {
-    gk: number | null;
-    def: number | null;
-    mid: number | null;
-    att: number | null;
-  } | null;
-}
-
-export interface CountryReference {
-  id: number;
-  name: string;
-  currencyName: string;
-  currencyRate: number;
-}
-
-export interface XmlImportResult {
-  clubProfile: ClubObservedProfile;
-  players: PlayerSnapshotV0["players"];
-  juniors: NonNullable<PlayerSnapshotV0["juniors"]>;
-  source: string;
-  importedAt: Date;
-  countries: CountryReference[];
-}
+export type SokkerCanonicalTeam = SokkerTeamDto;
+export type SokkerCanonicalPlayer = SokkerPlayerDto;
