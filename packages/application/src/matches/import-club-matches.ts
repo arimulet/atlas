@@ -9,24 +9,24 @@ import {
   type MatchPlayerAppearance,
   type MatchSide
 } from "@atlas/domain";
-import {
-  SokkerXMLProvider,
-  type SokkerAuthResult,
-  type SokkerCredentials
-} from "../sokker/SokkerXMLProvider/index.js";
-import {
-  parseSokkerLeagueXml,
-  parseSokkerMatchDetailXml,
-  parseSokkerMatchesXml,
-  type SokkerLeagueInfo,
-  type SokkerMatchPlayerStats,
-  type SokkerMatchSummary
-} from "./sokker-match-parser.js";
+import type { SokkerAuthResult, SokkerCredentials } from "../importer/types.js";
+import { SokkerXmlProvider } from "../importer/providers/xml/SokkerXmlProvider.js";
+import type {
+  SokkerLeagueDto,
+  SokkerMatchPlayerStatsDto,
+  SokkerMatchSummaryDto,
+  SokkerDataProvider
+} from "../importer/index.js";
 
 export interface SokkerMatchesXmlClient {
   login(credentials: SokkerCredentials): Promise<SokkerAuthResult>;
   fetchXml(filename: string, sessionId: string): Promise<string>;
 }
+
+export type SokkerMatchDataProvider = Pick<
+  SokkerDataProvider,
+  "getMatches" | "getMatchLineup" | "getLeague"
+>;
 
 export interface MatchRepository {
   exists(matchId: number): Promise<boolean>;
@@ -47,7 +47,8 @@ export interface ImportClubMatchesResult {
 }
 
 export interface ImportClubMatchesDependencies {
-  xmlClient: SokkerMatchesXmlClient;
+  xmlClient?: SokkerMatchesXmlClient;
+  dataProvider?: SokkerMatchDataProvider;
   matchRepository: MatchRepository;
 }
 
@@ -55,14 +56,10 @@ export class ImportClubMatchesUseCase {
   constructor(private readonly dependencies: ImportClubMatchesDependencies) {}
 
   async execute(input: ImportClubMatchesInput): Promise<ImportClubMatchesResult> {
-    const auth = await this.dependencies.xmlClient.login(input.credentials);
-    const matchesXml = await this.dependencies.xmlClient.fetchXml(
-      `matches-team-${input.clubId}.xml`,
-      auth.sessionId
-    );
-    const matches = parseSokkerMatchesXml(matchesXml);
+    const provider = await this.resolveProvider(input.credentials);
+    const matches = await provider.getMatches(input.clubId);
     const finishedMatches = matches.filter((match) => match.isFinished);
-    const leagueCache = new Map<number, SokkerLeagueInfo>();
+    const leagueCache = new Map<number, SokkerLeagueDto>();
     const result: ImportClubMatchesResult = {
       discovered: matches.length,
       finished: finishedMatches.length,
@@ -78,19 +75,11 @@ export class ImportClubMatchesUseCase {
       }
 
       try {
-        const detailXml = await this.dependencies.xmlClient.fetchXml(
-          `match-${match.id}.xml`,
-          auth.sessionId
-        );
-        const playerStats = parseSokkerMatchDetailXml(detailXml, input.clubId);
+        const playerStats = await provider.getMatchLineup(match.id, input.clubId);
         let league = leagueCache.get(match.leagueId);
 
         if (!league) {
-          const leagueXml = await this.dependencies.xmlClient.fetchXml(
-            `league-${match.leagueId}.xml`,
-            auth.sessionId
-          );
-          league = parseSokkerLeagueXml(leagueXml);
+          league = await provider.getLeague(match.leagueId);
           leagueCache.set(match.leagueId, league);
         }
 
@@ -104,12 +93,25 @@ export class ImportClubMatchesUseCase {
 
     return result;
   }
+
+  private async resolveProvider(credentials: SokkerCredentials): Promise<SokkerMatchDataProvider> {
+    if (this.dependencies.dataProvider) {
+      return this.dependencies.dataProvider;
+    }
+
+    const provider = this.dependencies.xmlClient
+      ? new SokkerXmlProvider(this.dependencies.xmlClient)
+      : new SokkerXmlProvider();
+    await provider.login(credentials);
+
+    return provider;
+  }
 }
 
 export async function importClubMatches(
   input: ImportClubMatchesInput,
   dependencies: ImportClubMatchesDependencies = {
-    xmlClient: new SokkerXMLProvider(),
+    xmlClient: new SokkerXmlProvider(),
     matchRepository: new MongoMatchRepository()
   }
 ): Promise<ImportClubMatchesResult> {
@@ -118,9 +120,9 @@ export async function importClubMatches(
 
 export function normalizeMatchForClub(
   clubId: number,
-  summary: SokkerMatchSummary,
-  league: SokkerLeagueInfo,
-  playerStats: SokkerMatchPlayerStats[]
+  summary: SokkerMatchSummaryDto,
+  league: SokkerLeagueDto,
+  playerStats: SokkerMatchPlayerStatsDto[]
 ): Match {
   if (!summary.playedAt) {
     throw new Error(`Finished match ${summary.id} does not have a valid played date.`);
@@ -157,7 +159,7 @@ export function normalizeMatchForClub(
   };
 }
 
-function normalizeMatchPlayer(player: SokkerMatchPlayerStats): MatchPlayerAppearance {
+function normalizeMatchPlayer(player: SokkerMatchPlayerStatsDto): MatchPlayerAppearance {
   const participation = {
     timeIn: player.timeIn,
     timeOut: player.timeOut,

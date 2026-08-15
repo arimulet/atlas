@@ -5,7 +5,11 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./sokker/SokkerXMLProvider": "./src/sokker/SokkerXMLProvider/index.ts"
+    "./sokker/SokkerXMLProvider": "./src/sokker/SokkerXMLProvider/index.ts",
+    "./importer": "./src/importer/index.ts",
+    "./importer/providers": "./src/importer/providers/index.ts",
+    "./importer/providers/xml": "./src/importer/providers/xml/index.ts",
+    "./importer/providers/api": "./src/importer/providers/api/index.ts"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json --noEmit"
