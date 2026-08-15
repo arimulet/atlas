@@ -1,0 +1,254 @@
+.atlas-v2 .v2-squad {
+  display: grid;
+  gap: 14px;
+  max-width: 1600px;
+}
+
+.atlas-v2 .v2-squad__header {
+  padding: 2px 0 4px;
+}
+
+.atlas-v2 .v2-squad__header h1 {
+  color: var(--atlas-text);
+  font-size: 1.35rem;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.atlas-v2 .v2-squad__section-title {
+  color: var(--atlas-text);
+  font-size: 0.82rem;
+  font-weight: 750;
+  letter-spacing: 0.07em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.atlas-v2 .v2-squad-panel {
+  background: var(--atlas-surface);
+  border: 1px solid var(--atlas-border);
+  border-radius: var(--atlas-radius-md);
+  min-width: 0;
+  padding: 14px 16px;
+}
+
+.atlas-v2 .v2-squad-panel--attention {
+  border-color: color-mix(in srgb, var(--semantic-warning-border) 55%, var(--atlas-border));
+}
+
+.atlas-v2 .v2-squad-panel--attention.is-quiet {
+  border-color: var(--atlas-border);
+  padding-bottom: 12px;
+  padding-top: 12px;
+}
+
+.atlas-v2 .v2-squad-panel__title {
+  color: var(--atlas-text);
+  font-size: 0.82rem;
+  font-weight: 750;
+  letter-spacing: 0.07em;
+  margin: 0 0 12px;
+  text-transform: uppercase;
+}
+
+.atlas-v2 .v2-squad-panel--attention.is-quiet .v2-squad-panel__title {
+  margin-bottom: 7px;
+}
+
+.atlas-v2 .v2-squad-panel__message {
+  color: var(--atlas-text-secondary);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.atlas-v2 .v2-squad-panel__message.is-error {
+  color: var(--semantic-error-text);
+}
+
+.atlas-v2 .v2-squad-panel__message.is-quiet {
+  color: var(--atlas-text-muted);
+}
+
+.atlas-v2 .v2-squad-attention-list {
+  display: grid;
+  gap: 7px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.atlas-v2 .v2-squad-attention-item {
+  align-items: baseline;
+  color: var(--atlas-text-secondary);
+  display: flex;
+  font-size: 0.78rem;
+  gap: 8px;
+  line-height: 1.35;
+}
+
+.atlas-v2 .v2-squad-table-wrap {
+  overflow-x: auto;
+}
+
+.atlas-v2 .v2-squad-position-sections {
+  display: grid;
+  gap: 14px;
+}
+
+.atlas-v2 .v2-squad-position-section {
+  min-width: 0;
+}
+
+.atlas-v2 .v2-squad-position-section__header {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.atlas-v2 .v2-squad-position-section__header h3 {
+  color: var(--atlas-text);
+  font-size: 0.8rem;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.atlas-v2 .v2-squad-position-section__header > span {
+  color: var(--atlas-text-muted);
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+
+.atlas-v2 .v2-squad-table {
+  border-collapse: collapse;
+  min-width: 1400px;
+  table-layout: fixed;
+  width: 100%;
+}
+
+.atlas-v2 .v2-squad-table col.is-player {
+  width: 190px;
+}
+.atlas-v2 .v2-squad-table col.is-age {
+  width: 48px;
+}
+.atlas-v2 .v2-squad-table col.is-form {
+  width: 62px;
+}
+.atlas-v2 .v2-squad-table col.is-skill {
+  width: 43px;
+}
+.atlas-v2 .v2-squad-table col.is-trained-skill {
+  width: 125px;
+}
+.atlas-v2 .v2-squad-table col.is-advanced {
+  width: 50px;
+}
+.atlas-v2 .v2-squad-table col.is-efficiency {
+  width: 70px;
+}
+.atlas-v2 .v2-squad-table col.is-progress {
+  width: 70px;
+}
+.atlas-v2 .v2-squad-table col.is-talent {
+  width: 68px;
+}
+.atlas-v2 .v2-squad-table col.is-next-skill-up {
+  width: 58px;
+}
+.atlas-v2 .v2-squad-table col.is-eta {
+  width: 58px;
+}
+.atlas-v2 .v2-squad-table col.is-status {
+  width: 100px;
+}
+
+.atlas-v2 .v2-squad-table th,
+.atlas-v2 .v2-squad-table td {
+  border-bottom: 1px solid color-mix(in srgb, var(--atlas-border) 72%, transparent);
+  color: var(--atlas-text-secondary);
+  font-size: 0.74rem;
+  height: 36px;
+  padding: 5px 7px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.atlas-v2 .v2-squad-table thead th {
+  color: var(--atlas-text-muted);
+  font-size: 0.63rem;
+  font-weight: 750;
+  letter-spacing: 0.07em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.atlas-v2 .v2-squad-table thead th:first-child,
+.atlas-v2 .v2-squad-table tbody th,
+.atlas-v2 .v2-squad-table thead tr:nth-child(2) th:first-child {
+  text-align: left;
+}
+
+.atlas-v2 .v2-squad-table__group-row th {
+  border-bottom: 1px solid var(--atlas-border);
+  color: var(--atlas-text-secondary);
+  font-size: 0.62rem;
+  height: 24px;
+  padding-bottom: 3px;
+  padding-top: 0;
+}
+
+.atlas-v2 .v2-squad-table__group-row .is-skills-group,
+.atlas-v2 .v2-squad-table__group-row .is-training-group,
+.atlas-v2 .v2-squad-table thead tr:nth-child(2) th:nth-child(3),
+.atlas-v2 .v2-squad-table thead tr:nth-child(2) th:nth-child(12) {
+  border-left: 1px solid var(--atlas-border);
+}
+
+.atlas-v2 .v2-squad-table__group-row .is-skills-group,
+.atlas-v2 .v2-squad-table__group-row .is-training-group {
+  background: color-mix(in srgb, var(--atlas-surface-hover) 28%, transparent);
+}
+
+.atlas-v2 .v2-squad-table tbody th {
+  color: var(--atlas-text);
+  font-weight: 700;
+}
+
+.atlas-v2 .v2-squad-table tbody td:nth-child(3),
+.atlas-v2 .v2-squad-table tbody td:nth-child(12) {
+  border-left: 1px solid color-mix(in srgb, var(--atlas-border) 72%, transparent);
+}
+
+.atlas-v2 .v2-squad-table tbody tr:last-child th,
+.atlas-v2 .v2-squad-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.atlas-v2 .v2-squad-table__empty {
+  color: var(--atlas-text-muted) !important;
+  font-size: 0.72rem !important;
+  padding-bottom: 3px !important;
+  padding-top: 3px !important;
+  text-align: left !important;
+}
+
+.atlas-v2 .v2-squad-table__numeric,
+.atlas-v2 .v2-squad-table__center {
+  text-align: center !important;
+}
+
+.atlas-v2 .v2-squad-table .v2-training-position-badge {
+  margin: 0 auto;
+}
+
+@media (max-width: 700px) {
+  .atlas-v2 .v2-squad-panel {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+}

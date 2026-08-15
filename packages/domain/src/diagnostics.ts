@@ -1,3 +1,4 @@
+import { SUPPORTED_SKILLS } from "./constants.js";
 import type {
   AvailabilityStatus,
   DataTraceKind,
@@ -6,7 +7,7 @@ import type {
   PlayerRole,
   Severity,
   SkillSet
-} from "./index.js";
+} from "./types.js";
 
 export type DiagnosticCategory =
   "squad-balance" | "economic-risk" | "asset-risk" | "training-potential" | "follow-up";
@@ -109,17 +110,6 @@ const roleAliases: Record<string, PlayerRole> = {
   forward: "striker",
   delantero: "striker"
 };
-
-const trackedSkillKeys = [
-  "stamina",
-  "pace",
-  "technique",
-  "passing",
-  "keeper",
-  "defender",
-  "playmaker",
-  "striker"
-] as const;
 
 export function generateBasicDiagnostic(
   snapshot: BasicDiagnosticSnapshot,
@@ -438,7 +428,7 @@ function missingFollowUpFields(player: BasicDiagnosticPlayerSnapshot): string[] 
     player.form === null ? "form" : null,
     player.availabilityStatus === null ? "availabilityStatus" : null,
     player.observedPosition ? null : "observedPosition",
-    ...trackedSkillKeys.map((skillKey) =>
+    ...SUPPORTED_SKILLS.map((skillKey) =>
       player.skills[skillKey] === null ? `skills.${skillKey}` : null
     )
   ].filter((field): field is string => field !== null);

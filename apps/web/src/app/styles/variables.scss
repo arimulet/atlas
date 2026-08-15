@@ -1,46 +1,75 @@
 :root {
+  /* ATLAS UI V2 layout and visual tokens */
+  --atlas-header-height: 56px;
+  --atlas-sidebar-width: 232px;
+  --atlas-bg: #11181c;
+  --atlas-surface: #182126;
+  --atlas-surface-hover: #202c32;
+  --atlas-border: #2b3a41;
+  --atlas-text: #edf5f2;
+  --atlas-text-secondary: #a8b6b6;
+  --atlas-text-muted: #748488;
+  --atlas-accent: #55d39a;
+  --atlas-radius-sm: 6px;
+  --atlas-radius-md: 10px;
+  --atlas-space-1: 4px;
+  --atlas-space-2: 8px;
+  --atlas-space-3: 12px;
+  --atlas-space-4: 16px;
+  --atlas-space-5: 24px;
+  --atlas-panel-padding-y: 14px;
+  --atlas-panel-padding-x: 16px;
+  --atlas-page-gap: 14px;
+  --atlas-page-max-width: 1440px;
+  --atlas-page-title-size: 1.35rem;
+  --atlas-section-title-size: 0.9rem;
+  --atlas-table-cell-padding-y: 6px;
+  --atlas-table-cell-padding-x: 8px;
+  --atlas-table-row-height: 36px;
+  --atlas-table-border: color-mix(in srgb, var(--atlas-border) 72%, transparent);
+
   /* Surfaces & Backgrounds */
-  --bg-primary: #ffffff;
-  --bg-secondary: #f8faf9;
-  --bg-tertiary: #edf2f0;
+  --bg-primary: #12181b;
+  --bg-secondary: #1a2226;
+  --bg-tertiary: #232d32;
 
   /* Text Colors */
-  --text-primary: #16695f;
-  --text-secondary: #52616b;
-  --text-tertiary: #64748b;
-  --text-dark: #40513f;
+  --text-primary: #e0f2f1;
+  --text-secondary: #a0aab2;
+  --text-tertiary: #7d8b94;
+  --text-dark: #f8f9fa; /* Now inverted for contrast on dark */
 
   /* Borders */
-  --border-default: #dce5e0;
-  --border-light: #e2e8e4;
-  --border-active: #8ac7ad;
+  --border-default: #2d3b42;
+  --border-light: #3a4a53;
+  --border-active: #4ade80; /* bright green */
 
   /* Semantic - Success (Green) */
-  --semantic-success-bg: #d9f99d;
-  --semantic-success-text: #365314;
+  --semantic-success-bg: #166534;
+  --semantic-success-text: #4ade80;
 
   /* Semantic - Info (Blue) */
-  --semantic-info-bg: #dbeafe;
-  --semantic-info-bg-light: #e0f2fe;
-  --semantic-info-text: #1d4ed8;
-  --semantic-info-text-dark: #075985;
-  --semantic-info-border: #b8c7da;
+  --semantic-info-bg: #1e3a8a;
+  --semantic-info-bg-light: #172554;
+  --semantic-info-text: #60a5fa;
+  --semantic-info-text-dark: #93c5fd;
+  --semantic-info-border: #3b82f6;
 
   /* Semantic - Warning (Amber) */
-  --semantic-warning-bg: #fef3c7;
-  --semantic-warning-bg-light: #fffbeb;
-  --semantic-warning-text: #92400e;
-  --semantic-warning-border: #e7c75f;
-  --semantic-warning-border-light: #e2cf9f;
+  --semantic-warning-bg: #78350f;
+  --semantic-warning-bg-light: #451a03;
+  --semantic-warning-text: #fbbf24;
+  --semantic-warning-border: #d97706;
+  --semantic-warning-border-light: #b45309;
 
   /* Semantic - Error (Red) */
-  --semantic-error-bg: #fee4e2;
-  --semantic-error-text: #b42318;
-  --semantic-error-border: #f3b5ae;
+  --semantic-error-bg: #7f1d1d;
+  --semantic-error-text: #f87171;
+  --semantic-error-border: #ef4444;
 
   /* Trace Kinds (Specific highlights) */
-  --trace-pink-bg: #fce7f3;
-  --trace-pink-text: #9d174d;
-  --trace-purple-bg: #ede9fe;
-  --trace-purple-text: #5b21b6;
+  --trace-pink-bg: #831843;
+  --trace-pink-text: #f472b6;
+  --trace-purple-bg: #4c1d95;
+  --trace-purple-text: #c084fc;
 }

@@ -25,12 +25,7 @@ import {
   SnapshotComparisonPlayer,
   SnapshotComparisonSnapshot
 } from "@atlas/domain";
-import {
-  formatDate,
-  normalizeNullableString,
-  validateCurrency,
-  validateWeek
-} from "@atlas/utils";
+import { formatDate, normalizeNullableString, validateCurrency, validateWeek } from "@atlas/utils";
 import {
   Category,
   ClubId,
@@ -74,12 +69,44 @@ export const getClubDashboard = async (clubId: ClubId): Promise<ClubDashboard> =
       previous: previous ? mapSnapshotSummary(previous) : null,
       canCompare: snapshots.length >= 2
     },
+    trainingSummary: buildTrainingSummary(latest),
     developmentSummary: buildDevelopmentSummary(clubId, development),
     marketSummary: buildMarketSummary(clubId, snapshots.length, marketPlanning),
     youthPipelineSummary: buildYouthPipelineSummary(clubId, snapshots.length, youthPipeline),
     operationalAreas: buildOperationalAreas(snapshots.length)
   };
 };
+
+function buildTrainingSummary(
+  snapshot: PersistedSnapshot | null
+): ClubDashboard["trainingSummary"] {
+  if (!snapshot) {
+    return {
+      available: false,
+      observed: {
+        latestSnapshotDate: null,
+        playerCount: 0,
+        playersWithTrainingData: 0,
+        advancedPlayers: 0,
+        formationPlayers: 0
+      }
+    };
+  }
+
+  const playersWithTrainingData = snapshot.players.length;
+  const advancedPlayers = snapshot.players.filter((player) => player.training.advanced).length;
+
+  return {
+    available: true,
+    observed: {
+      latestSnapshotDate: snapshot.snapshotDate.toISOString().slice(0, 10),
+      playerCount: snapshot.players.length,
+      playersWithTrainingData,
+      advancedPlayers,
+      formationPlayers: playersWithTrainingData - advancedPlayers
+    }
+  };
+}
 
 export const getClubProfile = async (clubId: ClubId): Promise<PersistedClub> => {
   const club = await clubRepository.findById(clubId.toString());
@@ -141,7 +168,6 @@ function validateManualRecords(records: KeyValue[]) {
     return { key, value };
   });
 }
-
 
 function buildDevelopmentSummary(
   clubId: ClubId,

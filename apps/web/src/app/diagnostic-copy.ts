@@ -3,7 +3,6 @@ import type {
   DiagnosticAssumption,
   DiagnosticFinding,
   DiagnosticParameterValue,
-  DiagnosticParameters,
   DiagnosticRecommendation,
   DiagnosticTrace
 } from "./types";

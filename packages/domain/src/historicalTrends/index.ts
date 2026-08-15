@@ -1,82 +1,32 @@
-import type { Money, SkillSet } from "./index.js";
-import type { SnapshotComparisonPlayer, SnapshotComparisonSnapshot } from "./snapshotComparison.js";
+import { SUPPORTED_SKILLS } from "../constants.js";
+import type { Money, SkillKey } from "../types.js";
+import type {
+  SnapshotComparisonPlayer,
+  SnapshotComparisonSnapshot
+} from "../snapshotComparison.js";
+import type {
+  HistoricalTrendPoint,
+  HistoricalTrends,
+  MoneyTrend,
+  NumericTrend,
+  PlayerHistoricalTrend,
+  SkillTrend,
+  SquadHistoricalTrendSummary,
+  TrendDirection,
+  TrendSnapshotEvidence
+} from "./types.js";
 
-export type TrendDirection = "up" | "down" | "stable" | "insufficient_data";
-
-export interface TrendSnapshotEvidence {
-  snapshotId: string;
-  snapshotDate: string;
-  value: number | null;
-}
-
-export interface TrendEvidence {
-  initialSnapshot: TrendSnapshotEvidence | null;
-  finalSnapshot: TrendSnapshotEvidence | null;
-  deltaAbsolute: number | null;
-  deltaPercentage: number | null;
-  dataPoints: number;
-  warnings: string[];
-}
-
-export interface NumericTrend {
-  direction: TrendDirection;
-  evidence: TrendEvidence;
-}
-
-export interface MoneyTrend extends NumericTrend {
-  currency: string | null;
-  isComparable: boolean;
-}
-
-export interface SkillTrend extends NumericTrend {
-  skill: keyof Required<SkillSet>;
-}
-
-export interface PlayerHistoricalTrend {
-  identity: {
-    playerId: number;
-  };
-  playerName: string;
-  value: MoneyTrend;
-  wage: MoneyTrend;
-  skills: SkillTrend[];
-  warnings: string[];
-}
-
-export interface SquadHistoricalTrendSummary {
-  valueTotal: MoneyTrend;
-  wageTotal: MoneyTrend;
-  playerCount: NumericTrend;
-  mainVariations: Array<{
-    playerId: number;
-    playerName: string;
-    metric: "value" | "wage";
-    deltaAbsolute: number;
-    deltaPercentage: number | null;
-    direction: Exclude<TrendDirection, "insufficient_data" | "stable">;
-  }>;
-  warnings: string[];
-}
-
-export interface HistoricalTrends {
-  clubId: string;
-  snapshotIds: string[];
-  snapshotDates: string[];
-  players: PlayerHistoricalTrend[];
-  squad: SquadHistoricalTrendSummary;
-  warnings: string[];
-}
-
-const skillKeys = [
-  "stamina",
-  "pace",
-  "technique",
-  "passing",
-  "keeper",
-  "defender",
-  "playmaker",
-  "striker"
-] as const;
+export type {
+  HistoricalTrends,
+  MoneyTrend,
+  NumericTrend,
+  PlayerHistoricalTrend,
+  SkillTrend,
+  SquadHistoricalTrendSummary,
+  TrendDirection,
+  TrendEvidence,
+  TrendSnapshotEvidence
+} from "./types.js";
 
 export function calculateHistoricalTrends(
   snapshots: SnapshotComparisonSnapshot[]
@@ -108,10 +58,8 @@ export function calculateHistoricalTrends(
   };
 }
 
-function buildPlayerTrends(
-  snapshots: SnapshotComparisonSnapshot[]
-): PlayerHistoricalTrend[] {
-  const byPlayerId = new Map<number, Array<{ snapshot: SnapshotComparisonSnapshot; player: SnapshotComparisonPlayer }>>();
+function buildPlayerTrends(snapshots: SnapshotComparisonSnapshot[]): PlayerHistoricalTrend[] {
+  const byPlayerId = new Map<number, HistoricalTrendPoint[]>();
 
   for (const snapshot of snapshots) {
     const index = indexSnapshotPlayers(snapshot.players);
@@ -134,7 +82,7 @@ function buildPlayerTrends(
         playerName: finalPoint?.player.name ?? orderedPoints[0]!.player.name,
         value: moneyTrend(orderedPoints, "value"),
         wage: moneyTrend(orderedPoints, "wage"),
-        skills: skillKeys.map((skill) => skillTrend(orderedPoints, skill)),
+        skills: SUPPORTED_SKILLS.map((skill) => skillTrend(orderedPoints, skill)),
         warnings:
           orderedPoints.length < 2
             ? ["Player needs at least two comparable snapshots for trend calculation."]
@@ -172,10 +120,7 @@ function buildSquadTrendSummary(
   };
 }
 
-function moneyTrend(
-  points: Array<{ snapshot: SnapshotComparisonSnapshot; player: SnapshotComparisonPlayer }>,
-  field: "value" | "wage"
-): MoneyTrend {
+function moneyTrend(points: HistoricalTrendPoint[], field: "value" | "wage"): MoneyTrend {
   return moneyTrendFromValues(
     points.map((point) => ({
       snapshot: point.snapshot,
@@ -207,12 +152,15 @@ function moneyTrendFromValues(
 }
 
 function skillTrend(
-  points: Array<{ snapshot: SnapshotComparisonSnapshot; player: SnapshotComparisonPlayer }>,
-  skill: keyof Required<SkillSet>
+  points: HistoricalTrendPoint[],
+  skill: SkillKey
 ): SkillTrend {
   const comparablePoints = points
     .map((point) => ({ snapshot: point.snapshot, value: point.player.skills[skill] }))
-    .filter((point): point is { snapshot: SnapshotComparisonSnapshot; value: number } => point.value !== null);
+    .filter(
+      (point): point is { snapshot: SnapshotComparisonSnapshot; value: number } =>
+        point.value !== null
+    );
 
   return {
     skill,
@@ -291,7 +239,9 @@ function mainVariations(
       variation(player, "value", player.value),
       variation(player, "wage", player.wage)
     ])
-    .filter((entry): entry is SquadHistoricalTrendSummary["mainVariations"][number] => entry !== null)
+    .filter(
+      (entry): entry is SquadHistoricalTrendSummary["mainVariations"][number] => entry !== null
+    )
     .sort((left, right) => Math.abs(right.deltaAbsolute) - Math.abs(left.deltaAbsolute))
     .slice(0, 5);
 }
@@ -301,10 +251,7 @@ function variation(
   metric: "value" | "wage",
   trend: MoneyTrend
 ): SquadHistoricalTrendSummary["mainVariations"][number] | null {
-  if (
-    trend.direction !== "up" &&
-    trend.direction !== "down"
-  ) {
+  if (trend.direction !== "up" && trend.direction !== "down") {
     return null;
   }
 
@@ -370,10 +317,7 @@ function indexSnapshotPlayers(players: SnapshotComparisonPlayer[]): {
   return { matchable, ambiguous };
 }
 
-function sumMoney(
-  players: SnapshotComparisonPlayer[],
-  field: "value" | "wage"
-): number {
+function sumMoney(players: SnapshotComparisonPlayer[], field: "value" | "wage"): number {
   return players.reduce((total, player) => total + player[field].amount, 0);
 }
 

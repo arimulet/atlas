@@ -77,6 +77,13 @@ export interface ImportResponse {
   diagnostic: {
     findings: DiagnosticFinding[];
   } | null;
+  matches?: {
+    discovered: number;
+    finished: number;
+    imported: number;
+    skipped: number;
+    failed: number;
+  };
 }
 
 export interface ManualRecord {
@@ -143,10 +150,45 @@ export interface ClubDashboard {
     previous: SnapshotSummary | null;
     canCompare: boolean;
   };
+  trainingSummary: ClubDashboardTrainingSummary;
   developmentSummary: ClubDashboardDevelopmentSummary;
   marketSummary: ClubDashboardMarketSummary;
   youthPipelineSummary: ClubDashboardYouthPipelineSummary;
   operationalAreas: OperationalArea[];
+}
+
+export interface ClubDashboardTrainingSummary {
+  available: boolean;
+  observed: {
+    latestSnapshotDate: string | null;
+    playerCount: number;
+    playersWithTrainingData: number;
+    advancedPlayers: number;
+    formationPlayers: number;
+  };
+}
+
+export interface TrainingPageData {
+  snapshotId: string | null;
+  snapshotDate: string | null;
+  configuration: {
+    GK: number | null;
+    DEF: number | null;
+    MID: number | null;
+    ATT: number | null;
+  } | null;
+  players: TrainingPagePlayer[];
+}
+
+export interface TrainingPagePlayer {
+  id: string;
+  name: string;
+  age: number;
+  form?: number | null;
+  training: {
+    position: number;
+    advanced: boolean;
+  };
 }
 
 export interface ClubDashboardDevelopmentSummary {

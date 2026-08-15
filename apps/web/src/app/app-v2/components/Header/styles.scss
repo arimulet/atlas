@@ -1,0 +1,92 @@
+.v2-header {
+  align-items: center;
+  background: var(--atlas-surface);
+  border-bottom: 1px solid var(--atlas-border);
+  display: flex;
+  grid-column: 1 / -1;
+  grid-row: 1;
+  justify-content: space-between;
+  min-width: 0;
+  padding: 0 var(--atlas-space-4);
+
+  .v2-brand,
+  &__tools {
+    align-items: center;
+    display: flex;
+  }
+
+  .v2-brand {
+    gap: 9px;
+
+    &__mark {
+      align-items: center;
+      background: var(--atlas-accent);
+      border-radius: var(--atlas-radius-sm);
+      color: #10221a;
+      display: inline-flex;
+      font-size: 0.76rem;
+      font-weight: 900;
+      height: 25px;
+      justify-content: center;
+      letter-spacing: -0.04em;
+      width: 25px;
+    }
+
+    &__name {
+      color: var(--atlas-text);
+      font-size: 0.88rem;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+    }
+  }
+
+  &__tools {
+    gap: 10px;
+  }
+
+  .atlas-v2-import-button {
+    align-items: center;
+    background: #213b33;
+    border: 1px solid #356b55;
+    border-radius: var(--atlas-radius-sm);
+    color: var(--atlas-text);
+    display: inline-flex;
+    font-size: 0.76rem;
+    font-weight: 750;
+    gap: 7px;
+    height: 32px;
+    padding: 0 11px;
+    transition:
+      background 120ms ease,
+      border-color 120ms ease,
+      color 120ms ease;
+
+    svg {
+      fill: none;
+      height: 15px;
+      stroke: currentColor;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-width: 1.8;
+      width: 15px;
+    }
+
+    &:hover {
+      background: #2a4d40;
+      border-color: var(--atlas-accent);
+      color: #ffffff;
+    }
+
+    &:focus-visible {
+      box-shadow:
+        0 0 0 2px var(--atlas-bg),
+        0 0 0 4px var(--atlas-accent);
+      outline: 0;
+    }
+
+    &:active {
+      background: #193128;
+      transform: translateY(1px);
+    }
+  }
+}
