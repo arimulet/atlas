@@ -98,47 +98,6 @@
   font-weight: 700;
 }
 
-.atlas-v2 .v2-dashboard-player-link {
-  background: transparent;
-  border: 0;
-  color: inherit;
-  cursor: pointer;
-  font: inherit;
-  padding: 0;
-  text-align: left;
-  text-decoration: none;
-}
-
-.atlas-v2 .v2-dashboard-player-link:hover,
-.atlas-v2 .v2-dashboard-player-link:focus-visible {
-  color: var(--atlas-accent);
-}
-
-.v2-dashboard-attention-item__icon {
-  align-items: center;
-  border: 1px solid currentColor;
-  border-radius: 50%;
-  display: inline-flex;
-  font-size: 0.68rem;
-  font-weight: 800;
-  height: 17px;
-  justify-content: center;
-  width: 17px;
-}
-
-.v2-dashboard-attention-item.is-high .v2-dashboard-attention-item__icon {
-  color: var(--semantic-error-text);
-}
-
-.v2-dashboard-attention-item.is-medium .v2-dashboard-attention-item__icon {
-  color: var(--semantic-warning-text);
-}
-
-.v2-dashboard-attention-item.is-low .v2-dashboard-attention-item__icon,
-.v2-dashboard-attention-item.is-info .v2-dashboard-attention-item__icon {
-  color: var(--semantic-info-text);
-}
-
 .v2-dashboard-watch-table {
   border-top: 1px solid var(--atlas-border);
   display: grid;

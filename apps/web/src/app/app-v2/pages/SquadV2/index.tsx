@@ -1,9 +1,17 @@
 import { describeDiagnosticFinding } from "@atlas/web/app/diagnostic-copy";
 import { formatTrainingPriority } from "@atlas/web/app/formatters";
 import type { DiagnosticFinding } from "@atlas/web/app/types";
-import { formatV2Eta, formatV2Number, formatV2Percentage, formatV2Talent } from "../../formatters";
+import {
+  formatV2Advanced,
+  formatV2Eta,
+  formatV2Number,
+  formatV2Percentage,
+  formatV2Talent
+} from "../../formatters";
+import { V2AttentionIcon } from "../../components/V2AttentionIcon";
+import { V2PlayerLink } from "../../components/V2PlayerLink";
+import { V2StatusBadge } from "../../components/V2StatusBadge";
 import type { SquadAttentionProps, SquadTableProps, SquadV2Props } from "./types";
-import { pathForPlayerDetail } from "../../routing";
 import {
   createSquadAttentionFindings,
   createSquadPlayerRows,
@@ -62,7 +70,7 @@ function SquadAttention({ diagnostic, status }: SquadAttentionProps) {
       className={`v2-squad-panel v2-squad-panel--attention${findings.length === 0 ? " is-quiet" : ""}`}
       aria-labelledby="squad-attention-title"
     >
-      <h2 id="squad-attention-title" className="v2-squad-panel__title">
+      <h2 id="squad-attention-title" className="v2-squad-panel__title v2-section-title">
         Squad Attention
       </h2>
       {status === "loading" ? <SquadMessage>Loading diagnostics...</SquadMessage> : null}
@@ -101,7 +109,7 @@ interface SquadAttentionItemProps {
 function SquadAttentionItem({ finding }: SquadAttentionItemProps) {
   return (
     <li className={`v2-squad-attention-item is-${finding.severity}`}>
-      <span aria-hidden="true">{attentionIcon(finding.severity)}</span>
+      <V2AttentionIcon severity={finding.severity} />
       <span>{describeDiagnosticFinding(finding)}</span>
     </li>
   );
@@ -252,26 +260,9 @@ function SquadPlayerRowView({ onSelectPlayer, row }: SquadPlayerRowViewProps) {
   return (
     <tr>
       <th scope="row">
-        <a
-          className="v2-squad-player-link"
-          href={pathForPlayerDetail(row.playerId)}
-          onClick={(event) => {
-            if (
-              event.button !== 0 ||
-              event.metaKey ||
-              event.ctrlKey ||
-              event.shiftKey ||
-              event.altKey
-            ) {
-              return;
-            }
-
-            event.preventDefault();
-            onSelectPlayer(row.playerId);
-          }}
-        >
+        <V2PlayerLink playerId={row.playerId} onSelectPlayer={onSelectPlayer}>
           {row.playerName}
-        </a>
+        </V2PlayerLink>
       </th>
       <td className="v2-squad-table__numeric">{row.age}</td>
       <td className="v2-squad-table__numeric">{row.form ?? "—"}</td>
@@ -283,7 +274,7 @@ function SquadPlayerRowView({ onSelectPlayer, row }: SquadPlayerRowViewProps) {
       <td>{row.training.trainedSkill ?? "—"}</td>
       <td className="v2-squad-table__center">
         <span className={`v2-training-advanced${row.training.advanced ? " is-active" : ""}`}>
-          {row.training.advanced ? "✓" : "—"}
+          {formatV2Advanced(row.training.advanced)}
         </span>
       </td>
       <td className="v2-squad-table__numeric">{formatV2Percentage(row.training.efficiency)}</td>
@@ -303,11 +294,7 @@ interface SquadStatusProps {
 }
 
 function SquadStatus({ status }: SquadStatusProps) {
-  return (
-    <span className={`v2-training-status${status ? ` is-${status.toLowerCase()}` : " is-empty"}`}>
-      {status ?? "—"}
-    </span>
-  );
+  return <V2StatusBadge status={status} />;
 }
 
 interface SquadMessageProps {
@@ -317,8 +304,4 @@ interface SquadMessageProps {
 
 function SquadMessage({ children, tone }: SquadMessageProps) {
   return <p className={`v2-squad-panel__message${tone ? ` is-${tone}` : ""}`}>{children}</p>;
-}
-
-function attentionIcon(severity: DiagnosticFinding["severity"]): string {
-  return severity === "info" || severity === "low" ? "ℹ" : "⚠";
 }

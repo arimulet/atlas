@@ -6,8 +6,9 @@ import {
   type FinanceLineItem,
   type FinancesViewModel
 } from "../../view-models/finances-view-model";
-import type { DashboardStatus, Severity } from "@atlas/web/app/types";
+import type { DashboardStatus } from "@atlas/web/app/types";
 import type { FinancesV2Props } from "./types";
+import { V2AttentionIcon } from "../../components/V2AttentionIcon";
 
 export function FinancesV2({ status }: FinancesV2Props) {
   const viewModel = createFinancesViewModel();
@@ -63,9 +64,7 @@ function FinanceAttention({ items, status }: FinanceAttentionProps) {
         <ul className="v2-finances-attention-list">
           {items.map((item) => (
             <li className={`v2-finances-attention-item is-${item.severity}`} key={item.id}>
-              <span className="v2-finances-attention-item__icon" aria-hidden="true">
-                {attentionIcon(item.severity)}
-              </span>
+              <V2AttentionIcon severity={item.severity} />
               <span>{item.message}</span>
             </li>
           ))}
@@ -161,7 +160,7 @@ function FinanceBreakdown({ items, title, total, status }: FinanceBreakdownProps
 
 function PanelTitle({ id, title }: { id: string; title: string }) {
   return (
-    <h2 className="v2-finances-panel__title" id={id}>
+    <h2 className="v2-finances-panel__title v2-section-title" id={id}>
       {title}
     </h2>
   );
@@ -169,8 +168,4 @@ function PanelTitle({ id, title }: { id: string; title: string }) {
 
 function PanelMessage({ children, tone }: { children: string; tone?: "error" }) {
   return <p className={`v2-finances-panel__message${tone ? ` is-${tone}` : ""}`}>{children}</p>;
-}
-
-function attentionIcon(severity: Severity): string {
-  return severity === "high" || severity === "medium" ? "⚠" : "ℹ";
 }

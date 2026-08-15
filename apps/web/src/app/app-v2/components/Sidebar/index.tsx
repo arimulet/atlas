@@ -33,7 +33,7 @@ export function Sidebar({ activeView, onUiVersionChange, onViewChange, uiVersion
 
       <div className="v2-sidebar__footer">
         <p className="v2-sidebar__label">Interface</p>
-        <UiVersionSwitch activeVersion={uiVersion} onChange={onUiVersionChange} />
+        <UiVersionSwitch activeVersion={uiVersion} onChange={onUiVersionChange} variant="v2" />
       </div>
     </aside>
   );

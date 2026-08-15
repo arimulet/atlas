@@ -2,8 +2,16 @@ import { describeDiagnosticFinding } from "@atlas/web/app/diagnostic-copy";
 import type { DiagnosticFinding, TrainingPageData } from "@atlas/web/app/types";
 import { formatTrainingPriority } from "@atlas/web/app/formatters";
 import type { TrainingPlayerRow, TrainingStatusLabel, TrainingV2Props } from "./types";
-import { pathForPlayerDetail } from "../../routing";
-import { formatV2Eta, formatV2Number, formatV2Percentage, formatV2Talent } from "../../formatters";
+import {
+  formatV2Advanced,
+  formatV2Eta,
+  formatV2Number,
+  formatV2Percentage,
+  formatV2Talent
+} from "../../formatters";
+import { V2AttentionIcon } from "../../components/V2AttentionIcon";
+import { V2PlayerLink } from "../../components/V2PlayerLink";
+import { V2StatusBadge } from "../../components/V2StatusBadge";
 import {
   compareDiagnosticSeverity,
   createTrainingPlayerRows,
@@ -116,7 +124,7 @@ interface TrainingAttentionItemProps {
 function TrainingAttentionItem({ finding }: TrainingAttentionItemProps) {
   return (
     <li className={`v2-training-attention-item is-${finding.severity}`}>
-      <span aria-hidden="true">{attentionIcon(finding.severity)}</span>
+      <V2AttentionIcon severity={finding.severity} />
       <span>{describeDiagnosticFinding(finding)}</span>
     </li>
   );
@@ -251,26 +259,9 @@ function PlayerRow({ onSelectPlayer, player }: PlayerRowProps) {
   return (
     <tr>
       <th scope="row">
-        <a
-          className="v2-training-player-link"
-          href={pathForPlayerDetail(player.playerId)}
-          onClick={(event) => {
-            if (
-              event.button !== 0 ||
-              event.metaKey ||
-              event.ctrlKey ||
-              event.shiftKey ||
-              event.altKey
-            ) {
-              return;
-            }
-
-            event.preventDefault();
-            onSelectPlayer(player.playerId);
-          }}
-        >
+        <V2PlayerLink playerId={player.playerId} onSelectPlayer={onSelectPlayer}>
           {player.playerName}
-        </a>
+        </V2PlayerLink>
       </th>
       <td className="v2-training-table__numeric">{player.age}</td>
       <td>
@@ -278,7 +269,7 @@ function PlayerRow({ onSelectPlayer, player }: PlayerRowProps) {
           className={`v2-training-advanced${player.advanced ? " is-active" : ""}`}
           aria-label={player.advanced ? "Advanced training" : "No advanced training"}
         >
-          {player.advanced ? "\u2713" : "\u2014"}
+          {formatV2Advanced(player.advanced)}
         </span>
       </td>
       <td className="v2-training-table__numeric">{formatV2Number(player.minutes)}</td>
@@ -299,11 +290,7 @@ interface TrainingStatusProps {
 }
 
 function TrainingStatus({ status }: TrainingStatusProps) {
-  return (
-    <span className={`v2-training-status${status ? ` is-${status.toLowerCase()}` : " is-empty"}`}>
-      {status ?? "\u2014"}
-    </span>
-  );
+  return <V2StatusBadge status={status} />;
 }
 
 function RecentTrainingProgress() {
@@ -322,7 +309,7 @@ interface PanelTitleProps {
 
 function PanelTitle({ id, title }: PanelTitleProps) {
   return (
-    <h2 id={id} className="v2-training-panel__title">
+    <h2 id={id} className="v2-training-panel__title v2-section-title">
       {title}
     </h2>
   );
@@ -338,11 +325,7 @@ function PanelMessage({ children, tone }: PanelMessageProps) {
 }
 
 function skillLabel(skill: number | null): string {
-  return skill === null ? "Not set" : formatTrainingSkill(skill);
-}
-
-function attentionIcon(severity: DiagnosticFinding["severity"]): string {
-  return severity === "info" || severity === "low" ? "ℹ" : "⚠";
+  return skill === null ? "\u2014" : formatTrainingSkill(skill);
 }
 
 function formatTrainingSkill(skill: number): string {

@@ -3,6 +3,14 @@ import type { PlayerDetailV2Props } from "./types";
 import { ProjectionPanel } from "./ProjectionPanel";
 import { TalentPanel } from "./TalentPanel";
 import {
+  formatV2Advanced,
+  formatV2DateTime,
+  formatV2Number,
+  formatV2Percentage
+} from "../../formatters";
+import { V2AttentionIcon } from "../../components/V2AttentionIcon";
+import { V2StatusBadge } from "../../components/V2StatusBadge";
+import {
   createPlayerDetailViewModel,
   type PlayerDetailViewModel
 } from "../../view-models/player-detail-view-model";
@@ -113,7 +121,7 @@ function PlayerAttention({ diagnosticAvailable, diagnostics, status }: PlayerAtt
         <ul className="v2-player-detail__attention-list">
           {diagnostics.map((finding) => (
             <li className={`is-${finding.severity}`} key={`${finding.code}-${finding.severity}`}>
-              <span aria-hidden="true">{attentionIcon(finding.severity)}</span>
+              <V2AttentionIcon severity={finding.severity} />
               <span>{describeDiagnosticFinding(finding)}</span>
             </li>
           ))}
@@ -139,7 +147,7 @@ function SkillsPanel({ skills }: SkillsPanelProps) {
         {skills.map((skill) => (
           <div key={skill.key}>
             <dt>{skill.label}</dt>
-            <dd>{skill.value === null ? "—" : skill.value}</dd>
+            <dd>{formatV2Number(skill.value)}</dd>
           </div>
         ))}
       </dl>
@@ -158,11 +166,16 @@ function TrainingPanel({ training }: TrainingPanelProps) {
       <dl className="v2-player-detail__data-list">
         <DataRow label="Position" value={training.position ?? "—"} />
         <DataRow label="Trained Skill" value={training.trainedSkill ?? "—"} />
-        <DataRow label="Advanced" value={training.advanced ? "✓ Yes" : "—"} />
-        <DataRow label="Minutes" value={formatNumber(training.minutes)} />
-        <DataRow label="Efficiency" value={formatPercentage(training.efficiency)} />
-        <DataRow label="Progress" value={formatPercentage(training.progress)} />
-        <DataRow label="Status" value={training.status ?? "—"} />
+        <DataRow label="Advanced" value={formatV2Advanced(training.advanced)} />
+        <DataRow label="Minutes" value={formatV2Number(training.minutes)} />
+        <DataRow label="Efficiency" value={formatV2Percentage(training.efficiency)} />
+        <DataRow label="Progress" value={formatV2Percentage(training.progress)} />
+        <div>
+          <dt>Status</dt>
+          <dd>
+            <V2StatusBadge status={training.status} />
+          </dd>
+        </div>
       </dl>
     </section>
   );
@@ -191,7 +204,7 @@ function ProgressPanel({ rows }: ProgressPanelProps) {
             <tbody>
               {rows.map((row) => (
                 <tr key={`${row.date}-${row.skill}-${row.toLevel}`}>
-                  <td>{row.date ?? "—"}</td>
+                  <td>{formatV2DateTime(row.date)}</td>
                   <th scope="row">{row.skill}</th>
                   <td>
                     {row.fromLevel} → {row.toLevel}
@@ -228,7 +241,7 @@ interface PanelTitleProps {
 
 function PanelTitle({ id, title }: PanelTitleProps) {
   return (
-    <h2 className="v2-player-detail-panel__title" id={id}>
+    <h2 className="v2-player-detail-panel__title v2-section-title" id={id}>
       {title}
     </h2>
   );
@@ -246,16 +259,4 @@ function DataRow({ label, value }: DataRowProps) {
       <dd>{value}</dd>
     </div>
   );
-}
-
-function formatNumber(value: number | null): string {
-  return value === null ? "—" : value.toLocaleString("en-US");
-}
-
-function formatPercentage(value: number | null): string {
-  return value === null ? "—" : `${value.toLocaleString("en-US", { maximumFractionDigits: 1 })}%`;
-}
-
-function attentionIcon(severity: PlayerDetailViewModel["diagnostics"][number]["severity"]): string {
-  return severity === "info" || severity === "low" ? "ℹ" : "⚠";
 }

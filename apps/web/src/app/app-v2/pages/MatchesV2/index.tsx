@@ -1,4 +1,3 @@
-import { pathForPlayerDetail } from "../../routing";
 import {
   createMatchesPageViewModel,
   matchTypeLabel,
@@ -6,6 +5,8 @@ import {
   type WeeklyPlayerMinutesViewModel
 } from "../../view-models/matches-view-model";
 import type { MatchesPageMatchType, MatchesV2Props } from "./types";
+import { V2PlayerLink } from "../../components/V2PlayerLink";
+import { V2StatusBadge } from "../../components/V2StatusBadge";
 
 export function MatchesV2({ data, onSelectPlayer, status }: MatchesV2Props) {
   const viewModel = data ? createMatchesPageViewModel(data) : null;
@@ -25,8 +26,13 @@ export function MatchesV2({ data, onSelectPlayer, status }: MatchesV2Props) {
 
 function MatchAttention({ status }: Pick<MatchesV2Props, "status">) {
   return (
-    <section className="v2-matches-panel v2-matches-panel--attention" aria-labelledby="match-attention-title">
-      <h2 id="match-attention-title">Match Attention</h2>
+    <section
+      className="v2-matches-panel v2-matches-panel--attention"
+      aria-labelledby="match-attention-title"
+    >
+      <h2 id="match-attention-title" className="v2-section-title">
+        Match Attention
+      </h2>
       {status === "loading" ? (
         <p>Loading match-related diagnostics...</p>
       ) : status === "error" ? (
@@ -47,13 +53,13 @@ function RecentMatches({ data, status }: MatchesSectionProps) {
   return (
     <section className="v2-matches-section" aria-labelledby="recent-matches-title">
       <div className="v2-matches-section__heading">
-        <h2 id="recent-matches-title">Recent Matches</h2>
+        <h2 id="recent-matches-title" className="v2-section-title">
+          Recent Matches
+        </h2>
         <span>{data?.recentMatches.length ?? 0}</span>
       </div>
       {status === "loading" ? <MatchesMessage>Loading matches...</MatchesMessage> : null}
-      {status === "error" ? (
-        <MatchesMessage>Unable to load matches.</MatchesMessage>
-      ) : null}
+      {status === "error" ? <MatchesMessage>Unable to load matches.</MatchesMessage> : null}
       {status === "idle" ? (
         <MatchesMessage>Import a club snapshot to load matches.</MatchesMessage>
       ) : null}
@@ -98,28 +104,30 @@ interface WeeklyPlayerMinutesProps extends MatchesSectionProps {
 
 function WeeklyPlayerMinutes({ data, onSelectPlayer, status }: WeeklyPlayerMinutesProps) {
   return (
-    <section className="v2-matches-section v2-matches-section--primary" aria-labelledby="weekly-player-minutes-title">
+    <section
+      className="v2-matches-section v2-matches-section--primary"
+      aria-labelledby="weekly-player-minutes-title"
+    >
       <div className="v2-matches-section__heading">
         <div>
-          <h2 id="weekly-player-minutes-title">Weekly Player Minutes</h2>
+          <h2 id="weekly-player-minutes-title" className="v2-section-title">
+            Weekly Player Minutes
+          </h2>
           {data?.currentPeriodLabel ? <p>{data.currentPeriodLabel}</p> : null}
         </div>
       </div>
       {status === "loading" ? <MatchesMessage>Loading player minutes...</MatchesMessage> : null}
-      {status === "error" ? (
-        <MatchesMessage>Unable to load player minutes.</MatchesMessage>
-      ) : null}
+      {status === "error" ? <MatchesMessage>Unable to load player minutes.</MatchesMessage> : null}
       {status === "idle" ? (
         <MatchesMessage>Import a club snapshot to load player minutes.</MatchesMessage>
       ) : null}
       {status === "ready" && data?.weeklyPlayerMinutes.length === 0 ? (
-        <MatchesMessage>No player minutes available for the current training period.</MatchesMessage>
+        <MatchesMessage>
+          No player minutes available for the current training period.
+        </MatchesMessage>
       ) : null}
       {status === "ready" && data && data.weeklyPlayerMinutes.length > 0 ? (
-        <WeeklyPlayerMinutesTable
-          data={data}
-          onSelectPlayer={onSelectPlayer}
-        />
+        <WeeklyPlayerMinutesTable data={data} onSelectPlayer={onSelectPlayer} />
       ) : null}
     </section>
   );
@@ -169,30 +177,17 @@ interface WeeklyPlayerMinutesRowProps {
   player: WeeklyPlayerMinutesViewModel;
 }
 
-function WeeklyPlayerMinutesRow({ matchTypes, onSelectPlayer, player }: WeeklyPlayerMinutesRowProps) {
+function WeeklyPlayerMinutesRow({
+  matchTypes,
+  onSelectPlayer,
+  player
+}: WeeklyPlayerMinutesRowProps) {
   return (
     <tr>
       <th scope="row">
-        <a
-          className="v2-matches-player-link"
-          href={pathForPlayerDetail(String(player.playerId))}
-          onClick={(event) => {
-            if (
-              event.button !== 0 ||
-              event.metaKey ||
-              event.ctrlKey ||
-              event.shiftKey ||
-              event.altKey
-            ) {
-              return;
-            }
-
-            event.preventDefault();
-            onSelectPlayer(String(player.playerId));
-          }}
-        >
+        <V2PlayerLink playerId={String(player.playerId)} onSelectPlayer={onSelectPlayer}>
           {player.playerName}
-        </a>
+        </V2PlayerLink>
       </th>
       {matchTypes.map((matchType) => (
         <td className="v2-matches-table__numeric" key={matchType}>
@@ -201,7 +196,9 @@ function WeeklyPlayerMinutesRow({ matchTypes, onSelectPlayer, player }: WeeklyPl
       ))}
       <td className="v2-matches-table__numeric">{player.totalMinutes}</td>
       <td className="v2-matches-table__numeric">{player.effectiveTrainingLabel}</td>
-      <td>{player.statusLabel}</td>
+      <td>
+        <V2StatusBadge status={player.statusLabel === "—" ? null : player.statusLabel} />
+      </td>
     </tr>
   );
 }
