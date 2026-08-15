@@ -2,6 +2,7 @@ import {
   calculateClubHistoricalTrends,
   compareClubSnapshots,
   generateClubHistoricalFindings,
+  getClubMatchesPageData,
   getClubDashboard,
   getClubOperatingSettings,
   getClubProfile,
@@ -49,6 +50,12 @@ async function clubRoutes(server: FastifyInstance) {
     const { clubId } = request.params;
 
     return getTrainingPageData(clubId);
+  });
+
+  server.get<{ Params: GetClubDashboardParams }>("/matches", async (request) => {
+    const { clubId } = request.params;
+
+    return getClubMatchesPageData(clubId);
   });
 
   server.patch<{ Params: PatchClubProfileParams }>("/profile", async (request) => {
