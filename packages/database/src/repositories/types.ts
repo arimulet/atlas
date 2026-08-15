@@ -9,7 +9,7 @@ export interface PersistedClub {
   id: string;
   clubId: number;
   country: number;
-  training: { 
+  training: {
     GK: number | null;
     DEF: number | null;
     MID: number | null;
@@ -130,6 +130,40 @@ export interface PersistedYouthPlayerSnapshot {
   weeksRemaining: number | null;
   skill: number | null;
   status: "in_academy" | "ready_for_promotion" | "promoted";
+}
+
+export interface PersistedMatchPlayerAppearance {
+  playerId: number;
+  number: number;
+  formation: "GK" | "DEF" | "MID" | "ATT";
+  role: "STARTER" | "SUBSTITUTE_USED" | "SUBSTITUTE_UNUSED";
+  timeIn: number;
+  timeOut: number;
+  minutesPlayed: number;
+}
+
+export interface PersistedMatch {
+  id: number;
+  clubId: number;
+  gameWeek: number;
+  week: number;
+  playedAt: Date;
+  leagueId: number;
+  matchType: "OFFICIAL" | "FRIENDLY" | "NOT_ELIGIBLE";
+  side: "HOME" | "AWAY";
+  opponent: {
+    id: number;
+    name: string;
+  };
+  score: {
+    club: number;
+    opponent: number;
+  };
+  players: PersistedMatchPlayerAppearance[];
+}
+
+export interface SaveMatchInput extends Omit<PersistedMatch, "id"> {
+  id: number;
 }
 
 export interface PersistedCountry {
