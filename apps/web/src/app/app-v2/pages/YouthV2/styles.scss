@@ -51,55 +51,6 @@
     color: var(--semantic-error-text);
   }
 
-  .v2-youth-attention-list {
-    display: grid;
-    gap: 7px;
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
-
-  .v2-youth-attention-item {
-    align-items: center;
-    color: var(--atlas-text-secondary);
-    display: grid;
-    font-size: 0.79rem;
-    gap: 9px;
-    grid-template-columns: 19px minmax(0, 1fr);
-    line-height: 1.35;
-    min-height: 27px;
-  }
-
-  .v2-youth-attention-item strong {
-    color: var(--atlas-text);
-    font-weight: 700;
-  }
-
-  .v2-youth-attention-item__icon {
-    align-items: center;
-    border: 1px solid currentColor;
-    border-radius: 50%;
-    display: inline-flex;
-    font-size: 0.68rem;
-    font-weight: 800;
-    height: 17px;
-    justify-content: center;
-    width: 17px;
-  }
-
-  .v2-youth-attention-item.is-high .v2-youth-attention-item__icon {
-    color: var(--semantic-error-text);
-  }
-
-  .v2-youth-attention-item.is-medium .v2-youth-attention-item__icon {
-    color: var(--semantic-warning-text);
-  }
-
-  .v2-youth-attention-item.is-low .v2-youth-attention-item__icon,
-  .v2-youth-attention-item.is-info .v2-youth-attention-item__icon {
-    color: var(--semantic-info-text);
-  }
-
   .v2-youth-table-wrap {
     overflow-x: auto;
   }

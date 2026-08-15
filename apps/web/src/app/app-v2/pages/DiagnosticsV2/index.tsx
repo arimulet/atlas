@@ -7,7 +7,7 @@ import {
   type DiagnosticViewModel
 } from "../../view-models/diagnostics-view-model";
 import type { DiagnosticsV2Props } from "./types";
-import { pathForPlayerDetail } from "../../routing";
+import { V2PlayerLink } from "../../components/V2PlayerLink";
 
 type SeverityFilter = "all" | Severity;
 type AreaFilter = "all" | DiagnosticArea;
@@ -108,7 +108,9 @@ export function DiagnosticsV2({
 
       <section className="v2-diagnostics__list" aria-labelledby="all-diagnostics-title">
         <div className="v2-diagnostics__list-header">
-          <h2 id="all-diagnostics-title">All Diagnostics</h2>
+          <h2 id="all-diagnostics-title" className="v2-section-title">
+            All Diagnostics
+          </h2>
           {viewModel.summary.total > 0 ? (
             <span>
               {filteredDiagnostics.length} of {viewModel.summary.total}
@@ -143,7 +145,9 @@ function DiagnosticSummary({ viewModel }: DiagnosticSummaryProps) {
 
   return (
     <section className="v2-diagnostics-summary" aria-labelledby="diagnostic-summary-title">
-      <h2 id="diagnostic-summary-title">Diagnostic Summary</h2>
+      <h2 id="diagnostic-summary-title" className="v2-section-title">
+        Diagnostic Summary
+      </h2>
       <div className="v2-diagnostics-summary__content">
         <span className="v2-diagnostics-summary__eyebrow">Diagnostics</span>
         {severities.length > 0 ? (
@@ -239,26 +243,9 @@ function DiagnosticRow({ diagnostic, onSelectPlayer, showContext }: DiagnosticRo
       </td>
       <td>
         {canNavigateToPlayer ? (
-          <a
-            className="v2-diagnostics-subject-link"
-            href={pathForPlayerDetail(playerId)}
-            onClick={(event) => {
-              if (
-                event.button !== 0 ||
-                event.metaKey ||
-                event.ctrlKey ||
-                event.shiftKey ||
-                event.altKey
-              ) {
-                return;
-              }
-
-              event.preventDefault();
-              onSelectPlayer(playerId);
-            }}
-          >
-            {diagnostic.subject?.label}
-          </a>
+          <V2PlayerLink playerId={playerId} onSelectPlayer={onSelectPlayer}>
+            {diagnostic.subject?.label ?? "\u2014"}
+          </V2PlayerLink>
         ) : (
           <span className="v2-diagnostics-subject">{diagnostic.subject?.label ?? "—"}</span>
         )}

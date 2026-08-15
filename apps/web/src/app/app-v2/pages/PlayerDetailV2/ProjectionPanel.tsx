@@ -1,4 +1,10 @@
 import type { PlayerDetailViewModel } from "../../view-models/player-detail-view-model";
+import {
+  formatV2Advanced,
+  formatV2Eta,
+  formatV2Number,
+  formatV2Percentage
+} from "../../formatters";
 
 interface ProjectionPanelProps {
   projection: PlayerDetailViewModel["projection"];
@@ -7,27 +13,27 @@ interface ProjectionPanelProps {
 
 export function ProjectionPanel({ projection, training }: ProjectionPanelProps) {
   return (
-    <section
-      className="v2-player-detail-panel"
-      aria-labelledby="player-detail-projection-title"
-    >
-      <h2 className="v2-player-detail-panel__title" id="player-detail-projection-title">
+    <section className="v2-player-detail-panel" aria-labelledby="player-detail-projection-title">
+      <h2
+        className="v2-player-detail-panel__title v2-section-title"
+        id="player-detail-projection-title"
+      >
         Projection
       </h2>
       <p className="v2-player-detail__projection-assumption">Assuming current training</p>
       <dl className="v2-player-detail__data-list">
         <DataRow label="Position" value={training.position ?? "—"} />
         <DataRow label="Trained Skill" value={training.trainedSkill ?? "—"} />
-        <DataRow label="Advanced" value={training.advanced ? "✓ Yes" : "—"} />
-        <DataRow label="Efficiency" value={formatPercentage(training.efficiency)} />
+        <DataRow label="Advanced" value={formatV2Advanced(training.advanced)} />
+        <DataRow label="Efficiency" value={formatV2Percentage(training.efficiency)} />
       </dl>
 
       <div className="v2-player-detail__projection-section">
         <h3>Current</h3>
         <dl className="v2-player-detail__data-list">
           <DataRow label="Skill" value={projection.current.skill ?? "—"} />
-          <DataRow label="Level" value={formatNumber(projection.current.level)} />
-          <DataRow label="Progress" value={formatPercentage(projection.current.progress)} />
+          <DataRow label="Level" value={formatV2Number(projection.current.level)} />
+          <DataRow label="Progress" value={formatV2Percentage(projection.current.progress)} />
         </dl>
       </div>
 
@@ -37,11 +43,11 @@ export function ProjectionPanel({ projection, training }: ProjectionPanelProps) 
           <dl className="v2-player-detail__data-list">
             <DataRow
               label={projection.current.skill ?? "Skill"}
-              value={formatNumber(projection.nextSkillUp.targetLevel)}
+              value={formatV2Number(projection.nextSkillUp.targetLevel)}
             />
             <DataRow
               label="Estimated weeks"
-              value={formatWeeks(projection.nextSkillUp.estimatedWeeks)}
+              value={formatV2Eta(projection.nextSkillUp.estimatedWeeks)}
             />
           </dl>
         ) : (
@@ -55,7 +61,7 @@ export function ProjectionPanel({ projection, training }: ProjectionPanelProps) 
           <dl className="v2-player-detail__data-list">
             <DataRow
               label={projection.current.skill ?? "Skill"}
-              value={formatNumber(projection.horizon.projectedLevel)}
+              value={formatV2Number(projection.horizon.projectedLevel)}
             />
           </dl>
         </div>
@@ -82,18 +88,4 @@ function DataRow({ label, value }: DataRowProps) {
       <dd>{value}</dd>
     </div>
   );
-}
-
-function formatNumber(value: number | null): string {
-  return value === null ? "—" : value.toLocaleString("en-US");
-}
-
-function formatPercentage(value: number | null): string {
-  return value === null ? "—" : `${value.toLocaleString("en-US", { maximumFractionDigits: 1 })}%`;
-}
-
-function formatWeeks(value: number | null): string {
-  return value === null
-    ? "—"
-    : `~${value.toLocaleString("en-US", { maximumFractionDigits: 1 })} weeks`;
 }

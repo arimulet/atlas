@@ -157,17 +157,4 @@
       text-transform: none;
     }
   }
-
-  .v2-matches-player-link {
-    color: inherit;
-    font: inherit;
-    text-decoration: none;
-
-    &:hover,
-    &:focus-visible {
-      color: var(--atlas-accent);
-      outline: none;
-      text-decoration: underline;
-    }
-  }
 }

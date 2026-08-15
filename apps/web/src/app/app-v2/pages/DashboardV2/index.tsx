@@ -6,7 +6,8 @@ import type {
   Severity
 } from "@atlas/web/app/types";
 import type { DashboardV2Props } from "./types";
-import { pathForPlayerDetail } from "../../routing";
+import { V2AttentionIcon } from "../../components/V2AttentionIcon";
+import { V2PlayerLink } from "../../components/V2PlayerLink";
 
 type Priority = "High" | "Medium" | "Low";
 
@@ -96,22 +97,14 @@ function AttentionPanel({ items, onSelectPlayer, status }: AttentionPanelProps) 
         <ul className="v2-dashboard-attention-list">
           {items.map((item) => (
             <li key={item.id} className={`v2-dashboard-attention-item is-${item.severity}`}>
-              <span className="v2-dashboard-attention-item__icon" aria-hidden="true">
-                {item.severity === "info" || item.severity === "low" ? "i" : "!"}
-              </span>
+              <V2AttentionIcon severity={item.severity} />
               <span>
                 {item.name ? (
                   <strong>
                     {item.playerId ? (
-                      <a
-                        className="v2-dashboard-player-link"
-                        href={pathForPlayerDetail(item.playerId)}
-                        onClick={(event) =>
-                          handlePlayerLinkClick(event, item.playerId!, onSelectPlayer)
-                        }
-                      >
+                      <V2PlayerLink playerId={item.playerId} onSelectPlayer={onSelectPlayer}>
                         {item.name}
-                      </a>
+                      </V2PlayerLink>
                     ) : (
                       item.name
                     )}
@@ -160,15 +153,9 @@ function PlayersToWatchPanel({ onSelectPlayer, players, status }: PlayersToWatch
             <div className="v2-dashboard-watch-row" role="row" key={player.id}>
               <strong role="cell">
                 {player.playerId ? (
-                  <a
-                    className="v2-dashboard-player-link"
-                    href={pathForPlayerDetail(player.playerId)}
-                    onClick={(event) =>
-                      handlePlayerLinkClick(event, player.playerId!, onSelectPlayer)
-                    }
-                  >
+                  <V2PlayerLink playerId={player.playerId} onSelectPlayer={onSelectPlayer}>
                     {player.name}
-                  </a>
+                  </V2PlayerLink>
                 ) : (
                   player.name
                 )}
@@ -272,7 +259,7 @@ interface PanelHeadingProps {
 
 function PanelHeading({ id, title }: PanelHeadingProps) {
   return (
-    <h2 id={id} className="v2-dashboard-panel__title">
+    <h2 id={id} className="v2-dashboard-panel__title v2-section-title">
       {title}
     </h2>
   );
@@ -472,17 +459,4 @@ function priorityFromSeverity(severity: Severity): Priority {
   if (severity === "high") return "High";
   if (severity === "medium") return "Medium";
   return "Low";
-}
-
-function handlePlayerLinkClick(
-  event: React.MouseEvent<HTMLAnchorElement>,
-  playerId: string,
-  onSelectPlayer: (playerId: string) => void
-): void {
-  if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
-    return;
-  }
-
-  event.preventDefault();
-  onSelectPlayer(playerId);
 }

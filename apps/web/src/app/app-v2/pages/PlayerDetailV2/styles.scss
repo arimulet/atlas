@@ -80,34 +80,6 @@
   color: var(--atlas-text-muted);
 }
 
-.atlas-v2 .v2-player-detail__attention-list {
-  display: grid;
-  gap: 7px;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.atlas-v2 .v2-player-detail__attention-list li {
-  align-items: baseline;
-  color: var(--atlas-text-secondary);
-  display: flex;
-  font-size: 0.78rem;
-  gap: 8px;
-  line-height: 1.35;
-}
-
-.atlas-v2 .v2-player-detail__attention-list li > span:first-child {
-  color: var(--semantic-warning-text);
-  flex: 0 0 12px;
-  text-align: center;
-}
-
-.atlas-v2 .v2-player-detail__attention-list li.is-low > span:first-child,
-.atlas-v2 .v2-player-detail__attention-list li.is-info > span:first-child {
-  color: var(--semantic-info-text);
-}
-
 .atlas-v2 .v2-player-detail__skills-grid {
   display: grid;
   gap: 0 22px;

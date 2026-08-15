@@ -1,10 +1,10 @@
-import { formatDateTime } from "@atlas/web/app/formatters";
 import type {
   MatchSummary,
   MatchesPageData,
   MatchesPageMatchType,
   WeeklyPlayerMinutes
 } from "../pages/MatchesV2/types";
+import { formatV2DateTime, formatV2Percentage } from "../formatters";
 
 export interface MatchesPageViewModel {
   currentPeriodLabel: string | null;
@@ -37,13 +37,12 @@ export function createMatchesPageViewModel(data: MatchesPageData): MatchesPageVi
     matchTypes: data.matchTypes,
     recentMatches: data.recentMatches.map((match) => ({
       ...match,
-      dateLabel: formatDateTime(match.playedAt),
+      dateLabel: formatV2DateTime(match.playedAt),
       matchTypeLabel: MATCH_TYPE_LABELS[match.matchType]
     })),
     weeklyPlayerMinutes: data.weeklyPlayerMinutes.map((player) => ({
       ...player,
-      effectiveTrainingLabel:
-        player.effectiveTraining === null ? "—" : `${player.effectiveTraining}%`,
+      effectiveTrainingLabel: formatV2Percentage(player.effectiveTraining),
       statusLabel: player.status ?? "—"
     }))
   };

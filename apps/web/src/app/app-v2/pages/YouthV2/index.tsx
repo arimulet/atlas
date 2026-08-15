@@ -6,6 +6,8 @@ import {
   type YouthPlayerRow
 } from "@atlas/web/app/app-v2/view-models/youth-view-model";
 import type { YouthV2Props } from "./types";
+import { formatV2Percentage } from "../../formatters";
+import { V2AttentionIcon } from "../../components/V2AttentionIcon";
 
 export function YouthV2({ youthAcademy, youthStatus }: YouthV2Props) {
   const rows = createYouthPlayerRows(youthAcademy);
@@ -34,7 +36,7 @@ function YouthAttention({ items, status }: YouthAttentionProps) {
       className="v2-youth-panel v2-youth-panel--attention"
       aria-labelledby="youth-attention-title"
     >
-      <h2 id="youth-attention-title" className="v2-youth-panel__title">
+      <h2 id="youth-attention-title" className="v2-youth-panel__title v2-section-title">
         Youth Attention
       </h2>
       {status === "loading" ? (
@@ -67,9 +69,7 @@ interface YouthAttentionItemViewProps {
 function YouthAttentionItemView({ item }: YouthAttentionItemViewProps) {
   return (
     <li className={`v2-youth-attention-item is-${item.severity}`}>
-      <span className="v2-youth-attention-item__icon" aria-hidden="true">
-        {item.severity === "high" || item.severity === "medium" ? "⚠" : "ℹ"}
-      </span>
+      <V2AttentionIcon severity={item.severity} />
       <span>
         {item.playerName ? <strong>{item.playerName}</strong> : null}
         {item.playerName ? " · " : null}
@@ -91,7 +91,7 @@ function YouthPlayers({ planning, rows, status }: YouthPlayersProps) {
       className="v2-youth-panel v2-youth-panel--players"
       aria-labelledby="youth-players-title"
     >
-      <h2 id="youth-players-title" className="v2-youth-panel__title">
+      <h2 id="youth-players-title" className="v2-youth-panel__title v2-section-title">
         Youth Players
       </h2>
       <div className="v2-youth-table-wrap">
@@ -180,7 +180,7 @@ function formatLevel(level: YouthPlayerRow["level"]): string {
 }
 
 function formatProgress(progress: number | null): string {
-  return progress === null ? "—" : `${progress}%`;
+  return formatV2Percentage(progress);
 }
 
 function statusClass(status: NonNullable<YouthPlayerRow["status"]>): string {

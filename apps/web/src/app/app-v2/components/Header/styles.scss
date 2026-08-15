@@ -7,7 +7,7 @@
   grid-row: 1;
   justify-content: space-between;
   min-width: 0;
-  padding: 0 20px;
+  padding: 0 var(--atlas-space-4);
 
   .v2-brand,
   &__tools {

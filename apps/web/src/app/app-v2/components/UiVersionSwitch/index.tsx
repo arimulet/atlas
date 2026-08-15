@@ -1,8 +1,15 @@
 import { UiVersionSwitchProps } from "./types";
 
-export function UiVersionSwitch({ activeVersion, onChange }: UiVersionSwitchProps) {
+export function UiVersionSwitch({
+  activeVersion,
+  onChange,
+  variant = "legacy"
+}: UiVersionSwitchProps) {
   return (
-    <div className="ui-version-switch" aria-label="Interface version">
+    <div
+      className={`${variant === "v2" ? "v2-ui-version-switch" : "ui-version-switch"}`}
+      aria-label="Interface version"
+    >
       <button
         type="button"
         className={activeVersion === "legacy" ? "active" : ""}

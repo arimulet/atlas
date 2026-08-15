@@ -1,4 +1,5 @@
 import type { PlayerDetailViewModel } from "../../view-models/player-detail-view-model";
+import { formatV2Talent } from "../../formatters";
 
 interface TalentPanelProps {
   talent: PlayerDetailViewModel["talent"];
@@ -7,18 +8,19 @@ interface TalentPanelProps {
 export function TalentPanel({ talent }: TalentPanelProps) {
   return (
     <section className="v2-player-detail-panel" aria-labelledby="player-detail-talent-title">
-      <h2 className="v2-player-detail-panel__title" id="player-detail-talent-title">
+      <h2
+        className="v2-player-detail-panel__title v2-section-title"
+        id="player-detail-talent-title"
+      >
         Talent
       </h2>
       {talent.estimated === null ? (
-        <p className="v2-player-detail__message">
-          Not enough training history to estimate talent.
-        </p>
+        <p className="v2-player-detail__message">Not enough training history to estimate talent.</p>
       ) : (
         <dl className="v2-player-detail__data-list">
           <div className="v2-player-detail__data-list-row--primary">
             <dt>Estimated talent</dt>
-            <dd>{formatTalent(talent.estimated)}</dd>
+            <dd>{formatV2Talent(talent.estimated)}</dd>
           </div>
           {talent.confidence !== undefined ? (
             <div>
@@ -42,8 +44,4 @@ export function TalentPanel({ talent }: TalentPanelProps) {
       )}
     </section>
   );
-}
-
-function formatTalent(value: number): string {
-  return value.toLocaleString("en-US", { maximumFractionDigits: 1 });
 }
