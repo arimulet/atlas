@@ -10,10 +10,10 @@ import {
   type MatchSide
 } from "@atlas/domain";
 import {
-  SokkerHttpClient,
+  SokkerXMLProvider,
   type SokkerAuthResult,
   type SokkerCredentials
-} from "../sokker/sokker-http-client.js";
+} from "../sokker/SokkerXMLProvider/index.js";
 import {
   parseSokkerLeagueXml,
   parseSokkerMatchDetailXml,
@@ -109,7 +109,7 @@ export class ImportClubMatchesUseCase {
 export async function importClubMatches(
   input: ImportClubMatchesInput,
   dependencies: ImportClubMatchesDependencies = {
-    xmlClient: new SokkerHttpClient(),
+    xmlClient: new SokkerXMLProvider(),
     matchRepository: new MongoMatchRepository()
   }
 ): Promise<ImportClubMatchesResult> {
