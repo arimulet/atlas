@@ -1,6 +1,5 @@
 import type { PlayerDetailViewModel } from "../../view-models/player-detail-view-model";
 import {
-  formatV2Advanced,
   formatV2Eta,
   formatV2Number,
   formatV2Percentage
@@ -24,8 +23,9 @@ export function ProjectionPanel({ projection, training }: ProjectionPanelProps) 
       <dl className="v2-player-detail__data-list">
         <DataRow label="Position" value={training.position ?? "—"} />
         <DataRow label="Trained Skill" value={training.trainedSkill ?? "—"} />
-        <DataRow label="Advanced" value={formatV2Advanced(training.advanced)} />
-        <DataRow label="Efficiency" value={formatV2Percentage(training.efficiency)} />
+        <DataRow label="Training type" value={training.trainingType ?? "—"} />
+        <DataRow label="Training kind" value={training.trainingKind ?? "—"} />
+        <DataRow label="Intensity" value={formatV2Percentage(training.intensity)} />
       </dl>
 
       <div className="v2-player-detail__projection-section">

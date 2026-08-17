@@ -9,10 +9,6 @@ export const sokkerSyncRequestSchema = z.object({
   password: z.string().min(1)
 });
 
-export const sokkerMatchesImportRequestSchema = sokkerSyncRequestSchema.extend({
-  clubId: z.number().int().positive()
-});
-
 const settingsRecordSchema = z.object({
   key: z.string(),
   value: z.string()

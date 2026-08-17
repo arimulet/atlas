@@ -4,9 +4,7 @@ import type {
   SokkerCountryDto,
   SokkerCurrentDto,
   SokkerJuniorDto,
-  SokkerLeagueDto,
-  SokkerMatchPlayerStatsDto,
-  SokkerMatchSummaryDto,
+  PlayerTrainingWeekDto,
   SokkerPlayerDto,
   SokkerTeamDto
 } from "../../types.js";
@@ -14,11 +12,10 @@ import type {
   SokkerApiCountryDto,
   SokkerApiCurrentDto,
   SokkerApiJuniorDto,
-  SokkerApiLeagueDto,
-  SokkerApiMatchDto,
-  SokkerApiMatchPlayerStatsDto,
   SokkerApiPlayerDto,
-  SokkerApiTeamDto
+  SokkerApiTeamDto,
+  SokkerApiTrainingPlayerDto,
+  SokkerApiTrainingReportDto
 } from "./dtos.js";
 
 export function mapApiCurrentToSokkerCurrentDto(input: SokkerApiCurrentDto): SokkerCurrentDto {
@@ -86,26 +83,118 @@ export function mapApiCountryToSokkerCountryDto(input: SokkerApiCountryDto): Sok
   return input;
 }
 
-export function mapApiMatchToSokkerMatchSummaryDto(
-  input: SokkerApiMatchDto
-): SokkerMatchSummaryDto {
+export function mapApiTrainingPlayerToPlayerTrainingWeekDto(
+  input: SokkerApiTrainingPlayerDto
+): PlayerTrainingWeekDto {
+  const report = input.report;
+
   return {
-    ...input,
-    playedAt: input.playedAt ? new Date(input.playedAt) : null
+    playerId: input.id,
+    gameWeek: report.day.week,
+    seasonWeek: report.day.seasonWeek,
+    date: mapTrainingDate(report),
+    type: mapTrainingType(report.type.name),
+    kind: mapTrainingKind(report.kind.name),
+    intensity: report.intensity,
+    age: report.age,
+    skills: mapSkills(report.skills),
+    skillsChange: mapSkillsChange(report.skillsChange)
   };
 }
 
-export function mapApiMatchPlayerStatsToSokkerMatchPlayerStatsDto(
-  input: SokkerApiMatchPlayerStatsDto
-): SokkerMatchPlayerStatsDto {
+export function mapTrainingKind(name: string): "advanced" | "formation" | "missing" {
+  switch (name.trim().toLowerCase()) {
+    case "individual":
+      return "advanced";
+    case "formation":
+      return "formation";
+    case "missing":
+      return "missing";
+    default:
+      throw new Error(`Unsupported Sokker training kind: ${name}.`);
+  }
+}
+
+export function mapTrainingType(name: string):
+  | "general"
+  | "stamina"
+  | "keeper"
+  | "playmaking"
+  | "passing"
+  | "technique"
+  | "defending"
+  | "striker"
+  | "pace" {
+  switch (name.trim().toLowerCase()) {
+    case "general":
+      return "general";
+    case "stamina":
+      return "stamina";
+    case "keeper":
+      return "keeper";
+    case "playmaking":
+    case "playmaker":
+      return "playmaking";
+    case "passing":
+      return "passing";
+    case "technique":
+      return "technique";
+    case "defending":
+    case "defender":
+      return "defending";
+    case "striker":
+    case "scoring":
+      return "striker";
+    case "pace":
+      return "pace";
+    default:
+      throw new Error(`Unsupported Sokker training type: ${name}.`);
+  }
+}
+
+function mapTrainingDate(report: SokkerApiTrainingReportDto): Date {
+  const timestamp = report.day.date.timestamp;
+  if (timestamp !== undefined) {
+    const date = new Date(timestamp * 1000);
+    if (!Number.isNaN(date.getTime())) {
+      return date;
+    }
+  }
+
+  const date = new Date(report.day.date.value);
+  if (Number.isNaN(date.getTime())) {
+    throw new Error(`Invalid Sokker training date: ${report.day.date.value}.`);
+  }
+
+  return date;
+}
+
+function mapSkills(input: SokkerApiTrainingReportDto["skills"]): PlayerTrainingWeekDto["skills"] {
   return {
-    ...input,
-    rating: input.rating ?? null,
-    timePlaying: input.timePlaying ?? null,
-    timeDefending: input.timeDefending ?? null
+    stamina: input.stamina,
+    keeper: input.keeper,
+    playmaking: input.playmaking,
+    passing: input.passing,
+    technique: input.technique,
+    defending: input.defending,
+    striker: input.striker,
+    pace: input.pace
   };
 }
 
-export function mapApiLeagueToSokkerLeagueDto(input: SokkerApiLeagueDto): SokkerLeagueDto {
-  return input;
+function mapSkillsChange(
+  input: SokkerApiTrainingReportDto["skillsChange"]
+): PlayerTrainingWeekDto["skillsChange"] {
+  return {
+    stamina: input.stamina ?? 0,
+    keeper: input.keeper ?? 0,
+    playmaking: input.playmaking ?? 0,
+    passing: input.passing ?? 0,
+    technique: input.technique ?? 0,
+    defending: input.defending ?? 0,
+    striker: input.striker ?? 0,
+    pace: input.pace ?? 0,
+    up: input.up,
+    down: input.down
+  };
 }

@@ -31,8 +31,9 @@ export interface SquadPlayerRow {
   training: {
     position: string | null;
     trainedSkill: string | null;
-    advanced: boolean;
-    efficiency: number | null;
+    trainingType: string | null;
+    trainingKind: "advanced" | "formation" | "missing" | null;
+    intensity: number | null;
     progress: number | null;
     status: TrainingStatusLabel | null;
   };
@@ -81,8 +82,9 @@ export function createSquadPlayerRows(input: CreateSquadPlayerRowsInput): SquadP
       training: {
         position: trainingPosition,
         trainedSkill: trainedSkill === null ? null : formatTrainingPriority(trainedSkill),
-        advanced: trainingRow?.advanced ?? player.training.advanced,
-        efficiency: trainingRow?.efficiency ?? null,
+        trainingType: trainingRow?.trainingType ?? null,
+        trainingKind: trainingRow?.trainingKind ?? null,
+        intensity: trainingRow?.intensity ?? null,
         progress: trainingRow?.progress ?? null,
         status: trainingRow?.status ?? null
       },

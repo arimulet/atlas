@@ -8,7 +8,6 @@ import type {
   TrainingPageData,
   YouthPipelinePlanning
 } from "./types";
-import type { MatchesPageData } from "./app-v2/pages/MatchesV2/types";
 
 export async function fetchClubDashboard(clubId: string): Promise<ClubDashboard> {
   const response = await fetch(`/api/clubs/${clubId}/dashboard`);
@@ -27,17 +26,6 @@ export async function fetchTrainingPageData(clubId: string): Promise<TrainingPag
 
   if (!response.ok || !body) {
     throw new Error("Training API returned an unexpected response.");
-  }
-
-  return body;
-}
-
-export async function fetchMatchesPageData(clubId: string): Promise<MatchesPageData> {
-  const response = await fetch(`/api/clubs/${clubId}/matches`);
-  const body = (await response.json()) as MatchesPageData;
-
-  if (!response.ok || !body) {
-    throw new Error("Matches API returned an unexpected response.");
   }
 
   return body;

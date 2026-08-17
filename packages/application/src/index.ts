@@ -10,7 +10,4 @@ export * from "./youthAcademyPlanning/index.js";
 export * from "./training/index.js";
 export * from "./types.js";
 export * from "./sokker/SokkerXMLProvider/index.js";
-export * from "./matches/import-club-matches.js";
-export * from "./matches/sokker-match-parser.js";
-export * from "./matches/get-club-matches.js";
 export * from "./importer/index.js";

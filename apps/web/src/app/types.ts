@@ -77,13 +77,6 @@ export interface ImportResponse {
   diagnostic: {
     findings: DiagnosticFinding[];
   } | null;
-  matches?: {
-    discovered: number;
-    finished: number;
-    imported: number;
-    skipped: number;
-    failed: number;
-  };
 }
 
 export interface ManualRecord {
@@ -178,6 +171,21 @@ export interface TrainingPageData {
     ATT: number | null;
   } | null;
   players: TrainingPagePlayer[];
+  history?: TrainingReport[];
+}
+
+export interface TrainingReport {
+  id?: string;
+  playerId: number;
+  gameWeek: number;
+  seasonWeek: number;
+  date: string;
+  type: string;
+  kind: "advanced" | "formation" | "missing";
+  intensity: number;
+  age: number;
+  skills: Record<string, number | undefined>;
+  skillsChange: Record<string, number>;
 }
 
 export interface TrainingPagePlayer {
@@ -189,6 +197,7 @@ export interface TrainingPagePlayer {
     position: number;
     advanced: boolean;
   };
+  latestReport?: TrainingReport | null;
 }
 
 export interface ClubDashboardDevelopmentSummary {

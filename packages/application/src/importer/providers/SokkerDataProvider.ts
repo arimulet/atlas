@@ -3,9 +3,7 @@ import type {
   SokkerCurrentDto,
   SokkerImportResultDto,
   SokkerJuniorDto,
-  SokkerLeagueDto,
-  SokkerMatchPlayerStatsDto,
-  SokkerMatchSummaryDto,
+  PlayerTrainingWeekDto,
   SokkerPlayerDto,
   SokkerTeamDto
 } from "../types.js";
@@ -23,8 +21,7 @@ export interface SokkerDataProvider {
   getPlayers(teamId: number): Promise<SokkerPlayerDto[]>;
   getJuniors(teamId: number): Promise<SokkerJuniorDto[]>;
   getCountries(): Promise<SokkerCountryDto[]>;
-  getMatches(teamId: number): Promise<SokkerMatchSummaryDto[]>;
-  getMatch(matchId: number): Promise<SokkerMatchSummaryDto>;
-  getMatchLineup(matchId: number, teamId?: number): Promise<SokkerMatchPlayerStatsDto[]>;
-  getLeague(leagueId: number): Promise<SokkerLeagueDto>;
+  getCurrentTraining(): Promise<PlayerTrainingWeekDto[]>;
+  getTrainingSummary(week?: number): Promise<PlayerTrainingWeekDto[]>;
+  getPlayerTrainingReport(playerId: number): Promise<PlayerTrainingWeekDto[]>;
 }

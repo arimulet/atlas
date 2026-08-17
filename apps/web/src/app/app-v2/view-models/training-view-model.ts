@@ -8,9 +8,10 @@ export interface TrainingPlayerRow {
   playerName: string;
   trainingPosition: number;
   age: number;
-  advanced: boolean;
-  minutes: number | null;
-  efficiency: number | null;
+  trainingType: string | null;
+  trainingKind: "advanced" | "formation" | "missing" | null;
+  intensity: number | null;
+  skillChanges: Array<{ skill: string; delta: number }>;
   progress: number | null;
   talent: number | null;
   nextSkillUp: number | null;
@@ -44,9 +45,10 @@ export function createTrainingPlayerRows(
       playerName: player.name,
       trainingPosition: player.training.position,
       age: player.age,
-      advanced: player.training.advanced,
-      minutes: null,
-      efficiency: null,
+      trainingType: player.latestReport?.type ?? null,
+      trainingKind: player.latestReport?.kind ?? null,
+      intensity: player.latestReport?.intensity ?? null,
+      skillChanges: visibleSkillChanges(player.latestReport),
       progress: projectionSummary?.progress ?? null,
       talent: projectionSummary?.talent ?? null,
       nextSkillUp: projectionSummary?.nextSkillUp ?? null,
@@ -54,6 +56,18 @@ export function createTrainingPlayerRows(
       status: trainingStatusForPlayer(player, diagnostic)
     };
   });
+}
+
+function visibleSkillChanges(
+  report: TrainingPagePlayer["latestReport"]
+): Array<{ skill: string; delta: number }> {
+  if (!report) {
+    return [];
+  }
+
+  return Object.entries(report.skillsChange)
+    .filter(([skill, delta]) => skill !== "up" && skill !== "down" && delta !== 0)
+    .map(([skill, delta]) => ({ skill, delta }));
 }
 
 export function trainingStatusForPlayer(

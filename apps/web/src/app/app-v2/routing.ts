@@ -4,7 +4,6 @@ export type V2MainViewId =
   | "dashboard"
   | "squad"
   | "training"
-  | "matches"
   | "youth"
   | "finances"
   | "diagnostics";
@@ -29,7 +28,6 @@ const mainPaths: Record<V2MainViewId, string> = {
   dashboard: "/dashboard",
   squad: "/squad",
   training: "/training",
-  matches: "/matches",
   youth: "/youth",
   finances: "/finances",
   diagnostics: "/diagnostics"

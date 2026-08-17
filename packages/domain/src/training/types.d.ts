@@ -1,20 +1,30 @@
-﻿export type TrainingType = "formation" | "advanced";
+export type TrainingKind = "advanced" | "formation" | "missing";
 
-export interface TrainingEfficiencyInput {
-  officialMinutes: number;
-  friendlyMinutes: number;
-  advancedTraining: boolean;
-}
+export type PlayerSkill =
+  | "stamina"
+  | "keeper"
+  | "playmaking"
+  | "passing"
+  | "technique"
+  | "defending"
+  | "striker"
+  | "pace";
 
-export interface TrainingEfficiencyResult {
-  equivalentMinutes: number;
-  formationEfficiency: number;
-  trainingEfficiency: number;
-  trainingType: TrainingType;
+export type TrainingType = "general" | PlayerSkill;
+export type PlayerSkills = Partial<Record<PlayerSkill, number>>;
+
+export interface PlayerSkillsChange extends Partial<Record<PlayerSkill, number>> {
+  up: number;
+  down: number;
 }
 
 export type SkillTrainingCostSkill =
-  "pace" | "scoring" | "defending" | "technique" | "playmaking" | "passing";
+  | "pace"
+  | "scoring"
+  | "defending"
+  | "technique"
+  | "playmaking"
+  | "passing";
 
 export interface SkillTrainingCostInput {
   skill: SkillTrainingCostSkill;
@@ -30,11 +40,8 @@ export interface SkillTrainingCostResult {
 }
 
 export type TrainingPosition = 0 | 1 | 2 | 3;
-
 export type SkillProgressObservationStatus = "progressed" | "censored";
-
 export type SkillProgressObservationConfidence = "high" | "medium" | "low";
-
 export type EffectiveTrainingCyclesSource = "observed" | "assumed-full-effectiveness";
 
 export interface SkillProgressObservationInput {
@@ -74,7 +81,6 @@ export interface SkillProgressObservation {
 }
 
 export type TalentProfileStatus = "sufficient_data" | "insufficient_data";
-
 export type TalentProfileEffectiveTrainingCyclesSource = EffectiveTrainingCyclesSource | "mixed";
 
 export interface TalentProfileInput {
@@ -154,33 +160,47 @@ export interface TalentEstimationResult {
 
 export type TrainingSkillLevels = Partial<Record<SkillTrainingCostSkill, number>>;
 
-export type TrainingSkillLevels = Partial<Record<SkillTrainingCostSkill, number>>;
-
 export interface TrainingWeekInput {
   playerId: number;
-  week: number;
-  skill: SkillTrainingCostSkill;
-  officialMinutes: number;
-  friendlyMinutes: number;
-  advancedTraining: boolean;
-  playerAge: number;
-  skillLevelBefore: number;
-  skillLevelAfter: number;
+  gameWeek: number;
+  seasonWeek: number;
+  date: Date;
+  type: TrainingType;
+  kind: TrainingKind;
+  intensity: number;
+  age: number;
+  skills: PlayerSkills;
+  skillsChange: PlayerSkillsChange;
+  skill?: SkillTrainingCostSkill;
+  skillLevelBefore?: number;
+  skillLevelAfter?: number;
   skillLevelsBefore?: TrainingSkillLevels;
   skillLevelsAfter?: TrainingSkillLevels;
 }
 
-export interface TrainingWeek extends Omit<
-  TrainingWeekInput,
-  "skillLevelsBefore" | "skillLevelsAfter"
-> {
+export interface TrainingWeek extends Omit<TrainingWeekInput, "skillLevelsBefore" | "skillLevelsAfter"> {
+  week: number;
+  skill: SkillTrainingCostSkill;
+  playerAge: number;
+  skillLevelBefore: number;
+  skillLevelAfter: number;
   skillLevelsBefore: TrainingSkillLevels;
   skillLevelsAfter: TrainingSkillLevels;
-  trainingEfficiency: number;
   trainingPoints: number;
 }
+
+export type PlayerTrainingWeek = TrainingWeek;
+
+export interface TrainingHistory {
+  playerId: number;
+  weeks: readonly TrainingWeek[];
+}
+
 export type SkillUpObservationCompleteness =
-  "complete" | "left-censored" | "missing-weeks" | "ambiguous";
+  | "complete"
+  | "left-censored"
+  | "missing-weeks"
+  | "ambiguous";
 
 export interface SkillUp {
   playerId: number;
@@ -189,11 +209,6 @@ export interface SkillUp {
   toLevel: number;
   levelDelta: number;
   week: number;
-}
-
-export interface TrainingHistory {
-  playerId: number;
-  weeks: readonly TrainingWeek[];
 }
 
 export interface SkillUpObservation {
@@ -254,6 +269,7 @@ export interface TalentObservationProfile {
   minimumObservations: number;
   skills: Record<SkillTrainingCostSkill, TalentObservationSkillProfile>;
 }
+
 export type ExpectedWeeksToSkillUpStatus = "calculable" | "insufficient_data";
 
 export interface ExpectedWeeksToSkillUpInput {

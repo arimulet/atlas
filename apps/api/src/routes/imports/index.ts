@@ -1,10 +1,10 @@
 import {
   createSokkerDataProvider,
-  importClubMatches,
+  importTrainingReports,
   importPlayerSnapshotMvp,
   validatePlayerSnapshotImport
 } from "@atlas/application";
-import { sokkerMatchesImportRequestSchema, sokkerSyncRequestSchema } from "../../schemas.js";
+import { sokkerSyncRequestSchema } from "../../schemas.js";
 import { FastifyInstance } from "fastify";
 
 async function importsRoutes(server: FastifyInstance) {
@@ -58,12 +58,7 @@ async function importsRoutes(server: FastifyInstance) {
         reply.code(422);
       }
 
-      const matches = await importClubMatches({
-        clubId: Number(xmlData.clubProfile.externalId),
-        credentials
-      });
-
-      return { ...playerResult, matches };
+      return playerResult;
     } catch (error) {
       reply.code(422);
 
@@ -97,21 +92,58 @@ async function importsRoutes(server: FastifyInstance) {
     }
   });
 
-  server.post("/sokker-matches", async (request, reply) => {
+  server.post("/sokker-json-sync", async (request, reply) => {
     try {
-      const input = sokkerMatchesImportRequestSchema.parse(request.body);
-      return await importClubMatches({
-        clubId: input.clubId,
-        credentials: { login: input.login, password: input.password }
-      });
+      const credentials = sokkerSyncRequestSchema.parse(request.body);
+      const provider = createSokkerDataProvider({ source: "json-api", credentials });
+      const apiData = await provider.getFullTeamData();
+      const playerSnapshotPayload = {
+        schemaVersion: "atlas.player-snapshot.v0",
+        source: {
+          type: "sokker-json-api-import",
+          exportedAt: apiData.importedAt.toISOString(),
+          locale: null
+        },
+        club: {
+          clubId: Number(apiData.clubProfile.externalId),
+          country: apiData.clubProfile.countryId,
+          name: apiData.clubProfile.name,
+          training: apiData.clubProfile.training,
+          gameWeek: apiData.clubProfile.gameWeek
+        },
+        snapshot: {
+          snapshotDate: apiData.importedAt.toISOString().split("T")[0],
+          gameWeek: apiData.clubProfile.gameWeek,
+          week: apiData.clubProfile.week
+        },
+        players: apiData.players,
+        juniors: apiData.juniors
+      };
+      const playerResult = await importPlayerSnapshotMvp({ payload: playerSnapshotPayload });
+
+      if (playerResult.importResult.status === "rejected") {
+        reply.code(422);
+        return playerResult;
+      }
+
+      await importTrainingReports(Number(apiData.clubProfile.externalId), apiData.training ?? []);
+      return playerResult;
     } catch (error) {
       reply.code(422);
       return {
-        status: "rejected",
-        errors: [{ path: "api", message: error instanceof Error ? error.message : String(error) }]
+        importResult: {
+          status: "rejected",
+          errors: [{ path: "api", message: error instanceof Error ? error.message : String(error) }],
+          warnings: [],
+          clubId: null,
+          importedPlayerCount: 0
+        },
+        summary: null,
+        diagnostic: null
       };
     }
   });
+
 }
 
 export default importsRoutes;
