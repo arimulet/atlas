@@ -9,7 +9,7 @@ import {
   type MatchPlayerAppearance,
   type MatchSide
 } from "@atlas/domain";
-import type { SokkerAuthResult, SokkerCredentials } from "../importer/types.js";
+import type { SokkerCredentials } from "../importer/types.js";
 import { SokkerXmlProvider } from "../importer/providers/xml/SokkerXmlProvider.js";
 import type {
   SokkerLeagueDto,
@@ -17,11 +17,6 @@ import type {
   SokkerMatchSummaryDto,
   SokkerDataProvider
 } from "../importer/index.js";
-
-export interface SokkerMatchesXmlClient {
-  login(credentials: SokkerCredentials): Promise<SokkerAuthResult>;
-  fetchXml(filename: string, sessionId: string): Promise<string>;
-}
 
 export type SokkerMatchDataProvider = Pick<
   SokkerDataProvider,
@@ -47,7 +42,6 @@ export interface ImportClubMatchesResult {
 }
 
 export interface ImportClubMatchesDependencies {
-  xmlClient?: SokkerMatchesXmlClient;
   dataProvider?: SokkerMatchDataProvider;
   matchRepository: MatchRepository;
 }
@@ -99,10 +93,8 @@ export class ImportClubMatchesUseCase {
       return this.dependencies.dataProvider;
     }
 
-    const provider = this.dependencies.xmlClient
-      ? new SokkerXmlProvider(this.dependencies.xmlClient)
-      : new SokkerXmlProvider();
-    await provider.login(credentials);
+    const provider = new SokkerXmlProvider(credentials);
+    await provider.login();
 
     return provider;
   }
@@ -110,10 +102,7 @@ export class ImportClubMatchesUseCase {
 
 export async function importClubMatches(
   input: ImportClubMatchesInput,
-  dependencies: ImportClubMatchesDependencies = {
-    xmlClient: new SokkerXmlProvider(),
-    matchRepository: new MongoMatchRepository()
-  }
+  dependencies: ImportClubMatchesDependencies = { matchRepository: new MongoMatchRepository() }
 ): Promise<ImportClubMatchesResult> {
   return new ImportClubMatchesUseCase(dependencies).execute(input);
 }

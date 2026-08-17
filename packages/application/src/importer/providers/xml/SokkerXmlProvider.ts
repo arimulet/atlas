@@ -29,23 +29,31 @@ import {
 } from "./parsers.js";
 import type { SokkerCredentials } from "../../types.js";
 
-export interface SokkerXmlTransport {
-  login(credentials: SokkerCredentials): Promise<SokkerAuthResult>;
-  fetchXml(filename: string, sessionId: string): Promise<string>;
-}
-
 const sessionCache = new Map<string, SokkerAuthResult & { expiresAt: number }>();
 
-class FetchSokkerXmlTransport implements SokkerXmlTransport {
-  async login(credentials: SokkerCredentials): Promise<SokkerAuthResult> {
-    const cached = sessionCache.get(credentials.login);
+export class SokkerXmlProvider implements SokkerDataProvider {
+  private readonly parser = new XMLParser({
+    ignoreAttributes: false,
+    attributeNamePrefix: "@_"
+  });
+
+  private session: SokkerAuthResult | null = null;
+  private readonly credentials: SokkerCredentials;
+
+  constructor(credentials: SokkerCredentials) {
+    this.credentials = credentials;
+  }
+
+  async login(): Promise<SokkerAuthResult> {
+    const cached = sessionCache.get(this.credentials.login);
     if (cached && cached.expiresAt > Date.now()) {
-      return { sessionId: cached.sessionId, teamId: cached.teamId };
+      this.session = { sessionId: cached.sessionId, teamId: cached.teamId };
+      return this.session;
     }
 
     const params = new URLSearchParams();
-    params.append("ilogin", credentials.login);
-    params.append("ipassword", credentials.password);
+    params.append("ilogin", this.credentials.login);
+    params.append("ipassword", this.credentials.password);
 
     const response = await fetch("https://sokker.org/start.php?session=xml", {
       method: "POST",
@@ -63,55 +71,11 @@ class FetchSokkerXmlTransport implements SokkerXmlTransport {
     }
 
     const sessionId = readSessionId(response.headers.get("set-cookie"));
-    const result = { sessionId, teamId: teamIdMatch[1] };
-
-    sessionCache.set(credentials.login, { ...result, expiresAt: Date.now() + 1000 * 60 * 30 });
-
-    return result;
-  }
-
-  async fetchXml(filename: string, sessionId: string): Promise<string> {
-    const response = await fetch(`https://sokker.org/xml/${filename}`, {
-      headers: { Cookie: `XMLSESSID=${sessionId}` }
+    this.session = { sessionId, teamId: teamIdMatch[1] };
+    sessionCache.set(this.credentials.login, {
+      ...this.session,
+      expiresAt: Date.now() + 1000 * 60 * 30
     });
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch ${filename}: ${response.statusText}`);
-    }
-
-    return response.text();
-  }
-}
-
-export class SokkerXmlProvider implements SokkerDataProvider {
-  private readonly parser = new XMLParser({
-    ignoreAttributes: false,
-    attributeNamePrefix: "@_"
-  });
-
-  private session: SokkerAuthResult | null = null;
-  private readonly credentials?: SokkerCredentials;
-  private readonly transport: SokkerXmlTransport;
-
-  constructor();
-  constructor(credentials: SokkerCredentials);
-  constructor(transport: SokkerXmlTransport, credentials?: SokkerCredentials);
-  constructor(
-    transportOrCredentials?: SokkerXmlTransport | SokkerCredentials,
-    credentials?: SokkerCredentials
-  ) {
-    if (isSokkerCredentials(transportOrCredentials)) {
-      this.transport = new FetchSokkerXmlTransport();
-      this.credentials = transportOrCredentials;
-      return;
-    }
-
-    this.transport = transportOrCredentials ?? new FetchSokkerXmlTransport();
-    this.credentials = credentials;
-  }
-
-  async login(credentials: SokkerCredentials): Promise<SokkerAuthResult> {
-    this.session = await this.transport.login(credentials);
 
     return this.session;
   }
@@ -119,7 +83,15 @@ export class SokkerXmlProvider implements SokkerDataProvider {
   async fetchXml(filename: string, sessionId?: string): Promise<string> {
     const session = sessionId ? { sessionId } : await this.ensureAuthenticated();
 
-    return this.transport.fetchXml(filename, session.sessionId);
+    const response = await fetch(`https://sokker.org/xml/${filename}`, {
+      headers: { Cookie: `XMLSESSID=${session.sessionId}` }
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch ${filename}: ${response.statusText}`);
+    }
+
+    return response.text();
   }
 
   async getFullTeamData(): Promise<SokkerImportResultDto> {
@@ -246,11 +218,7 @@ export class SokkerXmlProvider implements SokkerDataProvider {
       return this.session;
     }
 
-    if (!this.credentials) {
-      return this.requireSession();
-    }
-
-    return this.login(this.credentials);
+    return this.login();
   }
 
   private parseXml(xml: string): Record<string, unknown> {
@@ -264,17 +232,6 @@ export class SokkerXmlProvider implements SokkerDataProvider {
 
     return this.session;
   }
-}
-
-function isSokkerCredentials(value: unknown): value is SokkerCredentials {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    "login" in value &&
-    "password" in value &&
-    typeof value.login === "string" &&
-    typeof value.password === "string"
-  );
 }
 
 function readSessionId(setCookie: string | null): string {

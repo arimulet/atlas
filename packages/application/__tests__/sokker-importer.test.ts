@@ -1,11 +1,9 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   createSokkerDataProvider,
   SokkerJsonApiProvider,
-  SokkerXmlProvider,
-  type SokkerApiClient,
-  type SokkerXmlTransport
+  SokkerXmlProvider
 } from "@atlas/application";
 
 const TEAM_ID = 6038;
@@ -28,9 +26,8 @@ describe("createSokkerDataProvider", () => {
 
 describe("SokkerXmlProvider", () => {
   it("maps XML resources to the same canonical data consumed by the importer", async () => {
-    const transport = buildXmlTransport();
-    const provider = new SokkerXmlProvider(transport);
-    await provider.login({ login: "user", password: "password" });
+    vi.stubGlobal("fetch", buildXmlFetch());
+    const provider = new SokkerXmlProvider({ login: "user", password: "password" });
     const result = await provider.getFullTeamData();
 
     expect(result.players[0]).toMatchObject({
@@ -51,19 +48,26 @@ describe("SokkerXmlProvider", () => {
 
 describe("SokkerJsonApiProvider", () => {
   it("maps API DTOs before returning data to the importer", async () => {
-    const get = vi.fn().mockResolvedValue([
-      {
-        playerId: 1,
-        name: "Ada Lovelace",
-        age: 22,
-        wage: 100,
-        value: 1000,
-        training: { position: 2, advanced: false },
-        skills: { pace: 10 }
-      }
-    ]);
-    const client = { get } as unknown as SokkerApiClient;
-    const provider = new SokkerJsonApiProvider(client);
+    const mockFetch = vi
+      .fn()
+      .mockResolvedValueOnce(new Response("{}", { headers: { "set-cookie": "PHPSESSID=session" } }))
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify([
+            {
+              playerId: 1,
+              name: "Ada Lovelace",
+              age: 22,
+              wage: 100,
+              value: 1000,
+              training: { position: 2, advanced: false },
+              skills: { pace: 10 }
+            }
+          ])
+        )
+      );
+    vi.stubGlobal("fetch", mockFetch);
+    const provider = new SokkerJsonApiProvider({ login: "user", password: "password" });
 
     const player = await provider.getPlayers(TEAM_ID);
 
@@ -73,11 +77,24 @@ describe("SokkerJsonApiProvider", () => {
       availabilityStatus: "available",
       skills: { pace: 10 }
     });
-    expect(get).toHaveBeenCalledWith(`teams/${TEAM_ID}/players`);
+    expect(mockFetch).toHaveBeenNthCalledWith(1, "https://sokker.org/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ login: "user", password: "password", remember: false })
+    });
+    expect(mockFetch).toHaveBeenNthCalledWith(
+      2,
+      new URL(`https://sokker.org/api/teams/${TEAM_ID}/players`),
+      { method: "GET", headers: { Cookie: "PHPSESSID=session" } }
+    );
   });
 });
 
-function buildXmlTransport(): SokkerXmlTransport {
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
+function buildXmlFetch() {
   const xmlByFilename: Record<string, string> = {
     "vars.xml": "<vars><week>1204</week><day>1</day></vars>",
     [`team-${TEAM_ID}.xml`]: `<teamdata><team><teamID>${TEAM_ID}</teamID><name>River Plate Forever</name><countryID>1</countryID><money>1000</money><trainingTypeGk>0</trainingTypeGk><trainingTypeDef>1</trainingTypeDef><trainingTypeMid>2</trainingTypeMid><trainingTypeAtt>3</trainingTypeAtt></team></teamdata>`,
@@ -88,16 +105,22 @@ function buildXmlTransport(): SokkerXmlTransport {
       "<countries><country><countryID>1</countryID><name>Argentina</name><currencyName>ARS</currencyName><currencyRate>1</currencyRate></country></countries>"
   };
 
-  return {
-    login: vi.fn().mockResolvedValue({ sessionId: "session", teamId: String(TEAM_ID) }),
-    fetchXml: vi.fn(async (filename: string) => {
-      const xml = xmlByFilename[filename];
+  return vi.fn(async (input: RequestInfo | URL) => {
+    const url = String(input);
 
-      if (!xml) {
-        throw new Error(`Missing fixture ${filename}`);
-      }
+    if (url.includes("start.php?session=xml")) {
+      return new Response("OK teamID=6038", {
+        headers: { "set-cookie": "XMLSESSID=session" }
+      });
+    }
 
-      return xml;
-    })
-  };
+    const filename = url.split("/").pop();
+    const xml = filename ? xmlByFilename[filename] : undefined;
+
+    if (!xml) {
+      throw new Error(`Missing fixture ${filename}`);
+    }
+
+    return new Response(xml);
+  });
 }

@@ -1,10 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import {
-  importClubMatches,
-  normalizeMatchForClub,
-  type MatchRepository,
-  type SokkerMatchesXmlClient
-} from "@atlas/application";
+import { importClubMatches, normalizeMatchForClub, type MatchRepository } from "@atlas/application";
 import type { PersistedMatch, SaveMatchInput } from "@atlas/database";
 
 const CLUB_ID = 6038;
@@ -12,39 +7,42 @@ const CLUB_ID = 6038;
 describe("ImportClubMatches", () => {
   afterEach(() => {
     vi.clearAllMocks();
+    vi.unstubAllGlobals();
   });
 
   it("ignores unfinished matches, imports finished matches and caches the league", async () => {
     const saved: SaveMatchInput[] = [];
-    const mockXmlClient = buildMockXmlClient();
+    const mockFetch = buildMockXmlFetch();
     const mockMatchRepository = buildMockMatchRepository(saved);
 
     const result = await importClubMatches(
       { clubId: CLUB_ID, credentials: { login: "user", password: "password" } },
-      { xmlClient: mockXmlClient, matchRepository: mockMatchRepository }
+      { matchRepository: mockMatchRepository }
     );
 
     expect(result).toEqual({ discovered: 3, finished: 2, imported: 2, skipped: 0, failed: 0 });
     expect(saved).toHaveLength(2);
-    expect(mockXmlClient.fetchXml).toHaveBeenCalledWith("match-44421295.xml", "session");
-    expect(mockXmlClient.fetchXml).toHaveBeenCalledWith("match-44421296.xml", "session");
+    expect(mockFetch).toHaveBeenCalledWith("https://sokker.org/xml/match-44421295.xml", {
+      headers: { Cookie: "XMLSESSID=session" }
+    });
+    expect(mockFetch).toHaveBeenCalledWith("https://sokker.org/xml/match-44421296.xml", {
+      headers: { Cookie: "XMLSESSID=session" }
+    });
     expect(
-      mockXmlClient.fetchXml.mock.calls.filter(([filename]) => filename === "league-1295.xml")
+      mockFetch.mock.calls.filter(([url]) => url === "https://sokker.org/xml/league-1295.xml")
     ).toHaveLength(1);
   });
 
   it("does not download or persist an already imported match", async () => {
     const saved: SaveMatchInput[] = [];
-    const mockXmlClient = buildMockXmlClient();
+    const mockFetch = buildMockXmlFetch();
     const mockMatchRepository = buildMockMatchRepository(saved);
     const input = { clubId: CLUB_ID, credentials: { login: "user", password: "password" } };
 
     const firstResult = await importClubMatches(input, {
-      xmlClient: mockXmlClient,
       matchRepository: mockMatchRepository
     });
     const secondResult = await importClubMatches(input, {
-      xmlClient: mockXmlClient,
       matchRepository: mockMatchRepository
     });
 
@@ -58,9 +56,9 @@ describe("ImportClubMatches", () => {
     });
     expect(saved).toHaveLength(2);
     expect(
-      mockXmlClient.fetchXml.mock.calls
-        .filter(([filename]) => filename.startsWith("match-"))
-        .map(([filename]) => filename)
+      mockFetch.mock.calls
+        .filter(([url]) => String(url).includes("/xml/match-"))
+        .map(([url]) => String(url).split("/").pop())
     ).toEqual(["match-44421295.xml", "match-44421296.xml"]);
   });
 
@@ -123,12 +121,12 @@ describe("ImportClubMatches", () => {
 
   it("normalizes player formation, role and minutes from player stats", async () => {
     const saved: SaveMatchInput[] = [];
-    const mockXmlClient = buildMockXmlClient();
+    buildMockXmlFetch();
     const mockMatchRepository = buildMockMatchRepository(saved);
 
     await importClubMatches(
       { clubId: CLUB_ID, credentials: { login: "user", password: "password" } },
-      { xmlClient: mockXmlClient, matchRepository: mockMatchRepository }
+      { matchRepository: mockMatchRepository }
     );
 
     expect(saved[0]?.players).toEqual([
@@ -140,9 +138,7 @@ describe("ImportClubMatches", () => {
   });
 });
 
-function buildMockXmlClient(): SokkerMatchesXmlClient & {
-  fetchXml: ReturnType<typeof vi.fn>;
-} {
+function buildMockXmlFetch() {
   const xmlByFilename: Record<string, string> = {
     [`matches-team-${CLUB_ID}.xml`]: `
       <matches teamID="${CLUB_ID}">
@@ -154,18 +150,27 @@ function buildMockXmlClient(): SokkerMatchesXmlClient & {
     "match-44421296.xml": `<match><playersStats teamID="${CLUB_ID}"><playerStats><playerID>5</playerID><number>1</number><formation>0</formation><timeIn>0</timeIn><timeOut>0</timeOut><rating>60</rating></playerStats></playersStats></match>`,
     "league-1295.xml": `<league><info><leagueID>1295</leagueID><name>Friendly</name><countryID>0</countryID><division>0</division><round>0</round><season>0</season><type>4</type><isOfficial>0</isOfficial><isCup>0</isCup></info></league>`
   };
-  const fetchXml = vi.fn(async (filename: string) => {
-    const xml = xmlByFilename[filename];
+  const mockFetch = vi.fn(async (input: RequestInfo | URL) => {
+    const url = String(input);
+
+    if (url.includes("start.php?session=xml")) {
+      return new Response(`OK teamID=${CLUB_ID}`, {
+        headers: { "set-cookie": "XMLSESSID=session" }
+      });
+    }
+
+    const filename = url.split("/").pop();
+    const xml = filename ? xmlByFilename[filename] : undefined;
+
     if (!xml) {
       throw new Error(`Missing fixture ${filename}`);
     }
-    return xml;
-  });
 
-  return {
-    login: vi.fn().mockResolvedValue({ sessionId: "session", teamId: String(CLUB_ID) }),
-    fetchXml
-  };
+    return new Response(xml);
+  });
+  vi.stubGlobal("fetch", mockFetch);
+
+  return mockFetch;
 }
 
 function buildMockMatchRepository(saved: SaveMatchInput[]): MatchRepository {
