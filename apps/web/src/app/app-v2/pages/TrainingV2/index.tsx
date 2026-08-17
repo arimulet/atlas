@@ -1,9 +1,8 @@
 import { describeDiagnosticFinding } from "@atlas/web/app/diagnostic-copy";
-import type { DiagnosticFinding, TrainingPageData } from "@atlas/web/app/types";
+import type { DiagnosticFinding, TrainingPageData, TrainingReport } from "@atlas/web/app/types";
 import { formatTrainingPriority } from "@atlas/web/app/formatters";
 import type { TrainingPlayerRow, TrainingStatusLabel, TrainingV2Props } from "./types";
 import {
-  formatV2Advanced,
   formatV2Eta,
   formatV2Number,
   formatV2Percentage,
@@ -41,7 +40,7 @@ export function TrainingV2({
         projectionSummaries={projectionSummaries}
         status={trainingStatus}
       />
-      <RecentTrainingProgress />
+      <RecentTrainingProgress history={training?.history ?? []} players={training?.players ?? []} />
     </div>
   );
 }
@@ -222,9 +221,10 @@ function TrainingPositionTable({ onSelectPlayer, players }: TrainingPositionTabl
           <tr>
             <th scope="col">Player</th>
             <th scope="col">Age</th>
-            <th scope="col">Advanced</th>
-            <th scope="col">Minutes</th>
-            <th scope="col">Efficiency</th>
+            <th scope="col">Type</th>
+            <th scope="col">Kind</th>
+            <th scope="col">Intensity</th>
+            <th scope="col">Skill Changes</th>
             <th scope="col">Progress</th>
             <th scope="col">Talent</th>
             <th scope="col">Next Skill-up</th>
@@ -239,7 +239,7 @@ function TrainingPositionTable({ onSelectPlayer, players }: TrainingPositionTabl
             ))
           ) : (
             <tr>
-              <td className="v2-training-table__empty" colSpan={10}>
+              <td className="v2-training-table__empty" colSpan={11}>
                 No players assigned.
               </td>
             </tr>
@@ -264,16 +264,14 @@ function PlayerRow({ onSelectPlayer, player }: PlayerRowProps) {
         </V2PlayerLink>
       </th>
       <td className="v2-training-table__numeric">{player.age}</td>
+      <td>{player.trainingType ?? "—"}</td>
+      <td>{player.trainingKind ?? "—"}</td>
+      <td className="v2-training-table__numeric">{formatV2Percentage(player.intensity)}</td>
       <td>
-        <span
-          className={`v2-training-advanced${player.advanced ? " is-active" : ""}`}
-          aria-label={player.advanced ? "Advanced training" : "No advanced training"}
-        >
-          {formatV2Advanced(player.advanced)}
-        </span>
+        {player.skillChanges.length > 0
+          ? player.skillChanges.map((change) => `${change.skill} ${change.delta > 0 ? "+" : ""}${change.delta}`).join(", ")
+          : "—"}
       </td>
-      <td className="v2-training-table__numeric">{formatV2Number(player.minutes)}</td>
-      <td className="v2-training-table__numeric">{formatV2Percentage(player.efficiency)}</td>
       <td className="v2-training-table__numeric">{formatV2Percentage(player.progress)}</td>
       <td className="v2-training-table__numeric">{formatV2Talent(player.talent)}</td>
       <td className="v2-training-table__numeric">{formatV2Number(player.nextSkillUp)}</td>
@@ -293,11 +291,44 @@ function TrainingStatus({ status }: TrainingStatusProps) {
   return <V2StatusBadge status={status} />;
 }
 
-function RecentTrainingProgress() {
+interface RecentTrainingProgressProps {
+  history: TrainingReport[];
+  players: TrainingPageData["players"];
+}
+
+function RecentTrainingProgress({ history, players }: RecentTrainingProgressProps) {
+  const playerNames = new Map(players.map((player) => [player.id, player.name]));
+  const changes = history
+    .flatMap((report) =>
+      Object.entries(report.skillsChange)
+        .filter(([skill, delta]) => skill !== "up" && skill !== "down" && delta !== 0)
+        .map(([skill, delta]) => ({
+          key: `${report.playerId}-${report.gameWeek}-${skill}`,
+          playerName: playerNames.get(String(report.playerId)) ?? String(report.playerId),
+          skill,
+          delta
+        }))
+    )
+    .slice(-10)
+    .reverse();
+
   return (
     <section className="v2-training-panel" aria-labelledby="recent-progress-title">
       <PanelTitle id="recent-progress-title" title="Recent Progress" />
-      <PanelMessage>No recent skill-ups detected.</PanelMessage>
+      {changes.length === 0 ? (
+        <PanelMessage>No recent skill changes detected.</PanelMessage>
+      ) : (
+        <ul className="v2-training-attention-list">
+          {changes.map((change) => (
+            <li className="v2-training-attention-item" key={change.key}>
+              <span>
+                {change.playerName} · {change.skill} {change.delta > 0 ? "+" : ""}
+                {change.delta}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
     </section>
   );
 }

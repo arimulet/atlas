@@ -13,7 +13,6 @@
 @use "../app-v2/pages/PlayerDetailV2/styles.scss" as *;
 @use "../app-v2/pages/YouthV2/styles.scss" as *;
 @use "../app-v2/pages/DiagnosticsV2/styles.scss" as *;
-@use "../app-v2/pages/MatchesV2/styles.scss" as *;
 
 // Shared V2 presentation primitives. Page-specific styles remain above this
 // layer so the common geometry and states are defined in one place.
@@ -22,7 +21,6 @@
     .v2-dashboard,
     .v2-squad,
     .v2-training,
-    .v2-matches,
     .v2-youth,
     .v2-finances,
     .v2-diagnostics,
@@ -37,7 +35,6 @@
     .v2-dashboard__header,
     .v2-squad__header,
     .v2-training__header,
-    .v2-matches__header,
     .v2-youth__header,
     .v2-finances__header,
     .v2-diagnostics__header,
@@ -52,7 +49,6 @@
     .v2-dashboard__header h1,
     .v2-squad__header h1,
     .v2-training__header h1,
-    .v2-matches__header h1,
     .v2-youth__header h1,
     .v2-finances__header h1,
     .v2-diagnostics__header h1,
@@ -72,8 +68,6 @@
     .v2-squad-panel,
     .v2-youth-panel,
     .v2-finances-panel,
-    .v2-matches-panel,
-    .v2-matches-section,
     .v2-player-detail-panel,
     .v2-diagnostics-summary,
     .v2-diagnostics-table-wrap
@@ -94,18 +88,8 @@
     padding: var(--atlas-panel-padding-y) var(--atlas-panel-padding-x);
   }
 
-  .v2-matches-panel,
   .v2-diagnostics-summary {
     padding: var(--atlas-panel-padding-y) var(--atlas-panel-padding-x);
-  }
-
-  .v2-matches-section {
-    padding: var(--atlas-panel-padding-y) 0 0;
-  }
-
-  .v2-matches-section__heading {
-    padding-left: var(--atlas-panel-padding-x);
-    padding-right: var(--atlas-panel-padding-x);
   }
 
   :is(
@@ -132,7 +116,6 @@
     .v2-squad-panel__message,
     .v2-youth-panel__message,
     .v2-finances-panel__message,
-    .v2-matches-message,
     .v2-player-detail__message,
     .v2-diagnostics-message-state
   ) {
@@ -147,8 +130,7 @@
     .v2-training-panel__message.is-error,
     .v2-squad-panel__message.is-error,
     .v2-youth-panel__message.is-error,
-    .v2-finances-panel__message.is-error,
-    .v2-matches-panel p.is-error
+    .v2-finances-panel__message.is-error
   ) {
     color: var(--semantic-error-text);
   }
@@ -156,7 +138,6 @@
   :is(
     .v2-dashboard-panel__message.is-success,
     .v2-youth-panel__message.is-clear,
-    .v2-matches-panel p.is-clear,
     .v2-diagnostics-message-state.is-clear,
     .v2-player-detail__message--quiet
   ) {
@@ -169,7 +150,6 @@
     .v2-squad-panel--attention,
     .v2-youth-panel--attention,
     .v2-finances-panel--attention,
-    .v2-matches-panel--attention,
     .v2-player-detail-panel--attention
   ) {
     border-color: color-mix(in srgb, var(--semantic-warning-border) 55%, var(--atlas-border));
@@ -241,7 +221,6 @@
     .v2-dashboard-player-link,
     .v2-training-player-link,
     .v2-squad-player-link,
-    .v2-matches-player-link,
     .v2-diagnostics-subject-link,
     .v2-player-link
   ) {
@@ -268,7 +247,6 @@
     .v2-training-table,
     .v2-squad-table,
     .v2-youth-table,
-    .v2-matches-table,
     .v2-diagnostics-table,
     .v2-player-detail__table
   ) {
@@ -306,7 +284,7 @@
     }
   }
 
-  :is(.v2-training-table__numeric, .v2-squad-table__numeric, .v2-matches-table__numeric) {
+  :is(.v2-training-table__numeric, .v2-squad-table__numeric) {
     font-variant-numeric: tabular-nums;
     text-align: right !important;
   }

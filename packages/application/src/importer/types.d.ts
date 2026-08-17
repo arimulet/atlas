@@ -1,4 +1,10 @@
 import type { PlayerSnapshotV0 } from "@atlas/contracts";
+import type {
+  PlayerSkills,
+  PlayerSkillsChange,
+  TrainingKind,
+  TrainingType
+} from "@atlas/domain";
 
 import type { Money } from "../types.js";
 
@@ -56,36 +62,17 @@ export interface SokkerClubProfileDto {
   training?: SokkerTeamDto["training"] | null;
 }
 
-export interface SokkerMatchSummaryDto {
-  id: number;
-  homeTeamId: number;
-  awayTeamId: number;
-  homeTeamName: string;
-  awayTeamName: string;
-  leagueId: number;
-  gameWeek: number;
-  playedAt: Date | null;
-  homeScore: number;
-  awayScore: number;
-  isFinished: boolean;
-}
-
-export interface SokkerMatchPlayerStatsDto {
+export interface PlayerTrainingWeekDto {
   playerId: number;
-  number: number;
-  formation: number;
-  timeIn: number;
-  timeOut: number;
-  rating: number | null;
-  timePlaying: number | null;
-  timeDefending: number | null;
-}
-
-export interface SokkerLeagueDto {
-  id: number;
-  name: string;
-  type: number;
-  isOfficial: boolean;
+  gameWeek: number;
+  seasonWeek: number;
+  date: Date;
+  type: TrainingType;
+  kind: TrainingKind;
+  intensity: number;
+  age: number;
+  skills: PlayerSkills;
+  skillsChange: PlayerSkillsChange;
 }
 
 export interface SokkerImportResultDto {
@@ -95,4 +82,5 @@ export interface SokkerImportResultDto {
   source: string;
   importedAt: Date;
   countries: SokkerCountryDto[];
+  training?: PlayerTrainingWeekDto[];
 }

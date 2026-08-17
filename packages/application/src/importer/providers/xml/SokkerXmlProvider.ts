@@ -13,20 +13,13 @@ import type {
   SokkerCurrentDto,
   SokkerAuthResult,
   SokkerJuniorDto,
-  SokkerLeagueDto,
-  SokkerMatchPlayerStatsDto,
-  SokkerMatchSummaryDto,
+  PlayerTrainingWeekDto,
   SokkerPlayerDto,
   SokkerImportResultDto,
   SokkerTeamDto
 } from "../../types.js";
 import type { SokkerDataProvider } from "../SokkerDataProvider.js";
 import { assembleSokkerTeamData } from "../assemble-sokker-data.js";
-import {
-  parseSokkerLeagueXml,
-  parseSokkerMatchDetailXml,
-  parseSokkerMatchesXml
-} from "./parsers.js";
 import type { SokkerCredentials } from "../../types.js";
 
 const sessionCache = new Map<string, SokkerAuthResult & { expiresAt: number }>();
@@ -188,29 +181,16 @@ export class SokkerXmlProvider implements SokkerDataProvider {
     }));
   }
 
-  async getMatches(teamId: number): Promise<SokkerMatchSummaryDto[]> {
-    return parseSokkerMatchesXml(await this.fetchXml(`matches-team-${teamId}.xml`));
+  async getCurrentTraining(): Promise<PlayerTrainingWeekDto[]> {
+    return unsupportedTrainingSource();
   }
 
-  async getMatch(matchId: number): Promise<SokkerMatchSummaryDto> {
-    const teamId = Number((await this.ensureAuthenticated()).teamId);
-    const match = (await this.getMatches(teamId)).find((item) => item.id === matchId);
-
-    if (!match) {
-      throw new Error(`Match ${matchId} was not found for team ${teamId}.`);
-    }
-
-    return match;
+  async getTrainingSummary(): Promise<PlayerTrainingWeekDto[]> {
+    return unsupportedTrainingSource();
   }
 
-  async getMatchLineup(matchId: number, teamId?: number): Promise<SokkerMatchPlayerStatsDto[]> {
-    const currentTeamId = teamId ?? Number((await this.ensureAuthenticated()).teamId);
-
-    return parseSokkerMatchDetailXml(await this.fetchXml(`match-${matchId}.xml`), currentTeamId);
-  }
-
-  async getLeague(leagueId: number): Promise<SokkerLeagueDto> {
-    return parseSokkerLeagueXml(await this.fetchXml(`league-${leagueId}.xml`));
+  async getPlayerTrainingReport(): Promise<PlayerTrainingWeekDto[]> {
+    return unsupportedTrainingSource();
   }
 
   private async ensureAuthenticated(): Promise<SokkerAuthResult> {
@@ -232,6 +212,10 @@ export class SokkerXmlProvider implements SokkerDataProvider {
 
     return this.session;
   }
+}
+
+function unsupportedTrainingSource(): never {
+  throw new Error("The XML Sokker source does not expose the JSON training report.");
 }
 
 function readSessionId(setCookie: string | null): string {

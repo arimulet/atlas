@@ -8,7 +8,6 @@ const navigationItems: V2NavigationItem[] = [
   { id: "dashboard", label: "Dashboard", icon: "⌂", path: pathForMainView("dashboard") },
   { id: "squad", label: "Squad", icon: "S", path: pathForMainView("squad") },
   { id: "training", label: "Training", icon: "T", path: pathForMainView("training") },
-  { id: "matches", label: "Matches", icon: "M", path: pathForMainView("matches") },
   { id: "youth", label: "Youth", icon: "Y", path: pathForMainView("youth") },
   { id: "finances", label: "Finances", icon: "$", path: pathForMainView("finances") },
   { id: "diagnostics", label: "Diagnostics", icon: "!", path: pathForMainView("diagnostics") }

@@ -2,7 +2,6 @@ import { describeDiagnosticFinding } from "@atlas/web/app/diagnostic-copy";
 import { formatTrainingPriority } from "@atlas/web/app/formatters";
 import type { DiagnosticFinding } from "@atlas/web/app/types";
 import {
-  formatV2Advanced,
   formatV2Eta,
   formatV2Number,
   formatV2Percentage,
@@ -273,11 +272,9 @@ function SquadPlayerRowView({ onSelectPlayer, row }: SquadPlayerRowViewProps) {
       ))}
       <td>{row.training.trainedSkill ?? "—"}</td>
       <td className="v2-squad-table__center">
-        <span className={`v2-training-advanced${row.training.advanced ? " is-active" : ""}`}>
-          {formatV2Advanced(row.training.advanced)}
-        </span>
+        {row.training.trainingKind ?? "—"}
       </td>
-      <td className="v2-squad-table__numeric">{formatV2Percentage(row.training.efficiency)}</td>
+      <td className="v2-squad-table__numeric">{formatV2Percentage(row.training.intensity)}</td>
       <td className="v2-squad-table__numeric">{formatV2Percentage(row.training.progress)}</td>
       <td className="v2-squad-table__numeric">{formatV2Talent(row.development.talent)}</td>
       <td className="v2-squad-table__numeric">{formatV2Number(row.development.nextSkillUp)}</td>

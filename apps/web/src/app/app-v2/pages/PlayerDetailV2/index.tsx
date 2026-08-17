@@ -3,7 +3,6 @@ import type { PlayerDetailV2Props } from "./types";
 import { ProjectionPanel } from "./ProjectionPanel";
 import { TalentPanel } from "./TalentPanel";
 import {
-  formatV2Advanced,
   formatV2DateTime,
   formatV2Number,
   formatV2Percentage
@@ -90,7 +89,7 @@ function PlayerHeader({ onBack, player, training }: PlayerHeaderProps) {
       <h1>{player.name}</h1>
       <p>
         {player.age} · {training.position ?? "—"} · {training.trainedSkill ?? "—"}
-        {training.advanced ? " · Advanced" : ""}
+        {training.trainingKind ? ` · ${training.trainingKind}` : ""}
       </p>
     </header>
   );
@@ -166,9 +165,9 @@ function TrainingPanel({ training }: TrainingPanelProps) {
       <dl className="v2-player-detail__data-list">
         <DataRow label="Position" value={training.position ?? "—"} />
         <DataRow label="Trained Skill" value={training.trainedSkill ?? "—"} />
-        <DataRow label="Advanced" value={formatV2Advanced(training.advanced)} />
-        <DataRow label="Minutes" value={formatV2Number(training.minutes)} />
-        <DataRow label="Efficiency" value={formatV2Percentage(training.efficiency)} />
+        <DataRow label="Training type" value={training.trainingType ?? "—"} />
+        <DataRow label="Training kind" value={training.trainingKind ?? "—"} />
+        <DataRow label="Intensity" value={formatV2Percentage(training.intensity)} />
         <DataRow label="Progress" value={formatV2Percentage(training.progress)} />
         <div>
           <dt>Status</dt>

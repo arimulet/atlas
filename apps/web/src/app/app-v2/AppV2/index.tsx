@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
   fetchClubDashboard,
-  fetchMatchesPageData,
   fetchPlayerDevelopment,
   fetchRealYouthAcademyPlanning,
   fetchYouthPipelinePlanning,
@@ -18,7 +17,6 @@ import type {
   TrainingPageData,
   YouthPipelinePlanning
 } from "@atlas/web/app/types";
-import type { MatchesPageData } from "../pages/MatchesV2/types";
 import { AppShell } from "../components/AppShell";
 import { DashboardV2 } from "../pages/DashboardV2";
 import { FinancesV2 } from "../pages/FinancesV2";
@@ -27,7 +25,6 @@ import { TrainingV2 } from "../pages/TrainingV2";
 import { PlayerDetailV2 } from "../pages/PlayerDetailV2";
 import { YouthV2 } from "../pages/YouthV2";
 import { DiagnosticsV2 } from "../pages/DiagnosticsV2";
-import { MatchesV2 } from "../pages/MatchesV2";
 import { createPlayerTrainingProjectionSummaries } from "../view-models/player-detail-view-model";
 import type { SokkerImportCredentials } from "../components/SokkerImporterForm/types";
 import type { V2ViewId } from "../types";
@@ -60,10 +57,6 @@ export function AppV2({ uiVersion, onUiVersionChange }: AppV2Props) {
   );
   const [training, setTraining] = useState<TrainingPageData | null>(null);
   const [trainingDiagnostic, setTrainingDiagnostic] = useState<ImportResponse["diagnostic"]>(null);
-  const [matchesStatus, setMatchesStatus] = useState<DashboardStatus>(
-    activeClubId ? "loading" : "idle"
-  );
-  const [matches, setMatches] = useState<MatchesPageData | null>(null);
   const [playerDevelopment, setPlayerDevelopment] = useState<PlayerDevelopment | null>(null);
   const projectionSummaries = useMemo(
     () =>
@@ -130,20 +123,6 @@ export function AppV2({ uiVersion, onUiVersionChange }: AppV2Props) {
     }
   }, []);
 
-  const loadMatches = useCallback(async (clubId: string): Promise<boolean> => {
-    setMatchesStatus("loading");
-
-    try {
-      setMatches(await fetchMatchesPageData(clubId));
-      setMatchesStatus("ready");
-      return true;
-    } catch {
-      setMatches(null);
-      setMatchesStatus("error");
-      return false;
-    }
-  }, []);
-
   const loadYouthPipeline = useCallback(async (clubId: string): Promise<boolean> => {
     setYouthPipelineStatus("loading");
 
@@ -168,15 +147,13 @@ export function AppV2({ uiVersion, onUiVersionChange }: AppV2Props) {
     void loadTraining(activeClubId);
     void loadPlayerDevelopment(activeClubId);
     void loadYouthPipeline(activeClubId);
-    void loadMatches(activeClubId);
   }, [
     activeClubId,
     loadDashboard,
     loadPlayerDevelopment,
     loadTraining,
     loadYouthAcademy,
-    loadYouthPipeline,
-    loadMatches
+    loadYouthPipeline
   ]);
 
   const handleSokkerImport = useCallback(
@@ -197,15 +174,13 @@ export function AppV2({ uiVersion, onUiVersionChange }: AppV2Props) {
           youthLoaded,
           trainingLoaded,
           developmentLoaded,
-          youthPipelineLoaded,
-          matchesLoaded
+          youthPipelineLoaded
         ] = await Promise.all([
           loadDashboard(body.importResult.clubId),
           loadYouthAcademy(body.importResult.clubId),
           loadTraining(body.importResult.clubId),
           loadPlayerDevelopment(body.importResult.clubId),
           loadYouthPipeline(body.importResult.clubId),
-          loadMatches(body.importResult.clubId)
         ]);
 
         setTrainingDiagnostic(body.diagnostic);
@@ -215,8 +190,7 @@ export function AppV2({ uiVersion, onUiVersionChange }: AppV2Props) {
           !youthLoaded ||
           !trainingLoaded ||
           !developmentLoaded ||
-          !youthPipelineLoaded ||
-          !matchesLoaded
+          !youthPipelineLoaded
         ) {
           throw new Error("Datos actualizados, pero no se pudo recargar el Dashboard.");
         }
@@ -228,7 +202,6 @@ export function AppV2({ uiVersion, onUiVersionChange }: AppV2Props) {
     },
     [
       loadDashboard,
-      loadMatches,
       loadPlayerDevelopment,
       loadTraining,
       loadYouthAcademy,
@@ -267,8 +240,6 @@ export function AppV2({ uiVersion, onUiVersionChange }: AppV2Props) {
           youthAcademy={youthAcademy}
           youthStatus={youthStatus}
         />
-      ) : activeView === "matches" ? (
-        <MatchesV2 data={matches} onSelectPlayer={handleSelectPlayer} status={matchesStatus} />
       ) : activeView === "finances" ? (
         <FinancesV2 status={dashboardStatus} />
       ) : activeView === "squad" ? (

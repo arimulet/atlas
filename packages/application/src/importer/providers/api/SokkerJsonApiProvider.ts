@@ -2,9 +2,7 @@ import type {
   SokkerCountryDto,
   SokkerCurrentDto,
   SokkerJuniorDto,
-  SokkerLeagueDto,
-  SokkerMatchPlayerStatsDto,
-  SokkerMatchSummaryDto,
+  PlayerTrainingWeekDto,
   SokkerPlayerDto,
   SokkerImportResultDto,
   SokkerTeamDto
@@ -16,19 +14,15 @@ import type {
   SokkerApiCountryDto,
   SokkerApiCurrentDto,
   SokkerApiJuniorDto,
-  SokkerApiLeagueDto,
-  SokkerApiMatchDto,
-  SokkerApiMatchPlayerStatsDto,
   SokkerApiPlayerDto,
-  SokkerApiTeamDto
+  SokkerApiTeamDto,
+  SokkerApiTrainingResponseDto
 } from "./dtos.js";
 import {
   mapApiCountryToSokkerCountryDto,
   mapApiCurrentToSokkerCurrentDto,
   mapApiJuniorToSokkerJuniorDto,
-  mapApiLeagueToSokkerLeagueDto,
-  mapApiMatchPlayerStatsToSokkerMatchPlayerStatsDto,
-  mapApiMatchToSokkerMatchSummaryDto,
+  mapApiTrainingPlayerToPlayerTrainingWeekDto,
   mapApiPlayerToSokkerPlayerDto,
   mapApiTeamToSokkerTeamDto
 } from "./mappers.js";
@@ -54,7 +48,8 @@ export class SokkerJsonApiProvider implements SokkerDataProvider {
   }
 
   async getFullTeamData(): Promise<SokkerImportResultDto> {
-    return assembleSokkerTeamData(this, "sokker-json-api-import");
+    const teamData = await assembleSokkerTeamData(this, "sokker-json-api-import");
+    return { ...teamData, training: await this.getCurrentTraining() };
   }
 
   async getCurrent(): Promise<SokkerCurrentDto> {
@@ -87,31 +82,24 @@ export class SokkerJsonApiProvider implements SokkerDataProvider {
     return response.map(mapApiCountryToSokkerCountryDto);
   }
 
-  async getMatches(teamId: number): Promise<SokkerMatchSummaryDto[]> {
-    const response = await this.get<SokkerApiMatchDto[]>(`teams/${teamId}/matches`);
-
-    return response.map(mapApiMatchToSokkerMatchSummaryDto);
+  async getCurrentTraining(): Promise<PlayerTrainingWeekDto[]> {
+    return this.getTraining("training");
   }
 
-  async getMatch(matchId: number): Promise<SokkerMatchSummaryDto> {
-    const response = await this.get<SokkerApiMatchDto>(`matches/${matchId}`);
-
-    return mapApiMatchToSokkerMatchSummaryDto(response);
+  async getTrainingSummary(week?: number): Promise<PlayerTrainingWeekDto[]> {
+    return this.getTraining("training/summary", week === undefined ? undefined : { week });
   }
 
-  async getMatchLineup(matchId: number, teamId?: number): Promise<SokkerMatchPlayerStatsDto[]> {
-    const response = await this.get<SokkerApiMatchPlayerStatsDto[]>(
-      `matches/${matchId}/lineup`,
-      teamId === undefined ? undefined : { teamId }
-    );
-
-    return response.map(mapApiMatchPlayerStatsToSokkerMatchPlayerStatsDto);
+  async getPlayerTrainingReport(playerId: number): Promise<PlayerTrainingWeekDto[]> {
+    return this.getTraining(`training/${playerId}/report`);
   }
 
-  async getLeague(leagueId: number): Promise<SokkerLeagueDto> {
-    const response = await this.get<SokkerApiLeagueDto>(`leagues/${leagueId}`);
-
-    return mapApiLeagueToSokkerLeagueDto(response);
+  private async getTraining(
+    path: string,
+    params?: Record<string, number>
+  ): Promise<PlayerTrainingWeekDto[]> {
+    const response = await this.get<SokkerApiTrainingResponseDto>(path, params);
+    return response.players.map(mapApiTrainingPlayerToPlayerTrainingWeekDto);
   }
 
   private async get<T>(path: string, params?: unknown): Promise<T> {

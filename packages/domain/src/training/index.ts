@@ -1,14 +1,9 @@
 import {
-  ADVANCED_BASE_EFFICIENCY,
   AGE_TRAINING_FACTOR,
   BASE_TRAINING_AGE,
   BASE_TRAINING_POINTS,
   DEFAULT_TALENT_PROFILE_MINIMUM_OBSERVATIONS,
-  FIRST_EFFICIENCY_THRESHOLD,
-  FIRST_SEGMENT_EFFICIENCY,
-  FRIENDLY_MATCH_WEIGHT,
   MAX_EFFICIENCY,
-  MAX_EQUIVALENT_MINUTES,
   MAX_SKILL_LEVEL,
   MAX_TRAINING_EFFICIENCY,
   SKILL_LEVEL_TRAINING_FACTOR,
@@ -29,8 +24,11 @@ import type {
   TalentProfileInput,
   TalentProfileSegment,
   TalentSkillProfile,
-  TrainingEfficiencyInput,
-  TrainingEfficiencyResult,
+  PlayerSkill,
+  PlayerSkills,
+  PlayerSkillsChange,
+  PlayerTrainingWeek,
+  TrainingKind,
   TrainingPosition,
   TrainingType,
   TrainingSkillLevels,
@@ -79,8 +77,11 @@ export type {
   TalentProfileSegment,
   TalentProfileStatus,
   TalentSkillProfile,
-  TrainingEfficiencyInput,
-  TrainingEfficiencyResult,
+  PlayerSkill,
+  PlayerSkills,
+  PlayerSkillsChange,
+  PlayerTrainingWeek,
+  TrainingKind,
   TrainingPosition,
   TrainingType,
   TrainingSkillLevels,
@@ -113,63 +114,6 @@ export function calculateRelativeTrainingSpeed(age: number): number {
   return 1 / calculateAgeTrainingCostFactor(age);
 }
 
-export function calculateEquivalentTrainingMinutes(
-  officialMinutes: number,
-  friendlyMinutes: number
-): number {
-  assertNonNegativeFinite(officialMinutes, "officialMinutes");
-  assertNonNegativeFinite(friendlyMinutes, "friendlyMinutes");
-
-  return officialMinutes + friendlyMinutes * FRIENDLY_MATCH_WEIGHT;
-}
-
-export function calculateFormationTrainingEfficiency(equivalentMinutes: number): number {
-  assertNonNegativeFinite(equivalentMinutes, "equivalentMinutes");
-
-  if (equivalentMinutes >= MAX_EQUIVALENT_MINUTES) {
-    return MAX_EFFICIENCY;
-  }
-
-  const unroundedEfficiency =
-    equivalentMinutes <= FIRST_EFFICIENCY_THRESHOLD
-      ? (equivalentMinutes * FIRST_SEGMENT_EFFICIENCY) / FIRST_EFFICIENCY_THRESHOLD
-      : FIRST_SEGMENT_EFFICIENCY +
-        (equivalentMinutes - FIRST_EFFICIENCY_THRESHOLD) *
-          ((MAX_EFFICIENCY - FIRST_SEGMENT_EFFICIENCY) /
-            (MAX_EQUIVALENT_MINUTES - FIRST_EFFICIENCY_THRESHOLD));
-
-  return Math.min(MAX_EFFICIENCY, Math.round(unroundedEfficiency));
-}
-
-export function calculateAdvancedTrainingEfficiency(formationEfficiency: number): number {
-  assertEfficiency(formationEfficiency, "formationEfficiency");
-
-  return Math.min(MAX_EFFICIENCY, Math.floor(ADVANCED_BASE_EFFICIENCY + formationEfficiency / 2));
-}
-
-export function calculateTrainingEfficiency(
-  input: TrainingEfficiencyInput
-): TrainingEfficiencyResult {
-  assertBoolean(input.advancedTraining, "advancedTraining");
-
-  const equivalentMinutes = calculateEquivalentTrainingMinutes(
-    input.officialMinutes,
-    input.friendlyMinutes
-  );
-  const formationEfficiency = calculateFormationTrainingEfficiency(equivalentMinutes);
-  const trainingType: TrainingType = input.advancedTraining ? "advanced" : "formation";
-  const trainingEfficiency = input.advancedTraining
-    ? calculateAdvancedTrainingEfficiency(formationEfficiency)
-    : formationEfficiency;
-
-  return {
-    equivalentMinutes,
-    formationEfficiency,
-    trainingEfficiency,
-    trainingType
-  };
-}
-
 export function calculateSkillTrainingCostFactor(
   input: SkillTrainingCostInput
 ): SkillTrainingCostResult {
@@ -192,51 +136,60 @@ export function calculateSkillTrainingSpeedFactor(input: SkillTrainingCostInput)
   return 1 / calculateSkillTrainingCostFactor(input).costFactor;
 }
 
-export function calculateWeeklyTrainingPoints(trainingEfficiency: number): number {
-  assertEfficiency(trainingEfficiency, "trainingEfficiency");
+export function calculateWeeklyTrainingPoints(intensity: number): number {
+  assertEfficiency(intensity, "intensity");
 
-  return trainingEfficiency;
+  return intensity;
 }
 
 export function createTrainingWeek(input: TrainingWeekInput): TrainingWeek {
   assertPlayerId(input.playerId);
-  assertPositiveInteger(input.week, "week");
-  assertSupportedSkill(input.skill);
-  assertNonNegativeFinite(input.officialMinutes, "officialMinutes");
-  assertNonNegativeFinite(input.friendlyMinutes, "friendlyMinutes");
-  assertBoolean(input.advancedTraining, "advancedTraining");
-  assertAge(input.playerAge, "playerAge");
-  assertSkillLevel(input.skillLevelBefore, "skillLevelBefore");
-  assertSkillLevel(input.skillLevelAfter, "skillLevelAfter");
+  assertPositiveInteger(input.gameWeek, "gameWeek");
+  assertPositiveInteger(input.seasonWeek, "seasonWeek");
+  assertDate(input.date);
+  assertTrainingType(input.type);
+  assertTrainingKind(input.kind);
+  assertEfficiency(input.intensity, "intensity");
+  assertAge(input.age, "age");
+  assertSkills(input.skills, "skills");
+  assertSkillChanges(input.skillsChange);
 
-  const efficiency = calculateTrainingEfficiency({
-    officialMinutes: input.officialMinutes,
-    friendlyMinutes: input.friendlyMinutes,
-    advancedTraining: input.advancedTraining
-  }).trainingEfficiency;
+  const skill = input.skill ?? trainingSkillForType(input.type);
+  assertSupportedSkill(skill);
+  const skillLevelAfter = skillValue(input.skills, skill) ?? input.skillLevelAfter ?? 0;
+  const skillLevelBefore =
+    skillChangeValue(input.skillsChange, skill) === undefined
+      ? (input.skillLevelBefore ?? skillLevelAfter)
+      : skillLevelAfter - skillChangeValue(input.skillsChange, skill)!;
+  assertSkillLevel(skillLevelBefore, "skillLevelBefore");
+  assertSkillLevel(skillLevelAfter, "skillLevelAfter");
 
   const skillLevelsBefore = Object.freeze(
-    normalizeSkillLevels(input.skillLevelsBefore, input.skill, input.skillLevelBefore)
+    normalizeSkillLevels(input.skillLevelsBefore, skill, skillLevelBefore)
   );
   const skillLevelsAfter = Object.freeze(
-    normalizeSkillLevels(input.skillLevelsAfter, input.skill, input.skillLevelAfter)
+    normalizeSkillLevels(input.skillLevelsAfter, skill, skillLevelAfter)
   );
 
   return Object.freeze({
+    ...input,
     playerId: input.playerId,
-    week: input.week,
-    skill: input.skill,
-    officialMinutes: input.officialMinutes,
-    friendlyMinutes: input.friendlyMinutes,
-    advancedTraining: input.advancedTraining,
-    playerAge: input.playerAge,
-    skillLevelBefore: input.skillLevelBefore,
-    skillLevelAfter: input.skillLevelAfter,
+    week: input.gameWeek,
+    skill,
+    playerAge: input.age,
+    skillLevelBefore,
+    skillLevelAfter,
     skillLevelsBefore,
     skillLevelsAfter,
-    trainingEfficiency: efficiency,
-    trainingPoints: calculateWeeklyTrainingPoints(efficiency)
+    trainingPoints: calculateWeeklyTrainingPoints(input.intensity),
+    date: new Date(input.date),
+    skills: Object.freeze({ ...input.skills }),
+    skillsChange: Object.freeze({ ...input.skillsChange })
   });
+}
+
+export function createPlayerTrainingWeek(input: TrainingWeekInput): PlayerTrainingWeek {
+  return createTrainingWeek(input);
 }
 
 export function createTrainingHistory(
@@ -303,21 +256,25 @@ export function detectSkillUps(history: TrainingHistory): SkillUp[] {
   const weeks = getTrainingWeeks(history);
   const skillUps: SkillUp[] = [];
 
-  for (let index = 1; index < weeks.length; index += 1) {
-    const previousWeek = weeks[index - 1]!;
-    const currentWeek = weeks[index]!;
+  for (const currentWeek of weeks) {
 
     for (const skill of SUPPORTED_TRAINING_SKILLS) {
-      const fromLevel = previousSkillLevel(previousWeek, skill);
-      const toLevel = previousSkillLevel(currentWeek, skill);
+      const officialChange = skillChangeValue(currentWeek.skillsChange, skill);
+      const toLevel = skillValue(currentWeek.skills, skill);
+      const fromLevel = toLevel === undefined ? null : toLevel - (officialChange ?? 0);
 
-      if (fromLevel !== null && toLevel !== null && toLevel > fromLevel) {
+      if (
+        officialChange !== undefined &&
+        officialChange > 0 &&
+        fromLevel !== null &&
+        toLevel !== undefined
+      ) {
         skillUps.push({
           playerId: history.playerId,
           skill,
           fromLevel,
           toLevel,
-          levelDelta: toLevel - fromLevel,
+          levelDelta: officialChange,
           week: currentWeek.week
         });
       }
@@ -384,10 +341,6 @@ export function buildSkillUpObservations(history: TrainingHistory): SkillUpObser
   return observations;
 }
 
-function previousSkillLevel(week: TrainingWeek, skill: SkillTrainingCostSkill): number | null {
-  return week.skillLevelsAfter[skill] ?? week.skillLevelsBefore[skill] ?? null;
-}
-
 function determineCompleteness(input: {
   previousPop: SkillUp | undefined;
   levelDelta: number;
@@ -440,17 +393,20 @@ function compareTrainingWeeks(left: TrainingWeek, right: TrainingWeek): number {
 
 function assertTrainingWeek(week: TrainingWeek): void {
   assertPlayerId(week.playerId);
-  assertPositiveInteger(week.week, "week");
+  assertPositiveInteger(week.gameWeek, "gameWeek");
+  assertPositiveInteger(week.seasonWeek, "seasonWeek");
+  assertDate(week.date);
+  assertTrainingType(week.type);
+  assertTrainingKind(week.kind);
+  assertEfficiency(week.intensity, "intensity");
+  assertSkills(week.skills, "skills");
+  assertSkillChanges(week.skillsChange);
   assertSupportedSkill(week.skill);
-  assertNonNegativeFinite(week.officialMinutes, "officialMinutes");
-  assertNonNegativeFinite(week.friendlyMinutes, "friendlyMinutes");
-  assertBoolean(week.advancedTraining, "advancedTraining");
   assertAge(week.playerAge, "playerAge");
   assertSkillLevel(week.skillLevelBefore, "skillLevelBefore");
   assertSkillLevel(week.skillLevelAfter, "skillLevelAfter");
   normalizeSkillLevels(week.skillLevelsBefore, week.skill, week.skillLevelBefore);
   normalizeSkillLevels(week.skillLevelsAfter, week.skill, week.skillLevelAfter);
-  assertEfficiency(week.trainingEfficiency, "trainingEfficiency");
   assertNonNegativeFinite(week.trainingPoints, "trainingPoints");
 }
 
@@ -903,10 +859,97 @@ function assertEfficiency(value: number, fieldName: string): void {
   }
 }
 
-function assertBoolean(value: boolean, fieldName: string): void {
-  if (typeof value !== "boolean") {
-    throw new Error(`${fieldName} must be a boolean.`);
+function assertDate(value: Date): void {
+  if (!(value instanceof Date) || Number.isNaN(value.getTime())) {
+    throw new Error("date must be a valid Date.");
   }
+}
+
+function assertTrainingKind(value: TrainingKind): void {
+  if (!["advanced", "formation", "missing"].includes(value)) {
+    throw new Error("kind must be advanced, formation, or missing.");
+  }
+}
+
+function assertTrainingType(value: TrainingType): void {
+  if (
+    ![
+      "general",
+      "stamina",
+      "keeper",
+      "playmaking",
+      "passing",
+      "technique",
+      "defending",
+      "striker",
+      "pace"
+    ].includes(value)
+  ) {
+    throw new Error("Unsupported training type.");
+  }
+}
+
+function assertSkills(skills: PlayerSkills, fieldName: string): void {
+  for (const [skill, level] of Object.entries(skills)) {
+    if (level !== undefined) {
+      assertPlayerSkill(skill);
+      assertSkillLevel(level, `${fieldName}.${skill}`);
+    }
+  }
+}
+
+function assertSkillChanges(changes: PlayerSkillsChange): void {
+  assertNonNegativeFinite(changes.up, "skillsChange.up");
+  assertNonNegativeFinite(changes.down, "skillsChange.down");
+
+  for (const [skill, change] of Object.entries(changes)) {
+    if (skill !== "up" && skill !== "down" && change !== undefined) {
+      assertPlayerSkill(skill);
+      if (!Number.isInteger(change)) {
+        throw new Error(`skillsChange.${skill} must be an integer.`);
+      }
+    }
+  }
+}
+
+function assertPlayerSkill(skill: string): asserts skill is PlayerSkill {
+  if (
+    ![
+      "stamina",
+      "keeper",
+      "playmaking",
+      "passing",
+      "technique",
+      "defending",
+      "striker",
+      "pace"
+    ].includes(skill)
+  ) {
+    throw new Error(`Unsupported player skill: ${skill}.`);
+  }
+}
+
+function trainingSkillForType(type: TrainingType): SkillTrainingCostSkill {
+  if (type === "striker") {
+    return "scoring";
+  }
+
+  if (type === "general" || type === "stamina" || type === "keeper") {
+    return "pace";
+  }
+
+  return type;
+}
+
+function skillValue(skills: PlayerSkills, skill: SkillTrainingCostSkill): number | undefined {
+  return skills[skill === "scoring" ? "striker" : skill];
+}
+
+function skillChangeValue(
+  changes: PlayerSkillsChange,
+  skill: SkillTrainingCostSkill
+): number | undefined {
+  return changes[skill === "scoring" ? "striker" : skill];
 }
 
 function assertSupportedSkill(

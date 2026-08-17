@@ -53,34 +53,55 @@ export interface SokkerApiCountryDto {
   currencyRate: number;
 }
 
-export interface SokkerApiMatchDto {
-  id: number;
-  homeTeamId: number;
-  awayTeamId: number;
-  homeTeamName: string;
-  awayTeamName: string;
-  leagueId: number;
-  gameWeek: number;
-  playedAt: string | null;
-  homeScore: number;
-  awayScore: number;
-  isFinished: boolean;
+export interface SokkerApiSkillsDto {
+  stamina?: number;
+  keeper?: number;
+  playmaking?: number;
+  passing?: number;
+  technique?: number;
+  defending?: number;
+  striker?: number;
+  pace?: number;
+  form?: number;
+  tacticalDiscipline?: number;
+  teamwork?: number;
+  experience?: number;
 }
 
-export interface SokkerApiMatchPlayerStatsDto {
-  playerId: number;
-  number: number;
-  formation: number;
-  timeIn: number;
-  timeOut: number;
-  rating?: number | null;
-  timePlaying?: number | null;
-  timeDefending?: number | null;
+export interface SokkerApiSkillChangesDto extends SokkerApiSkillsDto {
+  up: number;
+  down: number;
 }
 
-export interface SokkerApiLeagueDto {
+export interface SokkerApiTrainingReportDto {
+  week: number;
+  day: {
+    season: number;
+    week: number;
+    seasonWeek: number;
+    day?: number;
+    date: { value: string; timestamp?: number };
+  };
+  skills: SokkerApiSkillsDto;
+  skillsChange: SokkerApiSkillChangesDto;
+  type: { code: number; name: string };
+  kind: { code: number; name: string };
+  games: {
+    minutesOfficial: number;
+    minutesFriendly: number;
+    minutesNational: number;
+  };
+  intensity: number;
+  formation: { code: number; name: string } | null;
+  age: number;
+}
+
+export interface SokkerApiTrainingPlayerDto {
   id: number;
-  name: string;
-  type: number;
-  isOfficial: boolean;
+  player?: SokkerApiPlayerDto;
+  report: SokkerApiTrainingReportDto;
+}
+
+export interface SokkerApiTrainingResponseDto {
+  players: SokkerApiTrainingPlayerDto[];
 }

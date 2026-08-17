@@ -26,5 +26,4 @@ export * from "./historicalFindings/index.js";
 export * from "./historicalTrends/index.js";
 export * from "./snapshotComparison.js";
 export * from "./training/index.js";
-export * from "./matches/index.js";
 export * from "./sokker/calendar.js";

@@ -132,39 +132,31 @@ export interface PersistedYouthPlayerSnapshot {
   status: "in_academy" | "ready_for_promotion" | "promoted";
 }
 
-export interface PersistedMatchPlayerAppearance {
-  playerId: number;
-  number: number;
-  formation: "GK" | "DEF" | "MID" | "ATT";
-  role: "STARTER" | "SUBSTITUTE_USED" | "SUBSTITUTE_UNUSED";
-  timeIn: number;
-  timeOut: number;
-  minutesPlayed: number;
-}
-
-export interface PersistedMatch {
-  id: number;
+export interface PersistedPlayerTrainingWeek {
+  id: string;
   clubId: number;
+  playerId: number;
   gameWeek: number;
-  week: number;
-  playedAt: Date;
-  leagueId: number;
-  matchType: "OFFICIAL" | "FRIENDLY" | "NOT_ELIGIBLE";
-  side: "HOME" | "AWAY";
-  opponent: {
-    id: number;
-    name: string;
-  };
-  score: {
-    club: number;
-    opponent: number;
-  };
-  players: PersistedMatchPlayerAppearance[];
+  seasonWeek: number;
+  date: Date;
+  type:
+    | "general"
+    | "stamina"
+    | "keeper"
+    | "playmaking"
+    | "passing"
+    | "technique"
+    | "defending"
+    | "striker"
+    | "pace";
+  kind: "advanced" | "formation" | "missing";
+  intensity: number;
+  age: number;
+  skills: Record<string, number | undefined>;
+  skillsChange: Record<string, number | undefined>;
 }
 
-export interface SaveMatchInput extends Omit<PersistedMatch, "id"> {
-  id: number;
-}
+export type SavePlayerTrainingWeekInput = Omit<PersistedPlayerTrainingWeek, "id">;
 
 export interface PersistedCountry {
   id: string;
