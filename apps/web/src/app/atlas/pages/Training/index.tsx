@@ -1,6 +1,6 @@
 import { describeDiagnosticFinding } from "@atlas/web/app/diagnostic-copy";
 import type { DiagnosticFinding, TrainingPageData, TrainingReport } from "@atlas/web/app/types";
-import { formatTrainingPriority } from "@atlas/web/app/formatters";
+import { formatTrainingPriority } from "../../formatters";
 import type { TrainingPlayerRow, TrainingStatusLabel, TrainingProps } from "./types";
 import { formatEta, formatNumber, formatPercentage, formatTalent } from "../../formatters";
 import { AttentionIcon } from "../../components/AttentionIcon";

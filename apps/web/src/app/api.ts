@@ -3,8 +3,6 @@ import type {
   ImportResponse,
   PlayerDevelopment,
   RealYouthAcademyPlanning,
-  SquadEconomy,
-  SquadMarketPlanning,
   TrainingPageData,
   YouthPipelinePlanning
 } from "./types";
@@ -31,34 +29,12 @@ export async function fetchTrainingPageData(clubId: string): Promise<TrainingPag
   return body;
 }
 
-export async function fetchSquadEconomy(clubId: string): Promise<SquadEconomy> {
-  const response = await fetch(`/api/clubs/${clubId}/economy`);
-  const body = (await response.json()) as SquadEconomy;
-
-  if (!response.ok || !body) {
-    throw new Error("Squad economy API returned an unexpected response.");
-  }
-
-  return body;
-}
-
 export async function fetchPlayerDevelopment(clubId: string): Promise<PlayerDevelopment> {
   const response = await fetch(`/api/clubs/${clubId}/players/development`);
   const body = (await response.json()) as PlayerDevelopment;
 
   if (!response.ok || !body) {
     throw new Error("Player development API returned an unexpected response.");
-  }
-
-  return body;
-}
-
-export async function fetchSquadMarketPlanning(clubId: string): Promise<SquadMarketPlanning> {
-  const response = await fetch(`/api/clubs/${clubId}/economy/squad-market-planning`);
-  const body = (await response.json()) as SquadMarketPlanning;
-
-  if (!response.ok || !body) {
-    throw new Error("Squad market planning API returned an unexpected response.");
   }
 
   return body;

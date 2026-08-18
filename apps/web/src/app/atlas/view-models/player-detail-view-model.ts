@@ -1,4 +1,4 @@
-import { formatTrainingPriority } from "@atlas/web/app/formatters";
+import { formatTrainingPriority } from "../formatters";
 import { calculateRequiredTrainingPoints } from "@atlas/domain";
 import type {
   DashboardStatus,

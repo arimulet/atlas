@@ -25,42 +25,4 @@
     display: grid;
     gap: 3px;
   }
-
-  &__footer {
-    border-top: 1px solid var(--atlas-border);
-    margin-top: auto;
-    padding-top: 14px;
-
-    .atlas-ui-mode-switch {
-      align-items: center;
-      background: var(--atlas-bg);
-      border: 1px solid var(--atlas-border);
-      border-radius: var(--atlas-radius-sm);
-      display: flex;
-      gap: 2px;
-      padding: 2px;
-      width: 100%;
-
-      button {
-        background: transparent;
-        border-radius: 4px;
-        color: var(--atlas-text-secondary);
-        flex: 1;
-        font-size: 0.7rem;
-        padding: 6px 5px;
-
-        &:hover,
-        &:focus-visible,
-        &.active {
-          background: var(--atlas-surface-hover);
-          color: var(--atlas-text);
-          outline: 0;
-        }
-
-        &:focus-visible {
-          box-shadow: inset 0 0 0 1px var(--atlas-accent);
-        }
-      }
-    }
-  }
 }

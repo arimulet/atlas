@@ -8,12 +8,10 @@ export function AppShell({
   activeView,
   children,
   isSokkerImportOpen,
-  onUiModeChange,
   onViewChange,
   onCloseSokkerImport,
   onOpenSokkerImport,
   onSokkerImport,
-  uiMode,
   navigationKey
 }: AppShellProps) {
   return (
@@ -22,8 +20,6 @@ export function AppShell({
       <Sidebar
         activeView={activeView}
         onViewChange={onViewChange}
-        uiMode={uiMode}
-        onUiModeChange={onUiModeChange}
       />
       <MainContent navigationKey={navigationKey}>{children}</MainContent>
       <SokkerImportModal
