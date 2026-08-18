@@ -24,7 +24,7 @@ Sólo se crean eventos con `delta !== 0`. Los contadores `skillsChange.up` y `do
 se registran si no coinciden, pero los deltas individuales son la fuente principal. Los drops se
 conservan como eventos observados y no alimentan talento positivo.
 
-`SkillUp` permanece como una proyección legacy para compatibilidad de consumidores antiguos; ya no
+`SkillUp` permanece como una proyección de compatibilidad para consumidores antiguos; ya no
 se persiste por separado ni es la fuente de talento. El flujo nuevo consume `TrainingHistory.skillChanges`.
 Player Snapshots se mantienen para evolución general, squad history, valor y validación histórica.
 
