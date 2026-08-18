@@ -11,8 +11,8 @@ import type {
 /**
  * Read-only source boundary consumed by the Sokker importer.
  *
- * Implementations may use XML, HTTP or any other source, but none of those
- * transport details cross this interface.
+ * Transport and external API details do not cross this interface. The
+ * application layer depends on this contract rather than on Sokker's API.
  */
 export interface SokkerDataProvider {
   getFullTeamData(): Promise<SokkerImportResultDto>;

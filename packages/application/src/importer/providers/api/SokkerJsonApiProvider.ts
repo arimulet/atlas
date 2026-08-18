@@ -48,7 +48,7 @@ export class SokkerJsonApiProvider implements SokkerDataProvider {
   }
 
   async getFullTeamData(): Promise<SokkerImportResultDto> {
-    const teamData = await assembleSokkerTeamData(this, "sokker-json-api-import");
+    const teamData = await assembleSokkerTeamData(this);
     return { ...teamData, training: await this.getCurrentTraining() };
   }
 

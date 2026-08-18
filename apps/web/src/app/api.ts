@@ -77,7 +77,7 @@ export async function importPlayerSnapshot(payload: unknown): Promise<{
   return { response, body: await readImportResponse(response) };
 }
 
-export async function syncSokkerXml(payload: unknown): Promise<{
+export async function syncSokker(payload: unknown): Promise<{
   response: Response;
   body: ImportResponse;
 }> {

@@ -34,9 +34,9 @@ describe("atlas.player-snapshot.v0", () => {
     expect(result.warnings.map((warning) => warning.path)).toContain("players.0.skills.technique");
   });
 
-  it("accepts XML players without an assigned training position", () => {
+  it("accepts JSON API snapshots without an assigned training position", () => {
     const snapshot = structuredClone(validSnapshot);
-    snapshot.source.type = "sokker-xml-import";
+    snapshot.source.type = "sokker-json-api-import";
     snapshot.players[0]!.training.position = 0;
 
     const result = validatePlayerSnapshotV0(snapshot);

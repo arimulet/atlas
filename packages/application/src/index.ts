@@ -9,5 +9,5 @@ export * from "./marketPlanning/index.js";
 export * from "./youthAcademyPlanning/index.js";
 export * from "./training/index.js";
 export * from "./types.js";
-export * from "./sokker/SokkerXMLProvider/index.js";
+export { normalizeSeasonWeek } from "@atlas/domain";
 export * from "./importer/index.js";

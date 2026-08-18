@@ -5,10 +5,8 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./sokker/SokkerXMLProvider": "./src/sokker/SokkerXMLProvider/index.ts",
     "./importer": "./src/importer/index.ts",
     "./importer/providers": "./src/importer/providers/index.ts",
-    "./importer/providers/xml": "./src/importer/providers/xml/index.ts",
     "./importer/providers/api": "./src/importer/providers/api/index.ts"
   },
   "scripts": {
@@ -18,8 +16,7 @@
     "@atlas/contracts": "0.1.0",
     "@atlas/database": "^0.1.0",
     "@atlas/domain": "0.1.0",
-    "@atlas/utils": "0.1.0",
-    "fast-xml-parser": "^5.10.1"
+    "@atlas/utils": "0.1.0"
   },
   "devDependencies": {
     "@atlas/test-fixtures": "0.1.0"

@@ -6,7 +6,7 @@ import {
   fetchRealYouthAcademyPlanning,
   fetchYouthPipelinePlanning,
   fetchTrainingPageData,
-  syncSokkerXml
+  syncSokker
 } from "@atlas/web/app/api";
 import type {
   ClubDashboard,
@@ -157,7 +157,7 @@ export function AtlasApp() {
 
   const handleSokkerImport = useCallback(
     async (credentials: SokkerImportCredentials) => {
-      const { response, body } = await syncSokkerXml(credentials);
+      const { response, body } = await syncSokker(credentials);
 
       if (!response.ok || body.importResult.status === "rejected") {
         const message = body.importResult.errors.map((error) => error.message).join(" ");

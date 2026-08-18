@@ -138,20 +138,6 @@ describe("ImportPlayerSnapshot", () => {
     expect(importEvent?.snapshotId?.toString()).toBe(result.snapshotId);
   });
 
-  it("imports XML players without an assigned training position", async () => {
-    const payload = structuredClone(validSnapshot) as unknown as PlayerSnapshotV0;
-    payload.source.type = "sokker-xml-import";
-    payload.players[0]!.training.position = 0;
-
-    const result = await importPlayerSnapshot({ payload });
-
-    expect(result.status).toBe("accepted");
-    expect(result.errors).toEqual([]);
-
-    const snapshot = await SnapshotModel.findById(result.snapshotId).lean();
-    expect(snapshot?.players[0]?.training.position).toBe(0);
-  });
-
   it("links future snapshots to the same observed club while preserving manual profile settings", async () => {
     const first = await importPlayerSnapshot({ payload: validSnapshot });
     await ClubModel.findByIdAndUpdate(first.clubId, {
