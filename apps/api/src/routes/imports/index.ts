@@ -7,8 +7,12 @@ import {
   mapJuniorsToSnapshotJuniors,
   mapPlayersToSnapshotPlayers,
   type SokkerSyncPayload,
+  type SokkerSyncValidationIssue,
+  validateSokkerSyncPayload,
   validatePlayerSnapshotImport
 } from "@atlas/application";
+import type { ImportIssue } from "@atlas/contracts";
+import type { ImportPlayerSnapshotMvpResult } from "@atlas/application";
 import { FastifyInstance } from "fastify";
 import { sokkerSyncRequestSchema } from "../../schemas.js";
 
@@ -31,19 +35,38 @@ async function importsRoutes(server: FastifyInstance) {
     try {
       const credentials = sokkerSyncRequestSchema.parse(request.body);
       const provider = createSokkerDataProvider(credentials);
-      const sokkerData = await loadSokkerSyncPayload(provider);
+      const loadedPayload = await loadSokkerSyncPayload(provider);
+      const validation = validateSokkerSyncPayload(loadedPayload);
+
+      if (validation.status === "invalid") {
+        reply.code(422);
+        return {
+          importResult: {
+            status: "rejected" as const,
+            errors: mapSyncIssues(validation.errors),
+            warnings: mapSyncIssues(validation.warnings),
+            clubId: null,
+            importedPlayerCount: 0
+          },
+          summary: null,
+          diagnostic: null
+        };
+      }
+
+      const sokkerData = validation.payload;
       const importedAt = new Date();
       const playerResult = await importPlayerSnapshotMvp({
         payload: createPlayerSnapshotPayload(sokkerData, importedAt)
       });
+      const result = appendSyncWarnings(playerResult, validation.warnings);
 
-      if (playerResult.importResult.status === "rejected") {
+      if (result.importResult.status === "rejected") {
         reply.code(422);
-        return playerResult;
+        return result;
       }
 
       await importTrainingReports(sokkerData.current.team.id, sokkerData.trainingWeeks);
-      return playerResult;
+      return result;
     } catch (error) {
       reply.code(422);
 
@@ -62,6 +85,34 @@ async function importsRoutes(server: FastifyInstance) {
       };
     }
   });
+}
+
+function mapSyncIssues(issues: readonly SokkerSyncValidationIssue[]): ImportIssue[] {
+  return issues.map((issue) => ({
+    path: issue.path ?? "sokker-sync",
+    message: `[${issue.code}] ${issue.message}`
+  }));
+}
+
+function appendSyncWarnings(
+  result: ImportPlayerSnapshotMvpResult,
+  warnings: readonly SokkerSyncValidationIssue[]
+): ImportPlayerSnapshotMvpResult {
+  if (warnings.length === 0) {
+    return result;
+  }
+
+  return {
+    ...result,
+    importResult: {
+      ...result.importResult,
+      status:
+        result.importResult.status === "accepted"
+          ? "accepted-with-warnings"
+          : result.importResult.status,
+      warnings: [...result.importResult.warnings, ...mapSyncIssues(warnings)]
+    }
+  };
 }
 
 function createPlayerSnapshotPayload(data: SokkerSyncPayload, importedAt: Date) {

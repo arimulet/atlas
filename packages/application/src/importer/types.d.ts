@@ -184,5 +184,31 @@ export interface SokkerSyncPayload {
   trainingSummary: TrainingSummaryDto;
 }
 
+export interface SokkerSyncValidationIssue {
+  severity: "fatal" | "warning";
+  code: string;
+  message: string;
+  path?: string;
+  details?: Record<string, unknown>;
+}
+
+export type SokkerSyncValidationError = SokkerSyncValidationIssue & { severity: "fatal" };
+export type SokkerSyncWarning = SokkerSyncValidationIssue & { severity: "warning" };
+
+export interface ValidatedSokkerSyncPayload {
+  status: "valid";
+  payload: SokkerSyncPayload;
+  warnings: SokkerSyncWarning[];
+}
+
+export interface InvalidSokkerSyncPayload {
+  status: "invalid";
+  payload: null;
+  errors: SokkerSyncValidationError[];
+  warnings: SokkerSyncWarning[];
+}
+
+export type SokkerSyncValidationResult = ValidatedSokkerSyncPayload | InvalidSokkerSyncPayload;
+
 export type SnapshotPlayerDto = PlayerSnapshotV0["players"][number];
 export type SnapshotJuniorDto = NonNullable<PlayerSnapshotV0["juniors"]>[number];
