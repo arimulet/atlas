@@ -1,5 +1,5 @@
 import { describeDiagnosticFinding } from "@atlas/web/app/diagnostic-copy";
-import { formatTrainingPriority } from "@atlas/web/app/formatters";
+import { formatTrainingPriority } from "../../formatters";
 import type { DiagnosticFinding } from "@atlas/web/app/types";
 import {
   formatEta,

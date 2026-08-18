@@ -1,4 +1,4 @@
-import { formatTrainingPriority } from "@atlas/web/app/formatters";
+import { formatTrainingPriority } from "../formatters";
 import type { PlayerDevelopment, TrainingPageData } from "@atlas/web/app/types";
 import {
   createTrainingPlayerRows,

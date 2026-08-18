@@ -1,6 +1,5 @@
 import { pathForMainView } from "../../routing";
 import type { NavigationItem } from "../../types";
-import { UiModeSwitch } from "@atlas/web/app/components/UiModeSwitch";
 import { SidebarItem } from "../SidebarItem";
 import { SidebarProps } from "./types";
 
@@ -13,7 +12,7 @@ const navigationItems: NavigationItem[] = [
   { id: "diagnostics", label: "Diagnostics", icon: "!", path: pathForMainView("diagnostics") }
 ];
 
-export function Sidebar({ activeView, onUiModeChange, onViewChange, uiMode }: SidebarProps) {
+export function Sidebar({ activeView, onViewChange }: SidebarProps) {
   return (
     <aside className="atlas-sidebar">
       <div className="atlas-sidebar__navigation">
@@ -30,10 +29,6 @@ export function Sidebar({ activeView, onUiModeChange, onViewChange, uiMode }: Si
         </nav>
       </div>
 
-      <div className="atlas-sidebar__footer">
-        <p className="atlas-sidebar__label">Interface</p>
-        <UiModeSwitch activeMode={uiMode} onChange={onUiModeChange} variant="canonical" />
-      </div>
     </aside>
   );
 }

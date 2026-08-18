@@ -1,11 +1,23 @@
-import { formatMoney as formatSourceMoney } from "@atlas/web/app/formatters";
 import type { MoneyTotal } from "@atlas/web/app/types";
 
 export function formatMoney(
   total: MoneyTotal | null,
   countryDetails?: { currencyName: string; currencyRate: number } | null
 ): string {
-  return total === null ? "\u2014" : formatSourceMoney(total, countryDetails);
+  if (total === null) {
+    return "\u2014";
+  }
+
+  let value: string;
+
+  if (countryDetails) {
+    const convertedAmount = Math.round(total.amount / countryDetails.currencyRate);
+    value = `${countryDetails.currencyName} ${convertedAmount.toLocaleString("en-US")}`;
+  } else {
+    value = `${total.currency ?? "mixed"} ${total.amount.toLocaleString("en-US")}`;
+  }
+
+  return total.isComplete ? value : `${value} (incomplete)`;
 }
 
 export function formatNumber(value: number | null): string {
@@ -50,4 +62,19 @@ export function formatDateTime(value: string | null): string {
 
 export function formatAdvanced(value: boolean): string {
   return value ? "\u2713" : "\u2014";
+}
+
+export function formatTrainingPriority(value: number): string {
+  const mapping: Record<number, string> = {
+    1: "Condicion",
+    2: "Porteria",
+    3: "Creacion",
+    4: "Pases",
+    5: "Tecnica",
+    6: "Defensa",
+    7: "Anotacion",
+    8: "Rapidez"
+  };
+
+  return mapping[value] ?? value.toString();
 }

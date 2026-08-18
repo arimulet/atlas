@@ -29,11 +29,10 @@ import { createPlayerTrainingProjectionSummaries } from "../view-models/player-d
 import type { SokkerImportCredentials } from "../components/SokkerImporterForm/types";
 import type { ViewId } from "../types";
 import { pathForMainView, pathForPlayerDetail, useRouter } from "../routing";
-import type { AtlasAppProps } from "./types";
 
 const lastClubStorageKey = "atlas.lastClubId";
 
-export function AtlasApp({ uiMode, onUiModeChange }: AtlasAppProps) {
+export function AtlasApp() {
   const { goBack, navigate, route } = useRouter();
   const activeView: ViewId = route.kind === "player-detail" ? "player-detail" : route.view;
   const [isSokkerImportOpen, setIsSokkerImportOpen] = useState(false);
@@ -226,8 +225,6 @@ export function AtlasApp({ uiMode, onUiModeChange }: AtlasAppProps) {
       isSokkerImportOpen={isSokkerImportOpen}
       navigationKey={route.path}
       onViewChange={(view) => navigate(pathForMainView(view))}
-      uiMode={uiMode}
-      onUiModeChange={onUiModeChange}
       onCloseSokkerImport={() => setIsSokkerImportOpen(false)}
       onOpenSokkerImport={() => setIsSokkerImportOpen(true)}
       onSokkerImport={handleSokkerImport}
