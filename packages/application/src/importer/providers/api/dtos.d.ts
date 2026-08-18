@@ -1,32 +1,47 @@
 export interface SokkerApiCurrentDto {
-  gameWeek: number;
+  gameWeek?: number;
+  week?: number;
+  seasonWeek?: number;
   season?: number;
   teamId?: number;
+  team?: SokkerApiTeamDto;
+  [key: string]: unknown;
 }
 
 export interface SokkerApiTeamDto {
-  id: number;
-  name: string;
-  countryId: number;
-  money: number;
+  id?: number;
+  name?: string;
+  countryId?: number;
+  money?: number | Record<string, unknown>;
   season?: number;
-  training: {
+  training?: {
     gk?: number;
     def?: number;
     mid?: number;
     att?: number;
+    keeper?: number;
+    goalkeeper?: number;
+    defender?: number;
+    defending?: number;
+    midfielder?: number;
+    playmaker?: number;
+    attacker?: number;
+    striker?: number;
+    [key: string]: unknown;
   };
+  [key: string]: unknown;
 }
 
 export interface SokkerApiPlayerDto {
-  playerId: number;
-  name: string;
-  age: number;
-  wage: number;
-  value: number;
-  training: { position: number; advanced: boolean };
+  playerId?: number;
+  id?: number;
+  name?: string;
+  age?: number;
+  wage?: number;
+  value?: number;
+  training?: { position?: number; advanced?: boolean; [key: string]: unknown };
   form?: number | null;
-  skills: {
+  skills?: {
     stamina?: number;
     pace?: number;
     technique?: number;
@@ -36,14 +51,18 @@ export interface SokkerApiPlayerDto {
     playmaker?: number;
     striker?: number;
   };
+  [key: string]: unknown;
 }
 
 export interface SokkerApiJuniorDto {
-  playerId: number;
-  name: string;
-  age: number;
-  weeksRemaining: number;
-  skill: number;
+  playerId?: number;
+  id?: number;
+  name?: string;
+  age?: number;
+  weeksRemaining?: number;
+  weeks?: number;
+  skill?: number;
+  [key: string]: unknown;
 }
 
 export interface SokkerApiCountryDto {
