@@ -1,4 +1,5 @@
 import { formatTrainingPriority } from "@atlas/web/app/formatters";
+import { calculateRequiredTrainingPoints } from "@atlas/domain";
 import type {
   DashboardStatus,
   DiagnosticFinding,
@@ -44,7 +45,7 @@ export interface PlayerDetailViewModel {
   };
   talent: {
     estimated: number | null;
-    confidence?: "low" | "medium" | "high";
+    confidence?: "unknown" | "low" | "medium" | "high";
     observations?: number;
     updatedAt?: string;
   };
@@ -70,7 +71,18 @@ export interface PlayerDetailViewModel {
     fromLevel: number;
     toLevel: number;
   }>;
-  trainingHistory: [];
+  trainingHistory: Array<{
+    week: number;
+    type: string;
+    kind: "advanced" | "formation" | "missing";
+    intensity: number;
+    skillChanges: Array<{
+      skill: string;
+      before: number;
+      after: number;
+      direction: "up" | "down";
+    }>;
+  }>;
 }
 
 export interface PlayerTrainingProjectionSummary {
@@ -106,8 +118,8 @@ export function createPlayerDetailViewModel(
     return null;
   }
 
-  const observedPlayer = input.development?.observed.players.find(
-    (candidate) => identifiersMatch(candidate.snapshotPlayerId, player.id)
+  const observedPlayer = input.development?.observed.players.find((candidate) =>
+    identifiersMatch(candidate.snapshotPlayerId, player.id)
   );
   const trainedSkill = trainedSkillForPosition(
     input.training?.configuration ?? null,
@@ -124,6 +136,14 @@ export function createPlayerDetailViewModel(
     trainedSkillDefinition === undefined
       ? null
       : (observedPlayer?.skills[trainedSkillDefinition.key] ?? null);
+  const talentEstimate = player.talentEstimate ?? null;
+  const nextSkillUp = createProjectionNextSkillUp({
+    currentSkillLevel,
+    skill: trainedSkillDefinition?.key ?? null,
+    talentEstimate,
+    latestReport: player.latestReport ?? null,
+    age: player.age
+  });
 
   return {
     player: {
@@ -142,18 +162,21 @@ export function createPlayerDetailViewModel(
       trainedSkill: trainedSkill === null ? null : formatTrainingPriority(trainedSkill)
     },
     talent: {
-      estimated: null
+      estimated: talentEstimate?.value ?? null,
+      confidence: talentEstimate?.confidence,
+      observations: talentEstimate?.evidenceCount
     },
     projection: {
       current: {
         skill: trainedSkill === null ? null : formatTrainingPriority(trainedSkill),
         level: currentSkillLevel,
         progress: trainingRow.progress
-      }
+      },
+      nextSkillUp
     },
     diagnostics: diagnosticFindingsForPlayer(input.trainingDiagnostic, player),
-    recentSkillUps: createRecentSkillUps(input.development, observedPlayer?.playerId ?? null),
-    trainingHistory: []
+    recentSkillUps: createRecentSkillUps(input.training, observedPlayer?.playerId ?? null),
+    trainingHistory: createTrainingHistoryRows(input.training, observedPlayer?.playerId ?? null)
   };
 }
 
@@ -182,30 +205,103 @@ export function createPlayerTrainingProjectionSummaries(
 }
 
 function createRecentSkillUps(
-  development: PlayerDevelopment | null,
+  training: TrainingPageData | null,
   playerId: string | null
 ): PlayerDetailViewModel["recentSkillUps"] {
-  const summary = development?.derived.players.find((candidate) =>
-    identifiersMatch(candidate.playerId, playerId)
-  );
-
-  return (summary?.skillChanges ?? [])
-    .filter(
-      (change) =>
-        change.direction === "up" && change.previousValue !== null && change.currentValue !== null
+  return (training?.history ?? [])
+    .filter((report) => identifiersMatch(report.playerId, playerId))
+    .flatMap((report) =>
+      (report.skillChanges ?? [])
+        .filter((change) => change.direction === "up")
+        .map((change) => ({
+          date: report.date?.toString() ?? null,
+          skill: skillLabelForKey(change.skill),
+          fromLevel: change.before,
+          toLevel: change.after
+        }))
     )
-    .map((change) => ({
-      date: development?.observed.latestSnapshotDate ?? null,
-      skill: skillLabelForKey(change.skill),
-      fromLevel: change.previousValue as number,
-      toLevel: change.currentValue as number
-    }))
-    .slice(0, 10);
+    .slice(-10)
+    .reverse();
+}
+
+function createTrainingHistoryRows(
+  training: TrainingPageData | null,
+  playerId: string | null
+): PlayerDetailViewModel["trainingHistory"] {
+  return (training?.history ?? [])
+    .filter((report) => identifiersMatch(report.playerId, playerId))
+    .sort((left, right) => right.gameWeek - left.gameWeek)
+    .map((report) => ({
+      week: report.gameWeek,
+      type: report.type,
+      kind: report.kind,
+      intensity: report.intensity,
+      skillChanges: (report.skillChanges ?? []).map((change) => ({
+        skill: skillLabelForKey(change.skill),
+        before: change.before,
+        after: change.after,
+        direction: change.direction
+      }))
+    }));
 }
 
 function skillLabelForKey(skill: string): string {
   const definition = SKILL_DEFINITIONS.find((candidate) => candidate.key === skill);
   return definition === undefined ? skill : formatTrainingPriority(definition.trainingPriority);
+}
+
+function createProjectionNextSkillUp(input: {
+  currentSkillLevel: number | null;
+  skill: SkillKey | null;
+  talentEstimate: TrainingPageData["players"][number]["talentEstimate"];
+  latestReport: NonNullable<TrainingPageData["history"]>[number] | null;
+  age: number;
+}): PlayerDetailViewModel["projection"]["nextSkillUp"] {
+  if (
+    input.currentSkillLevel === null ||
+    input.currentSkillLevel >= 18 ||
+    input.talentEstimate?.value === null ||
+    input.talentEstimate?.value === undefined ||
+    input.talentEstimate.confidence === "unknown" ||
+    input.talentEstimate.confidence === "low" ||
+    input.latestReport?.kind !== "advanced" ||
+    input.latestReport.intensity <= 0 ||
+    input.skill === null
+  ) {
+    return undefined;
+  }
+
+  const trainingSkill = toTrainingCostSkill(input.skill);
+  const required = calculateRequiredTrainingPoints({
+    talent: input.talentEstimate.value,
+    age: input.age,
+    skill: trainingSkill,
+    targetSkillLevel: input.currentSkillLevel + 1
+  });
+
+  return {
+    targetLevel: input.currentSkillLevel + 1,
+    estimatedWeeks: required.requiredTrainingPoints / input.latestReport.intensity
+  };
+}
+
+function toTrainingCostSkill(
+  skill: SkillKey
+):
+  "stamina" | "keeper" | "pace" | "scoring" | "defending" | "technique" | "playmaking" | "passing" {
+  if (skill === "defender") {
+    return "defending";
+  }
+
+  if (skill === "playmaker") {
+    return "playmaking";
+  }
+
+  if (skill === "striker") {
+    return "scoring";
+  }
+
+  return skill;
 }
 
 function createTrainingRow(

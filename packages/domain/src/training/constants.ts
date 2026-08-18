@@ -12,6 +12,8 @@ export const BASE_TRAINING_POINTS = 47;
 export const DEFAULT_TALENT_PROFILE_MINIMUM_OBSERVATIONS = 2;
 
 export const SUPPORTED_TRAINING_SKILLS: readonly SkillTrainingCostSkill[] = [
+  "stamina",
+  "keeper",
   "pace",
   "scoring",
   "defending",
@@ -21,6 +23,8 @@ export const SUPPORTED_TRAINING_SKILLS: readonly SkillTrainingCostSkill[] = [
 ];
 
 export const SKILL_TRAINING_BASE_LEVEL: Readonly<Record<SkillTrainingCostSkill, number>> = {
+  stamina: 4,
+  keeper: 4,
   pace: 4,
   scoring: 4,
   defending: 6,

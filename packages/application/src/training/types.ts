@@ -3,6 +3,7 @@ import type {
   PersistedPlayerSnapshot,
   PersistedPlayerTrainingWeek
 } from "@atlas/database";
+import type { TalentEstimate } from "@atlas/domain";
 
 export interface TrainingPageData {
   snapshotId: string | null;
@@ -19,4 +20,5 @@ export interface TrainingPagePlayer {
   form?: number | null;
   training: PersistedPlayerSnapshot["training"];
   latestReport: PersistedPlayerTrainingWeek | null;
+  talentEstimate: TalentEstimate | null;
 }

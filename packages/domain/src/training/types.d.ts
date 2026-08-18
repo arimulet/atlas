@@ -1,17 +1,22 @@
 export type TrainingKind = "advanced" | "formation" | "missing";
 
 export type PlayerSkill =
-  | "stamina"
-  | "keeper"
-  | "playmaking"
-  | "passing"
-  | "technique"
-  | "defending"
-  | "striker"
-  | "pace";
+  "stamina" | "keeper" | "playmaking" | "passing" | "technique" | "defending" | "striker" | "pace";
 
 export type TrainingType = "general" | PlayerSkill;
 export type PlayerSkills = Partial<Record<PlayerSkill, number>>;
+
+export type Skill = PlayerSkill;
+
+export type SkillChangeDirection = "up" | "down";
+
+export interface SkillChange {
+  skill: Skill;
+  before: number;
+  after: number;
+  delta: number;
+  direction: SkillChangeDirection;
+}
 
 export interface PlayerSkillsChange extends Partial<Record<PlayerSkill, number>> {
   up: number;
@@ -19,12 +24,7 @@ export interface PlayerSkillsChange extends Partial<Record<PlayerSkill, number>>
 }
 
 export type SkillTrainingCostSkill =
-  | "pace"
-  | "scoring"
-  | "defending"
-  | "technique"
-  | "playmaking"
-  | "passing";
+  "stamina" | "keeper" | "pace" | "scoring" | "defending" | "technique" | "playmaking" | "passing";
 
 export interface SkillTrainingCostInput {
   skill: SkillTrainingCostSkill;
@@ -163,6 +163,7 @@ export type TrainingSkillLevels = Partial<Record<SkillTrainingCostSkill, number>
 export interface TrainingWeekInput {
   playerId: number;
   gameWeek: number;
+  season?: number;
   seasonWeek: number;
   date: Date;
   type: TrainingType;
@@ -171,6 +172,7 @@ export interface TrainingWeekInput {
   age: number;
   skills: PlayerSkills;
   skillsChange: PlayerSkillsChange;
+  skillChanges?: readonly SkillChange[];
   skill?: SkillTrainingCostSkill;
   skillLevelBefore?: number;
   skillLevelAfter?: number;
@@ -178,7 +180,10 @@ export interface TrainingWeekInput {
   skillLevelsAfter?: TrainingSkillLevels;
 }
 
-export interface TrainingWeek extends Omit<TrainingWeekInput, "skillLevelsBefore" | "skillLevelsAfter"> {
+export interface TrainingWeek extends Omit<
+  TrainingWeekInput,
+  "skillLevelsBefore" | "skillLevelsAfter"
+> {
   week: number;
   skill: SkillTrainingCostSkill;
   playerAge: number;
@@ -187,6 +192,7 @@ export interface TrainingWeek extends Omit<TrainingWeekInput, "skillLevelsBefore
   skillLevelsBefore: TrainingSkillLevels;
   skillLevelsAfter: TrainingSkillLevels;
   trainingPoints: number;
+  skillChanges: readonly SkillChange[];
 }
 
 export type PlayerTrainingWeek = TrainingWeek;
@@ -196,11 +202,30 @@ export interface TrainingHistory {
   weeks: readonly TrainingWeek[];
 }
 
+export interface TalentEvidence {
+  playerId: number;
+  skill: Skill;
+  fromLevel: number;
+  toLevel: number;
+  fromWeek: number;
+  toWeek: number;
+  trainingWeeks: number;
+  accumulatedTrainingPoints: number;
+  estimatedTalent: number;
+  confidence: number;
+}
+
+export type TalentConfidence = "unknown" | "low" | "medium" | "high";
+
+export interface TalentEstimate {
+  value: number | null;
+  confidence: TalentConfidence;
+  evidenceCount: number;
+  evidences: readonly TalentEvidence[];
+}
+
 export type SkillUpObservationCompleteness =
-  | "complete"
-  | "left-censored"
-  | "missing-weeks"
-  | "ambiguous";
+  "complete" | "left-censored" | "missing-weeks" | "ambiguous";
 
 export interface SkillUp {
   playerId: number;

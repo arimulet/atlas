@@ -4,6 +4,7 @@ import {
   MongoTrainingWeekRepository,
   type PersistedPlayerSnapshot
 } from "@atlas/database";
+import { createTrainingWeek, estimateTalentFromTrainingHistory } from "@atlas/domain";
 import type { ClubId } from "../types.js";
 import type { PlayerTrainingWeekDto } from "../importer/types.js";
 import type { TrainingPageData } from "./types.js";
@@ -27,11 +28,39 @@ export async function getTrainingPageData(clubId: ClubId): Promise<TrainingPageD
     latestByPlayer.set(report.playerId, report);
   }
 
+  const talentByPlayer = new Map<number, ReturnType<typeof estimateTalentFromTrainingHistory>>();
+  for (const playerId of new Set(history.map((report) => report.playerId))) {
+    const playerWeeks = history
+      .filter((report) => report.playerId === playerId)
+      .map((report) =>
+        createTrainingWeek({
+          playerId: report.playerId,
+          gameWeek: report.gameWeek,
+          season: report.season ?? undefined,
+          seasonWeek: report.seasonWeek,
+          date: report.date,
+          type: report.type,
+          kind: report.kind,
+          intensity: report.intensity,
+          age: report.age,
+          skills: report.skills,
+          skillsChange: report.skillsChange
+        })
+      );
+    talentByPlayer.set(
+      playerId,
+      estimateTalentFromTrainingHistory({ playerId, weeks: playerWeeks })
+    );
+  }
+
   return {
     snapshotId: latestSnapshot?.id ?? null,
     snapshotDate: latestSnapshot?.snapshotDate.toISOString().slice(0, 10) ?? null,
     configuration: club.training,
-    players: latestSnapshot?.players.map((player) => mapPlayer(player, latestByPlayer)) ?? [],
+    players:
+      latestSnapshot?.players.map((player) =>
+        mapPlayer(player, latestByPlayer, talentByPlayer.get(player.playerId) ?? null)
+      ) ?? [],
     history
   };
 }
@@ -45,6 +74,7 @@ export async function importTrainingReports(
       clubId,
       playerId: report.playerId,
       gameWeek: report.gameWeek,
+      season: report.season,
       seasonWeek: report.seasonWeek,
       date: report.date,
       type: report.type,
@@ -52,7 +82,8 @@ export async function importTrainingReports(
       intensity: report.intensity,
       age: report.age,
       skills: { ...report.skills },
-      skillsChange: { ...report.skillsChange }
+      skillsChange: { ...report.skillsChange },
+      skillChanges: report.skillChanges.map((change) => ({ ...change }))
     });
   }
 
@@ -61,7 +92,8 @@ export async function importTrainingReports(
 
 function mapPlayer(
   player: PersistedPlayerSnapshot,
-  latestByPlayer: ReadonlyMap<number, TrainingPageData["history"][number]>
+  latestByPlayer: ReadonlyMap<number, TrainingPageData["history"][number]>,
+  talentEstimate: ReturnType<typeof estimateTalentFromTrainingHistory> | null
 ): TrainingPageData["players"][number] {
   return {
     id: player.id,
@@ -69,7 +101,8 @@ function mapPlayer(
     age: player.age,
     form: player.form,
     training: player.training,
-    latestReport: latestByPlayer.get(player.playerId) ?? null
+    latestReport: latestByPlayer.get(player.playerId) ?? null,
+    talentEstimate
   };
 }
 

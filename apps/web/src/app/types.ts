@@ -178,6 +178,7 @@ export interface TrainingReport {
   id?: string;
   playerId: number;
   gameWeek: number;
+  season?: number | null;
   seasonWeek: number;
   date: string;
   type: string;
@@ -186,6 +187,15 @@ export interface TrainingReport {
   age: number;
   skills: Record<string, number | undefined>;
   skillsChange: Record<string, number>;
+  skillChanges?: TrainingSkillChange[];
+}
+
+export interface TrainingSkillChange {
+  skill: string;
+  before: number;
+  after: number;
+  delta: number;
+  direction: "up" | "down";
 }
 
 export interface TrainingPagePlayer {
@@ -198,6 +208,27 @@ export interface TrainingPagePlayer {
     advanced: boolean;
   };
   latestReport?: TrainingReport | null;
+  talentEstimate?: TalentEstimate | null;
+}
+
+export interface TalentEstimate {
+  value: number | null;
+  confidence: "unknown" | "low" | "medium" | "high";
+  evidenceCount: number;
+  evidences: TalentEvidence[];
+}
+
+export interface TalentEvidence {
+  playerId: number;
+  skill: string;
+  fromLevel: number;
+  toLevel: number;
+  fromWeek: number;
+  toWeek: number;
+  trainingWeeks: number;
+  accumulatedTrainingPoints: number;
+  estimatedTalent: number;
+  confidence: number;
 }
 
 export interface ClubDashboardDevelopmentSummary {

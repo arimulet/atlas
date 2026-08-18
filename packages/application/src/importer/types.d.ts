@@ -2,6 +2,7 @@ import type { PlayerSnapshotV0 } from "@atlas/contracts";
 import type {
   PlayerSkills,
   PlayerSkillsChange,
+  SkillChange,
   TrainingKind,
   TrainingType
 } from "@atlas/domain";
@@ -65,6 +66,7 @@ export interface SokkerClubProfileDto {
 export interface PlayerTrainingWeekDto {
   playerId: number;
   gameWeek: number;
+  season: number;
   seasonWeek: number;
   date: Date;
   type: TrainingType;
@@ -73,6 +75,7 @@ export interface PlayerTrainingWeekDto {
   age: number;
   skills: PlayerSkills;
   skillsChange: PlayerSkillsChange;
+  skillChanges: SkillChange[];
 }
 
 export interface SokkerImportResultDto {
