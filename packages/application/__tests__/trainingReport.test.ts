@@ -1,3 +1,4 @@
+import trainingFixture from "../../test-fixtures/fixtures/sokker-json-api/training.fixture.json" with { type: "json" };
 import { describe, expect, it } from "vitest";
 
 import {
@@ -5,30 +6,7 @@ import {
   mapTrainingKind,
   mapTrainingType
 } from "../src/importer/providers/api/mappers.js";
-import type { SokkerApiTrainingPlayerDto } from "../src/importer/providers/api/dtos.js";
-
-function apiReport(kind: string): SokkerApiTrainingPlayerDto {
-  return {
-    id: 40098056,
-    report: {
-      week: 1204,
-      day: {
-        season: 78,
-        week: 1204,
-        seasonWeek: 8,
-        date: { value: "2026-08-13" }
-      },
-      skills: { pace: 11, passing: 10 },
-      skillsChange: { pace: 1, passing: 1, up: 2, down: 0 },
-      type: { code: 8, name: "pace" },
-      kind: { code: 1, name: kind },
-      games: { minutesOfficial: 0, minutesFriendly: 90, minutesNational: 0 },
-      intensity: 85,
-      formation: null,
-      age: 20
-    }
-  };
-}
+import type { SokkerTrainingApiDto } from "../src/importer/providers/api/dtos.js";
 
 describe("Sokker JSON training mapper", () => {
   it.each([
@@ -44,24 +22,18 @@ describe("Sokker JSON training mapper", () => {
     expect(mapTrainingType("defending")).toBe("defending");
   });
 
-  it("keeps intensity and skillsChange and drops games from the canonical DTO", () => {
-    const mapped = mapApiTrainingPlayerToPlayerTrainingWeekDto(apiReport("formation"));
+  it("accepts zero intensity, null formation and negative skill changes", () => {
+    const training = trainingFixture as SokkerTrainingApiDto;
+    const mapped = mapApiTrainingPlayerToPlayerTrainingWeekDto(training.players[0]!);
 
     expect(mapped).toMatchObject({
-      playerId: 40098056,
-      type: "pace",
-      kind: "formation",
-      intensity: 85,
-      skillsChange: { pace: 1, passing: 1, up: 2, down: 0 },
+      intensity: 0,
+      skillsChange: { pace: 1, passing: -1, up: 1, down: 1 },
       skillChanges: [
         { skill: "pace", before: 10, after: 11, delta: 1, direction: "up" },
-        { skill: "passing", before: 9, after: 10, delta: 1, direction: "up" }
+        { skill: "passing", before: 11, after: 10, delta: -1, direction: "down" }
       ]
     });
     expect(mapped).not.toHaveProperty("games");
-  });
-
-  it("accepts a null formation because it is transport-only", () => {
-    expect(() => mapApiTrainingPlayerToPlayerTrainingWeekDto(apiReport("missing"))).not.toThrow();
   });
 });

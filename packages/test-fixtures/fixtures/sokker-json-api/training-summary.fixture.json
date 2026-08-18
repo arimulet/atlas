@@ -1,0 +1,28 @@
+{
+  "weeks": [
+    {
+      "gameDay": {
+        "season": 78,
+        "week": 1203,
+        "seasonWeek": 6,
+        "day": 3,
+        "date": { "value": "2026-08-05", "timestamp": 1780000000 }
+      },
+      "week": 1203,
+      "stats": { "general": 12, "advanced": 8, "skillsUp": 2 },
+      "juniors": { "number": 4, "skillsUp": 1 }
+    },
+    {
+      "gameDay": {
+        "season": 78,
+        "week": 1204,
+        "seasonWeek": 7,
+        "day": 3,
+        "date": { "value": "2026-08-12", "timestamp": 1780000000 }
+      },
+      "week": 1204,
+      "stats": { "general": 0, "advanced": 0, "skillsUp": 0 },
+      "juniors": { "number": 0, "skillsUp": 0 }
+    }
+  ]
+}

@@ -10,6 +10,11 @@
     "./player-snapshot/missing-external-id.json": "./fixtures/player-snapshot/missing-external-id.json",
     "./player-snapshot/missing-skill.json": "./fixtures/player-snapshot/missing-skill.json",
     "./player-snapshot/extension-sokker-dom-export.json": "./fixtures/player-snapshot/extension-sokker-dom-export.json",
-    "./player-snapshot/sokker-squad-player-box-export.json": "./fixtures/player-snapshot/sokker-squad-player-box-export.json"
+    "./player-snapshot/sokker-squad-player-box-export.json": "./fixtures/player-snapshot/sokker-squad-player-box-export.json",
+    "./sokker-json-api/current.fixture.json": "./fixtures/sokker-json-api/current.fixture.json",
+    "./sokker-json-api/training.fixture.json": "./fixtures/sokker-json-api/training.fixture.json",
+    "./sokker-json-api/trainers.fixture.json": "./fixtures/sokker-json-api/trainers.fixture.json",
+    "./sokker-json-api/juniors.fixture.json": "./fixtures/sokker-json-api/juniors.fixture.json",
+    "./sokker-json-api/training-summary.fixture.json": "./fixtures/sokker-json-api/training-summary.fixture.json"
   }
 }
