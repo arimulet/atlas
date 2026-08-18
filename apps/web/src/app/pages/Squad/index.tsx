@@ -1,6 +1,5 @@
-import { describeDiagnosticFinding } from "@atlas/web/app/diagnostic-copy";
 import { formatTrainingPriority } from "../../formatters";
-import type { DiagnosticFinding } from "@atlas/web/app/types";
+import type { DiagnosticFinding, DiagnosticParameterValue } from "@atlas/web/app/types";
 import {
   formatEta,
   formatNumber,
@@ -109,7 +108,7 @@ function SquadAttentionItem({ finding }: SquadAttentionItemProps) {
   return (
     <li className={`atlas-squad-attention-item is-${finding.severity}`}>
       <AttentionIcon severity={finding.severity} />
-      <span>{describeDiagnosticFinding(finding)}</span>
+      <span>{describeSquadFinding(finding)}</span>
     </li>
   );
 }
@@ -301,4 +300,70 @@ interface SquadMessageProps {
 
 function SquadMessage({ children, tone }: SquadMessageProps) {
   return <p className={`atlas-squad-panel__message${tone ? ` is-${tone}` : ""}`}>{children}</p>;
+}
+
+const roleLabels: Record<string, string> = {
+  goalkeeper: "arquero",
+  defender: "defensor",
+  midfielder: "mediocampista",
+  winger: "extremo",
+  striker: "delantero"
+};
+
+function describeSquadFinding(finding: DiagnosticFinding): string {
+  const parameters = finding.parameters ?? {};
+
+  if (finding.code.startsWith("squad-balance.") && finding.code.endsWith(".deficit")) {
+    return (
+      "La plantilla tiene " +
+      formatDiagnosticNumber(parameters.currentCount) +
+      " jugador(es) en " +
+      diagnosticRoleLabel(parameters.role) +
+      "; el mínimo de referencia es " +
+      formatDiagnosticNumber(parameters.minimum) +
+      "."
+    );
+  }
+
+  switch (finding.code) {
+    case "economic-risk.high-wage-low-value-ratio":
+      return (
+        diagnosticStringValue(parameters.playerName) +
+        " tiene un salario alto (" +
+        formatDiagnosticNumber(parameters.wage) +
+        ") en relación con su valor estimado (" +
+        formatDiagnosticNumber(parameters.value) +
+        ")."
+      );
+    case "asset-risk.senior-high-value":
+      return (
+        diagnosticStringValue(parameters.playerName) +
+        " combina una edad senior con un valor estimado relevante (" +
+        formatDiagnosticNumber(parameters.value) +
+        ")."
+      );
+    case "training-potential.young-role-fit":
+      return diagnosticStringValue(parameters.playerName) + " es joven y muestra un buen ajuste para su rol.";
+    case "follow-up.incomplete-player-data":
+      return (
+        diagnosticStringValue(parameters.playerName) +
+        " requiere seguimiento porque sus datos importados están incompletos."
+      );
+    default:
+      return finding.code;
+  }
+}
+
+function diagnosticRoleLabel(value: DiagnosticParameterValue | undefined): string {
+  return roleLabels[diagnosticStringValue(value)] ?? diagnosticStringValue(value);
+}
+
+function diagnosticStringValue(value: DiagnosticParameterValue | undefined): string {
+  return value === null || value === undefined ? "dato no disponible" : String(value);
+}
+
+function formatDiagnosticNumber(value: DiagnosticParameterValue | undefined): string {
+  return typeof value === "number"
+    ? value.toLocaleString("es-AR")
+    : diagnosticStringValue(value);
 }

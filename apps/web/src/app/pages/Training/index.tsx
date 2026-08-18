@@ -1,5 +1,9 @@
-import { describeDiagnosticFinding } from "@atlas/web/app/diagnostic-copy";
-import type { DiagnosticFinding, TrainingPageData, TrainingReport } from "@atlas/web/app/types";
+import type {
+  DiagnosticFinding,
+  DiagnosticParameterValue,
+  TrainingPageData,
+  TrainingReport
+} from "@atlas/web/app/types";
 import { formatTrainingPriority } from "../../formatters";
 import type { TrainingPlayerRow, TrainingStatusLabel, TrainingProps } from "./types";
 import { formatEta, formatNumber, formatPercentage, formatTalent } from "../../formatters";
@@ -119,7 +123,7 @@ function TrainingAttentionItem({ finding }: TrainingAttentionItemProps) {
   return (
     <li className={`atlas-training-attention-item is-${finding.severity}`}>
       <AttentionIcon severity={finding.severity} />
-      <span>{describeDiagnosticFinding(finding)}</span>
+      <span>{describeTrainingFinding(finding)}</span>
     </li>
   );
 }
@@ -356,4 +360,19 @@ function skillLabel(skill: number | null): string {
 
 function formatTrainingSkill(skill: number): string {
   return formatTrainingPriority(skill);
+}
+
+function describeTrainingFinding(finding: DiagnosticFinding): string {
+  if (finding.code === "training-potential.young-role-fit") {
+    return (
+      trainingDiagnosticStringValue(finding.parameters?.playerName) +
+      " es joven y muestra un buen ajuste para su rol."
+    );
+  }
+
+  return finding.code;
+}
+
+function trainingDiagnosticStringValue(value: DiagnosticParameterValue | undefined): string {
+  return value === null || value === undefined ? "dato no disponible" : String(value);
 }
