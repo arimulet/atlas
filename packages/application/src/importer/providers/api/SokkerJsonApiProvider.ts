@@ -11,15 +11,12 @@ import type { SokkerCredentials } from "../../types.js";
 import type { SokkerDataProvider } from "../SokkerDataProvider.js";
 import { assembleSokkerTeamData } from "../assemble-sokker-data.js";
 import type {
-  SokkerApiCountryDto,
   SokkerApiCurrentDto,
   SokkerApiJuniorDto,
   SokkerApiPlayerDto,
-  SokkerApiTeamDto,
   SokkerApiTrainingResponseDto
 } from "./dtos.js";
 import {
-  mapApiCountryToSokkerCountryDto,
   mapApiCurrentToSokkerCurrentDto,
   mapApiJuniorToSokkerJuniorDto,
   mapApiTrainingPlayerToPlayerTrainingWeekDto,
@@ -30,6 +27,7 @@ import {
 export class SokkerJsonApiProvider implements SokkerDataProvider {
   private sessionCookie: string | null = null;
   private loginPromise: Promise<void> | null = null;
+  private currentResponse: SokkerApiCurrentDto | null = null;
 
   constructor(private readonly credentials: SokkerCredentials) {}
 
@@ -54,32 +52,43 @@ export class SokkerJsonApiProvider implements SokkerDataProvider {
 
   async getCurrent(): Promise<SokkerCurrentDto> {
     const response = await this.get<SokkerApiCurrentDto>("current");
+    this.currentResponse = response;
 
     return mapApiCurrentToSokkerCurrentDto(response);
   }
 
   async getTeam(teamId: number): Promise<SokkerTeamDto> {
-    const response = await this.get<SokkerApiTeamDto>(`teams/${teamId}`);
+    const response = this.currentResponse ?? (await this.get<SokkerApiCurrentDto>("current"));
+    this.currentResponse = response;
+    const team = response.team;
 
-    return mapApiTeamToSokkerTeamDto(response);
+    if (!team || team.id !== teamId) {
+      throw new Error(`Sokker current response did not provide team ${teamId}.`);
+    }
+
+    return mapApiTeamToSokkerTeamDto({ ...response, ...team });
   }
 
   async getPlayers(teamId: number): Promise<SokkerPlayerDto[]> {
-    const response = await this.get<SokkerApiPlayerDto[]>(`teams/${teamId}/players`);
+    const response = await this.get<unknown>("player", {
+      "filter[team]": teamId,
+      "filter[limit]": 200,
+      "filter[offset]": 0
+    });
+    const players = readApiCollection<SokkerApiPlayerDto>(response, "players");
 
-    return response.map(mapApiPlayerToSokkerPlayerDto);
+    return players.map(mapApiPlayerToSokkerPlayerDto);
   }
 
-  async getJuniors(teamId: number): Promise<SokkerJuniorDto[]> {
-    const response = await this.get<SokkerApiJuniorDto[]>(`teams/${teamId}/juniors`);
+  async getJuniors(): Promise<SokkerJuniorDto[]> {
+    const response = await this.get<unknown>("junior");
+    const juniors = readApiCollection<SokkerApiJuniorDto>(response, "juniors");
 
-    return response.map(mapApiJuniorToSokkerJuniorDto);
+    return juniors.map(mapApiJuniorToSokkerJuniorDto);
   }
 
   async getCountries(): Promise<SokkerCountryDto[]> {
-    const response = await this.get<SokkerApiCountryDto[]>("countries");
-
-    return response.map(mapApiCountryToSokkerCountryDto);
+    return [];
   }
 
   async getCurrentTraining(): Promise<PlayerTrainingWeekDto[]> {
@@ -119,7 +128,9 @@ export class SokkerJsonApiProvider implements SokkerDataProvider {
     });
 
     if (!response.ok) {
-      throw new Error(`Sokker API request failed (${response.status}): ${response.statusText}`);
+      throw new Error(
+        `Sokker API request failed (${response.status}) for ${url.pathname}${url.search}: ${response.statusText}`
+      );
     }
 
     return (await response.json()) as T;
@@ -161,6 +172,47 @@ function appendQueryParams(searchParams: URLSearchParams, params: unknown): void
 
     searchParams.set(key, String(value));
   }
+}
+
+function readApiCollection<T>(response: unknown, resourceName: string): T[] {
+  const collection = findApiCollection(response, resourceName, new Set<object>());
+  if (collection) {
+    return collection as T[];
+  }
+
+  throw new Error(`Sokker API ${resourceName} response did not contain a collection.`);
+}
+
+function findApiCollection(
+  value: unknown,
+  resourceName: string,
+  visited: Set<object>
+): unknown[] | null {
+  if (Array.isArray(value)) {
+    return value;
+  }
+
+  if (!isRecord(value) || visited.has(value)) {
+    return null;
+  }
+
+  visited.add(value);
+
+  for (const key of [resourceName, "data", "items", "results"]) {
+    const nested = value[key];
+    if (Array.isArray(nested)) {
+      return nested;
+    }
+  }
+
+  for (const nested of Object.values(value)) {
+    const collection = findApiCollection(nested, resourceName, visited);
+    if (collection) {
+      return collection;
+    }
+  }
+
+  return null;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

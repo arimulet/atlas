@@ -160,7 +160,9 @@ export function App() {
       const { response, body } = await syncSokker(credentials);
 
       if (!response.ok || body.importResult.status === "rejected") {
-        const message = body.importResult.errors.map((error) => error.message).join(" ");
+        const message = body.importResult.errors
+          .map((error) => (error.path ? `${error.path}: ${error.message}` : error.message))
+          .join(" ");
 
         throw new Error(message || "No se pudieron actualizar los datos.");
       }
