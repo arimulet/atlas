@@ -9,16 +9,9 @@ import type {
 
 import type { Money } from "../types.js";
 
-export type SokkerDataSource = "xml" | "json-api";
-
 export interface SokkerCredentials {
   login: string;
   password: string;
-}
-
-export interface SokkerAuthResult {
-  sessionId: string;
-  teamId: string;
 }
 
 export interface SokkerCurrentDto {
@@ -82,7 +75,6 @@ export interface SokkerImportResultDto {
   clubProfile: SokkerClubProfileDto;
   players: SokkerPlayerDto[];
   juniors: SokkerJuniorDto[];
-  source: string;
   importedAt: Date;
   countries: SokkerCountryDto[];
   training?: PlayerTrainingWeekDto[];

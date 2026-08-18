@@ -30,7 +30,7 @@ npm run dev:api
 
 ## Data Import
 
-The official data import flow uses the internal XML import form within the ATLAS web application. Users can export XML data from Sokker and import it directly into ATLAS.
+The official data import flow uses the Sokker JSON API through the ATLAS web application. Users authenticate with their Sokker credentials to synchronize current data while preserving historical snapshots.
 
 ## Technical Baseline
 

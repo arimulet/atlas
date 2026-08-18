@@ -307,7 +307,7 @@ function normalizePlayer(
   player: PlayerSnapshotV0["players"][number]
 ): NormalizedPlayerSnapshot["players"][number] {
   const skills = normalizeSkills(player.skills);
-  // Sokker XML does not provide the observed role; derive it consistently from skills.
+  // External snapshots may omit the observed role; derive it consistently from skills.
   const observedPosition = deriveObservedPosition(skills);
 
   return {

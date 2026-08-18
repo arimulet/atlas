@@ -8,8 +8,7 @@ type TeamDataProvider = Pick<
 >;
 
 export async function assembleSokkerTeamData(
-  provider: TeamDataProvider,
-  source: string
+  provider: TeamDataProvider
 ): Promise<SokkerImportResultDto> {
   const current = await provider.getCurrent();
   const teamId = current.teamId;
@@ -29,7 +28,6 @@ export async function assembleSokkerTeamData(
     clubProfile: mapSokkerTeamToClubProfile(team, current),
     players,
     juniors,
-    source,
     importedAt: new Date(),
     countries
   };
