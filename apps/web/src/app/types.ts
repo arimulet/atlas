@@ -1,3 +1,14 @@
+import type { MainViewId } from "./routing";
+
+export type ViewId = MainViewId | "player-detail";
+
+export interface NavigationItem {
+  id: MainViewId;
+  label: string;
+  icon: string;
+  path: string;
+}
+
 export type DashboardStatus = "idle" | "loading" | "ready" | "error";
 export type SourceKind = "observed" | "manual" | "effective";
 export type SquadEconomyEvidenceKind = "observed" | "manual" | "derived" | "inferred";

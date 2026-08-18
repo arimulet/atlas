@@ -1,18 +1,18 @@
-@use "../atlas/AtlasApp/styles.scss" as *;
-@use "../atlas/components/AppShell/styles.scss" as *;
-@use "../atlas/components/Header/styles.scss" as *;
-@use "../atlas/components/MainContent/styles.scss" as *;
-@use "../atlas/components/Sidebar/styles.scss" as *;
-@use "../atlas/components/SidebarItem/styles.scss" as *;
-@use "../atlas/components/SokkerImportModal/styles.scss" as *;
-@use "../atlas/components/SokkerImporterForm/styles.scss" as *;
-@use "../atlas/pages/Dashboard/styles.scss" as *;
-@use "../atlas/pages/Finances/styles.scss" as *;
-@use "../atlas/pages/Squad/styles.scss" as *;
-@use "../atlas/pages/Training/styles.scss" as *;
-@use "../atlas/pages/PlayerDetail/styles.scss" as *;
-@use "../atlas/pages/Youth/styles.scss" as *;
-@use "../atlas/pages/Diagnostics/styles.scss" as *;
+@use "./App.scss" as *;
+@use "../components/AppShell/styles.scss" as *;
+@use "../components/Header/styles.scss" as *;
+@use "../components/MainContent/styles.scss" as *;
+@use "../components/Sidebar/styles.scss" as *;
+@use "../components/SidebarItem/styles.scss" as *;
+@use "../components/SokkerImportModal/styles.scss" as *;
+@use "../components/SokkerImporterForm/styles.scss" as *;
+@use "../pages/Dashboard/styles.scss" as *;
+@use "../pages/Finances/styles.scss" as *;
+@use "../pages/Squad/styles.scss" as *;
+@use "../pages/Training/styles.scss" as *;
+@use "../pages/PlayerDetail/styles.scss" as *;
+@use "../pages/Youth/styles.scss" as *;
+@use "../pages/Diagnostics/styles.scss" as *;
 
 // Shared ATLAS presentation primitives. Page-specific styles remain above this
 // layer so the common geometry and states are defined in one place.
