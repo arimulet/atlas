@@ -52,7 +52,11 @@ describe("Sokker JSON training mapper", () => {
       type: "pace",
       kind: "formation",
       intensity: 85,
-      skillsChange: { pace: 1, passing: 1, up: 2, down: 0 }
+      skillsChange: { pace: 1, passing: 1, up: 2, down: 0 },
+      skillChanges: [
+        { skill: "pace", before: 10, after: 11, delta: 1, direction: "up" },
+        { skill: "passing", before: 9, after: 10, delta: 1, direction: "up" }
+      ]
     });
     expect(mapped).not.toHaveProperty("games");
   });

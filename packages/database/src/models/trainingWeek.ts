@@ -5,6 +5,7 @@ const trainingWeekSchema = new Schema(
     clubId: { type: Number, required: true, min: 1, index: true },
     playerId: { type: Number, required: true, min: 1, index: true },
     gameWeek: { type: Number, required: true, min: 1 },
+    season: { type: Number, default: null },
     seasonWeek: { type: Number, required: true, min: 1 },
     date: { type: Date, required: true },
     type: {
@@ -26,7 +27,22 @@ const trainingWeekSchema = new Schema(
     intensity: { type: Number, required: true, min: 0, max: 100 },
     age: { type: Number, required: true, min: 16 },
     skills: { type: Schema.Types.Mixed, required: true },
-    skillsChange: { type: Schema.Types.Mixed, required: true }
+    skillsChange: { type: Schema.Types.Mixed, required: true },
+    skillChanges: {
+      type: [
+        new Schema(
+          {
+            skill: { type: String, required: true },
+            before: { type: Number, required: true },
+            after: { type: Number, required: true },
+            delta: { type: Number, required: true },
+            direction: { type: String, enum: ["up", "down"], required: true }
+          },
+          { _id: false }
+        )
+      ],
+      default: []
+    }
   },
   { timestamps: true }
 );

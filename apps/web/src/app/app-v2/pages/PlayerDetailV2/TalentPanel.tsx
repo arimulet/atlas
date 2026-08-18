@@ -30,7 +30,7 @@ export function TalentPanel({ talent }: TalentPanelProps) {
           ) : null}
           {talent.observations !== undefined ? (
             <div>
-              <dt>Observations</dt>
+              <dt>Complete training cycles</dt>
               <dd>{talent.observations}</dd>
             </div>
           ) : null}

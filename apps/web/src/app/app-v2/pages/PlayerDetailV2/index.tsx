@@ -2,11 +2,7 @@ import { describeDiagnosticFinding } from "@atlas/web/app/diagnostic-copy";
 import type { PlayerDetailV2Props } from "./types";
 import { ProjectionPanel } from "./ProjectionPanel";
 import { TalentPanel } from "./TalentPanel";
-import {
-  formatV2DateTime,
-  formatV2Number,
-  formatV2Percentage
-} from "../../formatters";
+import { formatV2DateTime, formatV2Number, formatV2Percentage } from "../../formatters";
 import { V2AttentionIcon } from "../../components/V2AttentionIcon";
 import { V2StatusBadge } from "../../components/V2StatusBadge";
 import {
@@ -228,7 +224,38 @@ function TrainingHistoryPanel({ rows }: TrainingHistoryPanelProps) {
       <PanelTitle id="player-detail-history-title" title="Training History" />
       {rows.length === 0 ? (
         <p className="v2-player-detail__message">No training history available.</p>
-      ) : null}
+      ) : (
+        <div className="v2-player-detail__table-wrap">
+          <table className="v2-player-detail__table">
+            <thead>
+              <tr>
+                <th scope="col">Week</th>
+                <th scope="col">Type</th>
+                <th scope="col">Kind</th>
+                <th scope="col">Intensity</th>
+                <th scope="col">Skill Changes</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr key={row.week}>
+                  <th scope="row">W{row.week}</th>
+                  <td>{row.type}</td>
+                  <td>{row.kind}</td>
+                  <td>{row.intensity}%</td>
+                  <td>
+                    {row.skillChanges.length === 0
+                      ? "—"
+                      : row.skillChanges
+                          .map((change) => `${change.skill} ${change.before} → ${change.after}`)
+                          .join(", ")}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </section>
   );
 }

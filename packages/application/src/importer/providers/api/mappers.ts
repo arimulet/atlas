@@ -1,4 +1,4 @@
-import { normalizeSeasonWeek } from "@atlas/domain";
+import { deriveSkillChanges, normalizeSeasonWeek } from "@atlas/domain";
 
 import type {
   SokkerCountryDto,
@@ -88,17 +88,22 @@ export function mapApiTrainingPlayerToPlayerTrainingWeekDto(
 ): PlayerTrainingWeekDto {
   const report = input.report;
 
+  const skills = mapSkills(report.skills);
+  const skillsChange = mapSkillsChange(report.skillsChange);
+
   return {
     playerId: input.id,
     gameWeek: report.day.week,
+    season: report.day.season,
     seasonWeek: report.day.seasonWeek,
     date: mapTrainingDate(report),
     type: mapTrainingType(report.type.name),
     kind: mapTrainingKind(report.kind.name),
     intensity: report.intensity,
     age: report.age,
-    skills: mapSkills(report.skills),
-    skillsChange: mapSkillsChange(report.skillsChange)
+    skills,
+    skillsChange,
+    skillChanges: deriveSkillChanges(skills, skillsChange)
   };
 }
 
@@ -115,7 +120,9 @@ export function mapTrainingKind(name: string): "advanced" | "formation" | "missi
   }
 }
 
-export function mapTrainingType(name: string):
+export function mapTrainingType(
+  name: string
+):
   | "general"
   | "stamina"
   | "keeper"

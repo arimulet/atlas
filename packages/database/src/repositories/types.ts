@@ -1,5 +1,23 @@
 export type ObservedPosition = "goalkeeper" | "defender" | "midfielder" | "winger" | "striker";
 
+export type PersistedTrainingSkill =
+  "stamina" | "keeper" | "playmaking" | "passing" | "technique" | "defending" | "striker" | "pace";
+
+export interface PersistedTrainingSkillChange {
+  skill: PersistedTrainingSkill;
+  before: number;
+  after: number;
+  delta: number;
+  direction: "up" | "down";
+}
+
+export type PersistedPlayerSkills = Partial<Record<PersistedTrainingSkill, number>>;
+
+export interface PersistedPlayerSkillsChange extends PersistedPlayerSkills {
+  up: number;
+  down: number;
+}
+
 export interface PersistedImportIssue {
   path: string;
   message: string;
@@ -137,6 +155,7 @@ export interface PersistedPlayerTrainingWeek {
   clubId: number;
   playerId: number;
   gameWeek: number;
+  season: number | null;
   seasonWeek: number;
   date: Date;
   type:
@@ -152,8 +171,9 @@ export interface PersistedPlayerTrainingWeek {
   kind: "advanced" | "formation" | "missing";
   intensity: number;
   age: number;
-  skills: Record<string, number | undefined>;
-  skillsChange: Record<string, number | undefined>;
+  skills: PersistedPlayerSkills;
+  skillsChange: PersistedPlayerSkillsChange;
+  skillChanges: PersistedTrainingSkillChange[];
 }
 
 export type SavePlayerTrainingWeekInput = Omit<PersistedPlayerTrainingWeek, "id">;

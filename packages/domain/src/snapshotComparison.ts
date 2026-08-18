@@ -29,7 +29,7 @@ export interface MoneyChange extends NumericChange {
   isComparable: boolean;
 }
 
-export interface SkillChange extends NumericChange {
+export interface SnapshotSkillChange extends NumericChange {
   skill: SkillKey;
 }
 
@@ -44,7 +44,7 @@ export interface MatchedPlayerComparison {
     age: NumericChange | null;
     wage: MoneyChange | null;
     value: MoneyChange | null;
-    skills: SkillChange[];
+    skills: SnapshotSkillChange[];
   };
 }
 
@@ -135,8 +135,7 @@ export function compareSnapshots(
       totalValueBefore: sumMoney(baseSnapshot.players, "value"),
       totalValueAfter: sumMoney(targetSnapshot.players, "value"),
       totalValueDelta:
-        sumMoney(targetSnapshot.players, "value") -
-        sumMoney(baseSnapshot.players, "value"),
+        sumMoney(targetSnapshot.players, "value") - sumMoney(baseSnapshot.players, "value"),
       totalWageBefore: sumMoney(baseSnapshot.players, "wage"),
       totalWageAfter: sumMoney(targetSnapshot.players, "wage"),
       totalWageDelta:
@@ -203,18 +202,16 @@ function comparePlayer(
       age: numericChange(basePlayer.age, targetPlayer.age),
       wage: moneyChange(basePlayer.wage, targetPlayer.wage),
       value: moneyChange(basePlayer.value, targetPlayer.value),
-      skills: SUPPORTED_SKILLS
-        .map((skill) => {
-          const before = basePlayer.skills[skill];
-          const after = targetPlayer.skills[skill];
+      skills: SUPPORTED_SKILLS.map((skill) => {
+        const before = basePlayer.skills[skill];
+        const after = targetPlayer.skills[skill];
 
-          if (before === null || after === null || before === after) {
-            return null;
-          }
+        if (before === null || after === null || before === after) {
+          return null;
+        }
 
-          return { skill, before, after, delta: after - before };
-        })
-        .filter((change): change is SkillChange => change !== null)
+        return { skill, before, after, delta: after - before };
+      }).filter((change): change is SnapshotSkillChange => change !== null)
     }
   };
 }

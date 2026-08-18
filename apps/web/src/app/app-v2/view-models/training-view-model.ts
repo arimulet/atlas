@@ -65,9 +65,10 @@ function visibleSkillChanges(
     return [];
   }
 
-  return Object.entries(report.skillsChange)
-    .filter(([skill, delta]) => skill !== "up" && skill !== "down" && delta !== 0)
-    .map(([skill, delta]) => ({ skill, delta }));
+  return (report.skillChanges ?? []).map((change) => ({
+    skill: change.skill,
+    delta: change.delta
+  }));
 }
 
 export function trainingStatusForPlayer(

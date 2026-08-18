@@ -2,12 +2,7 @@ import { describeDiagnosticFinding } from "@atlas/web/app/diagnostic-copy";
 import type { DiagnosticFinding, TrainingPageData, TrainingReport } from "@atlas/web/app/types";
 import { formatTrainingPriority } from "@atlas/web/app/formatters";
 import type { TrainingPlayerRow, TrainingStatusLabel, TrainingV2Props } from "./types";
-import {
-  formatV2Eta,
-  formatV2Number,
-  formatV2Percentage,
-  formatV2Talent
-} from "../../formatters";
+import { formatV2Eta, formatV2Number, formatV2Percentage, formatV2Talent } from "../../formatters";
 import { V2AttentionIcon } from "../../components/V2AttentionIcon";
 import { V2PlayerLink } from "../../components/V2PlayerLink";
 import { V2StatusBadge } from "../../components/V2StatusBadge";
@@ -269,7 +264,9 @@ function PlayerRow({ onSelectPlayer, player }: PlayerRowProps) {
       <td className="v2-training-table__numeric">{formatV2Percentage(player.intensity)}</td>
       <td>
         {player.skillChanges.length > 0
-          ? player.skillChanges.map((change) => `${change.skill} ${change.delta > 0 ? "+" : ""}${change.delta}`).join(", ")
+          ? player.skillChanges
+              .map((change) => `${change.skill} ${change.delta > 0 ? "+" : ""}${change.delta}`)
+              .join(", ")
           : "—"}
       </td>
       <td className="v2-training-table__numeric">{formatV2Percentage(player.progress)}</td>
@@ -300,14 +297,12 @@ function RecentTrainingProgress({ history, players }: RecentTrainingProgressProp
   const playerNames = new Map(players.map((player) => [player.id, player.name]));
   const changes = history
     .flatMap((report) =>
-      Object.entries(report.skillsChange)
-        .filter(([skill, delta]) => skill !== "up" && skill !== "down" && delta !== 0)
-        .map(([skill, delta]) => ({
-          key: `${report.playerId}-${report.gameWeek}-${skill}`,
-          playerName: playerNames.get(String(report.playerId)) ?? String(report.playerId),
-          skill,
-          delta
-        }))
+      (report.skillChanges ?? []).map((change) => ({
+        key: `${report.playerId}-${report.gameWeek}-${change.skill}`,
+        playerName: playerNames.get(String(report.playerId)) ?? String(report.playerId),
+        skill: change.skill,
+        delta: change.delta
+      }))
     )
     .slice(-10)
     .reverse();
