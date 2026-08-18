@@ -12,6 +12,7 @@ import type {
   TrainerDto,
   TrainerSkillDto,
   TrainerSkillsDto,
+  TrainingDataDto,
   TrainingSummaryDto,
   TrainingType
 } from "../../types.js";
@@ -117,6 +118,20 @@ export function mapTrainingApiToTrainingWeeks(
   source: SokkerApiTrainingPlayerDto[]
 ): PlayerTrainingWeekDto[] {
   return source.map(mapTrainingPlayerApiToTrainingWeek);
+}
+
+export function mapTrainingApiToTrainingData(
+  source: SokkerApiTrainingPlayerDto[]
+): TrainingDataDto {
+  const players: PlayerDto[] = [];
+  const trainingWeeks: PlayerTrainingWeekDto[] = [];
+
+  for (const item of source) {
+    players.push(mapTrainingPlayerApiToPlayer(item));
+    trainingWeeks.push(mapTrainingPlayerApiToTrainingWeek(item));
+  }
+
+  return { players, trainingWeeks };
 }
 
 export function mapTrainingKind(

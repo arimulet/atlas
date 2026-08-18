@@ -18,8 +18,7 @@ import {
   mapCurrentApiToCurrentClubContext,
   mapJuniorsApiToJuniors,
   mapTrainersApiToTrainers,
-  mapTrainingApiToPlayers,
-  mapTrainingApiToTrainingWeeks,
+  mapTrainingApiToTrainingData,
   mapTrainingSummaryApiToTrainingSummary
 } from "./mappers.js";
 
@@ -44,34 +43,33 @@ export class SokkerJsonApiProvider implements SokkerDataProvider {
   }
 
   async getCurrent(): Promise<CurrentClubContextDto> {
-    return mapCurrentApiToCurrentClubContext(await this.get<SokkerCurrentApiDto>("current"));
+    const response = await this.get<SokkerCurrentApiDto>("current");
+
+    return mapResource("current", () => mapCurrentApiToCurrentClubContext(response));
   }
 
   async getTraining(): Promise<TrainingDataDto> {
     const response = await this.get<SokkerTrainingApiDto>("training");
 
-    return {
-      players: mapTrainingApiToPlayers(response.players),
-      trainingWeeks: mapTrainingApiToTrainingWeeks(response.players)
-    };
+    return mapResource("training", () => mapTrainingApiToTrainingData(response.players));
   }
 
   async getTrainers(): Promise<TrainerDto[]> {
     const response = await this.get<SokkerTrainersApiDto>("trainer");
 
-    return mapTrainersApiToTrainers(response.trainers);
+    return mapResource("trainer", () => mapTrainersApiToTrainers(response.trainers));
   }
 
   async getJuniors(): Promise<JuniorDto[]> {
     const response = await this.get<SokkerJuniorsApiDto>("junior");
 
-    return mapJuniorsApiToJuniors(response.juniors);
+    return mapResource("junior", () => mapJuniorsApiToJuniors(response.juniors));
   }
 
   async getTrainingSummary(): Promise<TrainingSummaryDto> {
-    return mapTrainingSummaryApiToTrainingSummary(
-      await this.get<SokkerTrainingSummaryApiDto>("training/summary")
-    );
+    const response = await this.get<SokkerTrainingSummaryApiDto>("training/summary");
+
+    return mapResource("training summary", () => mapTrainingSummaryApiToTrainingSummary(response));
   }
 
   private async get<T>(path: string): Promise<T> {
@@ -114,6 +112,14 @@ export class SokkerJsonApiProvider implements SokkerDataProvider {
     }
 
     this.sessionCookie = readSessionCookie(response.headers.get("set-cookie"));
+  }
+}
+
+function mapResource<T>(resource: string, mapper: () => T): T {
+  try {
+    return mapper();
+  } catch (cause) {
+    throw new Error(`Failed to map Sokker ${resource} response.`, { cause });
   }
 }
 
