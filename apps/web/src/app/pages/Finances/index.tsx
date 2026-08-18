@@ -1,4 +1,4 @@
-import { formatMoney } from "@atlas/web/app/atlas/formatters";
+import { formatMoney } from "@atlas/web/app/formatters";
 import {
   createFinancesViewModel,
   hasFinancialData,

@@ -4,7 +4,7 @@ import {
   createYouthPlayerRows,
   type YouthAttentionItem,
   type YouthPlayerRow
-} from "@atlas/web/app/atlas/view-models/youth-view-model";
+} from "@atlas/web/app/view-models/youth-view-model";
 import type { YouthProps } from "./types";
 import { formatPercentage } from "../../formatters";
 import { AttentionIcon } from "../../components/AttentionIcon";
