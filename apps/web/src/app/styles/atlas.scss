@@ -1,30 +1,30 @@
-@use "../app-v2/AppV2/styles.scss" as *;
-@use "../app-v2/components/AppShell/styles.scss" as *;
-@use "../app-v2/components/Header/styles.scss" as *;
-@use "../app-v2/components/MainContent/styles.scss" as *;
-@use "../app-v2/components/Sidebar/styles.scss" as *;
-@use "../app-v2/components/SidebarItem/styles.scss" as *;
-@use "../app-v2/components/SokkerImportModal/styles.scss" as *;
-@use "../app-v2/components/SokkerImporterForm/styles.scss" as *;
-@use "../app-v2/pages/DashboardV2/styles.scss" as *;
-@use "../app-v2/pages/FinancesV2/styles.scss" as *;
-@use "../app-v2/pages/SquadV2/styles.scss" as *;
-@use "../app-v2/pages/TrainingV2/styles.scss" as *;
-@use "../app-v2/pages/PlayerDetailV2/styles.scss" as *;
-@use "../app-v2/pages/YouthV2/styles.scss" as *;
-@use "../app-v2/pages/DiagnosticsV2/styles.scss" as *;
+@use "../atlas/AtlasApp/styles.scss" as *;
+@use "../atlas/components/AppShell/styles.scss" as *;
+@use "../atlas/components/Header/styles.scss" as *;
+@use "../atlas/components/MainContent/styles.scss" as *;
+@use "../atlas/components/Sidebar/styles.scss" as *;
+@use "../atlas/components/SidebarItem/styles.scss" as *;
+@use "../atlas/components/SokkerImportModal/styles.scss" as *;
+@use "../atlas/components/SokkerImporterForm/styles.scss" as *;
+@use "../atlas/pages/Dashboard/styles.scss" as *;
+@use "../atlas/pages/Finances/styles.scss" as *;
+@use "../atlas/pages/Squad/styles.scss" as *;
+@use "../atlas/pages/Training/styles.scss" as *;
+@use "../atlas/pages/PlayerDetail/styles.scss" as *;
+@use "../atlas/pages/Youth/styles.scss" as *;
+@use "../atlas/pages/Diagnostics/styles.scss" as *;
 
-// Shared V2 presentation primitives. Page-specific styles remain above this
+// Shared ATLAS presentation primitives. Page-specific styles remain above this
 // layer so the common geometry and states are defined in one place.
-.atlas-v2 {
+.atlas {
   :is(
-    .v2-dashboard,
-    .v2-squad,
-    .v2-training,
-    .v2-youth,
-    .v2-finances,
-    .v2-diagnostics,
-    .v2-player-detail
+    .atlas-dashboard,
+    .atlas-squad,
+    .atlas-training,
+    .atlas-youth,
+    .atlas-finances,
+    .atlas-diagnostics,
+    .atlas-player-detail
   ) {
     display: grid;
     gap: var(--atlas-page-gap);
@@ -32,13 +32,13 @@
   }
 
   :is(
-    .v2-dashboard__header,
-    .v2-squad__header,
-    .v2-training__header,
-    .v2-youth__header,
-    .v2-finances__header,
-    .v2-diagnostics__header,
-    .v2-player-detail__header
+    .atlas-dashboard__header,
+    .atlas-squad__header,
+    .atlas-training__header,
+    .atlas-youth__header,
+    .atlas-finances__header,
+    .atlas-diagnostics__header,
+    .atlas-player-detail__header
   ) {
     align-items: baseline;
     min-height: 0;
@@ -46,13 +46,13 @@
   }
 
   :is(
-    .v2-dashboard__header h1,
-    .v2-squad__header h1,
-    .v2-training__header h1,
-    .v2-youth__header h1,
-    .v2-finances__header h1,
-    .v2-diagnostics__header h1,
-    .v2-player-detail__header h1
+    .atlas-dashboard__header h1,
+    .atlas-squad__header h1,
+    .atlas-training__header h1,
+    .atlas-youth__header h1,
+    .atlas-finances__header h1,
+    .atlas-diagnostics__header h1,
+    .atlas-player-detail__header h1
   ) {
     color: var(--atlas-text);
     font-size: var(--atlas-page-title-size);
@@ -63,14 +63,14 @@
   }
 
   :is(
-    .v2-dashboard-panel,
-    .v2-training-panel,
-    .v2-squad-panel,
-    .v2-youth-panel,
-    .v2-finances-panel,
-    .v2-player-detail-panel,
-    .v2-diagnostics-summary,
-    .v2-diagnostics-table-wrap
+    .atlas-dashboard-panel,
+    .atlas-training-panel,
+    .atlas-squad-panel,
+    .atlas-youth-panel,
+    .atlas-finances-panel,
+    .atlas-player-detail-panel,
+    .atlas-diagnostics-summary,
+    .atlas-diagnostics-table-wrap
   ) {
     background: var(--atlas-surface);
     border: 1px solid var(--atlas-border);
@@ -78,28 +78,28 @@
   }
 
   :is(
-    .v2-dashboard-panel,
-    .v2-training-panel,
-    .v2-squad-panel,
-    .v2-youth-panel,
-    .v2-finances-panel,
-    .v2-player-detail-panel
+    .atlas-dashboard-panel,
+    .atlas-training-panel,
+    .atlas-squad-panel,
+    .atlas-youth-panel,
+    .atlas-finances-panel,
+    .atlas-player-detail-panel
   ) {
     padding: var(--atlas-panel-padding-y) var(--atlas-panel-padding-x);
   }
 
-  .v2-diagnostics-summary {
+  .atlas-diagnostics-summary {
     padding: var(--atlas-panel-padding-y) var(--atlas-panel-padding-x);
   }
 
   :is(
-    .v2-dashboard-panel__title,
-    .v2-training-panel__title,
-    .v2-squad-panel__title,
-    .v2-youth-panel__title,
-    .v2-finances-panel__title,
-    .v2-player-detail-panel__title,
-    .v2-section-title
+    .atlas-dashboard-panel__title,
+    .atlas-training-panel__title,
+    .atlas-squad-panel__title,
+    .atlas-youth-panel__title,
+    .atlas-finances-panel__title,
+    .atlas-player-detail-panel__title,
+    .atlas-section-title
   ) {
     color: var(--atlas-text);
     font-size: var(--atlas-section-title-size);
@@ -111,13 +111,13 @@
   }
 
   :is(
-    .v2-dashboard-panel__message,
-    .v2-training-panel__message,
-    .v2-squad-panel__message,
-    .v2-youth-panel__message,
-    .v2-finances-panel__message,
-    .v2-player-detail__message,
-    .v2-diagnostics-message-state
+    .atlas-dashboard-panel__message,
+    .atlas-training-panel__message,
+    .atlas-squad-panel__message,
+    .atlas-youth-panel__message,
+    .atlas-finances-panel__message,
+    .atlas-player-detail__message,
+    .atlas-diagnostics-message-state
   ) {
     color: var(--atlas-text-secondary);
     font-size: 0.8rem;
@@ -126,36 +126,36 @@
   }
 
   :is(
-    .v2-dashboard-panel__message.is-error,
-    .v2-training-panel__message.is-error,
-    .v2-squad-panel__message.is-error,
-    .v2-youth-panel__message.is-error,
-    .v2-finances-panel__message.is-error
+    .atlas-dashboard-panel__message.is-error,
+    .atlas-training-panel__message.is-error,
+    .atlas-squad-panel__message.is-error,
+    .atlas-youth-panel__message.is-error,
+    .atlas-finances-panel__message.is-error
   ) {
     color: var(--semantic-error-text);
   }
 
   :is(
-    .v2-dashboard-panel__message.is-success,
-    .v2-youth-panel__message.is-clear,
-    .v2-diagnostics-message-state.is-clear,
-    .v2-player-detail__message--quiet
+    .atlas-dashboard-panel__message.is-success,
+    .atlas-youth-panel__message.is-clear,
+    .atlas-diagnostics-message-state.is-clear,
+    .atlas-player-detail__message--quiet
   ) {
     color: var(--semantic-success-text);
   }
 
   :is(
-    .v2-dashboard-panel--attention,
-    .v2-training-panel--attention,
-    .v2-squad-panel--attention,
-    .v2-youth-panel--attention,
-    .v2-finances-panel--attention,
-    .v2-player-detail-panel--attention
+    .atlas-dashboard-panel--attention,
+    .atlas-training-panel--attention,
+    .atlas-squad-panel--attention,
+    .atlas-youth-panel--attention,
+    .atlas-finances-panel--attention,
+    .atlas-player-detail-panel--attention
   ) {
     border-color: color-mix(in srgb, var(--semantic-warning-border) 55%, var(--atlas-border));
   }
 
-  .v2-attention-icon {
+  .atlas-attention-icon {
     align-items: center;
     border: 1px solid currentColor;
     border-radius: 50%;
@@ -182,12 +182,12 @@
   }
 
   :is(
-    .v2-dashboard-attention-list,
-    .v2-training-attention-list,
-    .v2-squad-attention-list,
-    .v2-youth-attention-list,
-    .v2-finances-attention-list,
-    .v2-player-detail__attention-list
+    .atlas-dashboard-attention-list,
+    .atlas-training-attention-list,
+    .atlas-squad-attention-list,
+    .atlas-youth-attention-list,
+    .atlas-finances-attention-list,
+    .atlas-player-detail__attention-list
   ) {
     display: grid;
     gap: var(--atlas-space-2);
@@ -197,12 +197,12 @@
   }
 
   :is(
-    .v2-dashboard-attention-item,
-    .v2-training-attention-item,
-    .v2-squad-attention-item,
-    .v2-youth-attention-item,
-    .v2-finances-attention-item,
-    .v2-player-detail__attention-list li
+    .atlas-dashboard-attention-item,
+    .atlas-training-attention-item,
+    .atlas-squad-attention-item,
+    .atlas-youth-attention-item,
+    .atlas-finances-attention-item,
+    .atlas-player-detail__attention-list li
   ) {
     align-items: center;
     color: var(--atlas-text-secondary);
@@ -213,16 +213,16 @@
     min-height: 27px;
   }
 
-  .v2-dashboard-attention-item .v2-dashboard-priority {
+  .atlas-dashboard-attention-item .atlas-dashboard-priority {
     margin-left: auto;
   }
 
   :is(
-    .v2-dashboard-player-link,
-    .v2-training-player-link,
-    .v2-squad-player-link,
-    .v2-diagnostics-subject-link,
-    .v2-player-link
+    .atlas-dashboard-player-link,
+    .atlas-training-player-link,
+    .atlas-squad-player-link,
+    .atlas-diagnostics-subject-link,
+    .atlas-player-link
   ) {
     background: transparent;
     border: 0;
@@ -244,11 +244,11 @@
   }
 
   :is(
-    .v2-training-table,
-    .v2-squad-table,
-    .v2-youth-table,
-    .v2-diagnostics-table,
-    .v2-player-detail__table
+    .atlas-training-table,
+    .atlas-squad-table,
+    .atlas-youth-table,
+    .atlas-diagnostics-table,
+    .atlas-player-detail__table
   ) {
     border-collapse: collapse;
 
@@ -284,19 +284,19 @@
     }
   }
 
-  :is(.v2-training-table__numeric, .v2-squad-table__numeric) {
+  :is(.atlas-training-table__numeric, .atlas-squad-table__numeric) {
     font-variant-numeric: tabular-nums;
     text-align: right !important;
   }
 
-  :is(.v2-squad-table__center, .v2-youth-table__center) {
+  :is(.atlas-squad-table__center, .atlas-youth-table__center) {
     text-align: center !important;
   }
 
-  .v2-dashboard-priority,
-  .v2-status-badge,
-  .v2-training-status,
-  .v2-youth-status {
+  .atlas-dashboard-priority,
+  .atlas-status-badge,
+  .atlas-training-status,
+  .atlas-youth-status {
     border: 1px solid currentColor;
     border-radius: 999px;
     display: inline-flex;
@@ -309,40 +309,40 @@
     white-space: nowrap;
   }
 
-  :is(.v2-dashboard-priority, .v2-status-badge, .v2-training-status).is-critical {
+  :is(.atlas-dashboard-priority, .atlas-status-badge, .atlas-training-status).is-critical {
     color: var(--semantic-error-text);
   }
 
-  :is(.v2-dashboard-priority, .v2-status-badge, .v2-training-status).is-attention,
-  .v2-dashboard-priority.is-medium {
+  :is(.atlas-dashboard-priority, .atlas-status-badge, .atlas-training-status).is-attention,
+  .atlas-dashboard-priority.is-medium {
     color: var(--semantic-warning-text);
   }
 
-  :is(.v2-dashboard-priority, .v2-status-badge, .v2-training-status).is-info,
-  .v2-dashboard-priority.is-low {
+  :is(.atlas-dashboard-priority, .atlas-status-badge, .atlas-training-status).is-info,
+  .atlas-dashboard-priority.is-low {
     color: var(--semantic-info-text);
   }
 
-  :is(.v2-dashboard-priority, .v2-status-badge, .v2-training-status).is-empty,
-  .v2-youth-status.is-empty,
-  .v2-youth-status.is-in-academy {
+  :is(.atlas-dashboard-priority, .atlas-status-badge, .atlas-training-status).is-empty,
+  .atlas-youth-status.is-empty,
+  .atlas-youth-status.is-in-academy {
     border-color: transparent;
     color: var(--atlas-text-muted);
     padding-left: 0;
     padding-right: 0;
   }
 
-  .v2-youth-status.is-promotion,
-  .v2-youth-status.is-promoted,
-  .v2-youth-status.is-review {
+  .atlas-youth-status.is-promotion,
+  .atlas-youth-status.is-promoted,
+  .atlas-youth-status.is-review {
     color: var(--semantic-info-text);
   }
 
-  .v2-youth-status.is-attention {
+  .atlas-youth-status.is-attention {
     color: var(--semantic-warning-text);
   }
 
-  :is(.v2-diagnostics-severity) {
+  :is(.atlas-diagnostics-severity) {
     background: transparent;
     border: 1px solid currentColor;
     border-radius: 999px;
@@ -353,16 +353,16 @@
     padding: 4px 7px;
   }
 
-  .v2-diagnostics-severity.is-high {
+  .atlas-diagnostics-severity.is-high {
     color: var(--semantic-error-text);
   }
 
-  .v2-diagnostics-severity.is-medium {
+  .atlas-diagnostics-severity.is-medium {
     color: var(--semantic-warning-text);
   }
 
-  .v2-diagnostics-severity.is-low,
-  .v2-diagnostics-severity.is-info {
+  .atlas-diagnostics-severity.is-low,
+  .atlas-diagnostics-severity.is-info {
     color: var(--semantic-info-text);
   }
 }

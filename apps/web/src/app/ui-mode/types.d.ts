@@ -1,1 +1,1 @@
-export type UiVersion = "legacy" | "v2";
+export type UiMode = "legacy" | "canonical";

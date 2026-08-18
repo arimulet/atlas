@@ -1,11 +1,15 @@
-import type { UiVersion } from "./ui-version/types";
+import type { UiMode } from "./ui-mode/types";
 
-export type { UiVersion } from "./ui-version/types";
+export type { UiMode } from "./ui-mode/types";
 
-export const uiVersionStorageKey = "atlas-ui-version";
+export const uiModeStorageKey = "atlas-ui-mode";
 
-export function readUiVersion(): UiVersion {
-  const storedVersion = window.localStorage.getItem(uiVersionStorageKey);
+const legacyUiVersionStorageKey = "atlas-ui-version";
 
-  return storedVersion === "v2" ? "v2" : "legacy";
+export function readUiMode(): UiMode {
+  const storedMode =
+    window.localStorage.getItem(uiModeStorageKey) ??
+    window.localStorage.getItem(legacyUiVersionStorageKey);
+
+  return storedMode === "legacy" ? "legacy" : "canonical";
 }
