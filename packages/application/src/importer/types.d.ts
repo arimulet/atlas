@@ -21,29 +21,15 @@ export interface SokkerCurrentDto {
   teamId?: number;
 }
 
-export interface SokkerTeamDto {
-  id: number;
-  name: string;
-  countryId: number;
-  money: Money;
-  season?: number;
-  training: {
-    gk: number | null;
-    def: number | null;
-    mid: number | null;
-    att: number | null;
-  };
-}
-
 export type SokkerPlayerDto = PlayerSnapshotV0["players"][number];
 export type SokkerJuniorDto = NonNullable<PlayerSnapshotV0["juniors"]>[number];
 
-export interface SokkerCountryDto {
-  id: number;
-  name: string;
-  currencyName: string;
-  currencyRate: number;
-}
+export type SokkerTeamTrainingDto = {
+  gk: number | null;
+  def: number | null;
+  mid: number | null;
+  att: number | null;
+};
 
 export interface SokkerClubProfileDto {
   externalId: string;
@@ -53,7 +39,7 @@ export interface SokkerClubProfileDto {
   season?: number;
   gameWeek: number;
   week: number;
-  training?: SokkerTeamDto["training"] | null;
+  training?: SokkerTeamTrainingDto | null;
 }
 
 export interface PlayerTrainingWeekDto {
@@ -76,6 +62,5 @@ export interface SokkerImportResultDto {
   players: SokkerPlayerDto[];
   juniors: SokkerJuniorDto[];
   importedAt: Date;
-  countries: SokkerCountryDto[];
   training?: PlayerTrainingWeekDto[];
 }

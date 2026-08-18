@@ -1,5 +1,6 @@
 import {
   createSokkerDataProvider,
+  assembleSokkerTeamData,
   importPlayerSnapshotMvp,
   importTrainingReports,
   type SokkerImportResultDto,
@@ -27,7 +28,7 @@ async function importsRoutes(server: FastifyInstance) {
     try {
       const credentials = sokkerSyncRequestSchema.parse(request.body);
       const provider = createSokkerDataProvider(credentials);
-      const sokkerData = await provider.getFullTeamData();
+      const sokkerData = await assembleSokkerTeamData(provider);
       const playerResult = await importPlayerSnapshotMvp({
         payload: createPlayerSnapshotPayload(sokkerData)
       });
@@ -37,7 +38,10 @@ async function importsRoutes(server: FastifyInstance) {
         return playerResult;
       }
 
-      await importTrainingReports(Number(sokkerData.clubProfile.externalId), sokkerData.training ?? []);
+      await importTrainingReports(
+        Number(sokkerData.clubProfile.externalId),
+        sokkerData.training ?? []
+      );
       return playerResult;
     } catch (error) {
       reply.code(422);
@@ -45,7 +49,9 @@ async function importsRoutes(server: FastifyInstance) {
       return {
         importResult: {
           status: "rejected" as const,
-          errors: [{ path: "api", message: error instanceof Error ? error.message : String(error) }],
+          errors: [
+            { path: "api", message: error instanceof Error ? error.message : String(error) }
+          ],
           warnings: [],
           clubId: null,
           importedPlayerCount: 0
