@@ -7,14 +7,19 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { createSokkerDataProvider, SokkerJsonApiProvider } from "@atlas/application";
 import {
-  mapApiCurrentToClubProfile,
-  mapApiCurrentToSokkerCurrentDto,
-  mapApiJuniorToSokkerJuniorDto,
-  mapApiTrainingPlayerToPlayerTrainingWeekDto,
-  mapApiTrainingPlayerToSokkerPlayerDto
+  mapCurrentApiToCurrentClubContext,
+  mapJuniorApiToJunior,
+  mapTrainingApiToPlayers,
+  mapTrainingApiToTrainingWeeks,
+  mapTrainingKind,
+  mapTrainingPlayerApiToPlayer,
+  mapTrainingSummaryApiToTrainingSummary,
+  mapTrainingType,
+  mapTrainerApiToTrainer,
+  mapTrainersApiToTrainers
 } from "../src/importer/providers/api/mappers.js";
 import type {
-  SokkerCurrentApiDto,
+  SokkerApiCurrentDto,
   SokkerJuniorsApiDto,
   SokkerTrainersApiDto,
   SokkerTrainingApiDto,
@@ -58,11 +63,15 @@ describe("SokkerJsonApiProvider", () => {
     const juniors = await provider.getJuniors();
     const summary = await provider.getTrainingSummary();
 
-    expect(current.team.league).toBeNull();
+    expect(current.calendar.gameWeek).toBe(1205);
     expect(training.players).toHaveLength(3);
-    expect(trainers.trainers).toHaveLength(3);
-    expect(juniors.juniors).toHaveLength(2);
-    expect(summary.weeks[1]?.stats).toEqual({ general: 0, advanced: 0, skillsUp: 0 });
+    expect(trainers).toHaveLength(3);
+    expect(juniors).toHaveLength(2);
+    expect(summary.weeks[1]?.players).toEqual({
+      formationTraining: 0,
+      advancedTraining: 0,
+      skillsUp: 0
+    });
     expect(mockFetch.mock.calls.slice(1).map(([url]) => String(url))).toEqual([
       "https://sokker.org/api/current",
       "https://sokker.org/api/training",
@@ -73,80 +82,162 @@ describe("SokkerJsonApiProvider", () => {
   });
 });
 
-describe("Sokker JSON API contracts", () => {
-  it("maps current club data and preserves nullable external fields", () => {
-    const current = currentFixture as SokkerCurrentApiDto;
+describe("Sokker API canonical mappers", () => {
+  it("maps current into a minimal canonical club context", () => {
+    const current = mapCurrentApiToCurrentClubContext(currentFixture as SokkerApiCurrentDto);
 
-    expect(mapApiCurrentToSokkerCurrentDto(current)).toMatchObject({
-      gameWeek: 1204,
-      week: 7,
-      season: 78,
-      teamId: 6038
+    expect(current).toEqual({
+      userId: 91,
+      userName: "Ada",
+      team: {
+        id: 6038,
+        name: "River Plate Forever",
+        rank: 3,
+        rankPosition: 1,
+        country: { code: 32, name: "Argentina" },
+        bankrupt: false
+      },
+      budget: { value: 123456, currency: "ARS" },
+      calendar: {
+        season: 78,
+        gameWeek: 1205,
+        seasonWeek: 8,
+        date: "2026-08-20"
+      }
     });
-    expect(mapApiCurrentToClubProfile(current)).toMatchObject({
-      externalId: "6038",
-      countryId: 32,
-      money: { amount: 123456, currency: "ARS" }
-    });
+    expect(current).not.toHaveProperty("plus");
+    expect(current.team).not.toHaveProperty("emblem");
   });
 
-  it("maps training player plus report without leaking previousValue or games", () => {
+  it("maps training player into a canonical player without external-only fields", () => {
     const training = trainingFixture as SokkerTrainingApiDto;
-    const [individual, formation, missing] = training.players;
+    const player = mapTrainingPlayerApiToPlayer(training.players[0]!);
 
-    expect(individual).toBeDefined();
-    expect(formation).toBeDefined();
-    expect(missing).toBeDefined();
-
-    const player = mapApiTrainingPlayerToSokkerPlayerDto(individual!);
-    const report = mapApiTrainingPlayerToPlayerTrainingWeekDto(individual!);
-    const formationReport = mapApiTrainingPlayerToPlayerTrainingWeekDto(formation!);
-    const missingReport = mapApiTrainingPlayerToPlayerTrainingWeekDto(missing!);
-
-    expect(player).toMatchObject({
-      playerId: 40098056,
-      name: "Ada Lovelace",
-      form: 10,
-      training: { position: 0, advanced: true },
-      skills: { defender: 5, playmaker: 9 }
+    expect(player).toEqual({
+      id: 40098056,
+      teamId: 6038,
+      name: { firstName: "Ada", lastName: "Lovelace", fullName: "Ada Lovelace" },
+      country: { code: 32, name: "Argentina" },
+      value: { value: 450000, currency: "ARS" },
+      wage: { value: 12000, currency: "ARS" },
+      age: 20,
+      height: 180,
+      weight: 75,
+      bmi: 23.1,
+      skills: expect.objectContaining({
+        form: 10,
+        tacticalDiscipline: 8,
+        defending: 5,
+        pace: 11
+      }),
+      formation: null,
+      injury: { daysRemaining: 0, severe: false },
+      youthTeamId: 0,
+      nationalCallUp: false,
+      nationalType: "none"
     });
     expect(player).not.toHaveProperty("previousValue");
-    expect(report).toMatchObject({
-      intensity: 0,
+    expect(player).not.toHaveProperty("face");
+    expect(player).not.toHaveProperty("stats");
+    expect(player).not.toHaveProperty("nationalStats");
+  });
+
+  it("maps the full training collection into separate player and report outputs", () => {
+    const training = trainingFixture as SokkerTrainingApiDto;
+    const players = mapTrainingApiToPlayers(training.players);
+    const reports = mapTrainingApiToTrainingWeeks(training.players);
+
+    expect(players).toHaveLength(3);
+    expect(reports).toHaveLength(3);
+    expect(reports[0]).toMatchObject({
+      playerId: 40098056,
+      gameWeek: 1204,
+      season: 78,
+      seasonWeek: 7,
+      date: "2026-08-12",
+      trainedSkill: "pace",
       kind: "advanced",
-      skillsChange: { pace: 1, passing: -1, down: 1, up: 1 }
+      intensity: 0,
+      formation: null,
+      skillsChange: { pace: 1, passing: -1, up: 1, down: 1 }
     });
-    expect(report).not.toHaveProperty("games");
-    expect(formationReport.kind).toBe("formation");
-    expect(missingReport.kind).toBe("missing");
-    expect(individual?.report.formation).toBeNull();
+    expect(reports[0]).not.toHaveProperty("games");
+    expect(reports[1]?.kind).toBe("formation");
+    expect(reports[2]?.kind).toBe("missing");
   });
 
-  it("consumes trainer info as the canonical source and preserves skill effectiveness", () => {
+  it.each([
+    [{ code: 1, name: "individual" }, "advanced"],
+    [{ code: 2, name: "formation" }, "formation"],
+    [{ code: 3, name: "missing" }, "missing"]
+  ] as const)("maps training kind %o", (source, expected) => {
+    expect(mapTrainingKind(source)).toBe(expected);
+  });
+
+  it.each([
+    [{ code: 0, name: "general" }, "general"],
+    [{ code: 2, name: "keeper" }, "keeper"],
+    [{ code: 6, name: "defending" }, "defending"],
+    [{ code: 8, name: "pace" }, "pace"]
+  ] as const)("maps training type %o", (source, expected) => {
+    expect(mapTrainingType(source)).toBe(expected);
+  });
+
+  it("rejects unknown training kind and type instead of silently defaulting", () => {
+    expect(() => mapTrainingKind({ code: 99, name: "unknown" })).toThrow();
+    expect(() => mapTrainingType({ code: 99, name: "unknown" })).toThrow();
+  });
+
+  it("maps trainer info only and preserves value, percent and average effectiveness", () => {
     const trainers = trainersFixture as SokkerTrainersApiDto;
-    const first = trainers.trainers[0]!;
+    const first = mapTrainerApiToTrainer(trainers.trainers[0]!);
+    const mapped = mapTrainersApiToTrainers(trainers.trainers);
 
-    expect(first.info.assignment.name).toBe("first");
-    expect(first.info.skills.pace).toEqual({ value: 16, percent: 94 });
-    expect(first.info.skills.averagePercent).toBe(77);
-    expect(first.fullName?.full).toBe("ignored");
+    expect(first).toMatchObject({
+      id: 1,
+      teamId: 6038,
+      name: { fullName: "Alan Turing" },
+      assignment: "HEAD",
+      salary: { value: 10000, currency: "ARS" },
+      averageEffectivenessPercent: 77,
+      skills: { pace: { level: 16, effectivenessPercent: 94 } }
+    });
+    expect(first.name.fullName).not.toBe("ignored");
+    expect(mapped.map((trainer) => trainer.assignment)).toEqual(["HEAD", "ASSISTANT", "YOUTH"]);
   });
 
-  it("maps the junior wrapper without assuming pagination or ranges", () => {
+  it("maps juniors into a single canonical name and current level", () => {
     const juniors = juniorsFixture as SokkerJuniorsApiDto;
+    const junior = mapJuniorApiToJunior(juniors.juniors[0]!);
 
-    expect(juniors.juniors.map(mapApiJuniorToSokkerJuniorDto)).toMatchObject([
-      { playerId: 501, weeksRemaining: 8 },
-      { playerId: 502, weeksRemaining: 0 }
-    ]);
+    expect(junior).toEqual({
+      id: 501,
+      teamId: 6038,
+      name: { firstName: "Junior", lastName: "One", fullName: "Junior One" },
+      age: 16,
+      currentLevel: 7,
+      weeksLeft: 8
+    });
+    expect(junior).not.toHaveProperty("fullName");
   });
 
-  it("preserves summary aggregates, including zero current or future weeks", () => {
-    const summary = summaryFixture as SokkerTrainingSummaryApiDto;
+  it("maps training summary with explicit formation and advanced semantics", () => {
+    const summary = mapTrainingSummaryApiToTrainingSummary(
+      summaryFixture as SokkerTrainingSummaryApiDto
+    );
 
-    expect(summary.weeks[0]?.stats.general).toBe(12);
-    expect(summary.weeks[1]?.stats).toEqual({ general: 0, advanced: 0, skillsUp: 0 });
-    expect(summary.weeks[1]?.juniors).toEqual({ number: 0, skillsUp: 0 });
+    expect(summary.weeks[0]).toEqual({
+      gameWeek: 1203,
+      season: 78,
+      seasonWeek: 6,
+      date: "2026-08-05",
+      players: { formationTraining: 12, advancedTraining: 8, skillsUp: 2 },
+      juniors: { count: 4, skillsUp: 1 }
+    });
+    expect(summary.weeks[1]).toMatchObject({
+      gameWeek: 1205,
+      players: { formationTraining: 0, advancedTraining: 0, skillsUp: 0 }
+    });
   });
 });
 

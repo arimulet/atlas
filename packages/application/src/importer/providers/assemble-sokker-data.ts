@@ -1,11 +1,5 @@
 import type { SokkerImportResultDto } from "../types.js";
 import type { SokkerDataProvider } from "./SokkerDataProvider.js";
-import {
-  mapApiCurrentToClubProfile,
-  mapApiJuniorToSokkerJuniorDto,
-  mapApiTrainingPlayerToPlayerTrainingWeekDto,
-  mapApiTrainingPlayerToSokkerPlayerDto
-} from "./api/mappers.js";
 
 type TeamDataProvider = Pick<SokkerDataProvider, "getCurrent" | "getTraining" | "getJuniors">;
 
@@ -19,10 +13,10 @@ export async function assembleSokkerTeamData(
   ]);
 
   return {
-    clubProfile: mapApiCurrentToClubProfile(current),
-    players: training.players.map(mapApiTrainingPlayerToSokkerPlayerDto),
-    juniors: juniors.juniors.map(mapApiJuniorToSokkerJuniorDto),
+    current,
+    players: training.players,
+    juniors,
     importedAt: new Date(),
-    training: training.players.map(mapApiTrainingPlayerToPlayerTrainingWeekDto)
+    training: training.trainingWeeks
   };
 }

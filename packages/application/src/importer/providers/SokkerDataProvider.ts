@@ -1,10 +1,10 @@
 import type {
-  SokkerCurrentApiDto,
-  SokkerJuniorsApiDto,
-  SokkerTrainersApiDto,
-  SokkerTrainingApiDto,
-  SokkerTrainingSummaryApiDto
-} from "./api/dtos.js";
+  CurrentClubContextDto,
+  JuniorDto,
+  TrainerDto,
+  TrainingDataDto,
+  TrainingSummaryDto
+} from "../types.js";
 
 /**
  * Read-only source boundary consumed by the Sokker importer.
@@ -13,9 +13,9 @@ import type {
  * application layer depends on this contract rather than on Sokker's API.
  */
 export interface SokkerDataProvider {
-  getCurrent(): Promise<SokkerCurrentApiDto>;
-  getTraining(): Promise<SokkerTrainingApiDto>;
-  getTrainers(): Promise<SokkerTrainersApiDto>;
-  getJuniors(): Promise<SokkerJuniorsApiDto>;
-  getTrainingSummary(): Promise<SokkerTrainingSummaryApiDto>;
+  getCurrent(): Promise<CurrentClubContextDto>;
+  getTraining(): Promise<TrainingDataDto>;
+  getTrainers(): Promise<TrainerDto[]>;
+  getJuniors(): Promise<JuniorDto[]>;
+  getTrainingSummary(): Promise<TrainingSummaryDto>;
 }
