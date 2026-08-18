@@ -175,12 +175,13 @@ export interface TrainingSummaryDto {
   weeks: TrainingSummaryWeekDto[];
 }
 
-export interface SokkerImportResultDto {
+export interface SokkerSyncPayload {
   current: CurrentClubContextDto;
   players: PlayerDto[];
+  trainingWeeks: PlayerTrainingWeekDto[];
+  trainers: TrainerDto[];
   juniors: JuniorDto[];
-  importedAt: Date;
-  training: PlayerTrainingWeekDto[];
+  trainingSummary: TrainingSummaryDto;
 }
 
 export type SnapshotPlayerDto = PlayerSnapshotV0["players"][number];

@@ -1,12 +1,12 @@
 import {
   createSokkerDataProvider,
-  assembleSokkerTeamData,
   importPlayerSnapshotMvp,
   importTrainingReports,
+  loadSokkerSyncPayload,
   mapCurrentContextToSnapshotClub,
   mapJuniorsToSnapshotJuniors,
   mapPlayersToSnapshotPlayers,
-  type SokkerImportResultDto,
+  type SokkerSyncPayload,
   validatePlayerSnapshotImport
 } from "@atlas/application";
 import { FastifyInstance } from "fastify";
@@ -31,9 +31,10 @@ async function importsRoutes(server: FastifyInstance) {
     try {
       const credentials = sokkerSyncRequestSchema.parse(request.body);
       const provider = createSokkerDataProvider(credentials);
-      const sokkerData = await assembleSokkerTeamData(provider);
+      const sokkerData = await loadSokkerSyncPayload(provider);
+      const importedAt = new Date();
       const playerResult = await importPlayerSnapshotMvp({
-        payload: createPlayerSnapshotPayload(sokkerData)
+        payload: createPlayerSnapshotPayload(sokkerData, importedAt)
       });
 
       if (playerResult.importResult.status === "rejected") {
@@ -41,7 +42,7 @@ async function importsRoutes(server: FastifyInstance) {
         return playerResult;
       }
 
-      await importTrainingReports(sokkerData.current.team.id, sokkerData.training);
+      await importTrainingReports(sokkerData.current.team.id, sokkerData.trainingWeeks);
       return playerResult;
     } catch (error) {
       reply.code(422);
@@ -63,21 +64,21 @@ async function importsRoutes(server: FastifyInstance) {
   });
 }
 
-function createPlayerSnapshotPayload(data: SokkerImportResultDto) {
+function createPlayerSnapshotPayload(data: SokkerSyncPayload, importedAt: Date) {
   return {
     schemaVersion: "atlas.player-snapshot.v0" as const,
     source: {
       type: "sokker-json-api-import" as const,
-      exportedAt: data.importedAt.toISOString(),
+      exportedAt: importedAt.toISOString(),
       locale: null
     },
     club: mapCurrentContextToSnapshotClub(data.current),
     snapshot: {
-      snapshotDate: data.importedAt.toISOString().split("T")[0]!,
+      snapshotDate: importedAt.toISOString().split("T")[0]!,
       gameWeek: data.current.calendar.gameWeek,
       week: data.current.calendar.seasonWeek
     },
-    players: mapPlayersToSnapshotPlayers(data.players, data.training),
+    players: mapPlayersToSnapshotPlayers(data.players, data.trainingWeeks),
     juniors: mapJuniorsToSnapshotJuniors(data.juniors)
   };
 }
