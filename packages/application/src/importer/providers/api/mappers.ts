@@ -1,103 +1,111 @@
-import { calculateGameWeek, deriveSkillChanges, normalizeSeasonWeek } from "@atlas/domain";
-
+import { deriveSkillChanges } from "@atlas/domain";
 import type {
-  SokkerClubProfileDto,
-  SokkerCurrentDto,
-  SokkerJuniorDto,
+  CurrentClubContextDto,
+  JuniorDto,
+  PlayerDto,
+  PlayerFormation,
+  PlayerNameDto,
+  PlayerSkillsChangeDto,
+  PlayerSkillsDto,
   PlayerTrainingWeekDto,
-  SokkerPlayerDto
+  TrainerAssignment,
+  TrainerDto,
+  TrainerSkillDto,
+  TrainerSkillsDto,
+  TrainingSummaryDto,
+  TrainingType
 } from "../../types.js";
 import type {
   SokkerApiCurrentDto,
-  SokkerApiJuniorDto,
+  SokkerApiFormationDto,
+  SokkerJuniorApiDto,
   SokkerApiTrainingPlayerDto,
-  SokkerApiTrainingReportDto,
   SokkerPlayerSkillsApiDto,
-  SokkerSkillsChangeApiDto
+  SokkerSkillsChangeApiDto,
+  SokkerTrainerApiDto,
+  SokkerTrainerInfoApiDto,
+  SokkerTrainerSkillApiDto,
+  SokkerTrainingSummaryApiDto,
+  SokkerTrainingSummaryWeekApiDto
 } from "./dtos.js";
 
-export function mapApiCurrentToSokkerCurrentDto(input: SokkerApiCurrentDto): SokkerCurrentDto {
-  const gameWeek =
-    input.today.week >= 977
-      ? input.today.week
-      : calculateGameWeek(input.today.season, input.today.seasonWeek);
-
+export function mapCurrentApiToCurrentClubContext(
+  source: SokkerApiCurrentDto
+): CurrentClubContextDto {
   return {
-    gameWeek,
-    week: normalizeSeasonWeek(gameWeek),
-    season: input.today.season,
-    teamId: input.team.id
-  };
-}
-
-export function mapApiCurrentToClubProfile(input: SokkerApiCurrentDto): SokkerClubProfileDto {
-  const current = mapApiCurrentToSokkerCurrentDto(input);
-
-  return {
-    externalId: String(input.team.id),
-    name: input.team.name,
-    countryId: input.team.country.code,
-    money: {
-      amount: input.budget.value,
-      currency: input.budget.currency
+    userId: source.id,
+    userName: source.name,
+    team: {
+      id: source.team.id,
+      name: source.team.name,
+      rank: source.team.rank,
+      rankPosition: source.team.rankPosition,
+      country: {
+        code: source.team.country.code,
+        name: source.team.country.name
+      },
+      bankrupt: source.team.bankrupt
     },
-    season: current.season,
-    gameWeek: current.gameWeek,
-    week: current.week,
-    training: null
+    budget: {
+      value: source.budget.value,
+      currency: source.budget.currency
+    },
+    calendar: {
+      season: source.today.season,
+      gameWeek: source.today.week,
+      seasonWeek: source.today.seasonWeek,
+      date: source.today.date.value
+    }
   };
 }
 
-export function mapApiTrainingPlayerToSokkerPlayerDto(
-  input: SokkerApiTrainingPlayerDto
-): SokkerPlayerDto {
-  const player = input.player;
+export function mapTrainingPlayerApiToPlayer(source: SokkerApiTrainingPlayerDto): PlayerDto {
+  const player = source.player;
 
   return {
-    playerId: input.id,
-    name: player.name.full,
+    id: source.id,
+    teamId: player.team.id,
+    name: mapName(player.name),
+    country: mapCountry(player.country),
+    value: mapMoney(player.value),
+    wage: mapMoney(player.wage),
     age: player.characteristics.age,
-    wage: player.wage.value,
-    value: player.value.value,
-    training: {
-      position: player.formation?.code ?? 0,
-      advanced: input.report.kind.name.trim().toLowerCase() === "individual"
+    height: player.characteristics.height,
+    weight: player.characteristics.weight,
+    bmi: player.characteristics.bmi,
+    skills: mapPlayerSkills(player.skills),
+    formation: mapFormation(player.formation),
+    injury: {
+      daysRemaining: player.injury.daysRemaining,
+      severe: player.injury.severe
     },
-    form: player.skills.form,
-    availabilityStatus: player.injury.daysRemaining > 0 ? "injured" : "available",
-    observedPosition: null,
-    skills: mapPlayerSkills(player.skills)
+    youthTeamId: player.youthTeamId,
+    nationalCallUp: player.nationalCallUp,
+    nationalType: player.nationalType
   };
 }
 
-export function mapApiJuniorToSokkerJuniorDto(input: SokkerApiJuniorDto): SokkerJuniorDto {
-  return {
-    playerId: input.id,
-    name: input.name,
-    age: input.age,
-    initialWeeksRemaining: input.weeksLeft,
-    weeksRemaining: input.weeksLeft,
-    skill: input.skill,
-    status: "in_academy"
-  };
+export function mapTrainingApiToPlayers(source: SokkerApiTrainingPlayerDto[]): PlayerDto[] {
+  return source.map(mapTrainingPlayerApiToPlayer);
 }
 
-export function mapApiTrainingPlayerToPlayerTrainingWeekDto(
-  input: SokkerApiTrainingPlayerDto
+export function mapTrainingPlayerApiToTrainingWeek(
+  source: SokkerApiTrainingPlayerDto
 ): PlayerTrainingWeekDto {
-  const report = input.report;
-  const skills = mapTrainingSkills(report.skills);
+  const report = source.report;
+  const skills = mapPlayerSkills(report.skills);
   const skillsChange = mapSkillsChange(report.skillsChange);
 
   return {
-    playerId: input.id,
-    gameWeek: report.day.week,
+    playerId: source.id,
+    gameWeek: report.week,
     season: report.day.season,
     seasonWeek: report.day.seasonWeek,
-    date: new Date(report.day.date.timestamp * 1000),
-    type: mapTrainingType(report.type.name),
-    kind: mapTrainingKind(report.kind.name),
+    date: report.day.date.value,
+    trainedSkill: mapTrainingType(report.type),
+    kind: mapTrainingKind(report.kind),
     intensity: report.intensity,
+    formation: mapFormation(report.formation),
     age: report.age,
     skills,
     skillsChange,
@@ -105,32 +113,32 @@ export function mapApiTrainingPlayerToPlayerTrainingWeekDto(
   };
 }
 
-export function mapTrainingKind(name: string): "advanced" | "formation" | "missing" {
-  switch (name.trim().toLowerCase()) {
-    case "individual":
-      return "advanced";
-    case "formation":
-      return "formation";
-    case "missing":
-      return "missing";
-    default:
-      throw new Error(`Unsupported Sokker training kind: ${name}.`);
-  }
+export function mapTrainingApiToTrainingWeeks(
+  source: SokkerApiTrainingPlayerDto[]
+): PlayerTrainingWeekDto[] {
+  return source.map(mapTrainingPlayerApiToTrainingWeek);
 }
 
-export function mapTrainingType(
-  name: string
-):
-  | "general"
-  | "stamina"
-  | "keeper"
-  | "playmaking"
-  | "passing"
-  | "technique"
-  | "defending"
-  | "striker"
-  | "pace" {
-  switch (name.trim().toLowerCase()) {
+export function mapTrainingKind(
+  source: SokkerApiFormationDto
+): "advanced" | "formation" | "missing" {
+  const kindByCode: Record<number, { name: string; value: "advanced" | "formation" | "missing" }> =
+    {
+      1: { name: "individual", value: "advanced" },
+      2: { name: "formation", value: "formation" },
+      3: { name: "missing", value: "missing" }
+    };
+  const expected = kindByCode[source.code];
+
+  if (!expected || source.name.trim().toLowerCase() !== expected.name) {
+    throw new Error(`Unsupported Sokker training kind: ${source.code}/${source.name}.`);
+  }
+
+  return expected.value;
+}
+
+export function mapTrainingType(source: SokkerApiFormationDto): TrainingType {
+  switch (source.name.trim().toLowerCase()) {
     case "general":
       return "general";
     case "stamina":
@@ -153,49 +161,169 @@ export function mapTrainingType(
     case "pace":
       return "pace";
     default:
-      throw new Error(`Unsupported Sokker training type: ${name}.`);
+      throw new Error(`Unsupported Sokker training type: ${source.code}/${source.name}.`);
   }
 }
 
-function mapPlayerSkills(input: SokkerPlayerSkillsApiDto): SokkerPlayerDto["skills"] {
+export function mapTrainerApiToTrainer(source: SokkerTrainerApiDto): TrainerDto {
+  const info = source.info;
+
   return {
-    stamina: input.stamina,
-    pace: input.pace,
-    technique: input.technique,
-    passing: input.passing,
-    keeper: input.keeper,
-    defender: input.defending,
-    playmaker: input.playmaking,
-    striker: input.striker
+    id: source.id,
+    teamId: source.teamId,
+    name: mapName(info.fullName),
+    assignment: mapTrainerAssignment(info.assignment),
+    contracted: info.contracted,
+    salary: mapMoney(info.salary),
+    age: info.age,
+    skills: mapTrainerSkills(info.skills),
+    averageEffectivenessPercent: info.skills.averagePercent,
+    status: info.status
   };
 }
 
-function mapTrainingSkills(input: SokkerPlayerSkillsApiDto): PlayerTrainingWeekDto["skills"] {
+export function mapTrainersApiToTrainers(source: SokkerTrainerApiDto[]): TrainerDto[] {
+  return source.map(mapTrainerApiToTrainer);
+}
+
+export function mapJuniorApiToJunior(source: SokkerJuniorApiDto): JuniorDto {
   return {
-    stamina: input.stamina,
-    keeper: input.keeper,
-    playmaking: input.playmaking,
-    passing: input.passing,
-    technique: input.technique,
-    defending: input.defending,
-    striker: input.striker,
-    pace: input.pace
+    id: source.id,
+    teamId: source.teamId,
+    name: mapName(source.fullName),
+    age: source.age,
+    currentLevel: source.skill,
+    weeksLeft: source.weeksLeft
   };
 }
 
-function mapSkillsChange(input: SokkerSkillsChangeApiDto): PlayerTrainingWeekDto["skillsChange"] {
+export function mapJuniorsApiToJuniors(source: SokkerJuniorApiDto[]): JuniorDto[] {
+  return source.map(mapJuniorApiToJunior);
+}
+
+export function mapTrainingSummaryApiToTrainingSummary(
+  source: SokkerTrainingSummaryApiDto
+): TrainingSummaryDto {
   return {
-    stamina: input.stamina,
-    keeper: input.keeper,
-    playmaking: input.playmaking,
-    passing: input.passing,
-    technique: input.technique,
-    defending: input.defending,
-    striker: input.striker,
-    pace: input.pace,
-    up: input.up,
-    down: input.down
+    weeks: source.weeks.map(mapTrainingSummaryWeek)
   };
 }
 
-export type SokkerTrainingReportApiContract = SokkerApiTrainingReportDto;
+function mapTrainingSummaryWeek(
+  source: SokkerTrainingSummaryWeekApiDto
+): TrainingSummaryDto["weeks"][number] {
+  return {
+    gameWeek: source.week,
+    season: source.gameDay.season,
+    seasonWeek: source.gameDay.seasonWeek,
+    date: source.gameDay.date.value,
+    players: {
+      formationTraining: source.stats.general,
+      advancedTraining: source.stats.advanced,
+      skillsUp: source.stats.skillsUp
+    },
+    juniors: {
+      count: source.juniors.number,
+      skillsUp: source.juniors.skillsUp
+    }
+  };
+}
+
+function mapName(source: { name: string; surname: string; full: string }): PlayerNameDto {
+  return {
+    firstName: source.name,
+    lastName: source.surname,
+    fullName: source.full
+  };
+}
+
+function mapCountry(source: { code: number; name: string }): { code: number; name: string } {
+  return { code: source.code, name: source.name };
+}
+
+function mapMoney(source: { value: number; currency: string }): {
+  value: number;
+  currency: string;
+} {
+  return { value: source.value, currency: source.currency };
+}
+
+function mapPlayerSkills(source: SokkerPlayerSkillsApiDto): PlayerSkillsDto {
+  return {
+    form: source.form,
+    tacticalDiscipline: source.tacticalDiscipline,
+    teamwork: source.teamwork,
+    experience: source.experience,
+    stamina: source.stamina,
+    keeper: source.keeper,
+    playmaking: source.playmaking,
+    passing: source.passing,
+    technique: source.technique,
+    defending: source.defending,
+    striker: source.striker,
+    pace: source.pace
+  };
+}
+
+function mapSkillsChange(source: SokkerSkillsChangeApiDto): PlayerSkillsChangeDto {
+  return {
+    ...mapPlayerSkills(source),
+    up: source.up,
+    down: source.down
+  };
+}
+
+function mapFormation(source: SokkerApiFormationDto | null): PlayerFormation | null {
+  if (source === null) {
+    return null;
+  }
+
+  const formationByCode: Record<number, PlayerFormation> = {
+    0: "GK",
+    1: "DEF",
+    2: "MID",
+    3: "ATT"
+  };
+  const formation = formationByCode[source.code];
+
+  if (!formation) {
+    throw new Error(`Unsupported Sokker player formation: ${source.code}/${source.name}.`);
+  }
+
+  return formation;
+}
+
+function mapTrainerAssignment(source: SokkerApiFormationDto): TrainerAssignment {
+  const assignmentByCode: Record<number, { name: string; value: TrainerAssignment }> = {
+    1: { name: "first", value: "HEAD" },
+    2: { name: "assistant", value: "ASSISTANT" },
+    3: { name: "junior", value: "YOUTH" }
+  };
+  const assignment = assignmentByCode[source.code];
+
+  if (!assignment || source.name.trim().toLowerCase() !== assignment.name) {
+    throw new Error(`Unsupported Sokker trainer assignment: ${source.code}/${source.name}.`);
+  }
+
+  return assignment.value;
+}
+
+function mapTrainerSkills(source: SokkerTrainerInfoApiDto["skills"]): TrainerSkillsDto {
+  return {
+    stamina: mapTrainerSkill(source.stamina),
+    keeper: mapTrainerSkill(source.keeper),
+    playmaking: mapTrainerSkill(source.playmaking),
+    passing: mapTrainerSkill(source.passing),
+    technique: mapTrainerSkill(source.technique),
+    defending: mapTrainerSkill(source.defending),
+    striker: mapTrainerSkill(source.striker),
+    pace: mapTrainerSkill(source.pace)
+  };
+}
+
+function mapTrainerSkill(source: SokkerTrainerSkillApiDto): TrainerSkillDto {
+  return {
+    level: source.value,
+    effectivenessPercent: source.percent
+  };
+}

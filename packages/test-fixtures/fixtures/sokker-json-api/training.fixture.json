@@ -243,7 +243,7 @@
           "up": 0
         },
         "type": { "code": 0, "name": "general" },
-        "kind": { "code": 0, "name": "missing" },
+        "kind": { "code": 3, "name": "missing" },
         "playerValue": { "value": 200000, "currency": "ARS" },
         "games": { "minutesOfficial": 0, "minutesFriendly": 0, "minutesNational": 0 },
         "intensity": 0,

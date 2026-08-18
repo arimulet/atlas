@@ -1,4 +1,11 @@
 import type { SokkerCredentials } from "../../types.js";
+import type {
+  CurrentClubContextDto,
+  JuniorDto,
+  TrainerDto,
+  TrainingDataDto,
+  TrainingSummaryDto
+} from "../../types.js";
 import type { SokkerDataProvider } from "../SokkerDataProvider.js";
 import type {
   SokkerCurrentApiDto,
@@ -7,6 +14,14 @@ import type {
   SokkerTrainingApiDto,
   SokkerTrainingSummaryApiDto
 } from "./dtos.js";
+import {
+  mapCurrentApiToCurrentClubContext,
+  mapJuniorsApiToJuniors,
+  mapTrainersApiToTrainers,
+  mapTrainingApiToPlayers,
+  mapTrainingApiToTrainingWeeks,
+  mapTrainingSummaryApiToTrainingSummary
+} from "./mappers.js";
 
 export class SokkerJsonApiProvider implements SokkerDataProvider {
   private sessionCookie: string | null = null;
@@ -28,24 +43,35 @@ export class SokkerJsonApiProvider implements SokkerDataProvider {
     }
   }
 
-  getCurrent(): Promise<SokkerCurrentApiDto> {
-    return this.get("current");
+  async getCurrent(): Promise<CurrentClubContextDto> {
+    return mapCurrentApiToCurrentClubContext(await this.get<SokkerCurrentApiDto>("current"));
   }
 
-  getTraining(): Promise<SokkerTrainingApiDto> {
-    return this.get("training");
+  async getTraining(): Promise<TrainingDataDto> {
+    const response = await this.get<SokkerTrainingApiDto>("training");
+
+    return {
+      players: mapTrainingApiToPlayers(response.players),
+      trainingWeeks: mapTrainingApiToTrainingWeeks(response.players)
+    };
   }
 
-  getTrainers(): Promise<SokkerTrainersApiDto> {
-    return this.get("trainer");
+  async getTrainers(): Promise<TrainerDto[]> {
+    const response = await this.get<SokkerTrainersApiDto>("trainer");
+
+    return mapTrainersApiToTrainers(response.trainers);
   }
 
-  getJuniors(): Promise<SokkerJuniorsApiDto> {
-    return this.get("junior");
+  async getJuniors(): Promise<JuniorDto[]> {
+    const response = await this.get<SokkerJuniorsApiDto>("junior");
+
+    return mapJuniorsApiToJuniors(response.juniors);
   }
 
-  getTrainingSummary(): Promise<SokkerTrainingSummaryApiDto> {
-    return this.get("training/summary");
+  async getTrainingSummary(): Promise<TrainingSummaryDto> {
+    return mapTrainingSummaryApiToTrainingSummary(
+      await this.get<SokkerTrainingSummaryApiDto>("training/summary")
+    );
   }
 
   private async get<T>(path: string): Promise<T> {

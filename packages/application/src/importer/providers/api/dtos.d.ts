@@ -236,7 +236,3 @@ export interface SokkerTrainingSummaryApiDto {
 }
 
 export type SokkerCurrentApiDto = SokkerApiCurrentDto;
-export type SokkerTrainingPlayerApiDto = SokkerApiTrainingPlayerDto;
-export type SokkerApiJuniorDto = SokkerJuniorApiDto;
-export type SokkerApiTrainingReportDto = SokkerTrainingReportApiDto;
-export type SokkerApiTrainingResponseDto = SokkerTrainingApiDto;

@@ -3,6 +3,9 @@ import {
   assembleSokkerTeamData,
   importPlayerSnapshotMvp,
   importTrainingReports,
+  mapCurrentContextToSnapshotClub,
+  mapJuniorsToSnapshotJuniors,
+  mapPlayersToSnapshotPlayers,
   type SokkerImportResultDto,
   validatePlayerSnapshotImport
 } from "@atlas/application";
@@ -38,10 +41,7 @@ async function importsRoutes(server: FastifyInstance) {
         return playerResult;
       }
 
-      await importTrainingReports(
-        Number(sokkerData.clubProfile.externalId),
-        sokkerData.training ?? []
-      );
+      await importTrainingReports(sokkerData.current.team.id, sokkerData.training);
       return playerResult;
     } catch (error) {
       reply.code(422);
@@ -71,20 +71,14 @@ function createPlayerSnapshotPayload(data: SokkerImportResultDto) {
       exportedAt: data.importedAt.toISOString(),
       locale: null
     },
-    club: {
-      clubId: Number(data.clubProfile.externalId),
-      country: data.clubProfile.countryId,
-      name: data.clubProfile.name,
-      training: data.clubProfile.training,
-      gameWeek: data.clubProfile.gameWeek
-    },
+    club: mapCurrentContextToSnapshotClub(data.current),
     snapshot: {
       snapshotDate: data.importedAt.toISOString().split("T")[0]!,
-      gameWeek: data.clubProfile.gameWeek,
-      week: data.clubProfile.week
+      gameWeek: data.current.calendar.gameWeek,
+      week: data.current.calendar.seasonWeek
     },
-    players: data.players,
-    juniors: data.juniors
+    players: mapPlayersToSnapshotPlayers(data.players, data.training),
+    juniors: mapJuniorsToSnapshotJuniors(data.juniors)
   };
 }
 
