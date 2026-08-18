@@ -33,29 +33,29 @@ import type {
 import { Section } from "./components/Section";
 import { IssueList } from "./components/IssueList";
 import { SokkerSyncModal } from "./components/SokkerSyncModal";
-import { AppV2 } from "./app-v2/AppV2";
-import { UiVersionSwitch } from "./app-v2/components/UiVersionSwitch";
+import { AtlasApp } from "./atlas/AtlasApp";
+import { UiModeSwitch } from "./components/UiModeSwitch";
 import type { AppLegacyProps } from "./app-legacy/types";
-import { readUiVersion, uiVersionStorageKey, type UiVersion } from "./ui-version";
+import { readUiMode, uiModeStorageKey, type UiMode } from "./ui-mode";
 
 const lastClubStorageKey = "atlas.lastClubId";
 
 export function App() {
-  const [uiVersion, setUiVersion] = useState<UiVersion>(() => readUiVersion());
+  const [uiMode, setUiMode] = useState<UiMode>(() => readUiMode());
 
-  const handleUiVersionChange = useCallback((version: UiVersion) => {
-    window.localStorage.setItem(uiVersionStorageKey, version);
-    setUiVersion(version);
+  const handleUiModeChange = useCallback((version: UiMode) => {
+    window.localStorage.setItem(uiModeStorageKey, version);
+    setUiMode(version);
   }, []);
 
-  return uiVersion === "legacy" ? (
-    <AppLegacy uiVersion={uiVersion} onUiVersionChange={handleUiVersionChange} />
+  return uiMode === "legacy" ? (
+    <AppLegacy uiMode={uiMode} onUiModeChange={handleUiModeChange} />
   ) : (
-    <AppV2 uiVersion={uiVersion} onUiVersionChange={handleUiVersionChange} />
+    <AtlasApp uiMode={uiMode} onUiModeChange={handleUiModeChange} />
   );
 }
 
-export function AppLegacy({ uiVersion, onUiVersionChange }: AppLegacyProps) {
+export function AppLegacy({ uiMode, onUiModeChange }: AppLegacyProps) {
   const [activeClubId, setActiveClubId] = useState<string | null>(() =>
     window.localStorage.getItem(lastClubStorageKey)
   );
@@ -261,7 +261,7 @@ export function AppLegacy({ uiVersion, onUiVersionChange }: AppLegacyProps) {
             <h1>Club dashboard</h1>
           </div>
           <div className="legacy-topbar-actions">
-            <UiVersionSwitch activeVersion={uiVersion} onChange={onUiVersionChange} />
+            <UiModeSwitch activeMode={uiMode} onChange={onUiModeChange} />
             <div className={`status-pill ${status}`}>{message}</div>
           </div>
         </header>

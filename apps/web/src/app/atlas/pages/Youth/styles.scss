@@ -1,0 +1,160 @@
+.atlas {
+  .atlas-youth {
+    display: grid;
+    gap: 14px;
+    max-width: 1440px;
+  }
+
+  .atlas-youth__header {
+    padding: 2px 0 4px;
+  }
+
+  .atlas-youth__header h1 {
+    color: var(--atlas-text);
+    font-size: 1.35rem;
+    line-height: 1.2;
+    margin: 0;
+  }
+
+  .atlas-youth-panel {
+    background: var(--atlas-surface);
+    border: 1px solid var(--atlas-border);
+    border-radius: var(--atlas-radius-md);
+    min-width: 0;
+    padding: 14px 16px;
+  }
+
+  .atlas-youth-panel--attention {
+    border-color: color-mix(in srgb, var(--semantic-warning-border) 55%, var(--atlas-border));
+  }
+
+  .atlas-youth-panel__title {
+    color: var(--atlas-text);
+    font-size: 0.9rem;
+    font-weight: 750;
+    letter-spacing: 0.01em;
+    margin: 0 0 12px;
+  }
+
+  .atlas-youth-panel__message {
+    color: var(--atlas-text-secondary);
+    font-size: 0.8rem;
+    line-height: 1.45;
+    margin: 0;
+  }
+
+  .atlas-youth-panel__message.is-clear {
+    color: var(--semantic-success-text);
+  }
+
+  .atlas-youth-panel__message.is-error {
+    color: var(--semantic-error-text);
+  }
+
+  .atlas-youth-table-wrap {
+    overflow-x: auto;
+  }
+
+  .atlas-youth-table {
+    border-collapse: collapse;
+    min-width: 900px;
+    table-layout: fixed;
+    width: 100%;
+  }
+
+  .atlas-youth-table__player-column {
+    width: 25%;
+  }
+
+  .atlas-youth-table__age-column,
+  .atlas-youth-table__position-column {
+    width: 9%;
+  }
+
+  .atlas-youth-table__level-column {
+    width: 19%;
+  }
+
+  .atlas-youth-table__weeks-column,
+  .atlas-youth-table__progress-column {
+    width: 11%;
+  }
+
+  .atlas-youth-table__promotion-column {
+    width: 11%;
+  }
+
+  .atlas-youth-table__status-column {
+    width: 13%;
+  }
+
+  .atlas-youth-table th,
+  .atlas-youth-table td {
+    border-bottom: 1px solid color-mix(in srgb, var(--atlas-border) 72%, transparent);
+    color: var(--atlas-text-secondary);
+    font-size: 0.78rem;
+    min-height: 36px;
+    overflow-wrap: anywhere;
+    padding: 8px 10px;
+    text-align: left;
+    vertical-align: middle;
+  }
+
+  .atlas-youth-table thead th {
+    color: var(--atlas-text-muted);
+    font-size: 0.67rem;
+    font-weight: 750;
+    letter-spacing: 0.07em;
+    padding-bottom: 7px;
+    text-transform: uppercase;
+  }
+
+  .atlas-youth-table tbody tr:last-child th,
+  .atlas-youth-table tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
+  .atlas-youth-table tbody th {
+    color: var(--atlas-text);
+    font-weight: 700;
+  }
+
+  .atlas-youth-table__center {
+    text-align: center !important;
+  }
+
+  .atlas-youth-table__empty {
+    color: var(--atlas-text-muted) !important;
+    height: 36px;
+    text-align: left;
+  }
+
+  .atlas-youth-status {
+    border: 1px solid currentColor;
+    border-radius: 4px;
+    display: inline-block;
+    font-size: 0.67rem;
+    font-weight: 750;
+    line-height: 1.2;
+    padding: 3px 6px;
+    white-space: nowrap;
+  }
+
+  .atlas-youth-status.is-promotion,
+  .atlas-youth-status.is-promoted {
+    color: var(--semantic-info-text);
+  }
+
+  .atlas-youth-status.is-attention {
+    color: var(--semantic-warning-text);
+  }
+
+  .atlas-youth-status.is-review {
+    color: var(--semantic-info-text);
+  }
+
+  .atlas-youth-status.is-in-academy,
+  .atlas-youth-status.is-empty {
+    color: var(--atlas-text-muted);
+  }
+}

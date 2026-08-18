@@ -1,6 +1,6 @@
 @use "./variables.scss";
 @use "@atlas/web/app/styles/components.scss";
-@use "./v2.scss";
+@use "./atlas.scss";
 
 :root {
   color: var(--text-primary);
@@ -73,7 +73,7 @@ button {
   gap: 12px;
 }
 
-.ui-version-switch {
+.ui-mode-switch {
   align-items: center;
   background: var(--bg-tertiary);
   border: 1px solid var(--border-default);
@@ -83,7 +83,7 @@ button {
   padding: 2px;
 }
 
-.ui-version-switch button {
+.ui-mode-switch button {
   background: transparent;
   border-radius: 4px;
   color: var(--text-secondary);
@@ -92,9 +92,9 @@ button {
   padding: 6px 8px;
 }
 
-.ui-version-switch button:hover,
-.ui-version-switch button:focus-visible,
-.ui-version-switch button.active {
+.ui-mode-switch button:hover,
+.ui-mode-switch button:focus-visible,
+.ui-mode-switch button.active {
   background: var(--bg-primary);
   color: var(--text-dark);
 }

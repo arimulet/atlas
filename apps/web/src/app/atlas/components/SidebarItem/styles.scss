@@ -1,0 +1,47 @@
+.atlas-sidebar-item {
+  align-items: center;
+  background: transparent;
+  border-left: 2px solid transparent;
+  border-radius: var(--atlas-radius-sm);
+  color: var(--atlas-text-secondary);
+  display: flex;
+  font-size: 0.8rem;
+  font-weight: 650;
+  gap: 10px;
+  min-height: 36px;
+  padding: 0 10px;
+  text-align: left;
+  text-decoration: none;
+  width: 100%;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--atlas-surface-hover);
+    color: var(--atlas-text);
+    outline: 0;
+  }
+
+  &:focus-visible {
+    box-shadow: inset 0 0 0 1px var(--atlas-accent);
+  }
+
+  &.is-active {
+    background: #1d2a2f;
+    border-left-color: var(--atlas-accent);
+    color: var(--atlas-text);
+
+    .atlas-sidebar-item__icon {
+      color: var(--atlas-accent);
+    }
+  }
+
+  &__icon {
+    align-items: center;
+    color: var(--atlas-text-muted);
+    display: inline-flex;
+    font-size: 1rem;
+    height: 20px;
+    justify-content: center;
+    width: 18px;
+  }
+}
