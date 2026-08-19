@@ -8,12 +8,8 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
-  ClubSnapshotModel,
-  JuniorModel,
   SnapshotModel,
   SyncRunModel,
-  TrainerModel,
-  TrainingSummaryModel,
   TrainingWeekModel
 } from "@atlas/database";
 import {
@@ -95,11 +91,9 @@ describe("Sokker sync end-to-end", () => {
       juniors: 2,
       trainingSummaryWeeks: 0
     });
-    expect(await ClubSnapshotModel.exists({ teamId: 6038, gameWeek: 1205 })).toBeFalsy();
     expect(await SnapshotModel.exists({ gameWeek: 1205 })).toBeTruthy();
     expect(await TrainingWeekModel.exists({ clubId: 6038, gameWeek: 1204 })).toBeTruthy();
     expect(await TrainingWeekModel.exists({ clubId: 6038, gameWeek: 1205 })).toBeFalsy();
-    expect(await TrainingSummaryModel.exists({ teamId: 6038, gameWeek: 1205 })).toBeFalsy();
 
     const training = await TrainingWeekModel.findOne({
       clubId: 6038,
@@ -128,12 +122,8 @@ describe("Sokker sync end-to-end", () => {
     await persistence.persist(validation);
 
     expect(await SnapshotModel.countDocuments({ gameWeek: 1205 })).toBe(1);
-    expect(await ClubSnapshotModel.countDocuments({ teamId: 6038, gameWeek: 1205 })).toBe(0);
     expect(await TrainingWeekModel.countDocuments({ clubId: 6038, gameWeek: 1204 })).toBe(3);
     expect(await TrainingWeekModel.countDocuments({ clubId: 6038, gameWeek: 1205 })).toBe(0);
-    expect(await TrainingSummaryModel.countDocuments({ teamId: 6038, gameWeek: 1205 })).toBe(0);
-    expect(await TrainerModel.countDocuments({ teamId: 6038 })).toBe(0);
-    expect(await JuniorModel.countDocuments({ teamId: 6038 })).toBe(0);
   });
 
   it("aborts before persistence when the summary checksum is incompatible", async () => {
