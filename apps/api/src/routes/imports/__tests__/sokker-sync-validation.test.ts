@@ -5,7 +5,6 @@ const mocks = vi.hoisted(() => ({
   createSokkerDataProvider: vi.fn(),
   loadSokkerSyncPayload: vi.fn(),
   persistSokkerSync: vi.fn(),
-  validatePlayerSnapshotImport: vi.fn(),
   validateSokkerSyncPayload: vi.fn()
 }));
 

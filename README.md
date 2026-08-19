@@ -10,11 +10,10 @@ This repository contains only the software implementation:
 
 - `apps/web`: React + Vite web application.
 - `apps/api`: Node.js + Fastify API.
-- `packages/contracts`: Zod JSON contracts and import validation.
 - `packages/domain`: minimal domain types.
 - `packages/application`: use-case boundary for application logic.
 - `packages/database`: MongoDB + Mongoose models.
-- `packages/test-fixtures`: valid and invalid JSON fixtures.
+- `packages/test-fixtures`: Sokker JSON API fixtures for importer tests.
 
 Project strategy, product decisions and architecture knowledge live in `atlas-workspace`.
 
