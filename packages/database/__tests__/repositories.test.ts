@@ -3,9 +3,7 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import {
   ClubModel,
-  ImportEventModel,
   MongoClubRepository,
-  MongoImportEventRepository,
   MongoPlayerRepository,
   MongoSnapshotRepository,
   PlayerModel,
@@ -17,7 +15,6 @@ import {
 let mongo: MongoMemoryServer;
 
 const clubs = new MongoClubRepository();
-const importEvents = new MongoImportEventRepository();
 const players = new MongoPlayerRepository();
 const snapshots = new MongoSnapshotRepository();
 
@@ -30,7 +27,6 @@ describe("Mongo repositories", () => {
   beforeEach(async () => {
     await Promise.all([
       ClubModel.deleteMany({}),
-      ImportEventModel.deleteMany({}),
       PlayerModel.deleteMany({}),
       SnapshotModel.deleteMany({})
     ]);
@@ -297,30 +293,6 @@ describe("Mongo repositories", () => {
     await expect(PlayerModel.create({ playerId: 1001, name: "Tomas Alvarez" })).rejects.toThrow(
       /clubId/
     );
-  });
-
-  it("persists an import event with warnings", async () => {
-    const event = await importEvents.create({
-      schemaVersion: "atlas.player-snapshot.v0",
-      status: "accepted-with-warnings",
-      errors: [],
-      warnings: [
-        {
-          path: "players.0.externalId",
-          message: "Missing externalId; player identity may require manual review."
-        }
-      ]
-    });
-
-    const found = await importEvents.findById(event.id);
-
-    expect(found?.status).toBe("accepted-with-warnings");
-    expect(found?.warnings).toEqual([
-      {
-        path: "players.0.externalId",
-        message: "Missing externalId; player identity may require manual review."
-      }
-    ]);
   });
 });
 

@@ -18,11 +18,6 @@ export interface PersistedPlayerSkillsChange extends PersistedPlayerSkills {
   down: number;
 }
 
-export interface PersistedImportIssue {
-  path: string;
-  message: string;
-}
-
 export interface PersistedClubStaffMember {
   trainerId: number;
   name: string;
@@ -83,17 +78,6 @@ export interface PersistedPlayer {
   cards: { yellow: number; red: number };
   injury: { days: number | null; severe: boolean | null };
   currentGameWeek: number | null;
-}
-
-export interface PersistedImportEvent {
-  id: string;
-  schemaVersion: string | null;
-  status: "accepted" | "accepted-with-warnings" | "rejected";
-  errors: PersistedImportIssue[];
-  warnings: PersistedImportIssue[];
-  clubId: string | null;
-  snapshotId: string | null;
-  importedAt: Date;
 }
 
 export interface SnapshotMoney {
