@@ -8,7 +8,6 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 
 import {
   ClubModel,
-  ImportEventModel,
   MongoClubRepository,
   MongoPlayerRepository,
   MongoSnapshotRepository,
@@ -47,7 +46,6 @@ describe("SokkerSyncPersistence", () => {
   beforeEach(async () => {
     await Promise.all([
       ClubModel.deleteMany({}),
-      ImportEventModel.deleteMany({}),
       PlayerModel.deleteMany({}),
       SnapshotModel.deleteMany({}),
       SyncRunModel.deleteMany({}),
@@ -86,6 +84,20 @@ describe("SokkerSyncPersistence", () => {
     expect(snapshot?.gameWeek).toBe(1205);
     expect(training?.gameWeek).toBe(1204);
     expect(second.snapshotId).toBe(first.snapshotId);
+  });
+
+  it("does not create unused auxiliary collections during sync", async () => {
+    const payload = createPayload();
+    const persistence = new SokkerSyncPersistence();
+
+    await persistence.persist(toValidatedPayload(payload));
+
+    const collections = await mongoose.connection
+      .db!.listCollections({}, { nameOnly: true })
+      .toArray();
+    const collectionNames = collections.map((collection) => collection.name).sort();
+
+    expect(collectionNames).toEqual(["clubs", "players", "snapshots", "syncruns", "trainingweeks"]);
   });
 
   it("replaces a corrected TrainingHistory fact at the same natural key", async () => {
