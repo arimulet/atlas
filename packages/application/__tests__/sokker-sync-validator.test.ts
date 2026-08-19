@@ -85,6 +85,14 @@ describe("SokkerSyncValidator", () => {
     }
   });
 
+  it("rejects a sync without numeric club training configuration", () => {
+    const payload = createPayload();
+    const invalidPayload = structuredClone(payload);
+    invalidPayload.current.training.ATT = Number.NaN;
+
+    expectFatal(invalidPayload, "INVALID_TRAINING_CONFIGURATION");
+  });
+
   it("accepts the observed W1204 aggregate of 8 advanced, 13 formation and 4 missing reports", () => {
     const payload = createPayload();
     const playerTemplates = payload.players;

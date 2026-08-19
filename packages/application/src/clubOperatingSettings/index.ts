@@ -11,7 +11,7 @@ import {
   ValidatedManualOperatingSettingsUpdate
 } from "./types";
 import { ClubId } from "@atlas/application";
-import { validateCurrency, validateWeek } from "@atlas/utils";
+import { validateWeek } from "@atlas/utils";
 
 const operatingPreferenceDefaults: Record<OperatingPreferenceKey, OperatingPreferenceValue> = {
   "economy.riskTolerance": "balanced",
@@ -55,7 +55,6 @@ export const updateClubOperatingSettings = async (
       : mergeOperatingPreferenceRecords(club.settings.preferences, settings.preferences ?? {});
   const update = {
     clubId: input.clubId,
-    ...(input.settings.currency !== undefined ? { currency: settings.currency } : {}),
     ...(input.settings.week !== undefined ? { week: settings.week } : {}),
     ...(nextPreferences !== undefined ? { preferences: nextPreferences } : {})
   };
@@ -74,12 +73,10 @@ export function buildClubOperatingSettings(club: PersistedClub): ClubOperatingSe
       week: club.week
     },
     settings: {
-      currency: club.settings.currency,
       week: club.settings.week ?? null,
       preferences: settingsPreferences
     },
     effective: {
-      currency: club.settings.currency,
       week: club.settings.week ?? club.week,
       preferences: {
         ...operatingPreferenceDefaults,
@@ -94,7 +91,6 @@ function validatesettingsOperatingSettings(
 ): ValidatedManualOperatingSettingsUpdate {
   const validated: ValidatedManualOperatingSettingsUpdate = {};
 
-  if ("currency" in settings) validated.currency = validateCurrency(settings.currency);
   if ("week" in settings) validated.week = validateWeek(settings.week);
   if (settings.preferences) validated.preferences = validateOperatingPreferences(settings.preferences);
 

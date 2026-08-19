@@ -1,9 +1,12 @@
 import mongoose, { type ClientSession } from "mongoose";
+import { migrateClubProfileDocuments } from "./migrations/club-profile.js";
 
 export type MongoSession = ClientSession;
 
 export async function connectMongoDb(uri: string): Promise<typeof mongoose> {
-  return mongoose.connect(uri);
+  const connection = await mongoose.connect(uri);
+  await migrateClubProfileDocuments();
+  return connection;
 }
 
 export async function disconnectMongoDb(): Promise<void> {

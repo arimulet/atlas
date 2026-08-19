@@ -7,25 +7,24 @@ export type ClubId = string | number;
 export interface SaveClubInput {
   clubId: number;
   country: number;
-  training?: {
-    GK: number | null;
-    DEF: number | null;
-    MID: number | null;
-    ATT: number | null;
-  } | null;
+  training: {
+    GK: number;
+    DEF: number;
+    MID: number;
+    ATT: number;
+  };
   name: string;
   gameWeek?: number | null;
   week?: number | null;
   lastSnapshotDate?: Date | null;
   observedAt?: Date | null;
-  currency: { name: string; rate: number };
-  budget?: { value: number } | null;
+  currency: string;
+  budget?: number | null;
   staff?: PersistedClubStaffMember[];
 }
 
 export interface UpdateClubManualProfileInput {
   clubId: ClubId;
-  currency?: { name: string; rate: number };
   week?: number | null;
   assumptions?: Array<{ key: string; value: string }>;
   preferences?: Array<{ key: string; value: string }>;
@@ -36,6 +35,7 @@ export class MongoClubRepository {
     const $set: Record<string, unknown> = {
       name: input.name,
       country: input.country,
+      currency: input.currency,
       week: input.week ?? null,
       lastSnapshotDate: input.lastSnapshotDate ?? null,
       observedAt: input.observedAt ?? null
@@ -49,18 +49,13 @@ export class MongoClubRepository {
       $set.gameWeek = input.gameWeek;
     }
 
-    if (input.training !== undefined) {
-      $set.training = input.training;
-    }
+    $set.training = input.training;
 
     if (input.staff !== undefined) {
       $set.staff = input.staff;
     }
 
-    const $setOnInsert: Record<string, unknown> = {
-      clubId: input.clubId,
-      "settings.currency": { name: input.currency.name, rate: input.currency.rate }
-    };
+    const $setOnInsert: Record<string, unknown> = { clubId: input.clubId };
 
     const club = await ClubModel.findOneAndUpdate(
       { clubId: input.clubId },
@@ -116,51 +111,78 @@ function mapClub(club: {
   clubId?: number | null;
   country?: number | null;
   training?: {
-    GK?: number | null;
-    DEF?: number | null;
-    MID?: number | null;
-    ATT?: number | null;
+    GK?: number;
+    DEF?: number;
+    MID?: number;
+    ATT?: number;
   } | null;
   name: string;
   gameWeek?: number | null;
   week?: number | null;
   lastSnapshotDate?: Date | null;
   observedAt?: Date | null;
+  currency?: string;
   staff?: PersistedClubStaffMember[];
   settings?: {
-    currency?: { name: string; rate: number };
     week?: number | null;
     assumptions?: Array<{ key: string; value: string; updatedAt: Date }>;
     preferences?: Array<{ key: string; value: string; updatedAt: Date }>;
   } | null;
-  budget?: { value?: number | null } | null;
+  budget?: number | null;
 }): PersistedClub {
-  const currency = club.settings?.currency ?? { name: "UNK", rate: 1 };
-
   return {
     id: club._id.toString(),
     clubId: club.clubId ?? 0,
     country: club.country ?? 0,
     name: club.name,
-    budget: club.budget ? { value: club.budget.value ?? null, currency: currency.name } : null,
+    currency: club.currency ?? "UNK",
+    budget: club.budget ?? null,
     staff: club.staff ?? [],
-    training: club.training
-      ? {
-          GK: club.training.GK ?? null,
-          DEF: club.training.DEF ?? null,
-          MID: club.training.MID ?? null,
-          ATT: club.training.ATT ?? null
-        }
-      : null,
+    training: requireNumericTraining(club.training),
     gameWeek: club.gameWeek ?? null,
     week: club.week ?? null,
     lastSnapshotDate: club.lastSnapshotDate ?? null,
     observedAt: club.observedAt ?? null,
     settings: {
-      currency,
       week: club.settings?.week ?? null,
       assumptions: club.settings?.assumptions ?? [],
       preferences: club.settings?.preferences ?? []
     }
+  };
+}
+
+function requireNumericTraining(
+  training: {
+    GK?: number;
+    DEF?: number;
+    MID?: number;
+    ATT?: number;
+  } | null | undefined
+): PersistedClub["training"] {
+  const GK = training?.GK;
+  const DEF = training?.DEF;
+  const MID = training?.MID;
+  const ATT = training?.ATT;
+
+  if (
+    training === null ||
+    training === undefined ||
+    typeof GK !== "number" ||
+    !Number.isFinite(GK) ||
+    typeof DEF !== "number" ||
+    !Number.isFinite(DEF) ||
+    typeof MID !== "number" ||
+    !Number.isFinite(MID) ||
+    typeof ATT !== "number" ||
+    !Number.isFinite(ATT)
+  ) {
+    throw new Error("Club training configuration is missing numeric values for every position.");
+  }
+
+  return {
+    GK,
+    DEF,
+    MID,
+    ATT
   };
 }

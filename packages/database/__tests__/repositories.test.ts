@@ -10,6 +10,7 @@ import {
   MongoSnapshotRepository,
   PlayerModel,
   SnapshotModel,
+  migrateClubProfileDocuments,
   type SaveSnapshotInput
 } from "../src/index.js";
 
@@ -45,7 +46,8 @@ describe("Mongo repositories", () => {
       clubId: 1,
       country: 1,
       name: "River Plate Forever",
-      currency: { name: "ARS", rate: 100 }
+      training: { GK: 2, DEF: 6, MID: 4, ATT: 7 },
+      currency: "ARS"
     });
     const player = await players.resolveHistoricalIdentity({
       playerId: 1001,
@@ -85,6 +87,25 @@ describe("Mongo repositories", () => {
     });
   });
 
+  it("migrates legacy club budget and currency fields without deleting the document", async () => {
+    const inserted = await ClubModel.collection.insertOne({
+      clubId: 99,
+      country: 1,
+      name: "Legacy Club",
+      budget: { value: 13221420, currency: "ARS" },
+      settings: { currency: { name: "ARS", rate: 1 }, preferences: [] }
+    });
+
+    const result = await migrateClubProfileDocuments();
+    const migrated = await ClubModel.collection.findOne({ _id: inserted.insertedId });
+
+    expect(result.migrated).toBe(1);
+    expect(migrated?.budget).toBe(13221420);
+    expect(migrated?.currency).toBe("ARS");
+    expect(migrated).not.toHaveProperty("budget.value");
+    expect(migrated).not.toHaveProperty("settings.currency");
+  });
+
   it("persists observed club profile separately from manual configuration", async () => {
     const club = await clubs.save({
       clubId: 1,
@@ -93,7 +114,8 @@ describe("Mongo repositories", () => {
       week: 4,
       lastSnapshotDate: new Date("2026-08-05T00:00:00.000Z"),
       observedAt: new Date("2026-08-05T20:00:00.000Z"),
-      currency: { name: "ARS", rate: 100 }
+      training: { GK: 2, DEF: 6, MID: 4, ATT: 7 },
+      currency: "ARS"
     });
 
     expect(club).toMatchObject({
@@ -102,8 +124,8 @@ describe("Mongo repositories", () => {
       week: 4
     });
     expect(club).not.toHaveProperty("sourceType");
+    expect(club).toMatchObject({ currency: "ARS" });
     expect(club.settings).toMatchObject({
-      currency: { name: "ARS", rate: 100 },
       week: null,
       assumptions: [],
       preferences: [
@@ -113,7 +135,6 @@ describe("Mongo repositories", () => {
         { key: "market.strategy", value: "balanced" }
       ]
     });
-    // The settings assertions above replace this block.
   });
 
   it("updates manual club configuration without changing observed Sokker data", async () => {
@@ -122,12 +143,12 @@ describe("Mongo repositories", () => {
       country: 1,
       name: "River Plate Forever",
       week: 4,
-      currency: { name: "ARS", rate: 100 }
+      training: { GK: 2, DEF: 6, MID: 4, ATT: 7 },
+      currency: "ARS"
     });
 
     const updated = await clubs.updateManualProfile({
       clubId: club.id,
-      currency: { name: "ARS", rate: 100 },
       assumptions: [{ key: "market-risk", value: "Keep liquidity buffer before buying." }],
       preferences: [{ key: "training-focus", value: "Prioritize playmaking trainees." }]
     });
@@ -138,7 +159,6 @@ describe("Mongo repositories", () => {
       week: 4
     });
     expect(updated.settings).toMatchObject({
-      currency: { name: "ARS", rate: 100 },
       week: null
     });
     expect(updated.settings.assumptions[0]).toMatchObject({
@@ -152,7 +172,8 @@ describe("Mongo repositories", () => {
       clubId: 1,
       country: 1,
       name: "River Plate Forever",
-      currency: { name: "ARS", rate: 100 }
+      training: { GK: 2, DEF: 6, MID: 4, ATT: 7 },
+      currency: "ARS"
     });
     const player = await players.resolveHistoricalIdentity({
       playerId: 1001,
@@ -174,13 +195,15 @@ describe("Mongo repositories", () => {
       clubId: 1,
       country: 1,
       name: "River Plate Forever",
-      currency: { name: "ARS", rate: 100 }
+      training: { GK: 2, DEF: 6, MID: 4, ATT: 7 },
+      currency: "ARS"
     });
     const otherClub = await clubs.save({
       clubId: 2,
       country: 1,
       name: "Atlas Wanderers",
-      currency: { name: "ARS", rate: 100 }
+      training: { GK: 2, DEF: 6, MID: 4, ATT: 7 },
+      currency: "ARS"
     });
     const player = await players.resolveHistoricalIdentity({
       playerId: 1001,
@@ -212,7 +235,8 @@ describe("Mongo repositories", () => {
       clubId: 1,
       country: 1,
       name: "River Plate Forever",
-      currency: { name: "ARS", rate: 100 }
+      training: { GK: 2, DEF: 6, MID: 4, ATT: 7 },
+      currency: "ARS"
     });
     const player = await players.resolveHistoricalIdentity({
       playerId: 1001,

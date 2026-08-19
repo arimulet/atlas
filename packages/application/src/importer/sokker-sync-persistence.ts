@@ -94,8 +94,9 @@ export class SokkerSyncPersistence {
           week: payload.current.calendar.seasonWeek,
           lastSnapshotDate: currentDate,
           observedAt: importedAt,
-          currency: { name: payload.current.budget.currency, rate: 1 },
-          budget: { value: payload.current.budget.value },
+          currency: payload.current.budget.currency,
+          budget: payload.current.budget.value,
+          training: payload.current.training,
           staff: payload.trainers.map(mapTrainerToStaff)
         },
         session

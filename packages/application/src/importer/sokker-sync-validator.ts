@@ -111,6 +111,17 @@ function validateCurrent(current: CurrentClubContextDto, issues: ValidationIssue
     );
   }
 
+  for (const position of ["GK", "DEF", "MID", "ATT"] as const) {
+    if (!Number.isFinite(current.training[position])) {
+      fatal(
+        issues,
+        "INVALID_TRAINING_CONFIGURATION",
+        `Current training ${position} value must be a finite number.`,
+        `current.training.${position}`
+      );
+    }
+  }
+
   validateDate(current.calendar.date, "current.calendar.date", issues);
 }
 

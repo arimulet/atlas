@@ -53,7 +53,7 @@ export const getSquadMarketPlanning = async (clubId: ClubId): Promise<SquadMarke
     economy.derived.playerDetails.map((player) => [player.snapshotPlayerId, player])
   );
   const developmentByIdentity = buildDevelopmentIndex(development.derived.players);
-  const observedPlayers = latest.players.map((player) => mapObservedPlayer(player, settings.effective.currency.name));
+  const observedPlayers = latest.players.map((player) => mapObservedPlayer(player, club.currency));
   const players = latest.players
     .map((player) =>
       buildPlayerPlan({

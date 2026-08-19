@@ -1,4 +1,5 @@
 export * from "./connection.js";
+export * from "./migrations/club-profile.js";
 export * from "./models/club.js";
 export * from "./models/country.js";
 export * from "./models/importEvent.js";
