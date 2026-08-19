@@ -1,6 +1,12 @@
 import mongoose, { Schema, model, type InferSchemaType, type Model } from "mongoose";
 
-const observedPositionValues = ["goalkeeper", "defender", "midfielder", "winger", "striker"] as const;
+const observedPositionValues = [
+  "goalkeeper",
+  "defender",
+  "midfielder",
+  "winger",
+  "striker"
+] as const;
 
 const trainingSchema = new Schema(
   {
@@ -69,6 +75,7 @@ const snapshotSchema = new Schema(
     snapshotDate: { type: Date, required: true, index: true },
     gameWeek: { type: Number, default: null },
     week: { type: Number, default: null },
+    naturalKey: { type: String, default: null },
     importedAt: { type: Date, required: true, default: () => new Date() },
     source: {
       type: {
@@ -87,6 +94,10 @@ const snapshotSchema = new Schema(
 );
 
 snapshotSchema.index({ clubId: 1, snapshotDate: 1 });
+snapshotSchema.index(
+  { clubId: 1, gameWeek: 1, naturalKey: 1 },
+  { unique: true, partialFilterExpression: { naturalKey: { $type: "string" } } }
+);
 
 type SnapshotDocument = InferSchemaType<typeof snapshotSchema>;
 

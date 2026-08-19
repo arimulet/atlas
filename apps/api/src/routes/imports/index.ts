@@ -1,18 +1,13 @@
 import {
   createSokkerDataProvider,
   importPlayerSnapshotMvp,
-  importTrainingReports,
   loadSokkerSyncPayload,
-  mapCurrentContextToSnapshotClub,
-  mapJuniorsToSnapshotJuniors,
-  mapPlayersToSnapshotPlayers,
-  type SokkerSyncPayload,
+  persistSokkerSync,
   type SokkerSyncValidationIssue,
   validateSokkerSyncPayload,
   validatePlayerSnapshotImport
 } from "@atlas/application";
 import type { ImportIssue } from "@atlas/contracts";
-import type { ImportPlayerSnapshotMvpResult } from "@atlas/application";
 import { FastifyInstance } from "fastify";
 import { sokkerSyncRequestSchema } from "../../schemas.js";
 
@@ -53,20 +48,8 @@ async function importsRoutes(server: FastifyInstance) {
         };
       }
 
-      const sokkerData = validation.payload;
-      const importedAt = new Date();
-      const playerResult = await importPlayerSnapshotMvp({
-        payload: createPlayerSnapshotPayload(sokkerData, importedAt)
-      });
-      const result = appendSyncWarnings(playerResult, validation.warnings);
-
-      if (result.importResult.status === "rejected") {
-        reply.code(422);
-        return result;
-      }
-
-      await importTrainingReports(sokkerData.current.team.id, sokkerData.trainingWeeks);
-      return result;
+      const persistence = await persistSokkerSync(validation);
+      return createSyncPersistenceResponse(persistence, validation.warnings);
     } catch (error) {
       reply.code(422);
 
@@ -94,43 +77,24 @@ function mapSyncIssues(issues: readonly SokkerSyncValidationIssue[]): ImportIssu
   }));
 }
 
-function appendSyncWarnings(
-  result: ImportPlayerSnapshotMvpResult,
+function createSyncPersistenceResponse(
+  persistence: Awaited<ReturnType<typeof persistSokkerSync>>,
   warnings: readonly SokkerSyncValidationIssue[]
-): ImportPlayerSnapshotMvpResult {
-  if (warnings.length === 0) {
-    return result;
-  }
-
+) {
   return {
-    ...result,
     importResult: {
-      ...result.importResult,
-      status:
-        result.importResult.status === "accepted"
-          ? "accepted-with-warnings"
-          : result.importResult.status,
-      warnings: [...result.importResult.warnings, ...mapSyncIssues(warnings)]
-    }
-  };
-}
-
-function createPlayerSnapshotPayload(data: SokkerSyncPayload, importedAt: Date) {
-  return {
-    schemaVersion: "atlas.player-snapshot.v0" as const,
-    source: {
-      type: "sokker-json-api-import" as const,
-      exportedAt: importedAt.toISOString(),
-      locale: null
+      status: warnings.length > 0 ? ("accepted-with-warnings" as const) : ("accepted" as const),
+      errors: [],
+      warnings: mapSyncIssues(warnings),
+      importEventId: persistence.syncRunId,
+      snapshotId: persistence.snapshotId,
+      clubId: persistence.clubId,
+      playerIds: [],
+      importedPlayerCount: persistence.upserted.players
     },
-    club: mapCurrentContextToSnapshotClub(data.current),
-    snapshot: {
-      snapshotDate: importedAt.toISOString().split("T")[0]!,
-      gameWeek: data.current.calendar.gameWeek,
-      week: data.current.calendar.seasonWeek
-    },
-    players: mapPlayersToSnapshotPlayers(data.players, data.trainingWeeks),
-    juniors: mapJuniorsToSnapshotJuniors(data.juniors)
+    summary: null,
+    diagnostic: null,
+    persistence
   };
 }
 

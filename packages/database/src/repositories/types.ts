@@ -34,6 +34,7 @@ export interface PersistedClub {
     ATT: number | null;
   } | null;
   name: string;
+  budget: { value: number | null; currency: string | null } | null;
   gameWeek: number | null;
   week: number | null;
   lastSnapshotDate: Date | null;

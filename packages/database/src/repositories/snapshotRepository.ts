@@ -1,4 +1,4 @@
-import { Types } from "mongoose";
+import { Types, type ClientSession } from "mongoose";
 import { SnapshotModel } from "../models/snapshot.js";
 import type {
   PersistedJuniorSnapshot,
@@ -17,13 +17,14 @@ export interface SaveSnapshotInput {
   importedAt: Date;
   source: SnapshotSource;
   sourceVersion?: string | null;
+  naturalKey?: string | null;
   players: Array<Omit<PersistedPlayerSnapshot, "id">>;
   juniors?: Array<Omit<PersistedJuniorSnapshot, "id" | "skill"> & { skill: number }>;
 }
 
 export class MongoSnapshotRepository {
-  async save(input: SaveSnapshotInput): Promise<PersistedSnapshot> {
-    const snapshot = await SnapshotModel.create({
+  async save(input: SaveSnapshotInput, session?: ClientSession): Promise<PersistedSnapshot> {
+    const document = {
       clubId: new Types.ObjectId(input.clubId),
       schemaVersion: input.schemaVersion,
       snapshotDate: input.snapshotDate,
@@ -32,6 +33,7 @@ export class MongoSnapshotRepository {
       importedAt: input.importedAt,
       source: input.source,
       sourceVersion: input.sourceVersion ?? null,
+      naturalKey: input.naturalKey ?? null,
       players: input.players.map((player) => ({
         ...player
       })),
@@ -44,7 +46,41 @@ export class MongoSnapshotRepository {
         skill: junior.skill,
         status: junior.status ?? "in_academy"
       }))
-    });
+    };
+
+    let snapshot;
+    if (input.naturalKey && input.gameWeek !== null) {
+      const legacyQuery = SnapshotModel.findOne({
+        clubId: document.clubId,
+        gameWeek: input.gameWeek
+      }).sort({ importedAt: -1 });
+      if (session) {
+        legacyQuery.session(session);
+      }
+      const existingSnapshot = await legacyQuery;
+      snapshot = await SnapshotModel.findOneAndUpdate(
+        existingSnapshot ? { _id: existingSnapshot._id } : {
+          clubId: document.clubId,
+          gameWeek: input.gameWeek,
+          naturalKey: input.naturalKey
+        },
+        { $set: document },
+        {
+          new: true,
+          upsert: existingSnapshot === null,
+          setDefaultsOnInsert: true,
+          session
+        }
+      );
+    } else {
+      snapshot = await SnapshotModel.create([document], { session }).then(
+        (documents) => documents[0]
+      );
+    }
+
+    if (!snapshot) {
+      throw new Error(`Snapshot could not be persisted: ${input.clubId}/${input.gameWeek}.`);
+    }
 
     return mapSnapshot(snapshot.toObject());
   }
