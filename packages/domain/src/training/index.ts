@@ -52,7 +52,11 @@ import type {
   RequiredTrainingPointsInput,
   RequiredTrainingPointsResult,
   TalentEstimationInput,
-  TalentEstimationResult
+  TalentEstimationResult,
+  WeeklyTrainingPlayerInput,
+  WeeklyTrainingPlayerReport,
+  WeeklyTrainingReport,
+  WeeklyTrainingReportInput
 } from "./types.js";
 
 const PLAYER_SKILLS: readonly PlayerSkill[] = [
@@ -123,7 +127,11 @@ export type {
   RequiredTrainingPointsInput,
   RequiredTrainingPointsResult,
   TalentEstimationInput,
-  TalentEstimationResult
+  TalentEstimationResult,
+  WeeklyTrainingPlayerInput,
+  WeeklyTrainingPlayerReport,
+  WeeklyTrainingReport,
+  WeeklyTrainingReportInput
 } from "./types.js";
 
 export function calculateAgeTrainingCostFactor(age: number): number {
@@ -315,6 +323,210 @@ export function getTrainingWeeksForSkill(
   assertSupportedSkill(skill);
 
   return getTrainingWeeks(history).filter((week) => week.skill === skill);
+}
+
+export function buildWeeklyTrainingReport(input: WeeklyTrainingReportInput): WeeklyTrainingReport {
+  const allWeeks = input.players.flatMap((player) => getTrainingWeeks(player.history));
+  const gameWeek = input.gameWeek ?? latestGameWeek(allWeeks);
+  assertPositiveInteger(gameWeek, "gameWeek");
+
+  const weeklyPlayers = input.players
+    .map((player) => buildWeeklyTrainingPlayerReport(player, gameWeek, input.talents))
+    .filter((player): player is WeeklyTrainingPlayerReport => player !== null);
+
+  const selectedWeek = allWeeks.find((week) => week.week === gameWeek);
+  const date = input.date ?? selectedWeek?.date;
+  if (!date) {
+    throw new Error(`No training report date is available for gameWeek ${gameWeek}.`);
+  }
+  assertDate(date);
+
+  const advancedPlayers = weeklyPlayers.filter(
+    (player) => player.training.kind === "advanced"
+  ).length;
+  const formationPlayers = weeklyPlayers.filter(
+    (player) => player.training.kind === "formation"
+  ).length;
+  const totalIntensity = weeklyPlayers.reduce(
+    (total, player) => total + player.training.intensity,
+    0
+  );
+
+  return {
+    gameWeek,
+    date: new Date(date),
+    players: weeklyPlayers,
+    summary: {
+      trainedPlayers: weeklyPlayers.length,
+      advancedPlayers,
+      formationPlayers,
+      skillUps: weeklyPlayers.filter((player) => player.skill.skillUp).length,
+      averageIntensity: weeklyPlayers.length === 0 ? 0 : totalIntensity / weeklyPlayers.length
+    }
+  };
+}
+
+function buildWeeklyTrainingPlayerReport(
+  input: WeeklyTrainingPlayerInput,
+  gameWeek: number,
+  talents: WeeklyTrainingReportInput["talents"]
+): WeeklyTrainingPlayerReport | null {
+  const weeks = getTrainingWeeks(input.history);
+  const currentWeek = weeks.find((week) => week.week === gameWeek);
+
+  if (!currentWeek || currentWeek.kind === "missing") {
+    return null;
+  }
+
+  const skillChange = currentWeek.skillChanges.find(
+    (change) => toTrainingCostSkill(change.skill) === currentWeek.skill
+  );
+  const skillUp = skillChange?.direction === "up";
+  const previousLevel = skillChange
+    ? currentWeek.skillLevelBefore
+    : previousObservedSkillLevel(weeks, currentWeek);
+  const talent = input.talent !== undefined ? input.talent : talentForPlayer(input, talents);
+  const progress = buildWeeklyProgress(weeks, currentWeek, talent);
+
+  return {
+    playerId: currentWeek.playerId,
+    gameWeek,
+    training: {
+      skill: currentWeek.skill,
+      kind: currentWeek.kind,
+      intensity: currentWeek.intensity
+    },
+    skill: {
+      previousLevel,
+      currentLevel: currentWeek.skillLevelAfter,
+      skillUp
+    },
+    trainingPoints: {
+      earned: calculateWeeklyTrainingPoints(currentWeek.intensity),
+      estimatedProgress: progress?.estimatedProgress ?? null,
+      remainingToNextLevel: progress?.remainingToNextLevel ?? null,
+      estimatedWeeksToNextLevel: progress?.estimatedWeeksToNextLevel ?? null
+    }
+  };
+}
+
+function previousObservedSkillLevel(
+  weeks: readonly TrainingWeek[],
+  currentWeek: TrainingWeek
+): number {
+  const previousWeek = [...weeks]
+    .reverse()
+    .find((week) => week.week < currentWeek.week && week.skill === currentWeek.skill);
+
+  return previousWeek?.skillLevelAfter ?? currentWeek.skillLevelBefore;
+}
+
+interface WeeklyProgress {
+  estimatedProgress: number;
+  remainingToNextLevel: number;
+  estimatedWeeksToNextLevel: number | null;
+}
+
+function buildWeeklyProgress(
+  weeks: readonly TrainingWeek[],
+  currentWeek: TrainingWeek,
+  talent: number | null | undefined
+): WeeklyProgress | null {
+  if (talent === null || talent === undefined || currentWeek.skillLevelAfter >= MAX_SKILL_LEVEL) {
+    return null;
+  }
+
+  const relevantWeeks = weeks.filter((week) => week.week <= currentWeek.week);
+  const skillUps = detectSkillUps({ playerId: currentWeek.playerId, weeks: relevantWeeks }).filter(
+    (skillUp) => skillUp.skill === currentWeek.skill
+  );
+  const lastSkillUp = skillUps.at(-1);
+  if (!lastSkillUp) {
+    return null;
+  }
+
+  const accumulationWeeks = relevantWeeks.filter(
+    (week) => week.week > lastSkillUp.week && week.week <= currentWeek.week
+  );
+  if (!hasCompleteTrainingHistory(accumulationWeeks, lastSkillUp.week + 1, currentWeek.week)) {
+    return null;
+  }
+
+  const accumulatedTrainingPoints = accumulationWeeks
+    .filter((week) => week.skill === currentWeek.skill)
+    .reduce((total, week) => total + calculateWeeklyTrainingPoints(week.intensity), 0);
+  const requiredTraining = calculateRequiredTrainingPoints({
+    talent,
+    age: currentWeek.playerAge,
+    skill: currentWeek.skill,
+    targetSkillLevel: currentWeek.skillLevelAfter + 1
+  });
+  const remainingToNextLevel = Math.max(
+    0,
+    requiredTraining.requiredTrainingPoints - accumulatedTrainingPoints
+  );
+  const estimatedProgress = Math.min(
+    1,
+    Math.max(0, accumulatedTrainingPoints / requiredTraining.requiredTrainingPoints)
+  );
+  const expectedWeeklyTrainingPoints = calculateWeeklyTrainingPoints(currentWeek.intensity);
+
+  return {
+    estimatedProgress,
+    remainingToNextLevel,
+    estimatedWeeksToNextLevel:
+      remainingToNextLevel === 0
+        ? 0
+        : expectedWeeklyTrainingPoints > 0
+          ? remainingToNextLevel / expectedWeeklyTrainingPoints
+          : null
+  };
+}
+
+function hasCompleteTrainingHistory(
+  weeks: readonly TrainingWeek[],
+  startWeek: number,
+  endWeek: number
+): boolean {
+  if (endWeek < startWeek) {
+    return true;
+  }
+
+  return (
+    weeks.length === endWeek - startWeek + 1 &&
+    weeks.every((week, index) => week.week === startWeek + index)
+  );
+}
+
+function talentForPlayer(
+  input: WeeklyTrainingPlayerInput,
+  talents: WeeklyTrainingReportInput["talents"]
+): number | null {
+  const explicitTalent = readTalent(talents, input.history.playerId);
+  if (explicitTalent !== undefined) {
+    return explicitTalent;
+  }
+
+  return estimateTalentFromTrainingHistory(input.history).value;
+}
+
+function readTalent(
+  talents: WeeklyTrainingReportInput["talents"],
+  playerId: number
+): number | null | undefined {
+  if (!talents) {
+    return undefined;
+  }
+
+  return "get" in talents ? talents.get(playerId) : talents[playerId];
+}
+
+function latestGameWeek(weeks: readonly TrainingWeek[]): number {
+  const latestWeek = weeks.reduce((latest, week) => Math.max(latest, week.week), 0);
+  if (latestWeek === 0) {
+    throw new Error("At least one training week is required to build a report.");
+  }
+  return latestWeek;
 }
 
 export function detectSkillUps(history: TrainingHistory): SkillUp[] {

@@ -7,12 +7,14 @@ import {
   type PersistedPlayerSnapshot
 } from "@atlas/database";
 import {
+  buildWeeklyTrainingReport,
   createTrainingWeek,
   estimateTalentFromTrainingHistory,
   type PlayerSkill,
   type PlayerSkills,
   type PlayerSkillsChange
 } from "@atlas/domain";
+import type { TrainingHistory, WeeklyTrainingReport } from "@atlas/domain";
 import type { ClubId } from "../types.js";
 import type { PlayerTrainingWeekDto } from "../importer/types.js";
 import type { TrainingPageData } from "./types.js";
@@ -81,6 +83,59 @@ export async function getTrainingPageData(clubId: ClubId): Promise<TrainingPageD
       ) ?? [],
     history
   };
+}
+
+export async function getWeeklyTrainingReport(
+  clubId: ClubId,
+  gameWeek?: number
+): Promise<WeeklyTrainingReport> {
+  const club = await clubRepository.findById(clubId.toString());
+
+  if (!club) {
+    throw new Error(`Club not found: ${clubId}`);
+  }
+
+  const reports = await trainingWeekRepository.listByClub(club.clubId);
+  const histories = buildTrainingHistories(reports);
+  const talents = new Map<number, number | null>();
+
+  for (const history of histories) {
+    talents.set(history.playerId, estimateTalentFromTrainingHistory(history).value);
+  }
+
+  return buildWeeklyTrainingReport({
+    players: histories.map((history) => ({ history })),
+    gameWeek,
+    talents
+  });
+}
+
+function buildTrainingHistories(
+  reports: readonly TrainingPageData["history"][number][]
+): TrainingHistory[] {
+  const weeksByPlayer = new Map<number, TrainingHistory["weeks"]>();
+
+  for (const report of reports) {
+    const playerWeeks = weeksByPlayer.get(report.playerId) ?? [];
+    weeksByPlayer.set(report.playerId, [
+      ...playerWeeks,
+      createTrainingWeek({
+        playerId: report.playerId,
+        gameWeek: report.gameWeek,
+        season: report.season ?? undefined,
+        seasonWeek: report.seasonWeek,
+        date: new Date(report.date),
+        type: report.type,
+        kind: report.kind,
+        intensity: report.intensity,
+        age: report.age,
+        skills: toDomainSkills(report.skills),
+        skillsChange: toDomainSkillsChange(report.skillsChange)
+      })
+    ]);
+  }
+
+  return [...weeksByPlayer.entries()].map(([playerId, weeks]) => ({ playerId, weeks }));
 }
 
 function toDomainSkills(skills: PersistedPlayerSkills): PlayerSkills {
