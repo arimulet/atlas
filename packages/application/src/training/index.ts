@@ -2,9 +2,17 @@ import {
   MongoClubRepository,
   MongoSnapshotRepository,
   MongoTrainingWeekRepository,
+  type PersistedPlayerSkills,
+  type PersistedPlayerSkillsChange,
   type PersistedPlayerSnapshot
 } from "@atlas/database";
-import { createTrainingWeek, estimateTalentFromTrainingHistory } from "@atlas/domain";
+import {
+  createTrainingWeek,
+  estimateTalentFromTrainingHistory,
+  type PlayerSkill,
+  type PlayerSkills,
+  type PlayerSkillsChange
+} from "@atlas/domain";
 import type { ClubId } from "../types.js";
 import type { PlayerTrainingWeekDto } from "../importer/types.js";
 import type { TrainingPageData } from "./types.js";
@@ -12,6 +20,16 @@ import type { TrainingPageData } from "./types.js";
 const clubRepository = new MongoClubRepository();
 const snapshotRepository = new MongoSnapshotRepository();
 const trainingWeekRepository = new MongoTrainingWeekRepository();
+const DOMAIN_PLAYER_SKILLS: readonly PlayerSkill[] = [
+  "stamina",
+  "keeper",
+  "playmaking",
+  "passing",
+  "technique",
+  "defending",
+  "striker",
+  "pace"
+];
 
 export async function getTrainingPageData(clubId: ClubId): Promise<TrainingPageData> {
   const club = await clubRepository.findById(clubId.toString());
@@ -43,8 +61,8 @@ export async function getTrainingPageData(clubId: ClubId): Promise<TrainingPageD
           kind: report.kind,
           intensity: report.intensity,
           age: report.age,
-          skills: report.skills,
-          skillsChange: report.skillsChange
+          skills: toDomainSkills(report.skills),
+          skillsChange: toDomainSkillsChange(report.skillsChange)
         })
       );
     talentByPlayer.set(
@@ -63,6 +81,35 @@ export async function getTrainingPageData(clubId: ClubId): Promise<TrainingPageD
       ) ?? [],
     history
   };
+}
+
+function toDomainSkills(skills: PersistedPlayerSkills): PlayerSkills {
+  const domainSkills: PlayerSkills = {};
+
+  for (const skill of DOMAIN_PLAYER_SKILLS) {
+    const value = skills[skill];
+    if (value !== undefined) {
+      domainSkills[skill] = value;
+    }
+  }
+
+  return domainSkills;
+}
+
+function toDomainSkillsChange(change: PersistedPlayerSkillsChange): PlayerSkillsChange {
+  const domainChange: PlayerSkillsChange = {
+    up: change.up,
+    down: change.down
+  };
+
+  for (const skill of DOMAIN_PLAYER_SKILLS) {
+    const value = change[skill];
+    if (value !== undefined) {
+      domainChange[skill] = value;
+    }
+  }
+
+  return domainChange;
 }
 
 export async function importTrainingReports(

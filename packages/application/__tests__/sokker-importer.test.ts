@@ -44,6 +44,21 @@ describe("createSokkerDataProvider", () => {
 });
 
 describe("SokkerJsonApiProvider", () => {
+  it("reports authentication failures without propagating the response body", async () => {
+    const mockFetch = vi.fn().mockResolvedValueOnce(
+      new Response("invalid credentials echoed by upstream", { status: 401 })
+    );
+    vi.stubGlobal("fetch", mockFetch);
+
+    const provider = new SokkerJsonApiProvider({ login: "user", password: "password" });
+
+    const error = await provider.login().catch((cause: unknown) => cause);
+
+    expect(error).toBeInstanceOf(Error);
+    expect((error as Error).message).toBe("Sokker API authentication failed (401).");
+    expect((error as Error).message).not.toContain("invalid credentials echoed by upstream");
+  });
+
   it("exposes only the five current JSON API resources", async () => {
     const mockFetch = vi
       .fn()
