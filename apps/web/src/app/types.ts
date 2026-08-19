@@ -113,7 +113,6 @@ export interface ClubDashboard {
     gameWeek: number | null;
     week: number | null;
     lastSnapshotDate: string | null;
-    sourceType: string | null;
     observedAt: string | null;
     settings: {
       currency: CurrencySettings;

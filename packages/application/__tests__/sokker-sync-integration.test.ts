@@ -18,13 +18,9 @@ import {
 } from "@atlas/database";
 import {
   MongoClubRepository,
-  MongoClubSnapshotRepository,
-  MongoJuniorRepository,
   MongoPlayerRepository,
   MongoSnapshotRepository,
   MongoSyncRunRepository,
-  MongoTrainerRepository,
-  MongoTrainingSummaryRepository,
   MongoTrainingWeekRepository
 } from "@atlas/database";
 import {
@@ -97,13 +93,13 @@ describe("Sokker sync end-to-end", () => {
       trainingWeeks: 3,
       trainers: 3,
       juniors: 2,
-      trainingSummaryWeeks: 3
+      trainingSummaryWeeks: 0
     });
-    expect(await ClubSnapshotModel.exists({ teamId: 6038, gameWeek: 1205 })).toBeTruthy();
+    expect(await ClubSnapshotModel.exists({ teamId: 6038, gameWeek: 1205 })).toBeFalsy();
     expect(await SnapshotModel.exists({ gameWeek: 1205 })).toBeTruthy();
     expect(await TrainingWeekModel.exists({ clubId: 6038, gameWeek: 1204 })).toBeTruthy();
     expect(await TrainingWeekModel.exists({ clubId: 6038, gameWeek: 1205 })).toBeFalsy();
-    expect(await TrainingSummaryModel.exists({ teamId: 6038, gameWeek: 1205 })).toBeTruthy();
+    expect(await TrainingSummaryModel.exists({ teamId: 6038, gameWeek: 1205 })).toBeFalsy();
 
     const training = await TrainingWeekModel.findOne({
       clubId: 6038,
@@ -132,12 +128,12 @@ describe("Sokker sync end-to-end", () => {
     await persistence.persist(validation);
 
     expect(await SnapshotModel.countDocuments({ gameWeek: 1205 })).toBe(1);
-    expect(await ClubSnapshotModel.countDocuments({ teamId: 6038, gameWeek: 1205 })).toBe(1);
+    expect(await ClubSnapshotModel.countDocuments({ teamId: 6038, gameWeek: 1205 })).toBe(0);
     expect(await TrainingWeekModel.countDocuments({ clubId: 6038, gameWeek: 1204 })).toBe(3);
     expect(await TrainingWeekModel.countDocuments({ clubId: 6038, gameWeek: 1205 })).toBe(0);
-    expect(await TrainingSummaryModel.countDocuments({ teamId: 6038, gameWeek: 1205 })).toBe(1);
-    expect(await TrainerModel.countDocuments({ teamId: 6038 })).toBe(3);
-    expect(await JuniorModel.countDocuments({ teamId: 6038 })).toBe(2);
+    expect(await TrainingSummaryModel.countDocuments({ teamId: 6038, gameWeek: 1205 })).toBe(0);
+    expect(await TrainerModel.countDocuments({ teamId: 6038 })).toBe(0);
+    expect(await JuniorModel.countDocuments({ teamId: 6038 })).toBe(0);
   });
 
   it("aborts before persistence when the summary checksum is incompatible", async () => {
@@ -155,9 +151,7 @@ describe("Sokker sync end-to-end", () => {
     if (validation.status === "valid") {
       throw new Error("The intentionally incompatible summary should be rejected.");
     }
-    expect(validation.errors.map((error) => error.code)).toContain(
-      "SUMMARY_ADVANCED_MISMATCH"
-    );
+    expect(validation.errors.map((error) => error.code)).toContain("SUMMARY_ADVANCED_MISMATCH");
     expect(await SnapshotModel.countDocuments({})).toBe(0);
     expect(await TrainingWeekModel.countDocuments({})).toBe(0);
   });
@@ -187,13 +181,9 @@ describe("Sokker sync end-to-end", () => {
     vi.spyOn(trainingWeeks, "save").mockRejectedValueOnce(new Error("temporary write failure"));
     const persistence = new SokkerSyncPersistence({
       clubs: new MongoClubRepository(),
-      clubSnapshots: new MongoClubSnapshotRepository(),
-      juniors: new MongoJuniorRepository(),
       players: new MongoPlayerRepository(),
       snapshots: new MongoSnapshotRepository(),
       syncRuns: new MongoSyncRunRepository(),
-      trainers: new MongoTrainerRepository(),
-      trainingSummaries: new MongoTrainingSummaryRepository(),
       trainingWeeks
     });
 
@@ -207,9 +197,7 @@ describe("Sokker sync end-to-end", () => {
 
 function createFixtureProvider(): SokkerDataProvider {
   const current = mapCurrentApiToCurrentClubContext(currentFixture as SokkerApiCurrentDto);
-  const training = mapTrainingApiToTrainingData(
-    (trainingFixture as SokkerTrainingApiDto).players
-  );
+  const training = mapTrainingApiToTrainingData((trainingFixture as SokkerTrainingApiDto).players);
   const trainers = mapTrainersApiToTrainers((trainersFixture as SokkerTrainersApiDto).trainers);
   const juniors = mapJuniorsApiToJuniors((juniorsFixture as SokkerJuniorsApiDto).juniors);
   const summary = mapTrainingSummaryApiToTrainingSummary(
@@ -222,8 +210,7 @@ function createFixtureProvider(): SokkerDataProvider {
     seasonWeek: reportWeek.seasonWeek,
     date: reportWeek.date,
     players: {
-      formationTraining: training.trainingWeeks.filter((week) => week.kind === "formation")
-        .length,
+      formationTraining: training.trainingWeeks.filter((week) => week.kind === "formation").length,
       advancedTraining: training.trainingWeeks.filter((week) => week.kind === "advanced").length,
       skillsUp: training.trainingWeeks.reduce((total, week) => total + week.skillsChange.up, 0)
     },

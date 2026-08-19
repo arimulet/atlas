@@ -1,11 +1,14 @@
-import { type ClientSession } from "mongoose";
+import { type ClientSession, Types } from "mongoose";
+import { ClubModel } from "../models/club.js";
+import { SnapshotModel } from "../models/snapshot.js";
 import { TrainingWeekModel } from "../models/trainingWeek.js";
 import type {
   PersistedPlayerSkills,
   PersistedPlayerSkillsChange,
   PersistedPlayerTrainingWeek,
   PersistedTrainingSkill,
-  SavePlayerTrainingWeekInput
+  SavePlayerTrainingWeekInput,
+  SnapshotSkillSet
 } from "./types.js";
 
 export class MongoTrainingWeekRepository {
@@ -23,21 +26,28 @@ export class MongoTrainingWeekRepository {
       throw new Error(`Training week could not be persisted: ${input.playerId}/${input.gameWeek}.`);
     }
 
-    return mapTrainingWeek(week.toObject());
+    const snapshots = await loadTrainingSnapshots(input.clubId);
+    return mapTrainingWeek(week.toObject(), snapshots);
   }
 
   async listByClub(clubId: number): Promise<PersistedPlayerTrainingWeek[]> {
-    const weeks = await TrainingWeekModel.find({ clubId }).sort({ gameWeek: 1, playerId: 1 });
-    return weeks.map((week) => mapTrainingWeek(week.toObject()));
+    const [weeks, snapshots] = await Promise.all([
+      TrainingWeekModel.find({ clubId }).sort({ gameWeek: 1, playerId: 1 }),
+      loadTrainingSnapshots(clubId)
+    ]);
+    return weeks.map((week) => mapTrainingWeek(week.toObject(), snapshots));
   }
 
   async listByPlayer(clubId: number, playerId: number): Promise<PersistedPlayerTrainingWeek[]> {
-    const weeks = await TrainingWeekModel.find({ clubId, playerId }).sort({ gameWeek: 1 });
-    return weeks.map((week) => mapTrainingWeek(week.toObject()));
+    const [weeks, snapshots] = await Promise.all([
+      TrainingWeekModel.find({ clubId, playerId }).sort({ gameWeek: 1 }),
+      loadTrainingSnapshots(clubId)
+    ]);
+    return weeks.map((week) => mapTrainingWeek(week.toObject(), snapshots));
   }
 }
 
-function mapTrainingWeek(week: {
+type TrainingWeekShape = {
   _id: unknown;
   clubId: number;
   playerId: number;
@@ -49,13 +59,41 @@ function mapTrainingWeek(week: {
   kind: PersistedPlayerTrainingWeek["kind"];
   intensity: number;
   age: number;
-  skills: PersistedPlayerTrainingWeek["skills"];
-  skillsChange: PersistedPlayerTrainingWeek["skillsChange"];
-}): PersistedPlayerTrainingWeek {
-  const skillChanges = derivePersistedSkillChanges(
-    readSkills(week.skills),
-    readSkillsChange(week.skillsChange)
-  );
+  skillsChange: PersistedPlayerSkillsChange;
+  skills?: PersistedPlayerSkills;
+};
+
+type TrainingSnapshot = {
+  gameWeek?: number | null;
+  players: Array<{
+    playerId: number;
+    skills: SnapshotSkillSet;
+  }>;
+};
+
+async function loadTrainingSnapshots(clubId: number): Promise<TrainingSnapshot[]> {
+  const club = await ClubModel.findOne({ clubId }).select({ _id: 1 }).lean();
+  if (!club) {
+    return [];
+  }
+
+  const snapshots = await SnapshotModel.find({ clubId: new Types.ObjectId(club._id) })
+    .select({ gameWeek: 1, players: 1 })
+    .sort({ gameWeek: 1 })
+    .lean();
+
+  return snapshots as unknown as TrainingSnapshot[];
+}
+
+function mapTrainingWeek(
+  week: TrainingWeekShape,
+  snapshots: readonly TrainingSnapshot[]
+): PersistedPlayerTrainingWeek {
+  const snapshotPlayer = findSnapshotPlayer(week, snapshots);
+  const skills = snapshotPlayer
+    ? mapSnapshotSkills(snapshotPlayer.skills)
+    : readSkills(week.skills);
+  const skillsChange = readSkillsChange(week.skillsChange);
 
   return {
     id: String(week._id),
@@ -69,35 +107,58 @@ function mapTrainingWeek(week: {
     kind: week.kind,
     intensity: week.intensity,
     age: week.age,
-    skills: week.skills,
-    skillsChange: week.skillsChange,
-    skillChanges
+    skills,
+    skillsChange,
+    skillChanges: derivePersistedSkillChanges(skills, skillsChange)
   };
 }
 
-function readSkills(input: PersistedPlayerSkills): PersistedPlayerSkills {
+function findSnapshotPlayer(
+  week: TrainingWeekShape,
+  snapshots: readonly TrainingSnapshot[]
+): TrainingSnapshot["players"][number] | null {
+  const afterTraining = snapshots.find((snapshot) => snapshot.gameWeek === week.gameWeek + 1);
+  const sameWeek = snapshots.find((snapshot) => snapshot.gameWeek === week.gameWeek);
+  const snapshot = afterTraining ?? sameWeek;
+  return snapshot?.players.find((player) => player.playerId === week.playerId) ?? null;
+}
+
+function mapSnapshotSkills(source: SnapshotSkillSet): PersistedPlayerSkills {
   return {
-    stamina: input.stamina,
-    keeper: input.keeper,
-    playmaking: input.playmaking,
-    passing: input.passing,
-    technique: input.technique,
-    defending: input.defending,
-    striker: input.striker,
-    pace: input.pace
+    ...(source.stamina !== null ? { stamina: source.stamina } : {}),
+    ...(source.keeper !== null ? { keeper: source.keeper } : {}),
+    ...(source.playmaker !== null ? { playmaking: source.playmaker } : {}),
+    ...(source.passing !== null ? { passing: source.passing } : {}),
+    ...(source.technique !== null ? { technique: source.technique } : {}),
+    ...(source.defender !== null ? { defending: source.defender } : {}),
+    ...(source.striker !== null ? { striker: source.striker } : {}),
+    ...(source.pace !== null ? { pace: source.pace } : {})
+  };
+}
+
+function readSkills(input: PersistedPlayerSkills | undefined): PersistedPlayerSkills {
+  return {
+    ...(input?.stamina !== undefined ? { stamina: input.stamina } : {}),
+    ...(input?.keeper !== undefined ? { keeper: input.keeper } : {}),
+    ...(input?.playmaking !== undefined ? { playmaking: input.playmaking } : {}),
+    ...(input?.passing !== undefined ? { passing: input.passing } : {}),
+    ...(input?.technique !== undefined ? { technique: input.technique } : {}),
+    ...(input?.defending !== undefined ? { defending: input.defending } : {}),
+    ...(input?.striker !== undefined ? { striker: input.striker } : {}),
+    ...(input?.pace !== undefined ? { pace: input.pace } : {})
   };
 }
 
 function readSkillsChange(input: PersistedPlayerSkillsChange): PersistedPlayerSkillsChange {
   return {
-    stamina: input.stamina,
-    keeper: input.keeper,
-    playmaking: input.playmaking,
-    passing: input.passing,
-    technique: input.technique,
-    defending: input.defending,
-    striker: input.striker,
-    pace: input.pace,
+    ...(input.stamina !== undefined ? { stamina: input.stamina } : {}),
+    ...(input.keeper !== undefined ? { keeper: input.keeper } : {}),
+    ...(input.playmaking !== undefined ? { playmaking: input.playmaking } : {}),
+    ...(input.passing !== undefined ? { passing: input.passing } : {}),
+    ...(input.technique !== undefined ? { technique: input.technique } : {}),
+    ...(input.defending !== undefined ? { defending: input.defending } : {}),
+    ...(input.striker !== undefined ? { striker: input.striker } : {}),
+    ...(input.pace !== undefined ? { pace: input.pace } : {}),
     up: input.up ?? 0,
     down: input.down ?? 0
   };

@@ -45,9 +45,11 @@ describe("createSokkerDataProvider", () => {
 
 describe("SokkerJsonApiProvider", () => {
   it("reports authentication failures without propagating the response body", async () => {
-    const mockFetch = vi.fn().mockResolvedValueOnce(
-      new Response("invalid credentials echoed by upstream", { status: 401 })
-    );
+    const mockFetch = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response("invalid credentials echoed by upstream", { status: 401 })
+      );
     vi.stubGlobal("fetch", mockFetch);
 
     const provider = new SokkerJsonApiProvider({ login: "user", password: "password" });
@@ -146,6 +148,7 @@ describe("Sokker API canonical mappers", () => {
         pace: 11
       }),
       formation: null,
+      cards: { yellow: 0, red: 0 },
       injury: { daysRemaining: 0, severe: false },
       youthTeamId: 0,
       nationalCallUp: false,

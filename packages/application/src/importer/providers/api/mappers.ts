@@ -22,6 +22,7 @@ import type {
   SokkerJuniorApiDto,
   SokkerApiTrainingPlayerDto,
   SokkerPlayerSkillsApiDto,
+  SokkerPlayerStatsApiDto,
   SokkerSkillsChangeApiDto,
   SokkerTrainerApiDto,
   SokkerTrainerInfoApiDto,
@@ -80,6 +81,7 @@ export function mapTrainingPlayerApiToPlayer(source: SokkerApiTrainingPlayerDto)
       daysRemaining: player.injury.daysRemaining,
       severe: player.injury.severe
     },
+    cards: mapPlayerCards(player.stats),
     youthTeamId: player.youthTeamId,
     nationalCallUp: player.nationalCallUp,
     nationalType: player.nationalType
@@ -261,6 +263,16 @@ function mapMoney(source: { value: number; currency: string }): {
   currency: string;
 } {
   return { value: source.value, currency: source.currency };
+}
+
+function mapPlayerCards(source: SokkerPlayerStatsApiDto | null | undefined): {
+  yellow: number;
+  red: number;
+} {
+  return {
+    yellow: source?.cards?.yellow ?? 0,
+    red: source?.cards?.red ?? 0
+  };
 }
 
 function mapPlayerSkills(source: SokkerPlayerSkillsApiDto): PlayerSkillsDto {

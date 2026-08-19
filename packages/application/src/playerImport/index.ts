@@ -54,7 +54,6 @@ export const importPlayerSnapshot = async (
   if (validation.status === "rejected") {
     const importEvent = await importEventRepository.create({
       schemaVersion: readStringProperty(input.payload, "schemaVersion"),
-      sourceType: readNestedStringProperty(input.payload, ["source", "type"]),
       status: validation.status,
       errors: validation.errors,
       warnings: validation.warnings
@@ -77,7 +76,6 @@ export const importPlayerSnapshot = async (
   const status = warnings.length > 0 ? "accepted-with-warnings" : "accepted";
   const importEvent = await importEventRepository.create({
     schemaVersion: normalized.schemaVersion,
-    sourceType: normalized.source.type,
     status,
     errors: validation.errors,
     warnings
@@ -112,6 +110,9 @@ export const importPlayerSnapshot = async (
           snapshotJunior.playerId === junior.playerId || snapshotJunior.name === junior.name
       );
 
+      if (previousJunior?.initialLevel != null) {
+        junior.initialLevel = previousJunior.initialLevel;
+      }
       if (previousJunior?.initialWeeksRemaining != null) {
         junior.initialWeeksRemaining = previousJunior.initialWeeksRemaining;
       }
@@ -125,7 +126,6 @@ export const importPlayerSnapshot = async (
     gameWeek: normalized.snapshot.gameWeek,
     week: normalized.snapshot.week,
     importedAt: importEvent.importedAt,
-    source: normalized.source,
     players: normalized.players.map((player) => ({
       playerId: player.playerId,
       name: player.name,
@@ -282,8 +282,7 @@ function normalizePlayerSnapshot(snapshot: PlayerSnapshotV0): NormalizedPlayerSn
       gameWeek: snapshot.snapshot.gameWeek ?? snapshot.club.gameWeek ?? undefined,
       week: snapshot.snapshot.week ?? null,
       lastSnapshotDate: new Date(`${snapshot.snapshot.snapshotDate}T00:00:00.000Z`),
-      sourceType: snapshot.source.type,
-      observedAt: new Date(snapshot.source.exportedAt)
+      observedAt: new Date(`${snapshot.snapshot.snapshotDate}T00:00:00.000Z`)
     },
     snapshot: {
       snapshotDate: new Date(`${snapshot.snapshot.snapshotDate}T00:00:00.000Z`),
@@ -295,6 +294,7 @@ function normalizePlayerSnapshot(snapshot: PlayerSnapshotV0): NormalizedPlayerSn
       playerId: junior.playerId,
       name: junior.name.trim(),
       age: junior.age,
+      initialLevel: junior.skill ?? 0,
       initialWeeksRemaining: junior.initialWeeksRemaining ?? junior.weeksRemaining ?? null,
       weeksRemaining: junior.weeksRemaining ?? null,
       skill: junior.skill ?? 0,
@@ -368,20 +368,6 @@ function readStringProperty(input: unknown, property: string): string | null {
 
   const value = (input as Record<string, unknown>)[property];
   return typeof value === "string" ? value : null;
-}
-
-function readNestedStringProperty(input: unknown, path: string[]): string | null {
-  let current: unknown = input;
-
-  for (const part of path) {
-    if (!current || typeof current !== "object") {
-      return null;
-    }
-
-    current = (current as Record<string, unknown>)[part];
-  }
-
-  return typeof current === "string" ? current : null;
 }
 
 export * from "./types.js";

@@ -41,7 +41,12 @@ describe("Mongo repositories", () => {
   });
 
   it("saves a valid normalized snapshot", async () => {
-    const club = await clubs.save({ clubId: 1, country: 1, name: "River Plate Forever", currency: { name: "ARS", rate: 100 } });
+    const club = await clubs.save({
+      clubId: 1,
+      country: 1,
+      name: "River Plate Forever",
+      currency: { name: "ARS", rate: 100 }
+    });
     const player = await players.resolveHistoricalIdentity({
       playerId: 1001,
       clubId: club.clubId,
@@ -65,10 +70,15 @@ describe("Mongo repositories", () => {
       value: 450000
     });
     expect(saved.juniors).toHaveLength(1);
+    expect((await SnapshotModel.findById(saved.id).lean())?.players[0]).not.toHaveProperty("name");
+    expect(Object.hasOwn((await SnapshotModel.findById(saved.id).lean()) ?? {}, "source")).toBe(
+      false
+    );
     expect(saved.juniors[0]).toMatchObject({
       playerId: 5001,
       name: "Matias Cantero",
       age: 16,
+      initialLevel: 8,
       weeksRemaining: 4,
       skill: 8,
       status: "in_academy"
@@ -77,11 +87,11 @@ describe("Mongo repositories", () => {
 
   it("persists observed club profile separately from manual configuration", async () => {
     const club = await clubs.save({
-      clubId: 1, country: 1,
+      clubId: 1,
+      country: 1,
       name: "River Plate Forever",
       week: 4,
       lastSnapshotDate: new Date("2026-08-05T00:00:00.000Z"),
-      sourceType: "sokker-dom-export",
       observedAt: new Date("2026-08-05T20:00:00.000Z"),
       currency: { name: "ARS", rate: 100 }
     });
@@ -89,9 +99,9 @@ describe("Mongo repositories", () => {
     expect(club).toMatchObject({
       clubId: 1,
       name: "River Plate Forever",
-      week: 4,
-      sourceType: "sokker-dom-export"
+      week: 4
     });
+    expect(club).not.toHaveProperty("sourceType");
     expect(club.settings).toMatchObject({
       currency: { name: "ARS", rate: 100 },
       week: null,
@@ -138,7 +148,12 @@ describe("Mongo repositories", () => {
   });
 
   it("retrieves a snapshot by id", async () => {
-    const club = await clubs.save({ clubId: 1, country: 1, name: "River Plate Forever", currency: { name: "ARS", rate: 100 } });
+    const club = await clubs.save({
+      clubId: 1,
+      country: 1,
+      name: "River Plate Forever",
+      currency: { name: "ARS", rate: 100 }
+    });
     const player = await players.resolveHistoricalIdentity({
       playerId: 1001,
       clubId: club.clubId,
@@ -155,8 +170,18 @@ describe("Mongo repositories", () => {
   });
 
   it("lists snapshots for a club", async () => {
-    const club = await clubs.save({ clubId: 1, country: 1, name: "River Plate Forever", currency: { name: "ARS", rate: 100 } });
-    const otherClub = await clubs.save({ clubId: 2, country: 1, name: "Atlas Wanderers", currency: { name: "ARS", rate: 100 } });
+    const club = await clubs.save({
+      clubId: 1,
+      country: 1,
+      name: "River Plate Forever",
+      currency: { name: "ARS", rate: 100 }
+    });
+    const otherClub = await clubs.save({
+      clubId: 2,
+      country: 1,
+      name: "Atlas Wanderers",
+      currency: { name: "ARS", rate: 100 }
+    });
     const player = await players.resolveHistoricalIdentity({
       playerId: 1001,
       clubId: club.clubId,
@@ -183,7 +208,12 @@ describe("Mongo repositories", () => {
   });
 
   it("retrieves snapshots by club and date", async () => {
-    const club = await clubs.save({ clubId: 1, country: 1, name: "River Plate Forever", currency: { name: "ARS", rate: 100 } });
+    const club = await clubs.save({
+      clubId: 1,
+      country: 1,
+      name: "River Plate Forever",
+      currency: { name: "ARS", rate: 100 }
+    });
     const player = await players.resolveHistoricalIdentity({
       playerId: 1001,
       clubId: club.clubId,
@@ -248,7 +278,6 @@ describe("Mongo repositories", () => {
   it("persists an import event with warnings", async () => {
     const event = await importEvents.create({
       schemaVersion: "atlas.player-snapshot.v0",
-      sourceType: "sokker-dom-export",
       status: "accepted-with-warnings",
       errors: [],
       warnings: [
@@ -283,12 +312,6 @@ function buildSnapshotInput(overrides: {
     gameWeek: 1201,
     week: 4,
     importedAt: new Date("2026-08-05T20:00:00.000Z"),
-    source: {
-      type: "sokker-dom-export",
-      exportedAt: new Date("2026-08-05T20:00:00.000Z"),
-      pageUrl: "https://example.sokker.org/players",
-      locale: "es-AR"
-    },
     players: [
       {
         playerId: overrides.playerId,
@@ -317,6 +340,7 @@ function buildSnapshotInput(overrides: {
         playerId: 5001,
         name: "Matias Cantero",
         age: 16,
+        initialLevel: 8,
         initialWeeksRemaining: 4,
         weeksRemaining: 4,
         skill: 8,

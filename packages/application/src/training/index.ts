@@ -128,13 +128,28 @@ export async function importTrainingReports(
       kind: report.kind,
       intensity: report.intensity,
       age: report.age,
-      skills: { ...report.skills },
-      skillsChange: { ...report.skillsChange },
-      skillChanges: report.skillChanges.map((change) => ({ ...change }))
+      skillsChange: toPersistedSkillsChange(report.skillsChange)
     });
   }
 
   return reports.length;
+}
+
+function toPersistedSkillsChange(
+  change: PlayerTrainingWeekDto["skillsChange"]
+): PersistedPlayerSkillsChange {
+  return {
+    stamina: change.stamina,
+    keeper: change.keeper,
+    playmaking: change.playmaking,
+    passing: change.passing,
+    technique: change.technique,
+    defending: change.defending,
+    striker: change.striker,
+    pace: change.pace,
+    up: change.up,
+    down: change.down
+  };
 }
 
 function mapPlayer(

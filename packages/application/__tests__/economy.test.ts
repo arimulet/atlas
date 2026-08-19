@@ -41,7 +41,6 @@ describe("Squad economy use case", () => {
     await updateClubOperatingSettings({
       clubId: importResult.clubId!,
       settings: {
-        currency: { name: "ARS", rate: 100 },
         preferences: { "economy.riskTolerance": "conservative" }
       }
     });
@@ -50,17 +49,17 @@ describe("Squad economy use case", () => {
 
     expect(squadEconomy.snapshotDate).toBe("2026-08-05");
     expect(squadEconomy.manual).toEqual({
-      currency: { name: "ARS", rate: 100 },
+      currency: { name: "UNK", rate: 1 },
       riskTolerance: "conservative"
     });
     expect(squadEconomy.derived.totalWage).toMatchObject({
       amount: 12000,
-      currency: "ARS",
+      currency: "UNK",
       isComplete: true
     });
     expect(squadEconomy.derived.totalValue).toMatchObject({
       amount: 450000,
-      currency: "ARS",
+      currency: "UNK",
       isComplete: true
     });
     expect(squadEconomy.derived.wageToValueRatio).toBe(0.0267);
@@ -119,7 +118,6 @@ describe("Squad economy use case", () => {
     );
   });
 
-
   it("marks totals incomplete when player economy data is partial", async () => {
     const payload = {
       ...readValidSnapshot(),
@@ -127,6 +125,7 @@ describe("Squad economy use case", () => {
         ...readValidSnapshot().players,
         {
           ...readValidSnapshot().players[0],
+          playerId: 2001,
           externalId: "2001",
           name: "Partial Player",
           wage: 0,
@@ -173,6 +172,7 @@ describe("Squad economy use case", () => {
         },
         {
           ...readValidSnapshot().players[0],
+          playerId: 2002,
           externalId: "2002",
           name: "Low Cost Player",
           wage: 1000,
@@ -216,4 +216,3 @@ function readValidSnapshot() {
     }>;
   };
 }
-

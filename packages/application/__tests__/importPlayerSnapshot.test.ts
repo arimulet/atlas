@@ -3,19 +3,11 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import validSnapshot from "@atlas/test-fixtures/player-snapshot/valid.json" with { type: "json" };
 import invalidSnapshot from "@atlas/test-fixtures/player-snapshot/invalid.json" with { type: "json" };
-import acceptedWithWarningsSnapshot from "@atlas/test-fixtures/player-snapshot/accepted-with-warnings.json" with {
-  type: "json"
-};
-import missingExternalIdSnapshot from "@atlas/test-fixtures/player-snapshot/missing-external-id.json" with {
-  type: "json"
-};
+import acceptedWithWarningsSnapshot from "@atlas/test-fixtures/player-snapshot/accepted-with-warnings.json" with { type: "json" };
+import missingExternalIdSnapshot from "@atlas/test-fixtures/player-snapshot/missing-external-id.json" with { type: "json" };
 import missingSkillSnapshot from "@atlas/test-fixtures/player-snapshot/missing-skill.json" with { type: "json" };
-import extensionSnapshot from "@atlas/test-fixtures/player-snapshot/extension-sokker-dom-export.json" with {
-  type: "json"
-};
-import sokkerPlayerBoxExtensionSnapshot from "@atlas/test-fixtures/player-snapshot/sokker-squad-player-box-export.json" with {
-  type: "json"
-};
+import extensionSnapshot from "@atlas/test-fixtures/player-snapshot/extension-sokker-dom-export.json" with { type: "json" };
+import sokkerPlayerBoxExtensionSnapshot from "@atlas/test-fixtures/player-snapshot/sokker-squad-player-box-export.json" with { type: "json" };
 import { ClubModel, ImportEventModel, PlayerModel, SnapshotModel } from "@atlas/database";
 import type { PlayerSnapshotV0 } from "@atlas/contracts";
 import { importPlayerSnapshot } from "../src/index.js";
@@ -130,9 +122,10 @@ describe("ImportPlayerSnapshot", () => {
     expect(club?.name).toBe("River Plate Forever");
     expect(snapshot?.schemaVersion).toBe("atlas.player-snapshot.v0");
     expect(snapshot?.snapshotDate.toISOString()).toBe("2026-08-05T00:00:00.000Z");
-    expect(snapshot?.source?.exportedAt.toISOString()).toBe("2026-08-05T20:00:00.000Z");
+    expect(snapshot).not.toHaveProperty("source");
     expect(snapshot?.players).toHaveLength(1);
-    expect(snapshot?.players[0]?.name).toBe("Tomas Alvarez");
+    expect(snapshot?.players[0]).not.toHaveProperty("name");
+    expect((await PlayerModel.findOne({ playerId: 1001 }))?.name).toBe("Tomas Alvarez");
     expect(snapshot?.players[0]?.wage).toBe(12000);
     expect(snapshot?.players[0]?.value).toBe(450000);
     expect(importEvent?.snapshotId?.toString()).toBe(result.snapshotId);
@@ -162,7 +155,9 @@ describe("ImportPlayerSnapshot", () => {
     expect(second.clubId).toBe(first.clubId);
 
     const club = await ClubModel.findById(first.clubId).lean();
-    const snapshots = await SnapshotModel.find({ clubId: first.clubId }).sort({ snapshotDate: 1 }).lean();
+    const snapshots = await SnapshotModel.find({ clubId: first.clubId })
+      .sort({ snapshotDate: 1 })
+      .lean();
 
     expect(club?.week).toBe(5);
     expect(club?.settings?.currency).toMatchObject({ name: "ARS", rate: 100 });
@@ -180,7 +175,7 @@ describe("ImportPlayerSnapshot", () => {
     expect(result.importedPlayerCount).toBe(1);
 
     const snapshot = await SnapshotModel.findById(result.snapshotId).lean();
-    expect(snapshot?.source?.type).toBe("sokker-dom-export");
+    expect(snapshot).not.toHaveProperty("source");
     expect(snapshot?.players[0]?.playerId).toBe(101);
   });
 
@@ -215,7 +210,9 @@ describe("ImportPlayerSnapshot", () => {
     const result = await importPlayerSnapshot({ payload });
 
     expect(result.status).toBe("accepted");
-    expect(result.warnings.map((warning) => warning.path)).not.toContain("players.0.observedPosition");
+    expect(result.warnings.map((warning) => warning.path)).not.toContain(
+      "players.0.observedPosition"
+    );
 
     const snapshot = await SnapshotModel.findById(result.snapshotId).lean();
     expect(snapshot?.players[0]?.observedPosition).toBe("winger");

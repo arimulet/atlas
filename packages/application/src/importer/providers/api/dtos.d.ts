@@ -95,6 +95,13 @@ export interface SokkerApiFormationDto {
   name: string;
 }
 
+export interface SokkerPlayerStatsApiDto {
+  cards?: {
+    yellow?: number;
+    red?: number;
+  };
+}
+
 export interface SokkerApiInjuryDto {
   daysRemaining: number;
   severe: boolean;
@@ -118,7 +125,7 @@ export interface SokkerTrainingPlayerInfoApiDto {
     bmi: number;
   };
   skills: SokkerPlayerSkillsApiDto;
-  stats: unknown;
+  stats: SokkerPlayerStatsApiDto;
   nationalStats: unknown;
   face: unknown;
   youthTeamId: number;

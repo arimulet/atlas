@@ -33,7 +33,6 @@ const skillSetSchema = new Schema(
 const playerSnapshotSchema = new Schema(
   {
     playerId: { type: Number, required: true, min: 1 },
-    name: { type: String, required: true },
     age: { type: Number, required: true, min: 1 },
     wage: { type: Number, required: true, min: 0 },
     value: { type: Number, required: true, min: 0 },
@@ -54,8 +53,9 @@ const playerSnapshotSchema = new Schema(
 const juniorSnapshotSchema = new Schema(
   {
     playerId: { type: Number, required: true, min: 1 },
-    name: { type: String, required: true },
+    name: { type: String, required: true, trim: true },
     age: { type: Number, required: true, min: 1 },
+    initialLevel: { type: Number, default: null, min: 0 },
     initialWeeksRemaining: { type: Number, default: null },
     weeksRemaining: { type: Number, default: null },
     skill: { type: Number, required: true, min: 0 },
@@ -77,16 +77,6 @@ const snapshotSchema = new Schema(
     week: { type: Number, default: null },
     naturalKey: { type: String, default: null },
     importedAt: { type: Date, required: true, default: () => new Date() },
-    source: {
-      type: {
-        type: String,
-        required: true
-      },
-      exportedAt: { type: Date, required: true },
-      pageUrl: { type: String, default: null },
-      locale: { type: String, default: null }
-    },
-    sourceVersion: { type: String, default: null },
     players: [playerSnapshotSchema],
     juniors: [juniorSnapshotSchema]
   },

@@ -56,7 +56,6 @@ export interface NormalizedPlayerSnapshot {
     gameWeek?: number | null;
     week: number | null;
     lastSnapshotDate: Date;
-    sourceType: PlayerSnapshotV0["source"]["type"];
     observedAt: Date;
   };
   snapshot: {
@@ -80,6 +79,7 @@ export interface NormalizedPlayerSnapshot {
     playerId: number;
     name: string;
     age: number;
+    initialLevel: number | null;
     initialWeeksRemaining: number | null;
     weeksRemaining: number | null;
     skill: number;
