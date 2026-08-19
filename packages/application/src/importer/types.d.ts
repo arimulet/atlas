@@ -1,4 +1,3 @@
-import type { PlayerSnapshotV0 } from "@atlas/contracts";
 import type { SkillChange, TrainingKind, TrainingType } from "@atlas/domain";
 
 export type { TrainingKind, TrainingType } from "@atlas/domain";
@@ -231,5 +230,37 @@ export interface SokkerSyncPersistenceResult {
   };
 }
 
-export type SnapshotPlayerDto = PlayerSnapshotV0["players"][number];
-export type SnapshotJuniorDto = NonNullable<PlayerSnapshotV0["juniors"]>[number];
+export interface SnapshotPlayerDto {
+  playerId: number;
+  name: string;
+  age: number;
+  wage: number;
+  value: number;
+  training: {
+    position: number;
+    advanced: boolean;
+  };
+  form: number | null;
+  availabilityStatus: "available" | "injured";
+  observedPosition: null;
+  skills: {
+    stamina: number;
+    pace: number;
+    technique: number;
+    passing: number;
+    keeper: number;
+    defender: number;
+    playmaker: number;
+    striker: number;
+  };
+}
+
+export interface SnapshotJuniorDto {
+  playerId: number;
+  name: string;
+  age: number;
+  initialWeeksRemaining: number;
+  weeksRemaining: number;
+  skill: number;
+  status: "in_academy";
+}

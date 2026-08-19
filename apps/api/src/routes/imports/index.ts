@@ -1,31 +1,19 @@
 import {
   createSokkerDataProvider,
-  importPlayerSnapshotMvp,
   loadSokkerSyncPayload,
   persistSokkerSync,
   type SokkerSyncValidationIssue,
-  validateSokkerSyncPayload,
-  validatePlayerSnapshotImport
+  validateSokkerSyncPayload
 } from "@atlas/application";
-import type { ImportIssue } from "@atlas/contracts";
 import { FastifyInstance } from "fastify";
 import { sokkerSyncRequestSchema } from "../../schemas.js";
 
+interface ImportIssue {
+  path: string;
+  message: string;
+}
+
 async function importsRoutes(server: FastifyInstance) {
-  server.post("/player-snapshot/validate", async (request) => {
-    return validatePlayerSnapshotImport({ payload: request.body });
-  });
-
-  server.post("/player-snapshot", async (request, reply) => {
-    const result = await importPlayerSnapshotMvp({ payload: request.body });
-
-    if (result.importResult.status === "rejected") {
-      reply.code(422);
-    }
-
-    return result;
-  });
-
   server.post("/sokker-sync", async (request, reply) => {
     try {
       const credentials = sokkerSyncRequestSchema.parse(request.body);

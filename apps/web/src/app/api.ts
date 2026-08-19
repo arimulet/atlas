@@ -64,19 +64,6 @@ export async function fetchRealYouthAcademyPlanning(
   return body;
 }
 
-export async function importPlayerSnapshot(payload: unknown): Promise<{
-  response: Response;
-  body: ImportResponse;
-}> {
-  const response = await fetch("/api/imports/player-snapshot", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
-  });
-
-  return { response, body: await readImportResponse(response) };
-}
-
 export async function syncSokker(payload: unknown): Promise<{
   response: Response;
   body: ImportResponse;
