@@ -10,6 +10,7 @@ import type { SokkerDataProvider } from "../SokkerDataProvider.js";
 import type {
   SokkerCurrentApiDto,
   SokkerJuniorsApiDto,
+  SokkerApiTrainingFormationsDto,
   SokkerTrainersApiDto,
   SokkerTrainingApiDto,
   SokkerTrainingSummaryApiDto
@@ -17,6 +18,7 @@ import type {
 import {
   mapCurrentApiToCurrentClubContext,
   mapJuniorsApiToJuniors,
+  mapTrainingFormationsApiToTraining,
   mapTrainersApiToTrainers,
   mapTrainingApiToTrainingData,
   mapTrainingSummaryApiToTrainingSummary
@@ -44,8 +46,18 @@ export class SokkerJsonApiProvider implements SokkerDataProvider {
 
   async getCurrent(): Promise<CurrentClubContextDto> {
     const response = await this.get<SokkerCurrentApiDto>("current");
+    const formationsResponse = await this.get<SokkerApiTrainingFormationsDto>(
+      "training/formations"
+    );
 
-    return mapResource("current", () => mapCurrentApiToCurrentClubContext(response));
+    return mapResource("current", () => {
+      const training = mapTrainingFormationsApiToTraining(formationsResponse);
+
+      return mapCurrentApiToCurrentClubContext({
+        ...response,
+        team: { ...response.team, training }
+      });
+    });
   }
 
   async getTraining(): Promise<TrainingDataDto> {
@@ -119,7 +131,9 @@ function mapResource<T>(resource: string, mapper: () => T): T {
   try {
     return mapper();
   } catch (cause) {
-    throw new Error(`Failed to map Sokker ${resource} response.`, { cause });
+    const detail = cause instanceof Error ? cause.message : String(cause);
+
+    throw new Error(`Failed to map Sokker ${resource} response: ${detail}`, { cause });
   }
 }
 

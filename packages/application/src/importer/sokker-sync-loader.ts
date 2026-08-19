@@ -27,8 +27,12 @@ export class SokkerSyncLoader {
     try {
       return await loader();
     } catch (cause) {
-      const detail = cause instanceof Error ? `: ${cause.message}` : `: ${String(cause)}`;
-      throw new Error(`Failed to fetch Sokker ${resource} data${detail}.`, { cause });
+      const detail = cause instanceof Error ? cause.message : String(cause);
+      const punctuation = detail.endsWith(".") ? "" : ".";
+
+      throw new Error(`Failed to fetch Sokker ${resource} data: ${detail}${punctuation}`, {
+        cause
+      });
     }
   }
 }

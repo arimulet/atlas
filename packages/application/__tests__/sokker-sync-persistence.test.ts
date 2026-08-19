@@ -79,7 +79,7 @@ describe("SokkerSyncPersistence", () => {
     expect(club).not.toHaveProperty("budget.value");
     expect(club?.currency).toBe("ARS");
     expect(club).not.toHaveProperty("settings.currency");
-    expect(club?.training).toEqual({ GK: 2, DEF: 6, MID: 4, ATT: 7 });
+    expect(club?.training).toEqual({ GK: 2, DEF: 6, MID: 8, ATT: 7 });
     expect(club?.staff).toHaveLength(3);
     expect(snapshot?.juniors).toHaveLength(2);
     const training = await TrainingWeekModel.findOne({ playerId: 40098056 }).lean();

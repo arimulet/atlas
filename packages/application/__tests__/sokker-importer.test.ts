@@ -61,11 +61,23 @@ describe("SokkerJsonApiProvider", () => {
     expect((error as Error).message).not.toContain("invalid credentials echoed by upstream");
   });
 
-  it("exposes only the five current JSON API resources", async () => {
+  it("loads the current resources and formation training configuration", async () => {
     const mockFetch = vi
       .fn()
       .mockResolvedValueOnce(new Response("{}", { headers: { "set-cookie": "PHPSESSID=session" } }))
       .mockResolvedValueOnce(new Response(JSON.stringify(currentFixture)))
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            formations: [
+              { formation: { code: 0, name: "GK" }, type: { code: 2, name: "keeper" } },
+              { formation: { code: 1, name: "DEF" }, type: { code: 6, name: "defending" } },
+              { formation: { code: 2, name: "MID" }, type: { code: 8, name: "pace" } },
+              { formation: { code: 3, name: "ATT" }, type: { code: 7, name: "striker" } }
+            ]
+          })
+        )
+      )
       .mockResolvedValueOnce(new Response(JSON.stringify(trainingFixture)))
       .mockResolvedValueOnce(new Response(JSON.stringify(trainersFixture)))
       .mockResolvedValueOnce(new Response(JSON.stringify(juniorsFixture)))
@@ -81,6 +93,7 @@ describe("SokkerJsonApiProvider", () => {
     const summary = await provider.getTrainingSummary();
 
     expect(current.calendar.gameWeek).toBe(1205);
+    expect(current.training).toEqual({ GK: 2, DEF: 6, MID: 8, ATT: 7 });
     expect(training.players).toHaveLength(3);
     expect(trainers).toHaveLength(3);
     expect(juniors).toHaveLength(2);
@@ -91,11 +104,61 @@ describe("SokkerJsonApiProvider", () => {
     });
     expect(mockFetch.mock.calls.slice(1).map(([url]) => String(url))).toEqual([
       "https://sokker.org/api/current",
+      "https://sokker.org/api/training/formations",
       "https://sokker.org/api/training",
       "https://sokker.org/api/trainer",
       "https://sokker.org/api/junior",
       "https://sokker.org/api/training/summary"
     ]);
+  });
+
+  it("loads training configuration from formations when current omits it", async () => {
+    const invalidCurrent = structuredClone(currentFixture) as SokkerApiCurrentDto;
+    Reflect.deleteProperty(invalidCurrent.team, "training");
+    const mockFetch = vi
+      .fn()
+      .mockResolvedValueOnce(new Response("{}", { headers: { "set-cookie": "PHPSESSID=session" } }))
+      .mockResolvedValueOnce(new Response(JSON.stringify(invalidCurrent)))
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            formations: [
+              { formation: { code: 0, name: "GK" }, type: { code: 2, name: "keeper" } },
+              { formation: { code: 1, name: "DEF" }, type: { code: 6, name: "defending" } },
+              { formation: { code: 2, name: "MID" }, type: { code: 8, name: "pace" } },
+              { formation: { code: 3, name: "ATT" }, type: { code: 7, name: "striker" } }
+            ]
+          })
+        )
+      );
+    vi.stubGlobal("fetch", mockFetch);
+
+    const provider = new SokkerJsonApiProvider({ login: "user", password: "password" });
+
+    await expect(provider.getCurrent()).resolves.toMatchObject({
+      training: { GK: 2, DEF: 6, MID: 8, ATT: 7 }
+    });
+    expect(mockFetch.mock.calls.slice(1).map(([url]) => String(url))).toEqual([
+      "https://sokker.org/api/current",
+      "https://sokker.org/api/training/formations"
+    ]);
+  });
+
+  it("explains when neither current nor formations has numeric training configuration", async () => {
+    const invalidCurrent = structuredClone(currentFixture) as SokkerApiCurrentDto;
+    Reflect.deleteProperty(invalidCurrent.team, "training");
+    const mockFetch = vi
+      .fn()
+      .mockResolvedValueOnce(new Response("{}", { headers: { "set-cookie": "PHPSESSID=session" } }))
+      .mockResolvedValueOnce(new Response(JSON.stringify(invalidCurrent)))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ formations: [] })));
+    vi.stubGlobal("fetch", mockFetch);
+
+    const provider = new SokkerJsonApiProvider({ login: "user", password: "password" });
+
+    await expect(provider.getCurrent()).rejects.toThrow(
+      "Failed to map Sokker current response: Sokker training/formations response does not contain numeric values for GK, DEF, MID and ATT."
+    );
   });
 });
 
@@ -115,7 +178,7 @@ describe("Sokker API canonical mappers", () => {
         bankrupt: false
       },
       budget: { value: 123456, currency: "ARS" },
-      training: { GK: 2, DEF: 6, MID: 4, ATT: 7 },
+      training: { GK: 2, DEF: 6, MID: 8, ATT: 7 },
       calendar: {
         season: 78,
         gameWeek: 1205,

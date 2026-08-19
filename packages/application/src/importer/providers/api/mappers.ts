@@ -20,6 +20,8 @@ import type {
   SokkerApiCurrentDto,
   SokkerApiFormationDto,
   SokkerJuniorApiDto,
+  SokkerApiTeamTrainingDto,
+  SokkerApiTrainingFormationsDto,
   SokkerApiTrainingPlayerDto,
   SokkerPlayerSkillsApiDto,
   SokkerPlayerStatsApiDto,
@@ -65,18 +67,72 @@ export function mapCurrentApiToCurrentClubContext(
 function mapTrainingConfiguration(
   source: SokkerApiCurrentDto["team"]["training"] | null | undefined
 ): CurrentClubContextDto["training"] {
-  if (
-    source === null ||
-    source === undefined ||
-    !Number.isFinite(source.gk) ||
-    !Number.isFinite(source.def) ||
-    !Number.isFinite(source.mid) ||
-    !Number.isFinite(source.att)
-  ) {
-    throw new Error("Sokker training configuration must contain numeric values for every position.");
+  if (source === null || source === undefined) {
+    throw new Error("Sokker current response is missing team.training.");
+  }
+
+  if (!isNumericTrainingConfiguration(source)) {
+    const invalidPosition = (["gk", "def", "mid", "att"] as const).find(
+      (position) => !Number.isFinite(source[position])
+    );
+
+    throw new Error(
+      invalidPosition
+        ? `Sokker current response team.training.${invalidPosition} must be a finite number.`
+        : "Sokker current response team.training must contain numeric values for every position."
+    );
   }
 
   return { GK: source.gk, DEF: source.def, MID: source.mid, ATT: source.att };
+}
+
+function isNumericTrainingConfiguration(
+  source: SokkerApiCurrentDto["team"]["training"]
+): source is { gk: number; def: number; mid: number; att: number } {
+  return (
+    source !== null &&
+    source !== undefined &&
+    Number.isFinite(source.gk) &&
+    Number.isFinite(source.def) &&
+    Number.isFinite(source.mid) &&
+    Number.isFinite(source.att)
+  );
+}
+
+export function mapTrainingFormationsApiToTraining(
+  source: SokkerApiTrainingFormationsDto | null
+): SokkerApiTeamTrainingDto {
+  if (source === null || !Array.isArray(source.formations)) {
+    throw new Error(
+      "Sokker training/formations response does not contain a formations array."
+    );
+  }
+
+  const training = {
+    gk: trainingValueForFormation(source, "GK"),
+    def: trainingValueForFormation(source, "DEF"),
+    mid: trainingValueForFormation(source, "MID"),
+    att: trainingValueForFormation(source, "ATT")
+  };
+
+  if (!isNumericTrainingConfiguration(training)) {
+    throw new Error(
+      "Sokker training/formations response does not contain numeric values for GK, DEF, MID and ATT."
+    );
+  }
+
+  return training;
+}
+
+function trainingValueForFormation(
+  source: SokkerApiTrainingFormationsDto,
+  formationName: "GK" | "DEF" | "MID" | "ATT"
+): number | undefined {
+  const formation = source.formations.find(
+    (item) => item.formation.name.trim().toUpperCase() === formationName
+  );
+
+  return formation?.type.code;
 }
 
 export function mapTrainingPlayerApiToPlayer(source: SokkerApiTrainingPlayerDto): PlayerDto {

@@ -34,17 +34,34 @@ export interface SokkerApiTeamDto {
   rankPosition: number;
   emblem: string;
   country: SokkerApiCountryDto;
-  training: {
-    gk: number;
-    def: number;
-    mid: number;
-    att: number;
-  };
+  training?: SokkerApiTeamTrainingDto | null;
   colors: unknown;
   nationalType: number;
   bankrupt: boolean;
   league: unknown | null;
   rankTrend: unknown | null;
+}
+
+export interface SokkerApiTeamTrainingDto {
+  gk?: number | null;
+  def?: number | null;
+  mid?: number | null;
+  att?: number | null;
+}
+
+export interface SokkerApiTrainingFormationDto {
+  formation: {
+    code: number;
+    name: string;
+  };
+  type: {
+    code: number;
+    name: string;
+  };
+}
+
+export interface SokkerApiTrainingFormationsDto {
+  formations: SokkerApiTrainingFormationDto[];
 }
 
 export interface SokkerApiCurrentDto {
