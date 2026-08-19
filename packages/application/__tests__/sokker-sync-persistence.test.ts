@@ -8,9 +8,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 
 import {
   ClubModel,
-  ClubSnapshotModel,
   ImportEventModel,
-  JuniorModel,
   MongoClubRepository,
   MongoPlayerRepository,
   MongoSnapshotRepository,
@@ -19,8 +17,6 @@ import {
   PlayerModel,
   SnapshotModel,
   SyncRunModel,
-  TrainerModel,
-  TrainingSummaryModel,
   TrainingWeekModel
 } from "@atlas/database";
 import {
@@ -51,14 +47,10 @@ describe("SokkerSyncPersistence", () => {
   beforeEach(async () => {
     await Promise.all([
       ClubModel.deleteMany({}),
-      ClubSnapshotModel.deleteMany({}),
       ImportEventModel.deleteMany({}),
-      JuniorModel.deleteMany({}),
       PlayerModel.deleteMany({}),
       SnapshotModel.deleteMany({}),
       SyncRunModel.deleteMany({}),
-      TrainerModel.deleteMany({}),
-      TrainingSummaryModel.deleteMany({}),
       TrainingWeekModel.deleteMany({})
     ]);
   });
@@ -79,10 +71,6 @@ describe("SokkerSyncPersistence", () => {
     expect(second.usedTransaction).toBe(false);
     expect(await SnapshotModel.countDocuments({ naturalKey: "sokker-json-api-sync" })).toBe(1);
     expect(await TrainingWeekModel.countDocuments({ clubId: 6038 })).toBe(3);
-    expect(await ClubSnapshotModel.countDocuments({ teamId: 6038 })).toBe(0);
-    expect(await TrainingSummaryModel.countDocuments({ teamId: 6038 })).toBe(0);
-    expect(await TrainerModel.countDocuments({ teamId: 6038 })).toBe(0);
-    expect(await JuniorModel.countDocuments({ teamId: 6038 })).toBe(0);
     expect(await SyncRunModel.countDocuments({ teamId: 6038, status: "completed" })).toBe(2);
 
     const snapshot = await SnapshotModel.findOne({ naturalKey: "sokker-json-api-sync" }).lean();
@@ -142,8 +130,6 @@ describe("SokkerSyncPersistence", () => {
     await persistence.persist(toValidatedPayload(firstPayload));
     await persistence.persist(toValidatedPayload(secondPayload));
 
-    expect(await TrainerModel.countDocuments({ teamId: 6038 })).toBe(0);
-    expect(await JuniorModel.countDocuments({ teamId: 6038 })).toBe(0);
     expect((await ClubModel.findOne({ clubId: 6038 }).lean())?.staff).toHaveLength(2);
     expect(
       (await SnapshotModel.findOne({ naturalKey: "sokker-json-api-sync" }).lean())?.juniors
