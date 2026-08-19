@@ -115,6 +115,7 @@ describe("Sokker API canonical mappers", () => {
         bankrupt: false
       },
       budget: { value: 123456, currency: "ARS" },
+      training: { GK: 2, DEF: 6, MID: 4, ATT: 7 },
       calendar: {
         season: 78,
         gameWeek: 1205,

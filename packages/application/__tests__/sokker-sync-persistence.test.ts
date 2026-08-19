@@ -75,6 +75,11 @@ describe("SokkerSyncPersistence", () => {
 
     const snapshot = await SnapshotModel.findOne({ naturalKey: "sokker-json-api-sync" }).lean();
     const club = await ClubModel.findOne({ clubId: 6038 }).lean();
+    expect(club?.budget).toBe(123456);
+    expect(club).not.toHaveProperty("budget.value");
+    expect(club?.currency).toBe("ARS");
+    expect(club).not.toHaveProperty("settings.currency");
+    expect(club?.training).toEqual({ GK: 2, DEF: 6, MID: 4, ATT: 7 });
     expect(club?.staff).toHaveLength(3);
     expect(snapshot?.juniors).toHaveLength(2);
     const training = await TrainingWeekModel.findOne({ playerId: 40098056 }).lean();

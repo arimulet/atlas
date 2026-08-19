@@ -19,7 +19,6 @@ export const updateClubProfileBodySchema = z
     settings: z
       .object({
         name: z.string().nullable().optional(),
-        currency: z.object({ name: z.string(), rate: z.number() }).optional(),
         week: z.number().int().nullable().optional(),
         assumptions: z.array(settingsRecordSchema).optional(),
         preferences: z.array(settingsRecordSchema).optional()
@@ -32,7 +31,6 @@ export const updateClubOperatingSettingsBodySchema = z
   .object({
     settings: z
       .object({
-        currency: z.object({ name: z.string(), rate: z.number() }).optional(),
         week: z.number().int().nullable().optional(),
         preferences: z
           .object({

@@ -34,6 +34,12 @@ export interface SokkerApiTeamDto {
   rankPosition: number;
   emblem: string;
   country: SokkerApiCountryDto;
+  training: {
+    gk: number;
+    def: number;
+    mid: number;
+    att: number;
+  };
   colors: unknown;
   nationalType: number;
   bankrupt: boolean;

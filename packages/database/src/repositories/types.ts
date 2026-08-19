@@ -40,14 +40,15 @@ export interface PersistedClub {
   id: string;
   clubId: number;
   country: number;
+  currency: string;
   training: {
-    GK: number | null;
-    DEF: number | null;
-    MID: number | null;
-    ATT: number | null;
-  } | null;
+    GK: number;
+    DEF: number;
+    MID: number;
+    ATT: number;
+  };
   name: string;
-  budget: { value: number | null; currency: string | null } | null;
+  budget: number | null;
   staff: PersistedClubStaffMember[];
   gameWeek: number | null;
   week: number | null;
@@ -57,7 +58,6 @@ export interface PersistedClub {
 }
 
 export interface PersistedClubSettings {
-  currency: { name: string; rate: number };
   week?: number | null;
   assumptions: PersistedClubSettingsRecord[];
   preferences: PersistedClubSettingsRecord[];

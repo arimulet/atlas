@@ -9,6 +9,7 @@
     "emblem": "river-emblem",
     "country": { "code": 32, "name": "Argentina" },
     "colors": { "primary": "red" },
+    "training": { "gk": 2, "def": 6, "mid": 4, "att": 7 },
     "nationalType": 0,
     "bankrupt": false,
     "league": null,

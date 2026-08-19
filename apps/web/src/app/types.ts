@@ -110,39 +110,38 @@ export interface ClubDashboard {
     id: string;
     clubId: number;
     name: string;
+    currency: string;
+    budget: number | null;
     gameWeek: number | null;
     week: number | null;
     lastSnapshotDate: string | null;
     observedAt: string | null;
     settings: {
-      currency: CurrencySettings;
       assumptions: ManualRecord[];
       preferences: ManualRecord[];
     };
     profile: {
       externalId: string | null;
       name: string;
-      currency: CurrencySettings;
+      currency: string;
       week: number | null;
     };
     training: {
-      GK: number | null;
-      DEF: number | null;
-      MID: number | null;
-      ATT: number | null;
-    } | null;
+      GK: number;
+      DEF: number;
+      MID: number;
+      ATT: number;
+    };
   };
   settings: {
     observed: {
       week: number | null;
     };
     settings: {
-      currency: CurrencySettings;
       week: number | null;
       preferences: Partial<Record<OperatingPreferenceKey, string>>;
     };
     effective: {
-      currency: CurrencySettings;
       week: number | null;
       preferences: Record<OperatingPreferenceKey, string>;
     };
@@ -176,10 +175,10 @@ export interface TrainingPageData {
   snapshotId: string | null;
   snapshotDate: string | null;
   configuration: {
-    GK: number | null;
-    DEF: number | null;
-    MID: number | null;
-    ATT: number | null;
+    GK: number;
+    DEF: number;
+    MID: number;
+    ATT: number;
   } | null;
   players: TrainingPagePlayer[];
   history?: TrainingReport[];

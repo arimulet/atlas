@@ -31,6 +31,7 @@ export const getSquadEconomy = async (clubId: ClubId): Promise<SquadEconomy> => 
   }
 
   const settings = buildClubOperatingSettings(club);
+  const currency = { name: club.currency, rate: 1 };
   const riskTolerance = settings.effective.preferences[
     "economy.riskTolerance"
   ] as EconomyRiskTolerance;
@@ -40,13 +41,13 @@ export const getSquadEconomy = async (clubId: ClubId): Promise<SquadEconomy> => 
   const countryDetails = await countryRepository.getById(club.country);
 
   if (!latest) {
-    return buildEmptySquadEconomy(clubId, settings.effective.currency, riskTolerance, countryDetails);
+    return buildEmptySquadEconomy(clubId, currency, riskTolerance, countryDetails);
   }
 
-  const observed = buildObserved(latest, settings.effective.currency);
-  const derived = buildDerived(latest, observed, settings.effective.currency);
+  const observed = buildObserved(latest, currency);
+  const derived = buildDerived(latest, observed, currency);
   const warnings = buildWarnings(latest, observed, derived);
-  const historical = buildHistorical(snapshots, settings.effective.currency, warnings);
+  const historical = buildHistorical(snapshots, currency, warnings);
   const findings = buildFindings(derived, historical, riskTolerance, warnings);
 
   return {
@@ -56,7 +57,7 @@ export const getSquadEconomy = async (clubId: ClubId): Promise<SquadEconomy> => 
     snapshotDate: formatDate(latest.snapshotDate),
     observed,
     manual: {
-      currency: settings.effective.currency,
+      currency,
       riskTolerance
     },
     derived,

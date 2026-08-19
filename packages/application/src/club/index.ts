@@ -25,7 +25,7 @@ import {
   SnapshotComparisonPlayer,
   SnapshotComparisonSnapshot
 } from "@atlas/domain";
-import { formatDate, normalizeNullableString, validateCurrency, validateWeek } from "@atlas/utils";
+import { formatDate, normalizeNullableString, validateWeek } from "@atlas/utils";
 import {
   Category,
   ClubId,
@@ -148,7 +148,6 @@ function validateManualProfileUpdate(
   const validated: ValidatedManualProfileUpdate = {};
 
   if ("name" in manual) validated.name = normalizeNullableString(manual.name);
-  if ("currency" in manual) validated.currency = validateCurrency(manual.currency);
   if ("week" in manual) validated.week = validateWeek(manual.week);
   if (manual.assumptions) validated.assumptions = validateManualRecords(manual.assumptions);
   if (manual.preferences) validated.preferences = validateManualRecords(manual.preferences);

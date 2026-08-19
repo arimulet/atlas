@@ -25,6 +25,12 @@ export interface CurrentClubContextDto {
     value: number;
     currency: string;
   };
+  training: {
+    GK: number;
+    DEF: number;
+    MID: number;
+    ATT: number;
+  };
   calendar: {
     season: number;
     gameWeek: number;

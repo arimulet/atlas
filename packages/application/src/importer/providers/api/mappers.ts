@@ -52,6 +52,7 @@ export function mapCurrentApiToCurrentClubContext(
       value: source.budget.value,
       currency: source.budget.currency
     },
+    training: mapTrainingConfiguration(source.team.training),
     calendar: {
       season: source.today.season,
       gameWeek: source.today.week,
@@ -59,6 +60,23 @@ export function mapCurrentApiToCurrentClubContext(
       date: source.today.date.value
     }
   };
+}
+
+function mapTrainingConfiguration(
+  source: SokkerApiCurrentDto["team"]["training"] | null | undefined
+): CurrentClubContextDto["training"] {
+  if (
+    source === null ||
+    source === undefined ||
+    !Number.isFinite(source.gk) ||
+    !Number.isFinite(source.def) ||
+    !Number.isFinite(source.mid) ||
+    !Number.isFinite(source.att)
+  ) {
+    throw new Error("Sokker training configuration must contain numeric values for every position.");
+  }
+
+  return { GK: source.gk, DEF: source.def, MID: source.mid, ATT: source.att };
 }
 
 export function mapTrainingPlayerApiToPlayer(source: SokkerApiTrainingPlayerDto): PlayerDto {

@@ -111,7 +111,7 @@ export const getYouthPipelinePlanning = async (
 
   const operatingSettings = buildClubOperatingSettings(club);
   const academyInvestment = operatingSettings.effective.preferences["academy.investment"];
-  const effectiveCurrency = operatingSettings.effective.currency;
+  const effectiveCurrency = club.currency;
   const snapshots = await snapshotRepository.listByClub(clubId);
   const latest = snapshots.at(-1) ?? null;
 
@@ -134,7 +134,7 @@ export const getYouthPipelinePlanning = async (
         player,
         snapshots,
         academyInvestment,
-        currency: effectiveCurrency.name,
+        currency: effectiveCurrency,
         developmentSummary: findDevelopmentSummary(player, developmentIndex),
         marketPlan: marketIndex.get(player.id) ?? null
       })
@@ -147,7 +147,7 @@ export const getYouthPipelinePlanning = async (
     snapshotDate: formatDate(latest.snapshotDate),
     observed: {
       youthAgeThreshold: YOUTH_PIPELINE_AGE_THRESHOLD,
-      players: youngPlayers.map((player) => mapObservedYouth(player, effectiveCurrency.name)),
+      players: youngPlayers.map((player) => mapObservedYouth(player, effectiveCurrency)),
       coverage: {
         seniorPlayerCount: latest.players.length,
         youngSeniorPlayerCount: youngPlayers.length,

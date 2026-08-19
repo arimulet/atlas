@@ -25,34 +25,30 @@ const staffTrainerSchema = new Schema(
   { _id: false }
 );
 
+const clubTrainingSchema = new Schema(
+  {
+    GK: { type: Number, required: true },
+    DEF: { type: Number, required: true },
+    MID: { type: Number, required: true },
+    ATT: { type: Number, required: true }
+  },
+  { _id: false }
+);
+
 const clubSchema = new Schema(
   {
     clubId: { type: Number, required: true },
     country: { type: Number, required: true },
-    training: {
-      GK: { type: Number, default: null },
-      DEF: { type: Number, default: null },
-      MID: { type: Number, default: null },
-      ATT: { type: Number, default: null }
-    },
+    training: { type: clubTrainingSchema, required: true },
     name: { type: String, required: true, trim: true },
     gameWeek: { type: Number, default: null },
     week: { type: Number, default: null },
-    budget: {
-      value: { type: Number, default: null }
-    },
+    budget: { type: Number, default: null },
+    currency: { type: String, required: true, trim: true },
     staff: { type: [staffTrainerSchema], default: [] },
     lastSnapshotDate: { type: Date, default: null },
     observedAt: { type: Date, default: null },
     settings: {
-      currency: {
-        type: {
-          name: { type: String, required: true },
-          rate: { type: Number, required: true }
-        },
-        _id: false,
-        required: true
-      },
       week: { type: Number, default: null },
       assumptions: { type: [manualRecordSchema], default: [] },
       preferences: {
