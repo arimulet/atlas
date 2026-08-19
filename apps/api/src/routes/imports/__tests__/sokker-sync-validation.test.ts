@@ -3,12 +3,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   createSokkerDataProvider: vi.fn(),
-  importPlayerSnapshotMvp: vi.fn(),
-  importTrainingReports: vi.fn(),
   loadSokkerSyncPayload: vi.fn(),
-  mapCurrentContextToSnapshotClub: vi.fn(),
-  mapJuniorsToSnapshotJuniors: vi.fn(),
-  mapPlayersToSnapshotPlayers: vi.fn(),
+  persistSokkerSync: vi.fn(),
   validatePlayerSnapshotImport: vi.fn(),
   validateSokkerSyncPayload: vi.fn()
 }));
@@ -61,8 +57,7 @@ describe("POST /sokker-sync validation boundary", () => {
     });
 
     expect(response.statusCode).toBe(422);
-    expect(mocks.importPlayerSnapshotMvp).not.toHaveBeenCalled();
-    expect(mocks.importTrainingReports).not.toHaveBeenCalled();
+    expect(mocks.persistSokkerSync).not.toHaveBeenCalled();
     expect(response.json().importResult.errors[0]).toEqual({
       path: "players.0.teamId",
       message: "[TEAM_ID_MISMATCH] Player belongs to another team."
@@ -86,24 +81,22 @@ describe("POST /sokker-sync validation boundary", () => {
         }
       ]
     });
-    mocks.mapCurrentContextToSnapshotClub.mockReturnValue({});
-    mocks.mapJuniorsToSnapshotJuniors.mockReturnValue([]);
-    mocks.mapPlayersToSnapshotPlayers.mockReturnValue([]);
-    mocks.importPlayerSnapshotMvp.mockResolvedValue({
-      importResult: {
-        status: "accepted",
-        errors: [],
-        warnings: [],
-        importEventId: "event-1",
-        snapshotId: "snapshot-1",
-        clubId: 6038,
-        playerIds: [],
-        importedPlayerCount: 0
-      },
-      summary: null,
-      diagnostic: null
+    mocks.persistSokkerSync.mockResolvedValue({
+      syncRunId: "run-1",
+      teamId: 6038,
+      gameWeek: 1205,
+      usedTransaction: false,
+      clubId: "club-1",
+      snapshotId: "snapshot-1",
+      upserted: {
+        players: 0,
+        playerSnapshots: 1,
+        trainingWeeks: 0,
+        trainers: 0,
+        juniors: 0,
+        trainingSummaryWeeks: 0
+      }
     });
-    mocks.importTrainingReports.mockResolvedValue(undefined);
 
     const server = Fastify();
     await server.register(importsRoutes);
@@ -115,8 +108,7 @@ describe("POST /sokker-sync validation boundary", () => {
     });
 
     expect(response.statusCode).toBe(200);
-    expect(mocks.importPlayerSnapshotMvp).toHaveBeenCalledTimes(1);
-    expect(mocks.importTrainingReports).toHaveBeenCalledWith(6038, []);
+    expect(mocks.persistSokkerSync).toHaveBeenCalledTimes(1);
     expect(response.json().importResult.status).toBe("accepted-with-warnings");
     expect(response.json().importResult.warnings[0].message).toContain("MISSING_HEAD_TRAINER");
 

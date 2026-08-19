@@ -22,6 +22,10 @@ const clubSchema = new Schema(
     name: { type: String, required: true, trim: true },
     gameWeek: { type: Number, default: null },
     week: { type: Number, default: null },
+    budget: {
+      value: { type: Number, default: null },
+      currency: { type: String, default: null }
+    },
     lastSnapshotDate: { type: Date, default: null },
     sourceType: { type: String, default: null },
     observedAt: { type: Date, default: null },
@@ -36,24 +40,21 @@ const clubSchema = new Schema(
       },
       week: { type: Number, default: null },
       assumptions: { type: [manualRecordSchema], default: [] },
-      preferences: { 
-        type: [manualRecordSchema], 
+      preferences: {
+        type: [manualRecordSchema],
         default: () => [
           { key: "economy.riskTolerance", value: "balanced", updatedAt: new Date() },
           { key: "training.priority", value: "balanced", updatedAt: new Date() },
           { key: "academy.investment", value: "balanced", updatedAt: new Date() },
           { key: "market.strategy", value: "balanced", updatedAt: new Date() }
-        ] 
+        ]
       }
     }
   },
   { timestamps: true }
 );
 
-clubSchema.index(
-  { clubId: 1 },
-  { unique: true }
-);
+clubSchema.index({ clubId: 1 }, { unique: true });
 
 export type ClubDocument = InferSchemaType<typeof clubSchema>;
 

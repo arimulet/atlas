@@ -1,3 +1,4 @@
+import { type ClientSession } from "mongoose";
 import { TrainingWeekModel } from "../models/trainingWeek.js";
 import type {
   PersistedPlayerSkills,
@@ -8,11 +9,14 @@ import type {
 } from "./types.js";
 
 export class MongoTrainingWeekRepository {
-  async save(input: SavePlayerTrainingWeekInput): Promise<PersistedPlayerTrainingWeek> {
+  async save(
+    input: SavePlayerTrainingWeekInput,
+    session?: ClientSession
+  ): Promise<PersistedPlayerTrainingWeek> {
     const week = await TrainingWeekModel.findOneAndUpdate(
       { clubId: input.clubId, playerId: input.playerId, gameWeek: input.gameWeek },
       { $set: input },
-      { new: true, upsert: true, setDefaultsOnInsert: true }
+      { new: true, upsert: true, setDefaultsOnInsert: true, session }
     );
 
     if (!week) {

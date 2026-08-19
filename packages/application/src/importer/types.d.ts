@@ -210,5 +210,22 @@ export interface InvalidSokkerSyncPayload {
 
 export type SokkerSyncValidationResult = ValidatedSokkerSyncPayload | InvalidSokkerSyncPayload;
 
+export interface SokkerSyncPersistenceResult {
+  syncRunId: string;
+  teamId: number;
+  gameWeek: number;
+  usedTransaction: boolean;
+  clubId: string;
+  snapshotId: string;
+  upserted: {
+    players: number;
+    playerSnapshots: number;
+    trainingWeeks: number;
+    trainers: number;
+    juniors: number;
+    trainingSummaryWeeks: number;
+  };
+}
+
 export type SnapshotPlayerDto = PlayerSnapshotV0["players"][number];
 export type SnapshotJuniorDto = NonNullable<PlayerSnapshotV0["juniors"]>[number];

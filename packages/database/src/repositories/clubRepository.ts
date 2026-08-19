@@ -1,4 +1,4 @@
-import { Types } from "mongoose";
+import { Types, type ClientSession } from "mongoose";
 import { ClubModel } from "../models/club.js";
 import type { PersistedClub } from "./types.js";
 
@@ -20,6 +20,7 @@ export interface SaveClubInput {
   sourceType?: string | null;
   observedAt?: Date | null;
   currency: { name: string; rate: number };
+  budget?: { value: number; currency: string } | null;
 }
 
 export interface UpdateClubManualProfileInput {
@@ -31,7 +32,7 @@ export interface UpdateClubManualProfileInput {
 }
 
 export class MongoClubRepository {
-  async save(input: SaveClubInput): Promise<PersistedClub> {
+  async save(input: SaveClubInput, session?: ClientSession): Promise<PersistedClub> {
     const $set: Record<string, unknown> = {
       name: input.name,
       country: input.country,
@@ -40,6 +41,10 @@ export class MongoClubRepository {
       sourceType: input.sourceType ?? null,
       observedAt: input.observedAt ?? null
     };
+
+    if (input.budget !== undefined) {
+      $set.budget = input.budget;
+    }
 
     if (input.gameWeek !== undefined) {
       $set.gameWeek = input.gameWeek;
@@ -50,11 +55,8 @@ export class MongoClubRepository {
     }
 
     if (!input.clubId) {
-      const club = await ClubModel.create({
-        clubId: input.clubId,
-        ...$set
-      });
-      return mapClub(club.toObject());
+      const club = await ClubModel.create([{ clubId: input.clubId, ...$set }], { session });
+      return mapClub(club[0]!.toObject());
     }
 
     const $setOnInsert: Record<string, unknown> = { clubId: input.clubId };
@@ -67,7 +69,7 @@ export class MongoClubRepository {
         $set,
         $setOnInsert
       },
-      { new: true, upsert: true }
+      { new: true, upsert: true, session }
     );
 
     return mapClub(club.toObject());
@@ -137,12 +139,16 @@ function mapClub(club: {
     assumptions?: Array<{ key: string; value: string; updatedAt: Date }>;
     preferences?: Array<{ key: string; value: string; updatedAt: Date }>;
   } | null;
+  budget?: { value?: number | null; currency?: string | null } | null;
 }): PersistedClub {
   return {
     id: club._id.toString(),
     clubId: club.clubId ?? 0,
     country: club.country ?? 0,
     name: club.name,
+    budget: club.budget
+      ? { value: club.budget.value ?? null, currency: club.budget.currency ?? null }
+      : null,
     training: club.training
       ? {
           GK: club.training.GK ?? null,
@@ -167,4 +173,3 @@ function mapClub(club: {
     }
   };
 }
-
