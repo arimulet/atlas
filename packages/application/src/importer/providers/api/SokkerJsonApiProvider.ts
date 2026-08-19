@@ -105,10 +105,10 @@ export class SokkerJsonApiProvider implements SokkerDataProvider {
         remember: false
       })
     });
-    const body = await response.text();
+    await response.text();
 
     if (!response.ok) {
-      throw new Error(`Sokker API authentication failed (${response.status}): ${body}`);
+      throw new Error(`Sokker API authentication failed (${response.status}).`);
     }
 
     this.sessionCookie = readSessionCookie(response.headers.get("set-cookie"));
