@@ -2,12 +2,14 @@ import {
   AGE_TRAINING_FACTOR,
   BASE_TRAINING_AGE,
   BASE_TRAINING_POINTS,
+  DEFAULT_TALENT_FOR_RELATIVE_COMPARISON,
   DEFAULT_TALENT_PROFILE_MINIMUM_OBSERVATIONS,
   MAX_EFFICIENCY,
   MAX_SKILL_LEVEL,
   MAX_TRAINING_EFFICIENCY,
   SKILL_LEVEL_TRAINING_FACTOR,
   SKILL_TRAINING_BASE_LEVEL,
+  TRAINING_RECOMMENDATION_SCORE_NORMALIZATION_BASE,
   SUPPORTED_TRAINING_SKILLS
 } from "./constants.js";
 import type {
@@ -53,6 +55,7 @@ import type {
   RequiredTrainingPointsResult,
   TalentEstimationInput,
   TalentEstimationResult,
+  DevelopmentReturnScoreInput,
   WeeklyTrainingPlayerInput,
   WeeklyTrainingPlayerReport,
   WeeklyTrainingReport,
@@ -74,11 +77,18 @@ export {
   AGE_TRAINING_FACTOR,
   BASE_TRAINING_AGE,
   BASE_TRAINING_POINTS,
+  DEFAULT_TALENT_FOR_RELATIVE_COMPARISON,
   DEFAULT_TALENT_PROFILE_MINIMUM_OBSERVATIONS,
   MAX_SKILL_LEVEL,
   MAX_TRAINING_EFFICIENCY,
   SKILL_LEVEL_TRAINING_FACTOR,
-  SKILL_TRAINING_BASE_LEVEL
+  SKILL_TRAINING_BASE_LEVEL,
+  TRAINING_RECOMMENDATION_HIGH_NEXT_LEVEL_WEEKS,
+  TRAINING_RECOMMENDATION_MIN_HISTORY_WEEKS,
+  TRAINING_RECOMMENDATION_RECENT_SWITCH_THRESHOLD,
+  TRAINING_RECOMMENDATION_SCORE_NORMALIZATION_BASE,
+  TRAINING_RECOMMENDATION_SKILL_UP_SOON_WEEKS,
+  TRAINING_RECOMMENDATION_SWITCH_THRESHOLD
 } from "./constants.js";
 
 export type {
@@ -128,6 +138,14 @@ export type {
   RequiredTrainingPointsResult,
   TalentEstimationInput,
   TalentEstimationResult,
+  TrainingRecommendationStatus,
+  TrainingRecommendationConfidence,
+  TrainingRecommendationPlayer,
+  PlayerTrainingRecommendationContext,
+  TrainingOptionEvaluation,
+  TrainingRecommendationReason,
+  PlayerTrainingRecommendation,
+  DevelopmentReturnScoreInput,
   WeeklyTrainingPlayerInput,
   WeeklyTrainingPlayerReport,
   WeeklyTrainingReport,
@@ -364,6 +382,30 @@ export function buildWeeklyTrainingReport(input: WeeklyTrainingReportInput): Wee
       averageIntensity: weeklyPlayers.length === 0 ? 0 : totalIntensity / weeklyPlayers.length
     }
   };
+}
+
+export function calculateDevelopmentReturnScore(input: DevelopmentReturnScoreInput): number | null {
+  if (
+    input.currentSkillLevel >= MAX_SKILL_LEVEL ||
+    input.expectedWeeklyTrainingPoints <= 0 ||
+    !Number.isFinite(input.expectedWeeklyTrainingPoints)
+  ) {
+    return null;
+  }
+
+  const talent = input.talent ?? DEFAULT_TALENT_FOR_RELATIVE_COMPARISON;
+  const requiredTraining = calculateRequiredTrainingPoints({
+    talent,
+    age: input.age,
+    skill: input.skill,
+    targetSkillLevel: input.currentSkillLevel + 1
+  });
+  const expectedTrainingCost =
+    requiredTraining.requiredTrainingPoints / input.expectedWeeklyTrainingPoints;
+  const expectedDevelopmentValue = (MAX_SKILL_LEVEL - input.currentSkillLevel) / MAX_SKILL_LEVEL;
+  const rawScore = expectedDevelopmentValue / expectedTrainingCost;
+
+  return rawScore / (TRAINING_RECOMMENDATION_SCORE_NORMALIZATION_BASE + rawScore);
 }
 
 function buildWeeklyTrainingPlayerReport(
@@ -1594,3 +1636,5 @@ function assertObservationPlayer(observation: SkillProgressObservation, playerId
     throw new Error("All observations must belong to the profile playerId.");
   }
 }
+
+export * from "./recommendations.js";
