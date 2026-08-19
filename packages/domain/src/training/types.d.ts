@@ -248,6 +248,67 @@ export interface WeeklyTrainingReportInput {
   talents?: ReadonlyMap<number, number | null> | Readonly<Record<number, number | null>>;
 }
 
+export type TrainingRecommendationStatus = "continue" | "switch_skill" | "hold";
+export type TrainingRecommendationConfidence = "low" | "medium" | "high";
+
+export interface TrainingRecommendationPlayer {
+  playerId: number;
+  age: number;
+  position: "goalkeeper" | "defender" | "midfielder" | "winger" | "striker" | null;
+  skills: PlayerSkills;
+}
+
+export interface PlayerTrainingRecommendationContext {
+  player: TrainingRecommendationPlayer;
+  weeklyReport: WeeklyTrainingPlayerReport;
+  trainingHistory: TrainingHistory | readonly TrainingHistory[];
+  talent?: TalentEstimate | null;
+}
+
+export interface TrainingOptionEvaluation {
+  skill: SkillTrainingCostSkill;
+  currentLevel: number;
+  estimatedWeeksToNextLevel: number | null;
+  requiredTrainingPoints: number | null;
+  expectedWeeklyTrainingPoints: number | null;
+  developmentReturnScore: number | null;
+}
+
+export type TrainingRecommendationReason =
+  | { type: "skill_up_soon"; estimatedWeeks: number }
+  | {
+      type: "better_alternative";
+      currentSkill: SkillTrainingCostSkill;
+      alternativeSkill: SkillTrainingCostSkill;
+      improvement: number;
+    }
+  | { type: "recent_skill_up"; skill: SkillTrainingCostSkill }
+  | { type: "high_next_level_cost"; skill: SkillTrainingCostSkill }
+  | { type: "stable_current_skill"; skill: SkillTrainingCostSkill }
+  | { type: "insufficient_history" }
+  | { type: "no_valid_alternative" }
+  | { type: "current_option_not_calculable" }
+  | { type: "talent_uncertain" };
+
+export interface PlayerTrainingRecommendation {
+  playerId: number;
+  status: TrainingRecommendationStatus;
+  currentSkill: SkillTrainingCostSkill;
+  recommendedSkill?: SkillTrainingCostSkill;
+  currentOption: TrainingOptionEvaluation;
+  alternatives: TrainingOptionEvaluation[];
+  confidence: TrainingRecommendationConfidence;
+  reasons: TrainingRecommendationReason[];
+}
+
+export interface DevelopmentReturnScoreInput {
+  age: number;
+  talent?: number | null;
+  skill: SkillTrainingCostSkill;
+  currentSkillLevel: number;
+  expectedWeeklyTrainingPoints: number;
+}
+
 export interface TalentEvidence {
   playerId: number;
   skill: Skill;
