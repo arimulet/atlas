@@ -9,6 +9,22 @@ const manualRecordSchema = new Schema(
   { _id: false }
 );
 
+const staffTrainerSchema = new Schema(
+  {
+    trainerId: { type: Number, required: true, min: 1 },
+    name: { type: String, required: true, trim: true },
+    assignment: { type: String, enum: ["HEAD", "ASSISTANT", "YOUTH"], required: true },
+    contracted: { type: Boolean, required: true },
+    salary: { type: Number, required: true, min: 0 },
+    age: { type: Number, required: true, min: 1 },
+    skills: { type: Schema.Types.Mixed, required: true },
+    averageEffectivenessPercent: { type: Number, required: true, min: 0, max: 100 },
+    status: { type: String, required: true },
+    active: { type: Boolean, required: true }
+  },
+  { _id: false }
+);
+
 const clubSchema = new Schema(
   {
     clubId: { type: Number, required: true },
@@ -23,11 +39,10 @@ const clubSchema = new Schema(
     gameWeek: { type: Number, default: null },
     week: { type: Number, default: null },
     budget: {
-      value: { type: Number, default: null },
-      currency: { type: String, default: null }
+      value: { type: Number, default: null }
     },
+    staff: { type: [staffTrainerSchema], default: [] },
     lastSnapshotDate: { type: Date, default: null },
-    sourceType: { type: String, default: null },
     observedAt: { type: Date, default: null },
     settings: {
       currency: {

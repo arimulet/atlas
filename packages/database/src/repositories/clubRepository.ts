@@ -1,6 +1,6 @@
 import { Types, type ClientSession } from "mongoose";
 import { ClubModel } from "../models/club.js";
-import type { PersistedClub } from "./types.js";
+import type { PersistedClub, PersistedClubStaffMember } from "./types.js";
 
 export type ClubId = string | number;
 
@@ -17,10 +17,10 @@ export interface SaveClubInput {
   gameWeek?: number | null;
   week?: number | null;
   lastSnapshotDate?: Date | null;
-  sourceType?: string | null;
   observedAt?: Date | null;
   currency: { name: string; rate: number };
-  budget?: { value: number; currency: string } | null;
+  budget?: { value: number } | null;
+  staff?: PersistedClubStaffMember[];
 }
 
 export interface UpdateClubManualProfileInput {
@@ -38,7 +38,6 @@ export class MongoClubRepository {
       country: input.country,
       week: input.week ?? null,
       lastSnapshotDate: input.lastSnapshotDate ?? null,
-      sourceType: input.sourceType ?? null,
       observedAt: input.observedAt ?? null
     };
 
@@ -54,14 +53,14 @@ export class MongoClubRepository {
       $set.training = input.training;
     }
 
-    if (!input.clubId) {
-      const club = await ClubModel.create([{ clubId: input.clubId, ...$set }], { session });
-      return mapClub(club[0]!.toObject());
+    if (input.staff !== undefined) {
+      $set.staff = input.staff;
     }
 
-    const $setOnInsert: Record<string, unknown> = { clubId: input.clubId };
-
-    $setOnInsert["settings.currency"] = { name: input.currency.name, rate: input.currency.rate };
+    const $setOnInsert: Record<string, unknown> = {
+      clubId: input.clubId,
+      "settings.currency": { name: input.currency.name, rate: input.currency.rate }
+    };
 
     const club = await ClubModel.findOneAndUpdate(
       { clubId: input.clubId },
@@ -84,12 +83,7 @@ export class MongoClubRepository {
     const updatedAt = new Date();
     const $set: Record<string, unknown> = {};
 
-    if ("currency" in input) {
-      if (input.currency) {
-        $set["settings.currency"] = { name: input.currency.name, rate: input.currency.rate };
-      }
-    }
-    if ("week" in input) $set["settings.week"] = input.week ?? null;
+    if (input.week !== undefined) $set["settings.week"] = input.week ?? null;
     if (input.assumptions) {
       $set["settings.assumptions"] = input.assumptions.map((record) => ({ ...record, updatedAt }));
     }
@@ -131,24 +125,25 @@ function mapClub(club: {
   gameWeek?: number | null;
   week?: number | null;
   lastSnapshotDate?: Date | null;
-  sourceType?: string | null;
   observedAt?: Date | null;
+  staff?: PersistedClubStaffMember[];
   settings?: {
     currency?: { name: string; rate: number };
     week?: number | null;
     assumptions?: Array<{ key: string; value: string; updatedAt: Date }>;
     preferences?: Array<{ key: string; value: string; updatedAt: Date }>;
   } | null;
-  budget?: { value?: number | null; currency?: string | null } | null;
+  budget?: { value?: number | null } | null;
 }): PersistedClub {
+  const currency = club.settings?.currency ?? { name: "UNK", rate: 1 };
+
   return {
     id: club._id.toString(),
     clubId: club.clubId ?? 0,
     country: club.country ?? 0,
     name: club.name,
-    budget: club.budget
-      ? { value: club.budget.value ?? null, currency: club.budget.currency ?? null }
-      : null,
+    budget: club.budget ? { value: club.budget.value ?? null, currency: currency.name } : null,
+    staff: club.staff ?? [],
     training: club.training
       ? {
           GK: club.training.GK ?? null,
@@ -160,13 +155,9 @@ function mapClub(club: {
     gameWeek: club.gameWeek ?? null,
     week: club.week ?? null,
     lastSnapshotDate: club.lastSnapshotDate ?? null,
-    sourceType: club.sourceType ?? null,
     observedAt: club.observedAt ?? null,
     settings: {
-      currency: {
-        name: club.settings?.currency?.name ?? "UNK",
-        rate: club.settings?.currency?.rate ?? 1
-      },
+      currency,
       week: club.settings?.week ?? null,
       assumptions: club.settings?.assumptions ?? [],
       preferences: club.settings?.preferences ?? []

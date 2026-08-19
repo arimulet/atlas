@@ -89,6 +89,10 @@ export interface PlayerDto {
     daysRemaining: number;
     severe: boolean;
   };
+  cards: {
+    yellow: number;
+    red: number;
+  };
   youthTeamId: number;
   nationalCallUp: boolean;
   nationalType: string;

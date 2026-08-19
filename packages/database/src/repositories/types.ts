@@ -23,6 +23,19 @@ export interface PersistedImportIssue {
   message: string;
 }
 
+export interface PersistedClubStaffMember {
+  trainerId: number;
+  name: string;
+  assignment: "HEAD" | "ASSISTANT" | "YOUTH";
+  contracted: boolean;
+  salary: number;
+  age: number;
+  skills: Record<string, { level: number; effectivenessPercent: number }>;
+  averageEffectivenessPercent: number;
+  status: string;
+  active: boolean;
+}
+
 export interface PersistedClub {
   id: string;
   clubId: number;
@@ -35,10 +48,10 @@ export interface PersistedClub {
   } | null;
   name: string;
   budget: { value: number | null; currency: string | null } | null;
+  staff: PersistedClubStaffMember[];
   gameWeek: number | null;
   week: number | null;
   lastSnapshotDate: Date | null;
-  sourceType: string | null;
   observedAt: Date | null;
   settings: PersistedClubSettings;
 }
@@ -61,12 +74,20 @@ export interface PersistedPlayer {
   playerId: number;
   clubId: number;
   name: string;
+  countryId: number | null;
+  age: number | null;
+  position: string | null;
+  skills: Record<string, number> | null;
+  marketValue: number | null;
+  wage: number | null;
+  cards: { yellow: number; red: number };
+  injury: { days: number | null; severe: boolean | null };
+  currentGameWeek: number | null;
 }
 
 export interface PersistedImportEvent {
   id: string;
   schemaVersion: string | null;
-  sourceType: string | null;
   status: "accepted" | "accepted-with-warnings" | "rejected";
   errors: PersistedImportIssue[];
   warnings: PersistedImportIssue[];
@@ -113,17 +134,11 @@ export interface PersistedJuniorSnapshot {
   playerId: number;
   name: string;
   age: number;
+  initialLevel: number | null;
   initialWeeksRemaining: number | null;
   weeksRemaining: number | null;
   skill: number | null;
   status: "in_academy" | "ready_for_promotion" | "promoted";
-}
-
-export interface SnapshotSource {
-  type: string;
-  exportedAt: Date;
-  pageUrl: string | null;
-  locale: string | null;
 }
 
 export interface PersistedSnapshot {
@@ -134,8 +149,6 @@ export interface PersistedSnapshot {
   gameWeek: number | null;
   week: number | null;
   importedAt: Date;
-  source: SnapshotSource;
-  sourceVersion: string | null;
   players: PersistedPlayerSnapshot[];
   juniors: PersistedJuniorSnapshot[];
 }
@@ -145,6 +158,7 @@ export interface PersistedYouthPlayerSnapshot {
   playerId: number;
   name: string;
   age: number;
+  initialLevel: number | null;
   initialWeeksRemaining: number | null;
   weeksRemaining: number | null;
   skill: number | null;
@@ -177,7 +191,10 @@ export interface PersistedPlayerTrainingWeek {
   skillChanges: PersistedTrainingSkillChange[];
 }
 
-export type SavePlayerTrainingWeekInput = Omit<PersistedPlayerTrainingWeek, "id">;
+export type SavePlayerTrainingWeekInput = Omit<
+  PersistedPlayerTrainingWeek,
+  "id" | "skills" | "skillChanges"
+>;
 
 export interface PersistedCountry {
   id: string;

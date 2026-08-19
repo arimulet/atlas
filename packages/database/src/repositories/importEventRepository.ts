@@ -4,7 +4,6 @@ import type { PersistedImportEvent, PersistedImportIssue } from "./types.js";
 
 export interface CreateImportEventInput {
   schemaVersion: string | null;
-  sourceType: string | null;
   status: "accepted" | "accepted-with-warnings" | "rejected";
   errors: PersistedImportIssue[];
   warnings: PersistedImportIssue[];
@@ -47,7 +46,6 @@ export class MongoImportEventRepository {
 function mapImportEvent(event: {
   _id: Types.ObjectId;
   schemaVersion?: string | null;
-  sourceType?: string | null;
   status: "accepted" | "accepted-with-warnings" | "rejected";
   errors: PersistedImportIssue[];
   warnings: PersistedImportIssue[];
@@ -58,7 +56,6 @@ function mapImportEvent(event: {
   return {
     id: event._id.toString(),
     schemaVersion: event.schemaVersion ?? null,
-    sourceType: event.sourceType ?? null,
     status: event.status,
     errors: event.errors,
     warnings: event.warnings,

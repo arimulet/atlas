@@ -12,13 +12,9 @@ import {
   ImportEventModel,
   JuniorModel,
   MongoClubRepository,
-  MongoClubSnapshotRepository,
-  MongoJuniorRepository,
   MongoPlayerRepository,
   MongoSnapshotRepository,
   MongoSyncRunRepository,
-  MongoTrainerRepository,
-  MongoTrainingSummaryRepository,
   MongoTrainingWeekRepository,
   PlayerModel,
   SnapshotModel,
@@ -83,13 +79,16 @@ describe("SokkerSyncPersistence", () => {
     expect(second.usedTransaction).toBe(false);
     expect(await SnapshotModel.countDocuments({ naturalKey: "sokker-json-api-sync" })).toBe(1);
     expect(await TrainingWeekModel.countDocuments({ clubId: 6038 })).toBe(3);
-    expect(await ClubSnapshotModel.countDocuments({ teamId: 6038 })).toBe(1);
-    expect(await TrainingSummaryModel.countDocuments({ teamId: 6038 })).toBe(2);
-    expect(await TrainerModel.countDocuments({ teamId: 6038 })).toBe(3);
-    expect(await JuniorModel.countDocuments({ teamId: 6038 })).toBe(2);
+    expect(await ClubSnapshotModel.countDocuments({ teamId: 6038 })).toBe(0);
+    expect(await TrainingSummaryModel.countDocuments({ teamId: 6038 })).toBe(0);
+    expect(await TrainerModel.countDocuments({ teamId: 6038 })).toBe(0);
+    expect(await JuniorModel.countDocuments({ teamId: 6038 })).toBe(0);
     expect(await SyncRunModel.countDocuments({ teamId: 6038, status: "completed" })).toBe(2);
 
     const snapshot = await SnapshotModel.findOne({ naturalKey: "sokker-json-api-sync" }).lean();
+    const club = await ClubModel.findOne({ clubId: 6038 }).lean();
+    expect(club?.staff).toHaveLength(3);
+    expect(snapshot?.juniors).toHaveLength(2);
     const training = await TrainingWeekModel.findOne({ playerId: 40098056 }).lean();
     expect(snapshot?.gameWeek).toBe(1205);
     expect(training?.gameWeek).toBe(1204);
@@ -133,7 +132,7 @@ describe("SokkerSyncPersistence", () => {
     expect(await TrainingWeekModel.exists({ clubId: 6038, gameWeek: 1205 })).toBeTruthy();
   });
 
-  it("marks trainers and juniors missing from the current payload inactive without deleting them", async () => {
+  it("replaces embedded staff and youth current state", async () => {
     const firstPayload = createPayload();
     const secondPayload = structuredClone(firstPayload);
     secondPayload.trainers = secondPayload.trainers.slice(1);
@@ -143,12 +142,13 @@ describe("SokkerSyncPersistence", () => {
     await persistence.persist(toValidatedPayload(firstPayload));
     await persistence.persist(toValidatedPayload(secondPayload));
 
-    expect(await TrainerModel.countDocuments({ teamId: 6038 })).toBe(3);
-    expect(await TrainerModel.countDocuments({ teamId: 6038, active: false })).toBe(1);
-    expect(await JuniorModel.countDocuments({ teamId: 6038 })).toBe(2);
-    expect(await JuniorModel.countDocuments({ teamId: 6038, active: false })).toBe(1);
+    expect(await TrainerModel.countDocuments({ teamId: 6038 })).toBe(0);
+    expect(await JuniorModel.countDocuments({ teamId: 6038 })).toBe(0);
+    expect((await ClubModel.findOne({ clubId: 6038 }).lean())?.staff).toHaveLength(2);
+    expect(
+      (await SnapshotModel.findOne({ naturalKey: "sokker-json-api-sync" }).lean())?.juniors
+    ).toHaveLength(1);
   });
-
   it("marks a partial fallback run failed and safely completes on retry", async () => {
     const payload = createPayload();
     const trainingWeeks = new MongoTrainingWeekRepository();
@@ -157,18 +157,14 @@ describe("SokkerSyncPersistence", () => {
       .mockRejectedValueOnce(new Error("temporary training write failure"));
     const persistence = new SokkerSyncPersistence({
       clubs: new MongoClubRepository(),
-      clubSnapshots: new MongoClubSnapshotRepository(),
-      juniors: new MongoJuniorRepository(),
       players: new MongoPlayerRepository(),
       snapshots: new MongoSnapshotRepository(),
       syncRuns: new MongoSyncRunRepository(),
-      trainers: new MongoTrainerRepository(),
-      trainingSummaries: new MongoTrainingSummaryRepository(),
       trainingWeeks
     });
 
     await expect(persistence.persist(toValidatedPayload(payload))).rejects.toThrow(
-      "Failed to upsert TrainingHistory naturalKey=40098056/1204"
+      "Failed to upsert PlayerTraining naturalKey=40098056/1204"
     );
     await persistence.persist(toValidatedPayload(payload));
 

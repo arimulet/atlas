@@ -1,16 +1,14 @@
 import {
   mongoTransactionsAvailable,
   MongoClubRepository,
-  MongoClubSnapshotRepository,
-  MongoJuniorRepository,
   MongoPlayerRepository,
   MongoSnapshotRepository,
   MongoSyncRunRepository,
-  MongoTrainerRepository,
-  MongoTrainingSummaryRepository,
   MongoTrainingWeekRepository,
   withMongoTransaction,
-  type MongoSession
+  type MongoSession,
+  type PersistedClubStaffMember,
+  type PersistedPlayerSkillsChange
 } from "@atlas/database";
 
 import type {
@@ -22,15 +20,12 @@ import { mapJuniorsToSnapshotJuniors, mapPlayersToSnapshotPlayers } from "./snap
 
 const SYNC_SNAPSHOT_NATURAL_KEY = "sokker-json-api-sync";
 
+/** Current club/player state and factual events are persisted; summaries stay in memory. */
 export interface SokkerSyncPersistenceRepositories {
   clubs: MongoClubRepository;
-  clubSnapshots: MongoClubSnapshotRepository;
-  juniors: MongoJuniorRepository;
   players: MongoPlayerRepository;
   snapshots: MongoSnapshotRepository;
   syncRuns: MongoSyncRunRepository;
-  trainers: MongoTrainerRepository;
-  trainingSummaries: MongoTrainingSummaryRepository;
   trainingWeeks: MongoTrainingWeekRepository;
 }
 
@@ -98,10 +93,10 @@ export class SokkerSyncPersistence {
           gameWeek: payload.current.calendar.gameWeek,
           week: payload.current.calendar.seasonWeek,
           lastSnapshotDate: currentDate,
-          sourceType: "sokker-json-api",
           observedAt: importedAt,
           currency: { name: payload.current.budget.currency, rate: 1 },
-          budget: payload.current.budget
+          budget: { value: payload.current.budget.value },
+          staff: payload.trainers.map(mapTrainerToStaff)
         },
         session
       )
@@ -110,12 +105,26 @@ export class SokkerSyncPersistence {
     for (const player of payload.players) {
       await persistStep("Player", `${teamId}/${player.id}`, () =>
         this.repositories.players.resolveHistoricalIdentity(
-          { playerId: player.id, clubId: teamId, name: player.name.fullName },
+          {
+            playerId: player.id,
+            clubId: teamId,
+            name: player.name.fullName,
+            countryId: player.country.code,
+            age: player.age,
+            position: player.formation,
+            skills: { ...player.skills },
+            marketValue: player.value.value,
+            wage: player.wage.value,
+            cards: player.cards,
+            injury: { days: player.injury.daysRemaining, severe: player.injury.severe },
+            currentGameWeek: payload.current.calendar.gameWeek
+          },
           session
         )
       );
     }
 
+    const previousSnapshot = (await this.repositories.snapshots.listByClub(club.id)).at(-1);
     const snapshotPlayers = mapPlayersToSnapshotPlayers(payload.players, payload.trainingWeeks).map(
       (player) => ({
         ...player,
@@ -134,12 +143,22 @@ export class SokkerSyncPersistence {
         }
       })
     );
-    const snapshotJuniors = mapJuniorsToSnapshotJuniors(payload.juniors).map((junior) => ({
-      ...junior,
-      initialWeeksRemaining: junior.initialWeeksRemaining ?? null,
-      weeksRemaining: junior.weeksRemaining ?? null,
-      status: junior.status ?? "in_academy"
-    }));
+    const snapshotJuniors = mapJuniorsToSnapshotJuniors(payload.juniors).map((junior) => {
+      const previousJunior = previousSnapshot?.juniors.find(
+        (candidate) => candidate.playerId === junior.playerId
+      );
+      return {
+        ...junior,
+        initialLevel: previousJunior?.initialLevel ?? junior.skill,
+        initialWeeksRemaining:
+          previousJunior?.initialWeeksRemaining ??
+          junior.initialWeeksRemaining ??
+          junior.weeksRemaining ??
+          null,
+        weeksRemaining: junior.weeksRemaining ?? null,
+        status: junior.status ?? "in_academy"
+      };
+    });
 
     const snapshot = await persistStep(
       "PlayerSnapshot",
@@ -154,12 +173,6 @@ export class SokkerSyncPersistence {
             week: payload.current.calendar.seasonWeek,
             importedAt,
             naturalKey: SYNC_SNAPSHOT_NATURAL_KEY,
-            source: {
-              type: "sokker-json-api",
-              exportedAt: importedAt,
-              pageUrl: null,
-              locale: null
-            },
             players: snapshotPlayers,
             juniors: snapshotJuniors
           },
@@ -168,7 +181,7 @@ export class SokkerSyncPersistence {
     );
 
     for (const report of payload.trainingWeeks) {
-      await persistStep("TrainingHistory", `${report.playerId}/${report.gameWeek}`, () =>
+      await persistStep("PlayerTraining", `${report.playerId}/${report.gameWeek}`, () =>
         this.repositories.trainingWeeks.save(
           {
             clubId: teamId,
@@ -181,86 +194,12 @@ export class SokkerSyncPersistence {
             kind: report.kind,
             intensity: report.intensity,
             age: report.age,
-            skills: { ...report.skills },
-            skillsChange: { ...report.skillsChange },
-            skillChanges: report.skillChanges.map((change) => ({ ...change }))
+            skillsChange: mapPersistedSkillsChange(report.skillsChange)
           },
           session
         )
       );
     }
-
-    await persistStep("ClubSnapshot", `${teamId}/${payload.current.calendar.gameWeek}`, () =>
-      this.repositories.clubSnapshots.upsert(
-        {
-          teamId,
-          gameWeek: payload.current.calendar.gameWeek,
-          season: payload.current.calendar.season,
-          seasonWeek: payload.current.calendar.seasonWeek,
-          date: currentDate,
-          team: payload.current.team,
-          budget: payload.current.budget
-        },
-        session
-      )
-    );
-
-    await persistStep("Trainer", `${teamId}`, async () => {
-      await this.repositories.trainers.deactivateMissing(
-        teamId,
-        payload.trainers.map((trainer) => trainer.id),
-        session
-      );
-      await this.repositories.trainers.upsertMany(
-        payload.trainers.map((trainer) => ({
-          teamId,
-          trainerId: trainer.id,
-          name: trainer.name,
-          assignment: trainer.assignment,
-          contracted: trainer.contracted,
-          salary: trainer.salary,
-          age: trainer.age,
-          skills: { ...trainer.skills },
-          averageEffectivenessPercent: trainer.averageEffectivenessPercent,
-          status: trainer.status
-        })),
-        session
-      );
-    });
-
-    await persistStep("Junior", `${teamId}`, async () => {
-      await this.repositories.juniors.deactivateMissing(
-        teamId,
-        payload.juniors.map((junior) => junior.id),
-        session
-      );
-      await this.repositories.juniors.upsertMany(
-        payload.juniors.map((junior) => ({
-          teamId,
-          juniorId: junior.id,
-          name: junior.name,
-          age: junior.age,
-          currentLevel: junior.currentLevel,
-          weeksLeft: junior.weeksLeft
-        })),
-        session
-      );
-    });
-
-    await persistStep("TrainingSummary", `${teamId}`, () =>
-      this.repositories.trainingSummaries.upsertMany(
-        payload.trainingSummary.weeks.map((week) => ({
-          teamId,
-          gameWeek: week.gameWeek,
-          season: week.season,
-          seasonWeek: week.seasonWeek,
-          date: gameDate(week.date),
-          players: week.players,
-          juniors: week.juniors
-        })),
-        session
-      )
-    );
 
     return {
       clubId: club.id,
@@ -271,7 +210,7 @@ export class SokkerSyncPersistence {
         trainingWeeks: payload.trainingWeeks.length,
         trainers: payload.trainers.length,
         juniors: payload.juniors.length,
-        trainingSummaryWeeks: payload.trainingSummary.weeks.length
+        trainingSummaryWeeks: 0
       }
     };
   }
@@ -286,14 +225,44 @@ export async function persistSokkerSync(
 function createRepositories(): SokkerSyncPersistenceRepositories {
   return {
     clubs: new MongoClubRepository(),
-    clubSnapshots: new MongoClubSnapshotRepository(),
-    juniors: new MongoJuniorRepository(),
     players: new MongoPlayerRepository(),
     snapshots: new MongoSnapshotRepository(),
     syncRuns: new MongoSyncRunRepository(),
-    trainers: new MongoTrainerRepository(),
-    trainingSummaries: new MongoTrainingSummaryRepository(),
     trainingWeeks: new MongoTrainingWeekRepository()
+  };
+}
+
+function mapPersistedSkillsChange(
+  change: SokkerSyncPayload["trainingWeeks"][number]["skillsChange"]
+): PersistedPlayerSkillsChange {
+  return {
+    stamina: change.stamina,
+    keeper: change.keeper,
+    playmaking: change.playmaking,
+    passing: change.passing,
+    technique: change.technique,
+    defending: change.defending,
+    striker: change.striker,
+    pace: change.pace,
+    up: change.up,
+    down: change.down
+  };
+}
+
+function mapTrainerToStaff(
+  trainer: SokkerSyncPayload["trainers"][number]
+): PersistedClubStaffMember {
+  return {
+    trainerId: trainer.id,
+    name: trainer.name.fullName,
+    assignment: trainer.assignment,
+    contracted: trainer.contracted,
+    salary: trainer.salary.value,
+    age: trainer.age,
+    skills: { ...trainer.skills },
+    averageEffectivenessPercent: trainer.averageEffectivenessPercent,
+    status: trainer.status,
+    active: true
   };
 }
 

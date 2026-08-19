@@ -11,7 +11,6 @@ const importIssueSchema = new Schema(
 const importEventSchema = new Schema(
   {
     schemaVersion: { type: String, default: null },
-    sourceType: { type: String, default: null },
     status: {
       type: String,
       enum: ["accepted", "accepted-with-warnings", "rejected"],

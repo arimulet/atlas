@@ -10,6 +10,7 @@ export * from "./models/snapshot.js";
 export * from "./models/syncRun.js";
 export * from "./models/trainer.js";
 export * from "./models/trainingSummary.js";
+export * from "./migrations/normalizePersistence.js";
 export * from "./models/trainingWeek.js";
 export * from "./repositories/clubRepository.js";
 export * from "./repositories/clubSnapshotRepository.js";

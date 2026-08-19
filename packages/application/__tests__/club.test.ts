@@ -80,7 +80,6 @@ describe("Club dashboard use case", () => {
     await updateClubOperatingSettings({
       clubId: importResult.clubId!,
       settings: {
-        currency: { name: "ARS", rate: 100 },
         week: 6,
         preferences: {
           "market.strategy": "opportunistic"
@@ -95,11 +94,11 @@ describe("Club dashboard use case", () => {
       week: 4
     });
     expect(dashboard.club.settings).toMatchObject({
-      currency: { name: "ARS", rate: 100 },
+      currency: { name: "UNK", rate: 1 },
       week: 6
     });
     expect(dashboard.settings.effective).toMatchObject({
-      currency: { name: "ARS", rate: 100 },
+      currency: { name: "UNK", rate: 1 },
       week: 6,
       preferences: {
         "economy.riskTolerance": "balanced",
@@ -500,7 +499,6 @@ describe("Club profile use cases", () => {
     const profile = await updateClubProfile({
       clubId: club.id,
       settings: {
-        currency: { name: "ARS", rate: 100 },
         week: 6,
         assumptions: [{ key: "wage-growth", value: "Use conservative wage growth." }],
         preferences: [{ key: "market-style", value: "Avoid short-term flips." }]
