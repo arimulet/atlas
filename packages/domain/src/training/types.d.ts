@@ -202,6 +202,52 @@ export interface TrainingHistory {
   weeks: readonly TrainingWeek[];
 }
 
+export interface WeeklyTrainingPlayerReport {
+  playerId: number;
+  gameWeek: number;
+  training: {
+    skill: SkillTrainingCostSkill;
+    kind: "advanced" | "formation";
+    intensity: number;
+  };
+  skill: {
+    previousLevel: number;
+    currentLevel: number;
+    skillUp: boolean;
+  };
+  trainingPoints: {
+    earned: number;
+    estimatedProgress: number | null;
+    remainingToNextLevel: number | null;
+    estimatedWeeksToNextLevel: number | null;
+  };
+}
+
+export interface WeeklyTrainingReport {
+  gameWeek: number;
+  date: Date;
+  players: WeeklyTrainingPlayerReport[];
+  summary: {
+    trainedPlayers: number;
+    advancedPlayers: number;
+    formationPlayers: number;
+    skillUps: number;
+    averageIntensity: number;
+  };
+}
+
+export interface WeeklyTrainingPlayerInput {
+  history: TrainingHistory;
+  talent?: number | null;
+}
+
+export interface WeeklyTrainingReportInput {
+  players: readonly WeeklyTrainingPlayerInput[];
+  gameWeek?: number;
+  date?: Date;
+  talents?: ReadonlyMap<number, number | null> | Readonly<Record<number, number | null>>;
+}
+
 export interface TalentEvidence {
   playerId: number;
   skill: Skill;
