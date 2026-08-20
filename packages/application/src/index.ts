@@ -1,4 +1,5 @@
 export * from "./playerDevelopment/index.js";
+export * from "./playerDevelopmentPlan/index.js";
 export * from "./clubHistorical/index.js";
 export * from "./clubOperatingSettings/index.js";
 export * from "./club/index.js";

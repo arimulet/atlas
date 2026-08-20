@@ -1,3 +1,9 @@
+export type PersistedDevelopmentProfile =
+  "goalkeeper" | "central_defender" | "wing_defender" | "central_midfielder" | "winger" | "forward";
+
+export type PersistedDevelopmentSkill =
+  "stamina" | "pace" | "technique" | "passing" | "keeper" | "defender" | "playmaker" | "striker";
+
 export type ObservedPosition = "goalkeeper" | "defender" | "midfielder" | "winger" | "striker";
 
 export type PersistedTrainingSkill =
@@ -78,6 +84,23 @@ export interface PersistedPlayer {
   cards: { yellow: number; red: number };
   injury: { days: number | null; severe: boolean | null };
   currentGameWeek: number | null;
+}
+
+export interface PersistedPlayerDevelopmentOverride {
+  id: string;
+  playerId: number;
+  clubId: number;
+  profile: PersistedDevelopmentProfile | null;
+  targetLevels: Partial<Record<PersistedDevelopmentSkill, number>>;
+  targetAge: number | null;
+}
+
+export interface SavePlayerDevelopmentOverrideInput {
+  playerId: number;
+  clubId: number;
+  profile?: PersistedDevelopmentProfile | null;
+  targetLevels?: Partial<Record<PersistedDevelopmentSkill, number>>;
+  targetAge?: number | null;
 }
 
 export interface SnapshotMoney {
