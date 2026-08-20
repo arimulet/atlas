@@ -181,7 +181,7 @@ export function App() {
           loadYouthAcademy(body.importResult.clubId),
           loadTraining(body.importResult.clubId),
           loadPlayerDevelopment(body.importResult.clubId),
-          loadYouthPipeline(body.importResult.clubId),
+          loadYouthPipeline(body.importResult.clubId)
         ]);
 
         setTrainingDiagnostic(body.diagnostic);
@@ -201,13 +201,7 @@ export function App() {
 
       return body;
     },
-    [
-      loadDashboard,
-      loadPlayerDevelopment,
-      loadTraining,
-      loadYouthAcademy,
-      loadYouthPipeline
-    ]
+    [loadDashboard, loadPlayerDevelopment, loadTraining, loadYouthAcademy, loadYouthPipeline]
   );
 
   const handleSelectPlayer = useCallback(
@@ -252,6 +246,7 @@ export function App() {
         />
       ) : activeView === "training" ? (
         <Training
+          clubId={activeClubId}
           development={playerDevelopment}
           onSelectPlayer={handleSelectPlayer}
           projectionSummaries={projectionSummaries}

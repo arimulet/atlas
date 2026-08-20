@@ -15,8 +15,10 @@ import {
   createTrainingPlayerRows,
   TRAINING_POSITIONS
 } from "../../view-models/training-view-model";
+import { WeeklyTrainingIntelligence } from "./WeeklyTrainingIntelligence";
 
 export function Training({
+  clubId,
   onSelectPlayer,
   projectionSummaries,
   training,
@@ -29,6 +31,11 @@ export function Training({
         <h1>Training</h1>
       </header>
 
+      <WeeklyTrainingIntelligence
+        clubId={clubId}
+        onSelectPlayer={onSelectPlayer}
+        training={training}
+      />
       <TrainingConfiguration configuration={training?.configuration ?? null} />
       <TrainingAttention diagnostic={trainingDiagnostic} status={trainingStatus} />
       <TrainingPositionSections
