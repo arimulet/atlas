@@ -9,6 +9,7 @@ import type {
   SquadRoleAssignment,
   WeeklyTrainingReport
 } from "@atlas/domain";
+export type { YouthDecisionPlanning } from "@atlas/application";
 
 export type { SquadRole } from "@atlas/domain";
 

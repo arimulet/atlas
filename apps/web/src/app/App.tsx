@@ -322,7 +322,13 @@ export function App() {
           trainingStatus={trainingStatus}
         />
       ) : activeView === "youth" ? (
-        <Youth youthAcademy={youthAcademy} youthStatus={youthStatus} />
+        <Youth
+          clubId={activeClubId}
+          currency={dashboard?.club.currency ?? null}
+          onSelectPlayer={handleSelectPlayer}
+          youthAcademy={youthAcademy}
+          youthStatus={youthStatus}
+        />
       ) : activeView === "diagnostics" ? (
         <Diagnostics
           dashboardStatus={dashboardStatus}

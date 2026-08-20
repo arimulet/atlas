@@ -8,10 +8,14 @@ import {
 import type { YouthProps } from "./types";
 import { formatPercentage } from "../../formatters";
 import { AttentionIcon } from "../../components/AttentionIcon";
+import { YouthDecisionSections } from "./YouthDecisionSections";
+import { useYouthDecisionEngine } from "./useYouthDecisionEngine";
 
-export function Youth({ youthAcademy, youthStatus }: YouthProps) {
+export function Youth({ clubId, currency, onSelectPlayer, youthAcademy, youthStatus }: YouthProps) {
   const rows = createYouthPlayerRows(youthAcademy);
   const attentionItems = createYouthAttentionItems(youthAcademy);
+  const schoolRows = rows.filter((row) => row.promotion !== "Promoted");
+  const decisionEngine = useYouthDecisionEngine({ clubId, currency, youthAcademy });
 
   return (
     <div className="atlas-youth">
@@ -19,8 +23,14 @@ export function Youth({ youthAcademy, youthStatus }: YouthProps) {
         <h1>Youth</h1>
       </header>
 
+      <YouthDecisionSections
+        models={decisionEngine.decisionCandidates}
+        onSelectPlayer={onSelectPlayer}
+        status={decisionEngine.status}
+        summary={decisionEngine.summary}
+      />
       <YouthAttention items={attentionItems} status={youthStatus} />
-      <YouthPlayers rows={rows} status={youthStatus} planning={youthAcademy} />
+      <YouthPlayers rows={schoolRows} status={youthStatus} planning={youthAcademy} />
     </div>
   );
 }
@@ -92,7 +102,7 @@ function YouthPlayers({ planning, rows, status }: YouthPlayersProps) {
       aria-labelledby="youth-players-title"
     >
       <h2 id="youth-players-title" className="atlas-youth-panel__title atlas-section-title">
-        Youth Players
+        Youth School
       </h2>
       <div className="atlas-youth-table-wrap">
         <table className="atlas-youth-table">
