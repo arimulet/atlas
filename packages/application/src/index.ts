@@ -8,6 +8,7 @@ export * from "./economy/index.js";
 export * from "./marketPlanning/index.js";
 export * from "./squadPlanning/index.js";
 export * from "./youthAcademyPlanning/index.js";
+export * from "./youthDecisionEngine/index.js";
 export * from "./training/index.js";
 export * from "./types.js";
 export { calculateGameWeek, normalizeSeasonWeek } from "@atlas/domain";
