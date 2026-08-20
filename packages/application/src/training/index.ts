@@ -8,10 +8,12 @@ import {
 } from "@atlas/database";
 import {
   buildTrainingRecommendations,
+  buildWeeklyTrainingCalibrationReport,
   buildWeeklyTrainingReport,
   createTrainingWeek,
   estimateTalentFromTrainingHistory,
   optimizeAdvancedTrainingSlots,
+  selectTrainingCalibrationDataset,
   type PlayerSkill,
   type PlayerSkills,
   type PlayerSkillsChange
@@ -21,6 +23,8 @@ import type {
   AdvancedTrainingOptimization,
   PlayerTrainingRecommendation,
   TrainingHistory,
+  TrainingCalibrationPlayerContext,
+  WeeklyTrainingCalibrationReport,
   WeeklyTrainingReport
 } from "@atlas/domain";
 import type { ClubId } from "../types.js";
@@ -294,6 +298,111 @@ export async function getWeeklyTrainingIntelligence(
   ]);
 
   return { report, recommendations, advancedOptimization };
+}
+
+export async function getWeeklyTrainingCalibration(
+  clubId: ClubId,
+  gameWeek?: number
+): Promise<WeeklyTrainingCalibrationReport> {
+  const club = await clubRepository.findById(clubId.toString());
+  if (!club) {
+    throw new Error(`Club not found: ${clubId}`);
+  }
+
+  const [reports, snapshots] = await Promise.all([
+    trainingWeekRepository.listByClub(club.clubId),
+    snapshotRepository.listByClub(clubId)
+  ]);
+  const histories = buildTrainingHistories(reports);
+  const talentByPlayer = new Map<number, ReturnType<typeof estimateTalentFromTrainingHistory>>();
+  for (const history of histories) {
+    talentByPlayer.set(history.playerId, estimateTalentFromTrainingHistory(history));
+  }
+
+  const talents = new Map<number, number | null>();
+  for (const [playerId, talent] of talentByPlayer) {
+    talents.set(playerId, talent.value);
+  }
+  const weeklyReport = buildWeeklyTrainingReport({
+    players: histories.map((history) => ({ history })),
+    gameWeek,
+    talents
+  });
+  const latestSnapshot = snapshots.at(-1);
+  const reportByPlayer = new Map(
+    weeklyReport.players.map((playerReport) => [playerReport.playerId, playerReport])
+  );
+  const recommendationContexts = histories.flatMap((history) => {
+    const currentWeek = history.weeks.find((week) => week.week === weeklyReport.gameWeek);
+    const report = reportByPlayer.get(history.playerId);
+    if (!currentWeek || !report) {
+      return [];
+    }
+    const snapshotPlayer = latestSnapshot?.players.find(
+      (player) => player.playerId === history.playerId
+    );
+    return [{
+      player: {
+        playerId: history.playerId,
+        age: currentWeek.playerAge,
+        position: snapshotPlayer?.observedPosition ?? null,
+        skills: currentWeek.skills
+      },
+      weeklyReport: report,
+      trainingHistory: history,
+      talent: talentByPlayer.get(history.playerId) ?? null
+    }];
+  });
+  const recommendations = buildTrainingRecommendations(recommendationContexts);
+  const recommendationByPlayer = new Map(
+    recommendations.map((recommendation) => [recommendation.playerId, recommendation])
+  );
+  const advancedContexts = recommendationContexts.flatMap((context) => {
+    const snapshotPlayer = latestSnapshot?.players.find(
+      (player) => player.playerId === context.player.playerId
+    );
+    const currentWeek = context.trainingHistory.weeks.find(
+      (week) => week.week === weeklyReport.gameWeek
+    );
+    if (!currentWeek) {
+      return [];
+    }
+    return [{
+      ...context,
+      trainingRecommendation: recommendationByPlayer.get(context.player.playerId),
+      currentTraining: {
+        skill: currentWeek.skill,
+        kind: snapshotPlayer
+          ? snapshotPlayer.training.advanced
+            ? "advanced" as const
+            : "formation" as const
+          : currentWeek.kind === "missing"
+            ? "formation" as const
+            : currentWeek.kind,
+        intensity: currentWeek.intensity
+      }
+    }];
+  });
+  const advancedOptimization = optimizeAdvancedTrainingSlots(
+    advancedContexts,
+    weeklyReport.gameWeek
+  );
+  const calibrationPlayers: TrainingCalibrationPlayerContext[] = advancedContexts.map((context) => ({
+    player: context.player,
+    trainingHistory: context.trainingHistory,
+    currentTraining: context.currentTraining,
+    currentlyAdvanced: context.currentTraining.kind === "advanced"
+  }));
+
+  const datasetSelection = selectTrainingCalibrationDataset(calibrationPlayers);
+  return buildWeeklyTrainingCalibrationReport({
+    players: datasetSelection.players,
+    datasetSelection,
+    gameWeek: weeklyReport.gameWeek,
+    weeklyReport,
+    recommendations,
+    advancedOptimization
+  });
 }
 
 function buildTrainingHistories(
