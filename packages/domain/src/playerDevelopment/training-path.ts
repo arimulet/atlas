@@ -47,6 +47,10 @@ const DEVELOPMENT_TO_TRAINING_SKILL: Readonly<Record<DevelopmentSkill, SkillTrai
   striker: "scoring"
 };
 
+export function toTrainingDomainSkill(skill: DevelopmentSkill): SkillTrainingCostSkill {
+  return DEVELOPMENT_TO_TRAINING_SKILL[skill];
+}
+
 export function createDevelopmentSimulationState(
   context: TrainingPathContext
 ): DevelopmentSimulationState {
@@ -84,7 +88,7 @@ export function generateNextTrainingCandidates(
       return [];
     }
 
-    const trainingSkill = DEVELOPMENT_TO_TRAINING_SKILL[targetSkill.skill];
+    const trainingSkill = toTrainingDomainSkill(targetSkill.skill);
     const requiredTrainingPoints = calculateRequiredTrainingPoints({
       talent: talent ?? DEFAULT_TALENT_FOR_RELATIVE_COMPARISON,
       age: state.estimatedAge,
