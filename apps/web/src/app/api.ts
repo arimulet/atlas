@@ -7,6 +7,16 @@ import type {
   WeeklyTrainingIntelligence,
   YouthPipelinePlanning
 } from "./types";
+import type { PlayerDevelopmentTargetOverride } from "@atlas/domain";
+
+export interface PlayerDevelopmentTargetOverrideResponse {
+  id: string;
+  playerId: number;
+  clubId: number;
+  profile: PlayerDevelopmentTargetOverride["profile"];
+  targetLevels: NonNullable<PlayerDevelopmentTargetOverride["targetLevels"]>;
+  targetAge: number | null;
+}
 
 export async function fetchClubDashboard(clubId: string): Promise<ClubDashboard> {
   const response = await fetch(`/api/clubs/${clubId}/dashboard`);
@@ -52,6 +62,57 @@ export async function fetchPlayerDevelopment(clubId: string): Promise<PlayerDeve
   }
 
   return body;
+}
+
+export async function fetchPlayerDevelopmentTarget(
+  clubId: string,
+  playerId: string
+): Promise<PlayerDevelopmentTargetOverrideResponse | null> {
+  const response = await fetch(`/api/clubs/${clubId}/players/${playerId}/development-target`);
+
+  if (response.status === 404) {
+    return null;
+  }
+
+  const body = (await response.json()) as PlayerDevelopmentTargetOverrideResponse | null;
+
+  if (!response.ok) {
+    throw new Error("Development target API returned an unexpected response.");
+  }
+
+  return body;
+}
+
+export async function savePlayerDevelopmentTarget(
+  clubId: string,
+  playerId: string,
+  override: PlayerDevelopmentTargetOverride
+): Promise<PlayerDevelopmentTargetOverrideResponse> {
+  const response = await fetch(`/api/clubs/${clubId}/players/${playerId}/development-target`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(override)
+  });
+  const body = (await response.json()) as PlayerDevelopmentTargetOverrideResponse;
+
+  if (!response.ok || !body) {
+    throw new Error("Development target API returned an unexpected response.");
+  }
+
+  return body;
+}
+
+export async function resetPlayerDevelopmentTarget(
+  clubId: string,
+  playerId: string
+): Promise<void> {
+  const response = await fetch(`/api/clubs/${clubId}/players/${playerId}/development-target`, {
+    method: "DELETE"
+  });
+
+  if (!response.ok) {
+    throw new Error("Development target API returned an unexpected response.");
+  }
 }
 
 export async function fetchYouthPipelinePlanning(clubId: string): Promise<YouthPipelinePlanning> {

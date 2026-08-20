@@ -1,9 +1,5 @@
 import type { PlayerDetailViewModel } from "../../view-models/player-detail-view-model";
-import {
-  formatEta,
-  formatNumber,
-  formatPercentage
-} from "../../formatters";
+import { formatEta, formatNumber, formatPercentage } from "../../formatters";
 
 interface ProjectionPanelProps {
   projection: PlayerDetailViewModel["projection"];
@@ -17,7 +13,7 @@ export function ProjectionPanel({ projection, training }: ProjectionPanelProps) 
         className="atlas-player-detail-panel__title atlas-section-title"
         id="player-detail-projection-title"
       >
-        Projection
+        Potential Projection
       </h2>
       <p className="atlas-player-detail__projection-assumption">Assuming current training</p>
       <dl className="atlas-player-detail__data-list">
