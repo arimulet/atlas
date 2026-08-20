@@ -2,8 +2,15 @@ import type { MainViewId } from "./routing";
 import type {
   AdvancedTrainingOptimization,
   PlayerTrainingRecommendation,
+  SquadDepthAnalysis,
+  SquadDepthPlayer,
+  SquadPlanningRecommendations,
+  SquadRole,
+  SquadRoleAssignment,
   WeeklyTrainingReport
 } from "@atlas/domain";
+
+export type { SquadRole } from "@atlas/domain";
 
 export type ViewId = MainViewId | "player-detail";
 
@@ -15,6 +22,20 @@ export interface NavigationItem {
 }
 
 export type DashboardStatus = "idle" | "loading" | "ready" | "error";
+
+export interface SquadPlanningData {
+  players: SquadDepthPlayer[];
+  summary: Record<SquadRole, number>;
+  manualAssignments: SquadRoleAssignment[];
+  currentGameWeek: number | null;
+  depthPlayers: SquadDepthPlayer[];
+}
+
+export interface SquadPlanningBundle {
+  assessment: SquadPlanningData;
+  depth: SquadDepthAnalysis;
+  recommendations: SquadPlanningRecommendations;
+}
 export type SourceKind = "observed" | "manual" | "effective";
 export type SquadEconomyEvidenceKind = "observed" | "manual" | "derived" | "inferred";
 export type SkillChangeDirection = "up" | "down" | "stable" | "insufficient_data";
