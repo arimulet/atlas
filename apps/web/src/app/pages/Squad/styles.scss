@@ -24,6 +24,60 @@
   text-transform: uppercase;
 }
 
+.atlas .atlas-squad-market-summary {
+  display: grid;
+  gap: 14px;
+}
+
+.atlas .atlas-squad-market-summary__heading {
+  align-items: baseline;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.atlas .atlas-squad-market-summary__heading > span {
+  color: var(--atlas-text-muted);
+  font-size: 0.7rem;
+}
+
+.atlas .atlas-squad-market-summary__eyebrow {
+  color: var(--atlas-accent);
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  margin: 0 0 4px;
+  text-transform: uppercase;
+}
+
+.atlas .atlas-squad-market-summary__heading .atlas-squad-panel__title {
+  margin-bottom: 0;
+}
+
+.atlas .atlas-squad-market-summary__metrics {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.atlas .atlas-squad-market-summary__metric {
+  background: color-mix(in srgb, var(--atlas-surface-hover) 45%, transparent);
+  border-radius: var(--atlas-radius-sm);
+  display: grid;
+  gap: 4px;
+  padding: 10px;
+}
+
+.atlas .atlas-squad-market-summary__metric span {
+  color: var(--atlas-text-muted);
+  font-size: 0.66rem;
+}
+
+.atlas .atlas-squad-market-summary__metric strong {
+  color: var(--atlas-text);
+  font-size: 0.95rem;
+}
+
 .atlas .atlas-squad-panel {
   background: var(--atlas-surface);
   border: 1px solid var(--atlas-border);
@@ -166,6 +220,10 @@
 .atlas .atlas-squad-table col.is-eta {
   width: 58px;
 }
+.atlas .atlas-squad-table col.is-market-value,
+.atlas .atlas-squad-table col.is-projected-value {
+  width: 104px;
+}
 .atlas .atlas-squad-table col.is-status {
   width: 100px;
 }
@@ -208,12 +266,14 @@
 .atlas .atlas-squad-table__group-row .is-skills-group,
 .atlas .atlas-squad-table__group-row .is-training-group,
 .atlas .atlas-squad-table thead tr:nth-child(2) th:nth-child(3),
-.atlas .atlas-squad-table thead tr:nth-child(2) th:nth-child(12) {
+.atlas .atlas-squad-table thead tr:nth-child(2) th:nth-child(13),
+.atlas .atlas-squad-table thead tr:nth-child(2) th:nth-child(20) {
   border-left: 1px solid var(--atlas-border);
 }
 
 .atlas .atlas-squad-table__group-row .is-skills-group,
-.atlas .atlas-squad-table__group-row .is-training-group {
+.atlas .atlas-squad-table__group-row .is-training-group,
+.atlas .atlas-squad-table__group-row .is-market-group {
   background: color-mix(in srgb, var(--atlas-surface-hover) 28%, transparent);
 }
 
@@ -223,7 +283,8 @@
 }
 
 .atlas .atlas-squad-table tbody td:nth-child(3),
-.atlas .atlas-squad-table tbody td:nth-child(12) {
+.atlas .atlas-squad-table tbody td:nth-child(13),
+.atlas .atlas-squad-table tbody td:nth-child(20) {
   border-left: 1px solid color-mix(in srgb, var(--atlas-border) 72%, transparent);
 }
 
@@ -253,6 +314,10 @@
   .atlas .atlas-squad-panel {
     padding-left: 12px;
     padding-right: 12px;
+  }
+
+  .atlas .atlas-squad-market-summary__metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 

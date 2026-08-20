@@ -20,6 +20,7 @@ export interface SquadProps {
   training: TrainingPageData | null;
   trainingDiagnostic: TrainingDiagnostic | null;
   trainingStatus: DashboardStatus;
+  currency: string | null;
 }
 
 export interface SquadAttentionProps {

@@ -7,6 +7,11 @@ import type {
   PlayerDevelopmentTarget
 } from "../playerDevelopment/index.js";
 import type { SquadPlayerAssessment } from "./types.js";
+import type {
+  CalibratedPlayerMarketValueEstimate,
+  PlayerMarketValueProjection,
+  TrainingKindMarketValueComparison
+} from "../playerMarketValue/index.js";
 
 export type SquadPlanningHorizon = "current" | "next_season" | "medium_term";
 
@@ -97,6 +102,7 @@ export interface SquadDepthAnalysis {
 }
 
 export interface SquadDepthPlayer extends SquadPlayerAssessment {
+  playerName?: string;
   age?: number | null;
   developmentPlan?: PlayerDevelopmentPlan | null;
   developmentTarget?: PlayerDevelopmentTarget | null;
@@ -105,6 +111,10 @@ export interface SquadDepthPlayer extends SquadPlayerAssessment {
   profileContributions?: Partial<Record<DevelopmentProfile, number>>;
   fallbackProfile?: DevelopmentProfile | null;
   formation?: Formation | null;
+  sokkerValue?: number | null;
+  marketValue?: CalibratedPlayerMarketValueEstimate | null;
+  marketProjection?: PlayerMarketValueProjection | null;
+  marketTrainingComparison?: TrainingKindMarketValueComparison | null;
 }
 
 export interface SquadDepthAnalysisConfig {

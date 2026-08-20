@@ -1,4 +1,4 @@
-import type { DashboardStatus, PlayerDevelopment } from "@atlas/web/app/types";
+import type { DashboardStatus, PlayerDevelopment, SquadPlanningBundle } from "@atlas/web/app/types";
 import type { TrainingDiagnostic } from "../../view-models/training-view-model";
 
 export interface PlayerDetailProps {
@@ -8,6 +8,8 @@ export interface PlayerDetailProps {
   development: PlayerDevelopment | null;
   trainingDiagnostic: TrainingDiagnostic | null;
   trainingStatus: DashboardStatus;
+  squadPlanning: SquadPlanningBundle | null;
+  currency: string | null;
   onBack: () => void;
   onBackToSquad: () => void;
 }

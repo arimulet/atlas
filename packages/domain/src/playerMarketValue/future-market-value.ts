@@ -1,10 +1,11 @@
 import type { Confidence, SkillSet } from "../types.js";
 import { DEVELOPMENT_PROJECTION_WEEKS_PER_YEAR } from "../playerDevelopment/projection.js";
-import type { DevelopmentProjectionStep, DevelopmentProjectionMilestone } from "../playerDevelopment/index.js";
-import { calibratePlayerMarketValue } from "./calibration.js";
 import type {
-  CalibratedPlayerMarketValueEstimate
-} from "./calibration-types.js";
+  DevelopmentProjectionStep,
+  DevelopmentProjectionMilestone
+} from "../playerDevelopment/index.js";
+import { calibratePlayerMarketValue } from "./calibration.js";
+import type { CalibratedPlayerMarketValueEstimate } from "./calibration-types.js";
 import { estimatePlayerMarketValue } from "./index.js";
 import type {
   MarketValueRange,
@@ -29,6 +30,7 @@ import type {
 
 export const PLAYER_MARKET_VALUE_PROJECTION_MODEL_VERSION =
   "market-value-v1-calibration-v1-training-projection-v1";
+export const PLAYER_MARKET_VALUE_COMPARISON_HORIZON_WEEKS = 12;
 
 export function projectPlayerMarketValue(
   context: FutureMarketValueContext
@@ -73,7 +75,8 @@ export function projectPlayerMarketValue(
       ...(milestone ? { milestone } : {})
     });
 
-    if (!valuation.hasComparableEvidence) reasons.push({ type: "future_market_segment_low_evidence" });
+    if (!valuation.hasComparableEvidence)
+      reasons.push({ type: "future_market_segment_low_evidence" });
     if (valueGainFromPrevious !== null && valueGainFromPrevious < 0) {
       reasons.push({ type: "negative_market_value_return", skill: projectionStep.skill });
       if (valueGainFromCurrent !== null && valueGainFromCurrent < 0) {
@@ -128,7 +131,9 @@ export function projectMarketValueAtHorizon(
     (point) =>
       point.cumulativeTrainingWeeks !== null && point.cumulativeTrainingWeeks <= horizonWeeks
   );
-  return cloneRange(eligible.at(-1)?.marketValue) ?? cloneRange(projection.current.calibratedValue)!;
+  return (
+    cloneRange(eligible.at(-1)?.marketValue) ?? cloneRange(projection.current.calibratedValue)!
+  );
 }
 
 export function compareAdvancedAndFormationMarketValue(input: {
@@ -207,7 +212,10 @@ export class PlayerMarketProjectionService {
     return evaluateTrainingPathEconomics(context);
   }
 
-  projectMarketValueAtHorizon(context: FutureMarketValueContext, horizonWeeks: number): MarketValueRange {
+  projectMarketValueAtHorizon(
+    context: FutureMarketValueContext,
+    horizonWeeks: number
+  ): MarketValueRange {
     return projectMarketValueAtHorizon(context, horizonWeeks);
   }
 
@@ -239,7 +247,9 @@ function validateProjectionContext(context: FutureMarketValueContext): void {
   }
 }
 
-function resolveCurrentMarketValue(context: FutureMarketValueContext): CalibratedPlayerMarketValueEstimate {
+function resolveCurrentMarketValue(
+  context: FutureMarketValueContext
+): CalibratedPlayerMarketValueEstimate {
   if (context.currentMarketValue) {
     return isCalibratedEstimate(context.currentMarketValue)
       ? context.currentMarketValue
@@ -253,7 +263,9 @@ function resolveCurrentMarketValue(context: FutureMarketValueContext): Calibrate
       context.transfers,
       context.comparableOptions
     );
-    return calibrated.comparableEstimate ? calibrated : wrapFundamentalEstimate(calibrated.fundamental);
+    return calibrated.comparableEstimate
+      ? calibrated
+      : wrapFundamentalEstimate(calibrated.fundamental);
   }
   return wrapFundamentalEstimate(estimatePlayerMarketValue(currentContext));
 }
@@ -352,10 +364,10 @@ function buildMilestones(
       step: milestone.step,
       gameWeek: finiteOrNull(milestone.estimatedGameWeek),
       age: finiteOrNull(milestone.estimatedAge),
-      marketValue: cloneRange(point?.marketValue) ?? cloneRange(milestone.step === 0 ? current.calibratedValue : null),
-      valueGainFromCurrent:
-        point?.valueGainFromCurrent ??
-        (milestone.step === 0 ? 0 : null),
+      marketValue:
+        cloneRange(point?.marketValue) ??
+        cloneRange(milestone.step === 0 ? current.calibratedValue : null),
+      valueGainFromCurrent: point?.valueGainFromCurrent ?? (milestone.step === 0 ? 0 : null),
       confidence: point?.confidence ?? milestone.confidence
     };
   });
@@ -372,7 +384,8 @@ function buildCompletion(
   const completionAvailable = completion.estimatedWeeks !== null;
   const currentCompletion = completionAvailable && completion.estimatedWeeks === 0 && !lastPoint;
   const marketValue = completionAvailable
-    ? cloneRange(lastPoint?.marketValue) ?? (currentCompletion ? cloneRange(current.calibratedValue) : null)
+    ? (cloneRange(lastPoint?.marketValue) ??
+      (currentCompletion ? cloneRange(current.calibratedValue) : null))
     : null;
   const expected = marketValue?.expected ?? null;
   return {
@@ -393,7 +406,10 @@ function buildStepEvaluations(
 ): TrainingStepEconomicEvaluation[] {
   return context.projection.steps.map((step, index) => {
     const point = points[index];
-    const before = index === 0 ? current.calibratedValue.expected : points[index - 1]?.marketValue?.expected ?? null;
+    const before =
+      index === 0
+        ? current.calibratedValue.expected
+        : (points[index - 1]?.marketValue?.expected ?? null);
     const after = point?.marketValue?.expected ?? null;
     const valueGain = difference(after, before);
     const estimatedWeeks = finiteOrNull(step.estimatedWeeks);
@@ -428,7 +444,9 @@ function buildTrainingRoi(
     (evaluation): evaluation is TrainingStepEconomicEvaluation & { valueGainPerWeek: number } =>
       evaluation.valueGainPerWeek !== null
   );
-  const best = validEvaluations.reduce<TrainingStepEconomicEvaluation & { valueGainPerWeek: number } | null>(
+  const best = validEvaluations.reduce<
+    (TrainingStepEconomicEvaluation & { valueGainPerWeek: number }) | null
+  >(
     (bestEvaluation, evaluation) =>
       bestEvaluation === null || evaluation.valueGainPerWeek > bestEvaluation.valueGainPerWeek
         ? evaluation
@@ -469,9 +487,11 @@ function addStepValueReasons(
   for (const evaluation of evaluations) {
     const value = evaluation.valueGainPerWeek;
     if (value === null) continue;
-    if (value >= average * 1.25) reasons.push({ type: "high_value_training_step", skill: evaluation.skill });
+    if (value >= average * 1.25)
+      reasons.push({ type: "high_value_training_step", skill: evaluation.skill });
     if (value < 0) reasons.push({ type: "negative_market_value_return", skill: evaluation.skill });
-    else if (value <= average * 0.75) reasons.push({ type: "low_value_training_step", skill: evaluation.skill });
+    else if (value <= average * 0.75)
+      reasons.push({ type: "low_value_training_step", skill: evaluation.skill });
   }
 }
 
@@ -489,8 +509,7 @@ function findPeak(
     )
   ];
   return candidates.reduce<PeakMarketValuePoint | null>(
-    (peak, candidate) =>
-      peak === null || candidate.value > peak.value ? candidate : peak,
+    (peak, candidate) => (peak === null || candidate.value > peak.value ? candidate : peak),
     null
   );
 }
@@ -502,7 +521,8 @@ function projectionConfidence(
   completion: FutureMarketValueCompletion | null
 ): Confidence {
   let confidence = minimumConfidence(current.confidence, context.projection.confidence);
-  if (context.projection.projectionStatus !== "projected") confidence = minimumConfidence(confidence, "low");
+  if (context.projection.projectionStatus !== "projected")
+    confidence = minimumConfidence(confidence, "low");
   for (const point of points) confidence = minimumConfidence(confidence, point.confidence);
   if (completion?.estimatedWeeks !== null && (completion?.estimatedWeeks ?? 0) > 26) {
     confidence = minimumConfidence(confidence, "low");
@@ -605,7 +625,8 @@ function nonNegative(value: number): number {
 }
 
 function validNonNegative(value: number, label: string): number {
-  if (!Number.isFinite(value) || value < 0) throw new RangeError(`${label} must be finite and non-negative.`);
+  if (!Number.isFinite(value) || value < 0)
+    throw new RangeError(`${label} must be finite and non-negative.`);
   return value;
 }
 

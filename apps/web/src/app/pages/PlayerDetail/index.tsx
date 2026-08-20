@@ -12,6 +12,7 @@ import {
 } from "../../view-models/player-detail-view-model";
 import { PlayerDevelopmentPlan } from "./PlayerDevelopmentPlan";
 import { usePlayerDevelopmentPlan } from "./usePlayerDevelopmentPlan";
+import { PlayerMarketValueSection } from "./MarketValuePanel";
 
 export function PlayerDetail({
   clubId,
@@ -21,6 +22,8 @@ export function PlayerDetail({
   training,
   trainingDiagnostic,
   trainingStatus,
+  squadPlanning,
+  currency,
   onBackToSquad
 }: PlayerDetailProps) {
   const viewModel = createPlayerDetailViewModel({
@@ -28,7 +31,9 @@ export function PlayerDetail({
     training,
     development,
     trainingDiagnostic,
-    trainingStatus
+    trainingStatus,
+    squadPlanning,
+    currency
   });
 
   if (!viewModel) {
@@ -89,6 +94,7 @@ function PlayerDetailContent({
         diagnostics={viewModel.diagnostics}
         status={trainingStatus}
       />
+      <PlayerMarketValueSection marketValue={viewModel.marketValue ?? null} />
       <div className="atlas-player-detail__summary-grid">
         <SkillsPanel skills={viewModel.skills} />
         <TrainingPanel training={viewModel.training} />

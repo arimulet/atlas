@@ -67,6 +67,74 @@
     color: var(--semantic-error-text);
   }
 
+  .atlas-squad-asset-value {
+    display: grid;
+    gap: 14px;
+  }
+
+  .atlas-finances-asset-metrics {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .atlas-finances-asset-metric {
+    background: color-mix(in srgb, var(--atlas-surface-hover) 45%, transparent);
+    border-radius: var(--atlas-radius-sm);
+    display: grid;
+    gap: 4px;
+    padding: 10px;
+  }
+
+  .atlas-finances-asset-metric span {
+    color: var(--atlas-text-muted);
+    font-size: 0.66rem;
+  }
+
+  .atlas-finances-asset-metric strong {
+    color: var(--atlas-text);
+    font-size: 0.95rem;
+  }
+
+  .atlas-finances-asset-columns {
+    display: grid;
+    gap: 22px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .atlas-finances-asset-columns h3 {
+    color: var(--atlas-text-muted);
+    font-size: 0.65rem;
+    font-weight: 750;
+    letter-spacing: 0.07em;
+    margin: 0 0 8px;
+    text-transform: uppercase;
+  }
+
+  .atlas-finances-top-assets {
+    display: grid;
+    gap: 7px;
+    margin: 0;
+    padding-left: 22px;
+  }
+
+  .atlas-finances-top-assets li {
+    align-items: baseline;
+    color: var(--atlas-text-secondary);
+    display: flex;
+    gap: 12px;
+    justify-content: space-between;
+    font-size: 0.79rem;
+  }
+
+  .atlas-finances-top-assets a {
+    color: var(--atlas-accent);
+  }
+
+  .atlas-finances-top-assets strong {
+    color: var(--atlas-text);
+  }
+
   .atlas-finances-panel__note {
     border-top: 1px solid color-mix(in srgb, var(--atlas-border) 72%, transparent);
     margin-top: 10px;
@@ -150,7 +218,9 @@
 
   @media (max-width: 760px) {
     .atlas-finances__breakdown-grid,
-    .atlas-finances-overview-list {
+    .atlas-finances-overview-list,
+    .atlas-finances-asset-metrics,
+    .atlas-finances-asset-columns {
       grid-template-columns: 1fr;
     }
 
