@@ -15,6 +15,7 @@ import {
 } from "../playerDevelopment/index.js";
 import { SQUAD_PLANNING_CONFIG } from "./constants.js";
 import { analyzeSquadDepth } from "./depth.js";
+import { generateSquadPlanningRecommendations } from "./recommendations.js";
 import type {
   SquadDepthAnalysis,
   SquadDepthAnalysisInput,
@@ -22,6 +23,10 @@ import type {
   SquadDepthPlayer,
   SquadProfileRequirement
 } from "./depth-types.js";
+import type {
+  SquadPlanningRecommendations,
+  SquadPlanningRecommendationsInput
+} from "./recommendation-types.js";
 import type {
   PlayerLifecycleStage,
   SquadAssessment,
@@ -37,6 +42,7 @@ import type {
 export * from "./constants.js";
 export * from "./types.js";
 export * from "./depth.js";
+export * from "./recommendations.js";
 
 const ROLE_ORDER: readonly SquadRole[] = [
   "core",
@@ -215,6 +221,10 @@ export class SquadPlanner {
     options: SquadDepthAnalysisOptions | readonly SquadProfileRequirement[] = {}
   ): SquadDepthAnalysis {
     return analyzeSquadDepth(input, options);
+  }
+
+  recommend(input: SquadPlanningRecommendationsInput): SquadPlanningRecommendations {
+    return generateSquadPlanningRecommendations(input);
   }
 }
 

@@ -13,6 +13,7 @@ import {
 import {
   assessSquad,
   analyzeSquadDepth,
+  generateSquadPlanningRecommendations,
   generatePlayerTrainingPath,
   PlayerDevelopmentPlanner,
   projectDevelopment,
@@ -23,6 +24,7 @@ import {
   type SquadRoleAssignment,
   type SquadDepthAnalysis,
   type SquadDepthPlayer,
+  type SquadPlanningRecommendations,
   type TrainingHistory
 } from "@atlas/domain";
 import { createTrainingWeek, type PlayerSkills, type PlayerSkillsChange } from "@atlas/domain";
@@ -41,6 +43,15 @@ export type {
   SquadDepthAnalysisOptions,
   SquadDepthReason,
   SquadPlanningHorizon,
+  SquadPlanningCandidate,
+  SquadPlanningConflict,
+  SquadPlanningReason,
+  SquadPlanningRecommendation,
+  SquadPlanningRecommendationConfig,
+  SquadPlanningRecommendationPriority,
+  SquadPlanningRecommendationType,
+  SquadPlanningRecommendationsInput,
+  SquadNeed,
   SquadProfileRequirement,
   SuccessionCandidate,
   SuccessionCoverageStatus,
@@ -55,6 +66,7 @@ export type {
   SquadRoleReason
 } from "@atlas/domain";
 export type { SquadDepthAnalysis } from "@atlas/domain";
+export type { SquadPlanningRecommendations } from "@atlas/domain";
 
 const clubRepository = new MongoClubRepository();
 const snapshotRepository = new MongoSnapshotRepository();
@@ -136,6 +148,19 @@ export async function getSquadDepthAnalysis(clubId: ClubId): Promise<SquadDepthA
   const assessment = await getSquadAssessment(clubId);
   return analyzeSquadDepth(assessment.depthPlayers, {
     currentGameWeek: assessment.currentGameWeek
+  });
+}
+
+export async function getSquadPlanningRecommendations(
+  clubId: ClubId
+): Promise<SquadPlanningRecommendations> {
+  const assessment = await getSquadAssessment(clubId);
+  const depthAnalysis = analyzeSquadDepth(assessment.depthPlayers, {
+    currentGameWeek: assessment.currentGameWeek
+  });
+  return generateSquadPlanningRecommendations({
+    depthAnalysis,
+    players: assessment.depthPlayers
   });
 }
 

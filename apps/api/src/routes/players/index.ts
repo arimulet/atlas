@@ -1,6 +1,7 @@
 import {
   getPlayerDevelopment,
   getSquadDepthAnalysis,
+  getSquadPlanningRecommendations,
   getRealYouthAcademyPlanning,
   getSquadAssessment,
   getYouthPipelinePlanning,
@@ -89,6 +90,14 @@ async function playerRoutes(server: FastifyInstance) {
     const { clubId } = clubParamsSchema.parse(request.params);
     return getSquadDepthAnalysis(clubId);
   });
+
+  server.get<{ Params: GetDevelopmentParams }>(
+    "/squad-planning-recommendations",
+    async (request) => {
+      const { clubId } = clubParamsSchema.parse(request.params);
+      return getSquadPlanningRecommendations(clubId);
+    }
+  );
 
   server.get<{ Params: GetDevelopmentParams }>("/development", async (request) => {
     const { clubId } = clubParamsSchema.parse(request.params);

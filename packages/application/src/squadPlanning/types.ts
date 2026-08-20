@@ -1,6 +1,7 @@
 import type {
   SquadDepthAnalysis,
   SquadDepthPlayer,
+  SquadPlanningRecommendations,
   SquadAssessment,
   SquadPlayerContext,
   SquadRole,
@@ -10,6 +11,7 @@ import type {
 export type { SquadAssessment, SquadPlayerContext, SquadRole, SquadRoleAssignment };
 export type { SquadDepthAnalysis };
 export type { SquadDepthPlayer };
+export type { SquadPlanningRecommendations };
 
 export interface SquadAssessmentData extends SquadAssessment {
   manualAssignments: SquadRoleAssignment[];
