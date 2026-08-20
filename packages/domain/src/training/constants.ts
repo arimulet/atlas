@@ -17,6 +17,15 @@ export const TRAINING_RECOMMENDATION_HIGH_NEXT_LEVEL_WEEKS = 3;
 export const TRAINING_RECOMMENDATION_SWITCH_THRESHOLD = 1.15;
 export const TRAINING_RECOMMENDATION_RECENT_SWITCH_THRESHOLD = 1.25;
 export const TRAINING_RECOMMENDATION_SCORE_NORMALIZATION_BASE = 1;
+// Sokker's report differentiates the training mode; the factors are kept in
+// the Training Domain so consumers do not encode mode-specific percentages.
+export const TRAINING_KIND_EFFECTIVENESS = {
+  advanced: 1,
+  formation: 0.5
+} as const;
+export const ADVANCED_TRAINING_SLOT_COUNT = 10;
+export const ADVANCED_SLOT_REPLACEMENT_THRESHOLD = 0.05;
+export const ADVANCED_SLOT_HIGH_DEVELOPMENT_POTENTIAL_THRESHOLD = 0.5;
 
 export const SUPPORTED_TRAINING_SKILLS: readonly SkillTrainingCostSkill[] = [
   "stamina",

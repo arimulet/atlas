@@ -309,6 +309,94 @@ export interface DevelopmentReturnScoreInput {
   expectedWeeklyTrainingPoints: number;
 }
 
+export interface TrainingPointsByKindInput {
+  intensity: number;
+  kind: "advanced" | "formation";
+}
+
+export interface AdvancedTrainingCandidateContext {
+  player: TrainingRecommendationPlayer;
+  weeklyReport?: WeeklyTrainingPlayerReport;
+  trainingRecommendation?: PlayerTrainingRecommendation;
+  trainingHistory: TrainingHistory | readonly TrainingHistory[];
+  currentTraining: {
+    skill: SkillTrainingCostSkill;
+    kind: TrainingKind;
+    intensity: number;
+  };
+  talent?: TalentEstimate | null;
+}
+
+export interface AdvancedSlotEvaluation {
+  playerId: number;
+  currentSkill: SkillTrainingCostSkill;
+  advancedScore: number | null;
+  expectedAdvancedTrainingPoints: number | null;
+  expectedFormationTrainingPoints: number | null;
+  marginalTrainingPoints: number | null;
+  developmentPotentialScore: number | null;
+  confidence: TrainingRecommendationConfidence;
+}
+
+export interface AdvancedTrainingRankingEntry {
+  playerId: number;
+  rank: number;
+  score: number | null;
+  currentlyAdvanced: boolean;
+  recommendedAdvanced: boolean;
+  confidence: TrainingRecommendationConfidence;
+}
+
+export type AdvancedTrainingRecommendation =
+  "keep_advanced" | "promote_to_advanced" | "remove_from_advanced" | "keep_formation" | "hold";
+
+export type AdvancedSlotReason =
+  | { type: "high_marginal_training_gain"; value: number }
+  | { type: "high_development_potential" }
+  | { type: "low_development_potential" }
+  | { type: "better_candidate_available"; playerId: number; scoreDifference: number }
+  | { type: "within_recommended_top_slots"; rank: number }
+  | { type: "below_advanced_cutoff"; rank: number }
+  | { type: "difference_below_replacement_threshold" }
+  | { type: "insufficient_data" };
+
+export interface AdvancedTrainingPlayerRecommendation {
+  playerId: number;
+  status: AdvancedTrainingRecommendation;
+  currentlyAdvanced: boolean;
+  recommendedAdvanced: boolean;
+  evaluation: AdvancedSlotEvaluation;
+  reasons: AdvancedSlotReason[];
+}
+
+export interface AdvancedSlotReplacement {
+  promotePlayerId: number;
+  removePlayerId: number;
+  scoreDifference: number;
+  confidence: TrainingRecommendationConfidence;
+  reasons: AdvancedSlotReason[];
+}
+
+export interface AdvancedSlotScoreInput {
+  marginalTrainingPoints: number;
+  developmentPotentialScore: number;
+}
+
+export interface AdvancedTrainingOptimization {
+  gameWeek: number;
+  slotCount: number;
+  ranking: AdvancedTrainingRankingEntry[];
+  recommendedAdvancedPlayerIds: number[];
+  recommendations: AdvancedTrainingPlayerRecommendation[];
+  replacements: AdvancedSlotReplacement[];
+  summary: {
+    currentlyAdvanced: number;
+    recommendedChanges: number;
+    promotions: number;
+    removals: number;
+  };
+}
+
 export interface TalentEvidence {
   playerId: number;
   skill: Skill;

@@ -191,6 +191,13 @@ export function evaluateTrainingOption(input: {
   });
 }
 
+export function isSkillTrainableForPosition(
+  position: TrainingRecommendationPlayer["position"],
+  skill: SkillTrainingCostSkill
+): boolean {
+  return position === null || TRAINABLE_SKILLS_BY_POSITION[position].includes(skill);
+}
+
 function evaluateOption(input: {
   age: number;
   currentSkill: SkillTrainingCostSkill;
