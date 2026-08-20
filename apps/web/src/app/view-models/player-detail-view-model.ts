@@ -4,6 +4,7 @@ import type {
   DashboardStatus,
   DiagnosticFinding,
   PlayerDevelopment,
+  SquadPlanningBundle,
   TrainingPageData
 } from "@atlas/web/app/types";
 import {
@@ -14,6 +15,10 @@ import {
   type TrainingDiagnostic,
   type TrainingPlayerRow
 } from "./training-view-model";
+import {
+  createPlayerMarketValueViewModel,
+  type PlayerMarketValueViewModel
+} from "./market-value-view-model";
 
 const SKILL_DEFINITIONS = [
   { key: "stamina", trainingPriority: 1 },
@@ -84,6 +89,7 @@ export interface PlayerDetailViewModel {
       direction: "up" | "down";
     }>;
   }>;
+  marketValue?: PlayerMarketValueViewModel | null;
 }
 
 export interface PlayerTrainingProjectionSummary {
@@ -100,6 +106,8 @@ export interface CreatePlayerDetailViewModelInput {
   development: PlayerDevelopment | null;
   trainingDiagnostic: TrainingDiagnostic | null;
   trainingStatus: DashboardStatus;
+  squadPlanning?: SquadPlanningBundle | null;
+  currency?: string | null;
 }
 
 export function createPlayerDetailViewModel(
@@ -145,6 +153,11 @@ export function createPlayerDetailViewModel(
     latestReport: player.latestReport ?? null,
     age: player.age
   });
+  const marketPlayer = input.squadPlanning?.assessment.depthPlayers.find(
+    (candidate) =>
+      identifiersMatch(candidate.playerId, observedPlayer?.playerId) ||
+      identifiersMatch(candidate.playerId, player.id)
+  );
 
   return {
     player: {
@@ -178,7 +191,10 @@ export function createPlayerDetailViewModel(
     },
     diagnostics: diagnosticFindingsForPlayer(input.trainingDiagnostic, player),
     recentSkillUps: createRecentSkillUps(input.training, observedPlayer?.playerId ?? null),
-    trainingHistory: createTrainingHistoryRows(input.training, observedPlayer?.playerId ?? null)
+    trainingHistory: createTrainingHistoryRows(input.training, observedPlayer?.playerId ?? null),
+    marketValue: marketPlayer
+      ? createPlayerMarketValueViewModel(marketPlayer, input.currency ?? null)
+      : null
   };
 }
 

@@ -4,6 +4,7 @@ import {
   MongoPlayerDevelopmentTargetRepository,
   MongoSquadRoleAssignmentRepository,
   MongoTrainingWeekRepository,
+  MongoPlayerTransferRepository,
   type PersistedPlayerSnapshot,
   type PersistedPlayerDevelopmentOverride,
   type PersistedPlayerTrainingWeek,
@@ -26,6 +27,14 @@ import {
   type SquadDepthPlayer,
   type SquadPlanningRecommendations,
   type TrainingHistory
+} from "@atlas/domain";
+import {
+  calibratePlayerMarketValue,
+  compareAdvancedAndFormationMarketValue,
+  PLAYER_MARKET_VALUE_COMPARISON_HORIZON_WEEKS,
+  projectPlayerMarketValue,
+  type PlayerMarketValuePlayerInput,
+  type PlayerTransferRecord
 } from "@atlas/domain";
 import { createTrainingWeek, type PlayerSkills, type PlayerSkillsChange } from "@atlas/domain";
 import type { ClubId } from "../types.js";
@@ -73,15 +82,17 @@ const snapshotRepository = new MongoSnapshotRepository();
 const trainingWeekRepository = new MongoTrainingWeekRepository();
 const roleAssignmentRepository = new MongoSquadRoleAssignmentRepository();
 const developmentTargetRepository = new MongoPlayerDevelopmentTargetRepository();
+const playerTransferRepository = new MongoPlayerTransferRepository();
 
 export async function getSquadAssessment(clubId: ClubId): Promise<SquadAssessmentData> {
   const club = await clubRepository.findById(clubId.toString());
   if (!club) throw new Error(`Club not found: ${clubId}`);
 
-  const [snapshots, trainingWeeks, assignments] = await Promise.all([
+  const [snapshots, trainingWeeks, assignments, persistedTransfers] = await Promise.all([
     snapshotRepository.listByClub(clubId),
     trainingWeekRepository.listByClub(club.clubId),
-    roleAssignmentRepository.listByClub(club.clubId)
+    roleAssignmentRepository.listByClub(club.clubId),
+    playerTransferRepository.findTransfersForCalibration().catch(() => [])
   ]);
   const latest = snapshots.at(-1);
   if (!latest) {
@@ -122,17 +133,25 @@ export async function getSquadAssessment(clubId: ClubId): Promise<SquadAssessmen
       latest.snapshotDate
     )
   );
+  const transfers = persistedTransfers.map(mapTransferRecord);
   const assessment = assessSquad(contexts);
   const contextByPlayer = new Map(contexts.map((context) => [context.playerId, context]));
+  const marketValues = createMarketValues(contexts, transfers);
   const depthPlayers: SquadDepthPlayer[] = assessment.players.map((playerAssessment) => {
     const context = contextByPlayer.get(playerAssessment.playerId);
+    const marketValue = marketValues.get(playerAssessment.playerId);
     return {
       ...playerAssessment,
+      playerName: context?.playerName ?? `Player ${playerAssessment.playerId}`,
       age: context?.age ?? null,
+      sokkerValue: context?.sokkerValue ?? null,
       developmentPlan: context?.developmentPlan ?? null,
       developmentTarget: context?.developmentTarget ?? null,
       projection: context?.projection ?? null,
-      formation: context?.formation ?? null
+      formation: context?.formation ?? null,
+      marketValue: marketValue?.current ?? null,
+      marketProjection: marketValue?.projection ?? null,
+      marketTrainingComparison: marketValue?.trainingComparison ?? null
     };
   });
 
@@ -227,7 +246,9 @@ function buildPlayerContext(
 
   return {
     ...developmentPlayer,
+    playerName: player.name,
     age: player.age,
+    sokkerValue: player.value,
     profile: plan.target.profile,
     developmentPlan: plan,
     developmentTarget: plan.target,
@@ -243,6 +264,165 @@ function buildPlayerContext(
     },
     historyWeeks: history?.weeks.length ?? 0,
     manualRole: assignment ? mapAssignment(assignment) : null
+  };
+}
+
+function createMarketValues(
+  contexts: readonly SquadPlayerContext[],
+  transfers: readonly PlayerTransferRecord[]
+): Map<number, MarketValueEntry> {
+  const values = new Map<number, MarketValueEntry>();
+
+  for (const context of contexts) {
+    const player = toMarketValuePlayer(context);
+    const marketContext = {
+      player,
+      developmentProfile: context.profile ?? null,
+      developmentPlan: context.developmentPlan ?? null,
+      talent: context.talent ?? null
+    };
+    try {
+      const current = calibratePlayerMarketValue(marketContext, transfers);
+      const projection =
+        context.developmentPlan && context.trainingPath && context.projection
+          ? projectPlayerMarketValue({
+              player,
+              developmentPlan: context.developmentPlan,
+              path: context.trainingPath,
+              projection: context.projection,
+              currentMarketValue: current,
+              talent: context.talent ?? null,
+              transfers
+            })
+          : null;
+      const trainingComparison =
+        context.developmentPlan && context.trainingPath
+          ? createMarketTrainingComparison(context, player, current, transfers)
+          : null;
+      values.set(context.playerId, { current, projection, trainingComparison });
+    } catch {
+      // Market value is derived data. A malformed player must not break squad planning.
+    }
+  }
+
+  return values;
+}
+
+interface MarketValueEntry {
+  current: ReturnType<typeof calibratePlayerMarketValue>;
+  projection: ReturnType<typeof projectPlayerMarketValue> | null;
+  trainingComparison: ReturnType<typeof compareAdvancedAndFormationMarketValue> | null;
+}
+
+function createMarketTrainingComparison(
+  context: SquadPlayerContext,
+  player: PlayerMarketValuePlayerInput,
+  current: ReturnType<typeof calibratePlayerMarketValue>,
+  transfers: readonly PlayerTransferRecord[]
+): ReturnType<typeof compareAdvancedAndFormationMarketValue> | null {
+  if (!context.developmentPlan || !context.trainingPath || !context.projection) return null;
+
+  const advancedProjection = createScenarioProjection(context, "advanced");
+  const formationProjection = createScenarioProjection(context, "formation");
+  if (!advancedProjection || !formationProjection) return null;
+
+  try {
+    return compareAdvancedAndFormationMarketValue({
+      advanced: {
+        player,
+        developmentPlan: context.developmentPlan,
+        path: context.trainingPath,
+        projection: advancedProjection,
+        currentMarketValue: current,
+        talent: context.talent ?? null,
+        transfers
+      },
+      formation: {
+        player,
+        developmentPlan: context.developmentPlan,
+        path: context.trainingPath,
+        projection: formationProjection,
+        currentMarketValue: current,
+        talent: context.talent ?? null,
+        transfers
+      },
+      fixedHorizonWeeks: PLAYER_MARKET_VALUE_COMPARISON_HORIZON_WEEKS
+    });
+  } catch {
+    return null;
+  }
+}
+
+function createScenarioProjection(
+  context: SquadPlayerContext,
+  trainingKind: "advanced" | "formation"
+): ReturnType<typeof projectDevelopment> | null {
+  if (
+    !context.developmentPlan ||
+    !context.trainingPath ||
+    !context.projection ||
+    context.age === null
+  )
+    return null;
+  try {
+    return projectDevelopment({
+      player: {
+        playerId: context.playerId,
+        age: context.age,
+        skills: context.skills,
+        formation: context.formation ?? null,
+        observedPosition: context.observedPosition ?? null
+      },
+      target: context.developmentPlan.target,
+      path: context.trainingPath,
+      currentGameWeek: context.projection.generatedAtGameWeek,
+      currentDate: context.projection.generatedAtDate,
+      talent: context.talent ?? null,
+      trainingAssumptions: {
+        trainingKind,
+        expectedIntensity: context.projection.assumptions.expectedIntensity,
+        assumeContinuousTraining: context.projection.assumptions.assumeContinuousTraining
+      }
+    });
+  } catch {
+    return null;
+  }
+}
+
+function toMarketValuePlayer(context: SquadPlayerContext): PlayerMarketValuePlayerInput {
+  return {
+    playerId: context.playerId,
+    age: context.age,
+    skills: context.skills,
+    formation: context.formation ?? null,
+    position: context.position ?? null,
+    observedPosition: context.observedPosition ?? null,
+    profile: context.profile ?? null,
+    sokkerValue: context.sokkerValue ?? null
+  };
+}
+
+function mapTransferRecord(
+  transfer: Awaited<
+    ReturnType<MongoPlayerTransferRepository["findTransfersForCalibration"]>
+  >[number]
+): PlayerTransferRecord {
+  return {
+    ...(transfer.transferId ? { transferId: transfer.transferId } : {}),
+    ...(transfer.playerId === undefined ? {} : { playerId: transfer.playerId }),
+    transferDate: transfer.transferDate,
+    gameWeek: transfer.gameWeek,
+    salePrice: transfer.salePrice,
+    currency: transfer.currency,
+    normalizedSalePrice: transfer.normalizedSalePrice,
+    age: transfer.age,
+    skills: transfer.skills,
+    formation: transfer.formation,
+    developmentProfile: transfer.developmentProfile,
+    sokkerValue: transfer.sokkerValue,
+    source: transfer.source,
+    dataQuality: transfer.dataQuality,
+    salePriceType: transfer.salePriceType
   };
 }
 

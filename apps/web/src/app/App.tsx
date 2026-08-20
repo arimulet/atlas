@@ -292,10 +292,16 @@ export function App() {
           youthStatus={youthStatus}
         />
       ) : activeView === "finances" ? (
-        <Finances status={dashboardStatus} />
+        <Finances
+          dashboard={dashboard}
+          onSelectPlayer={handleSelectPlayer}
+          squadPlanning={squadPlanning}
+          status={dashboardStatus}
+        />
       ) : activeView === "squad" ? (
-          <Squad
-            development={playerDevelopment}
+        <Squad
+          currency={dashboard?.club.currency ?? null}
+          development={playerDevelopment}
           onSelectPlayer={handleSelectPlayer}
           onSaveSquadRole={handleSaveSquadRole}
           projectionSummaries={projectionSummaries}
@@ -333,6 +339,7 @@ export function App() {
       ) : activeView === "player-detail" ? (
         <PlayerDetail
           clubId={activeClubId}
+          currency={dashboard?.club.currency ?? null}
           development={playerDevelopment}
           onBack={handleBackFromPlayerDetail}
           onBackToSquad={() => navigate(pathForMainView("squad"), { replace: true })}
@@ -340,6 +347,7 @@ export function App() {
           training={training}
           trainingDiagnostic={trainingDiagnostic}
           trainingStatus={trainingStatus}
+          squadPlanning={squadPlanning}
         />
       ) : (
         <div className="atlas-placeholder">

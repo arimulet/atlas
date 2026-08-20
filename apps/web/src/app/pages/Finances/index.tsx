@@ -9,9 +9,10 @@ import {
 import type { DashboardStatus } from "@atlas/web/app/types";
 import type { FinancesProps } from "./types";
 import { AttentionIcon } from "../../components/AttentionIcon";
+import { PlayerLink } from "../../components/PlayerLink";
 
-export function Finances({ status }: FinancesProps) {
-  const viewModel = createFinancesViewModel();
+export function Finances({ dashboard, onSelectPlayer, squadPlanning, status }: FinancesProps) {
+  const viewModel = createFinancesViewModel({ dashboard, squadPlanning });
 
   return (
     <div className="atlas-finances">
@@ -20,6 +21,7 @@ export function Finances({ status }: FinancesProps) {
       </header>
 
       <FinanceAttention items={viewModel.diagnostics} status={status} />
+      <SquadAssetValue onSelectPlayer={onSelectPlayer} status={status} viewModel={viewModel} />
       <FinancialOverview viewModel={viewModel} status={status} />
 
       <div className="atlas-finances__breakdown-grid">
@@ -36,6 +38,94 @@ export function Finances({ status }: FinancesProps) {
           status={status}
         />
       </div>
+    </div>
+  );
+}
+
+interface SquadAssetValueProps {
+  onSelectPlayer: (playerId: string) => void;
+  status: DashboardStatus;
+  viewModel: FinancesViewModel;
+}
+
+function SquadAssetValue({ onSelectPlayer, status, viewModel }: SquadAssetValueProps) {
+  const assets = viewModel.squadAssets;
+  return (
+    <section
+      className="atlas-finances-panel atlas-squad-asset-value"
+      aria-labelledby="squad-asset-value-title"
+    >
+      <div className="atlas-finances-panel__heading-row">
+        <PanelTitle id="squad-asset-value-title" title="Squad Asset Value" />
+        <span>
+          {assets.coverage.valued}/{assets.coverage.total} players valued
+        </span>
+      </div>
+      {status === "loading" ? <PanelMessage>Loading squad assets...</PanelMessage> : null}
+      {status === "error" ? (
+        <PanelMessage tone="error">Squad asset values are temporarily unavailable.</PanelMessage>
+      ) : null}
+      {status === "idle" ? <PanelMessage>No squad asset data available.</PanelMessage> : null}
+      {status === "ready" && assets.coverage.valued === 0 ? (
+        <PanelMessage>Insufficient data to estimate squad asset value.</PanelMessage>
+      ) : null}
+      {status === "ready" && assets.coverage.valued > 0 ? (
+        <>
+          <div className="atlas-finances-asset-metrics">
+            <FinanceAssetMetric label="Current squad value" value={assets.currentTotal.label} />
+            <FinanceAssetMetric
+              label="Projected at development targets"
+              value={assets.projectedTotal.label}
+            />
+            <FinanceAssetMetric
+              label="Potential value creation"
+              value={assets.potentialValueCreation.label}
+            />
+            <FinanceAssetMetric
+              label="Cash"
+              value={viewModel.overview.cash ? formatMoney(viewModel.overview.cash) : "—"}
+            />
+          </div>
+          <p className="atlas-finances-panel__note">
+            Cash and squad assets are separate concepts; squad value is not immediate liquidity.
+          </p>
+          <div className="atlas-finances-asset-columns">
+            <div>
+              <h3>By squad role</h3>
+              <ul className="atlas-finances-breakdown-list">
+                {assets.breakdown.map((item) => (
+                  <li className="atlas-finances-breakdown-row" key={item.role}>
+                    <span>{item.role}</span>
+                    <strong>{item.value.label}</strong>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <h3>Top player assets</h3>
+              <ol className="atlas-finances-top-assets">
+                {assets.topAssets.map((asset) => (
+                  <li key={asset.playerId}>
+                    <PlayerLink playerId={asset.playerId} onSelectPlayer={onSelectPlayer}>
+                      {asset.name}
+                    </PlayerLink>
+                    <strong>{asset.value.label}</strong>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </div>
+        </>
+      ) : null}
+    </section>
+  );
+}
+
+function FinanceAssetMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="atlas-finances-asset-metric">
+      <span>{label}</span>
+      <strong>{value}</strong>
     </div>
   );
 }
@@ -91,7 +181,9 @@ function FinancialOverview({ status, viewModel }: FinancialOverviewProps) {
     <section className="atlas-finances-panel" aria-labelledby="financial-overview-title">
       <div className="atlas-finances-panel__heading-row">
         <PanelTitle id="financial-overview-title" title="Financial Overview" />
-        {viewModel.period ? <span className="atlas-finances-period">{viewModel.period}</span> : null}
+        {viewModel.period ? (
+          <span className="atlas-finances-period">{viewModel.period}</span>
+        ) : null}
       </div>
       {status === "loading" ? <PanelMessage>Loading finances...</PanelMessage> : null}
       {status === "error" ? (

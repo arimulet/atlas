@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { formatTrainingPriority } from "../../formatters";
 import type { DiagnosticFinding, DiagnosticParameterValue } from "@atlas/web/app/types";
 import type { SquadRole } from "@atlas/domain";
@@ -28,6 +28,7 @@ import {
   SQUAD_SKILL_DEFINITIONS,
   type SquadPlayerRow
 } from "../../view-models/squad-view-model";
+import { createSquadMarketValueSummary } from "../../view-models/market-value-view-model";
 import {
   TRAINING_POSITIONS,
   type TrainingPositionCode
@@ -49,25 +50,39 @@ export function Squad({
   squadPlanningStatus,
   training,
   trainingDiagnostic,
-  trainingStatus
+  trainingStatus,
+  currency
 }: SquadProps) {
   const rows = createSquadPlayerRows({
     development,
     projectionSummaries,
     training,
     trainingDiagnostic,
-    trainingStatus
+    trainingStatus,
+    squadPlanning,
+    currency
   });
   const { filteredRows, filters, setProfileFilter, setRoleFilter, viewModel } = useSquadPlanning({
     planning: squadPlanning,
     rows
   });
+  const [marketSort, setMarketSort] = useState<MarketSort>("default");
+  const sortedRows = useMemo(
+    () => sortSquadRowsByMarketValue(filteredRows, marketSort),
+    [filteredRows, marketSort]
+  );
+  const marketSummary = createSquadMarketValueSummary(
+    squadPlanning?.assessment.depthPlayers ?? [],
+    currency
+  );
 
   return (
     <div className="atlas-squad">
       <header className="atlas-squad__header">
         <h1>Squad</h1>
       </header>
+
+      <SquadMarketSummary summary={marketSummary} />
 
       {squadPlanningStatus === "loading" ? (
         <SquadMessage>Loading squad planning...</SquadMessage>
@@ -96,32 +111,84 @@ export function Squad({
       </h2>
       <SquadPlanningFiltersBar
         filters={filters}
+        marketSort={marketSort}
         onProfileChange={setProfileFilter}
         onRoleChange={setRoleFilter}
+        onMarketSortChange={setMarketSort}
         planningAvailable={squadPlanningStatus === "ready" && squadPlanning !== null}
       />
       <SquadTable
         onSaveSquadRole={onSaveSquadRole}
         onSelectPlayer={onSelectPlayer}
         planning={squadPlanning}
-        rows={filteredRows}
+        rows={sortedRows}
         status={trainingStatus}
       />
     </div>
   );
 }
 
+function SquadMarketSummary({
+  summary
+}: {
+  summary: ReturnType<typeof createSquadMarketValueSummary>;
+}) {
+  return (
+    <section
+      className="atlas-squad-panel atlas-squad-market-summary"
+      aria-labelledby="squad-market-title"
+    >
+      <div className="atlas-squad-market-summary__heading">
+        <div>
+          <p className="atlas-squad-market-summary__eyebrow">Market Value</p>
+          <h2 id="squad-market-title" className="atlas-squad-panel__title atlas-section-title">
+            Squad asset overview
+          </h2>
+        </div>
+        <span>
+          {summary.coverage.valued}/{summary.coverage.total} players valued
+        </span>
+      </div>
+      <div className="atlas-squad-market-summary__metrics">
+        <SummaryMetric label="Current squad value" value={summary.currentTotal.label} />
+        <SummaryMetric label="Projected at targets" value={summary.projectedTotal.label} />
+        <SummaryMetric
+          label="Potential value creation"
+          value={summary.potentialValueCreation.label}
+        />
+        <SummaryMetric
+          label="Comparable-backed"
+          value={`${summary.coverage.comparableBacked} players`}
+        />
+      </div>
+    </section>
+  );
+}
+
+function SummaryMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="atlas-squad-market-summary__metric">
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+}
+
 interface SquadPlanningFiltersBarProps {
   filters: SquadPlanningFilters;
+  marketSort: MarketSort;
   onProfileChange: (profile: SquadPlanningFilters["profile"]) => void;
   onRoleChange: (role: SquadPlanningFilters["role"]) => void;
+  onMarketSortChange: (sort: MarketSort) => void;
   planningAvailable: boolean;
 }
 
 function SquadPlanningFiltersBar({
   filters,
+  marketSort,
   onProfileChange,
   onRoleChange,
+  onMarketSortChange,
   planningAvailable
 }: SquadPlanningFiltersBarProps) {
   return (
@@ -140,6 +207,19 @@ function SquadPlanningFiltersBar({
               {roleOptionLabel(role)}
             </option>
           ))}
+        </select>
+      </label>
+      <label>
+        Market sort
+        <select
+          disabled={!planningAvailable}
+          value={marketSort}
+          onChange={(event) => onMarketSortChange(event.target.value as MarketSort)}
+        >
+          <option value="default">Default</option>
+          <option value="current">Estimated value</option>
+          <option value="projected">Projected value</option>
+          <option value="efficiency">Training value / week</option>
         </select>
       </label>
       <label>
@@ -170,6 +250,27 @@ function SquadPlanningFiltersBar({
       </label>
     </div>
   );
+}
+
+type MarketSort = "default" | "current" | "projected" | "efficiency";
+
+function sortSquadRowsByMarketValue(rows: SquadPlayerRow[], sort: MarketSort): SquadPlayerRow[] {
+  if (sort === "default") return rows;
+  return [...rows].sort((left, right) => {
+    const leftValue = marketSortValue(left, sort);
+    const rightValue = marketSortValue(right, sort);
+    return (
+      (rightValue ?? -1) - (leftValue ?? -1) || left.playerName.localeCompare(right.playerName)
+    );
+  });
+}
+
+function marketSortValue(row: SquadPlayerRow, sort: Exclude<MarketSort, "default">): number | null {
+  if (!row.marketValue) return null;
+  if (sort === "current") return row.marketValue.current.expected.value;
+  if (sort === "projected")
+    return row.marketValue.projection?.targetCompletion?.value.value ?? null;
+  return row.marketValue.training?.averageValueGainPerWeek?.value ?? null;
 }
 
 function SquadAttention({ diagnostic, status }: SquadAttentionProps) {
@@ -306,6 +407,8 @@ function SquadPositionTable({
           <col className="is-talent" />
           <col className="is-next-skill-up" />
           <col className="is-eta" />
+          <col className="is-market-value" />
+          <col className="is-projected-value" />
           <col className="is-status" />
         </colgroup>
         <thead>
@@ -320,9 +423,13 @@ function SquadPositionTable({
             >
               Skills
             </th>
-            <th className="is-training-group" colSpan={8} scope="colgroup">
+            <th className="is-training-group" colSpan={7} scope="colgroup">
               Training / Development
             </th>
+            <th className="is-market-group" colSpan={2} scope="colgroup">
+              Market Value
+            </th>
+            <th scope="colgroup">Status</th>
           </tr>
           <tr>
             <th scope="col">Player</th>
@@ -357,6 +464,8 @@ function SquadPositionTable({
               Next
             </th>
             <th scope="col">ETA</th>
+            <th scope="col">Current</th>
+            <th scope="col">Projected</th>
             <th scope="col">Status</th>
           </tr>
         </thead>
@@ -373,7 +482,7 @@ function SquadPositionTable({
             ))
           ) : (
             <tr>
-              <td className="atlas-squad-table__empty" colSpan={20}>
+              <td className="atlas-squad-table__empty" colSpan={22}>
                 No players assigned.
               </td>
             </tr>
@@ -461,6 +570,12 @@ function SquadPlayerRowView({
       <td className="atlas-squad-table__numeric">{formatTalent(row.development.talent)}</td>
       <td className="atlas-squad-table__numeric">{formatNumber(row.development.nextSkillUp)}</td>
       <td className="atlas-squad-table__numeric">{formatEta(row.development.etaWeeks)}</td>
+      <td className="atlas-squad-table__numeric">
+        {row.marketValue?.current.expected.label ?? "â€”"}
+      </td>
+      <td className="atlas-squad-table__numeric">
+        {row.marketValue?.projection?.targetCompletion?.value.label ?? "â€”"}
+      </td>
       <td>
         <SquadStatus status={row.training.status} />
       </td>

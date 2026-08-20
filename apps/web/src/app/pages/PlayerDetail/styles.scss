@@ -186,6 +186,307 @@
   text-transform: uppercase;
 }
 
+.atlas .atlas-market-value {
+  display: grid;
+  gap: 16px;
+}
+
+.atlas .atlas-market-value__heading,
+.atlas .atlas-market-value__section-heading,
+.atlas .atlas-market-value__evidence-summary,
+.atlas .atlas-market-value__projection-row,
+.atlas .atlas-market-value__training-summary {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.atlas .atlas-market-value__eyebrow {
+  color: var(--atlas-accent);
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  margin: 0 0 4px;
+  text-transform: uppercase;
+}
+
+.atlas .atlas-market-value__heading .atlas-player-detail-panel__title,
+.atlas .atlas-market-value__section-heading h3 {
+  margin: 0;
+}
+
+.atlas .atlas-market-value__confidence {
+  border: 1px solid var(--atlas-border);
+  border-radius: 999px;
+  color: var(--atlas-text-secondary);
+  font-size: 0.68rem;
+  padding: 5px 9px;
+  white-space: nowrap;
+}
+
+.atlas .atlas-market-value__confidence.is-high {
+  border-color: color-mix(in srgb, var(--semantic-success-text) 65%, var(--atlas-border));
+  color: var(--semantic-success-text);
+}
+
+.atlas .atlas-market-value__confidence.is-medium {
+  border-color: color-mix(in srgb, var(--semantic-info-border) 65%, var(--atlas-border));
+  color: var(--semantic-info-text);
+}
+
+.atlas .atlas-market-value__confidence.is-low {
+  border-color: color-mix(in srgb, var(--semantic-warning-border) 65%, var(--atlas-border));
+  color: var(--semantic-warning-text);
+}
+
+.atlas .atlas-market-value__summary {
+  background: color-mix(in srgb, var(--atlas-accent) 6%, var(--atlas-surface));
+  border: 1px solid color-mix(in srgb, var(--atlas-accent) 24%, var(--atlas-border));
+  border-radius: var(--atlas-radius-sm);
+  display: grid;
+  gap: 14px;
+  padding: 14px;
+}
+
+.atlas .atlas-market-value__primary {
+  display: grid;
+  gap: 3px;
+}
+
+.atlas .atlas-market-value__primary span,
+.atlas .atlas-market-value__primary small,
+.atlas .atlas-market-value__facts dt,
+.atlas .atlas-market-value__note,
+.atlas .atlas-market-value__diagnostic,
+.atlas .atlas-market-value__differences,
+.atlas .atlas-market-value__projection-row small {
+  color: var(--atlas-text-secondary);
+  font-size: 0.74rem;
+}
+
+.atlas .atlas-market-value__primary strong {
+  color: var(--atlas-text);
+  font-size: 1.55rem;
+  line-height: 1.1;
+}
+
+.atlas .atlas-market-value__facts {
+  display: grid;
+  gap: 10px 18px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0;
+}
+
+.atlas .atlas-market-value__facts div,
+.atlas .atlas-market-value__metric {
+  display: grid;
+  gap: 4px;
+}
+
+.atlas .atlas-market-value__facts dd,
+.atlas .atlas-market-value__metric strong {
+  color: var(--atlas-text);
+  font-size: 0.84rem;
+  font-weight: 750;
+  margin: 0;
+}
+
+.atlas .atlas-market-value__note,
+.atlas .atlas-market-value__diagnostic,
+.atlas .atlas-market-value__warning {
+  margin: 0;
+}
+
+.atlas .atlas-market-value__drivers {
+  border-top: 1px solid color-mix(in srgb, var(--atlas-border) 72%, transparent);
+  padding-top: 11px;
+}
+
+.atlas .atlas-market-value__drivers h3,
+.atlas .atlas-market-value__differences strong,
+.atlas .atlas-finances-asset-columns h3 {
+  color: var(--atlas-text-muted);
+  font-size: 0.65rem;
+  font-weight: 750;
+  letter-spacing: 0.07em;
+  margin: 0 0 7px;
+  text-transform: uppercase;
+}
+
+.atlas .atlas-market-value__drivers ul,
+.atlas .atlas-market-value__differences ul {
+  color: var(--atlas-text-secondary);
+  display: grid;
+  font-size: 0.76rem;
+  gap: 4px;
+  margin: 0;
+  padding-left: 18px;
+}
+
+.atlas .atlas-market-value__section {
+  border-top: 1px solid color-mix(in srgb, var(--atlas-border) 72%, transparent);
+  display: grid;
+  gap: 12px;
+  padding-top: 15px;
+}
+
+.atlas .atlas-market-value__section-heading h3 {
+  color: var(--atlas-text);
+  font-size: 0.88rem;
+}
+
+.atlas .atlas-market-value__evidence-summary span,
+.atlas .atlas-market-value__projection-row span {
+  color: var(--atlas-text-secondary);
+  font-size: 0.76rem;
+}
+
+.atlas .atlas-market-value__evidence-range,
+.atlas .atlas-market-value__timeline-summary {
+  display: grid;
+  gap: 10px 16px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.atlas .atlas-market-value__timeline-summary {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.atlas .atlas-market-value__metric span {
+  color: var(--atlas-text-muted);
+  font-size: 0.66rem;
+}
+
+.atlas .atlas-market-value__comparables {
+  border-top: 1px solid color-mix(in srgb, var(--atlas-border) 72%, transparent);
+  padding-top: 10px;
+}
+
+.atlas .atlas-market-value__comparables summary {
+  color: var(--atlas-accent);
+  cursor: pointer;
+  font-size: 0.76rem;
+}
+
+.atlas .atlas-market-value__comparable-table {
+  margin-top: 10px;
+}
+
+.atlas .atlas-market-value__comparable-detail summary {
+  align-items: center;
+  color: var(--atlas-text-secondary);
+  cursor: pointer;
+  display: grid;
+  font-size: 0.74rem;
+  gap: 8px;
+  grid-template-columns: 0.5fr 1.3fr 1.7fr 0.7fr 0.9fr 0.9fr;
+  list-style-position: inside;
+  padding: 4px 0;
+}
+
+.atlas .atlas-market-value__comparable-detail ul {
+  color: var(--atlas-text-secondary);
+  font-size: 0.74rem;
+  margin: 8px 0 4px;
+  padding-left: 28px;
+}
+
+.atlas .atlas-market-value__comparable-detail small {
+  color: var(--atlas-text-muted);
+  display: block;
+  padding: 8px 0 4px 24px;
+}
+
+.atlas .atlas-market-value__chart-wrap {
+  background: color-mix(in srgb, var(--atlas-surface-hover) 36%, transparent);
+  border: 1px solid color-mix(in srgb, var(--atlas-border) 72%, transparent);
+  border-radius: var(--atlas-radius-sm);
+  padding: 8px;
+}
+
+.atlas .atlas-market-value__chart {
+  display: block;
+  height: 150px;
+  width: 100%;
+}
+
+.atlas .atlas-market-value__chart line {
+  stroke: var(--atlas-border);
+  stroke-width: 1;
+}
+
+.atlas .atlas-market-value__chart polyline {
+  fill: none;
+  stroke: var(--atlas-accent);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 3;
+}
+
+.atlas .atlas-market-value__chart circle {
+  fill: var(--atlas-surface);
+  stroke: var(--atlas-accent);
+  stroke-width: 3;
+}
+
+.atlas .atlas-market-value__projection-list {
+  display: grid;
+  gap: 0;
+}
+
+.atlas .atlas-market-value__projection-row {
+  border-bottom: 1px solid color-mix(in srgb, var(--atlas-border) 72%, transparent);
+  padding: 9px 0;
+}
+
+.atlas .atlas-market-value__projection-row > div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.atlas .atlas-market-value__projection-row strong {
+  color: var(--atlas-text);
+  font-size: 0.78rem;
+}
+
+.atlas .atlas-market-value__projection-row span {
+  color: var(--atlas-text-secondary);
+  font-size: 0.76rem;
+  min-width: 90px;
+  text-align: right;
+}
+
+.atlas .atlas-market-value__training-summary {
+  align-items: stretch;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.atlas .atlas-market-value__training-summary .atlas-market-value__metric {
+  background: color-mix(in srgb, var(--atlas-surface-hover) 45%, transparent);
+  border-radius: var(--atlas-radius-sm);
+  padding: 9px;
+}
+
+.atlas .atlas-market-value__warning {
+  background: color-mix(in srgb, var(--semantic-error-border) 12%, transparent);
+  border-left: 3px solid var(--semantic-error-border);
+  color: var(--semantic-error-text);
+  font-size: 0.76rem;
+  padding: 8px 10px;
+}
+
+@media (max-width: 760px) {
+  .atlas .atlas-market-value__facts,
+  .atlas .atlas-market-value__evidence-range,
+  .atlas .atlas-market-value__timeline-summary,
+  .atlas .atlas-market-value__training-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 .atlas .atlas-player-development-plan {
   display: grid;
   gap: 14px;

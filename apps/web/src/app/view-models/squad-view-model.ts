@@ -1,5 +1,9 @@
 import { formatTrainingPriority } from "../formatters";
-import type { PlayerDevelopment, TrainingPageData } from "@atlas/web/app/types";
+import type {
+  PlayerDevelopment,
+  SquadPlanningBundle,
+  TrainingPageData
+} from "@atlas/web/app/types";
 import {
   createTrainingPlayerRows,
   trainedSkillForPosition,
@@ -8,6 +12,10 @@ import {
   type TrainingStatusLabel
 } from "./training-view-model";
 import type { PlayerTrainingProjectionSummary } from "./player-detail-view-model";
+import {
+  createPlayerMarketValueViewModel,
+  type PlayerMarketValueViewModel
+} from "./market-value-view-model";
 
 export const SQUAD_SKILL_DEFINITIONS = [
   { key: "stamina", shortLabel: "STA", trainingPriority: 1 },
@@ -42,6 +50,7 @@ export interface SquadPlayerRow {
     nextSkillUp: number | null;
     etaWeeks: number | null;
   };
+  marketValue?: PlayerMarketValueViewModel | null;
 }
 
 export interface CreateSquadPlayerRowsInput {
@@ -50,6 +59,8 @@ export interface CreateSquadPlayerRowsInput {
   trainingDiagnostic: TrainingDiagnostic | null;
   trainingStatus: "idle" | "loading" | "ready" | "error";
   projectionSummaries?: ReadonlyMap<string, PlayerTrainingProjectionSummary>;
+  squadPlanning?: SquadPlanningBundle | null;
+  currency?: string | null;
 }
 
 export function createSquadPlayerRows(input: CreateSquadPlayerRowsInput): SquadPlayerRow[] {
@@ -72,6 +83,11 @@ export function createSquadPlayerRows(input: CreateSquadPlayerRowsInput): SquadP
       player.training.position
     );
     const trainingRow = trainingRowsByPlayerId.get(player.id);
+    const marketPlayer = input.squadPlanning?.assessment.depthPlayers.find(
+      (candidate) =>
+        identifiersMatch(candidate.playerId, observedPlayer?.playerId) ||
+        identifiersMatch(candidate.playerId, player.id)
+    );
 
     return {
       playerId: observedPlayer?.playerId?.toString() ?? player.id,
@@ -92,9 +108,21 @@ export function createSquadPlayerRows(input: CreateSquadPlayerRowsInput): SquadP
         talent: trainingRow?.talent ?? null,
         nextSkillUp: trainingRow?.nextSkillUp ?? null,
         etaWeeks: trainingRow?.etaWeeks ?? null
-      }
+      },
+      marketValue: marketPlayer
+        ? createPlayerMarketValueViewModel(marketPlayer, input.currency ?? null)
+        : null
     };
   });
+}
+
+function identifiersMatch(
+  left: string | number | null | undefined,
+  right: string | number | null | undefined
+): boolean {
+  return left !== null && left !== undefined && right !== null && right !== undefined
+    ? String(left) === String(right)
+    : false;
 }
 
 export function createSquadAttentionFindings(

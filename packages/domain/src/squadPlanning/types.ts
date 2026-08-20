@@ -9,7 +9,6 @@ import type {
   PlayerDevelopmentTarget,
   PlayerTrainingPath
 } from "../playerDevelopment/index.js";
-
 export type SquadRole = "core" | "developing" | "prospect" | "rotation" | "depth" | "transition";
 
 export type PlayerLifecycleStage = "prospect" | "development" | "prime" | "late_prime" | "decline";
@@ -40,6 +39,7 @@ export interface SquadTrainingContext {
 }
 
 export interface SquadPlayerContext extends DevelopmentPlayer {
+  playerName?: string;
   age: number | null;
   profile?: DevelopmentProfile | null;
   developmentPlan?: PlayerDevelopmentPlan | null;
@@ -55,6 +55,7 @@ export interface SquadPlayerContext extends DevelopmentPlayer {
   trainingStatus?: TrainingKind | null;
   historyWeeks?: number;
   manualRole?: SquadRoleAssignment | null;
+  sokkerValue?: number | null;
   previousAutomaticRole?: SquadRole | null;
 }
 
