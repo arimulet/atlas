@@ -31,3 +31,4 @@ export * from "./playerDevelopment/index.js";
 export * from "./squadPlanning/index.js";
 export * from "./playerMarketValue/index.js";
 export * from "./youthDecisionEngine/index.js";
+export * from "./financialStrategy/index.js";
