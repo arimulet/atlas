@@ -4,8 +4,13 @@ import {
   fetchClubDashboard,
   fetchPlayerDevelopment,
   fetchRealYouthAcademyPlanning,
+  fetchSquadDepthAnalysis,
+  fetchSquadPlanning,
+  fetchSquadPlanningRecommendations,
   fetchYouthPipelinePlanning,
   fetchTrainingPageData,
+  resetSquadRoleAssignment,
+  saveSquadRoleAssignment,
   syncSokker
 } from "@atlas/web/app/api";
 import type {
@@ -14,6 +19,8 @@ import type {
   ImportResponse,
   PlayerDevelopment,
   RealYouthAcademyPlanning,
+  SquadPlanningBundle,
+  SquadRole,
   TrainingPageData,
   YouthPipelinePlanning
 } from "@atlas/web/app/types";
@@ -57,6 +64,10 @@ export function App() {
   const [training, setTraining] = useState<TrainingPageData | null>(null);
   const [trainingDiagnostic, setTrainingDiagnostic] = useState<ImportResponse["diagnostic"]>(null);
   const [playerDevelopment, setPlayerDevelopment] = useState<PlayerDevelopment | null>(null);
+  const [squadPlanningStatus, setSquadPlanningStatus] = useState<DashboardStatus>(
+    activeClubId ? "loading" : "idle"
+  );
+  const [squadPlanning, setSquadPlanning] = useState<SquadPlanningBundle | null>(null);
   const projectionSummaries = useMemo(
     () =>
       trainingStatus === "ready"
@@ -122,6 +133,26 @@ export function App() {
     }
   }, []);
 
+  const loadSquadPlanning = useCallback(async (clubId: string): Promise<boolean> => {
+    setSquadPlanningStatus("loading");
+
+    try {
+      const [assessment, depth, recommendations] = await Promise.all([
+        fetchSquadPlanning(clubId),
+        fetchSquadDepthAnalysis(clubId),
+        fetchSquadPlanningRecommendations(clubId)
+      ]);
+
+      setSquadPlanning({ assessment, depth, recommendations });
+      setSquadPlanningStatus("ready");
+      return true;
+    } catch {
+      setSquadPlanning(null);
+      setSquadPlanningStatus("error");
+      return false;
+    }
+  }, []);
+
   const loadYouthPipeline = useCallback(async (clubId: string): Promise<boolean> => {
     setYouthPipelineStatus("loading");
 
@@ -146,13 +177,15 @@ export function App() {
     void loadTraining(activeClubId);
     void loadPlayerDevelopment(activeClubId);
     void loadYouthPipeline(activeClubId);
+    void loadSquadPlanning(activeClubId);
   }, [
     activeClubId,
     loadDashboard,
     loadPlayerDevelopment,
     loadTraining,
     loadYouthAcademy,
-    loadYouthPipeline
+    loadYouthPipeline,
+    loadSquadPlanning
   ]);
 
   const handleSokkerImport = useCallback(
@@ -196,12 +229,37 @@ export function App() {
           throw new Error("Datos actualizados, pero no se pudo recargar el Dashboard.");
         }
 
+        void loadSquadPlanning(body.importResult.clubId);
         setIsSokkerImportOpen(false);
       }
 
       return body;
     },
-    [loadDashboard, loadPlayerDevelopment, loadTraining, loadYouthAcademy, loadYouthPipeline]
+    [
+      loadDashboard,
+      loadPlayerDevelopment,
+      loadSquadPlanning,
+      loadTraining,
+      loadYouthAcademy,
+      loadYouthPipeline
+    ]
+  );
+
+  const handleSaveSquadRole = useCallback(
+    async (playerId: string, role: SquadRole | null): Promise<void> => {
+      if (!activeClubId) {
+        return;
+      }
+
+      if (role === null) {
+        await resetSquadRoleAssignment(activeClubId, playerId);
+      } else {
+        await saveSquadRoleAssignment(activeClubId, playerId, role);
+      }
+
+      await loadSquadPlanning(activeClubId);
+    },
+    [activeClubId, loadSquadPlanning]
   );
 
   const handleSelectPlayer = useCallback(
@@ -236,10 +294,13 @@ export function App() {
       ) : activeView === "finances" ? (
         <Finances status={dashboardStatus} />
       ) : activeView === "squad" ? (
-        <Squad
-          development={playerDevelopment}
+          <Squad
+            development={playerDevelopment}
           onSelectPlayer={handleSelectPlayer}
+          onSaveSquadRole={handleSaveSquadRole}
           projectionSummaries={projectionSummaries}
+          squadPlanning={squadPlanning}
+          squadPlanningStatus={squadPlanningStatus}
           training={training}
           trainingDiagnostic={trainingDiagnostic}
           trainingStatus={trainingStatus}

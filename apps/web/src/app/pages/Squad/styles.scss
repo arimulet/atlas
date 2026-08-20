@@ -136,6 +136,9 @@
 .atlas .atlas-squad-table col.is-age {
   width: 48px;
 }
+.atlas .atlas-squad-table col.is-planning {
+  width: 170px;
+}
 .atlas .atlas-squad-table col.is-form {
   width: 62px;
 }
@@ -250,5 +253,346 @@
   .atlas .atlas-squad-panel {
     padding-left: 12px;
     padding-right: 12px;
+  }
+}
+
+.atlas .atlas-squad-planning-summary {
+  align-items: center;
+  background: var(--atlas-surface);
+  border: 1px solid var(--atlas-border);
+  border-radius: var(--atlas-radius-md);
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(130px, 0.7fr) minmax(390px, 2fr) minmax(220px, 1.2fr);
+  padding: 16px;
+}
+
+.atlas .atlas-squad-planning-summary__eyebrow,
+.atlas .atlas-squad-planning-legend {
+  color: var(--atlas-text-muted);
+  font-size: 0.65rem;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.atlas .atlas-squad-planning-summary h2 {
+  color: var(--atlas-text);
+  font-size: 1.12rem;
+  margin: 5px 0 0;
+}
+
+.atlas .atlas-squad-planning-summary__roles,
+.atlas .atlas-squad-role-summary {
+  display: grid;
+  gap: 7px;
+  grid-template-columns: repeat(6, minmax(65px, 1fr));
+}
+
+.atlas .atlas-squad-planning-summary__metric,
+.atlas .atlas-squad-role-summary__item {
+  background: color-mix(in srgb, var(--atlas-surface-hover) 55%, transparent);
+  border-radius: 7px;
+  display: grid;
+  gap: 3px;
+  padding: 8px 9px;
+}
+
+.atlas .atlas-squad-planning-summary__metric span,
+.atlas .atlas-squad-role-summary__item span {
+  color: var(--atlas-text-muted);
+  font-size: 0.64rem;
+  white-space: nowrap;
+}
+
+.atlas .atlas-squad-planning-summary__metric strong,
+.atlas .atlas-squad-role-summary__item strong {
+  color: var(--atlas-text);
+  font-size: 1.08rem;
+}
+
+.atlas .atlas-squad-planning-summary__structure {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+}
+
+.atlas .atlas-squad-planning-summary__structure span,
+.atlas .atlas-squad-planning-summary__structure strong {
+  font-size: 0.68rem;
+}
+
+.atlas .atlas-squad-planning-summary__structure span {
+  color: var(--atlas-text-muted);
+  width: 100%;
+}
+
+.atlas .atlas-squad-planning-summary__structure .is-critical,
+.atlas .atlas-squad-planning-badge.is-critical {
+  color: var(--semantic-error-text);
+}
+.atlas .atlas-squad-planning-summary__structure .is-thin,
+.atlas .atlas-squad-planning-badge.is-thin,
+.atlas .atlas-squad-planning-badge.is-at_risk {
+  color: var(--semantic-warning-text);
+}
+.atlas .atlas-squad-planning-summary__structure .is-balanced,
+.atlas .atlas-squad-planning-badge.is-balanced,
+.atlas .atlas-squad-planning-badge.is-covered {
+  color: var(--semantic-success-text);
+}
+.atlas .atlas-squad-planning-summary__structure .is-overstocked,
+.atlas .atlas-squad-planning-badge.is-overstocked {
+  color: var(--semantic-info-text);
+}
+
+.atlas .atlas-squad-panel__heading {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.atlas .atlas-squad-panel__heading .atlas-squad-panel__title {
+  margin-bottom: 0;
+}
+.atlas .atlas-squad-planning-quiet {
+  color: var(--atlas-text-muted);
+  font-size: 0.74rem;
+}
+
+.atlas .atlas-squad-actions-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.atlas .atlas-squad-recommendation {
+  background: color-mix(in srgb, var(--atlas-surface-hover) 42%, transparent);
+  border: 1px solid var(--atlas-border);
+  border-left: 3px solid var(--atlas-text-muted);
+  border-radius: 8px;
+  padding: 12px;
+}
+.atlas .atlas-squad-recommendation.is-critical {
+  border-left-color: var(--semantic-error-border);
+}
+.atlas .atlas-squad-recommendation.is-high {
+  border-left-color: var(--semantic-warning-border);
+}
+.atlas .atlas-squad-recommendation.is-medium {
+  border-left-color: var(--semantic-info-border);
+}
+.atlas .atlas-squad-recommendation__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: var(--atlas-text-muted);
+  font-size: 0.65rem;
+}
+.atlas .atlas-squad-recommendation h3 {
+  color: var(--atlas-text);
+  font-size: 0.9rem;
+  margin: 10px 0 3px;
+}
+.atlas .atlas-squad-recommendation > strong {
+  color: var(--atlas-text-secondary);
+  font-size: 0.75rem;
+}
+.atlas .atlas-squad-recommendation p {
+  color: var(--atlas-text-secondary);
+  font-size: 0.74rem;
+  line-height: 1.4;
+  margin: 8px 0;
+}
+.atlas .atlas-squad-recommendation__players {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 0.72rem;
+}
+.atlas .atlas-squad-recommendation details {
+  border-top: 1px solid var(--atlas-border);
+  margin-top: 9px;
+  padding-top: 7px;
+}
+.atlas .atlas-squad-recommendation summary {
+  color: var(--atlas-text-muted);
+  cursor: pointer;
+  font-size: 0.68rem;
+}
+.atlas .atlas-squad-recommendation ul {
+  color: var(--atlas-text-secondary);
+  font-size: 0.7rem;
+  line-height: 1.4;
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+
+.atlas .atlas-squad-role-summary {
+  grid-template-columns: repeat(6, minmax(100px, 1fr));
+}
+.atlas .atlas-squad-role-summary__item {
+  border-top: 2px solid var(--atlas-border);
+}
+.atlas .atlas-squad-role-summary__item.is-core {
+  border-top-color: var(--atlas-accent);
+}
+.atlas .atlas-squad-role-summary__item.is-developing {
+  border-top-color: var(--semantic-info-border);
+}
+.atlas .atlas-squad-role-summary__item.is-prospect {
+  border-top-color: var(--semantic-success-border);
+}
+.atlas .atlas-squad-role-summary__item.is-transition {
+  border-top-color: var(--semantic-warning-border);
+}
+
+.atlas .atlas-squad-profile-table-wrap {
+  overflow-x: auto;
+}
+.atlas .atlas-squad-profile-table {
+  border-collapse: collapse;
+  min-width: 850px;
+  width: 100%;
+}
+.atlas .atlas-squad-profile-table th,
+.atlas .atlas-squad-profile-table td {
+  border-bottom: 1px solid color-mix(in srgb, var(--atlas-border) 72%, transparent);
+  color: var(--atlas-text-secondary);
+  font-size: 0.72rem;
+  padding: 10px 8px;
+  text-align: left;
+  vertical-align: top;
+}
+.atlas .atlas-squad-profile-table thead th {
+  color: var(--atlas-text-muted);
+  font-size: 0.63rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.atlas .atlas-squad-profile-table tbody th {
+  color: var(--atlas-text);
+  min-width: 145px;
+}
+.atlas .atlas-squad-profile-table tbody tr:last-child th,
+.atlas .atlas-squad-profile-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+.atlas .atlas-squad-profile-table details > summary {
+  cursor: pointer;
+  list-style-position: inside;
+}
+.atlas .atlas-squad-depth-cell {
+  display: grid;
+  gap: 2px;
+}
+.atlas .atlas-squad-depth-cell strong {
+  color: var(--atlas-text);
+  font-size: 0.92rem;
+}
+.atlas .atlas-squad-depth-cell small {
+  color: var(--atlas-text-muted);
+  font-size: 0.62rem;
+  white-space: nowrap;
+}
+.atlas .atlas-squad-planning-badge {
+  color: var(--atlas-text-secondary);
+  font-size: 0.67rem;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.atlas .atlas-squad-planning-cell {
+  display: grid;
+  gap: 4px;
+}
+.atlas .atlas-squad-planning-cell small {
+  color: var(--atlas-text-muted);
+  font-size: 0.62rem;
+}
+.atlas .atlas-squad-planning-cell select,
+.atlas .atlas-squad-filters select {
+  background: var(--atlas-surface);
+  border: 1px solid var(--atlas-border);
+  border-radius: 5px;
+  color: var(--atlas-text-secondary);
+  font-size: 0.65rem;
+  padding: 3px 5px;
+}
+.atlas .atlas-squad-profile-detail {
+  background: var(--atlas-surface-hover);
+  border: 1px solid var(--atlas-border);
+  border-radius: 7px;
+  display: grid;
+  gap: 10px;
+  margin: 10px 0 2px;
+  min-width: 600px;
+  padding: 10px;
+}
+.atlas .atlas-squad-profile-detail h4 {
+  color: var(--atlas-text-muted);
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  margin: 0 0 5px;
+  text-transform: uppercase;
+}
+.atlas .atlas-squad-profile-detail ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.atlas .atlas-squad-profile-detail li {
+  align-items: baseline;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 10px;
+  padding: 3px 0;
+}
+.atlas .atlas-squad-profile-detail li > span {
+  color: var(--atlas-text-muted);
+  font-size: 0.67rem;
+}
+.atlas .atlas-squad-profile-detail__succession {
+  display: grid;
+  gap: 4px;
+}
+.atlas .atlas-squad-profile-detail__succession > span {
+  color: var(--atlas-text-secondary);
+  font-size: 0.7rem;
+}
+.atlas .atlas-squad-profile-detail__notice {
+  border-left: 2px solid var(--semantic-warning-border);
+  color: var(--atlas-text-secondary);
+  font-size: 0.7rem;
+  line-height: 1.4;
+  margin: 0;
+  padding-left: 8px;
+}
+.atlas .atlas-squad-profile-detail__reasons {
+  color: var(--atlas-text-muted);
+  font-size: 0.68rem;
+  padding-left: 17px;
+}
+.atlas .atlas-squad-filters {
+  align-items: end;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.atlas .atlas-squad-filters label {
+  color: var(--atlas-text-muted);
+  display: grid;
+  font-size: 0.63rem;
+  font-weight: 750;
+  gap: 4px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 1000px) {
+  .atlas .atlas-squad-planning-summary {
+    grid-template-columns: 1fr;
   }
 }

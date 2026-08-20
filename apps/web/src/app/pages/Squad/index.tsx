@@ -1,15 +1,27 @@
+import type { ReactNode } from "react";
 import { formatTrainingPriority } from "../../formatters";
 import type { DiagnosticFinding, DiagnosticParameterValue } from "@atlas/web/app/types";
-import {
-  formatEta,
-  formatNumber,
-  formatPercentage,
-  formatTalent
-} from "../../formatters";
+import type { SquadRole } from "@atlas/domain";
+import { formatEta, formatNumber, formatPercentage, formatTalent } from "../../formatters";
 import { AttentionIcon } from "../../components/AttentionIcon";
 import { PlayerLink } from "../../components/PlayerLink";
 import { StatusBadge } from "../../components/StatusBadge";
 import type { SquadAttentionProps, SquadTableProps, SquadProps } from "./types";
+import {
+  SquadPlanningSections,
+  describeManualRoleConflict,
+  planningConfidenceWarning,
+  roleOptionLabel,
+  roleOptions
+} from "./SquadPlanningSections";
+import { useSquadPlanning } from "./useSquadPlanning";
+import {
+  formatContributionScore,
+  lifecycleLabel,
+  profileLabel,
+  roleLabel,
+  type SquadPlanningFilters
+} from "./squad-planning-view-model";
 import {
   createSquadAttentionFindings,
   createSquadPlayerRows,
@@ -31,7 +43,10 @@ const TRAINING_POSITION_TITLES: Record<TrainingPositionCode, string> = {
 export function Squad({
   development,
   onSelectPlayer,
+  onSaveSquadRole,
   projectionSummaries,
+  squadPlanning,
+  squadPlanningStatus,
   training,
   trainingDiagnostic,
   trainingStatus
@@ -43,6 +58,10 @@ export function Squad({
     trainingDiagnostic,
     trainingStatus
   });
+  const { filteredRows, filters, setProfileFilter, setRoleFilter, viewModel } = useSquadPlanning({
+    planning: squadPlanning,
+    rows
+  });
 
   return (
     <div className="atlas-squad">
@@ -50,12 +69,105 @@ export function Squad({
         <h1>Squad</h1>
       </header>
 
+      {squadPlanningStatus === "loading" ? (
+        <SquadMessage>Loading squad planning...</SquadMessage>
+      ) : null}
+      {squadPlanningStatus === "error" ? (
+        <SquadMessage tone="error">
+          Squad Planning is unavailable. Basic squad data remains available.
+        </SquadMessage>
+      ) : null}
+      {squadPlanningStatus === "idle" ? (
+        <SquadMessage>Squad planning data is not available yet.</SquadMessage>
+      ) : null}
+      {squadPlanningStatus === "ready" && viewModel ? (
+        <>
+          <SquadPlanningSections onSelectPlayer={onSelectPlayer} viewModel={viewModel} />
+          {planningConfidenceWarning(viewModel) ? (
+            <SquadMessage tone="quiet">{planningConfidenceWarning(viewModel)}</SquadMessage>
+          ) : null}
+        </>
+      ) : null}
+
       <SquadAttention diagnostic={trainingDiagnostic} status={trainingStatus} />
 
       <h2 id="squad-players-title" className="atlas-squad__section-title">
         Players
       </h2>
-      <SquadTable onSelectPlayer={onSelectPlayer} rows={rows} status={trainingStatus} />
+      <SquadPlanningFiltersBar
+        filters={filters}
+        onProfileChange={setProfileFilter}
+        onRoleChange={setRoleFilter}
+        planningAvailable={squadPlanningStatus === "ready" && squadPlanning !== null}
+      />
+      <SquadTable
+        onSaveSquadRole={onSaveSquadRole}
+        onSelectPlayer={onSelectPlayer}
+        planning={squadPlanning}
+        rows={filteredRows}
+        status={trainingStatus}
+      />
+    </div>
+  );
+}
+
+interface SquadPlanningFiltersBarProps {
+  filters: SquadPlanningFilters;
+  onProfileChange: (profile: SquadPlanningFilters["profile"]) => void;
+  onRoleChange: (role: SquadPlanningFilters["role"]) => void;
+  planningAvailable: boolean;
+}
+
+function SquadPlanningFiltersBar({
+  filters,
+  onProfileChange,
+  onRoleChange,
+  planningAvailable
+}: SquadPlanningFiltersBarProps) {
+  return (
+    <div className="atlas-squad-filters" aria-label="Squad filters">
+      <label>
+        Role
+        <select
+          disabled={!planningAvailable}
+          value={filters.role}
+          onChange={(event) => onRoleChange(event.target.value as SquadPlanningFilters["role"])}
+        >
+          <option value="all">All</option>
+          <option value="attention">Attention</option>
+          {roleOptions().map((role) => (
+            <option key={role} value={role}>
+              {roleOptionLabel(role)}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label>
+        Development Profile
+        <select
+          disabled={!planningAvailable}
+          value={filters.profile}
+          onChange={(event) =>
+            onProfileChange(event.target.value as SquadPlanningFilters["profile"])
+          }
+        >
+          <option value="all">All profiles</option>
+          {(
+            [
+              "goalkeeper",
+              "central_defender",
+              "wing_defender",
+              "central_midfielder",
+              "winger",
+              "forward"
+            ] as const
+          ).map((profile) => (
+            <option key={profile} value={profile}>
+              {profileLabel(profile)}
+            </option>
+          ))}
+        </select>
+      </label>
     </div>
   );
 }
@@ -113,7 +225,7 @@ function SquadAttentionItem({ finding }: SquadAttentionItemProps) {
   );
 }
 
-function SquadTable({ onSelectPlayer, rows, status }: SquadTableProps) {
+function SquadTable({ onSaveSquadRole, onSelectPlayer, planning, rows, status }: SquadTableProps) {
   if (status === "loading") {
     return <SquadMessage>Loading squad...</SquadMessage>;
   }
@@ -147,7 +259,12 @@ function SquadTable({ onSelectPlayer, rows, status }: SquadTableProps) {
               </h3>
               <span>{positionRows.length} players</span>
             </div>
-            <SquadPositionTable onSelectPlayer={onSelectPlayer} rows={positionRows} />
+            <SquadPositionTable
+              onSaveSquadRole={onSaveSquadRole}
+              onSelectPlayer={onSelectPlayer}
+              planning={planning}
+              rows={positionRows}
+            />
           </section>
         );
       })}
@@ -156,17 +273,28 @@ function SquadTable({ onSelectPlayer, rows, status }: SquadTableProps) {
 }
 
 interface SquadPositionTableProps {
+  onSaveSquadRole: SquadTableProps["onSaveSquadRole"];
   onSelectPlayer: (playerId: string) => void;
+  planning: SquadTableProps["planning"];
   rows: SquadPlayerRow[];
 }
 
-function SquadPositionTable({ onSelectPlayer, rows }: SquadPositionTableProps) {
+function SquadPositionTable({
+  onSaveSquadRole,
+  onSelectPlayer,
+  planning,
+  rows
+}: SquadPositionTableProps) {
+  const playersById = new Map(
+    (planning?.assessment.depthPlayers ?? []).map((player) => [String(player.playerId), player])
+  );
   return (
     <div className="atlas-squad-table-wrap">
       <table className="atlas-squad-table">
         <colgroup>
           <col className="is-player" />
           <col className="is-age" />
+          <col className="is-planning" />
           <col className="is-form" />
           {SQUAD_SKILL_DEFINITIONS.map((skill) => (
             <col className="is-skill" key={skill.key} />
@@ -182,7 +310,7 @@ function SquadPositionTable({ onSelectPlayer, rows }: SquadPositionTableProps) {
         </colgroup>
         <thead>
           <tr className="atlas-squad-table__group-row">
-            <th colSpan={2} scope="colgroup">
+            <th colSpan={3} scope="colgroup">
               Player
             </th>
             <th
@@ -199,6 +327,7 @@ function SquadPositionTable({ onSelectPlayer, rows }: SquadPositionTableProps) {
           <tr>
             <th scope="col">Player</th>
             <th scope="col">Age</th>
+            <th scope="col">Planning</th>
             <th scope="col" title="Form">
               Form
             </th>
@@ -234,11 +363,17 @@ function SquadPositionTable({ onSelectPlayer, rows }: SquadPositionTableProps) {
         <tbody>
           {rows.length > 0 ? (
             rows.map((row) => (
-              <SquadPlayerRowView key={row.playerId} onSelectPlayer={onSelectPlayer} row={row} />
+              <SquadPlayerRowView
+                key={row.playerId}
+                onSaveSquadRole={onSaveSquadRole}
+                onSelectPlayer={onSelectPlayer}
+                planningPlayer={playersById.get(row.playerId) ?? null}
+                row={row}
+              />
             ))
           ) : (
             <tr>
-              <td className="atlas-squad-table__empty" colSpan={19}>
+              <td className="atlas-squad-table__empty" colSpan={20}>
                 No players assigned.
               </td>
             </tr>
@@ -250,11 +385,21 @@ function SquadPositionTable({ onSelectPlayer, rows }: SquadPositionTableProps) {
 }
 
 interface SquadPlayerRowViewProps {
+  onSaveSquadRole: SquadTableProps["onSaveSquadRole"];
   onSelectPlayer: (playerId: string) => void;
+  planningPlayer:
+    NonNullable<SquadTableProps["planning"]>["assessment"]["depthPlayers"][number] | null;
   row: SquadPlayerRow;
 }
 
-function SquadPlayerRowView({ onSelectPlayer, row }: SquadPlayerRowViewProps) {
+function SquadPlayerRowView({
+  onSaveSquadRole,
+  onSelectPlayer,
+  planningPlayer,
+  row
+}: SquadPlayerRowViewProps) {
+  const manualRole = planningPlayer?.manualRole?.role ?? null;
+  const automaticRole = planningPlayer?.automaticRole ?? null;
   return (
     <tr>
       <th scope="row">
@@ -263,6 +408,46 @@ function SquadPlayerRowView({ onSelectPlayer, row }: SquadPlayerRowViewProps) {
         </PlayerLink>
       </th>
       <td className="atlas-squad-table__numeric">{row.age}</td>
+      <td>
+        {planningPlayer ? (
+          <div className="atlas-squad-planning-cell">
+            <span className={`atlas-squad-planning-badge is-${planningPlayer.role}`}>
+              {roleLabel(planningPlayer.role)}
+            </span>
+            <small>
+              {planningPlayer.profile ? profileLabel(planningPlayer.profile) : "No profile"}
+            </small>
+            <small>{lifecycleLabel(planningPlayer.lifecycle)}</small>
+            <small>
+              Current {formatContributionScore(planningPlayer.currentContributionScore)} · Future{" "}
+              {formatContributionScore(planningPlayer.futureContributionScore)}
+            </small>
+            {automaticRole && manualRole && automaticRole !== manualRole ? (
+              <small>{describeManualRoleConflict(automaticRole, manualRole)}</small>
+            ) : null}
+            <select
+              aria-label={`Manual squad role for ${row.playerName}`}
+              value={manualRole ?? "automatic"}
+              onChange={(event) => {
+                const value = event.target.value;
+                void onSaveSquadRole(
+                  row.playerId,
+                  value === "automatic" ? null : (value as SquadRole)
+                );
+              }}
+            >
+              <option value="automatic">Automatic</option>
+              {roleOptions().map((role) => (
+                <option key={role} value={role}>
+                  {roleOptionLabel(role)}
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : (
+          "—"
+        )}
+      </td>
       <td className="atlas-squad-table__numeric">{row.form ?? "—"}</td>
       {SQUAD_SKILL_DEFINITIONS.map((skill) => (
         <td className="atlas-squad-table__numeric" key={skill.key}>
@@ -270,9 +455,7 @@ function SquadPlayerRowView({ onSelectPlayer, row }: SquadPlayerRowViewProps) {
         </td>
       ))}
       <td>{row.training.trainedSkill ?? "—"}</td>
-      <td className="atlas-squad-table__center">
-        {row.training.trainingKind ?? "—"}
-      </td>
+      <td className="atlas-squad-table__center">{row.training.trainingKind ?? "—"}</td>
       <td className="atlas-squad-table__numeric">{formatPercentage(row.training.intensity)}</td>
       <td className="atlas-squad-table__numeric">{formatPercentage(row.training.progress)}</td>
       <td className="atlas-squad-table__numeric">{formatTalent(row.development.talent)}</td>
@@ -294,7 +477,7 @@ function SquadStatus({ status }: SquadStatusProps) {
 }
 
 interface SquadMessageProps {
-  children: string;
+  children: ReactNode;
   tone?: "error" | "quiet";
 }
 
@@ -343,7 +526,10 @@ function describeSquadFinding(finding: DiagnosticFinding): string {
         ")."
       );
     case "training-potential.young-role-fit":
-      return diagnosticStringValue(parameters.playerName) + " es joven y muestra un buen ajuste para su rol.";
+      return (
+        diagnosticStringValue(parameters.playerName) +
+        " es joven y muestra un buen ajuste para su rol."
+      );
     case "follow-up.incomplete-player-data":
       return (
         diagnosticStringValue(parameters.playerName) +
@@ -363,7 +549,5 @@ function diagnosticStringValue(value: DiagnosticParameterValue | undefined): str
 }
 
 function formatDiagnosticNumber(value: DiagnosticParameterValue | undefined): string {
-  return typeof value === "number"
-    ? value.toLocaleString("es-AR")
-    : diagnosticStringValue(value);
+  return typeof value === "number" ? value.toLocaleString("es-AR") : diagnosticStringValue(value);
 }

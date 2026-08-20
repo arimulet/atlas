@@ -3,11 +3,17 @@ import type {
   ImportResponse,
   PlayerDevelopment,
   RealYouthAcademyPlanning,
+  SquadPlanningData,
   TrainingPageData,
   WeeklyTrainingIntelligence,
   YouthPipelinePlanning
 } from "./types";
-import type { PlayerDevelopmentTargetOverride } from "@atlas/domain";
+import type {
+  PlayerDevelopmentTargetOverride,
+  SquadDepthAnalysis,
+  SquadPlanningRecommendations,
+  SquadRole
+} from "@atlas/domain";
 
 export interface PlayerDevelopmentTargetOverrideResponse {
   id: string;
@@ -62,6 +68,67 @@ export async function fetchPlayerDevelopment(clubId: string): Promise<PlayerDeve
   }
 
   return body;
+}
+
+export async function fetchSquadPlanning(clubId: string): Promise<SquadPlanningData> {
+  const response = await fetch(`/api/clubs/${clubId}/players/squad-planning`);
+  const body = (await response.json()) as SquadPlanningData;
+
+  if (!response.ok || !body) {
+    throw new Error("Squad Planning API returned an unexpected response.");
+  }
+
+  return body;
+}
+
+export async function fetchSquadDepthAnalysis(clubId: string): Promise<SquadDepthAnalysis> {
+  const response = await fetch(`/api/clubs/${clubId}/players/squad-depth`);
+  const body = (await response.json()) as SquadDepthAnalysis;
+
+  if (!response.ok || !body) {
+    throw new Error("Squad depth API returned an unexpected response.");
+  }
+
+  return body;
+}
+
+export async function fetchSquadPlanningRecommendations(
+  clubId: string
+): Promise<SquadPlanningRecommendations> {
+  const response = await fetch(`/api/clubs/${clubId}/players/squad-planning-recommendations`);
+  const body = (await response.json()) as SquadPlanningRecommendations;
+
+  if (!response.ok || !body) {
+    throw new Error("Squad planning recommendations API returned an unexpected response.");
+  }
+
+  return body;
+}
+
+export async function saveSquadRoleAssignment(
+  clubId: string,
+  playerId: string,
+  role: SquadRole
+): Promise<void> {
+  const response = await fetch(`/api/clubs/${clubId}/players/${playerId}/squad-role`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ role })
+  });
+
+  if (!response.ok) {
+    throw new Error("Squad role API returned an unexpected response.");
+  }
+}
+
+export async function resetSquadRoleAssignment(clubId: string, playerId: string): Promise<void> {
+  const response = await fetch(`/api/clubs/${clubId}/players/${playerId}/squad-role`, {
+    method: "DELETE"
+  });
+
+  if (!response.ok) {
+    throw new Error("Squad role API returned an unexpected response.");
+  }
 }
 
 export async function fetchPlayerDevelopmentTarget(
