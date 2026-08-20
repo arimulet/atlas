@@ -4,6 +4,42 @@ export const clubParamsSchema = z.object({
   clubId: z.string().min(1)
 });
 
+export const playerDevelopmentTargetParamsSchema = clubParamsSchema.extend({
+  playerId: z.coerce.number().int().positive()
+});
+
+export const playerDevelopmentTargetBodySchema = z
+  .object({
+    profile: z
+      .enum([
+        "goalkeeper",
+        "central_defender",
+        "wing_defender",
+        "central_midfielder",
+        "winger",
+        "forward"
+      ])
+      .nullable()
+      .optional(),
+    targetLevels: z
+      .record(
+        z.enum([
+          "stamina",
+          "pace",
+          "technique",
+          "passing",
+          "keeper",
+          "defender",
+          "playmaker",
+          "striker"
+        ]),
+        z.number().int().min(1).max(18)
+      )
+      .optional(),
+    targetAge: z.number().int().min(1).nullable().optional()
+  })
+  .strict();
+
 export const sokkerSyncRequestSchema = z.object({
   login: z.string().min(1),
   password: z.string().min(1)

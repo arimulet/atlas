@@ -1,5 +1,5 @@
 import { formatTrainingPriority } from "../formatters";
-import { calculateRequiredTrainingPoints } from "@atlas/domain";
+import { calculateRequiredTrainingPoints, type DevelopmentPlayer } from "@atlas/domain";
 import type {
   DashboardStatus,
   DiagnosticFinding,
@@ -34,6 +34,7 @@ export interface PlayerDetailViewModel {
     name: string;
     age: number;
   };
+  developmentPlayer: (DevelopmentPlayer & { age: number }) | null;
   skills: Array<{
     key: SkillKey;
     label: string;
@@ -151,6 +152,7 @@ export function createPlayerDetailViewModel(
       name: player.name,
       age: player.age
     },
+    developmentPlayer: createDevelopmentPlayer(player.id, observedPlayer),
     skills: SKILL_DEFINITIONS.map((definition) => ({
       key: definition.key,
       label: formatTrainingPriority(definition.trainingPriority),
@@ -178,6 +180,35 @@ export function createPlayerDetailViewModel(
     recentSkillUps: createRecentSkillUps(input.training, observedPlayer?.playerId ?? null),
     trainingHistory: createTrainingHistoryRows(input.training, observedPlayer?.playerId ?? null)
   };
+}
+
+function createDevelopmentPlayer(
+  playerId: string,
+  observedPlayer: PlayerDevelopment["observed"]["players"][number] | undefined
+): (DevelopmentPlayer & { age: number }) | null {
+  const stablePlayerId = observedPlayer?.playerId ?? playerId;
+  const numericPlayerId = Number(stablePlayerId);
+
+  if (!Number.isInteger(numericPlayerId) || numericPlayerId <= 0 || observedPlayer === undefined) {
+    return null;
+  }
+
+  return {
+    playerId: numericPlayerId,
+    age: observedPlayer.age,
+    observedPosition: toObservedPosition(observedPlayer.observedPosition),
+    skills: observedPlayer.skills
+  };
+}
+
+function toObservedPosition(value: string | null): DevelopmentPlayer["observedPosition"] {
+  return value === "goalkeeper" ||
+    value === "defender" ||
+    value === "midfielder" ||
+    value === "winger" ||
+    value === "striker"
+    ? value
+    : null;
 }
 
 export function createPlayerTrainingProjectionSummaries(

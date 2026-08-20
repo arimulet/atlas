@@ -271,6 +271,7 @@ export function App() {
         />
       ) : activeView === "player-detail" ? (
         <PlayerDetail
+          clubId={activeClubId}
           development={playerDevelopment}
           onBack={handleBackFromPlayerDetail}
           onBackToSquad={() => navigate(pathForMainView("squad"), { replace: true })}

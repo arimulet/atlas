@@ -32,6 +32,10 @@ export class MongoPlayerDevelopmentTargetRepository {
 
     return mapOverride(target);
   }
+
+  async deleteManualOverride(input: { playerId: number; clubId: number }): Promise<void> {
+    await getPlayerDevelopmentTargetModel().deleteOne(input);
+  }
 }
 
 function mapOverride(target: {

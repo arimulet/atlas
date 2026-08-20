@@ -1,3 +1,4 @@
+import { Component, type ReactNode } from "react";
 import type { DiagnosticFinding, DiagnosticParameterValue } from "@atlas/web/app/types";
 import type { PlayerDetailProps } from "./types";
 import { ProjectionPanel } from "./ProjectionPanel";
@@ -9,8 +10,11 @@ import {
   createPlayerDetailViewModel,
   type PlayerDetailViewModel
 } from "../../view-models/player-detail-view-model";
+import { PlayerDevelopmentPlan } from "./PlayerDevelopmentPlan";
+import { usePlayerDevelopmentPlan } from "./usePlayerDevelopmentPlan";
 
 export function PlayerDetail({
+  clubId,
   development,
   onBack,
   playerId,
@@ -49,6 +53,35 @@ export function PlayerDetail({
   }
 
   return (
+    <PlayerDetailContent
+      clubId={clubId ?? null}
+      player={viewModel}
+      training={training}
+      trainingDiagnostic={trainingDiagnostic}
+      trainingStatus={trainingStatus}
+      onBack={onBack}
+    />
+  );
+}
+
+interface PlayerDetailContentProps {
+  clubId: string | null;
+  player: PlayerDetailViewModel;
+  training: PlayerDetailProps["training"];
+  trainingDiagnostic: PlayerDetailProps["trainingDiagnostic"];
+  trainingStatus: PlayerDetailProps["trainingStatus"];
+  onBack: PlayerDetailProps["onBack"];
+}
+
+function PlayerDetailContent({
+  clubId,
+  player: viewModel,
+  training,
+  trainingDiagnostic,
+  trainingStatus,
+  onBack
+}: PlayerDetailContentProps) {
+  return (
     <div className="atlas-player-detail">
       <PlayerHeader player={viewModel.player} training={viewModel.training} onBack={onBack} />
       <PlayerAttention
@@ -64,10 +97,77 @@ export function PlayerDetail({
         <TalentPanel talent={viewModel.talent} />
         <ProjectionPanel projection={viewModel.projection} training={viewModel.training} />
       </div>
+      <DevelopmentPlanBoundary key={viewModel.player.id}>
+        <DevelopmentPlanSection clubId={clubId} player={viewModel} training={training} />
+      </DevelopmentPlanBoundary>
       <ProgressPanel rows={viewModel.recentSkillUps} />
       <TrainingHistoryPanel rows={viewModel.trainingHistory} />
     </div>
   );
+}
+
+interface DevelopmentPlanSectionProps {
+  clubId: string | null;
+  player: PlayerDetailViewModel;
+  training: PlayerDetailProps["training"];
+}
+
+function DevelopmentPlanSection({ clubId, player, training }: DevelopmentPlanSectionProps) {
+  const developmentPlan = usePlayerDevelopmentPlan({ clubId, player, training });
+
+  return (
+    <PlayerDevelopmentPlan
+      plan={developmentPlan.plan}
+      isLoading={developmentPlan.isLoading}
+      isSaving={developmentPlan.isSaving}
+      error={developmentPlan.error}
+      onUpdateTarget={developmentPlan.updateTarget}
+      onResetToAutomatic={developmentPlan.resetToAutomatic}
+    />
+  );
+}
+
+interface DevelopmentPlanBoundaryProps {
+  children: ReactNode;
+}
+
+interface DevelopmentPlanBoundaryState {
+  hasError: boolean;
+}
+
+class DevelopmentPlanBoundary extends Component<
+  DevelopmentPlanBoundaryProps,
+  DevelopmentPlanBoundaryState
+> {
+  public state: DevelopmentPlanBoundaryState = { hasError: false };
+
+  public static getDerivedStateFromError(): DevelopmentPlanBoundaryState {
+    return { hasError: true };
+  }
+
+  public componentDidCatch(): void {
+    // Development Plan failures remain local to this section.
+  }
+
+  public render(): ReactNode {
+    if (this.state.hasError) {
+      return (
+        <section
+          className="atlas-player-detail-panel"
+          aria-labelledby="player-development-error-title"
+        >
+          <h2 className="atlas-player-detail-panel__title" id="player-development-error-title">
+            Development Plan
+          </h2>
+          <p className="atlas-player-detail__message">
+            Development Plan is temporarily unavailable. Other player details remain available.
+          </p>
+        </section>
+      );
+    }
+
+    return this.props.children;
+  }
 }
 
 interface PlayerHeaderProps {
@@ -328,7 +428,10 @@ function describePlayerFinding(finding: DiagnosticFinding): string {
         ")."
       );
     case "training-potential.young-role-fit":
-      return diagnosticStringValue(parameters.playerName) + " es joven y muestra un buen ajuste para su rol.";
+      return (
+        diagnosticStringValue(parameters.playerName) +
+        " es joven y muestra un buen ajuste para su rol."
+      );
     case "follow-up.incomplete-player-data":
       return (
         diagnosticStringValue(parameters.playerName) +
@@ -348,7 +451,5 @@ function diagnosticStringValue(value: DiagnosticParameterValue | undefined): str
 }
 
 function formatDiagnosticNumber(value: DiagnosticParameterValue | undefined): string {
-  return typeof value === "number"
-    ? value.toLocaleString("es-AR")
-    : diagnosticStringValue(value);
+  return typeof value === "number" ? value.toLocaleString("es-AR") : diagnosticStringValue(value);
 }
