@@ -86,7 +86,7 @@ describe("SokkerSyncPersistence", () => {
     expect(second.snapshotId).toBe(first.snapshotId);
   });
 
-  it("does not create unused auxiliary collections during sync", async () => {
+  it("does not create unrelated auxiliary collections during sync", async () => {
     const payload = createPayload();
     const persistence = new SokkerSyncPersistence();
 
@@ -97,7 +97,14 @@ describe("SokkerSyncPersistence", () => {
       .toArray();
     const collectionNames = collections.map((collection) => collection.name).sort();
 
-    expect(collectionNames).toEqual(["clubs", "players", "snapshots", "syncruns", "trainingweeks"]);
+    expect(collectionNames).toEqual([
+      "clubs",
+      "players",
+      "playertransfers",
+      "snapshots",
+      "syncruns",
+      "trainingweeks"
+    ]);
   });
 
   it("replaces a corrected TrainingHistory fact at the same natural key", async () => {

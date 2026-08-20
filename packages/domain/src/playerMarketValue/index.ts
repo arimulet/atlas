@@ -23,6 +23,10 @@ import type {
 
 export * from "./constants.js";
 export * from "./types.js";
+export * from "./calibration-constants.js";
+export * from "./calibration-types.js";
+export * from "./comparables.js";
+export * from "./calibration.js";
 
 const VALID_MINIMUM_AGE = 15;
 const VALID_MAXIMUM_AGE = 45;
@@ -43,9 +47,9 @@ export function calculateSkillValue(
   const weightedCurve = definition.relevantSkills.reduce((total, item) => {
     const level = readSkill(player.skills, item.skill);
     const weight = DEVELOPMENT_PRIORITY_WEIGHTS[item.priority];
-    return total + skillCurve(level ?? 0, config) * weight;
+    return total + calculateMarketSkillCurve(level ?? 0, config) * weight;
   }, 0);
-  const referenceCurve = skillCurve(config.referenceSkillLevel, config);
+  const referenceCurve = calculateMarketSkillCurve(config.referenceSkillLevel, config);
 
   return roundMoney(
     config.baseValue * (weightedCurve / (totalWeight * Math.max(referenceCurve, 1)))
@@ -420,7 +424,10 @@ function readSokkerValue(player: PlayerMarketValuePlayerInput): number | null {
   return typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : null;
 }
 
-function skillCurve(level: number, config: PlayerMarketValueConfig): number {
+export function calculateMarketSkillCurve(
+  level: number,
+  config: PlayerMarketValueConfig = PLAYER_MARKET_VALUE_CONFIG
+): number {
   return Math.pow(clamp(level, VALID_MINIMUM_SKILL, VALID_MAXIMUM_SKILL), config.skillExponent);
 }
 
