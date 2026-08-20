@@ -5,6 +5,15 @@ import {
   type PlayerDevelopmentTargetOverride
 } from "@atlas/domain";
 
+export {
+  createDevelopmentSimulationState,
+  generateNextTrainingCandidates,
+  generatePlayerTrainingPath,
+  getNextPlannedTrainingStep,
+  selectBestTrainingCandidate,
+  validateDevelopmentTarget
+} from "@atlas/domain";
+
 export type {
   DevelopmentPlayer,
   DevelopmentProfile,
@@ -12,9 +21,16 @@ export type {
   DevelopmentProfileSuggestion,
   DevelopmentSkill,
   DevelopmentTargetSkill,
+  DevelopmentMilestone,
+  DevelopmentSimulationState,
   PlayerDevelopmentGap,
   PlayerDevelopmentTarget,
-  PlayerDevelopmentTargetOverride
+  PlayerDevelopmentTargetOverride,
+  PlayerTrainingPath,
+  TrainingPathCandidate,
+  TrainingPathContext,
+  TrainingPathReason,
+  TrainingPathStep
 } from "@atlas/domain";
 
 export function buildPlayerDevelopmentPlan(
