@@ -11,11 +11,14 @@ import {
   buildWeeklyTrainingReport,
   createTrainingWeek,
   estimateTalentFromTrainingHistory,
+  optimizeAdvancedTrainingSlots,
   type PlayerSkill,
   type PlayerSkills,
   type PlayerSkillsChange
 } from "@atlas/domain";
 import type {
+  AdvancedTrainingCandidateContext,
+  AdvancedTrainingOptimization,
   PlayerTrainingRecommendation,
   TrainingHistory,
   WeeklyTrainingReport
@@ -175,6 +178,110 @@ export async function getTrainingRecommendations(
       ];
     })
   );
+}
+
+export async function getAdvancedTrainingOptimization(
+  clubId: ClubId,
+  gameWeek?: number
+): Promise<AdvancedTrainingOptimization> {
+  const club = await clubRepository.findById(clubId.toString());
+
+  if (!club) {
+    throw new Error(`Club not found: ${clubId}`);
+  }
+
+  const [reports, snapshots] = await Promise.all([
+    trainingWeekRepository.listByClub(club.clubId),
+    snapshotRepository.listByClub(clubId)
+  ]);
+  const histories = buildTrainingHistories(reports);
+  const talentByPlayer = new Map<number, ReturnType<typeof estimateTalentFromTrainingHistory>>();
+
+  for (const history of histories) {
+    talentByPlayer.set(history.playerId, estimateTalentFromTrainingHistory(history));
+  }
+
+  const talents = new Map<number, number | null>();
+  for (const [playerId, estimate] of talentByPlayer) {
+    talents.set(playerId, estimate.value);
+  }
+
+  const weeklyReport = buildWeeklyTrainingReport({
+    players: histories.map((history) => ({ history })),
+    gameWeek,
+    talents
+  });
+  const latestSnapshot = snapshots.at(-1);
+  const weeklyReportByPlayer = new Map(
+    weeklyReport.players.map((playerReport) => [playerReport.playerId, playerReport])
+  );
+  const recommendationByPlayer = new Map<number, PlayerTrainingRecommendation>();
+
+  buildTrainingRecommendations(
+    weeklyReport.players.flatMap((playerReport) => {
+      const history = histories.find((candidate) => candidate.playerId === playerReport.playerId);
+      const currentWeek = history?.weeks.find((week) => week.week === playerReport.gameWeek);
+      if (!history || !currentWeek) {
+        return [];
+      }
+
+      const snapshotPlayer = latestSnapshot?.players.find(
+        (player) => player.playerId === playerReport.playerId
+      );
+
+      return [
+        {
+          player: {
+            playerId: playerReport.playerId,
+            age: currentWeek.playerAge,
+            position: snapshotPlayer?.observedPosition ?? null,
+            skills: currentWeek.skills
+          },
+          weeklyReport: playerReport,
+          trainingHistory: history,
+          talent: talentByPlayer.get(playerReport.playerId) ?? null
+        }
+      ];
+    })
+  ).forEach((recommendation) => {
+    recommendationByPlayer.set(recommendation.playerId, recommendation);
+  });
+
+  const contexts: AdvancedTrainingCandidateContext[] = histories.flatMap((history) => {
+    const currentWeek = history.weeks.find((week) => week.week === weeklyReport.gameWeek);
+    if (!currentWeek) {
+      return [];
+    }
+
+    const snapshotPlayer = latestSnapshot?.players.find(
+      (player) => player.playerId === history.playerId
+    );
+    return [
+      {
+        player: {
+          playerId: history.playerId,
+          age: currentWeek.playerAge,
+          position: snapshotPlayer?.observedPosition ?? null,
+          skills: currentWeek.skills
+        },
+        weeklyReport: weeklyReportByPlayer.get(history.playerId),
+        trainingRecommendation: recommendationByPlayer.get(history.playerId),
+        trainingHistory: history,
+        currentTraining: {
+          skill: currentWeek.skill,
+          kind: snapshotPlayer
+            ? snapshotPlayer.training.advanced
+              ? "advanced"
+              : "formation"
+            : currentWeek.kind,
+          intensity: currentWeek.intensity
+        },
+        talent: talentByPlayer.get(history.playerId) ?? null
+      }
+    ];
+  });
+
+  return optimizeAdvancedTrainingSlots(contexts, weeklyReport.gameWeek);
 }
 
 function buildTrainingHistories(

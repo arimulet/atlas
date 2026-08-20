@@ -9,6 +9,7 @@ import {
   MAX_TRAINING_EFFICIENCY,
   SKILL_LEVEL_TRAINING_FACTOR,
   SKILL_TRAINING_BASE_LEVEL,
+  TRAINING_KIND_EFFECTIVENESS,
   TRAINING_RECOMMENDATION_SCORE_NORMALIZATION_BASE,
   SUPPORTED_TRAINING_SKILLS
 } from "./constants.js";
@@ -56,6 +57,7 @@ import type {
   TalentEstimationInput,
   TalentEstimationResult,
   DevelopmentReturnScoreInput,
+  TrainingPointsByKindInput,
   WeeklyTrainingPlayerInput,
   WeeklyTrainingPlayerReport,
   WeeklyTrainingReport,
@@ -83,6 +85,10 @@ export {
   MAX_TRAINING_EFFICIENCY,
   SKILL_LEVEL_TRAINING_FACTOR,
   SKILL_TRAINING_BASE_LEVEL,
+  TRAINING_KIND_EFFECTIVENESS,
+  ADVANCED_TRAINING_SLOT_COUNT,
+  ADVANCED_SLOT_HIGH_DEVELOPMENT_POTENTIAL_THRESHOLD,
+  ADVANCED_SLOT_REPLACEMENT_THRESHOLD,
   TRAINING_RECOMMENDATION_HIGH_NEXT_LEVEL_WEEKS,
   TRAINING_RECOMMENDATION_MIN_HISTORY_WEEKS,
   TRAINING_RECOMMENDATION_RECENT_SWITCH_THRESHOLD,
@@ -146,6 +152,16 @@ export type {
   TrainingRecommendationReason,
   PlayerTrainingRecommendation,
   DevelopmentReturnScoreInput,
+  TrainingPointsByKindInput,
+  AdvancedTrainingCandidateContext,
+  AdvancedSlotEvaluation,
+  AdvancedTrainingRankingEntry,
+  AdvancedTrainingRecommendation,
+  AdvancedSlotReason,
+  AdvancedTrainingPlayerRecommendation,
+  AdvancedSlotReplacement,
+  AdvancedSlotScoreInput,
+  AdvancedTrainingOptimization,
   WeeklyTrainingPlayerInput,
   WeeklyTrainingPlayerReport,
   WeeklyTrainingReport,
@@ -188,6 +204,11 @@ export function calculateWeeklyTrainingPoints(intensity: number): number {
   assertEfficiency(intensity, "intensity");
 
   return intensity;
+}
+
+export function calculateWeeklyTrainingPointsByKind(input: TrainingPointsByKindInput): number {
+  const baseTrainingPoints = calculateWeeklyTrainingPoints(input.intensity);
+  return baseTrainingPoints * TRAINING_KIND_EFFECTIVENESS[input.kind];
 }
 
 export function createTrainingWeek(input: TrainingWeekInput): TrainingWeek {
@@ -1638,3 +1659,4 @@ function assertObservationPlayer(observation: SkillProgressObservation, playerId
 }
 
 export * from "./recommendations.js";
+export * from "./advanced-slots.js";
