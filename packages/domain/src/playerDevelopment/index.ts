@@ -20,6 +20,8 @@ import type {
 
 export * from "./profiles.js";
 export * from "./types.js";
+export * from "./training-path-types.js";
+export * from "./training-path.js";
 
 const FORMATION_PROFILE_AFFINITY: Readonly<
   Record<Formation, Partial<Record<DevelopmentProfile, number>>>
