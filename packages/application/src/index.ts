@@ -6,6 +6,7 @@ export * from "./club/index.js";
 export * from "./club/types.js";
 export * from "./economy/index.js";
 export * from "./marketPlanning/index.js";
+export * from "./squadPlanning/index.js";
 export * from "./youthAcademyPlanning/index.js";
 export * from "./training/index.js";
 export * from "./types.js";

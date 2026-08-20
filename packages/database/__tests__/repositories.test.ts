@@ -5,10 +5,12 @@ import {
   ClubModel,
   MongoClubRepository,
   MongoPlayerDevelopmentTargetRepository,
+  MongoSquadRoleAssignmentRepository,
   MongoPlayerRepository,
   MongoSnapshotRepository,
   PlayerModel,
   getPlayerDevelopmentTargetModel,
+  getSquadRoleAssignmentModel,
   SnapshotModel,
   migrateClubProfileDocuments,
   type SaveSnapshotInput
@@ -19,6 +21,7 @@ let mongo: MongoMemoryServer;
 const clubs = new MongoClubRepository();
 const players = new MongoPlayerRepository();
 const developmentTargets = new MongoPlayerDevelopmentTargetRepository();
+const squadRoleAssignments = new MongoSquadRoleAssignmentRepository();
 const snapshots = new MongoSnapshotRepository();
 
 describe("Mongo repositories", () => {
@@ -32,6 +35,7 @@ describe("Mongo repositories", () => {
       ClubModel.deleteMany({}),
       PlayerModel.deleteMany({}),
       getPlayerDevelopmentTargetModel().deleteMany({}),
+      getSquadRoleAssignmentModel().deleteMany({}),
       SnapshotModel.deleteMany({})
     ]);
   });
@@ -321,6 +325,30 @@ describe("Mongo repositories", () => {
     expect(saved).toMatchObject({ profile: "forward", targetAge: 24 });
     expect(override).toMatchObject({ profile: "forward", targetAge: 24 });
     expect(override?.targetLevels).toEqual({ striker: 15 });
+  });
+
+  it("keeps a manual squad role override when Sokker player state is synced", async () => {
+    const saved = await squadRoleAssignments.saveManualOverride({
+      clubId: 1,
+      playerId: 1001,
+      role: "core"
+    });
+
+    await players.resolveHistoricalIdentity({
+      playerId: 1001,
+      clubId: 1,
+      name: "Updated Tomas",
+      age: 29,
+      skills: { defender: 14 }
+    });
+
+    const override = await squadRoleAssignments.findByPlayerId({ clubId: 1, playerId: 1001 });
+    const raw = await getSquadRoleAssignmentModel().findOne({ clubId: 1, playerId: 1001 }).lean();
+
+    expect(saved).toMatchObject({ role: "core", source: "manual" });
+    expect(override).toMatchObject({ role: "core", source: "manual" });
+    expect(raw).not.toHaveProperty("currentContributionScore");
+    expect(raw).not.toHaveProperty("lifecycle");
   });
 });
 

@@ -95,6 +95,23 @@ export interface PersistedPlayerDevelopmentOverride {
   targetAge: number | null;
 }
 
+export type PersistedSquadRole =
+  "core" | "developing" | "prospect" | "rotation" | "depth" | "transition";
+
+export interface PersistedSquadRoleAssignment {
+  id: string;
+  playerId: number;
+  clubId: number;
+  role: PersistedSquadRole;
+  source: "manual";
+}
+
+export interface SaveSquadRoleAssignmentInput {
+  playerId: number;
+  clubId: number;
+  role: PersistedSquadRole;
+}
+
 export interface SavePlayerDevelopmentOverrideInput {
   playerId: number;
   clubId: number;

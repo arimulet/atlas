@@ -28,3 +28,4 @@ export * from "./snapshotComparison.js";
 export * from "./training/index.js";
 export * from "./sokker/calendar.js";
 export * from "./playerDevelopment/index.js";
+export * from "./squadPlanning/index.js";

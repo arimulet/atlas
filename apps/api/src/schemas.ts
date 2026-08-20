@@ -40,6 +40,12 @@ export const playerDevelopmentTargetBodySchema = z
   })
   .strict();
 
+export const squadRoleAssignmentBodySchema = z
+  .object({
+    role: z.enum(["core", "developing", "prospect", "rotation", "depth", "transition"])
+  })
+  .strict();
+
 export const sokkerSyncRequestSchema = z.object({
   login: z.string().min(1),
   password: z.string().min(1)

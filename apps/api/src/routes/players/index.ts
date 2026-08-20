@@ -1,8 +1,12 @@
 import {
   getPlayerDevelopment,
   getRealYouthAcademyPlanning,
+  getSquadAssessment,
   getYouthPipelinePlanning,
   getPlayerDevelopmentTarget,
+  getSquadRoleAssignment,
+  resetSquadRoleAssignment,
+  saveSquadRoleAssignment,
   resetPlayerDevelopmentTarget,
   savePlayerDevelopmentTarget
 } from "@atlas/application";
@@ -10,7 +14,8 @@ import { FastifyInstance } from "fastify";
 import {
   clubParamsSchema,
   playerDevelopmentTargetBodySchema,
-  playerDevelopmentTargetParamsSchema
+  playerDevelopmentTargetParamsSchema,
+  squadRoleAssignmentBodySchema
 } from "@atlas/api/schemas";
 import { GetDevelopmentParams, GetYouthPipelinePlanningParams } from "./types";
 
@@ -47,6 +52,37 @@ async function playerRoutes(server: FastifyInstance) {
       return reply.code(204).send();
     }
   );
+
+  server.get<{ Params: GetDevelopmentParams & { playerId: number } }>(
+    "/:playerId/squad-role",
+    async (request) => {
+      const { clubId, playerId } = playerDevelopmentTargetParamsSchema.parse(request.params);
+      return getSquadRoleAssignment({ clubId: Number(clubId), playerId });
+    }
+  );
+
+  server.put<{ Params: GetDevelopmentParams & { playerId: number } }>(
+    "/:playerId/squad-role",
+    async (request) => {
+      const { clubId, playerId } = playerDevelopmentTargetParamsSchema.parse(request.params);
+      const body = squadRoleAssignmentBodySchema.parse(request.body);
+      return saveSquadRoleAssignment({ clubId: Number(clubId), playerId, role: body.role });
+    }
+  );
+
+  server.delete<{ Params: GetDevelopmentParams & { playerId: number } }>(
+    "/:playerId/squad-role",
+    async (request, reply) => {
+      const { clubId, playerId } = playerDevelopmentTargetParamsSchema.parse(request.params);
+      await resetSquadRoleAssignment({ clubId: Number(clubId), playerId });
+      return reply.code(204).send();
+    }
+  );
+
+  server.get<{ Params: GetDevelopmentParams }>("/squad-planning", async (request) => {
+    const { clubId } = clubParamsSchema.parse(request.params);
+    return getSquadAssessment(clubId);
+  });
 
   server.get<{ Params: GetDevelopmentParams }>("/development", async (request) => {
     const { clubId } = clubParamsSchema.parse(request.params);
