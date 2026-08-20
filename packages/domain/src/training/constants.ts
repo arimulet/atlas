@@ -27,6 +27,14 @@ export const ADVANCED_TRAINING_SLOT_COUNT = 10;
 export const ADVANCED_SLOT_REPLACEMENT_THRESHOLD = 0.05;
 export const ADVANCED_SLOT_HIGH_DEVELOPMENT_POTENTIAL_THRESHOLD = 0.5;
 
+// Calibration thresholds are diagnostic signals. They do not change a training
+// decision; they identify predictions and rankings that deserve inspection.
+export const TRAINING_CALIBRATION_HIGH_PREDICTION_ERROR_WEEKS = 1;
+export const TRAINING_CALIBRATION_MIN_FLAPPING_OBSERVATIONS = 3;
+export const TRAINING_CALIBRATION_BORDERLINE_RANK_START = 8;
+export const TRAINING_CALIBRATION_BORDERLINE_RANK_END = 12;
+export const TRAINING_CALIBRATION_RANK_INSTABILITY_DELTA = 2;
+
 export const SUPPORTED_TRAINING_SKILLS: readonly SkillTrainingCostSkill[] = [
   "stamina",
   "keeper",

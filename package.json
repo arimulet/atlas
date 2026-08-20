@@ -16,6 +16,7 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "test": "vitest run",
+    "training:calibrate": "tsx scripts/training-calibrate.ts",
     "test:e2e": "playwright test",
     "test:watch": "vitest"
   },

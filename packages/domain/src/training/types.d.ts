@@ -309,6 +309,19 @@ export interface DevelopmentReturnScoreInput {
   expectedWeeklyTrainingPoints: number;
 }
 
+export interface TrainingOptionScoreBreakdown {
+  skill: SkillTrainingCostSkill;
+  level: number;
+  requiredPoints: number;
+  weeklyPoints: number;
+  estimatedWeeks: number;
+  developmentValue: number;
+  ageCostFactor: number;
+  skillCostFactor: number;
+  talent: number;
+  developmentReturnScore: number;
+}
+
 export interface TrainingPointsByKindInput {
   intensity: number;
   kind: "advanced" | "formation";
@@ -335,7 +348,16 @@ export interface AdvancedSlotEvaluation {
   expectedFormationTrainingPoints: number | null;
   marginalTrainingPoints: number | null;
   developmentPotentialScore: number | null;
+  scoreBreakdown?: AdvancedScoreBreakdown;
   confidence: TrainingRecommendationConfidence;
+}
+
+export interface AdvancedScoreBreakdown {
+  marginalTrainingGain: number;
+  developmentPotential: number;
+  talentContribution?: number;
+  ageContribution: number;
+  finalScore: number;
 }
 
 export interface AdvancedTrainingRankingEntry {
@@ -395,6 +417,154 @@ export interface AdvancedTrainingOptimization {
     promotions: number;
     removals: number;
   };
+}
+
+export type CalibrationWarning =
+  | "insufficient_history"
+  | "missing_last_skill_up"
+  | "prediction_error_high"
+  | "unstable_talent_estimate"
+  | "recommendation_flapping"
+  | "advanced_rank_instability"
+  | "inconsistent_training_history";
+
+export type CalibrationConfidence = TrainingRecommendationConfidence;
+
+export interface TrainingCalibrationEntry {
+  playerId: number;
+  gameWeek: number;
+  observed: {
+    skill: SkillTrainingCostSkill;
+    previousLevel: number | null;
+    currentLevel: number;
+    skillUp: boolean;
+    intensity: number;
+  };
+  estimated: {
+    earnedTrainingPoints: number | null;
+    progress: number | null;
+    remainingTrainingPoints: number | null;
+    weeksToNextSkillUp: number | null;
+  };
+  confidence: CalibrationConfidence;
+  warnings: CalibrationWarning[];
+}
+
+export interface SkillUpBacktestPrediction {
+  playerId: number;
+  skill: SkillTrainingCostSkill;
+  predictionWeek: number;
+  observedSkillUpWeek: number;
+  predictedWeeks: number | null;
+  actualWeeks: number;
+  errorWeeks: number | null;
+}
+
+export interface SkillUpBacktestSummary {
+  samples: number;
+  meanAbsoluteErrorWeeks: number | null;
+  medianAbsoluteErrorWeeks: number | null;
+  withinHalfWeek: number;
+  withinOneWeek: number;
+  withinTwoWeeks: number;
+}
+
+export interface RecommendationCalibrationObservation {
+  playerId: number;
+  gameWeek: number;
+  currentSkill: SkillTrainingCostSkill;
+  status: TrainingRecommendationStatus;
+  recommendedSkill?: SkillTrainingCostSkill;
+  currentScore: number | null;
+  bestAlternativeScore: number | null;
+  relativeImprovement: number | null;
+  confidence: CalibrationConfidence;
+}
+
+export interface RankingStability {
+  playerId: number;
+  currentRank: number;
+  previousRank: number | null;
+  rankDelta: number | null;
+}
+
+export interface AdvancedTrainingCalibrationSummary {
+  stableSlots: number;
+  recommendedChanges: number;
+  borderlinePlayers: number;
+  rankingStability: RankingStability[];
+  cutoff: Array<{ playerId: number; rank: number; score: number | null }>;
+}
+
+export interface CalibrationWarningSummary {
+  warning: CalibrationWarning;
+  count: number;
+  playerIds: number[];
+}
+
+export interface TrainingCalibrationPlayerContext {
+  player: TrainingRecommendationPlayer;
+  trainingHistory: TrainingHistory;
+  currentTraining?: AdvancedTrainingCandidateContext["currentTraining"];
+  currentlyAdvanced?: boolean;
+}
+
+export type TrainingCalibrationScenario =
+  | "young_with_long_history"
+  | "young_with_short_history"
+  | "high_talent_estimate"
+  | "uncertain_talent"
+  | "observed_skill_up"
+  | "recent_skill_up"
+  | "repeated_skill"
+  | "changed_skill"
+  | "advanced"
+  | "formation"
+  | "older_player";
+
+export interface TrainingCalibrationDatasetSelection {
+  analyzedPlayers: number;
+  players: TrainingCalibrationPlayerContext[];
+  scenarios: Array<{
+    playerId: number;
+    scenarios: TrainingCalibrationScenario[];
+  }>;
+}
+
+export interface WeeklyTrainingCalibrationInput {
+  players: readonly TrainingCalibrationPlayerContext[];
+  datasetSelection?: TrainingCalibrationDatasetSelection;
+  gameWeek?: number;
+  weeklyReport?: WeeklyTrainingReport;
+  recommendations?: readonly PlayerTrainingRecommendation[];
+  advancedOptimization?: AdvancedTrainingOptimization;
+  previousAdvancedRanking?: readonly AdvancedTrainingRankingEntry[];
+}
+
+export interface WeeklyTrainingCalibrationReport {
+  gameWeek: number;
+  dataset: {
+    analyzedPlayers: number;
+    selectedPlayers: number;
+    scenarios: TrainingCalibrationDatasetSelection["scenarios"];
+  };
+  players: TrainingCalibrationEntry[];
+  skillUpBacktest: SkillUpBacktestSummary;
+  skillUpPredictions: SkillUpBacktestPrediction[];
+  recommendations: {
+    continue: number;
+    switchSkill: number;
+    hold: number;
+    flappingDetected: number;
+    observations: RecommendationCalibrationObservation[];
+  };
+  advancedTraining: AdvancedTrainingCalibrationSummary;
+  warnings: CalibrationWarningSummary[];
+  optionBreakdowns: TrainingOptionScoreBreakdown[];
+  advancedScoreBreakdowns: Array<{
+    playerId: number;
+    breakdown: AdvancedScoreBreakdown;
+  }>;
 }
 
 export interface TalentEvidence {

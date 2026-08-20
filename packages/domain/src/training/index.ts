@@ -57,6 +57,7 @@ import type {
   TalentEstimationInput,
   TalentEstimationResult,
   DevelopmentReturnScoreInput,
+  TrainingOptionScoreBreakdown,
   TrainingPointsByKindInput,
   WeeklyTrainingPlayerInput,
   WeeklyTrainingPlayerReport,
@@ -94,7 +95,12 @@ export {
   TRAINING_RECOMMENDATION_RECENT_SWITCH_THRESHOLD,
   TRAINING_RECOMMENDATION_SCORE_NORMALIZATION_BASE,
   TRAINING_RECOMMENDATION_SKILL_UP_SOON_WEEKS,
-  TRAINING_RECOMMENDATION_SWITCH_THRESHOLD
+  TRAINING_RECOMMENDATION_SWITCH_THRESHOLD,
+  TRAINING_CALIBRATION_HIGH_PREDICTION_ERROR_WEEKS,
+  TRAINING_CALIBRATION_MIN_FLAPPING_OBSERVATIONS,
+  TRAINING_CALIBRATION_BORDERLINE_RANK_START,
+  TRAINING_CALIBRATION_BORDERLINE_RANK_END,
+  TRAINING_CALIBRATION_RANK_INSTABILITY_DELTA
 } from "./constants.js";
 
 export type {
@@ -152,6 +158,7 @@ export type {
   TrainingRecommendationReason,
   PlayerTrainingRecommendation,
   DevelopmentReturnScoreInput,
+  TrainingOptionScoreBreakdown,
   TrainingPointsByKindInput,
   AdvancedTrainingCandidateContext,
   AdvancedSlotEvaluation,
@@ -162,6 +169,21 @@ export type {
   AdvancedSlotReplacement,
   AdvancedSlotScoreInput,
   AdvancedTrainingOptimization,
+  AdvancedScoreBreakdown,
+  CalibrationWarning,
+  CalibrationConfidence,
+  TrainingCalibrationEntry,
+  SkillUpBacktestPrediction,
+  SkillUpBacktestSummary,
+  RecommendationCalibrationObservation,
+  RankingStability,
+  AdvancedTrainingCalibrationSummary,
+  CalibrationWarningSummary,
+  TrainingCalibrationScenario,
+  TrainingCalibrationDatasetSelection,
+  TrainingCalibrationPlayerContext,
+  WeeklyTrainingCalibrationInput,
+  WeeklyTrainingCalibrationReport,
   WeeklyTrainingPlayerInput,
   WeeklyTrainingPlayerReport,
   WeeklyTrainingReport,
@@ -406,6 +428,12 @@ export function buildWeeklyTrainingReport(input: WeeklyTrainingReportInput): Wee
 }
 
 export function calculateDevelopmentReturnScore(input: DevelopmentReturnScoreInput): number | null {
+  return calculateDevelopmentReturnScoreBreakdown(input)?.developmentReturnScore ?? null;
+}
+
+export function calculateDevelopmentReturnScoreBreakdown(
+  input: DevelopmentReturnScoreInput
+): TrainingOptionScoreBreakdown | null {
   if (
     input.currentSkillLevel >= MAX_SKILL_LEVEL ||
     input.expectedWeeklyTrainingPoints <= 0 ||
@@ -425,8 +453,21 @@ export function calculateDevelopmentReturnScore(input: DevelopmentReturnScoreInp
     requiredTraining.requiredTrainingPoints / input.expectedWeeklyTrainingPoints;
   const expectedDevelopmentValue = (MAX_SKILL_LEVEL - input.currentSkillLevel) / MAX_SKILL_LEVEL;
   const rawScore = expectedDevelopmentValue / expectedTrainingCost;
+  const developmentReturnScore =
+    rawScore / (TRAINING_RECOMMENDATION_SCORE_NORMALIZATION_BASE + rawScore);
 
-  return rawScore / (TRAINING_RECOMMENDATION_SCORE_NORMALIZATION_BASE + rawScore);
+  return {
+    skill: input.skill,
+    level: input.currentSkillLevel,
+    requiredPoints: requiredTraining.requiredTrainingPoints,
+    weeklyPoints: input.expectedWeeklyTrainingPoints,
+    estimatedWeeks: expectedTrainingCost,
+    developmentValue: expectedDevelopmentValue,
+    ageCostFactor: requiredTraining.ageCostFactor,
+    skillCostFactor: requiredTraining.skillCostFactor,
+    talent,
+    developmentReturnScore
+  };
 }
 
 function buildWeeklyTrainingPlayerReport(
@@ -1660,3 +1701,4 @@ function assertObservationPlayer(observation: SkillProgressObservation, playerId
 
 export * from "./recommendations.js";
 export * from "./advanced-slots.js";
+export * from "./calibration.js";

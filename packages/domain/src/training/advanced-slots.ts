@@ -1,5 +1,5 @@
 import {
-  calculateDevelopmentReturnScore,
+  calculateDevelopmentReturnScoreBreakdown,
   calculateWeeklyTrainingPointsByKind,
   detectSkillUps,
   getTrainingWeeks,
@@ -26,7 +26,8 @@ import type {
   SkillTrainingCostSkill,
   TrainingHistory,
   TrainingRecommendationConfidence,
-  TrainingRecommendationPlayer
+  TrainingRecommendationPlayer,
+  TrainingOptionScoreBreakdown
 } from "./types.js";
 
 export function optimizeAdvancedTrainingSlots(
@@ -104,6 +105,27 @@ export function calculateAdvancedSlotScore(input: AdvancedSlotScoreInput): numbe
   return Math.min(1, normalizedMarginalBenefit * input.developmentPotentialScore);
 }
 
+export function buildAdvancedScoreBreakdown(input: {
+  marginalTrainingPoints: number;
+  developmentPotentialScore: number;
+  optionBreakdown?: TrainingOptionScoreBreakdown | null;
+}): AdvancedSlotEvaluation["scoreBreakdown"] | null {
+  const finalScore = calculateAdvancedSlotScore(input);
+  if (finalScore === null) {
+    return null;
+  }
+
+  return {
+    marginalTrainingGain: input.marginalTrainingPoints / MAX_EFFICIENCY,
+    developmentPotential: input.developmentPotentialScore,
+    talentContribution: input.optionBreakdown?.talent,
+    ageContribution: input.optionBreakdown
+      ? 1 / input.optionBreakdown.ageCostFactor
+      : 1,
+    finalScore
+  };
+}
+
 interface EvaluatedCandidate {
   context: AdvancedTrainingCandidateContext;
   evaluation: AdvancedSlotEvaluation;
@@ -160,20 +182,29 @@ function evaluateCandidate(
       : null;
   const preferredSkill = preferredSkillFor(context);
   const preferredLevel = levelForPreferredSkill(context, preferredSkill);
-  const developmentPotentialScore =
+  const developmentPotentialBreakdown =
     preferredLevel === null || expectedAdvancedTrainingPoints === null
       ? null
-      : calculateDevelopmentReturnScore({
+      : calculateDevelopmentReturnScoreBreakdown({
           age: context.player.age,
           talent: context.talent?.value ?? null,
           skill: preferredSkill,
           currentSkillLevel: preferredLevel,
           expectedWeeklyTrainingPoints: expectedAdvancedTrainingPoints
         });
+  const developmentPotentialScore = developmentPotentialBreakdown?.developmentReturnScore ?? null;
   const advancedScore =
     developmentPotentialScore === null || marginalTrainingPoints === null
       ? null
       : calculateAdvancedSlotScore({ marginalTrainingPoints, developmentPotentialScore });
+  const scoreBreakdown =
+    developmentPotentialScore === null || marginalTrainingPoints === null
+      ? null
+      : buildAdvancedScoreBreakdown({
+          marginalTrainingPoints,
+          developmentPotentialScore,
+          optionBreakdown: developmentPotentialBreakdown
+        });
 
   return {
     context,
@@ -185,6 +216,7 @@ function evaluateCandidate(
       expectedFormationTrainingPoints,
       marginalTrainingPoints,
       developmentPotentialScore,
+      ...(scoreBreakdown ? { scoreBreakdown } : {}),
       confidence
     },
     isEligible,
