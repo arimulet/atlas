@@ -12,12 +12,17 @@ import {
 } from "@atlas/database";
 import {
   assessSquad,
+  analyzeSquadDepth,
+  generatePlayerTrainingPath,
   PlayerDevelopmentPlanner,
+  projectDevelopment,
   estimateTalentFromTrainingHistory,
   type DevelopmentPlayer,
   type PlayerDevelopmentTargetOverride,
   type SquadPlayerContext,
   type SquadRoleAssignment,
+  type SquadDepthAnalysis,
+  type SquadDepthPlayer,
   type TrainingHistory
 } from "@atlas/domain";
 import { createTrainingWeek, type PlayerSkills, type PlayerSkillsChange } from "@atlas/domain";
@@ -26,6 +31,20 @@ import type { SquadAssessmentData } from "./types.js";
 
 export type {
   PlayerLifecycleStage,
+  ProfileDepthAssessment,
+  ProfileDepthSnapshot,
+  ProfileDependencyRisk,
+  ProfileSuccessionAssessment,
+  ProfileDepthStatus,
+  SquadDepthAnalysisConfig,
+  SquadDepthAnalysisInput,
+  SquadDepthAnalysisOptions,
+  SquadDepthReason,
+  SquadPlanningHorizon,
+  SquadProfileRequirement,
+  SuccessionCandidate,
+  SuccessionCoverageStatus,
+  SuccessionReadiness,
   SquadAssessment,
   SquadContributionMetrics,
   SquadPlayerAssessment,
@@ -35,6 +54,7 @@ export type {
   SquadRoleAssignment,
   SquadRoleReason
 } from "@atlas/domain";
+export type { SquadDepthAnalysis } from "@atlas/domain";
 
 const clubRepository = new MongoClubRepository();
 const snapshotRepository = new MongoSnapshotRepository();
@@ -56,7 +76,9 @@ export async function getSquadAssessment(clubId: ClubId): Promise<SquadAssessmen
     return {
       players: [],
       summary: { core: 0, developing: 0, prospect: 0, rotation: 0, depth: 0, transition: 0 },
-      manualAssignments: assignments.map(mapAssignment)
+      manualAssignments: assignments.map(mapAssignment),
+      currentGameWeek: null,
+      depthPlayers: []
     };
   }
 
@@ -83,15 +105,38 @@ export async function getSquadAssessment(clubId: ClubId): Promise<SquadAssessmen
       player,
       histories.get(player.playerId) ?? null,
       overrides.get(player.playerId) ?? null,
-      assignmentsByPlayer.get(player.playerId) ?? null
+      assignmentsByPlayer.get(player.playerId) ?? null,
+      latest.gameWeek,
+      latest.snapshotDate
     )
   );
   const assessment = assessSquad(contexts);
+  const contextByPlayer = new Map(contexts.map((context) => [context.playerId, context]));
+  const depthPlayers: SquadDepthPlayer[] = assessment.players.map((playerAssessment) => {
+    const context = contextByPlayer.get(playerAssessment.playerId);
+    return {
+      ...playerAssessment,
+      age: context?.age ?? null,
+      developmentPlan: context?.developmentPlan ?? null,
+      developmentTarget: context?.developmentTarget ?? null,
+      projection: context?.projection ?? null,
+      formation: context?.formation ?? null
+    };
+  });
 
   return {
     ...assessment,
-    manualAssignments: assignments.map(mapAssignment)
+    manualAssignments: assignments.map(mapAssignment),
+    currentGameWeek: latest.gameWeek,
+    depthPlayers
   };
+}
+
+export async function getSquadDepthAnalysis(clubId: ClubId): Promise<SquadDepthAnalysis> {
+  const assessment = await getSquadAssessment(clubId);
+  return analyzeSquadDepth(assessment.depthPlayers, {
+    currentGameWeek: assessment.currentGameWeek
+  });
 }
 
 export async function getSquadRoleAssignment(input: {
@@ -118,7 +163,9 @@ function buildPlayerContext(
   player: PersistedPlayerSnapshot,
   history: TrainingHistory | null,
   developmentOverride: PersistedPlayerDevelopmentOverride | null,
-  assignment: PersistedSquadRoleAssignment | null
+  assignment: PersistedSquadRoleAssignment | null,
+  currentGameWeek: number | null,
+  currentDate: Date
 ): SquadPlayerContext {
   const developmentPlayer: DevelopmentPlayer = {
     playerId: player.playerId,
@@ -135,13 +182,33 @@ function buildPlayerContext(
   const plan = buildPlan(developmentPlayer, override);
   const talent = history ? estimateTalentFromTrainingHistory(history) : null;
   const latestTraining = history?.weeks.at(-1);
+  const trainingPath = generatePlayerTrainingPath({
+    player: { ...developmentPlayer, age: player.age ?? 16 },
+    target: plan.target,
+    developmentGap: plan.gap,
+    talent,
+    trainingHistory: history ? [history] : undefined
+  });
+  const projection = buildProjection({
+    player,
+    developmentPlayer,
+    target: plan.target,
+    trainingPath,
+    talent,
+    latestTraining,
+    currentGameWeek,
+    currentDate
+  });
 
   return {
     ...developmentPlayer,
     age: player.age,
     profile: plan.target.profile,
+    developmentPlan: plan,
     developmentTarget: plan.target,
     developmentGap: plan.gap,
+    trainingPath,
+    projection,
     hasDevelopmentPlan: developmentOverride !== null,
     talent,
     training: {
@@ -152,6 +219,39 @@ function buildPlayerContext(
     historyWeeks: history?.weeks.length ?? 0,
     manualRole: assignment ? mapAssignment(assignment) : null
   };
+}
+
+function buildProjection(input: {
+  player: PersistedPlayerSnapshot;
+  developmentPlayer: DevelopmentPlayer;
+  target: ReturnType<PlayerDevelopmentPlanner["createPlan"]>["target"];
+  trainingPath: ReturnType<typeof generatePlayerTrainingPath>;
+  talent: ReturnType<typeof estimateTalentFromTrainingHistory> | null;
+  latestTraining: TrainingHistory["weeks"][number] | undefined;
+  currentGameWeek: number | null;
+  currentDate: Date;
+}) {
+  if (input.currentGameWeek === null || input.player.age === null) {
+    return null;
+  }
+
+  try {
+    return projectDevelopment({
+      player: { ...input.developmentPlayer, age: input.player.age },
+      target: input.target,
+      path: input.trainingPath,
+      currentGameWeek: input.currentGameWeek,
+      currentDate: input.currentDate,
+      talent: input.talent,
+      trainingAssumptions: {
+        trainingKind: input.latestTraining?.kind === "advanced" ? "advanced" : "formation",
+        expectedIntensity: input.latestTraining?.intensity ?? 100,
+        assumeContinuousTraining: true
+      }
+    });
+  } catch {
+    return null;
+  }
 }
 
 function buildPlan(player: DevelopmentPlayer, override: PlayerDevelopmentTargetOverride) {
