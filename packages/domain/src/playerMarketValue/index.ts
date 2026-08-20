@@ -27,6 +27,8 @@ export * from "./calibration-constants.js";
 export * from "./calibration-types.js";
 export * from "./comparables.js";
 export * from "./calibration.js";
+export * from "./future-market-value-types.js";
+export * from "./future-market-value.js";
 
 const VALID_MINIMUM_AGE = 15;
 const VALID_MAXIMUM_AGE = 45;
