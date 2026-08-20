@@ -1,10 +1,11 @@
-import type { Confidence } from "../types.js";
+import type { Confidence, SkillSet } from "../types.js";
 import type { Formation } from "../playerDevelopment/index.js";
 import type {
   DevelopmentProfile,
   PlayerDevelopmentPlan,
   PlayerDevelopmentProjection,
-  PlayerDevelopmentTarget
+  PlayerDevelopmentTarget,
+  PlayerTrainingPath
 } from "../playerDevelopment/index.js";
 import type { SquadPlayerAssessment } from "./types.js";
 import type {
@@ -102,9 +103,11 @@ export interface SquadDepthAnalysis {
 }
 
 export interface SquadDepthPlayer extends SquadPlayerAssessment {
+  skills?: SkillSet;
   playerName?: string;
   age?: number | null;
   developmentPlan?: PlayerDevelopmentPlan | null;
+  trainingPath?: PlayerTrainingPath | null;
   developmentTarget?: PlayerDevelopmentTarget | null;
   projection?: PlayerDevelopmentProjection | null;
   compatibleProfiles?: readonly DevelopmentProfile[];

@@ -142,10 +142,12 @@ export async function getSquadAssessment(clubId: ClubId): Promise<SquadAssessmen
     const marketValue = marketValues.get(playerAssessment.playerId);
     return {
       ...playerAssessment,
+      skills: context?.skills ?? {},
       playerName: context?.playerName ?? `Player ${playerAssessment.playerId}`,
       age: context?.age ?? null,
       sokkerValue: context?.sokkerValue ?? null,
       developmentPlan: context?.developmentPlan ?? null,
+      trainingPath: context?.trainingPath ?? null,
       developmentTarget: context?.developmentTarget ?? null,
       projection: context?.projection ?? null,
       formation: context?.formation ?? null,

@@ -8,6 +8,7 @@ import type {
   WeeklyTrainingIntelligence,
   YouthPipelinePlanning
 } from "./types";
+import type { YouthDecisionPlanning } from "@atlas/application";
 import type {
   PlayerDevelopmentTargetOverride,
   SquadDepthAnalysis,
@@ -188,6 +189,17 @@ export async function fetchYouthPipelinePlanning(clubId: string): Promise<YouthP
 
   if (!response.ok || !body) {
     throw new Error("Youth pipeline planning API returned an unexpected response.");
+  }
+
+  return body;
+}
+
+export async function fetchYouthDecisionPlanning(clubId: string): Promise<YouthDecisionPlanning> {
+  const response = await fetch(`/api/clubs/${clubId}/players/youth-decision-planning`);
+  const body = (await response.json()) as YouthDecisionPlanning;
+
+  if (!response.ok || !body) {
+    throw new Error("Youth decision planning API returned an unexpected response.");
   }
 
   return body;
