@@ -28,8 +28,25 @@ import type {
   YouthProspectStrength,
   YouthProspectWeakness
 } from "./types.js";
+import {
+  assessYouthDevelopmentOpportunity,
+  assessYouthStrategicAssessment,
+  evaluateYouthDevelopmentOpportunities
+} from "./fit.js";
+import type {
+  YouthDevelopmentOpportunity,
+  YouthFitConfig,
+  YouthFitContext,
+  YouthStrategicAssessment
+} from "./fit-types.js";
 
 export * from "./types.js";
+export * from "./fit-types.js";
+export {
+  assessYouthDevelopmentOpportunity,
+  assessYouthStrategicAssessment,
+  evaluateYouthDevelopmentOpportunities
+} from "./fit.js";
 
 const QUALITY_AGE_ADJUSTMENT_FLOOR = 0.55;
 const PRIMARY_SKILL_STRENGTH_LEVEL = 10;
@@ -158,6 +175,27 @@ export class YouthDecisionEngine {
 
   diagnoseProspect(context: YouthProspectContext): YouthProspectDiagnostic {
     return buildYouthProspectDiagnostic(context);
+  }
+
+  assessFit(
+    context: YouthFitContext,
+    config: Partial<YouthFitConfig> = {}
+  ): YouthDevelopmentOpportunity {
+    return assessYouthDevelopmentOpportunity(context, config);
+  }
+
+  assessStrategic(
+    context: YouthFitContext,
+    config: Partial<YouthFitConfig> = {}
+  ): YouthStrategicAssessment {
+    return assessYouthStrategicAssessment(context, config);
+  }
+
+  assessFits(
+    contexts: readonly YouthFitContext[],
+    config: Partial<YouthFitConfig> = {}
+  ): YouthDevelopmentOpportunity[] {
+    return evaluateYouthDevelopmentOpportunities(contexts, config);
   }
 }
 
