@@ -4,9 +4,11 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import {
   ClubModel,
   MongoClubRepository,
+  MongoPlayerDevelopmentTargetRepository,
   MongoPlayerRepository,
   MongoSnapshotRepository,
   PlayerModel,
+  getPlayerDevelopmentTargetModel,
   SnapshotModel,
   migrateClubProfileDocuments,
   type SaveSnapshotInput
@@ -16,6 +18,7 @@ let mongo: MongoMemoryServer;
 
 const clubs = new MongoClubRepository();
 const players = new MongoPlayerRepository();
+const developmentTargets = new MongoPlayerDevelopmentTargetRepository();
 const snapshots = new MongoSnapshotRepository();
 
 describe("Mongo repositories", () => {
@@ -28,6 +31,7 @@ describe("Mongo repositories", () => {
     await Promise.all([
       ClubModel.deleteMany({}),
       PlayerModel.deleteMany({}),
+      getPlayerDevelopmentTargetModel().deleteMany({}),
       SnapshotModel.deleteMany({})
     ]);
   });
@@ -293,6 +297,30 @@ describe("Mongo repositories", () => {
     await expect(PlayerModel.create({ playerId: 1001, name: "Tomas Alvarez" })).rejects.toThrow(
       /clubId/
     );
+  });
+
+  it("keeps manual development overrides separate from Sokker player sync", async () => {
+    const saved = await developmentTargets.saveManualOverride({
+      clubId: 1,
+      playerId: 1001,
+      profile: "forward",
+      targetLevels: { striker: 15 },
+      targetAge: 24
+    });
+
+    await players.resolveHistoricalIdentity({
+      playerId: 1001,
+      clubId: 1,
+      name: "Updated Tomas",
+      position: "MID",
+      skills: { striker: 12 }
+    });
+
+    const override = await developmentTargets.findByPlayerId({ clubId: 1, playerId: 1001 });
+
+    expect(saved).toMatchObject({ profile: "forward", targetAge: 24 });
+    expect(override).toMatchObject({ profile: "forward", targetAge: 24 });
+    expect(override?.targetLevels).toEqual({ striker: 15 });
   });
 });
 
