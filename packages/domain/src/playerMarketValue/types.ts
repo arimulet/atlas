@@ -47,7 +47,12 @@ export type PlayerMarketValueReason =
   | { type: "limited_development_upside" }
   | { type: "profile_fallback_used"; profile: DevelopmentProfile }
   | { type: "incomplete_data" }
-  | { type: "talent_low_confidence" };
+  | { type: "talent_low_confidence" }
+  | { type: "comparable_market_evidence"; sampleSize: number }
+  | { type: "no_comparable_market_evidence" }
+  | { type: "market_premium"; factor: number }
+  | { type: "market_discount"; factor: number }
+  | { type: "high_price_dispersion" };
 
 export interface MarketValueRange {
   low: number;

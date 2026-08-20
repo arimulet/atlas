@@ -86,6 +86,46 @@ export interface PersistedPlayer {
   currentGameWeek: number | null;
 }
 
+export type PersistedPlayerTransferSource = string;
+export type PersistedTransferDataQuality = "complete" | "partial" | "weak";
+export type PersistedSalePriceType = "final_sale" | "unknown";
+export type PersistedTransferFormation = "GK" | "DEF" | "MID" | "ATT";
+export type PersistedTransferProfile =
+  | "goalkeeper"
+  | "central_defender"
+  | "wing_defender"
+  | "central_midfielder"
+  | "winger"
+  | "forward";
+export type PersistedTransferSkills = Partial<
+  Record<
+    "stamina" | "pace" | "technique" | "passing" | "keeper" | "defender" | "playmaker" | "striker",
+    number | null
+  >
+>;
+
+export interface PersistedPlayerTransfer {
+  id: string;
+  transferKey: string;
+  transferId?: string;
+  playerId?: number;
+  transferDate: Date;
+  gameWeek?: number | null;
+  salePrice: number;
+  currency?: string | null;
+  normalizedSalePrice?: number | null;
+  age: number;
+  skills: PersistedTransferSkills;
+  formation?: PersistedTransferFormation | null;
+  developmentProfile?: PersistedTransferProfile | null;
+  sokkerValue?: number | null;
+  source: PersistedPlayerTransferSource;
+  dataQuality?: PersistedTransferDataQuality;
+  salePriceType?: PersistedSalePriceType;
+}
+
+export type SavePlayerTransferInput = Omit<PersistedPlayerTransfer, "id" | "transferKey">;
+
 export interface PersistedPlayerDevelopmentOverride {
   id: string;
   playerId: number;
