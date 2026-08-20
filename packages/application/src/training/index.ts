@@ -25,7 +25,7 @@ import type {
 } from "@atlas/domain";
 import type { ClubId } from "../types.js";
 import type { PlayerTrainingWeekDto } from "../importer/types.js";
-import type { TrainingPageData } from "./types.js";
+import type { TrainingPageData, WeeklyTrainingIntelligence } from "./types.js";
 
 const clubRepository = new MongoClubRepository();
 const snapshotRepository = new MongoSnapshotRepository();
@@ -282,6 +282,18 @@ export async function getAdvancedTrainingOptimization(
   });
 
   return optimizeAdvancedTrainingSlots(contexts, weeklyReport.gameWeek);
+}
+
+export async function getWeeklyTrainingIntelligence(
+  clubId: ClubId
+): Promise<WeeklyTrainingIntelligence> {
+  const [report, recommendations, advancedOptimization] = await Promise.all([
+    getWeeklyTrainingReport(clubId),
+    getTrainingRecommendations(clubId),
+    getAdvancedTrainingOptimization(clubId)
+  ]);
+
+  return { report, recommendations, advancedOptimization };
 }
 
 function buildTrainingHistories(

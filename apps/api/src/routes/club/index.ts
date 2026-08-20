@@ -6,6 +6,7 @@ import {
   getClubOperatingSettings,
   getClubProfile,
   getClubSnapshots,
+  getWeeklyTrainingIntelligence,
   getTrainingPageData,
   updateClubOperatingSettings,
   updateClubProfile
@@ -49,6 +50,12 @@ async function clubRoutes(server: FastifyInstance) {
     const { clubId } = request.params;
 
     return getTrainingPageData(clubId);
+  });
+
+  server.get<{ Params: GetClubDashboardParams }>("/training/intelligence", async (request) => {
+    const { clubId } = request.params;
+
+    return getWeeklyTrainingIntelligence(clubId);
   });
 
   server.patch<{ Params: PatchClubProfileParams }>("/profile", async (request) => {

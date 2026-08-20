@@ -248,8 +248,394 @@
   color: var(--semantic-success-text);
 }
 
+.atlas .atlas-training-intelligence {
+  display: grid;
+  gap: 14px;
+}
+
+.atlas .atlas-training-intelligence__heading,
+.atlas .atlas-training-intelligence__section-heading {
+  align-items: baseline;
+  display: flex;
+  gap: 14px;
+  justify-content: space-between;
+}
+
+.atlas .atlas-training-intelligence__heading {
+  padding: 4px 0 0;
+}
+
+.atlas .atlas-training-intelligence__eyebrow {
+  color: var(--atlas-accent);
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+
+.atlas .atlas-training-intelligence__heading h2 {
+  color: var(--atlas-text);
+  font-size: 1.08rem;
+  margin: 0;
+}
+
+.atlas .atlas-training-intelligence__week,
+.atlas .atlas-training-intelligence__slot-count {
+  color: var(--atlas-text-muted);
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+.atlas .atlas-training-intelligence__summary {
+  background: var(--atlas-surface);
+  border: 1px solid var(--atlas-border);
+  border-radius: var(--atlas-radius-md);
+  display: grid;
+  gap: 1px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  overflow: hidden;
+}
+
+.atlas .atlas-training-intelligence__metric {
+  background: color-mix(in srgb, var(--atlas-surface) 88%, var(--atlas-accent));
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  padding: 12px 14px;
+}
+
+.atlas .atlas-training-intelligence__metric strong {
+  color: var(--atlas-text);
+  font-size: 1.08rem;
+  font-weight: 750;
+}
+
+.atlas .atlas-training-intelligence__metric span {
+  color: var(--atlas-text-muted);
+  font-size: 0.67rem;
+  text-transform: uppercase;
+}
+
+.atlas .atlas-training-intelligence__section {
+  background: var(--atlas-surface);
+  border: 1px solid var(--atlas-border);
+  border-radius: var(--atlas-radius-md);
+  min-width: 0;
+  padding: 14px 16px;
+}
+
+.atlas .atlas-training-intelligence__section--attention {
+  border-color: color-mix(in srgb, var(--semantic-warning-border) 55%, var(--atlas-border));
+}
+
+.atlas .atlas-training-intelligence__title {
+  color: var(--atlas-text);
+  font-size: 0.82rem;
+  font-weight: 750;
+  margin: 0 0 11px;
+}
+
+.atlas .atlas-training-intelligence__message,
+.atlas .atlas-training-intelligence__hint {
+  color: var(--atlas-text-secondary);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.atlas .atlas-training-intelligence__message.is-error {
+  color: var(--semantic-error-text);
+}
+
+.atlas .atlas-training-intelligence__hint {
+  color: var(--semantic-info-text);
+  margin: -3px 0 11px;
+}
+
+.atlas .atlas-training-intelligence__attention-list,
+.atlas .atlas-training-intelligence__replacements {
+  display: grid;
+  gap: 8px;
+}
+
+.atlas .atlas-training-intelligence__attention-card {
+  align-items: center;
+  border: 1px solid var(--atlas-border);
+  border-left: 3px solid var(--semantic-warning-border);
+  border-radius: 6px;
+  display: flex;
+  gap: 10px;
+  min-width: 0;
+  padding: 9px 11px;
+}
+
+.atlas .atlas-training-intelligence__attention-card.is-high {
+  border-left-color: var(--semantic-error-text);
+}
+
+.atlas .atlas-training-intelligence__attention-card.is-low {
+  border-left-color: var(--semantic-info-text);
+}
+
+.atlas .atlas-training-intelligence__attention-icon {
+  align-items: center;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  color: var(--semantic-warning-text);
+  display: inline-flex;
+  flex: 0 0 20px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  height: 20px;
+  justify-content: center;
+  width: 20px;
+}
+
+.atlas .atlas-training-intelligence__attention-card.is-high .atlas-training-intelligence__attention-icon {
+  color: var(--semantic-error-text);
+}
+
+.atlas .atlas-training-intelligence__attention-card.is-low .atlas-training-intelligence__attention-icon {
+  color: var(--semantic-info-text);
+}
+
+.atlas .atlas-training-intelligence__attention-copy {
+  min-width: 0;
+}
+
+.atlas .atlas-training-intelligence__attention-copy strong {
+  color: var(--atlas-text);
+  display: block;
+  font-size: 0.79rem;
+}
+
+.atlas .atlas-training-intelligence__attention-copy p {
+  color: var(--atlas-text-secondary);
+  font-size: 0.75rem;
+  line-height: 1.4;
+  margin: 2px 0 0;
+}
+
+.atlas .atlas-training-intelligence__attention-card button,
+.atlas .atlas-training-intelligence__filters button {
+  background: transparent;
+  border: 1px solid var(--atlas-border);
+  color: var(--atlas-text-secondary);
+  font-size: 0.68rem;
+  padding: 5px 8px;
+  white-space: nowrap;
+}
+
+.atlas .atlas-training-intelligence__attention-card button {
+  margin-left: auto;
+}
+
+.atlas .atlas-training-intelligence__attention-card button:hover,
+.atlas .atlas-training-intelligence__attention-card button:focus-visible,
+.atlas .atlas-training-intelligence__filters button:hover,
+.atlas .atlas-training-intelligence__filters button:focus-visible {
+  border-color: var(--atlas-accent);
+  color: var(--atlas-accent);
+  outline: 0;
+}
+
+.atlas .atlas-training-intelligence__replacements {
+  margin: 0 0 12px;
+}
+
+.atlas .atlas-training-intelligence__replacement {
+  background: color-mix(in srgb, var(--atlas-accent) 8%, var(--atlas-surface));
+  border: 1px solid color-mix(in srgb, var(--atlas-accent) 38%, var(--atlas-border));
+  border-radius: 6px;
+  padding: 10px 12px;
+}
+
+.atlas .atlas-training-intelligence__replacement-label {
+  color: var(--atlas-accent);
+  display: block;
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  margin-bottom: 5px;
+  text-transform: uppercase;
+}
+
+.atlas .atlas-training-intelligence__replacement-players {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.atlas .atlas-training-intelligence__replacement-players .atlas-player-link {
+  color: var(--atlas-text);
+  font-size: 0.8rem;
+  font-weight: 750;
+}
+
+.atlas .atlas-training-intelligence__replacement p {
+  color: var(--atlas-text-secondary);
+  font-size: 0.73rem;
+  margin: 5px 0 0;
+}
+
+.atlas .atlas-training-intelligence__table-wrap {
+  overflow-x: auto;
+}
+
+.atlas .atlas-training-intelligence__table {
+  border-collapse: collapse;
+  min-width: 760px;
+  width: 100%;
+}
+
+.atlas .atlas-training-intelligence__table th,
+.atlas .atlas-training-intelligence__table td {
+  border-bottom: 1px solid color-mix(in srgb, var(--atlas-border) 72%, transparent);
+  font-size: 0.75rem;
+  padding: 8px 7px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.atlas .atlas-training-intelligence__table thead th {
+  color: var(--atlas-text-muted);
+  font-size: 0.63rem;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.atlas .atlas-training-intelligence__table tbody th {
+  color: var(--atlas-text);
+  font-weight: 700;
+}
+
+.atlas .atlas-training-intelligence__table tbody td {
+  color: var(--atlas-text-secondary);
+}
+
+.atlas .atlas-training-intelligence__table tbody tr.is-outside {
+  background: color-mix(in srgb, var(--semantic-warning-text) 5%, transparent);
+}
+
+.atlas .atlas-training-intelligence__table tbody tr.is-skill-up {
+  background: color-mix(in srgb, var(--semantic-success-text) 7%, transparent);
+}
+
+.atlas .atlas-training-intelligence__table tbody tr:last-child th,
+.atlas .atlas-training-intelligence__table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.atlas .atlas-training-intelligence__numeric {
+  text-align: center !important;
+}
+
+.atlas .atlas-training-intelligence__secondary {
+  color: var(--atlas-text-muted) !important;
+  font-size: 0.68rem !important;
+}
+
+.atlas .atlas-training-intelligence__status {
+  color: var(--atlas-text-secondary);
+}
+
+.atlas .atlas-training-intelligence__status:first-letter {
+  color: var(--atlas-accent);
+}
+
+.atlas .atlas-training-intelligence__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  justify-content: flex-end;
+}
+
+.atlas .atlas-training-intelligence__filters button.is-active {
+  background: var(--atlas-accent);
+  border-color: var(--atlas-accent);
+  color: var(--atlas-bg);
+}
+
+.atlas .atlas-training-intelligence__progress-cell {
+  min-width: 120px;
+}
+
+.atlas .atlas-training-intelligence__progress {
+  align-items: center;
+  display: flex;
+  gap: 7px;
+}
+
+.atlas .atlas-training-intelligence__progress-bar {
+  background: var(--atlas-border);
+  border-radius: 3px;
+  display: inline-block;
+  height: 4px;
+  overflow: hidden;
+  width: 45px;
+}
+
+.atlas .atlas-training-intelligence__progress-bar > span {
+  background: var(--atlas-accent);
+  display: block;
+  height: 100%;
+}
+
+.atlas .atlas-training-intelligence__skill-up {
+  background: color-mix(in srgb, var(--semantic-success-text) 15%, transparent);
+  border-radius: 3px;
+  color: var(--semantic-success-text);
+  display: inline-block;
+  font-size: 0.58rem;
+  font-weight: 800;
+  margin-left: 7px;
+  padding: 2px 4px;
+  text-transform: uppercase;
+  vertical-align: 1px;
+}
+
+.atlas .atlas-training-intelligence__recommendation {
+  color: var(--atlas-text);
+  display: block;
+}
+
+.atlas .atlas-training-intelligence__table small {
+  color: var(--atlas-text-muted);
+  display: block;
+  font-size: 0.62rem;
+  margin-top: 2px;
+}
+
+.atlas .atlas-training-intelligence__empty {
+  color: var(--atlas-text-muted) !important;
+  padding: 14px 0 !important;
+  text-align: center !important;
+}
+
 @media (max-width: 700px) {
   .atlas .atlas-training-configuration {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .atlas .atlas-training-intelligence__summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .atlas .atlas-training-intelligence__metric:last-child {
+    grid-column: span 2;
+  }
+
+  .atlas .atlas-training-intelligence__heading,
+  .atlas .atlas-training-intelligence__section-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .atlas .atlas-training-intelligence__filters {
+    justify-content: flex-start;
   }
 }

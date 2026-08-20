@@ -1,4 +1,9 @@
 import type { MainViewId } from "./routing";
+import type {
+  AdvancedTrainingOptimization,
+  PlayerTrainingRecommendation,
+  WeeklyTrainingReport
+} from "@atlas/domain";
 
 export type ViewId = MainViewId | "player-detail";
 
@@ -182,6 +187,16 @@ export interface TrainingPageData {
   } | null;
   players: TrainingPagePlayer[];
   history?: TrainingReport[];
+}
+
+export type WeeklyTrainingReportResponse = Omit<WeeklyTrainingReport, "date"> & {
+  date: string;
+};
+
+export interface WeeklyTrainingIntelligence {
+  report: WeeklyTrainingReportResponse;
+  recommendations: PlayerTrainingRecommendation[];
+  advancedOptimization: AdvancedTrainingOptimization;
 }
 
 export interface TrainingReport {

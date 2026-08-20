@@ -4,6 +4,7 @@ import type {
   PlayerDevelopment,
   RealYouthAcademyPlanning,
   TrainingPageData,
+  WeeklyTrainingIntelligence,
   YouthPipelinePlanning
 } from "./types";
 
@@ -24,6 +25,19 @@ export async function fetchTrainingPageData(clubId: string): Promise<TrainingPag
 
   if (!response.ok || !body) {
     throw new Error("Training API returned an unexpected response.");
+  }
+
+  return body;
+}
+
+export async function fetchWeeklyTrainingIntelligence(
+  clubId: string
+): Promise<WeeklyTrainingIntelligence> {
+  const response = await fetch(`/api/clubs/${clubId}/training/intelligence`);
+  const body = (await response.json()) as WeeklyTrainingIntelligence;
+
+  if (!response.ok || !body) {
+    throw new Error("Weekly Training Intelligence API returned an unexpected response.");
   }
 
   return body;
