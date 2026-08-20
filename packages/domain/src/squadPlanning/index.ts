@@ -14,6 +14,14 @@ import {
   type PlayerDevelopmentTarget
 } from "../playerDevelopment/index.js";
 import { SQUAD_PLANNING_CONFIG } from "./constants.js";
+import { analyzeSquadDepth } from "./depth.js";
+import type {
+  SquadDepthAnalysis,
+  SquadDepthAnalysisInput,
+  SquadDepthAnalysisOptions,
+  SquadDepthPlayer,
+  SquadProfileRequirement
+} from "./depth-types.js";
 import type {
   PlayerLifecycleStage,
   SquadAssessment,
@@ -28,6 +36,7 @@ import type {
 
 export * from "./constants.js";
 export * from "./types.js";
+export * from "./depth.js";
 
 const ROLE_ORDER: readonly SquadRole[] = [
   "core",
@@ -199,6 +208,13 @@ export class SquadPlanner {
 
   assessSquad(contexts: readonly SquadPlayerContext[]): SquadAssessment {
     return assessSquad(contexts, this.config);
+  }
+
+  analyzeDepth(
+    input: SquadDepthAnalysisInput | SquadAssessment | readonly SquadDepthPlayer[],
+    options: SquadDepthAnalysisOptions | readonly SquadProfileRequirement[] = {}
+  ): SquadDepthAnalysis {
+    return analyzeSquadDepth(input, options);
   }
 }
 
