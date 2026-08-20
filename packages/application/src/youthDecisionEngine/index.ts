@@ -4,7 +4,11 @@ export {
   assessYouthDevelopmentOpportunity,
   assessYouthStrategicAssessment,
   buildYouthProspectDiagnostic,
+  evaluateYouthDecisions,
   evaluateYouthDevelopmentOpportunities,
+  recommendYouthDecision,
+  summarizeYouthDecisions,
+  YouthDecisionRecommendationService,
   YouthDecisionEngine
 } from "@atlas/domain";
 export type {
@@ -24,5 +28,15 @@ export type {
   YouthProfileDevelopmentCapacity,
   YouthReprofileOpportunity,
   YouthStrategicAssessment,
-  YouthSuccessionFit
+  YouthSuccessionFit,
+  YouthDecision,
+  YouthDecisionConfig,
+  YouthDecisionContext,
+  YouthDecisionPriority,
+  YouthDecisionReason,
+  YouthDecisionRecommendation,
+  YouthDecisionRisk,
+  YouthDecisionScoreBreakdown,
+  YouthDecisionScores,
+  YouthDecisionSummary
 } from "@atlas/domain";

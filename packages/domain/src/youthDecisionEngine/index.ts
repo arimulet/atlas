@@ -39,9 +39,17 @@ import type {
   YouthFitContext,
   YouthStrategicAssessment
 } from "./fit-types.js";
+import { evaluateYouthDecisions, recommendYouthDecision } from "./decision.js";
 
 export * from "./types.js";
 export * from "./fit-types.js";
+export * from "./decision-types.js";
+export {
+  evaluateYouthDecisions,
+  recommendYouthDecision,
+  summarizeYouthDecisions,
+  YouthDecisionRecommendationService
+} from "./decision.js";
 export {
   assessYouthDevelopmentOpportunity,
   assessYouthStrategicAssessment,
@@ -196,6 +204,20 @@ export class YouthDecisionEngine {
     config: Partial<YouthFitConfig> = {}
   ): YouthDevelopmentOpportunity[] {
     return evaluateYouthDevelopmentOpportunities(contexts, config);
+  }
+
+  recommend(
+    context: import("./decision-types.js").YouthDecisionContext,
+    config: Partial<import("./decision-types.js").YouthDecisionConfig> = {}
+  ): import("./decision-types.js").YouthDecisionRecommendation {
+    return recommendYouthDecision(context, config);
+  }
+
+  evaluateDecisions(
+    contexts: readonly import("./decision-types.js").YouthDecisionContext[],
+    config: Partial<import("./decision-types.js").YouthDecisionConfig> = {}
+  ): import("./decision-types.js").YouthDecisionRecommendation[] {
+    return evaluateYouthDecisions(contexts, config);
   }
 }
 
