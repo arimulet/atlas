@@ -90,6 +90,7 @@ describe("Sokker sync end-to-end", () => {
     expect(await JuniorModel.countDocuments({ clubId: 6038 })).toBe(2);
     expect(await JuniorModel.findOne({ clubId: 6038, juniorId: 501 }).lean()).toMatchObject({
       currentLevel: 7,
+      initialLevel: 7,
       initialWeeks: 8,
       weeksLeft: 8,
       status: "in_academy"
