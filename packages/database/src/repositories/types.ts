@@ -207,7 +207,7 @@ export interface PersistedJuniorSnapshot {
 
 export interface PersistedSnapshot {
   id: string;
-  clubId: string;
+  clubId: number;
   schemaVersion: string;
   snapshotDate: Date;
   gameWeek: number | null;

@@ -13,6 +13,7 @@ import {
   getSquadRoleAssignmentModel,
   SnapshotModel,
   migrateClubProfileDocuments,
+  migrateSnapshotClubIds,
   type SaveSnapshotInput
 } from "../src/index.js";
 
@@ -60,11 +61,11 @@ describe("Mongo repositories", () => {
     });
 
     const saved = await snapshots.save(
-      buildSnapshotInput({ clubId: club.id, playerId: player.playerId })
+      buildSnapshotInput({ clubId: club.clubId, playerId: player.playerId })
     );
 
     expect(saved.id).toEqual(expect.any(String));
-    expect(saved.clubId).toBe(club.id);
+    expect(saved.clubId).toBe(club.clubId);
     expect(saved.schemaVersion).toBe("atlas.player-snapshot.v0");
     expect(saved.gameWeek).toBe(1201);
     expect(saved.week).toBe(4);
@@ -141,6 +142,30 @@ describe("Mongo repositories", () => {
     });
   });
 
+  it("migrates legacy snapshot ObjectId references to numeric club ids", async () => {
+    const club = await clubs.save({
+      clubId: 1,
+      country: 1,
+      name: "River Plate Forever",
+      training: { GK: 2, DEF: 6, MID: 4, ATT: 7 },
+      currency: "ARS"
+    });
+    const inserted = await SnapshotModel.collection.insertOne({
+      clubId: new mongoose.Types.ObjectId(club.id),
+      schemaVersion: "atlas.player-snapshot.v0",
+      snapshotDate: new Date("2026-08-05T00:00:00.000Z"),
+      importedAt: new Date("2026-08-05T20:00:00.000Z"),
+      players: [],
+      juniors: []
+    });
+
+    const result = await migrateSnapshotClubIds();
+    const migrated = await SnapshotModel.collection.findOne({ _id: inserted.insertedId });
+
+    expect(result.migrated).toBe(1);
+    expect(migrated?.clubId).toBe(1);
+  });
+
   it("updates manual club configuration without changing observed Sokker data", async () => {
     const club = await clubs.save({
       clubId: 1,
@@ -185,7 +210,7 @@ describe("Mongo repositories", () => {
       name: "Tomas Alvarez"
     });
     const saved = await snapshots.save(
-      buildSnapshotInput({ clubId: club.id, playerId: player.playerId })
+      buildSnapshotInput({ clubId: club.clubId, playerId: player.playerId })
     );
 
     const found = await snapshots.findById(saved.id);
@@ -217,17 +242,19 @@ describe("Mongo repositories", () => {
 
     await snapshots.save(
       buildSnapshotInput({
-        clubId: club.id,
+        clubId: club.clubId,
         playerId: player.playerId,
         snapshotDate: new Date("2026-08-06T00:00:00.000Z")
       })
     );
-    await snapshots.save(buildSnapshotInput({ clubId: club.id, playerId: player.playerId }));
-    await snapshots.save(buildSnapshotInput({ clubId: otherClub.id, playerId: player.playerId }));
+    await snapshots.save(buildSnapshotInput({ clubId: club.clubId, playerId: player.playerId }));
+    await snapshots.save(
+      buildSnapshotInput({ clubId: otherClub.clubId, playerId: player.playerId })
+    );
 
-    const list = await snapshots.listByClub(club.id);
+    const list = await snapshots.listByClub(club.clubId);
 
-    expect(list.map((snapshot) => snapshot.clubId)).toEqual([club.id, club.id]);
+    expect(list.map((snapshot) => snapshot.clubId)).toEqual([club.clubId, club.clubId]);
     expect(list.map((snapshot) => snapshot.snapshotDate.toISOString())).toEqual([
       "2026-08-05T00:00:00.000Z",
       "2026-08-06T00:00:00.000Z"
@@ -250,10 +277,10 @@ describe("Mongo repositories", () => {
     const snapshotDate = new Date("2026-08-05T00:00:00.000Z");
 
     const saved = await snapshots.save(
-      buildSnapshotInput({ clubId: club.id, playerId: player.playerId, snapshotDate })
+      buildSnapshotInput({ clubId: club.clubId, playerId: player.playerId, snapshotDate })
     );
 
-    const found = await snapshots.findByClubAndDate(club.id, snapshotDate);
+    const found = await snapshots.findByClubAndDate(club.clubId, snapshotDate);
 
     expect(found.map((snapshot) => snapshot.id)).toEqual([saved.id]);
   });
@@ -353,7 +380,7 @@ describe("Mongo repositories", () => {
 });
 
 function buildSnapshotInput(overrides: {
-  clubId: string;
+  clubId: number;
   playerId: number;
   snapshotDate?: Date;
 }): SaveSnapshotInput {

@@ -125,7 +125,7 @@ export class SokkerSyncPersistence {
       );
     }
 
-    const previousSnapshot = (await this.repositories.snapshots.listByClub(club.id)).at(-1);
+    const previousSnapshot = (await this.repositories.snapshots.listByClub(club.clubId)).at(-1);
     const snapshotPlayers = mapPlayersToSnapshotPlayers(payload.players, payload.trainingWeeks).map(
       (player) => ({
         ...player,
@@ -167,7 +167,7 @@ export class SokkerSyncPersistence {
       () =>
         this.repositories.snapshots.save(
           {
-            clubId: club.id,
+            clubId: club.clubId,
             schemaVersion: "atlas.player-snapshot.v0",
             snapshotDate: currentDate,
             gameWeek: payload.current.calendar.gameWeek,

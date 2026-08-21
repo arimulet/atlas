@@ -41,7 +41,7 @@ export const generateClubHistoricalFindings = async (
 function mapSnapshot(snapshot: PersistedSnapshot): SnapshotComparisonSnapshot {
   return {
     id: snapshot.id,
-    clubId: snapshot.clubId,
+    clubId: String(snapshot.clubId),
     snapshotDate: formatDate(snapshot.snapshotDate),
     players: snapshot.players.map(mapPlayer)
   };
