@@ -7,7 +7,7 @@ import mongoose from "mongoose";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { SnapshotModel, SyncRunModel, TrainingWeekModel } from "@atlas/database";
+import { JuniorModel, SnapshotModel, SyncRunModel, TrainingWeekModel } from "@atlas/database";
 import {
   MongoClubRepository,
   MongoPlayerRepository,
@@ -86,6 +86,13 @@ describe("Sokker sync end-to-end", () => {
       trainers: 3,
       juniors: 2,
       trainingSummaryWeeks: 0
+    });
+    expect(await JuniorModel.countDocuments({ clubId: 6038 })).toBe(2);
+    expect(await JuniorModel.findOne({ clubId: 6038, juniorId: 501 }).lean()).toMatchObject({
+      currentLevel: 7,
+      initialWeeks: 8,
+      weeksLeft: 8,
+      status: "in_academy"
     });
     expect(await SnapshotModel.exists({ gameWeek: 1205 })).toBeTruthy();
     expect(await TrainingWeekModel.exists({ clubId: 6038, gameWeek: 1204 })).toBeTruthy();

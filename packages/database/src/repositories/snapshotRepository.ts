@@ -47,7 +47,6 @@ export class MongoSnapshotRepository {
         name: junior.name,
         age: junior.age,
         initialLevel: junior.initialLevel ?? null,
-        initialWeeksRemaining: junior.initialWeeksRemaining ?? null,
         weeksRemaining: junior.weeksRemaining ?? null,
         skill: junior.skill ?? null,
         status: junior.status ?? "in_academy"
@@ -189,7 +188,6 @@ interface SnapshotDocumentShape {
     name: string;
     age: number;
     initialLevel?: number | null;
-    initialWeeksRemaining?: number | null;
     weeksRemaining?: number | null;
     skill?: number | null;
     status?: "in_academy" | "ready_for_promotion" | "promoted";
@@ -239,7 +237,6 @@ function mapSnapshot(
       name: junior.name,
       age: junior.age,
       initialLevel: junior.initialLevel ?? junior.skill ?? null,
-      initialWeeksRemaining: junior.initialWeeksRemaining ?? null,
       weeksRemaining: junior.weeksRemaining ?? null,
       skill: junior.skill ?? null,
       status: junior.status ?? "in_academy"

@@ -1,4 +1,8 @@
-import { MongoClubRepository, MongoSnapshotRepository } from "@atlas/database";
+import {
+  MongoClubRepository,
+  MongoJuniorRepository,
+  MongoSnapshotRepository
+} from "@atlas/database";
 import type {
   RealYouthAcademyPlayerPlan,
   RealYouthAcademyPlanning,
@@ -11,6 +15,7 @@ import type {
 import { ClubId, buildClubOperatingSettings } from "@atlas/application";
 
 const clubRepository = new MongoClubRepository();
+const juniorRepository = new MongoJuniorRepository();
 const snapshotRepository = new MongoSnapshotRepository();
 
 export const getRealYouthAcademyPlanning = async (
@@ -33,6 +38,10 @@ export const getRealYouthAcademyPlanning = async (
     return buildEmptyPlanning(clubId, academyInvestment);
   }
 
+  const currentJuniors = await juniorRepository.listByClub(club.clubId);
+  const initialWeeksByJuniorId = new Map(
+    currentJuniors.map((junior) => [junior.juniorId, junior.initialWeeks])
+  );
   const warnings: YouthAcademyWarning[] = [];
   const observedPlayers: YouthAcademyObservedPlayer[] = latest.juniors.map((p) => {
     return {
@@ -40,7 +49,7 @@ export const getRealYouthAcademyPlanning = async (
       playerId: p.playerId,
       name: p.name,
       age: p.age,
-      initialWeeksRemaining: p.initialWeeksRemaining,
+      initialWeeksRemaining: initialWeeksByJuniorId.get(p.playerId) ?? null,
       weeksRemaining: p.weeksRemaining,
       skill: p.skill,
       status: p.status
@@ -96,10 +105,7 @@ export const getRealYouthAcademyPlanning = async (
   };
 };
 
-function buildEmptyPlanning(
-  clubId: ClubId,
-  academyInvestment: string
-): RealYouthAcademyPlanning {
+function buildEmptyPlanning(clubId: ClubId, academyInvestment: string): RealYouthAcademyPlanning {
   return {
     clubId,
     snapshotId: null,
@@ -163,12 +169,14 @@ function classifyYouthPlayer(player: YouthAcademyObservedPlayer): RealYouthAcade
   }
 
   const projectedPromotionAge =
-    player.weeksRemaining !== null
-      ? player.age + Math.floor(player.weeksRemaining / 16)
-      : null;
+    player.weeksRemaining !== null ? player.age + Math.floor(player.weeksRemaining / 16) : null;
 
   if (projectedPromotionAge !== null) {
-    evidence.push({ kind: "derived", label: "Edad proyectada de ascenso", value: projectedPromotionAge });
+    evidence.push({
+      kind: "derived",
+      label: "Edad proyectada de ascenso",
+      value: projectedPromotionAge
+    });
   }
 
   let category: YouthAcademyCategory = "follow_up";
@@ -186,7 +194,8 @@ function classifyYouthPlayer(player: YouthAcademyObservedPlayer): RealYouthAcade
     category = "ready_for_promotion";
     severity = "info";
     confidence = player.weeksRemaining !== null ? "high" : "medium";
-    rationale = "El juvenil ha completado su ciclo de formacion y esta listo para ser promovido al plantel principal.";
+    rationale =
+      "El juvenil ha completado su ciclo de formacion y esta listo para ser promovido al plantel principal.";
     signals.push({
       code: "youth_ready_for_promotion",
       severity: "info",
@@ -194,7 +203,10 @@ function classifyYouthPlayer(player: YouthAcademyObservedPlayer): RealYouthAcade
       message: "Listo para promocion al primer equipo.",
       evidence
     });
-  } else if (isHigh && (player.age <= 17 || (player.weeksRemaining !== null && player.weeksRemaining <= 4))) {
+  } else if (
+    isHigh &&
+    (player.age <= 17 || (player.weeksRemaining !== null && player.weeksRemaining <= 4))
+  ) {
     category = "standout_prospect";
     severity = "low";
     confidence = player.weeksRemaining !== null ? "high" : "medium";

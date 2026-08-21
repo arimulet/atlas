@@ -265,7 +265,6 @@ export interface SnapshotJuniorDto {
   playerId: number;
   name: string;
   age: number;
-  initialWeeksRemaining: number;
   weeksRemaining: number;
   skill: number;
   status: "in_academy";

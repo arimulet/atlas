@@ -1,6 +1,7 @@
 import {
   mongoTransactionsAvailable,
   MongoClubRepository,
+  MongoJuniorRepository,
   MongoPlayerRepository,
   MongoSnapshotRepository,
   MongoSyncRunRepository,
@@ -20,9 +21,10 @@ import { mapJuniorsToSnapshotJuniors, mapPlayersToSnapshotPlayers } from "./snap
 
 const SYNC_SNAPSHOT_NATURAL_KEY = "sokker-json-api-sync";
 
-/** Current club/player state and factual events are persisted; summaries stay in memory. */
+/** Current club/player/junior state and factual events are persisted; summaries stay in memory. */
 export interface SokkerSyncPersistenceRepositories {
   clubs: MongoClubRepository;
+  juniors?: MongoJuniorRepository;
   players: MongoPlayerRepository;
   snapshots: MongoSnapshotRepository;
   syncRuns: MongoSyncRunRepository;
@@ -125,6 +127,31 @@ export class SokkerSyncPersistence {
       );
     }
 
+    const juniors = this.repositories.juniors ?? new MongoJuniorRepository();
+    await persistStep("Junior", `${teamId}/status`, () =>
+      juniors.markMissingStatuses(
+        teamId,
+        payload.juniors.map((junior) => junior.id),
+        payload.players.map((player) => player.id),
+        session
+      )
+    );
+    for (const junior of payload.juniors) {
+      await persistStep("Junior", `${teamId}/${junior.id}`, () =>
+        juniors.resolveCurrentIdentity(
+          {
+            juniorId: junior.id,
+            clubId: teamId,
+            name: junior.name.fullName,
+            age: junior.age,
+            currentLevel: junior.currentLevel,
+            weeksLeft: junior.weeksLeft
+          },
+          session
+        )
+      );
+    }
+
     const previousSnapshot = (await this.repositories.snapshots.listByClub(club.clubId)).at(-1);
     const snapshotPlayers = mapPlayersToSnapshotPlayers(payload.players, payload.trainingWeeks).map(
       (player) => ({
@@ -148,14 +175,10 @@ export class SokkerSyncPersistence {
       const previousJunior = previousSnapshot?.juniors.find(
         (candidate) => candidate.playerId === junior.playerId
       );
+
       return {
         ...junior,
         initialLevel: previousJunior?.initialLevel ?? junior.skill,
-        initialWeeksRemaining:
-          previousJunior?.initialWeeksRemaining ??
-          junior.initialWeeksRemaining ??
-          junior.weeksRemaining ??
-          null,
         weeksRemaining: junior.weeksRemaining ?? null,
         status: junior.status ?? "in_academy"
       };
@@ -226,6 +249,7 @@ export async function persistSokkerSync(
 function createRepositories(): SokkerSyncPersistenceRepositories {
   return {
     clubs: new MongoClubRepository(),
+    juniors: new MongoJuniorRepository(),
     players: new MongoPlayerRepository(),
     snapshots: new MongoSnapshotRepository(),
     syncRuns: new MongoSyncRunRepository(),

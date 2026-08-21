@@ -3,7 +3,9 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import {
   ClubModel,
+  JuniorModel,
   MongoClubRepository,
+  MongoJuniorRepository,
   MongoPlayerDevelopmentTargetRepository,
   MongoSquadRoleAssignmentRepository,
   MongoPlayerRepository,
@@ -20,6 +22,7 @@ import {
 let mongo: MongoMemoryServer;
 
 const clubs = new MongoClubRepository();
+const juniors = new MongoJuniorRepository();
 const players = new MongoPlayerRepository();
 const developmentTargets = new MongoPlayerDevelopmentTargetRepository();
 const squadRoleAssignments = new MongoSquadRoleAssignmentRepository();
@@ -34,6 +37,7 @@ describe("Mongo repositories", () => {
   beforeEach(async () => {
     await Promise.all([
       ClubModel.deleteMany({}),
+      JuniorModel.deleteMany({}),
       PlayerModel.deleteMany({}),
       getPlayerDevelopmentTargetModel().deleteMany({}),
       getSquadRoleAssignmentModel().deleteMany({}),
@@ -89,6 +93,37 @@ describe("Mongo repositories", () => {
       weeksRemaining: 4,
       skill: 8,
       status: "in_academy"
+    });
+  });
+
+  it("keeps the current junior state by club and external id", async () => {
+    const first = await juniors.resolveCurrentIdentity({
+      juniorId: 5001,
+      clubId: 1,
+      name: "Matias Cantero",
+      age: 16,
+      currentLevel: 8,
+      weeksLeft: 4
+    });
+    const second = await juniors.resolveCurrentIdentity({
+      juniorId: 5001,
+      clubId: 1,
+      name: "Matias Cantero",
+      age: 17,
+      currentLevel: 9,
+      weeksLeft: 0
+    });
+
+    await juniors.markMissingStatuses(1, [], [5001]);
+
+    expect(second.id).toBe(first.id);
+    expect(await JuniorModel.countDocuments({ clubId: 1, juniorId: 5001 })).toBe(1);
+    expect(await juniors.findByJuniorId({ clubId: 1, juniorId: 5001 })).toMatchObject({
+      age: 17,
+      currentLevel: 9,
+      initialWeeks: 4,
+      weeksLeft: 0,
+      status: "promoted"
     });
   });
 
@@ -420,7 +455,6 @@ function buildSnapshotInput(overrides: {
         name: "Matias Cantero",
         age: 16,
         initialLevel: 8,
-        initialWeeksRemaining: 4,
         weeksRemaining: 4,
         skill: 8,
         status: "in_academy"

@@ -65,7 +65,6 @@ export function mapJuniorsToSnapshotJuniors(juniors: readonly JuniorDto[]): Snap
     playerId: junior.id,
     name: junior.name.fullName,
     age: junior.age,
-    initialWeeksRemaining: junior.weeksLeft,
     weeksRemaining: junior.weeksLeft,
     skill: junior.currentLevel,
     status: "in_academy"

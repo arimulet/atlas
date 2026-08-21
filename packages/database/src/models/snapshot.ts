@@ -59,7 +59,6 @@ const juniorSnapshotSchema = new Schema(
     name: { type: String, required: true, trim: true },
     age: { type: Number, required: true, min: 1 },
     initialLevel: { type: Number, default: null, min: 0 },
-    initialWeeksRemaining: { type: Number, default: null },
     weeksRemaining: { type: Number, default: null },
     skill: { type: Number, required: true, min: 0 },
     status: {
