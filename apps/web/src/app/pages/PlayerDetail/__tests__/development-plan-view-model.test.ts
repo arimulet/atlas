@@ -119,7 +119,7 @@ describe("createDevelopmentPlanViewModel", () => {
   });
 
   it("derives profile editor defaults from the domain catalog", () => {
-    const defaults = targetDefaultsForProfile("central_defender", { defender: 13, pace: 8 });
+    const defaults = targetDefaultsForProfile("defender", { defender: 13, pace: 8 });
 
     expect(defaults).toMatchObject({ defender: 13, pace: 10, technique: 9, playmaker: 7 });
   });

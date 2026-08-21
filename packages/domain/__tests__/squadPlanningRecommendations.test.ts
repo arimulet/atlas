@@ -17,7 +17,7 @@ const forwardRequirement: SquadProfileRequirement = {
 };
 
 const midfielderRequirement: SquadProfileRequirement = {
-  profile: "central_midfielder",
+  profile: "midfielder",
   minimum: 2,
   ideal: 3,
   maximum: 4
@@ -357,8 +357,8 @@ describe("squad planning recommendations", () => {
           role: "core",
           currentContributionScore: 0.95,
           futureContributionScore: 0.8,
-          profileContributions: { forward: 0.79, central_midfielder: 0.76 },
-          compatibleProfiles: ["central_midfielder"]
+          profileContributions: { forward: 0.79, midfielder: 0.76 },
+          compatibleProfiles: ["midfielder"]
         }),
         player({
           playerId: 2,
@@ -382,14 +382,14 @@ describe("squad planning recommendations", () => {
       [{ profile: "forward", minimum: 2, ideal: 2, maximum: 3 }, midfielderRequirement]
     );
 
-    expect(recommendationFor(result, "central_midfielder")).toMatchObject({
+    expect(recommendationFor(result, "midfielder")).toMatchObject({
       type: "reprofile_player",
       targetPlayerId: 1
     });
-    expect(recommendationFor(result, "central_midfielder").reasons).toContainEqual({
+    expect(recommendationFor(result, "midfielder").reasons).toContainEqual({
       type: "compatible_reprofile_candidate",
       playerId: 1,
-      targetProfile: "central_midfielder"
+      targetProfile: "midfielder"
     });
   });
 
@@ -401,8 +401,8 @@ describe("squad planning recommendations", () => {
           role: "core",
           currentContributionScore: 0.95,
           futureContributionScore: 0.8,
-          profileContributions: { forward: 0.79, central_midfielder: 0.6 },
-          compatibleProfiles: ["central_midfielder"]
+          profileContributions: { forward: 0.79, midfielder: 0.6 },
+          compatibleProfiles: ["midfielder"]
         }),
         player({
           playerId: 2,
@@ -426,7 +426,7 @@ describe("squad planning recommendations", () => {
       [{ profile: "forward", minimum: 2, ideal: 2, maximum: 3 }, midfielderRequirement]
     );
 
-    expect(recommendationFor(result, "central_midfielder").type).not.toBe("reprofile_player");
+    expect(recommendationFor(result, "midfielder").type).not.toBe("reprofile_player");
   });
 
   it("turns a dependency risk into a monitor recommendation", () => {
@@ -587,8 +587,8 @@ describe("squad planning recommendations", () => {
       lifecycle: "development",
       currentContributionScore: 0.55,
       futureContributionScore: 0.85,
-      compatibleProfiles: ["central_midfielder"],
-      profileContributions: { central_midfielder: 0.8 }
+      compatibleProfiles: ["midfielder"],
+      profileContributions: { midfielder: 0.8 }
     });
     const result = recommend(
       [
@@ -596,7 +596,7 @@ describe("squad planning recommendations", () => {
         player({ playerId: 2, currentContributionScore: 0.2, futureContributionScore: 0.2 }),
         player({
           playerId: 3,
-          profile: "central_midfielder",
+          profile: "midfielder",
           currentContributionScore: 0.2,
           futureContributionScore: 0.2
         })
@@ -620,7 +620,7 @@ describe("squad planning recommendations", () => {
         player({ playerId: 1, currentContributionScore: 0.2, futureContributionScore: 0.2 }),
         player({
           playerId: 2,
-          profile: "central_midfielder",
+          profile: "midfielder",
           currentContributionScore: 0.2,
           futureContributionScore: 0.2
         })
@@ -689,8 +689,8 @@ describe("squad planning recommendations", () => {
         role: "core",
         currentContributionScore: 0.85,
         futureContributionScore: 0.85,
-        compatibleProfiles: ["central_midfielder"],
-        profileContributions: { central_midfielder: 0.76 }
+        compatibleProfiles: ["midfielder"],
+        profileContributions: { midfielder: 0.76 }
       }),
       player({
         playerId: 2,
@@ -703,7 +703,7 @@ describe("squad planning recommendations", () => {
     const depthAnalysis = analyze(players, [forwardRequirement, midfielderRequirement]);
 
     expect(
-      depthAnalysis.profiles.find((profile) => profile.profile === "central_midfielder")?.current
+      depthAnalysis.profiles.find((profile) => profile.profile === "midfielder")?.current
         .availablePlayers
     ).toBe(0.65);
     expect(result.recommendations).toBeDefined();

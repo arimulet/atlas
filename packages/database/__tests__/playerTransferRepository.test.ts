@@ -43,7 +43,7 @@ describe("Mongo player transfer repository", () => {
       age: 20,
       salePrice: 2_000_000,
       currency: "ARS",
-      developmentProfile: "central_defender",
+      developmentProfile: "defender",
       salePriceType: "final_sale"
     });
   });
@@ -87,7 +87,7 @@ function buildTransfer(overrides: Partial<SavePlayerTransferInput> = {}): SavePl
     age: 20,
     skills: { defender: 13, pace: 12, technique: 10, playmaker: 9 },
     formation: "DEF",
-    developmentProfile: "central_defender",
+    developmentProfile: "defender",
     sokkerValue: 1_100_000,
     source: "manual",
     dataQuality: "complete",

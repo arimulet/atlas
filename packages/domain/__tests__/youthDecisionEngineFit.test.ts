@@ -35,8 +35,8 @@ function squadAssessment(): SquadAssessment {
 
 function depthProfile(overrides: Partial<ProfileDepthAssessment> = {}): ProfileDepthAssessment {
   return {
-    profile: "central_defender",
-    requirement: { profile: "central_defender", minimum: 2, ideal: 3, maximum: 4 },
+    profile: "defender",
+    requirement: { profile: "defender", minimum: 2, ideal: 3, maximum: 4 },
     current: {
       availablePlayers: 2,
       strongOptions: 2,
@@ -96,7 +96,7 @@ function projection(
 ): PlayerDevelopmentProjection {
   return {
     playerId: 1,
-    profile: "central_defender",
+    profile: "defender",
     generatedAtGameWeek: 1200,
     generatedAtDate: new Date("2026-08-20T00:00:00.000Z"),
     steps: [],
@@ -177,7 +177,7 @@ describe("Youth Fit & Development Opportunity", () => {
             {
               id: "need",
               type: "prepare_successor",
-              profile: "central_defender",
+              profile: "defender",
               priority: "high",
               horizon: "medium_term",
               playerIds: [],
@@ -202,7 +202,7 @@ describe("Youth Fit & Development Opportunity", () => {
     expect(assessment.squadNeedScore).toBeGreaterThan(0.7);
     expect(assessment.reasons).toContainEqual({
       type: "profile_needed",
-      profile: "central_defender",
+      profile: "defender",
       horizon: "current"
     });
   });
@@ -253,7 +253,7 @@ describe("Youth Fit & Development Opportunity", () => {
     expect(assessment.reasons).toContainEqual({ type: "projected_ready_in_time" });
     expect(assessment.reasons).toContainEqual({
       type: "succession_opportunity",
-      profile: "central_defender"
+      profile: "defender"
     });
   });
 

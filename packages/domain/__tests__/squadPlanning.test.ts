@@ -12,7 +12,7 @@ import {
 
 const target: PlayerDevelopmentTarget = {
   playerId: 1,
-  profile: "central_defender",
+  profile: "defender",
   targetSkills: [
     { skill: "defender", targetLevel: 15, priority: "primary" },
     { skill: "pace", targetLevel: 13, priority: "primary" },
@@ -26,7 +26,7 @@ function player(overrides: Partial<SquadPlayerContext> = {}): SquadPlayerContext
     playerId: 1,
     age: 24,
     skills: { defender: 9, pace: 9, technique: 8 },
-    profile: "central_defender",
+    profile: "defender",
     developmentTarget: { ...target },
     training: { kind: "advanced" },
     talent: { value: 1.1, confidence: "high", evidenceCount: 4, evidences: [] },
@@ -84,7 +84,7 @@ describe("squad planning domain", () => {
     const assessment = assessSquadRole(
       withLevels(
         { defender: 5, pace: 5, technique: 5 },
-        { age: 25, talent: null, developmentTarget: null, profile: "central_defender" }
+        { age: 25, talent: null, developmentTarget: null, profile: "defender" }
       )
     );
 
@@ -99,7 +99,7 @@ describe("squad planning domain", () => {
           age: 32,
           ageFactor: 7,
           developmentTarget: { ...target, targetSkills: target.targetSkills },
-          profile: "central_defender"
+          profile: "defender"
         }
       )
     );

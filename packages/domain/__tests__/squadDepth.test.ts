@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   analyzeSquadDepth,
+  SQUAD_PROFILE_REQUIREMENTS,
   type PlayerDevelopmentProjection,
   type SquadDepthPlayer,
   type SquadProfileRequirement
@@ -71,6 +72,13 @@ function analyze(players: readonly SquadDepthPlayer[]) {
 }
 
 describe("squad depth analysis", () => {
+  it("does not include unsupported wing profiles in the default squad requirements", () => {
+    const profiles = SQUAD_PROFILE_REQUIREMENTS.map((requirement) => requirement.profile);
+
+    expect(profiles).not.toContain("wing_defender");
+    expect(profiles).not.toContain("winger");
+  });
+
   it("classifies a profile with healthy current and future depth as balanced", () => {
     const assessment = analyze([
       player({

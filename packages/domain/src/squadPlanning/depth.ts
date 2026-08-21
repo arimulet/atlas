@@ -284,8 +284,8 @@ function profileMatch(
 
 function formationFallback(formation: SquadDepthPlayer["formation"]): DevelopmentProfile | null {
   if (formation === "GK") return "goalkeeper";
-  if (formation === "DEF") return "central_defender";
-  if (formation === "MID") return "central_midfielder";
+  if (formation === "DEF") return "defender";
+  if (formation === "MID") return "midfielder";
   if (formation === "ATT") return "forward";
   return null;
 }

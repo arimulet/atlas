@@ -22,7 +22,7 @@ function player(overrides: Partial<PlayerMarketValuePlayer> = {}): PlayerMarketV
     playerId: 1,
     age: 20,
     formation: "DEF",
-    profile: "central_defender",
+    profile: "defender",
     skills: {
       pace: 12,
       technique: 10,
@@ -46,7 +46,7 @@ function transfer(overrides: Partial<PlayerTransferRecord> = {}): PlayerTransfer
     age: 20,
     skills: player().skills,
     formation: "DEF",
-    developmentProfile: "central_defender",
+    developmentProfile: "defender",
     source: "manual",
     ...overrides
   };
@@ -282,7 +282,7 @@ describe("Player Market comparable calibration", () => {
         transferId: "sample",
         transferDate: new Date("2026-01-01"),
         age: 20,
-        profile: "central_defender",
+        profile: "defender",
         actualSalePrice: 100,
         fundamentalPredictedValue: 80,
         predictedValue: 110,

@@ -142,9 +142,9 @@ export function profileLabel(profile: DevelopmentProfile | null): string {
   if (profile === null) return "Profile unknown";
   const labels: Record<DevelopmentProfile, string> = {
     goalkeeper: "Goalkeeper",
-    central_defender: "Central Defender",
+    defender: "Defender",
     wing_defender: "Wing Defender",
-    central_midfielder: "Central Midfielder",
+    midfielder: "Midfielder",
     winger: "Winger",
     forward: "Forward"
   };

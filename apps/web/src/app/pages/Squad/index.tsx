@@ -1,8 +1,6 @@
 import { useMemo, useState, type ReactNode } from "react";
-import { formatTrainingPriority } from "../../formatters";
 import type { DiagnosticFinding, DiagnosticParameterValue } from "@atlas/web/app/types";
 import type { SquadRole } from "@atlas/domain";
-import { formatEta, formatNumber, formatPercentage, formatTalent } from "../../formatters";
 import { AttentionIcon } from "../../components/AttentionIcon";
 import { PlayerLink } from "../../components/PlayerLink";
 import { StatusBadge } from "../../components/StatusBadge";
@@ -232,20 +230,13 @@ function SquadPlanningFiltersBar({
           }
         >
           <option value="all">All profiles</option>
-          {(
-            [
-              "goalkeeper",
-              "central_defender",
-              "wing_defender",
-              "central_midfielder",
-              "winger",
-              "forward"
-            ] as const
-          ).map((profile) => (
-            <option key={profile} value={profile}>
-              {profileLabel(profile)}
-            </option>
-          ))}
+          {(["goalkeeper", "defender", "midfielder", "forward"] as const).map(
+            (profile) => (
+              <option key={profile} value={profile}>
+                {profileLabel(profile)}
+              </option>
+            )
+          )}
         </select>
       </label>
     </div>
@@ -400,13 +391,6 @@ function SquadPositionTable({
           {SQUAD_SKILL_DEFINITIONS.map((skill) => (
             <col className="is-skill" key={skill.key} />
           ))}
-          <col className="is-trained-skill" />
-          <col className="is-advanced" />
-          <col className="is-efficiency" />
-          <col className="is-progress" />
-          <col className="is-talent" />
-          <col className="is-next-skill-up" />
-          <col className="is-eta" />
           <col className="is-market-value" />
           <col className="is-projected-value" />
           <col className="is-status" />
@@ -423,9 +407,6 @@ function SquadPositionTable({
             >
               Skills
             </th>
-            <th className="is-training-group" colSpan={7} scope="colgroup">
-              Training / Development
-            </th>
             <th className="is-market-group" colSpan={2} scope="colgroup">
               Market Value
             </th>
@@ -439,31 +420,10 @@ function SquadPositionTable({
               Form
             </th>
             {SQUAD_SKILL_DEFINITIONS.map((skill) => (
-              <th
-                scope="col"
-                key={skill.key}
-                title={formatTrainingPriority(skill.trainingPriority)}
-              >
+              <th scope="col" key={skill.key}>
                 {skill.shortLabel}
               </th>
             ))}
-            <th scope="col" title="Trained Skill">
-              Skill
-            </th>
-            <th scope="col" title="Advanced">
-              Adv
-            </th>
-            <th scope="col" title="Efficiency">
-              Eff
-            </th>
-            <th scope="col" title="Progress">
-              Prog
-            </th>
-            <th scope="col">Talent</th>
-            <th scope="col" title="Next Skill-up">
-              Next
-            </th>
-            <th scope="col">ETA</th>
             <th scope="col">Current</th>
             <th scope="col">Projected</th>
             <th scope="col">Status</th>
@@ -482,7 +442,7 @@ function SquadPositionTable({
             ))
           ) : (
             <tr>
-              <td className="atlas-squad-table__empty" colSpan={22}>
+              <td className="atlas-squad-table__empty" colSpan={15}>
                 No players assigned.
               </td>
             </tr>
@@ -520,17 +480,17 @@ function SquadPlayerRowView({
       <td>
         {planningPlayer ? (
           <div className="atlas-squad-planning-cell">
-            <span className={`atlas-squad-planning-badge is-${planningPlayer.role}`}>
-              {roleLabel(planningPlayer.role)}
-            </span>
-            <small>
-              {planningPlayer.profile ? profileLabel(planningPlayer.profile) : "No profile"}
-            </small>
-            <small>{lifecycleLabel(planningPlayer.lifecycle)}</small>
-            <small>
-              Current {formatContributionScore(planningPlayer.currentContributionScore)} · Future{" "}
-              {formatContributionScore(planningPlayer.futureContributionScore)}
-            </small>
+            <div
+              className="atlas-squad-planning-cell__summary"
+              title={`Current contribution: ${formatContributionScore(planningPlayer.currentContributionScore)} · Future contribution: ${formatContributionScore(planningPlayer.futureContributionScore)}`}
+            >
+              <span className={`atlas-squad-planning-badge is-${planningPlayer.role}`}>
+                {roleLabel(planningPlayer.role)}
+              </span>
+              <span className="atlas-squad-planning-cell__lifecycle">
+                {lifecycleLabel(planningPlayer.lifecycle)}
+              </span>
+            </div>
             {automaticRole && manualRole && automaticRole !== manualRole ? (
               <small>{describeManualRoleConflict(automaticRole, manualRole)}</small>
             ) : null}
@@ -563,13 +523,6 @@ function SquadPlayerRowView({
           {row.skills[skill.key] ?? "—"}
         </td>
       ))}
-      <td>{row.training.trainedSkill ?? "—"}</td>
-      <td className="atlas-squad-table__center">{row.training.trainingKind ?? "—"}</td>
-      <td className="atlas-squad-table__numeric">{formatPercentage(row.training.intensity)}</td>
-      <td className="atlas-squad-table__numeric">{formatPercentage(row.training.progress)}</td>
-      <td className="atlas-squad-table__numeric">{formatTalent(row.development.talent)}</td>
-      <td className="atlas-squad-table__numeric">{formatNumber(row.development.nextSkillUp)}</td>
-      <td className="atlas-squad-table__numeric">{formatEta(row.development.etaWeeks)}</td>
       <td className="atlas-squad-table__numeric">
         {row.marketValue?.current.expected.label ?? "â€”"}
       </td>
