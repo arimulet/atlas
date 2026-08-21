@@ -1,4 +1,7 @@
 import mongoose, { Schema, model, type InferSchemaType, type Model } from "mongoose";
+import { ensureMongooseModels } from "./mongoose-model-registry.js";
+
+ensureMongooseModels();
 
 const trainingWeekSchema = new Schema(
   {
@@ -36,5 +39,5 @@ trainingWeekSchema.index({ clubId: 1, playerId: 1, gameWeek: 1 }, { unique: true
 export type TrainingWeekDocument = InferSchemaType<typeof trainingWeekSchema>;
 
 export const TrainingWeekModel =
-  (mongoose.models.TrainingWeek as Model<TrainingWeekDocument> | undefined) ??
+  (mongoose.models?.TrainingWeek as Model<TrainingWeekDocument> | undefined) ??
   model<TrainingWeekDocument>("TrainingWeek", trainingWeekSchema);

@@ -1,4 +1,7 @@
 import mongoose, { Schema, model, type InferSchemaType, type Model } from "mongoose";
+import { ensureMongooseModels } from "./mongoose-model-registry.js";
+
+ensureMongooseModels();
 
 const observedPositionValues = [
   "goalkeeper",
@@ -92,5 +95,5 @@ snapshotSchema.index(
 type SnapshotDocument = InferSchemaType<typeof snapshotSchema>;
 
 export const SnapshotModel =
-  (mongoose.models.Snapshot as Model<SnapshotDocument> | undefined) ??
+  (mongoose.models?.Snapshot as Model<SnapshotDocument> | undefined) ??
   model<SnapshotDocument>("Snapshot", snapshotSchema);

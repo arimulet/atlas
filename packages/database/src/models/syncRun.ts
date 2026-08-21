@@ -1,4 +1,7 @@
 import mongoose, { Schema, model, type InferSchemaType, type Model } from "mongoose";
+import { ensureMongooseModels } from "./mongoose-model-registry.js";
+
+ensureMongooseModels();
 
 const syncRunSchema = new Schema(
   {
@@ -17,5 +20,5 @@ syncRunSchema.index({ teamId: 1, gameWeek: 1, startedAt: -1 });
 export type SyncRunDocument = InferSchemaType<typeof syncRunSchema>;
 
 export const SyncRunModel =
-  (mongoose.models.SyncRun as Model<SyncRunDocument> | undefined) ??
+  (mongoose.models?.SyncRun as Model<SyncRunDocument> | undefined) ??
   model<SyncRunDocument>("SyncRun", syncRunSchema);
