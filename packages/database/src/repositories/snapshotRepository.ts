@@ -16,7 +16,7 @@ type SnapshotJuniorInput = Omit<PersistedJuniorSnapshot, "id" | "initialLevel"> 
 };
 
 export interface SaveSnapshotInput {
-  clubId: string;
+  clubId: number;
   schemaVersion: string;
   snapshotDate: Date;
   gameWeek: number | null;
@@ -30,7 +30,7 @@ export interface SaveSnapshotInput {
 export class MongoSnapshotRepository {
   async save(input: SaveSnapshotInput, session?: ClientSession): Promise<PersistedSnapshot> {
     const document = {
-      clubId: new Types.ObjectId(input.clubId),
+      clubId: input.clubId,
       schemaVersion: input.schemaVersion,
       snapshotDate: input.snapshotDate,
       gameWeek: input.gameWeek,
@@ -99,15 +99,17 @@ export class MongoSnapshotRepository {
   }
 
   async listByClub(clubId: ClubId): Promise<PersistedSnapshot[]> {
-    const snapshots = await SnapshotModel.find({ clubId: new Types.ObjectId(clubId) }).sort({
+    const numericClubId = await this.resolveNumericClubId(clubId);
+    const snapshots = await SnapshotModel.find({ clubId: numericClubId }).sort({
       snapshotDate: 1
     });
     return this.hydrateSnapshots(snapshots.map((snapshot) => snapshot.toObject()));
   }
 
-  async findByClubAndDate(clubId: string, snapshotDate: Date): Promise<PersistedSnapshot[]> {
+  async findByClubAndDate(clubId: ClubId, snapshotDate: Date): Promise<PersistedSnapshot[]> {
+    const numericClubId = await this.resolveNumericClubId(clubId);
     const snapshots = await SnapshotModel.find({
-      clubId: new Types.ObjectId(clubId),
+      clubId: numericClubId,
       snapshotDate
     }).sort({ importedAt: 1 });
 
@@ -119,10 +121,9 @@ export class MongoSnapshotRepository {
       return [];
     }
 
-    const club = await ClubModel.findById(snapshots[0]!.clubId).select({ clubId: 1 }).lean();
-    const players = club
-      ? await PlayerModel.find({ clubId: club.clubId }).select({ playerId: 1, name: 1 }).lean()
-      : [];
+    const players = await PlayerModel.find({ clubId: snapshots[0]!.clubId })
+      .select({ playerId: 1, name: 1 })
+      .lean();
     const names = new Map(players.map((player) => [player.playerId, player.name]));
 
     return snapshots.map((snapshot) => mapSnapshot(snapshot, names));
@@ -132,11 +133,29 @@ export class MongoSnapshotRepository {
     const snapshots = await this.hydrateSnapshots([snapshot]);
     return snapshots[0]!;
   }
+
+  private async resolveNumericClubId(clubId: ClubId): Promise<number> {
+    if (typeof clubId === "number") {
+      return requireNumericClubId(clubId);
+    }
+
+    const numericClubId = Number(clubId);
+    if (Number.isInteger(numericClubId) && numericClubId > 0) {
+      return numericClubId;
+    }
+
+    const club = await ClubModel.findById(clubId).select({ clubId: 1 }).lean();
+    if (!club || typeof club.clubId !== "number") {
+      throw new Error(`Club not found: ${clubId}`);
+    }
+
+    return club.clubId;
+  }
 }
 
 interface SnapshotDocumentShape {
   _id: Types.ObjectId;
-  clubId: Types.ObjectId;
+  clubId: number;
   schemaVersion: string;
   snapshotDate: Date;
   gameWeek?: number | null;
@@ -183,7 +202,7 @@ function mapSnapshot(
 ): PersistedSnapshot {
   return {
     id: snapshot._id.toString(),
-    clubId: snapshot.clubId.toString(),
+    clubId: snapshot.clubId,
     schemaVersion: snapshot.schemaVersion,
     snapshotDate: snapshot.snapshotDate,
     gameWeek: snapshot.gameWeek ?? null,
@@ -226,4 +245,12 @@ function mapSnapshot(
       status: junior.status ?? "in_academy"
     }))
   };
+}
+
+function requireNumericClubId(clubId: number): number {
+  if (!Number.isInteger(clubId) || clubId <= 0) {
+    throw new Error(`Club id must be a positive integer: ${clubId}.`);
+  }
+
+  return clubId;
 }

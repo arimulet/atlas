@@ -73,7 +73,7 @@ const juniorSnapshotSchema = new Schema(
 
 const snapshotSchema = new Schema(
   {
-    clubId: { type: Schema.Types.ObjectId, ref: "Club", required: true, index: true },
+    clubId: { type: Number, required: true, min: 1, index: true },
     schemaVersion: { type: String, required: true },
     snapshotDate: { type: Date, required: true, index: true },
     gameWeek: { type: Number, default: null },

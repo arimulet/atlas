@@ -533,7 +533,7 @@ function buildOperationalAreas(snapshotCount: number): ClubDashboard["operationa
 function mapSnapshotSummary(snapshot: PersistedSnapshot): ClubDashboardSnapshotSummary {
   return {
     id: snapshot.id,
-    clubId: snapshot.clubId,
+    clubId: String(snapshot.clubId),
     snapshotDate: snapshot.snapshotDate.toISOString().slice(0, 10),
     importedAt: snapshot.importedAt.toISOString(),
     gameWeek: snapshot.gameWeek,
@@ -548,10 +548,15 @@ async function resolveSnapshot(
   snapshotDate: string | undefined,
   role: "base" | "target"
 ): Promise<PersistedSnapshot> {
+  const club = await clubRepository.findById(clubId.toString());
+  if (!club) {
+    throw new Error(`${role} snapshot not found for club.`);
+  }
+
   if (snapshotId) {
     const snapshot = await snapshotRepository.findById(snapshotId);
 
-    if (!snapshot || snapshot.clubId !== clubId) {
+    if (!snapshot || snapshot.clubId !== club.clubId) {
       throw new Error(`${role} snapshot not found for club.`);
     }
 
@@ -563,7 +568,7 @@ async function resolveSnapshot(
   }
 
   const snapshots = await snapshotRepository.findByClubAndDate(
-    clubId.toString(),
+    club.clubId,
     new Date(`${snapshotDate}T00:00:00.000Z`)
   );
 
@@ -581,7 +586,7 @@ async function resolveSnapshot(
 function mapSnapshot(snapshot: PersistedSnapshot): SnapshotComparisonSnapshot {
   return {
     id: snapshot.id,
-    clubId: snapshot.clubId,
+    clubId: String(snapshot.clubId),
     snapshotDate: formatDate(snapshot.snapshotDate),
     players: snapshot.players.map(mapPlayer)
   };

@@ -1,5 +1,4 @@
-import { type ClientSession, Types } from "mongoose";
-import { ClubModel } from "../models/club.js";
+import { type ClientSession } from "mongoose";
 import { SnapshotModel } from "../models/snapshot.js";
 import { TrainingWeekModel } from "../models/trainingWeek.js";
 import type {
@@ -72,12 +71,7 @@ type TrainingSnapshot = {
 };
 
 async function loadTrainingSnapshots(clubId: number): Promise<TrainingSnapshot[]> {
-  const club = await ClubModel.findOne({ clubId }).select({ _id: 1 }).lean();
-  if (!club) {
-    return [];
-  }
-
-  const snapshots = await SnapshotModel.find({ clubId: new Types.ObjectId(club._id) })
+  const snapshots = await SnapshotModel.find({ clubId })
     .select({ gameWeek: 1, players: 1 })
     .sort({ gameWeek: 1 })
     .lean();
