@@ -297,6 +297,8 @@ export function App() {
           onSelectPlayer={handleSelectPlayer}
           youthAcademy={youthAcademy}
           youthStatus={youthStatus}
+          squadPlanning={squadPlanning}
+          squadPlanningStatus={squadPlanningStatus}
           financialStrategy={financialStrategy}
         />
       ) : activeView === "finances" ? (

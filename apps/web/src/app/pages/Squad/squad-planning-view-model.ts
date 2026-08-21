@@ -249,6 +249,22 @@ export function createSquadPlanningViewModel(
   };
 }
 
+export function createSquadPriorityActionsViewModel(
+  planning: SquadPlanningBundle
+): SquadPriorityActionViewModel[] {
+  const playerNames = new Map(
+    planning.assessment.depthPlayers.map((player) => [
+      String(player.playerId),
+      player.playerName || `Player ${player.playerId}`
+    ])
+  );
+
+  return planning.recommendations.recommendations
+    .map((recommendation) => mapRecommendation(recommendation, playerNames))
+    .sort(comparePriorityActions)
+    .filter((recommendation) => recommendation.type !== "maintain");
+}
+
 export function filterSquadRows(
   rows: readonly SquadPlayerRow[],
   planning: SquadPlanningBundle | null,

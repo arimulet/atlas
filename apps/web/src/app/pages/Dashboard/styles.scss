@@ -139,6 +139,131 @@
   color: var(--semantic-info-text);
 }
 
+.atlas-dashboard-panel__heading {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.atlas-dashboard-panel__heading .atlas-dashboard-panel__title {
+  margin-bottom: 0;
+}
+
+.atlas-dashboard-planning__eyebrow {
+  color: var(--atlas-text-muted);
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+
+.atlas-dashboard-planning__quiet {
+  color: var(--atlas-text-muted);
+  font-size: 0.74rem;
+}
+
+.atlas-dashboard-actions-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.atlas-dashboard-recommendation {
+  background: color-mix(in srgb, var(--atlas-surface-hover) 42%, transparent);
+  border: 1px solid var(--atlas-border);
+  border-left: 3px solid var(--atlas-text-muted);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.atlas-dashboard-recommendation.is-critical {
+  border-left-color: var(--semantic-error-border);
+}
+
+.atlas-dashboard-recommendation.is-high {
+  border-left-color: var(--semantic-warning-border);
+}
+
+.atlas-dashboard-recommendation.is-medium {
+  border-left-color: var(--semantic-info-border);
+}
+
+.atlas-dashboard-recommendation__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: var(--atlas-text-muted);
+  font-size: 0.65rem;
+}
+
+.atlas-dashboard-recommendation h3 {
+  color: var(--atlas-text);
+  font-size: 0.9rem;
+  margin: 10px 0 3px;
+}
+
+.atlas-dashboard-recommendation > strong {
+  color: var(--atlas-text-secondary);
+  font-size: 0.75rem;
+}
+
+.atlas-dashboard-recommendation p {
+  color: var(--atlas-text-secondary);
+  font-size: 0.74rem;
+  line-height: 1.4;
+  margin: 8px 0;
+}
+
+.atlas-dashboard-recommendation__players {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 0.72rem;
+}
+
+.atlas-dashboard-recommendation details {
+  border-top: 1px solid var(--atlas-border);
+  margin-top: 9px;
+  padding-top: 7px;
+}
+
+.atlas-dashboard-recommendation summary {
+  color: var(--atlas-text-muted);
+  cursor: pointer;
+  font-size: 0.68rem;
+}
+
+.atlas-dashboard-recommendation ul {
+  color: var(--atlas-text-secondary);
+  font-size: 0.7rem;
+  line-height: 1.4;
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+
+.atlas-dashboard-planning-badge {
+  color: var(--atlas-text-secondary);
+  font-size: 0.67rem;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.atlas-dashboard-planning-badge.is-critical {
+  color: var(--semantic-error-text);
+}
+
+.atlas-dashboard-planning-badge.is-high {
+  color: var(--semantic-warning-text);
+}
+
+.atlas-dashboard-planning-badge.is-medium {
+  color: var(--semantic-info-text);
+}
+
 @media (max-width: 900px) {
   .atlas-dashboard-panel--financial {
     border-color: color-mix(in srgb, var(--semantic-warning-border) 55%, var(--atlas-border));
