@@ -39,7 +39,8 @@ export function Dashboard({
   dashboardStatus,
   onSelectPlayer,
   youthAcademy,
-  youthStatus
+  youthStatus,
+  financialStrategy
 }: DashboardProps) {
   const attentionItems = dashboard ? buildAttentionItems(dashboard, youthAcademy) : [];
   const watchPlayers = dashboard ? buildWatchPlayers(dashboard, youthAcademy) : [];
@@ -56,6 +57,11 @@ export function Dashboard({
         status={dashboardStatus}
       />
 
+      <FinancialStrategyAlerts
+        onSelectPlayer={onSelectPlayer}
+        financialStrategy={financialStrategy}
+      />
+
       <div className="atlas-dashboard__main-grid">
         <PlayersToWatchPanel
           onSelectPlayer={onSelectPlayer}
@@ -67,6 +73,56 @@ export function Dashboard({
 
       <YouthSnapshot youthAcademy={youthAcademy} status={youthStatus} />
     </div>
+  );
+}
+
+function FinancialStrategyAlerts({
+  financialStrategy,
+  onSelectPlayer
+}: {
+  financialStrategy: DashboardProps["financialStrategy"];
+  onSelectPlayer: (playerId: string) => void;
+}) {
+  const alerts = financialStrategy.viewModel?.criticalRecommendations ?? [];
+  const hasMaterialPositionRisk = ["strained", "watch"].includes(
+    financialStrategy.viewModel?.position.status ?? "unknown"
+  );
+  if (financialStrategy.status !== "ready" || (alerts.length === 0 && !hasMaterialPositionRisk)) {
+    return null;
+  }
+
+  return (
+    <section
+      className="atlas-dashboard-panel atlas-dashboard-panel--financial"
+      aria-labelledby="financial-strategy-alerts-title"
+    >
+      <PanelHeading id="financial-strategy-alerts-title" title="Financial Strategy" />
+      {hasMaterialPositionRisk ? (
+        <p className="atlas-dashboard-financial-alert is-high">
+          Financial position: {financialStrategy.viewModel?.position.statusLabel}
+        </p>
+      ) : null}
+      <ul className="atlas-dashboard-financial-list">
+        {alerts.slice(0, 4).map((alert) => (
+          <li key={alert.id}>
+            <span
+              className={`atlas-dashboard-financial-priority is-${alert.priority.toLowerCase()}`}
+            >
+              {alert.priority}
+            </span>
+            <span>
+              <strong>{alert.title}</strong>
+              <small>{alert.description}</small>
+              {alert.playerIds[0] !== undefined ? (
+                <PlayerLink playerId={String(alert.playerIds[0])} onSelectPlayer={onSelectPlayer}>
+                  View player
+                </PlayerLink>
+              ) : null}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
@@ -227,7 +283,10 @@ function YouthSnapshot({ youthAcademy, status }: YouthSnapshotProps) {
   ).length;
 
   return (
-    <section className="atlas-dashboard-panel atlas-dashboard-panel--youth" aria-labelledby="youth-title">
+    <section
+      className="atlas-dashboard-panel atlas-dashboard-panel--youth"
+      aria-labelledby="youth-title"
+    >
       <PanelHeading id="youth-title" title="Youth" />
       {status === "loading" ? <PanelMessage>Loading youth data...</PanelMessage> : null}
       {status === "error" ? (
@@ -294,7 +353,9 @@ interface PriorityBadgeProps {
 
 function PriorityBadge({ severity }: PriorityBadgeProps) {
   return (
-    <span className={`atlas-dashboard-priority is-${severity}`}>{priorityFromSeverity(severity)}</span>
+    <span className={`atlas-dashboard-priority is-${severity}`}>
+      {priorityFromSeverity(severity)}
+    </span>
   );
 }
 

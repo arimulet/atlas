@@ -1,260 +1,553 @@
-import { formatMoney } from "@atlas/web/app/formatters";
-import {
-  createFinancesViewModel,
-  hasFinancialData,
-  type FinanceAttentionItem,
-  type FinanceLineItem,
-  type FinancesViewModel
-} from "../../view-models/finances-view-model";
-import type { DashboardStatus } from "@atlas/web/app/types";
-import type { FinancesProps } from "./types";
-import { AttentionIcon } from "../../components/AttentionIcon";
+import type { ReactNode } from "react";
+import { useState } from "react";
+import { formatMoney } from "../../formatters";
 import { PlayerLink } from "../../components/PlayerLink";
+import { StatusBadge } from "../../components/StatusBadge";
+import type { FinancesProps } from "./types";
+import type { FinancialStrategyState } from "../../features/financialStrategy/useFinancialStrategy";
 
-export function Finances({ dashboard, onSelectPlayer, squadPlanning, status }: FinancesProps) {
-  const viewModel = createFinancesViewModel({ dashboard, squadPlanning });
-
+export function Finances({
+  dashboard,
+  onSelectPlayer,
+  squadPlanning,
+  status,
+  financialStrategy
+}: FinancesProps) {
   return (
     <div className="atlas-finances">
       <header className="atlas-finances__header">
         <h1>Finances</h1>
       </header>
-
-      <FinanceAttention items={viewModel.diagnostics} status={status} />
-      <SquadAssetValue onSelectPlayer={onSelectPlayer} status={status} viewModel={viewModel} />
-      <FinancialOverview viewModel={viewModel} status={status} />
-
-      <div className="atlas-finances__breakdown-grid">
-        <FinanceBreakdown
-          items={viewModel.income}
-          title="Income"
-          total={viewModel.overview.income}
-          status={status}
-        />
-        <FinanceBreakdown
-          items={viewModel.expenses}
-          title="Expenses"
-          total={viewModel.overview.expenses}
-          status={status}
-        />
-      </div>
+      {financialStrategy.status === "loading" ? (
+        <PanelMessage>Loading financial strategy...</PanelMessage>
+      ) : null}
+      {financialStrategy.status === "error" ? (
+        <PanelMessage tone="error">
+          Financial Strategy is temporarily unavailable. Basic cash data remains available.
+        </PanelMessage>
+      ) : null}
+      <FinancialPositionSection
+        dashboard={dashboard}
+        financialStrategy={financialStrategy}
+        status={status}
+      />
+      <CapitalCapacitySection financialStrategy={financialStrategy} />
+      <InvestmentSimulator financialStrategy={financialStrategy} />
+      <StrategicRecommendationsSection
+        financialStrategy={financialStrategy}
+        onSelectPlayer={onSelectPlayer}
+      />
+      <FundingPlanSection financialStrategy={financialStrategy} />
+      <SquadAssetsSection financialStrategy={financialStrategy} onSelectPlayer={onSelectPlayer} />
+      <PayrollSafetySection financialStrategy={financialStrategy} />
+      <DevelopmentCapitalSection financialStrategy={financialStrategy} />
+      <ConflictsSection financialStrategy={financialStrategy} onSelectPlayer={onSelectPlayer} />
+      {squadPlanning === null && status === "ready" ? (
+        <PanelMessage>
+          Squad Planning is not available. Financial position and cash capacity remain visible.
+        </PanelMessage>
+      ) : null}
     </div>
   );
 }
 
-interface SquadAssetValueProps {
-  onSelectPlayer: (playerId: string) => void;
-  status: DashboardStatus;
-  viewModel: FinancesViewModel;
-}
-
-function SquadAssetValue({ onSelectPlayer, status, viewModel }: SquadAssetValueProps) {
-  const assets = viewModel.squadAssets;
+function FinancialPositionSection({
+  dashboard,
+  financialStrategy,
+  status
+}: {
+  dashboard: FinancesProps["dashboard"];
+  financialStrategy: FinancialStrategyState;
+  status: FinancesProps["status"];
+}) {
+  const position = financialStrategy.viewModel?.position;
+  const fallbackCash = dashboard?.club.budget ?? null;
   return (
-    <section
-      className="atlas-finances-panel atlas-squad-asset-value"
-      aria-labelledby="squad-asset-value-title"
-    >
-      <div className="atlas-finances-panel__heading-row">
-        <PanelTitle id="squad-asset-value-title" title="Squad Asset Value" />
-        <span>
-          {assets.coverage.valued}/{assets.coverage.total} players valued
-        </span>
-      </div>
-      {status === "loading" ? <PanelMessage>Loading squad assets...</PanelMessage> : null}
-      {status === "error" ? (
-        <PanelMessage tone="error">Squad asset values are temporarily unavailable.</PanelMessage>
-      ) : null}
-      {status === "idle" ? <PanelMessage>No squad asset data available.</PanelMessage> : null}
-      {status === "ready" && assets.coverage.valued === 0 ? (
-        <PanelMessage>Insufficient data to estimate squad asset value.</PanelMessage>
-      ) : null}
-      {status === "ready" && assets.coverage.valued > 0 ? (
+    <Section title="Financial Position" className="atlas-finances-position">
+      {position ? (
         <>
-          <div className="atlas-finances-asset-metrics">
-            <FinanceAssetMetric label="Current squad value" value={assets.currentTotal.label} />
-            <FinanceAssetMetric
-              label="Projected at development targets"
-              value={assets.projectedTotal.label}
-            />
-            <FinanceAssetMetric
-              label="Potential value creation"
-              value={assets.potentialValueCreation.label}
-            />
-            <FinanceAssetMetric
-              label="Cash"
-              value={viewModel.overview.cash ? formatMoney(viewModel.overview.cash) : "—"}
-            />
+          <div className="atlas-finances-status-row">
+            <StatusBadge status={position.statusLabel} />
+            <span>{position.confidence} confidence</span>
           </div>
-          <p className="atlas-finances-panel__note">
-            Cash and squad assets are separate concepts; squad value is not immediate liquidity.
-          </p>
-          <div className="atlas-finances-asset-columns">
-            <div>
-              <h3>By squad role</h3>
-              <ul className="atlas-finances-breakdown-list">
-                {assets.breakdown.map((item) => (
-                  <li className="atlas-finances-breakdown-row" key={item.role}>
-                    <span>{item.role}</span>
-                    <strong>{item.value.label}</strong>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <h3>Top player assets</h3>
-              <ol className="atlas-finances-top-assets">
-                {assets.topAssets.map((asset) => (
-                  <li key={asset.playerId}>
-                    <PlayerLink playerId={asset.playerId} onSelectPlayer={onSelectPlayer}>
-                      {asset.name}
-                    </PlayerLink>
-                    <strong>{asset.value.label}</strong>
-                  </li>
-                ))}
-              </ol>
-            </div>
-          </div>
+          <MetricGrid
+            metrics={[
+              ["Cash", position.cash, position.provenance.cash],
+              [
+                "Squad Asset Value",
+                position.squadValue,
+                `${position.provenance.squadValue} · ${position.squadValueCoverage}`
+              ],
+              ["Known Weekly Payroll", position.payroll, "Derived from known wages"],
+              ["Known Payroll Coverage", position.payrollCoverage, "Derived safety metric"],
+              ["Known Capital", position.knownCapital, "Observed cash + estimated sporting assets"],
+              ["Liquidity", position.liquidity, "Cash share of known capital"]
+            ]}
+          />
+          <PositionSignals reasons={position.reasons} warnings={position.warnings} />
         </>
-      ) : null}
-    </section>
+      ) : (
+        <PanelMessage>
+          {status === "loading"
+            ? "Loading financial position..."
+            : fallbackCash !== null
+              ? `Cash · ${formatMoney({ amount: fallbackCash, currency: dashboard?.club.currency ?? null, isComplete: true })} · Observed`
+              : "Financial position data is not available yet."}
+        </PanelMessage>
+      )}
+    </Section>
   );
 }
 
-function FinanceAssetMetric({ label, value }: { label: string; value: string }) {
+function CapitalCapacitySection({
+  financialStrategy
+}: {
+  financialStrategy: FinancialStrategyState;
+}) {
+  const capacity = financialStrategy.viewModel?.capacity;
   return (
-    <div className="atlas-finances-asset-metric">
-      <span>{label}</span>
-      <strong>{value}</strong>
-    </div>
-  );
-}
-
-interface FinanceAttentionProps {
-  items: FinanceAttentionItem[];
-  status: DashboardStatus;
-}
-
-function FinanceAttention({ items, status }: FinanceAttentionProps) {
-  return (
-    <section
-      className="atlas-finances-panel atlas-finances-panel--attention"
-      aria-labelledby="finance-attention-title"
-    >
-      <PanelTitle id="finance-attention-title" title="Finance Attention" />
-      {status === "loading" ? <PanelMessage>Loading finances...</PanelMessage> : null}
-      {status === "error" ? (
-        <PanelMessage tone="error">Unable to load financial data.</PanelMessage>
-      ) : null}
-      {status === "idle" ? <PanelMessage>No financial data available.</PanelMessage> : null}
-      {status === "ready" && items.length === 0 ? (
-        <PanelMessage>No financial diagnostics available.</PanelMessage>
-      ) : null}
-      {status === "ready" && items.length > 0 ? (
-        <ul className="atlas-finances-attention-list">
-          {items.map((item) => (
-            <li className={`atlas-finances-attention-item is-${item.severity}`} key={item.id}>
-              <AttentionIcon severity={item.severity} />
-              <span>{item.message}</span>
-            </li>
-          ))}
-        </ul>
-      ) : null}
-    </section>
-  );
-}
-
-interface FinancialOverviewProps {
-  status: DashboardStatus;
-  viewModel: FinancesViewModel;
-}
-
-function FinancialOverview({ status, viewModel }: FinancialOverviewProps) {
-  const metrics = [
-    ["Cash", viewModel.overview.cash],
-    ["Income", viewModel.overview.income],
-    ["Expenses", viewModel.overview.expenses],
-    ["Balance", viewModel.overview.balance]
-  ] as const;
-
-  return (
-    <section className="atlas-finances-panel" aria-labelledby="financial-overview-title">
-      <div className="atlas-finances-panel__heading-row">
-        <PanelTitle id="financial-overview-title" title="Financial Overview" />
-        {viewModel.period ? (
-          <span className="atlas-finances-period">{viewModel.period}</span>
-        ) : null}
-      </div>
-      {status === "loading" ? <PanelMessage>Loading finances...</PanelMessage> : null}
-      {status === "error" ? (
-        <PanelMessage tone="error">Unable to load financial data.</PanelMessage>
-      ) : null}
-      {status === "idle" ? <PanelMessage>No financial data available.</PanelMessage> : null}
-      {status === "ready" ? (
+    <Section title="Capital Capacity">
+      {capacity ? (
         <>
-          <dl className="atlas-finances-overview-list">
-            {metrics.map(([label, amount]) => (
-              <div className="atlas-finances-overview-row" key={label}>
-                <dt>{label}</dt>
-                <dd>{formatMoney(amount)}</dd>
+          <MetricGrid
+            metrics={[
+              ["Cash", financialStrategy.viewModel?.position.cash ?? "—", "Observed"],
+              ["Safety Reserve", capacity.reserve, `${capacity.reserveWeeks} · ATLAS policy`],
+              ["Spendable Cash", capacity.spendableCash, "Cash after protected reserve"],
+              ["Conservative Capacity", capacity.conservative, "Prudent commitment"],
+              ["Maximum Recommended", capacity.maximumRecommended, "Upper recommended commitment"]
+            ]}
+          />
+          <p className="atlas-finances-panel__note">
+            Safety reserve is a strategic ATLAS policy, not a game obligation.
+          </p>
+        </>
+      ) : (
+        <PanelMessage>Capital capacity is not available yet.</PanelMessage>
+      )}
+    </Section>
+  );
+}
+
+function InvestmentSimulator({ financialStrategy }: { financialStrategy: FinancialStrategyState }) {
+  const [amount, setAmount] = useState("");
+  const safety = financialStrategy.investmentSafetyView;
+  const handleSimulate = () => {
+    const numericAmount = Number(amount);
+    if (Number.isFinite(numericAmount) && numericAmount >= 0)
+      void financialStrategy.simulateInvestment(numericAmount);
+  };
+  return (
+    <Section title="Investment Simulator">
+      <div className="atlas-finances-simulator">
+        <label htmlFor="financial-commitment">Simulate commitment</label>
+        <input
+          id="financial-commitment"
+          inputMode="decimal"
+          min="0"
+          onChange={(event) => setAmount(event.target.value)}
+          placeholder="Amount"
+          type="number"
+          value={amount}
+        />
+        <button
+          type="button"
+          onClick={handleSimulate}
+          disabled={financialStrategy.isSimulating || amount === ""}
+        >
+          {financialStrategy.isSimulating ? "Simulating..." : "Simulate"}
+        </button>
+      </div>
+      {safety ? (
+        <MetricGrid
+          metrics={[
+            ["Post-investment Cash", safety.cash, "Derived simulation"],
+            ["Payroll Coverage", safety.coverage, "Known payroll only"],
+            ["Financial Status", safety.status, "Derived simulation"],
+            ["Investment Safety", safety.safety, "Derived simulation"]
+          ]}
+        />
+      ) : (
+        <p className="atlas-finances-panel__note">
+          Simulation is analytical only and never changes the club budget.
+        </p>
+      )}
+    </Section>
+  );
+}
+
+function StrategicRecommendationsSection({
+  financialStrategy,
+  onSelectPlayer
+}: {
+  financialStrategy: FinancialStrategyState;
+  onSelectPlayer: (playerId: string) => void;
+}) {
+  const recommendations = financialStrategy.viewModel?.recommendations ?? [];
+  return (
+    <Section title="Strategic Recommendations" className="atlas-finances-recommendations">
+      {financialStrategy.status === "ready" && recommendations.length === 0 ? (
+        <PanelMessage>
+          Financial strategy is currently stable. No high-priority action required.
+        </PanelMessage>
+      ) : null}
+      <div className="atlas-finances-recommendation-list">
+        {recommendations.map((recommendation) => (
+          <article
+            className={`atlas-finances-recommendation is-${recommendation.priority.toLowerCase()}`}
+            key={recommendation.id}
+          >
+            <div className="atlas-finances-recommendation__header">
+              <div>
+                <span className="atlas-finances-eyebrow">
+                  {recommendation.priority} · {recommendation.horizon}
+                </span>
+                <h3>{recommendation.title}</h3>
               </div>
-            ))}
-          </dl>
-          {!hasFinancialData(viewModel) ? (
-            <p className="atlas-finances-panel__note">No financial data available.</p>
+              <StatusBadge status={recommendation.confidence} />
+            </div>
+            <p>{recommendation.description}</p>
+            {recommendation.playerIds.length > 0 ? (
+              <div className="atlas-finances-player-links">
+                {recommendation.playerIds.map((playerId, index) => (
+                  <PlayerLink
+                    key={playerId}
+                    playerId={String(playerId)}
+                    onSelectPlayer={onSelectPlayer}
+                  >
+                    {recommendation.playerNames[index] ?? `Player ${playerId}`}
+                  </PlayerLink>
+                ))}
+              </div>
+            ) : null}
+            <ul className="atlas-finances-reason-list">
+              {recommendation.reasons.map((reason) => (
+                <li key={reason}>{reason}</li>
+              ))}
+            </ul>
+            {recommendation.financialImpact.length > 0 ? (
+              <div className="atlas-finances-impact">
+                {recommendation.financialImpact.join(" · ")}
+              </div>
+            ) : null}
+            {recommendation.risks.length > 0 ? (
+              <details className="atlas-finances-recommendation__details">
+                <summary>Risks</summary>
+                <ul className="atlas-finances-risk-list">
+                  {recommendation.risks.map((risk) => (
+                    <li key={risk}>{risk}</li>
+                  ))}
+                </ul>
+              </details>
+            ) : null}
+          </article>
+        ))}
+      </div>
+    </Section>
+  );
+}
+
+function FundingPlanSection({ financialStrategy }: { financialStrategy: FinancialStrategyState }) {
+  const funding = financialStrategy.viewModel?.funding;
+  return (
+    <Section title="Strategic Funding">
+      {!funding || funding.needs.length === 0 ? (
+        <PanelMessage>
+          {financialStrategy.status === "ready"
+            ? "Strategic funding needs are not available from current Squad Planning data."
+            : "Funding plan is not available yet."}
+        </PanelMessage>
+      ) : (
+        <>
+          <div className="atlas-finances-table-wrap">
+            <table className="atlas-finances-table">
+              <thead>
+                <tr>
+                  <th>Need</th>
+                  <th>Priority</th>
+                  <th>Horizon</th>
+                  <th>Expected</th>
+                  <th>Allocated</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {funding.needs.map((need) => (
+                  <tr key={need.id}>
+                    <th scope="row">{need.profile}</th>
+                    <td>{need.priority}</td>
+                    <td>{need.horizon}</td>
+                    <td>{need.expectedCost}</td>
+                    <td>{need.allocated}</td>
+                    <td>{need.status}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {funding.totalGap !== "—" ? (
+            <p className="atlas-finances-gap">Total estimated funding gap: {funding.totalGap}</p>
           ) : null}
         </>
-      ) : null}
-    </section>
+      )}
+    </Section>
   );
 }
 
-interface FinanceBreakdownProps {
-  items: FinanceLineItem[];
-  title: string;
-  total: FinanceLineItem["amount"] | null;
-  status: DashboardStatus;
-}
-
-function FinanceBreakdown({ items, title, total, status }: FinanceBreakdownProps) {
+function SquadAssetsSection({
+  financialStrategy,
+  onSelectPlayer
+}: {
+  financialStrategy: FinancialStrategyState;
+  onSelectPlayer: (playerId: string) => void;
+}) {
+  const assets = financialStrategy.viewModel?.assets;
+  if (!assets)
+    return (
+      <Section title="Squad Assets">
+        <PanelMessage>Squad asset valuation is not available yet.</PanelMessage>
+      </Section>
+    );
   return (
-    <section className="atlas-finances-panel" aria-labelledby={`${title.toLowerCase()}-title`}>
-      <PanelTitle id={`${title.toLowerCase()}-title`} title={title} />
-      {status === "loading" ? <PanelMessage>Loading finances...</PanelMessage> : null}
-      {status === "error" ? (
-        <PanelMessage tone="error">Unable to load financial data.</PanelMessage>
+    <Section title="Squad Assets">
+      <MetricGrid
+        metrics={[
+          ["Estimated Squad Value", assets.estimatedValue, `Estimated · ${assets.coverage}`],
+          ["Current Cash", financialStrategy.viewModel?.position.cash ?? "—", "Observed"],
+          ["Known Capital", assets.knownCapital, "Observed cash + estimated sporting assets"],
+          [
+            "Top 3 Concentration",
+            assets.concentration,
+            assets.concentrationWarning ? "High asset concentration" : "Derived market metric"
+          ],
+          ["Potential Liquidity", assets.potentialLiquidity, "Not cash until a transfer occurs"]
+        ]}
+      />
+      {assets.distribution.length > 0 ? (
+        <CompactList
+          title="Asset distribution"
+          items={assets.distribution.map((item) => `${item.role} · ${item.value}`)}
+        />
       ) : null}
-      {status === "idle" ? <PanelMessage>No financial data available.</PanelMessage> : null}
-      {status === "ready" && items.length === 0 ? (
-        <PanelMessage>No financial data available.</PanelMessage>
+      {assets.monetizable.length > 0 ? (
+        <AssetList
+          title="Potential Liquidity"
+          assets={assets.monetizable}
+          onSelectPlayer={onSelectPlayer}
+        />
       ) : null}
-      {status === "ready" && items.length > 0 ? (
-        <>
-          <ul className="atlas-finances-breakdown-list">
-            {items.map((item) => (
-              <li className="atlas-finances-breakdown-row" key={item.key}>
-                <span>{item.label}</span>
-                <strong>{formatMoney(item.amount)}</strong>
+      {assets.protectedAssets.length > 0 ? (
+        <div className="atlas-finances-subsection">
+          <h3>Protected Strategic Assets</h3>
+          <ul className="atlas-finances-asset-list">
+            {assets.protectedAssets.map((asset) => (
+              <li key={asset.playerId}>
+                <PlayerLink playerId={String(asset.playerId)} onSelectPlayer={onSelectPlayer}>
+                  {asset.name}
+                </PlayerLink>
+                <strong>{asset.value}</strong>
+                <small>{asset.reasons.join(" · ")}</small>
               </li>
             ))}
           </ul>
-          {total ? (
-            <div className="atlas-finances-breakdown-total">
-              <span>Total</span>
-              <strong>{formatMoney(total)}</strong>
-            </div>
-          ) : null}
-        </>
+        </div>
       ) : null}
-    </section>
+    </Section>
   );
 }
 
-function PanelTitle({ id, title }: { id: string; title: string }) {
+function AssetList({
+  title,
+  assets,
+  onSelectPlayer
+}: {
+  title: string;
+  assets: NonNullable<FinancialStrategyState["viewModel"]>["assets"]["monetizable"];
+  onSelectPlayer: (playerId: string) => void;
+}) {
   return (
-    <h2 className="atlas-finances-panel__title atlas-section-title" id={id}>
-      {title}
-    </h2>
+    <div className="atlas-finances-subsection">
+      <h3>{title}</h3>
+      <ul className="atlas-finances-asset-list">
+        {assets.map((asset) => (
+          <li key={asset.playerId}>
+            <PlayerLink playerId={String(asset.playerId)} onSelectPlayer={onSelectPlayer}>
+              {asset.name}
+            </PlayerLink>
+            <strong>{asset.value}</strong>
+            <small>
+              {asset.role} · Liquidity potential: {asset.liquidity}
+              {asset.recommended ? " · Recommended monetization" : ""}
+            </small>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function PayrollSafetySection({
+  financialStrategy
+}: {
+  financialStrategy: FinancialStrategyState;
+}) {
+  const payroll = financialStrategy.viewModel?.payroll;
+  return (
+    <Section title="Payroll & Safety">
+      {payroll ? (
+        <>
+          <MetricGrid
+            metrics={[
+              ["Player Payroll", payroll.playerPayroll, `${payroll.playerShare} of known payroll`],
+              [
+                "Trainer Payroll",
+                payroll.trainerPayroll,
+                `${payroll.trainerShare} of known payroll`
+              ],
+              ["Known Payroll", payroll.totalPayroll, "Derived from active known wages"],
+              ["Known Payroll Coverage", payroll.coverage, "Cash divided by known weekly payroll"]
+            ]}
+          />
+          <p className="atlas-finances-panel__note">{payroll.explanation}</p>
+        </>
+      ) : (
+        <PanelMessage>Known payroll data is incomplete. Safety metrics are limited.</PanelMessage>
+      )}
+    </Section>
+  );
+}
+
+function DevelopmentCapitalSection({
+  financialStrategy
+}: {
+  financialStrategy: FinancialStrategyState;
+}) {
+  const development = financialStrategy.viewModel?.developmentCapital;
+  return development ? (
+    <Section title="Development Capital">
+      <MetricGrid
+        metrics={[
+          [
+            "Projection Coverage",
+            development.coveredPlayers,
+            "Only valid projections are included"
+          ],
+          ["Current Covered Value", development.currentValue, "Derived market value"],
+          ["Projected Target Value", development.projectedValue, "Projected"],
+          [
+            "Potential Value Creation",
+            development.valueCreation,
+            `${development.confidence} confidence`
+          ]
+        ]}
+      />
+    </Section>
+  ) : null;
+}
+
+function ConflictsSection({
+  financialStrategy,
+  onSelectPlayer
+}: {
+  financialStrategy: FinancialStrategyState;
+  onSelectPlayer: (playerId: string) => void;
+}) {
+  const conflicts = financialStrategy.viewModel?.conflicts ?? [];
+  if (conflicts.length === 0) return null;
+  return (
+    <Section title="Strategic Conflicts">
+      <ul className="atlas-finances-conflict-list">
+        {conflicts.map((conflict, index) => (
+          <li key={`${conflict.playerId ?? "club"}-${index}`}>
+            <strong>
+              {conflict.playerName && conflict.playerId !== null ? (
+                <PlayerLink playerId={String(conflict.playerId)} onSelectPlayer={onSelectPlayer}>
+                  {conflict.playerName}
+                </PlayerLink>
+              ) : (
+                "Club strategy"
+              )}
+            </strong>
+            <span>{conflict.description}</span>
+          </li>
+        ))}
+      </ul>
+    </Section>
+  );
+}
+
+function PositionSignals({ reasons, warnings }: { reasons: string[]; warnings: string[] }) {
+  if (reasons.length === 0 && warnings.length === 0) return null;
+  return (
+    <div className="atlas-finances-signals">
+      {reasons.length > 0 ? (
+        <div>
+          <h3>Why</h3>
+          <ul>
+            {reasons.map((reason) => (
+              <li key={reason}>{reason}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+      {warnings.length > 0 ? (
+        <div>
+          <h3>Watch</h3>
+          <ul>
+            {warnings.map((warning) => (
+              <li key={warning}>{warning}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function CompactList({ title, items }: { title: string; items: string[] }) {
+  return (
+    <div className="atlas-finances-subsection">
+      <h3>{title}</h3>
+      <ul className="atlas-finances-compact-list">
+        {items.map((item) => (
+          <li key={item}>{item}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function MetricGrid({ metrics }: { metrics: Array<[string, string, string]> }) {
+  return (
+    <div className="atlas-finances-metric-grid">
+      {metrics.map(([label, value, meta]) => (
+        <div className="atlas-finances-metric" key={label}>
+          <span>{label}</span>
+          <strong>{value}</strong>
+          <small>{meta}</small>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function Section({
+  title,
+  children,
+  className = ""
+}: {
+  title: string;
+  children: ReactNode;
+  className?: string;
+}) {
+  const id = `${title.toLowerCase().replaceAll(" ", "-")}-title`;
+  return (
+    <section className={`atlas-finances-panel ${className}`} aria-labelledby={id}>
+      <h2 className="atlas-finances-panel__title atlas-section-title" id={id}>
+        {title}
+      </h2>
+      {children}
+    </section>
   );
 }
 

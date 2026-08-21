@@ -36,6 +36,7 @@ import { createPlayerTrainingProjectionSummaries } from "./view-models/player-de
 import type { SokkerImportCredentials } from "./components/SokkerImporterForm/types";
 import type { ViewId } from "./types";
 import { pathForMainView, pathForPlayerDetail, useRouter } from "./routing";
+import { useFinancialStrategy } from "./features/financialStrategy/useFinancialStrategy";
 
 const lastClubStorageKey = "atlas.lastClubId";
 
@@ -273,6 +274,12 @@ export function App() {
     goBack(pathForMainView("squad"));
   }, [goBack]);
 
+  const financialStrategy = useFinancialStrategy({
+    clubId: activeClubId,
+    currency: dashboard?.club.currency ?? null,
+    squadPlanning
+  });
+
   return (
     <AppShell
       activeView={route.kind === "main" ? route.view : null}
@@ -290,6 +297,7 @@ export function App() {
           onSelectPlayer={handleSelectPlayer}
           youthAcademy={youthAcademy}
           youthStatus={youthStatus}
+          financialStrategy={financialStrategy}
         />
       ) : activeView === "finances" ? (
         <Finances
@@ -297,6 +305,7 @@ export function App() {
           onSelectPlayer={handleSelectPlayer}
           squadPlanning={squadPlanning}
           status={dashboardStatus}
+          financialStrategy={financialStrategy}
         />
       ) : activeView === "squad" ? (
         <Squad
