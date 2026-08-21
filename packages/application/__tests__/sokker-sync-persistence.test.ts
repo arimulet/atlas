@@ -85,6 +85,7 @@ describe("SokkerSyncPersistence", () => {
     expect(await JuniorModel.countDocuments({ clubId: 6038 })).toBe(2);
     expect(await JuniorModel.findOne({ clubId: 6038, juniorId: 501 }).lean()).toMatchObject({
       name: "Junior One",
+      initialAge: 16,
       age: 16,
       initialLevel: 7,
       currentLevel: 7,

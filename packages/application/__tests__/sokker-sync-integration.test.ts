@@ -92,6 +92,7 @@ describe("Sokker sync end-to-end", () => {
       currentLevel: 7,
       initialLevel: 7,
       initialWeeks: 8,
+      initialAge: 16,
       weeksLeft: 8,
       status: "in_academy"
     });

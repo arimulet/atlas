@@ -8,6 +8,7 @@ const juniorSchema = new Schema(
     juniorId: { type: Number, required: true, min: 1 },
     clubId: { type: Number, required: true, min: 1 },
     name: { type: String, required: true, trim: true },
+    initialAge: { type: Number, required: true, min: 1 },
     age: { type: Number, required: true, min: 1 },
     initialLevel: { type: Number, required: true, min: 0 },
     currentLevel: { type: Number, required: true, min: 0 },

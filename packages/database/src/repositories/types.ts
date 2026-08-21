@@ -91,6 +91,7 @@ export interface PersistedJunior {
   juniorId: number;
   clubId: number;
   name: string;
+  initialAge: number;
   age: number;
   initialLevel: number;
   currentLevel: number;
