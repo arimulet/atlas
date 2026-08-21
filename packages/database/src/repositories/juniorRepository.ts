@@ -31,6 +31,7 @@ export class MongoJuniorRepository {
         $setOnInsert: {
           clubId: input.clubId,
           juniorId: input.juniorId,
+          initialAge: input.age,
           initialLevel: input.currentLevel,
           initialWeeks: input.weeksLeft
         }
@@ -92,6 +93,7 @@ function mapJunior(junior: {
   juniorId: number;
   clubId: number;
   name: string;
+  initialAge: number;
   age: number;
   initialLevel: number;
   currentLevel: number;
@@ -104,6 +106,7 @@ function mapJunior(junior: {
     juniorId: junior.juniorId,
     clubId: junior.clubId,
     name: junior.name,
+    initialAge: junior.initialAge,
     age: junior.age,
     initialLevel: junior.initialLevel,
     currentLevel: junior.currentLevel,
