@@ -4,10 +4,13 @@ import type {
   PlayerMarketValueProjection,
   SquadMarketValueAssessment
 } from "../../playerMarketValue/index.js";
+import type { ProfileDepthStatus, SuccessionCoverageStatus } from "../../squadPlanning/index.js";
 import {
   assessInvestmentSafety,
   assessClubFinancialPosition,
   buildCapitalAllocationPlan,
+  buildFinancialStrategyRecommendations,
+  buildLiquidityScenario,
   buildClubFinancialPosition,
   calculateFinancialReserve,
   calculateInvestmentCapacity,
@@ -15,7 +18,8 @@ import {
   estimateStrategicCapitalNeeds,
   simulateFinancialPositionAfterCashCommitment,
   type CapitalAllocationContext,
-  type FinancialPositionContext
+  type FinancialPositionContext,
+  type FinancialStrategyContext
 } from "../index.js";
 import type { SquadDepthAnalysis, SquadDepthPlayer } from "../../squadPlanning/index.js";
 
@@ -116,7 +120,9 @@ function depthPlayer(
 
 function depthAnalysis(
   profile: SquadDepthPlayer["profile"] = "goalkeeper",
-  playerIds: number[] = [1]
+  playerIds: number[] = [1],
+  status: ProfileDepthStatus = "thin",
+  successionCoverage: SuccessionCoverageStatus = "missing"
 ): SquadDepthAnalysis {
   return {
     profiles: [
@@ -151,9 +157,9 @@ function depthAnalysis(
           successionRequired: true,
           outgoingPlayers: [],
           successorCandidates: [],
-          coverageStatus: "missing"
+          coverageStatus: successionCoverage
         },
-        status: "thin",
+        status,
         confidence: "high",
         dependencyRisk: null,
         reasons: []
@@ -195,7 +201,14 @@ function allocationContext(
   financialAssessment: ReturnType<typeof assessClubFinancialPosition>,
   recommendations: ReturnType<typeof recommendation>[],
   options: Partial<
-    Pick<CapitalAllocationContext, "squadPlayers" | "playerMarketValues" | "playerProfiles">
+    Pick<
+      CapitalAllocationContext,
+      | "squadPlayers"
+      | "playerMarketValues"
+      | "playerProfiles"
+      | "depthAnalysis"
+      | "marketProjections"
+    >
   > = {}
 ): CapitalAllocationContext {
   return {
@@ -215,6 +228,79 @@ function allocationContext(
     },
     depthAnalysis: depthAnalysis("goalkeeper", [1]),
     ...options
+  };
+}
+
+function strategyContext(
+  financialAssessment: ReturnType<typeof assessClubFinancialPosition>,
+  recommendations: ReturnType<typeof recommendation>[],
+  options: Partial<
+    Pick<
+      CapitalAllocationContext,
+      | "squadPlayers"
+      | "playerMarketValues"
+      | "playerProfiles"
+      | "depthAnalysis"
+      | "marketProjections"
+    >
+  > = {}
+): FinancialStrategyContext {
+  const context = allocationContext(financialAssessment, recommendations, options);
+  return { ...context, allocation: buildCapitalAllocationPlan(context) };
+}
+
+function marketProjection(
+  playerId: number,
+  currentValue: number,
+  points: Array<{ expected: number; weeks: number }>,
+  confidence: "low" | "medium" | "high" = "high"
+): PlayerMarketValueProjection {
+  return {
+    playerId,
+    current: {
+      calibratedValue: {
+        low: currentValue * 0.8,
+        expected: currentValue,
+        high: currentValue * 1.2
+      },
+      confidence
+    } as PlayerMarketValueProjection["current"],
+    points: points.map((point, index) => ({
+      step: index + 1,
+      gameWeek: null,
+      estimatedDate: null,
+      estimatedAge: null,
+      skills: {},
+      completedStep: index + 1,
+      marketValue: {
+        low: point.expected * 0.8,
+        expected: point.expected,
+        high: point.expected * 1.2
+      },
+      valueGainFromCurrent: point.expected - currentValue,
+      valueGainFromPrevious: null,
+      cumulativeTrainingWeeks: point.weeks,
+      confidence,
+      milestone: null
+    })),
+    milestones: [],
+    completion: null,
+    roi: {
+      totalValueGain: points.at(-1)?.expected ?? null,
+      totalTrainingWeeks: points.at(-1)?.weeks ?? null,
+      averageValueGainPerWeek:
+        points.at(-1) && points.at(-1)!.weeks > 0
+          ? (points.at(-1)!.expected - currentValue) / points.at(-1)!.weeks
+          : null,
+      bestValueStep: null,
+      diminishingReturnPoint: null,
+      stepEvaluations: []
+    },
+    peak:
+      points.length > 0 ? { step: points.length, age: null, value: points.at(-1)!.expected } : null,
+    confidence,
+    reasons: [],
+    modelVersion: "test"
   };
 }
 
@@ -609,5 +695,232 @@ describe("financial strategy position", () => {
     expect(plan.spendableCash.availableCash).toBeNull();
     expect(plan.investmentCapacity.maximumRecommended).toBeNull();
     expect(JSON.stringify(plan)).not.toMatch(/Infinity|NaN/);
+  });
+
+  it("funds a funded priority need when the position is healthy", () => {
+    const financialAssessment = assessClubFinancialPosition(
+      baseContext({ club: { budget: 100_000_000, currency: "ARS" } })
+    );
+    const plan = buildFinancialStrategyRecommendations(
+      strategyContext(
+        financialAssessment,
+        [recommendation("gk", "find_external", "critical", "next_season")],
+        {
+          playerMarketValues: [marketEstimate(1, 1_000_000)],
+          playerProfiles: [{ playerId: 1, profile: "goalkeeper" }]
+        }
+      )
+    );
+
+    expect(plan.recommendations.some((item) => item.type === "fund_priority_need")).toBe(true);
+    expect(plan.recommendations.find((item) => item.type === "fund_priority_need")?.priority).toBe(
+      "critical"
+    );
+  });
+
+  it("preserves cash when the position is strained", () => {
+    const financialAssessment = assessClubFinancialPosition(
+      baseContext({ club: { budget: 500_000, currency: "ARS" } })
+    );
+    const plan = buildFinancialStrategyRecommendations(strategyContext(financialAssessment, []));
+
+    expect(plan.recommendations[0]?.type).toBe("preserve_cash");
+    expect(plan.summary.preserveCash).toBe(true);
+  });
+
+  it("delays an unsafe recruitment instead of recommending an unsafe commitment", () => {
+    const financialAssessment = assessClubFinancialPosition(baseContext());
+    const plan = buildFinancialStrategyRecommendations(
+      strategyContext(
+        financialAssessment,
+        [recommendation("expensive", "find_external", "high", "current")],
+        {
+          playerMarketValues: [marketEstimate(1, 5_000_000)],
+          playerProfiles: [{ playerId: 1, profile: "goalkeeper" }]
+        }
+      )
+    );
+
+    expect(plan.recommendations.some((item) => item.type === "delay_recruitment")).toBe(true);
+    expect(plan.recommendations.some((item) => item.type === "fund_priority_need")).toBe(false);
+  });
+
+  it("builds liquidity when a priority gap coexists with a reasonable surplus asset", () => {
+    const financialAssessment = assessClubFinancialPosition(baseContext());
+    const context = strategyContext(
+      financialAssessment,
+      [recommendation("need", "find_external", "high", "next_season")],
+      {
+        depthAnalysis: depthAnalysis("goalkeeper", [1], "overstocked", "covered"),
+        playerMarketValues: [marketEstimate(1, 4_000_000)],
+        playerProfiles: [{ playerId: 1, profile: "goalkeeper" }],
+        squadPlayers: [depthPlayer(1, "transition")]
+      }
+    );
+    const plan = buildFinancialStrategyRecommendations(context);
+
+    expect(plan.recommendations.some((item) => item.type === "build_liquidity")).toBe(true);
+    expect(plan.summary.strategicFundingGap).toBeGreaterThan(0);
+  });
+
+  it("recommends monetizing an overstocked valuable transition asset", () => {
+    const financialAssessment = assessClubFinancialPosition(baseContext());
+    const plan = buildFinancialStrategyRecommendations(
+      strategyContext(financialAssessment, [], {
+        depthAnalysis: depthAnalysis("goalkeeper", [1], "overstocked", "covered"),
+        playerMarketValues: [marketEstimate(1, 5_000_000)],
+        marketProjections: [marketProjection(1, 5_000_000, [{ expected: 5_000_000, weeks: 4 }])],
+        squadPlayers: [depthPlayer(1, "transition")],
+        playerProfiles: [{ playerId: 1, profile: "goalkeeper" }]
+      })
+    );
+
+    expect(plan.monetizationCandidates[0]?.monetizationScore).toBeGreaterThan(0.62);
+    expect(plan.recommendations.some((item) => item.type === "monetize_surplus_asset")).toBe(true);
+  });
+
+  it("protects a valuable core player without a successor", () => {
+    const financialAssessment = assessClubFinancialPosition(baseContext());
+    const plan = buildFinancialStrategyRecommendations(
+      strategyContext(financialAssessment, [], {
+        depthAnalysis: depthAnalysis("goalkeeper", [1], "thin", "missing"),
+        playerMarketValues: [marketEstimate(1, 12_000_000)],
+        squadPlayers: [depthPlayer(1, "core")],
+        playerProfiles: [{ playerId: 1, profile: "goalkeeper" }]
+      })
+    );
+
+    expect(plan.monetizationCandidates[0]?.strategicProtection).toBe("critical");
+    expect(plan.recommendations.some((item) => item.type === "protect_strategic_asset")).toBe(true);
+    expect(plan.recommendations.some((item) => item.type === "monetize_surplus_asset")).toBe(false);
+  });
+
+  it("reduces protection from critical when successor coverage is covered", () => {
+    const financialAssessment = assessClubFinancialPosition(baseContext());
+    const plan = buildFinancialStrategyRecommendations(
+      strategyContext(financialAssessment, [], {
+        depthAnalysis: depthAnalysis("goalkeeper", [1], "balanced", "covered"),
+        playerMarketValues: [marketEstimate(1, 12_000_000)],
+        squadPlayers: [depthPlayer(1, "core")],
+        playerProfiles: [{ playerId: 1, profile: "goalkeeper" }]
+      })
+    );
+
+    expect(plan.monetizationCandidates[0]?.strategicProtection).toBe("high");
+  });
+
+  it("recommends development before monetization when short-term value creation is strong", () => {
+    const financialAssessment = assessClubFinancialPosition(baseContext());
+    const plan = buildFinancialStrategyRecommendations(
+      strategyContext(financialAssessment, [], {
+        depthAnalysis: depthAnalysis("goalkeeper", [1], "overstocked", "covered"),
+        playerMarketValues: [marketEstimate(1, 1_000_000)],
+        marketProjections: [marketProjection(1, 1_000_000, [{ expected: 2_000_000, weeks: 4 }])],
+        squadPlayers: [depthPlayer(1, "transition")],
+        playerProfiles: [{ playerId: 1, profile: "goalkeeper" }]
+      })
+    );
+
+    expect(plan.monetizationCandidates[0]?.timing.recommendation).toBe("develop_then_monetize");
+    expect(plan.recommendations.some((item) => item.type === "develop_before_monetizing")).toBe(
+      true
+    );
+  });
+
+  it("does not recommend development when the advanced resource conflicts with a higher priority path", () => {
+    const financialAssessment = assessClubFinancialPosition(baseContext());
+    const plan = buildFinancialStrategyRecommendations({
+      ...strategyContext(financialAssessment, [], {
+        depthAnalysis: depthAnalysis("goalkeeper", [1], "overstocked", "covered"),
+        playerMarketValues: [marketEstimate(1, 1_000_000)],
+        marketProjections: [marketProjection(1, 1_000_000, [{ expected: 2_000_000, weeks: 4 }])],
+        squadPlayers: [depthPlayer(1, "transition")],
+        playerProfiles: [{ playerId: 1, profile: "goalkeeper" }]
+      }),
+      advancedResources: [
+        { playerId: 1, requiresAdvanced: true, competesWithHigherPriorityDevelopment: true }
+      ]
+    });
+
+    expect(plan.monetizationCandidates[0]?.timing.recommendation).toBe("hold_asset");
+    expect(plan.recommendations.some((item) => item.type === "develop_before_monetizing")).toBe(
+      false
+    );
+  });
+
+  it("ranks a transition candidate above a core candidate and lowers confidence for weak market evidence", () => {
+    const financialAssessment = assessClubFinancialPosition(baseContext());
+    const plan = buildFinancialStrategyRecommendations(
+      strategyContext(financialAssessment, [], {
+        depthAnalysis: depthAnalysis("goalkeeper", [1, 2], "overstocked", "covered"),
+        playerMarketValues: [
+          marketEstimate(1, 8_000_000, "low"),
+          marketEstimate(2, 7_000_000, "high")
+        ],
+        squadPlayers: [depthPlayer(1, "core"), depthPlayer(2, "transition")],
+        playerProfiles: [
+          { playerId: 1, profile: "goalkeeper" },
+          { playerId: 2, profile: "goalkeeper" }
+        ]
+      })
+    );
+
+    expect(plan.monetizationCandidates[0]?.playerId).toBe(2);
+    expect(
+      plan.monetizationCandidates.find((candidate) => candidate.playerId === 1)?.confidence
+    ).toBe("low");
+  });
+
+  it("simulates monetization cash and squad impact without mutating the assessment", () => {
+    const financialAssessment = assessClubFinancialPosition(baseContext());
+    const context = strategyContext(financialAssessment, [], {
+      depthAnalysis: depthAnalysis("goalkeeper", [1], "thin", "missing"),
+      playerMarketValues: [marketEstimate(1, 4_000_000)],
+      squadPlayers: [depthPlayer(1, "core")],
+      playerProfiles: [{ playerId: 1, profile: "goalkeeper" }]
+    });
+    const scenario = buildLiquidityScenario(context, [1]);
+
+    expect(scenario.estimatedGrossProceeds).toBe(4_000_000);
+    expect(scenario.resultingCash).toBe(14_000_000);
+    expect(scenario.resultingSquadImpact.corePlayersRemoved).toBe(1);
+    expect(scenario.resultingSquadImpact.severity).toBe("high");
+    expect(financialAssessment.position.cash).toBe(10_000_000);
+  });
+
+  it("returns maintain position when there are no material actions and monitor for insufficient evidence", () => {
+    const healthy = assessClubFinancialPosition(baseContext());
+    const maintained = buildFinancialStrategyRecommendations(strategyContext(healthy, []));
+    expect(maintained.recommendations[0]?.type).toBe("maintain_position");
+
+    const unknown = assessClubFinancialPosition(
+      baseContext({
+        club: { budget: null, currency: "ARS" },
+        players: [],
+        trainers: [],
+        squadMarketValue: null
+      })
+    );
+    const monitored = buildFinancialStrategyRecommendations(strategyContext(unknown, []));
+    expect(monitored.recommendations[0]?.type).toBe("monitor");
+  });
+
+  it("exposes conflicts, deterministic ranking and no financial execution fields", () => {
+    const financialAssessment = assessClubFinancialPosition(baseContext());
+    const context = strategyContext(financialAssessment, [], {
+      depthAnalysis: depthAnalysis("goalkeeper", [1], "overstocked", "covered"),
+      playerMarketValues: [marketEstimate(1, 1_000_000)],
+      marketProjections: [marketProjection(1, 1_000_000, [{ expected: 2_000_000, weeks: 4 }])],
+      squadPlayers: [depthPlayer(1, "transition")],
+      playerProfiles: [{ playerId: 1, profile: "goalkeeper" }]
+    });
+    const first = buildFinancialStrategyRecommendations(context);
+    const second = buildFinancialStrategyRecommendations(context);
+
+    expect(first).toEqual(second);
+    expect(first.conflicts.some((conflict) => conflict.type === "monetize_vs_develop")).toBe(true);
+    expect(first).not.toHaveProperty("transfer");
+    expect(first).not.toHaveProperty("buyPlayer");
+    expect(JSON.stringify(first)).not.toMatch(/Infinity|NaN/);
   });
 });
