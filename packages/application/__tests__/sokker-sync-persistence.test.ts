@@ -8,6 +8,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 
 import {
   ClubModel,
+  JuniorModel,
   MongoClubRepository,
   MongoPlayerRepository,
   MongoSnapshotRepository,
@@ -46,6 +47,7 @@ describe("SokkerSyncPersistence", () => {
   beforeEach(async () => {
     await Promise.all([
       ClubModel.deleteMany({}),
+      JuniorModel.deleteMany({}),
       PlayerModel.deleteMany({}),
       SnapshotModel.deleteMany({}),
       SyncRunModel.deleteMany({}),
@@ -80,6 +82,15 @@ describe("SokkerSyncPersistence", () => {
     expect(club?.training).toEqual({ GK: 2, DEF: 6, MID: 8, ATT: 7 });
     expect(club?.staff).toHaveLength(3);
     expect(snapshot?.juniors).toHaveLength(2);
+    expect(await JuniorModel.countDocuments({ clubId: 6038 })).toBe(2);
+    expect(await JuniorModel.findOne({ clubId: 6038, juniorId: 501 }).lean()).toMatchObject({
+      name: "Junior One",
+      age: 16,
+      currentLevel: 7,
+      initialWeeks: 8,
+      weeksLeft: 8,
+      status: "in_academy"
+    });
     const training = await TrainingWeekModel.findOne({ playerId: 40098056 }).lean();
     expect(snapshot?.gameWeek).toBe(1205);
     expect(training?.gameWeek).toBe(1204);
@@ -99,6 +110,7 @@ describe("SokkerSyncPersistence", () => {
 
     expect(collectionNames).toEqual([
       "clubs",
+      "juniors",
       "players",
       "playertransfers",
       "snapshots",
@@ -158,6 +170,13 @@ describe("SokkerSyncPersistence", () => {
     expect(
       (await SnapshotModel.findOne({ naturalKey: "sokker-json-api-sync" }).lean())?.juniors
     ).toHaveLength(1);
+    expect(await JuniorModel.countDocuments({ clubId: 6038 })).toBe(2);
+    expect(await JuniorModel.findOne({ clubId: 6038, juniorId: 501 }).lean()).toMatchObject({
+      status: "rejected"
+    });
+    expect(await JuniorModel.findOne({ clubId: 6038, juniorId: 502 }).lean()).toMatchObject({
+      status: "in_academy"
+    });
   });
   it("marks a partial fallback run failed and safely completes on retry", async () => {
     const payload = createPayload();

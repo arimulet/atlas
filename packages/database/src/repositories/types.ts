@@ -86,17 +86,24 @@ export interface PersistedPlayer {
   currentGameWeek: number | null;
 }
 
+export interface PersistedJunior {
+  id: string;
+  juniorId: number;
+  clubId: number;
+  name: string;
+  age: number;
+  currentLevel: number;
+  initialWeeks: number;
+  weeksLeft: number;
+  status: "in_academy" | "promoted" | "rejected";
+}
+
 export type PersistedPlayerTransferSource = string;
 export type PersistedTransferDataQuality = "complete" | "partial" | "weak";
 export type PersistedSalePriceType = "final_sale" | "unknown";
 export type PersistedTransferFormation = "GK" | "DEF" | "MID" | "ATT";
 export type PersistedTransferProfile =
-  | "goalkeeper"
-  | "central_defender"
-  | "wing_defender"
-  | "central_midfielder"
-  | "winger"
-  | "forward";
+  "goalkeeper" | "central_defender" | "wing_defender" | "central_midfielder" | "winger" | "forward";
 export type PersistedTransferSkills = Partial<
   Record<
     "stamina" | "pace" | "technique" | "passing" | "keeper" | "defender" | "playmaker" | "striker",
@@ -199,7 +206,6 @@ export interface PersistedJuniorSnapshot {
   name: string;
   age: number;
   initialLevel: number | null;
-  initialWeeksRemaining: number | null;
   weeksRemaining: number | null;
   skill: number | null;
   status: "in_academy" | "ready_for_promotion" | "promoted";
@@ -223,7 +229,6 @@ export interface PersistedYouthPlayerSnapshot {
   name: string;
   age: number;
   initialLevel: number | null;
-  initialWeeksRemaining: number | null;
   weeksRemaining: number | null;
   skill: number | null;
   status: "in_academy" | "ready_for_promotion" | "promoted";

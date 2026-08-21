@@ -39,7 +39,6 @@ export function Dashboard({
   dashboardStatus,
   onSelectPlayer,
   youthAcademy,
-  youthStatus,
   financialStrategy
 }: DashboardProps) {
   const attentionItems = dashboard ? buildAttentionItems(dashboard, youthAcademy) : [];
@@ -62,16 +61,11 @@ export function Dashboard({
         financialStrategy={financialStrategy}
       />
 
-      <div className="atlas-dashboard__main-grid">
-        <PlayersToWatchPanel
-          onSelectPlayer={onSelectPlayer}
-          players={watchPlayers}
-          status={dashboardStatus}
-        />
-        <TrainingSnapshot dashboard={dashboard} status={dashboardStatus} />
-      </div>
-
-      <YouthSnapshot youthAcademy={youthAcademy} status={youthStatus} />
+      <PlayersToWatchPanel
+        onSelectPlayer={onSelectPlayer}
+        players={watchPlayers}
+        status={dashboardStatus}
+      />
     </div>
   );
 }
@@ -228,89 +222,6 @@ function PlayersToWatchPanel({ onSelectPlayer, players, status }: PlayersToWatch
   );
 }
 
-interface TrainingSnapshotProps {
-  dashboard: DashboardProps["dashboard"];
-  status: DashboardStatus;
-}
-
-function TrainingSnapshot({ dashboard, status }: TrainingSnapshotProps) {
-  const summary = dashboard?.trainingSummary;
-
-  return (
-    <section
-      className="atlas-dashboard-panel atlas-dashboard-panel--compact"
-      aria-labelledby="training-title"
-    >
-      <PanelHeading id="training-title" title="Training" />
-      {status === "loading" ? <PanelMessage>Loading training data...</PanelMessage> : null}
-      {status === "error" ? (
-        <PanelMessage tone="error">Training data is unavailable.</PanelMessage>
-      ) : null}
-      {status === "idle" ? (
-        <PanelMessage>Import a club snapshot to inspect training.</PanelMessage>
-      ) : null}
-      {status === "ready" && !summary?.available ? (
-        <PanelMessage>No training data available.</PanelMessage>
-      ) : null}
-      {status === "ready" && summary?.available ? (
-        <>
-          <dl className="atlas-dashboard-metric-list">
-            <MetricRow label="Advanced training" value={summary.observed.advancedPlayers} />
-            <MetricRow label="Formation training" value={summary.observed.formationPlayers} />
-            <MetricRow label="Players observed" value={summary.observed.playersWithTrainingData} />
-          </dl>
-          <p className="atlas-dashboard-panel__note">
-            Efficiency and skill-up history are not available in the current snapshot model.
-          </p>
-        </>
-      ) : null}
-    </section>
-  );
-}
-
-interface YouthSnapshotProps {
-  youthAcademy: DashboardProps["youthAcademy"];
-  status: DashboardStatus;
-}
-
-function YouthSnapshot({ youthAcademy, status }: YouthSnapshotProps) {
-  const plans = youthAcademy?.derived.players ?? [];
-  const attentionCount = plans.filter(
-    (player) => player.category === "ready_for_promotion" || player.category === "stagnation_risk"
-  ).length;
-  const standoutProspectCount = plans.filter(
-    (player) => player.category === "standout_prospect"
-  ).length;
-
-  return (
-    <section
-      className="atlas-dashboard-panel atlas-dashboard-panel--youth"
-      aria-labelledby="youth-title"
-    >
-      <PanelHeading id="youth-title" title="Youth" />
-      {status === "loading" ? <PanelMessage>Loading youth data...</PanelMessage> : null}
-      {status === "error" ? (
-        <PanelMessage tone="error">Unable to load youth data.</PanelMessage>
-      ) : null}
-      {status === "idle" ? (
-        <PanelMessage>Import a club snapshot to inspect the academy.</PanelMessage>
-      ) : null}
-      {status === "ready" && !youthAcademy?.snapshotId ? (
-        <PanelMessage>No youth data available.</PanelMessage>
-      ) : null}
-      {status === "ready" && youthAcademy?.snapshotId ? (
-        <dl className="atlas-dashboard-metric-list atlas-dashboard-metric-list--youth">
-          <MetricRow label="Players" value={youthAcademy.observed.coverage.totalYouthCount} />
-          <MetricRow label="Need attention" value={attentionCount} />
-          {standoutProspectCount > 0 ? (
-            <MetricRow label="Standout prospects" value={standoutProspectCount} />
-          ) : null}
-        </dl>
-      ) : null}
-    </section>
-  );
-}
-
 interface PanelHeadingProps {
   id: string;
   title: string;
@@ -331,20 +242,6 @@ interface PanelMessageProps {
 
 function PanelMessage({ children, tone }: PanelMessageProps) {
   return <p className={`atlas-dashboard-panel__message${tone ? ` is-${tone}` : ""}`}>{children}</p>;
-}
-
-interface MetricRowProps {
-  label: string;
-  value: number;
-}
-
-function MetricRow({ label, value }: MetricRowProps) {
-  return (
-    <div className="atlas-dashboard-metric-row">
-      <dt>{label}</dt>
-      <dd>{value}</dd>
-    </div>
-  );
 }
 
 interface PriorityBadgeProps {

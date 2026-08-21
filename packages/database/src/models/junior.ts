@@ -1,0 +1,31 @@
+import mongoose, { Schema, model, type InferSchemaType, type Model } from "mongoose";
+import { ensureMongooseModels } from "./mongoose-model-registry.js";
+
+ensureMongooseModels();
+
+const juniorSchema = new Schema(
+  {
+    juniorId: { type: Number, required: true, min: 1 },
+    clubId: { type: Number, required: true, min: 1 },
+    name: { type: String, required: true, trim: true },
+    age: { type: Number, required: true, min: 1 },
+    currentLevel: { type: Number, required: true, min: 0 },
+    initialWeeks: { type: Number, required: true, min: 0 },
+    weeksLeft: { type: Number, required: true, min: 0 },
+    status: {
+      type: String,
+      required: true,
+      enum: ["in_academy", "promoted", "rejected"],
+      default: "in_academy"
+    }
+  },
+  { timestamps: true }
+);
+
+juniorSchema.index({ clubId: 1, juniorId: 1 }, { unique: true });
+
+type JuniorDocument = InferSchemaType<typeof juniorSchema>;
+
+export const JuniorModel =
+  (mongoose.models?.Junior as Model<JuniorDocument> | undefined) ??
+  model<JuniorDocument>("Junior", juniorSchema);
