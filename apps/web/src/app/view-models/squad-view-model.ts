@@ -82,15 +82,16 @@ export function createSquadPlayerRows(input: CreateSquadPlayerRowsInput): SquadP
       input.training?.configuration ?? null,
       player.training.position
     );
-    const trainingRow = trainingRowsByPlayerId.get(player.id);
+    const playerId = String(player.playerId);
+    const trainingRow = trainingRowsByPlayerId.get(playerId);
     const marketPlayer = input.squadPlanning?.assessment.depthPlayers.find(
       (candidate) =>
         identifiersMatch(candidate.playerId, observedPlayer?.playerId) ||
-        identifiersMatch(candidate.playerId, player.id)
+        identifiersMatch(candidate.playerId, player.playerId)
     );
 
     return {
-      playerId: observedPlayer?.playerId?.toString() ?? player.id,
+      playerId: observedPlayer?.playerId?.toString() ?? playerId,
       playerName: player.name,
       age: player.age,
       form: player.form ?? null,

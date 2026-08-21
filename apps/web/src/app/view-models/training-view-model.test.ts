@@ -8,24 +8,21 @@ describe("createTrainingPlayerRows", () => {
       [
         {
           id: "player-1",
+          playerId: 42,
           name: "Player One",
           age: 18,
           training: { position: 2, advanced: true }
         },
         {
           id: "player-2",
+          playerId: 43,
           name: "Player Two",
           age: 19,
           training: { position: 2, advanced: false }
         }
       ],
       null,
-      new Map([
-        [
-          "player-1",
-          { playerId: "player-1", progress: 82, talent: 3.4, nextSkillUp: 14, etaWeeks: 2 }
-        ]
-      ])
+      new Map([["42", { playerId: "42", progress: 82, talent: 3.4, nextSkillUp: 14, etaWeeks: 2 }]])
     );
 
     expect(rows).toEqual([

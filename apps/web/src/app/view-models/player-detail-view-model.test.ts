@@ -12,6 +12,7 @@ describe("createPlayerDetailViewModel", () => {
       players: [
         {
           id: "snapshot-player-1",
+          playerId: 42,
           name: "Player One",
           age: 20,
           training: { position: 2, advanced: true }
@@ -43,7 +44,7 @@ describe("createPlayerDetailViewModel", () => {
     };
 
     const viewModel = createPlayerDetailViewModel({
-      playerId: "snapshot-player-1",
+      playerId: "42",
       training,
       development,
       trainingDiagnostic: null,
@@ -68,6 +69,7 @@ describe("createPlayerDetailViewModel", () => {
       players: [
         {
           id: "snapshot-player-1",
+          playerId: 42,
           name: "Player One",
           age: 20,
           training: { position: 2, advanced: true }

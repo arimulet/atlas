@@ -115,7 +115,7 @@ export function createPlayerDetailViewModel(
 ): PlayerDetailViewModel | null {
   const player = input.training?.players.find(
     (candidate) =>
-      identifiersMatch(candidate.id, input.playerId) ||
+      identifiersMatch(candidate.playerId, input.playerId) ||
       input.development?.observed.players.some(
         (observed) =>
           identifiersMatch(observed.snapshotPlayerId, candidate.id) &&
@@ -156,16 +156,16 @@ export function createPlayerDetailViewModel(
   const marketPlayer = input.squadPlanning?.assessment.depthPlayers.find(
     (candidate) =>
       identifiersMatch(candidate.playerId, observedPlayer?.playerId) ||
-      identifiersMatch(candidate.playerId, player.id)
+      identifiersMatch(candidate.playerId, player.playerId)
   );
 
   return {
     player: {
-      id: player.id,
+      id: String(player.playerId),
       name: player.name,
       age: player.age
     },
-    developmentPlayer: createDevelopmentPlayer(player.id, observedPlayer),
+    developmentPlayer: createDevelopmentPlayer(String(player.playerId), observedPlayer),
     skills: SKILL_DEFINITIONS.map((definition) => ({
       key: definition.key,
       label: formatTrainingPriority(definition.trainingPriority),
@@ -233,14 +233,15 @@ export function createPlayerTrainingProjectionSummaries(
   const summaries = new Map<string, PlayerTrainingProjectionSummary>();
 
   for (const player of input.training?.players ?? []) {
-    const viewModel = createPlayerDetailViewModel({ ...input, playerId: player.id });
+    const playerId = String(player.playerId);
+    const viewModel = createPlayerDetailViewModel({ ...input, playerId });
 
     if (!viewModel) {
       continue;
     }
 
-    summaries.set(player.id, {
-      playerId: player.id,
+    summaries.set(playerId, {
+      playerId,
       progress: viewModel.projection.current.progress,
       talent: viewModel.talent.estimated,
       nextSkillUp: viewModel.projection.nextSkillUp?.targetLevel ?? null,
@@ -356,7 +357,7 @@ function createTrainingRow(
   diagnostic: TrainingDiagnostic | null
 ): TrainingPlayerRow {
   return {
-    playerId: player.id,
+    playerId: String(player.playerId),
     playerName: player.name,
     trainingPosition: player.training.position,
     age: player.age,

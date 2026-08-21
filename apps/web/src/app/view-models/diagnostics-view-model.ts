@@ -178,9 +178,14 @@ function createPlayerIndex(input: CreateDiagnosticsPageViewModelInput): PlayerIn
   }
 
   for (const player of input.training?.players ?? []) {
-    const subject = byName.get(player.name) ?? playerSubject(player.name, player.id);
+    const existingSubject = byName.get(player.name);
+    const subject =
+      existingSubject?.id !== undefined
+        ? existingSubject
+        : playerSubject(player.name, player.playerId);
     byName.set(player.name, subject);
     byId.set(player.id, subject);
+    byId.set(String(player.playerId), subject);
   }
 
   return { byId, byName };

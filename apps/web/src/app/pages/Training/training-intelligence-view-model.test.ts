@@ -13,10 +13,10 @@ const training: TrainingPageData = {
   snapshotDate: "2026-08-20",
   configuration: { GK: 2, DEF: 6, MID: 7, ATT: 7 },
   players: [
-    { id: "1", name: "Gómez", age: 18, training: { position: 1, advanced: true } },
-    { id: "2", name: "Martínez", age: 19, training: { position: 2, advanced: true } },
-    { id: "3", name: "Pérez", age: 18, training: { position: 2, advanced: false } },
-    { id: "4", name: "Fernández", age: 23, training: { position: 1, advanced: true } }
+    { id: "1", playerId: 1, name: "Gómez", age: 18, training: { position: 1, advanced: true } },
+    { id: "2", playerId: 2, name: "Martínez", age: 19, training: { position: 2, advanced: true } },
+    { id: "3", playerId: 3, name: "Pérez", age: 18, training: { position: 2, advanced: false } },
+    { id: "4", playerId: 4, name: "Fernández", age: 23, training: { position: 1, advanced: true } }
   ],
   history: []
 };
