@@ -205,10 +205,24 @@ export function simulateFinancialPositionAfterCashCommitment(
   config = FINANCIAL_SAFETY_CONFIG
 ): ClubFinancialPosition {
   const normalizedAmount = finiteNonNegative(amount);
+  return simulateFinancialPositionAfterCashChange(
+    financialAssessment,
+    normalizedAmount === null ? 0 : -normalizedAmount,
+    config
+  );
+}
+
+export function simulateFinancialPositionAfterCashChange(
+  financialAssessment: ClubFinancialAssessment,
+  cashDelta: number,
+  config = FINANCIAL_SAFETY_CONFIG
+): ClubFinancialPosition {
+  const normalizedDelta =
+    typeof cashDelta === "number" && Number.isFinite(cashDelta) ? cashDelta : 0;
   const cash =
-    financialAssessment.position.cash === null || normalizedAmount === null
-      ? financialAssessment.position.cash
-      : Math.max(0, financialAssessment.position.cash - normalizedAmount);
+    financialAssessment.position.cash === null
+      ? null
+      : Math.max(0, financialAssessment.position.cash + normalizedDelta);
   return rebuildPositionWithCash(financialAssessment.position, cash, config);
 }
 
