@@ -1,4 +1,7 @@
 import mongoose, { Schema, model, type InferSchemaType, type Model } from "mongoose";
+import { ensureMongooseModels } from "./mongoose-model-registry.js";
+
+ensureMongooseModels();
 
 const playerDevelopmentTargetSchema = new Schema(
   {
@@ -28,7 +31,7 @@ type PlayerDevelopmentTargetDocument = InferSchemaType<typeof playerDevelopmentT
 
 export function getPlayerDevelopmentTargetModel(): Model<PlayerDevelopmentTargetDocument> {
   return (
-    (mongoose.models.PlayerDevelopmentTarget as
+    (mongoose.models?.PlayerDevelopmentTarget as
       Model<PlayerDevelopmentTargetDocument> | undefined) ??
     model<PlayerDevelopmentTargetDocument>("PlayerDevelopmentTarget", playerDevelopmentTargetSchema)
   );

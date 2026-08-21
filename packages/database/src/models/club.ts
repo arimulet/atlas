@@ -1,4 +1,7 @@
 import mongoose, { Schema, model, type InferSchemaType, type Model } from "mongoose";
+import { ensureMongooseModels } from "./mongoose-model-registry.js";
+
+ensureMongooseModels();
 
 const manualRecordSchema = new Schema(
   {
@@ -70,5 +73,5 @@ clubSchema.index({ clubId: 1 }, { unique: true });
 export type ClubDocument = InferSchemaType<typeof clubSchema>;
 
 export const ClubModel =
-  (mongoose.models.Club as Model<ClubDocument> | undefined) ??
+  (mongoose.models?.Club as Model<ClubDocument> | undefined) ??
   model<ClubDocument>("Club", clubSchema);

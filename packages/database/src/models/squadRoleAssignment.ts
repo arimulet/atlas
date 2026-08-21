@@ -1,4 +1,7 @@
 import mongoose, { Schema, model, type InferSchemaType, type Model } from "mongoose";
+import { ensureMongooseModels } from "./mongoose-model-registry.js";
+
+ensureMongooseModels();
 
 const squadRoleAssignmentSchema = new Schema(
   {
@@ -19,7 +22,7 @@ type SquadRoleAssignmentDocument = InferSchemaType<typeof squadRoleAssignmentSch
 
 export function getSquadRoleAssignmentModel(): Model<SquadRoleAssignmentDocument> {
   return (
-    (mongoose.models.SquadRoleAssignment as Model<SquadRoleAssignmentDocument> | undefined) ??
+    (mongoose.models?.SquadRoleAssignment as Model<SquadRoleAssignmentDocument> | undefined) ??
     model<SquadRoleAssignmentDocument>("SquadRoleAssignment", squadRoleAssignmentSchema)
   );
 }

@@ -1,4 +1,7 @@
 import mongoose, { Schema, model, type InferSchemaType, type Model } from "mongoose";
+import { ensureMongooseModels } from "./mongoose-model-registry.js";
+
+ensureMongooseModels();
 
 const skillSetSchema = new Schema(
   {
@@ -53,5 +56,5 @@ playerTransferSchema.index({ transferDate: 1, developmentProfile: 1 });
 export type PlayerTransferDocument = InferSchemaType<typeof playerTransferSchema>;
 
 export const PlayerTransferModel =
-  (mongoose.models.PlayerTransfer as Model<PlayerTransferDocument> | undefined) ??
+  (mongoose.models?.PlayerTransfer as Model<PlayerTransferDocument> | undefined) ??
   model<PlayerTransferDocument>("PlayerTransfer", playerTransferSchema);
