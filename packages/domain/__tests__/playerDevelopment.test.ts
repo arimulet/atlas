@@ -32,7 +32,7 @@ describe("Player Development Plan", () => {
   it("suggests a profile from formation and compatible skills", () => {
     const suggestion = suggestDevelopmentProfile(player());
 
-    expect(suggestion.profile).toBe("central_defender");
+    expect(suggestion.profile).toBe("defender");
     expect(suggestion.confidence).toBe("high");
     expect(suggestion.reasons).toContainEqual({ type: "formation_match", formation: "DEF" });
   });
@@ -47,7 +47,7 @@ describe("Player Development Plan", () => {
     });
     expect(suggestion.reasons).toContainEqual({
       type: "profile_skill_distribution",
-      profile: "central_defender"
+      profile: "defender"
     });
   });
 
@@ -113,11 +113,11 @@ describe("Player Development Plan", () => {
   });
 
   it("builds default targets from profile definitions", () => {
-    const target = buildDefaultDevelopmentTarget(player(), "central_defender");
+    const target = buildDefaultDevelopmentTarget(player(), "defender");
 
     expect(target).toMatchObject({
       playerId: 42,
-      profile: "central_defender",
+      profile: "defender",
       source: "automatic"
     });
     expect(target.targetSkills.map(({ skill }) => skill)).toEqual([
@@ -129,14 +129,14 @@ describe("Player Development Plan", () => {
   });
 
   it("never creates an automatic target below the current skill", () => {
-    const target = buildDefaultDevelopmentTarget(player(), "central_defender");
+    const target = buildDefaultDevelopmentTarget(player(), "defender");
 
     expect(target.targetSkills.find((skill) => skill.skill === "defender")?.targetLevel).toBe(14);
   });
 
   it("preserves manual levels and target age while deriving priorities from the profile", () => {
-    const target = buildDefaultDevelopmentTarget(player(), "central_defender", {
-      profile: "central_defender",
+    const target = buildDefaultDevelopmentTarget(player(), "defender", {
+      profile: "defender",
       targetLevels: { defender: 16, pace: 11 },
       targetAge: 24
     });
@@ -153,7 +153,7 @@ describe("Player Development Plan", () => {
     const current = player({ skills: { defender: 10, pace: 5, technique: 10 } });
     const target: PlayerDevelopmentTarget = {
       playerId: 42,
-      profile: "central_defender",
+      profile: "defender",
       source: "automatic",
       targetSkills: [
         { skill: "defender", targetLevel: 10, priority: "primary" },
@@ -225,7 +225,7 @@ describe("Player Development Plan", () => {
     const plan = planner.createPlan(
       player({ skills: { defender: 15, pace: 14, technique: 12, playmaker: 10 } }),
       {
-        profile: "central_defender"
+        profile: "defender"
       }
     );
 

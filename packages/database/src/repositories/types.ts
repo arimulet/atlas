@@ -1,5 +1,5 @@
 export type PersistedDevelopmentProfile =
-  "goalkeeper" | "central_defender" | "wing_defender" | "central_midfielder" | "winger" | "forward";
+  "goalkeeper" | "defender" | "wing_defender" | "midfielder" | "winger" | "forward";
 
 export type PersistedDevelopmentSkill =
   "stamina" | "pace" | "technique" | "passing" | "keeper" | "defender" | "playmaker" | "striker";
@@ -105,7 +105,7 @@ export type PersistedTransferDataQuality = "complete" | "partial" | "weak";
 export type PersistedSalePriceType = "final_sale" | "unknown";
 export type PersistedTransferFormation = "GK" | "DEF" | "MID" | "ATT";
 export type PersistedTransferProfile =
-  "goalkeeper" | "central_defender" | "wing_defender" | "central_midfielder" | "winger" | "forward";
+  "goalkeeper" | "defender" | "wing_defender" | "midfielder" | "winger" | "forward";
 export type PersistedTransferSkills = Partial<
   Record<
     "stamina" | "pace" | "technique" | "passing" | "keeper" | "defender" | "playmaker" | "striker",

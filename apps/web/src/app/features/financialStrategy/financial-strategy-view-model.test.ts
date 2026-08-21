@@ -43,7 +43,7 @@ describe("financial strategy presentation model", () => {
         horizon: "Next season"
       }),
       expect.objectContaining({
-        profile: "Central Defender",
+        profile: "Defender",
         status: "Future need",
         gap: "USD 3,000,000"
       })
@@ -199,7 +199,7 @@ function createFinancialStrategyData(): FinancialStrategyData {
       },
       {
         id: "need-def",
-        profile: "central_defender",
+        profile: "defender",
         sourceRecommendationId: "squad-def",
         horizon: "medium_term",
         priority: "high",
@@ -283,7 +283,7 @@ function createFinancialStrategyData(): FinancialStrategyData {
     monetizationCandidates: [
       {
         playerId: 7,
-        profile: "central_defender",
+        profile: "defender",
         marketValue: 8_100_000,
         squadRole: "core",
         profileStatus: "balanced",

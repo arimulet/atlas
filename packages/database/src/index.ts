@@ -1,5 +1,6 @@
 export * from "./connection.js";
 export * from "./migrations/club-profile.js";
+export * from "./migrations/development-profile-keys.js";
 export * from "./migrations/snapshot-club-id.js";
 export * from "./models/club.js";
 export * from "./models/country.js";

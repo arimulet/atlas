@@ -19,7 +19,7 @@ const basePlayer: PlayerMarketValuePlayer = {
   playerId: 7,
   age: 18,
   formation: "DEF",
-  profile: "central_defender",
+  profile: "defender",
   sokkerValue: 1_300_000,
   skills: {
     stamina: 8,
@@ -57,7 +57,7 @@ function depthPlayer(overrides: Partial<SquadDepthPlayer> = {}): SquadDepthPlaye
     source: "automatic",
     manualRole: null,
     lifecycle: "development",
-    profile: "central_defender",
+    profile: "defender",
     currentContributionScore: 0.5,
     futureContributionScore: 0.8,
     developmentPotentialScore: 0.7,
@@ -79,7 +79,7 @@ function comparable(index: number, outlier = false): MarketComparable {
       age: 18 + (index % 2),
       skills: basePlayer.skills,
       formation: "DEF",
-      developmentProfile: "central_defender",
+      developmentProfile: "defender",
       source: "manual"
     },
     similarityScore: outlier ? 0.86 : 0.9,

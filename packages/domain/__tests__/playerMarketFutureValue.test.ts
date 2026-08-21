@@ -18,7 +18,7 @@ const player: PlayerMarketValuePlayer = {
   playerId: 77,
   age: 18.4,
   formation: "DEF",
-  profile: "central_defender",
+  profile: "defender",
   skills: {
     stamina: 8,
     pace: 11,
@@ -34,13 +34,13 @@ const player: PlayerMarketValuePlayer = {
 function plan(): PlayerDevelopmentPlan {
   return {
     suggestion: {
-      profile: "central_defender",
+      profile: "defender",
       confidence: "high",
       reasons: []
     },
     target: {
       playerId: player.playerId,
-      profile: "central_defender",
+      profile: "defender",
       targetSkills: [
         { skill: "defender", targetLevel: 14, priority: "primary" },
         { skill: "pace", targetLevel: 12, priority: "secondary" }
@@ -49,7 +49,7 @@ function plan(): PlayerDevelopmentPlan {
     },
     gap: {
       playerId: player.playerId,
-      profile: "central_defender",
+      profile: "defender",
       totalGap: 3,
       progress: 0.7,
       skills: [
@@ -101,7 +101,7 @@ function projection(steps: DevelopmentProjectionStep[]): PlayerDevelopmentProjec
   const last = steps.at(-1);
   return {
     playerId: player.playerId,
-    profile: "central_defender",
+    profile: "defender",
     generatedAtGameWeek: 20,
     generatedAtDate: new Date("2026-08-20T00:00:00.000Z"),
     steps,
@@ -145,7 +145,7 @@ function projection(steps: DevelopmentProjectionStep[]): PlayerDevelopmentProjec
 function path(steps: DevelopmentProjectionStep[]): PlayerTrainingPath {
   return {
     playerId: player.playerId,
-    profile: "central_defender",
+    profile: "defender",
     steps: steps.map((item) => ({
       order: item.order,
       skill: item.skill,
@@ -213,7 +213,7 @@ describe("future player market value", () => {
     const result = projectPlayerMarketValue(context());
     const direct = estimatePlayerMarketValue({
       player: { ...player, age: 18.55, skills: { ...player.skills, defender: 13 } },
-      developmentProfile: "central_defender",
+      developmentProfile: "defender",
       developmentPlan: plan()
     });
 

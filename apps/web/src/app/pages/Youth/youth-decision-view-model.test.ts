@@ -18,10 +18,10 @@ import {
 describe("youth decision presentation model", () => {
   it("translates domain reasons and risks into readable messages", () => {
     expect(
-      mapYouthDecisionReason({ type: "fills_future_squad_need", profile: "central_defender" })
+      mapYouthDecisionReason({ type: "fills_future_squad_need", profile: "defender" })
     ).toEqual({
       title: "Future squad need",
-      description: "Covers a future Central Defender need."
+      description: "Covers a future Defender need."
     });
     expect(mapYouthDecisionRisk({ type: "advanced_slot_unlikely" })).toEqual({
       title: "Advanced slot may be unavailable",
@@ -40,7 +40,7 @@ describe("youth decision presentation model", () => {
       decision: "keep",
       prospectQualityLabel: "Very High",
       clubFitLabel: "Poor",
-      profileLabel: "Central Defender"
+      profileLabel: "Defender"
     });
   });
 
@@ -115,7 +115,7 @@ function createCandidate(
   };
   const opportunity: YouthDevelopmentOpportunity = {
     playerId,
-    profile: "central_defender",
+    profile: "defender",
     squadNeedScore: 0.7,
     successionFitScore: 0.7,
     developmentOpportunityScore: 0.7,
@@ -138,7 +138,7 @@ function createCandidate(
     age: 17,
     role: "prospect",
     formation: "DEF",
-    initialProfile: "central_defender",
+    initialProfile: "defender",
     prospect,
     opportunity,
     recommendation,

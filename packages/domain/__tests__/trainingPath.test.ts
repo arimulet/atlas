@@ -41,7 +41,7 @@ function target(
 ): PlayerDevelopmentTarget {
   return {
     playerId: 42,
-    profile: "central_defender",
+    profile: "defender",
     source: "automatic",
     targetSkills,
     ...overrides

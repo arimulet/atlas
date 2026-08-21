@@ -179,7 +179,7 @@
 
 .atlas .atlas-squad-table {
   border-collapse: collapse;
-  min-width: 1400px;
+  min-width: 900px;
   table-layout: fixed;
   width: 100%;
 }
@@ -198,27 +198,6 @@
 }
 .atlas .atlas-squad-table col.is-skill {
   width: 43px;
-}
-.atlas .atlas-squad-table col.is-trained-skill {
-  width: 125px;
-}
-.atlas .atlas-squad-table col.is-advanced {
-  width: 50px;
-}
-.atlas .atlas-squad-table col.is-efficiency {
-  width: 70px;
-}
-.atlas .atlas-squad-table col.is-progress {
-  width: 70px;
-}
-.atlas .atlas-squad-table col.is-talent {
-  width: 68px;
-}
-.atlas .atlas-squad-table col.is-next-skill-up {
-  width: 58px;
-}
-.atlas .atlas-squad-table col.is-eta {
-  width: 58px;
 }
 .atlas .atlas-squad-table col.is-market-value,
 .atlas .atlas-squad-table col.is-projected-value {
@@ -264,15 +243,12 @@
 }
 
 .atlas .atlas-squad-table__group-row .is-skills-group,
-.atlas .atlas-squad-table__group-row .is-training-group,
 .atlas .atlas-squad-table thead tr:nth-child(2) th:nth-child(3),
-.atlas .atlas-squad-table thead tr:nth-child(2) th:nth-child(13),
-.atlas .atlas-squad-table thead tr:nth-child(2) th:nth-child(20) {
+.atlas .atlas-squad-table thead tr:nth-child(2) th:nth-child(13) {
   border-left: 1px solid var(--atlas-border);
 }
 
 .atlas .atlas-squad-table__group-row .is-skills-group,
-.atlas .atlas-squad-table__group-row .is-training-group,
 .atlas .atlas-squad-table__group-row .is-market-group {
   background: color-mix(in srgb, var(--atlas-surface-hover) 28%, transparent);
 }
@@ -283,8 +259,7 @@
 }
 
 .atlas .atlas-squad-table tbody td:nth-child(3),
-.atlas .atlas-squad-table tbody td:nth-child(13),
-.atlas .atlas-squad-table tbody td:nth-child(20) {
+.atlas .atlas-squad-table tbody td:nth-child(13) {
   border-left: 1px solid color-mix(in srgb, var(--atlas-border) 72%, transparent);
 }
 
@@ -347,15 +322,13 @@
   margin: 5px 0 0;
 }
 
-.atlas .atlas-squad-planning-summary__roles,
-.atlas .atlas-squad-role-summary {
+.atlas .atlas-squad-planning-summary__roles {
   display: grid;
   gap: 7px;
   grid-template-columns: repeat(6, minmax(65px, 1fr));
 }
 
-.atlas .atlas-squad-planning-summary__metric,
-.atlas .atlas-squad-role-summary__item {
+.atlas .atlas-squad-planning-summary__metric {
   background: color-mix(in srgb, var(--atlas-surface-hover) 55%, transparent);
   border-radius: 7px;
   display: grid;
@@ -363,15 +336,13 @@
   padding: 8px 9px;
 }
 
-.atlas .atlas-squad-planning-summary__metric span,
-.atlas .atlas-squad-role-summary__item span {
+.atlas .atlas-squad-planning-summary__metric span {
   color: var(--atlas-text-muted);
   font-size: 0.64rem;
   white-space: nowrap;
 }
 
-.atlas .atlas-squad-planning-summary__metric strong,
-.atlas .atlas-squad-role-summary__item strong {
+.atlas .atlas-squad-planning-summary__metric strong {
   color: var(--atlas-text);
   font-size: 1.08rem;
 }
@@ -421,25 +392,6 @@
 
 .atlas .atlas-squad-panel__heading .atlas-squad-panel__title {
   margin-bottom: 0;
-}
-
-.atlas .atlas-squad-role-summary {
-  grid-template-columns: repeat(6, minmax(100px, 1fr));
-}
-.atlas .atlas-squad-role-summary__item {
-  border-top: 2px solid var(--atlas-border);
-}
-.atlas .atlas-squad-role-summary__item.is-core {
-  border-top-color: var(--atlas-accent);
-}
-.atlas .atlas-squad-role-summary__item.is-developing {
-  border-top-color: var(--semantic-info-border);
-}
-.atlas .atlas-squad-role-summary__item.is-prospect {
-  border-top-color: var(--semantic-success-border);
-}
-.atlas .atlas-squad-role-summary__item.is-transition {
-  border-top-color: var(--semantic-warning-border);
 }
 
 .atlas .atlas-squad-profile-table-wrap {
@@ -501,6 +453,12 @@
   display: grid;
   gap: 4px;
 }
+.atlas .atlas-squad-planning-cell__summary {
+  align-items: center;
+  display: flex;
+  gap: 5px;
+}
+.atlas .atlas-squad-planning-cell__lifecycle,
 .atlas .atlas-squad-planning-cell small {
   color: var(--atlas-text-muted);
   font-size: 0.62rem;

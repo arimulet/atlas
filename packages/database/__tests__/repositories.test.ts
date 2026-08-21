@@ -11,10 +11,12 @@ import {
   MongoPlayerRepository,
   MongoSnapshotRepository,
   PlayerModel,
+  PlayerTransferModel,
   getPlayerDevelopmentTargetModel,
   getSquadRoleAssignmentModel,
   SnapshotModel,
   migrateClubProfileDocuments,
+  migrateDevelopmentProfileKeys,
   migrateSnapshotClubIds,
   type SaveSnapshotInput
 } from "../src/index.js";
@@ -39,6 +41,7 @@ describe("Mongo repositories", () => {
       ClubModel.deleteMany({}),
       JuniorModel.deleteMany({}),
       PlayerModel.deleteMany({}),
+      PlayerTransferModel.deleteMany({}),
       getPlayerDevelopmentTargetModel().deleteMany({}),
       getSquadRoleAssignmentModel().deleteMany({}),
       SnapshotModel.deleteMany({})
@@ -201,6 +204,37 @@ describe("Mongo repositories", () => {
 
     expect(result.migrated).toBe(1);
     expect(migrated?.clubId).toBe(1);
+  });
+
+  it("migrates legacy development profile keys", async () => {
+    const developmentTarget = await getPlayerDevelopmentTargetModel().collection.insertOne({
+      playerId: 100,
+      clubId: 1,
+      profile: "central_defender",
+      targetLevels: {},
+      targetAge: null
+    });
+    const transfer = await PlayerTransferModel.collection.insertOne({
+      transferKey: "legacy-development-profile",
+      transferDate: new Date("2026-08-21T00:00:00.000Z"),
+      salePrice: 1_000_000,
+      age: 20,
+      skills: {},
+      source: "test",
+      developmentProfile: "central_midfielder"
+    });
+
+    const result = await migrateDevelopmentProfileKeys();
+    const migratedTarget = await getPlayerDevelopmentTargetModel().collection.findOne({
+      _id: developmentTarget.insertedId
+    });
+    const migratedTransfer = await PlayerTransferModel.collection.findOne({
+      _id: transfer.insertedId
+    });
+
+    expect(result).toEqual({ developmentTargets: 1, playerTransfers: 1 });
+    expect(migratedTarget?.profile).toBe("defender");
+    expect(migratedTransfer?.developmentProfile).toBe("midfielder");
   });
 
   it("updates manual club configuration without changing observed Sokker data", async () => {

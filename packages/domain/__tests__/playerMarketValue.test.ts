@@ -53,7 +53,7 @@ function developmentPlan(
       observedPosition: currentPlayer.observedPosition,
       skills: currentPlayer.skills
     },
-    { profile: "central_defender", targetLevels }
+    { profile: "defender", targetLevels }
   );
 }
 
@@ -191,7 +191,7 @@ describe("Player Market Value", () => {
 
     expect(estimate.reasons).toContainEqual({
       type: "profile_fallback_used",
-      profile: "central_defender"
+      profile: "defender"
     });
     expect(estimate.confidence).toBe("low");
   });
@@ -348,7 +348,7 @@ describe("Player Market Value", () => {
       playerId: 1,
       estimatedMarketValue: valuation.estimatedValue.expected,
       sokkerValue: 1_100_000,
-      profile: "central_defender"
+      profile: "defender"
     });
     expect(sample.primarySkills).toMatchObject({ defender: 13, pace: 11 });
   });
@@ -370,7 +370,7 @@ describe("Player Market Value", () => {
   });
 
   it("uses medium confidence for complete observable data and never claims V1 calibration", () => {
-    const estimate = estimatePlayerMarketValue(context({ developmentProfile: "central_defender" }));
+    const estimate = estimatePlayerMarketValue(context({ developmentProfile: "defender" }));
 
     expect(estimate.confidence).toBe("medium");
     expect(estimate.estimatedValue.low).toBeLessThanOrEqual(estimate.estimatedValue.expected);

@@ -11,9 +11,9 @@ const playerDevelopmentTargetSchema = new Schema(
       type: String,
       enum: [
         "goalkeeper",
-        "central_defender",
+        "defender",
         "wing_defender",
-        "central_midfielder",
+        "midfielder",
         "winger",
         "forward"
       ],

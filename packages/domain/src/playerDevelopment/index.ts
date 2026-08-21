@@ -29,8 +29,8 @@ const FORMATION_PROFILE_AFFINITY: Readonly<
   Record<Formation, Partial<Record<DevelopmentProfile, number>>>
 > = {
   GK: { goalkeeper: 3 },
-  DEF: { central_defender: 3, wing_defender: 2 },
-  MID: { central_midfielder: 3, winger: 2 },
+  DEF: { defender: 3, wing_defender: 2 },
+  MID: { midfielder: 3, winger: 2 },
   ATT: { forward: 3 }
 };
 
@@ -62,7 +62,7 @@ export function suggestDevelopmentProfile(
   const best = evaluations[0];
 
   if (!best || best.score === 0) {
-    return { profile: "central_midfielder", confidence: "low", reasons: [] };
+    return { profile: "midfielder", confidence: "low", reasons: [] };
   }
 
   const secondBest = evaluations[1];

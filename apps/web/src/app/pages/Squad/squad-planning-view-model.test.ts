@@ -31,13 +31,15 @@ describe("squad planning presentation", () => {
     expect(viewModel.summary.profileCounts.critical).toBe(1);
     expect(viewModel.summary.successionRisks).toBe(1);
     expect(profileLabel("goalkeeper")).toBe("Goalkeeper");
+    expect(profileLabel("defender")).toBe("Defender");
+    expect(profileLabel("midfielder")).toBe("Midfielder");
     expect(roleLabel("core")).toBe("Core");
   });
 
   it("shows priority actions, excludes maintain, and keeps global ordering", () => {
     const planning = createBundle([
       recommendation("maintain", "low", "goalkeeper"),
-      recommendation("find_external", "critical", "central_defender"),
+      recommendation("find_external", "critical", "defender"),
       recommendation("develop_internal", "high", "goalkeeper")
     ]);
 
@@ -54,7 +56,7 @@ describe("squad planning presentation", () => {
 
   it("keeps current, next season and medium-term snapshots distinct", () => {
     const viewModel = createSquadPlanningViewModel(createBundle(), createRows());
-    const profile = viewModel.profiles.find((entry) => entry.profile === "central_defender");
+    const profile = viewModel.profiles.find((entry) => entry.profile === "defender");
 
     expect(profile?.current.availablePlayers).toBe(2);
     expect(profile?.nextSeason.availablePlayers).toBe(1);
@@ -62,9 +64,20 @@ describe("squad planning presentation", () => {
     expect(profile?.statusLabel).toBe("Critical");
   });
 
+  it("hides unsupported wing profiles from the squad depth view", () => {
+    const planning = createBundle();
+    planning.depth.profiles.push(createProfile("wing_defender", [], [], [], "critical", "high"));
+    planning.depth.profiles.push(createProfile("winger", [], [], [], "critical", "high"));
+
+    const viewModel = createSquadPlanningViewModel(planning, createRows());
+
+    expect(viewModel.profiles.map((profile) => profile.profile)).not.toContain("wing_defender");
+    expect(viewModel.profiles.map((profile) => profile.profile)).not.toContain("winger");
+  });
+
   it("exposes succession, dependency, congestion and missing pipeline signals", () => {
     const viewModel = createSquadPlanningViewModel(createBundle(), createRows());
-    const profile = viewModel.profiles.find((entry) => entry.profile === "central_defender");
+    const profile = viewModel.profiles.find((entry) => entry.profile === "defender");
 
     expect(profile?.successionStatus).toBe("missing");
     expect(profile?.dependencyRisk?.playerName).toBe("Ana");
@@ -147,11 +160,11 @@ function createBundle(
   const players = [
     createPlayer(1, "goalkeeper", "core", "prime", confidence),
     createPlayer(2, "goalkeeper", "developing", "development", confidence),
-    createPlayer(3, "central_defender", "transition", "late_prime", confidence)
+    createPlayer(3, "defender", "transition", "late_prime", confidence)
   ];
   const profiles = [
     createProfile("goalkeeper", [1, 2], [2], [], "balanced", confidence),
-    createProfile("central_defender", [3, 1], [1], [], "critical", confidence)
+    createProfile("defender", [3, 1], [1], [], "critical", confidence)
   ];
 
   return {
@@ -241,17 +254,17 @@ function createProfile(
     nextSeason: createSnapshot(nextIds),
     mediumTerm: createSnapshot(mediumIds),
     succession: {
-      successionRequired: profile === "central_defender",
-      outgoingPlayers: profile === "central_defender" ? [3] : [],
+      successionRequired: profile === "defender",
+      outgoingPlayers: profile === "defender" ? [3] : [],
       successorCandidates: [],
-      coverageStatus: profile === "central_defender" ? "missing" : "covered"
+      coverageStatus: profile === "defender" ? "missing" : "covered"
     },
     status,
     confidence,
     dependencyRisk:
-      profile === "central_defender" ? { dominantPlayerId: 1, contributionGap: 0.4 } : null,
+      profile === "defender" ? { dominantPlayerId: 1, contributionGap: 0.4 } : null,
     reasons:
-      profile === "central_defender"
+      profile === "defender"
         ? [
             { type: "development_congestion", candidates: 3 },
             { type: "prospect_pipeline_missing" },

@@ -41,7 +41,7 @@ describe("Youth Decision Engine: Youth Prospect Assessment", () => {
   it("scores a young player with strong primary skills as a good prospect", () => {
     const assessment = assessYouthProspect(context({ talent: talent(1.2) }));
 
-    expect(assessment.suggestedProfile).toBe("central_defender");
+    expect(assessment.suggestedProfile).toBe("defender");
     expect(assessment.prospectScore).toBeGreaterThan(0.5);
     expect(assessment.strengths).toContainEqual({
       type: "strong_primary_skill",
@@ -65,7 +65,7 @@ describe("Youth Decision Engine: Youth Prospect Assessment", () => {
           skills: { defender: 10, pace: 9, technique: 8, playmaker: 7 }
         }),
         suggestedDevelopmentProfile: {
-          profile: "central_defender",
+          profile: "defender",
           confidence: "medium",
           reasons: []
         }
@@ -151,7 +151,7 @@ describe("Youth Decision Engine: Youth Prospect Assessment", () => {
 
     expect(assessment.suggestedDevelopmentTarget).toMatchObject({
       playerId: 1,
-      profile: "central_defender",
+      profile: "defender",
       source: "automatic"
     });
     expect(assessment.suggestedDevelopmentTarget?.targetSkills.map(({ skill }) => skill)).toEqual([
@@ -215,7 +215,7 @@ describe("Youth Decision Engine: Youth Prospect Assessment", () => {
     ];
 
     expect(values.every((value) => value === null || Number.isFinite(value))).toBe(true);
-    expect(diagnostic).toMatchObject({ playerId: 1, profile: "central_defender" });
+    expect(diagnostic).toMatchObject({ playerId: 1, profile: "defender" });
   });
 
   it("emits semantic weaknesses for low primary skills and unbalanced distribution", () => {
@@ -225,7 +225,7 @@ describe("Youth Decision Engine: Youth Prospect Assessment", () => {
           skills: { defender: 5, striker: 12, passing: 10, keeper: 10, stamina: 10 }
         }),
         suggestedDevelopmentProfile: {
-          profile: "central_defender",
+          profile: "defender",
           confidence: "medium",
           reasons: []
         }

@@ -16,7 +16,6 @@ export function SquadPlanningSections({ onSelectPlayer, viewModel }: SquadPlanni
   return (
     <>
       <SquadPlanningSummary viewModel={viewModel} />
-      <SquadRoleSummary roleCounts={viewModel.summary.roleCounts} />
       <SquadProfileDepthTable profiles={viewModel.profiles} onSelectPlayer={onSelectPlayer} />
     </>
   );
@@ -56,33 +55,6 @@ function SquadPlanningSummary({ viewModel }: SquadPlanningSummaryProps) {
         <strong className="is-overstocked">{profileCounts.overstocked} Overstocked</strong>
         <span>{viewModel.summary.successionRisks} Succession risks</span>
         <span>{viewModel.summary.externalNeeds} External needs</span>
-      </div>
-    </section>
-  );
-}
-
-interface SquadRoleSummaryProps {
-  roleCounts: Record<SquadRole, number>;
-}
-
-function SquadRoleSummary({ roleCounts }: SquadRoleSummaryProps) {
-  return (
-    <section
-      className="atlas-squad-panel atlas-squad-panel--role-summary"
-      aria-labelledby="squad-role-summary-title"
-    >
-      <h2 id="squad-role-summary-title" className="atlas-squad-panel__title">
-        Squad Structure
-      </h2>
-      <div className="atlas-squad-role-summary">
-        {(["core", "developing", "prospect", "rotation", "depth", "transition"] as const).map(
-          (role) => (
-            <div className={`atlas-squad-role-summary__item is-${role}`} key={role}>
-              <span>{roleLabel(role)}</span>
-              <strong>{roleCounts[role]}</strong>
-            </div>
-          )
-        )}
       </div>
     </section>
   );

@@ -23,8 +23,8 @@ export const DEVELOPMENT_PROFILES: Readonly<
       { skill: "passing", priority: "supporting", defaultTargetLevel: 8 }
     ]
   },
-  central_defender: {
-    id: "central_defender",
+  defender: {
+    id: "defender",
     relevantSkills: [
       { skill: "defender", priority: "primary", defaultTargetLevel: 12 },
       { skill: "pace", priority: "primary", defaultTargetLevel: 10 },
@@ -41,8 +41,8 @@ export const DEVELOPMENT_PROFILES: Readonly<
       { skill: "passing", priority: "supporting", defaultTargetLevel: 8 }
     ]
   },
-  central_midfielder: {
-    id: "central_midfielder",
+  midfielder: {
+    id: "midfielder",
     relevantSkills: [
       { skill: "playmaker", priority: "primary", defaultTargetLevel: 12 },
       { skill: "passing", priority: "primary", defaultTargetLevel: 11 },
@@ -72,9 +72,9 @@ export const DEVELOPMENT_PROFILES: Readonly<
 
 export const DEVELOPMENT_PROFILE_ORDER: readonly DevelopmentProfile[] = [
   "goalkeeper",
-  "central_defender",
+  "defender",
   "wing_defender",
-  "central_midfielder",
+  "midfielder",
   "winger",
   "forward"
 ];
@@ -83,18 +83,18 @@ export const DEVELOPMENT_PROFILE_SIGNATURE_SKILLS: Readonly<
   Record<DevelopmentProfile, DevelopmentSkill>
 > = {
   goalkeeper: "keeper",
-  central_defender: "defender",
+  defender: "defender",
   wing_defender: "pace",
-  central_midfielder: "playmaker",
+  midfielder: "playmaker",
   winger: "technique",
   forward: "striker"
 };
 
 export const DEVELOPMENT_PROFILE_SIGNATURE_BONUSES: Readonly<Record<DevelopmentProfile, number>> = {
   goalkeeper: 2.5,
-  central_defender: 1.5,
+  defender: 1.5,
   wing_defender: 1,
-  central_midfielder: 1.5,
+  midfielder: 1.5,
   winger: 1,
   forward: 2.5
 };

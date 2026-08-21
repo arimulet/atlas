@@ -145,10 +145,8 @@ export const SQUAD_ROLE_ORDER: readonly SquadRole[] = [
 
 export const SQUAD_PROFILE_ORDER: readonly DevelopmentProfile[] = [
   "goalkeeper",
-  "central_defender",
-  "wing_defender",
-  "central_midfielder",
-  "winger",
+  "defender",
+  "midfielder",
   "forward"
 ];
 
@@ -170,9 +168,9 @@ const ROLE_LABELS: Record<SquadRole, string> = {
 
 const PROFILE_LABELS: Record<DevelopmentProfile, string> = {
   goalkeeper: "Goalkeeper",
-  central_defender: "Central Defender",
+  defender: "Defender",
   wing_defender: "Wing Defender",
-  central_midfielder: "Central Midfielder",
+  midfielder: "Midfielder",
   winger: "Winger",
   forward: "Forward"
 };
@@ -225,9 +223,9 @@ export function createSquadPlanningViewModel(
   const recommendations = planning.recommendations.recommendations
     .map((recommendation) => mapRecommendation(recommendation, playerNames))
     .sort(comparePriorityActions);
-  const profiles = planning.depth.profiles.map((assessment) =>
-    mapProfile(assessment, players, playerNames, recommendations)
-  );
+  const profiles = planning.depth.profiles
+    .filter((assessment) => SQUAD_PROFILE_ORDER.includes(assessment.profile))
+    .map((assessment) => mapProfile(assessment, players, playerNames, recommendations));
   const summary = mapSummary(planning, rows.length);
   const attentionPlayerIds = new Set<string>(
     recommendations.flatMap((recommendation) => recommendation.playerIds)

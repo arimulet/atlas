@@ -37,7 +37,7 @@ function opportunity(
 ): YouthDevelopmentOpportunity {
   return {
     playerId: 1,
-    profile: "central_defender",
+    profile: "defender",
     squadNeedScore: 0.72,
     successionFitScore: 0.7,
     developmentOpportunityScore: 0.72,
@@ -366,7 +366,7 @@ describe("Youth Decision Recommendations", () => {
           opportunity: "poor",
           reprofileOpportunity: {
             currentProfile: "winger",
-            alternativeProfile: "central_midfielder",
+            alternativeProfile: "midfielder",
             compatibilityScore: 0.82,
             squadNeedImprovement: 0.3,
             viable: true
@@ -376,10 +376,10 @@ describe("Youth Decision Recommendations", () => {
     );
 
     expect(recommendation.decision).toBe("train");
-    expect(recommendation.recommendedProfile).toBe("central_midfielder");
+    expect(recommendation.recommendedProfile).toBe("midfielder");
     expect(recommendation.reasons).toContainEqual({
       type: "better_alternative_profile",
-      profile: "central_midfielder"
+      profile: "midfielder"
     });
   });
 
@@ -390,8 +390,8 @@ describe("Youth Decision Recommendations", () => {
         opportunity: opportunity({
           clubFitScore: 0.8,
           reprofileOpportunity: {
-            currentProfile: "central_defender",
-            alternativeProfile: "central_midfielder",
+            currentProfile: "defender",
+            alternativeProfile: "midfielder",
             compatibilityScore: 0.55,
             squadNeedImprovement: 0.02,
             viable: false
@@ -400,7 +400,7 @@ describe("Youth Decision Recommendations", () => {
       })
     );
 
-    expect(recommendation.recommendedProfile).toBe("central_defender");
+    expect(recommendation.recommendedProfile).toBe("defender");
     expect(recommendation.alternativeProfile).toBeNull();
   });
 
