@@ -114,7 +114,7 @@ export function createTrainingIntelligenceViewModel(input: {
   training: TrainingPageData;
   intelligence: WeeklyTrainingIntelligence;
 }): TrainingIntelligenceViewModel {
-  const playerById = new Map(input.training.players.map((player) => [Number(player.id), player]));
+  const playerById = new Map(input.training.players.map((player) => [player.playerId, player]));
   const recommendationById = new Map(
     input.intelligence.recommendations.map((recommendation) => [
       recommendation.playerId,

@@ -12,6 +12,7 @@ describe("createSquadPlayerRows", () => {
       players: [
         {
           id: "snapshot-player-1",
+          playerId: 42,
           name: "Player One",
           age: 18,
           form: 17,
@@ -46,10 +47,7 @@ describe("createSquadPlayerRows", () => {
     const rows = createSquadPlayerRows({
       development,
       projectionSummaries: new Map([
-        [
-          "snapshot-player-1",
-          { playerId: "snapshot-player-1", progress: 82, talent: 3.4, nextSkillUp: 14, etaWeeks: 2 }
-        ]
+        ["42", { playerId: "42", progress: 82, talent: 3.4, nextSkillUp: 14, etaWeeks: 2 }]
       ]),
       training,
       trainingDiagnostic: null,

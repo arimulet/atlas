@@ -289,7 +289,7 @@ function findTrainingPlayer(
   training: TrainingPageData | null,
   playerId: string
 ): TrainingPagePlayer | null {
-  return training?.players.find((player) => player.id === playerId) ?? null;
+  return training?.players.find((player) => String(player.playerId) === playerId) ?? null;
 }
 
 function currentTrainingReport(

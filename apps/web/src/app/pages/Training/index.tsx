@@ -305,7 +305,7 @@ interface RecentTrainingProgressProps {
 }
 
 function RecentTrainingProgress({ history, players }: RecentTrainingProgressProps) {
-  const playerNames = new Map(players.map((player) => [player.id, player.name]));
+  const playerNames = new Map(players.map((player) => [String(player.playerId), player.name]));
   const changes = history
     .flatMap((report) =>
       (report.skillChanges ?? []).map((change) => ({

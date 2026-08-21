@@ -20,6 +20,7 @@ export interface TrainingPageData {
 
 export interface TrainingPagePlayer {
   id: string;
+  playerId: number;
   name: string;
   age: number;
   form?: number | null;

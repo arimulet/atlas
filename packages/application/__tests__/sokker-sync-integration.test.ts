@@ -7,11 +7,7 @@ import mongoose from "mongoose";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
-import {
-  SnapshotModel,
-  SyncRunModel,
-  TrainingWeekModel
-} from "@atlas/database";
+import { SnapshotModel, SyncRunModel, TrainingWeekModel } from "@atlas/database";
 import {
   MongoClubRepository,
   MongoPlayerRepository,
@@ -78,7 +74,7 @@ describe("Sokker sync end-to-end", () => {
     const result = await new SokkerSyncPersistence().persist(validation);
 
     await expect(getTrainingPageData(result.clubId)).resolves.toMatchObject({
-      players: expect.any(Array),
+      players: expect.arrayContaining([expect.objectContaining({ playerId: 40098056 })]),
       history: expect.any(Array)
     });
 

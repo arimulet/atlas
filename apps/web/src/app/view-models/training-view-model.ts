@@ -38,10 +38,11 @@ export function createTrainingPlayerRows(
   projectionSummaries?: ReadonlyMap<string, PlayerTrainingProjectionSummary>
 ): TrainingPlayerRow[] {
   return players.map((player) => {
-    const projectionSummary = projectionSummaries?.get(player.id);
+    const playerId = String(player.playerId);
+    const projectionSummary = projectionSummaries?.get(playerId);
 
     return {
-      playerId: player.id,
+      playerId,
       playerName: player.name,
       trainingPosition: player.training.position,
       age: player.age,
@@ -79,7 +80,7 @@ export function trainingStatusForPlayer(
     diagnostic?.findings.filter(
       (finding) =>
         finding.category === "training-potential" &&
-        isFindingForPlayer(finding, player.id, player.name)
+        isFindingForPlayer(finding, String(player.playerId), player.name, player.id)
     ) ?? [];
 
   const highestSeverity = findings.reduce<DiagnosticFinding["severity"] | null>(
@@ -98,8 +99,9 @@ export function diagnosticFindingsForPlayer(
   player: TrainingPagePlayer
 ): DiagnosticFinding[] {
   return (
-    diagnostic?.findings.filter((finding) => isFindingForPlayer(finding, player.id, player.name)) ??
-    []
+    diagnostic?.findings.filter((finding) =>
+      isFindingForPlayer(finding, String(player.playerId), player.name, player.id)
+    ) ?? []
   ).sort(compareDiagnosticSeverity);
 }
 
@@ -107,7 +109,7 @@ export function isFindingForPlayer(
   finding: DiagnosticFinding,
   playerId: string,
   playerName: string,
-  stablePlayerId?: number
+  stablePlayerId?: string | number
 ): boolean {
   return (
     finding.parameters?.playerName === playerName ||

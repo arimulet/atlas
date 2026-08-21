@@ -16,7 +16,13 @@ describe("createDiagnosticsPageViewModel", () => {
       snapshotDate: "2026-08-14",
       configuration: null,
       players: [
-        { id: "snapshot-player-1", name: "Ana", age: 21, training: { position: 1, advanced: true } }
+        {
+          id: "snapshot-player-1",
+          playerId: 1,
+          name: "Ana",
+          age: 21,
+          training: { position: 1, advanced: true }
+        }
       ]
     };
     const development = createDevelopment();

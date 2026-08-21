@@ -509,6 +509,7 @@ function mapPlayer(
 ): TrainingPageData["players"][number] {
   return {
     id: player.id,
+    playerId: player.playerId,
     name: player.name,
     age: player.age,
     form: player.form,

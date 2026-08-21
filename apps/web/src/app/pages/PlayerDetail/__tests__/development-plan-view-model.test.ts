@@ -50,6 +50,7 @@ function createTraining(): NonNullable<
     players: [
       {
         id: "7",
+        playerId: 7,
         name: "Test Player",
         age: 18,
         training: { position: 1, advanced: true },
