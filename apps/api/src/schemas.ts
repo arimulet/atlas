@@ -107,3 +107,9 @@ export const compareClubSnapshotsBodySchema = z
     targetSnapshotDate: z.string().min(1).optional()
   })
   .default({});
+
+export const investmentSafetyBodySchema = z
+  .object({
+    amount: z.number().finite().min(0)
+  })
+  .strict();

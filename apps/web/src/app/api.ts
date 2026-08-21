@@ -10,11 +10,21 @@ import type {
 } from "./types";
 import type { YouthDecisionPlanning } from "@atlas/application";
 import type {
+  CapitalAllocationPlan,
+  ClubFinancialAssessment,
+  FinancialStrategyPlan,
+  InvestmentSafetyAssessment,
   PlayerDevelopmentTargetOverride,
   SquadDepthAnalysis,
   SquadPlanningRecommendations,
   SquadRole
 } from "@atlas/domain";
+
+export interface FinancialStrategyData {
+  financialAssessment: ClubFinancialAssessment;
+  capitalAllocation: CapitalAllocationPlan;
+  strategyPlan: FinancialStrategyPlan;
+}
 
 export interface PlayerDevelopmentTargetOverrideResponse {
   id: string;
@@ -31,6 +41,35 @@ export async function fetchClubDashboard(clubId: string): Promise<ClubDashboard>
 
   if (!response.ok || !body) {
     throw new Error("Dashboard API returned an unexpected response.");
+  }
+
+  return body;
+}
+
+export async function fetchFinancialStrategy(clubId: string): Promise<FinancialStrategyData> {
+  const response = await fetch(`/api/clubs/${clubId}/financial-strategy`);
+  const body = (await response.json()) as FinancialStrategyData;
+
+  if (!response.ok || !body) {
+    throw new Error("Financial strategy API returned an unexpected response.");
+  }
+
+  return body;
+}
+
+export async function fetchInvestmentSafety(
+  clubId: string,
+  amount: number
+): Promise<InvestmentSafetyAssessment> {
+  const response = await fetch(`/api/clubs/${clubId}/financial-strategy/investment-safety`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ amount })
+  });
+  const body = (await response.json()) as InvestmentSafetyAssessment;
+
+  if (!response.ok || !body) {
+    throw new Error("Investment safety API returned an unexpected response.");
   }
 
   return body;

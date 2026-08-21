@@ -3,6 +3,8 @@ import {
   compareClubSnapshots,
   generateClubHistoricalFindings,
   getClubDashboard,
+  getFinancialStrategyAssessment,
+  getInvestmentSafety,
   getClubOperatingSettings,
   getClubProfile,
   getClubSnapshots,
@@ -14,6 +16,7 @@ import {
 import { FastifyInstance } from "fastify";
 import {
   compareClubSnapshotsBodySchema,
+  investmentSafetyBodySchema,
   updateClubOperatingSettingsBodySchema,
   updateClubProfileBodySchema
 } from "@atlas/api/schemas";
@@ -45,6 +48,22 @@ async function clubRoutes(server: FastifyInstance) {
 
     return dashboard;
   });
+
+  server.get<{ Params: GetClubDashboardParams }>("/financial-strategy", async (request) => {
+    const { clubId } = request.params;
+
+    return getFinancialStrategyAssessment(clubId);
+  });
+
+  server.post<{ Params: GetClubDashboardParams }>(
+    "/financial-strategy/investment-safety",
+    async (request) => {
+      const { clubId } = request.params;
+      const { amount } = investmentSafetyBodySchema.parse(request.body);
+
+      return getInvestmentSafety(clubId, amount);
+    }
+  );
 
   server.get<{ Params: GetClubDashboardParams }>("/training", async (request) => {
     const { clubId } = request.params;
