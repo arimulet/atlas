@@ -86,6 +86,7 @@ describe("SokkerSyncPersistence", () => {
     expect(await JuniorModel.findOne({ clubId: 6038, juniorId: 501 }).lean()).toMatchObject({
       name: "Junior One",
       age: 16,
+      initialLevel: 7,
       currentLevel: 7,
       initialWeeks: 8,
       weeksLeft: 8,

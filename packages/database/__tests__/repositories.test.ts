@@ -120,6 +120,7 @@ describe("Mongo repositories", () => {
     expect(await JuniorModel.countDocuments({ clubId: 1, juniorId: 5001 })).toBe(1);
     expect(await juniors.findByJuniorId({ clubId: 1, juniorId: 5001 })).toMatchObject({
       age: 17,
+      initialLevel: 8,
       currentLevel: 9,
       initialWeeks: 4,
       weeksLeft: 0,
