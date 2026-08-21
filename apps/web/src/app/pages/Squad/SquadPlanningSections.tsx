@@ -3,7 +3,6 @@ import { PlayerLink } from "../../components/PlayerLink";
 import {
   roleLabel,
   type SquadPlanningViewModel,
-  type SquadPriorityActionViewModel,
   type SquadProfilePlayerGroup,
   type SquadProfileViewModel
 } from "./squad-planning-view-model";
@@ -17,7 +16,6 @@ export function SquadPlanningSections({ onSelectPlayer, viewModel }: SquadPlanni
   return (
     <>
       <SquadPlanningSummary viewModel={viewModel} />
-      <SquadPriorityActions actions={viewModel.priorityActions} onSelectPlayer={onSelectPlayer} />
       <SquadRoleSummary roleCounts={viewModel.summary.roleCounts} />
       <SquadProfileDepthTable profiles={viewModel.profiles} onSelectPlayer={onSelectPlayer} />
     </>
@@ -60,85 +58,6 @@ function SquadPlanningSummary({ viewModel }: SquadPlanningSummaryProps) {
         <span>{viewModel.summary.externalNeeds} External needs</span>
       </div>
     </section>
-  );
-}
-
-interface SquadPriorityActionsProps {
-  actions: readonly SquadPriorityActionViewModel[];
-  onSelectPlayer: (playerId: string) => void;
-}
-
-function SquadPriorityActions({ actions, onSelectPlayer }: SquadPriorityActionsProps) {
-  return (
-    <section
-      className="atlas-squad-panel atlas-squad-panel--planning-actions"
-      aria-labelledby="squad-priority-actions-title"
-    >
-      <div className="atlas-squad-panel__heading">
-        <div>
-          <span className="atlas-squad-planning-summary__eyebrow">Planning focus</span>
-          <h2 id="squad-priority-actions-title" className="atlas-squad-panel__title">
-            Priority Actions
-          </h2>
-        </div>
-        {actions.length === 0 ? (
-          <span className="atlas-squad-planning-quiet">No high-priority actions detected.</span>
-        ) : null}
-      </div>
-      {actions.length === 0 ? (
-        <p className="atlas-squad-panel__message is-quiet">Squad structure is currently healthy.</p>
-      ) : (
-        <div className="atlas-squad-actions-grid">
-          {actions.map((action) => (
-            <SquadRecommendationCard
-              action={action}
-              key={action.id}
-              onSelectPlayer={onSelectPlayer}
-            />
-          ))}
-        </div>
-      )}
-    </section>
-  );
-}
-
-interface SquadRecommendationCardProps {
-  action: SquadPriorityActionViewModel;
-  onSelectPlayer: (playerId: string) => void;
-}
-
-function SquadRecommendationCard({ action, onSelectPlayer }: SquadRecommendationCardProps) {
-  return (
-    <article className={`atlas-squad-recommendation is-${action.priority}`}>
-      <div className="atlas-squad-recommendation__meta">
-        <span className={`atlas-squad-planning-badge is-${action.priority}`}>
-          {action.priority}
-        </span>
-        <span>{action.horizonLabel}</span>
-        <span>{action.confidence} confidence</span>
-      </div>
-      <h3>{action.profileLabel}</h3>
-      <strong>{action.title}</strong>
-      <p>{action.description}</p>
-      {action.playerIds.length > 0 ? (
-        <div className="atlas-squad-recommendation__players">
-          {action.playerIds.map((playerId) => (
-            <PlayerLink key={playerId} playerId={playerId} onSelectPlayer={onSelectPlayer}>
-              {action.candidates.find((candidate) => candidate.playerId === playerId)?.playerName ??
-                `Player ${playerId}`}
-            </PlayerLink>
-          ))}
-        </div>
-      ) : null}
-      <details>
-        <summary>Why</summary>
-        <ul>
-          {action.reasons.map((reason) => (
-            <li key={reason}>{reason}</li>
-          ))}
-        </ul>
-      </details>
-    </article>
   );
 }
 

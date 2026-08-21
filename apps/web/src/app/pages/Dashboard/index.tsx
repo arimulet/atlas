@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import type {
   ClubDashboardDevelopmentPlayer,
   ClubDashboardYouthPipelinePlayer,
@@ -6,6 +7,9 @@ import type {
   Severity
 } from "@atlas/web/app/types";
 import type { DashboardProps } from "./types";
+import { PlanningFocus } from "./PlanningFocus";
+import { createSquadPriorityActionsViewModel } from "../Squad/squad-planning-view-model";
+
 import { AttentionIcon } from "../../components/AttentionIcon";
 import { PlayerLink } from "../../components/PlayerLink";
 
@@ -39,10 +43,16 @@ export function Dashboard({
   dashboardStatus,
   onSelectPlayer,
   youthAcademy,
+  squadPlanning,
+  squadPlanningStatus,
   financialStrategy
 }: DashboardProps) {
   const attentionItems = dashboard ? buildAttentionItems(dashboard, youthAcademy) : [];
   const watchPlayers = dashboard ? buildWatchPlayers(dashboard, youthAcademy) : [];
+  const planningActions = useMemo(
+    () => (squadPlanning ? createSquadPriorityActionsViewModel(squadPlanning) : []),
+    [squadPlanning]
+  );
 
   return (
     <div className="atlas-dashboard">
@@ -55,6 +65,19 @@ export function Dashboard({
         onSelectPlayer={onSelectPlayer}
         status={dashboardStatus}
       />
+
+      {squadPlanningStatus === "loading" ? (
+        <PanelMessage>Loading squad planning...</PanelMessage>
+      ) : null}
+      {squadPlanningStatus === "error" ? (
+        <PanelMessage tone="error">Squad planning is unavailable.</PanelMessage>
+      ) : null}
+      {squadPlanningStatus === "idle" ? (
+        <PanelMessage>Squad planning data is not available yet.</PanelMessage>
+      ) : null}
+      {squadPlanningStatus === "ready" && squadPlanning ? (
+        <PlanningFocus actions={planningActions} onSelectPlayer={onSelectPlayer} />
+      ) : null}
 
       <FinancialStrategyAlerts
         onSelectPlayer={onSelectPlayer}
