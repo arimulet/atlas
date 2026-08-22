@@ -190,6 +190,9 @@
 .atlas .atlas-squad-table col.is-age {
   width: 48px;
 }
+.atlas .atlas-squad-table col.is-game-value {
+  width: 104px;
+}
 .atlas .atlas-squad-table col.is-planning {
   width: 170px;
 }
@@ -199,8 +202,7 @@
 .atlas .atlas-squad-table col.is-skill {
   width: 43px;
 }
-.atlas .atlas-squad-table col.is-market-value,
-.atlas .atlas-squad-table col.is-projected-value {
+.atlas .atlas-squad-table col.is-market-value {
   width: 104px;
 }
 .atlas .atlas-squad-table col.is-status {
@@ -246,8 +248,8 @@
 .atlas .atlas-squad-table__group-row .is-market-group,
 .atlas .atlas-squad-table__group-row .is-status-group,
 .atlas .atlas-squad-table__group-row .is-planning-group,
-.atlas .atlas-squad-table thead tr:nth-child(2) th:nth-child(3),
-.atlas .atlas-squad-table thead tr:nth-child(2) th:nth-child(12),
+.atlas .atlas-squad-table thead tr:nth-child(2) th:nth-child(4),
+.atlas .atlas-squad-table thead tr:nth-child(2) th:nth-child(13),
 .atlas .atlas-squad-table thead tr:nth-child(2) th:nth-child(14),
 .atlas .atlas-squad-table thead tr:nth-child(2) th:nth-child(15) {
   border-left: 1px solid var(--atlas-border);
@@ -263,8 +265,8 @@
   font-weight: 700;
 }
 
-.atlas .atlas-squad-table tbody td:nth-child(3),
-.atlas .atlas-squad-table tbody td:nth-child(12),
+.atlas .atlas-squad-table tbody td:nth-child(4),
+.atlas .atlas-squad-table tbody td:nth-child(13),
 .atlas .atlas-squad-table tbody td:nth-child(14),
 .atlas .atlas-squad-table tbody td:nth-child(15) {
   border-left: 1px solid color-mix(in srgb, var(--atlas-border) 72%, transparent);

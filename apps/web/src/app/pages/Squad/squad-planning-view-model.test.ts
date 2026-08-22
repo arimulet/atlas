@@ -314,6 +314,7 @@ function createRows(): SquadPlayerRow[] {
     playerId: String(playerId),
     playerName: ["Ana", "Bruno", "Carlos"][index] ?? `Player ${playerId}`,
     age: 25,
+    gameValue: null,
     form: null,
     skills: {
       stamina: null,
