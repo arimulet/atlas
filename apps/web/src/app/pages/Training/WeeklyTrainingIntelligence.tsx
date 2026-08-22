@@ -27,7 +27,6 @@ export function WeeklyTrainingIntelligence({
   training
 }: WeeklyTrainingIntelligenceProps) {
   const { data, error, isLoading } = useWeeklyTrainingIntelligence(clubId);
-
   if (isLoading) {
     return (
       <IntelligencePanelMessage>Loading Weekly Training Intelligence...</IntelligencePanelMessage>
