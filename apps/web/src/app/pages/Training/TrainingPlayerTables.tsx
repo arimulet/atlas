@@ -9,6 +9,7 @@ import {
 } from "../../formatters";
 import { PlayerLink } from "../../components/PlayerLink";
 import { isSquadSkillRequiredForPosition } from "../../view-models/squad-view-model";
+import { TrainingDetails } from "./TrainingDetails";
 import { PLAYER_SKILL_DEFINITIONS, type PlayerSkillKey } from "../../view-models/player-skills";
 import {
   createTrainingPlayerRows,
@@ -258,7 +259,7 @@ function TrainingPlayerRows({
                   </dd>
                 </div>
               </dl>
-              <TrainingHistory history={history} />
+              \r\n <TrainingDetails history={history} player={player} />
             </div>
           </td>
         </tr>
@@ -323,27 +324,6 @@ function TrainingStatusIndicator({ status }: { status: TrainingPlayerRow["status
     </span>
   );
 }
-function TrainingHistory({ history }: { history: TrainingReport[] }) {
-  const recentHistory = [...history]
-    .sort((left, right) => right.gameWeek - left.gameWeek)
-    .slice(0, 5);
-  if (recentHistory.length === 0)
-    return <p className="atlas-training-player-detail__message">No training history available.</p>;
-  return (
-    <div>
-      <h3>Training history</h3>
-      <ul>
-        {recentHistory.map((report) => (
-          <li key={`${report.gameWeek}-${report.id ?? report.date}`}>
-            Week {report.gameWeek} · {report.type} · {formatTrainingKind(report.kind)} ·{" "}
-            {formatPercentage(report.intensity)}
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
 function skillValue(
   skills: TrainingReport["skills"] | undefined,
   skill: PlayerSkillKey
