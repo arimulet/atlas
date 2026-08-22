@@ -115,17 +115,7 @@ function TrainingPositionTable({
           <col className="is-recommendation" />
         </colgroup>
         <thead>
-          <tr className="atlas-training-table__group-row">
-            <th colSpan={2} scope="colgroup">
-              Player
-            </th>
-            <th scope="colgroup">Age</th>
-            <th colSpan={PLAYER_SKILL_DEFINITIONS.length} scope="colgroup">
-              Skills
-            </th>
-            <th scope="colgroup">Recommendation</th>
-          </tr>
-          <tr>
+          <tr className="atlas-training-table__columns-row">
             <th scope="col">Player</th>
             <th scope="col">Talent</th>
             <th scope="col">Age</th>

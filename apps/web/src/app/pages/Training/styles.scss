@@ -669,7 +669,8 @@
   min-width: 1080px;
 }
 
-.atlas .atlas-training-table--skills .atlas-training-table__group-row th {
+.atlas .atlas-training-table--skills .atlas-training-table__columns-row,
+.atlas .atlas-training-table--skills .atlas-training-table__columns-row th {
   background: color-mix(in srgb, var(--atlas-surface-hover) 28%, transparent);
   border-bottom: 1px solid var(--atlas-border);
   color: var(--atlas-text-secondary);
@@ -827,12 +828,12 @@
   }
 }
 
-.atlas .atlas-training-table--skills thead tr:nth-child(2) th:nth-child(3),
+.atlas .atlas-training-table--skills thead .atlas-training-table__columns-row th:nth-child(3),
 .atlas .atlas-training-table--skills tbody td:nth-child(3) {
   border-left: 1px solid var(--atlas-border);
 }
 
-.atlas .atlas-training-table--skills thead tr:nth-child(2) th:nth-child(11),
+.atlas .atlas-training-table--skills thead .atlas-training-table__columns-row th:nth-child(11),
 .atlas .atlas-training-table--skills tbody td:nth-child(11) {
   border-left: 1px solid var(--atlas-border);
 }
@@ -919,7 +920,7 @@
   color: var(--atlas-accent);
 }
 
-.atlas .atlas-training-table--skills thead tr:nth-child(2) th:nth-child(11),
+.atlas .atlas-training-table--skills thead .atlas-training-table__columns-row th:nth-child(11),
 .atlas .atlas-training-table--skills tbody td:nth-child(11) {
   border-left: 1px solid var(--atlas-border);
 }
@@ -1360,22 +1361,22 @@
 }
 
 /* Age remains independent; Skills starts at STA and ends at SCO. */
-.atlas .atlas-training-table--skills thead tr:nth-child(2) th:nth-child(3),
+.atlas .atlas-training-table--skills thead .atlas-training-table__columns-row th:nth-child(3),
 .atlas .atlas-training-table--skills tbody td:nth-child(3) {
   border-left: 1px solid var(--atlas-border);
 }
 
-.atlas .atlas-training-table--skills thead tr:nth-child(2) th:nth-child(4),
+.atlas .atlas-training-table--skills thead .atlas-training-table__columns-row th:nth-child(4),
 .atlas .atlas-training-table--skills tbody td:nth-child(4) {
   border-left: 1px solid var(--atlas-border);
 }
 
-.atlas .atlas-training-table--skills thead tr:nth-child(2) th:nth-child(11),
+.atlas .atlas-training-table--skills thead .atlas-training-table__columns-row th:nth-child(11),
 .atlas .atlas-training-table--skills tbody td:nth-child(11) {
   border-left: 0;
 }
 
-.atlas .atlas-training-table--skills thead tr:nth-child(2) th:nth-child(12),
+.atlas .atlas-training-table--skills thead .atlas-training-table__columns-row th:nth-child(12),
 .atlas .atlas-training-table--skills tbody td:nth-child(12) {
   border-left: 1px solid var(--atlas-border);
 }
