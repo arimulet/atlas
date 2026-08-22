@@ -15,7 +15,6 @@ import { recommendationLabel } from "./training-intelligence-view-model";
 import { useWeeklyTrainingIntelligence } from "./useWeeklyTrainingIntelligence";
 import { RecentTrainingProgressModal } from "./RecentTrainingProgressModal";
 import { TrainingPlayerTables } from "./TrainingPlayerTables";
-import { WeeklyTrainingIntelligence } from "./WeeklyTrainingIntelligence";
 
 export function Training({
   clubId,
@@ -59,11 +58,6 @@ export function Training({
           recommendations={recommendations}
         />
       ) : null}
-      <WeeklyTrainingIntelligence
-        clubId={clubId}
-        onSelectPlayer={onSelectPlayer}
-        training={training}
-      />
       <TrainingAttention diagnostic={trainingDiagnostic} status={trainingStatus} />
       <RecentTrainingProgressModal
         history={training?.history ?? []}

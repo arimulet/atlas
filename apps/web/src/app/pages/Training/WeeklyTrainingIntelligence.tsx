@@ -1,17 +1,12 @@
-import { useMemo, useState } from "react";
-
 import { PlayerLink } from "../../components/PlayerLink";
-import { formatEta, formatPercentage } from "../../formatters";
+import { formatPercentage } from "../../formatters";
 import type { TrainingPageData } from "../../types";
 import {
   createTrainingIntelligenceViewModel,
-  filterTrainingOverview,
   type AdvancedSlotReplacementViewModel,
   type AdvancedTrainingSlotRow,
   type TrainingAttentionItem,
-  type TrainingIntelligenceViewModel,
-  type TrainingOverviewFilter,
-  type TrainingOverviewRow
+  type TrainingIntelligenceViewModel
 } from "./training-intelligence-view-model";
 import { useWeeklyTrainingIntelligence } from "./useWeeklyTrainingIntelligence";
 
@@ -79,7 +74,6 @@ function WeeklyTrainingIntelligenceContent({
       <TrainingWeeklySummary summary={data.summary} />
       <TrainingAttentionList items={data.attention} onSelectPlayer={onSelectPlayer} />
       <AdvancedTrainingSlots data={data} onSelectPlayer={onSelectPlayer} />
-      <PlayerTrainingOverview data={data} onSelectPlayer={onSelectPlayer} />
     </section>
   );
 }
@@ -273,137 +267,6 @@ function AdvancedSlotRow({ onSelectPlayer, row }: AdvancedSlotRowProps) {
       </td>
       <td className="atlas-training-intelligence__numeric atlas-training-intelligence__secondary">
         {row.score === null ? "—" : row.score.toFixed(2)}
-      </td>
-    </tr>
-  );
-}
-
-interface PlayerTrainingOverviewProps {
-  data: TrainingIntelligenceViewModel;
-  onSelectPlayer: (playerId: string) => void;
-}
-
-function PlayerTrainingOverview({ data, onSelectPlayer }: PlayerTrainingOverviewProps) {
-  const [filter, setFilter] = useState<TrainingOverviewFilter>("all");
-  const rows = useMemo(
-    () => filterTrainingOverview(data.overviewRows, filter),
-    [data.overviewRows, filter]
-  );
-  const filters: Array<[TrainingOverviewFilter, string]> = [
-    ["all", "All"],
-    ["advanced", "Advanced"],
-    ["formation", "Formation"],
-    ["attention", "Attention"],
-    ["skill-ups", "Skill-ups"]
-  ];
-
-  return (
-    <section className="atlas-training-intelligence__section" aria-labelledby="all-training-title">
-      <div className="atlas-training-intelligence__section-heading">
-        <SectionHeading id="all-training-title" title="Player Training Overview" />
-        <div className="atlas-training-intelligence__filters" aria-label="Training filters">
-          {filters.map(([value, label]) => (
-            <button
-              aria-pressed={filter === value}
-              className={filter === value ? "is-active" : ""}
-              key={value}
-              type="button"
-              onClick={() => setFilter(value)}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
-      {data.hasInsufficientData ? (
-        <p className="atlas-training-intelligence__hint">
-          ATLAS needs more training history before estimating progress for some players.
-        </p>
-      ) : null}
-      <div className="atlas-training-intelligence__table-wrap">
-        <table className="atlas-training-intelligence__table atlas-training-intelligence__table--overview">
-          <thead>
-            <tr>
-              <th scope="col">Player</th>
-              <th scope="col">Age</th>
-              <th scope="col">Skill</th>
-              <th scope="col">Level</th>
-              <th scope="col">Training</th>
-              <th scope="col">Intensity</th>
-              <th scope="col">Progress</th>
-              <th scope="col">Next Skill-up</th>
-              <th scope="col">Recommendation</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.length > 0 ? (
-              rows.map((row) => (
-                <TrainingOverviewRowView
-                  key={row.playerId}
-                  onSelectPlayer={onSelectPlayer}
-                  row={row}
-                />
-              ))
-            ) : (
-              <tr>
-                <td className="atlas-training-intelligence__empty" colSpan={9}>
-                  No players match this filter.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-    </section>
-  );
-}
-
-interface TrainingOverviewRowViewProps {
-  onSelectPlayer: (playerId: string) => void;
-  row: TrainingOverviewRow;
-}
-
-function TrainingOverviewRowView({ onSelectPlayer, row }: TrainingOverviewRowViewProps) {
-  return (
-    <tr className={row.skillUp ? "is-skill-up" : undefined}>
-      <th scope="row">
-        <PlayerLink playerId={String(row.playerId)} onSelectPlayer={onSelectPlayer}>
-          {row.playerName}
-        </PlayerLink>
-        {row.skillUp ? (
-          <span className="atlas-training-intelligence__skill-up">Skill up</span>
-        ) : null}
-      </th>
-      <td className="atlas-training-intelligence__numeric">{row.age ?? "—"}</td>
-      <td>{row.skill}</td>
-      <td className="atlas-training-intelligence__numeric">
-        {row.skillUp && row.previousLevel !== null
-          ? `${row.previousLevel} → ${row.level}`
-          : row.level}
-      </td>
-      <td>{row.trainingKind}</td>
-      <td className="atlas-training-intelligence__numeric">{formatPercentage(row.intensity)}</td>
-      <td className="atlas-training-intelligence__progress-cell">
-        {row.progress === null ? (
-          <span className="atlas-training-intelligence__secondary">Insufficient history</span>
-        ) : (
-          <div className="atlas-training-intelligence__progress">
-            <span>{formatPercentage(row.progress)}</span>
-            <span aria-hidden="true" className="atlas-training-intelligence__progress-bar">
-              <span style={{ width: `${Math.max(0, Math.min(100, row.progress))}%` }} />
-            </span>
-          </div>
-        )}
-      </td>
-      <td
-        className="atlas-training-intelligence__numeric"
-        title="Not enough training history to estimate when unavailable"
-      >
-        {formatEta(row.nextSkillUp)}
-      </td>
-      <td>
-        <span className="atlas-training-intelligence__recommendation">{row.recommendation}</span>
-        {row.confidence ? <small>{row.confidence} confidence</small> : null}
       </td>
     </tr>
   );
