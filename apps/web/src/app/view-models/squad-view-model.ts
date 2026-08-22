@@ -65,6 +65,7 @@ export function isSquadSkillRequiredForPosition(
 export interface SquadPlayerRow {
   playerId: string;
   playerName: string;
+  countryName?: string | null;
   age: number;
   gameValue: MarketValueAmount | null;
   form: number | null;
@@ -126,6 +127,7 @@ export function createSquadPlayerRows(input: CreateSquadPlayerRowsInput): SquadP
     return {
       playerId: observedPlayer?.playerId?.toString() ?? playerId,
       playerName: player.name,
+      countryName: player.countryName,
       age: player.age,
       gameValue:
         marketPlayer?.sokkerValue === null || marketPlayer?.sokkerValue === undefined

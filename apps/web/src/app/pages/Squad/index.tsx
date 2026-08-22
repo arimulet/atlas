@@ -2,6 +2,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import type { DiagnosticFinding, DiagnosticParameterValue } from "@atlas/web/app/types";
 import type { SquadRole } from "@atlas/domain";
 import { AttentionIcon } from "../../components/AttentionIcon";
+import { CountryNameFlag } from "../../components/CountryNameFlag";
 import { PlayerLink } from "../../components/PlayerLink";
 import { StatusBadge } from "../../components/StatusBadge";
 import type { SquadAttentionProps, SquadTableProps, SquadProps } from "./types";
@@ -492,9 +493,12 @@ function SquadPlayerRowView({
   return (
     <tr>
       <th scope="row">
-        <PlayerLink playerId={row.playerId} onSelectPlayer={onSelectPlayer}>
-          {row.playerName}
-        </PlayerLink>
+        <span className="atlas-squad-player-name">
+          {row.countryName ? <CountryNameFlag countryName={row.countryName} /> : null}
+          <PlayerLink playerId={row.playerId} onSelectPlayer={onSelectPlayer}>
+            {row.playerName}
+          </PlayerLink>
+        </span>
       </th>
       <td className="atlas-squad-table__numeric">{row.age}</td>
       <td className="atlas-squad-table__numeric">{row.gameValue?.label ?? "—"}</td>

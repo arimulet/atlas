@@ -113,6 +113,7 @@ export class SokkerSyncPersistence {
             clubId: teamId,
             name: player.name.fullName,
             countryId: player.country.code,
+            countryName: player.country.name,
             age: player.age,
             position: player.formation,
             skills: { ...player.skills },

@@ -76,6 +76,7 @@ export interface PersistedPlayer {
   clubId: number;
   name: string;
   countryId: number | null;
+  countryName?: string | null;
   age: number | null;
   position: string | null;
   skills: Record<string, number> | null;
@@ -189,6 +190,7 @@ export interface PersistedPlayerSnapshot {
   id: string;
   playerId: number;
   name: string;
+  countryName?: string | null;
   age: number;
   wage: number;
   value: number;
