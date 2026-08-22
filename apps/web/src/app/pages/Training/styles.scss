@@ -1334,3 +1334,48 @@
 .atlas .atlas-training-details__session.is-formation .atlas-training-details__session-bar > span {
   background: var(--semantic-warning-text);
 }
+
+.atlas .atlas-training-table--skills col.is-player {
+  width: 25%;
+}
+
+.atlas .atlas-training-table--skills col.is-talent {
+  width: 6%;
+}
+
+.atlas .atlas-training-table--skills col.is-age {
+  width: 4%;
+}
+
+.atlas .atlas-training-table--skills col.is-skill {
+  width: 5.25%;
+}
+
+.atlas .atlas-training-table--skills col.is-recommendation {
+  width: 23%;
+}
+
+.atlas .atlas-training-player-detail__content dl {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+/* Age remains independent; Skills starts at STA and ends at SCO. */
+.atlas .atlas-training-table--skills thead tr:nth-child(2) th:nth-child(3),
+.atlas .atlas-training-table--skills tbody td:nth-child(3) {
+  border-left: 1px solid var(--atlas-border);
+}
+
+.atlas .atlas-training-table--skills thead tr:nth-child(2) th:nth-child(4),
+.atlas .atlas-training-table--skills tbody td:nth-child(4) {
+  border-left: 1px solid var(--atlas-border);
+}
+
+.atlas .atlas-training-table--skills thead tr:nth-child(2) th:nth-child(11),
+.atlas .atlas-training-table--skills tbody td:nth-child(11) {
+  border-left: 0;
+}
+
+.atlas .atlas-training-table--skills thead tr:nth-child(2) th:nth-child(12),
+.atlas .atlas-training-table--skills tbody td:nth-child(12) {
+  border-left: 1px solid var(--atlas-border);
+}

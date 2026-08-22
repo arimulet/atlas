@@ -107,6 +107,7 @@ function TrainingPositionTable({
       <table className="atlas-training-table atlas-training-table--skills">
         <colgroup>
           <col className="is-player" />
+          <col className="is-talent" />
           <col className="is-age" />
           {PLAYER_SKILL_DEFINITIONS.map((skill) => (
             <col className="is-skill" key={skill.key} />
@@ -118,6 +119,7 @@ function TrainingPositionTable({
             <th colSpan={2} scope="colgroup">
               Player
             </th>
+            <th scope="colgroup">Age</th>
             <th colSpan={PLAYER_SKILL_DEFINITIONS.length} scope="colgroup">
               Skills
             </th>
@@ -125,6 +127,7 @@ function TrainingPositionTable({
           </tr>
           <tr>
             <th scope="col">Player</th>
+            <th scope="col">Talent</th>
             <th scope="col">Age</th>
             {PLAYER_SKILL_DEFINITIONS.map((skill) => (
               <th
@@ -164,7 +167,7 @@ function TrainingPositionTable({
             ))
           ) : (
             <tr>
-              <td className="atlas-training-table__empty" colSpan={11}>
+              <td className="atlas-training-table__empty" colSpan={12}>
                 No players assigned.
               </td>
             </tr>
@@ -219,6 +222,7 @@ function TrainingPlayerRows({
           <TrainingKind kind={player.trainingKind} />
           <TrainingStatusIndicator status={player.status} />
         </th>
+        <td className="atlas-training-table__numeric">{formatTalent(player.talent)}</td>
         <td className="atlas-training-table__numeric">{player.age}</td>
         {PLAYER_SKILL_DEFINITIONS.map((skill) => (
           <SkillCell
@@ -234,7 +238,7 @@ function TrainingPlayerRows({
       </tr>
       {isDetailsOpen ? (
         <tr className="atlas-training-player-detail-row">
-          <td colSpan={11}>
+          <td colSpan={12}>
             <div className="atlas-training-player-detail__content">
               <dl>
                 <div>
@@ -251,15 +255,8 @@ function TrainingPlayerRows({
                   <dt>Progress</dt>
                   <dd>{formatPercentage(player.progress)}</dd>
                 </div>
-                <div>
-                  <dt>Training</dt>
-                  <dd>
-                    {player.trainingType ?? "—"} · {formatTrainingKind(player.trainingKind)} ·{" "}
-                    {formatPercentage(player.intensity)}
-                  </dd>
-                </div>
               </dl>
-              \r\n <TrainingDetails history={history} player={player} />
+              <TrainingDetails history={history} player={player} />
             </div>
           </td>
         </tr>
@@ -336,10 +333,6 @@ function trainingSkillKey(skill: string): string {
   if (skill === "defender") return "defending";
   if (skill === "playmaker") return "playmaking";
   return skill;
-}
-
-function formatTrainingKind(kind: TrainingPlayerRow["trainingKind"]): string {
-  return kind === null ? "—" : kind.charAt(0).toUpperCase() + kind.slice(1);
 }
 
 function skillLabel(skill: number | null): string {
