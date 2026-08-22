@@ -16,6 +16,8 @@ import {
 import type { PlayerTrainingProjectionSummary } from "./player-detail-view-model";
 import {
   createPlayerMarketValueViewModel,
+  formatMarketMoney,
+  type MarketValueAmount,
   type PlayerMarketValueViewModel
 } from "./market-value-view-model";
 
@@ -64,6 +66,7 @@ export interface SquadPlayerRow {
   playerId: string;
   playerName: string;
   age: number;
+  gameValue: MarketValueAmount | null;
   form: number | null;
   skills: Record<SquadSkillKey, number | null>;
   training: {
@@ -124,6 +127,13 @@ export function createSquadPlayerRows(input: CreateSquadPlayerRowsInput): SquadP
       playerId: observedPlayer?.playerId?.toString() ?? playerId,
       playerName: player.name,
       age: player.age,
+      gameValue:
+        marketPlayer?.sokkerValue === null || marketPlayer?.sokkerValue === undefined
+          ? null
+          : {
+              value: marketPlayer.sokkerValue,
+              label: formatMarketMoney(marketPlayer.sokkerValue, input.currency ?? null)
+            },
       form: player.form ?? null,
       skills: createSkillValues(observedPlayer?.skills ?? null),
       training: {

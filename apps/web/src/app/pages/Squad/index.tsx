@@ -65,7 +65,7 @@ export function Squad({
     planning: squadPlanning,
     rows
   });
-  const [marketSort, setMarketSort] = useState<MarketSort>("current");
+  const [marketSort, setMarketSort] = useState<MarketSort>("value");
   const sortedRows = useMemo(
     () => sortSquadRowsByMarketValue(filteredRows, marketSort),
     [filteredRows, marketSort]
@@ -216,8 +216,8 @@ function SquadPlanningFiltersBar({
           onChange={(event) => onMarketSortChange(event.target.value as MarketSort)}
         >
           <option value="default">Default</option>
+          <option value="value">Game value</option>
           <option value="current">Estimated value</option>
-          <option value="projected">Projected value</option>
           <option value="efficiency">Training value / week</option>
         </select>
       </label>
@@ -242,7 +242,7 @@ function SquadPlanningFiltersBar({
   );
 }
 
-type MarketSort = "default" | "current" | "projected" | "efficiency";
+type MarketSort = "default" | "value" | "current" | "efficiency";
 
 function sortSquadRowsByMarketValue(rows: SquadPlayerRow[], sort: MarketSort): SquadPlayerRow[] {
   if (sort === "default") return rows;
@@ -256,10 +256,9 @@ function sortSquadRowsByMarketValue(rows: SquadPlayerRow[], sort: MarketSort): S
 }
 
 function marketSortValue(row: SquadPlayerRow, sort: Exclude<MarketSort, "default">): number | null {
+  if (sort === "value") return row.gameValue?.value ?? null;
   if (!row.marketValue) return null;
   if (sort === "current") return row.marketValue.current.expected.value;
-  if (sort === "projected")
-    return row.marketValue.projection?.targetCompletion?.value.value ?? null;
   return row.marketValue.training?.averageValueGainPerWeek?.value ?? null;
 }
 
@@ -388,18 +387,18 @@ function SquadPositionTable({
         <colgroup>
           <col className="is-player" />
           <col className="is-age" />
+          <col className="is-game-value" />
           <col className="is-form" />
           {SQUAD_SKILL_DEFINITIONS.map((skill) => (
             <col className="is-skill" key={skill.key} />
           ))}
           <col className="is-market-value" />
-          <col className="is-projected-value" />
           <col className="is-status" />
           <col className="is-planning" />
         </colgroup>
         <thead>
           <tr className="atlas-squad-table__group-row">
-            <th colSpan={2} scope="colgroup">
+            <th colSpan={3} scope="colgroup">
               Player
             </th>
             <th
@@ -409,7 +408,7 @@ function SquadPositionTable({
             >
               Skills
             </th>
-            <th className="is-market-group" colSpan={2} scope="colgroup">
+            <th className="is-market-group" scope="colgroup">
               Market Value
             </th>
             <th className="is-status-group" scope="colgroup">
@@ -422,6 +421,7 @@ function SquadPositionTable({
           <tr>
             <th scope="col">Player</th>
             <th scope="col">Age</th>
+            <th scope="col">Value</th>
             <th scope="col" title="Form">
               Form
             </th>
@@ -444,7 +444,6 @@ function SquadPositionTable({
               </th>
             ))}
             <th scope="col">Current</th>
-            <th scope="col">Projected</th>
             <th scope="col">Status</th>
             <th scope="col">Planning</th>
           </tr>
@@ -498,6 +497,7 @@ function SquadPlayerRowView({
         </PlayerLink>
       </th>
       <td className="atlas-squad-table__numeric">{row.age}</td>
+      <td className="atlas-squad-table__numeric">{row.gameValue?.label ?? "—"}</td>
       <td className="atlas-squad-table__numeric">{row.form ?? "—"}</td>
       {SQUAD_SKILL_DEFINITIONS.map((skill) => (
         <td
@@ -508,10 +508,7 @@ function SquadPlayerRowView({
         </td>
       ))}
       <td className="atlas-squad-table__numeric">
-        {row.marketValue?.current.expected.label ?? "â€”"}
-      </td>
-      <td className="atlas-squad-table__numeric">
-        {row.marketValue?.projection?.targetCompletion?.value.label ?? "â€”"}
+        {row.marketValue?.current.expected.label ?? "—"}
       </td>
       <td>
         <SquadStatus status={row.training.status} />
