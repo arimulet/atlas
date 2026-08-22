@@ -205,9 +205,6 @@
 .atlas .atlas-squad-table col.is-market-value {
   width: 104px;
 }
-.atlas .atlas-squad-table col.is-status {
-  width: 100px;
-}
 
 .atlas .atlas-squad-table th,
 .atlas .atlas-squad-table td {
@@ -246,12 +243,10 @@
 
 .atlas .atlas-squad-table__group-row .is-skills-group,
 .atlas .atlas-squad-table__group-row .is-market-group,
-.atlas .atlas-squad-table__group-row .is-status-group,
 .atlas .atlas-squad-table__group-row .is-planning-group,
 .atlas .atlas-squad-table thead tr:nth-child(2) th:nth-child(4),
 .atlas .atlas-squad-table thead tr:nth-child(2) th:nth-child(13),
-.atlas .atlas-squad-table thead tr:nth-child(2) th:nth-child(14),
-.atlas .atlas-squad-table thead tr:nth-child(2) th:nth-child(15) {
+.atlas .atlas-squad-table thead tr:nth-child(2) th:nth-child(14) {
   border-left: 1px solid var(--atlas-border);
 }
 
@@ -275,10 +270,32 @@
   flex: 0 0 auto;
 }
 
+.atlas .atlas-squad-player-status {
+  align-items: center;
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+
+.atlas .atlas-squad-player-status svg {
+  height: 14px;
+  width: 14px;
+}
+
+.atlas .atlas-squad-player-status.is-critical {
+  color: var(--semantic-error-text);
+}
+
+.atlas .atlas-squad-player-status.is-attention {
+  color: var(--semantic-warning-text);
+}
+
+.atlas .atlas-squad-player-status.is-info {
+  color: var(--semantic-info-text);
+}
+
 .atlas .atlas-squad-table tbody td:nth-child(4),
 .atlas .atlas-squad-table tbody td:nth-child(13),
-.atlas .atlas-squad-table tbody td:nth-child(14),
-.atlas .atlas-squad-table tbody td:nth-child(15) {
+.atlas .atlas-squad-table tbody td:nth-child(14) {
   border-left: 1px solid color-mix(in srgb, var(--atlas-border) 72%, transparent);
 }
 
