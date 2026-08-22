@@ -96,15 +96,9 @@ function TrainingSessionMark({
   isDirectTraining: boolean;
   report: TrainingReport;
 }) {
-  const state = isDirectTraining
-    ? report.kind === "missing"
-      ? "idle"
-      : report.kind
-    : report.intensity > 0
-      ? "residual"
-      : "idle";
   const effectiveness = isDirectTraining ? effectivePoints(report) : report.intensity;
-  const percentage = Math.max(0, Math.min(100, effectiveness));
+  const state = effectiveness <= 0 ? "idle" : isDirectTraining ? report.kind : "residual";
+  const percentage = effectiveness <= 0 ? 100 : Math.max(0, Math.min(100, effectiveness));
   const description = isDirectTraining
     ? `Week ${report.seasonWeek} · ${formatEffectiveness(report)} effective training points`
     : state === "residual"
