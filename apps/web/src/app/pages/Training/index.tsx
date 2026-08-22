@@ -1,20 +1,20 @@
+import { useState } from "react";
 import type {
   DiagnosticFinding,
   DiagnosticParameterValue,
-  TrainingPageData,
-  TrainingReport
+  TrainingPageData
 } from "@atlas/web/app/types";
 import { formatTrainingPriority } from "../../formatters";
-import type { TrainingPlayerRow, TrainingStatusLabel, TrainingProps } from "./types";
-import { formatEta, formatNumber, formatPercentage, formatTalent } from "../../formatters";
+import type { TrainingProps } from "./types";
 import { AttentionIcon } from "../../components/AttentionIcon";
-import { PlayerLink } from "../../components/PlayerLink";
-import { StatusBadge } from "../../components/StatusBadge";
 import {
   compareDiagnosticSeverity,
-  createTrainingPlayerRows,
   TRAINING_POSITIONS
 } from "../../view-models/training-view-model";
+import { recommendationLabel } from "./training-intelligence-view-model";
+import { useWeeklyTrainingIntelligence } from "./useWeeklyTrainingIntelligence";
+import { RecentTrainingProgressModal } from "./RecentTrainingProgressModal";
+import { TrainingPlayerTables } from "./TrainingPlayerTables";
 import { WeeklyTrainingIntelligence } from "./WeeklyTrainingIntelligence";
 
 export function Training({
@@ -25,32 +25,55 @@ export function Training({
   trainingDiagnostic,
   trainingStatus
 }: TrainingProps) {
+  const [isRecentProgressOpen, setIsRecentProgressOpen] = useState(false);
+  const weeklyTrainingIntelligence = useWeeklyTrainingIntelligence(clubId);
+  const recommendations = new Map(
+    (weeklyTrainingIntelligence.data?.recommendations ?? []).map((recommendation) => [
+      String(recommendation.playerId),
+      recommendationLabel(recommendation)
+    ])
+  );
+
   return (
     <div className="atlas-training">
       <header className="atlas-training__header">
         <h1>Training</h1>
+        <button
+          className="atlas-training__recent-progress-button"
+          onClick={() => setIsRecentProgressOpen(true)}
+          type="button"
+        >
+          View Recent Progress
+        </button>
       </header>
 
+      <TrainingConfiguration configuration={training?.configuration ?? null} />
+      {trainingStatus === "ready" ? (
+        <TrainingPlayerTables
+          configuration={training?.configuration ?? null}
+          diagnostic={trainingDiagnostic}
+          history={training?.history ?? []}
+          onSelectPlayer={onSelectPlayer}
+          players={training?.players ?? []}
+          projectionSummaries={projectionSummaries}
+          recommendations={recommendations}
+        />
+      ) : null}
       <WeeklyTrainingIntelligence
         clubId={clubId}
         onSelectPlayer={onSelectPlayer}
         training={training}
       />
-      <TrainingConfiguration configuration={training?.configuration ?? null} />
       <TrainingAttention diagnostic={trainingDiagnostic} status={trainingStatus} />
-      <TrainingPositionSections
-        configuration={training?.configuration ?? null}
-        diagnostic={trainingDiagnostic}
-        onSelectPlayer={onSelectPlayer}
+      <RecentTrainingProgressModal
+        history={training?.history ?? []}
+        isOpen={isRecentProgressOpen}
+        onClose={() => setIsRecentProgressOpen(false)}
         players={training?.players ?? []}
-        projectionSummaries={projectionSummaries}
-        status={trainingStatus}
       />
-      <RecentTrainingProgress history={training?.history ?? []} players={training?.players ?? []} />
     </div>
   );
 }
-
 interface TrainingConfigurationProps {
   configuration: TrainingPageData["configuration"];
 }
@@ -132,210 +155,6 @@ function TrainingAttentionItem({ finding }: TrainingAttentionItemProps) {
       <AttentionIcon severity={finding.severity} />
       <span>{describeTrainingFinding(finding)}</span>
     </li>
-  );
-}
-
-interface TrainingPositionSectionsProps {
-  configuration: TrainingPageData["configuration"];
-  diagnostic: TrainingProps["trainingDiagnostic"];
-  onSelectPlayer: (playerId: string) => void;
-  players: TrainingPageData["players"];
-  projectionSummaries: TrainingProps["projectionSummaries"];
-  status: TrainingProps["trainingStatus"];
-}
-
-function TrainingPositionSections({
-  configuration,
-  diagnostic,
-  onSelectPlayer,
-  players,
-  projectionSummaries,
-  status
-}: TrainingPositionSectionsProps) {
-  if (status !== "ready") {
-    return null;
-  }
-
-  const rows = createTrainingPlayerRows(players, diagnostic, projectionSummaries);
-
-  return (
-    <div className="atlas-training-position-sections">
-      {TRAINING_POSITIONS.map((position) => (
-        <TrainingPositionSection
-          key={position.code}
-          onSelectPlayer={onSelectPlayer}
-          players={rows.filter((player) => player.trainingPosition === position.trainingPosition)}
-          position={position}
-          trainedSkill={configuration?.[position.code] ?? null}
-        />
-      ))}
-    </div>
-  );
-}
-
-interface TrainingPositionSectionProps {
-  onSelectPlayer: (playerId: string) => void;
-  players: TrainingPlayerRow[];
-  position: (typeof TRAINING_POSITIONS)[number];
-  trainedSkill: number | null;
-}
-
-function TrainingPositionSection({
-  onSelectPlayer,
-  players,
-  position,
-  trainedSkill
-}: TrainingPositionSectionProps) {
-  return (
-    <section
-      className="atlas-training-position-section"
-      aria-labelledby={`training-position-${position.code}`}
-    >
-      <div className="atlas-training-position-section__header">
-        <h2 id={`training-position-${position.code}`}>
-          {position.code} · {skillLabel(trainedSkill)}
-        </h2>
-        <span>{players.length} players</span>
-      </div>
-      <TrainingPositionTable onSelectPlayer={onSelectPlayer} players={players} />
-    </section>
-  );
-}
-
-interface TrainingPositionTableProps {
-  onSelectPlayer: (playerId: string) => void;
-  players: TrainingPlayerRow[];
-}
-
-function TrainingPositionTable({ onSelectPlayer, players }: TrainingPositionTableProps) {
-  return (
-    <div className="atlas-training-table-wrap">
-      <table className="atlas-training-table">
-        <colgroup>
-          <col />
-          <col />
-          <col />
-          <col />
-          <col />
-          <col />
-          <col />
-          <col />
-          <col />
-          <col />
-        </colgroup>
-        <thead>
-          <tr>
-            <th scope="col">Player</th>
-            <th scope="col">Age</th>
-            <th scope="col">Type</th>
-            <th scope="col">Kind</th>
-            <th scope="col">Intensity</th>
-            <th scope="col">Skill Changes</th>
-            <th scope="col">Progress</th>
-            <th scope="col">Talent</th>
-            <th scope="col">Next Skill-up</th>
-            <th scope="col">ETA</th>
-            <th scope="col">Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {players.length > 0 ? (
-            players.map((player) => (
-              <PlayerRow key={player.playerId} onSelectPlayer={onSelectPlayer} player={player} />
-            ))
-          ) : (
-            <tr>
-              <td className="atlas-training-table__empty" colSpan={11}>
-                No players assigned.
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
-interface PlayerRowProps {
-  onSelectPlayer: (playerId: string) => void;
-  player: TrainingPlayerRow;
-}
-
-function PlayerRow({ onSelectPlayer, player }: PlayerRowProps) {
-  return (
-    <tr>
-      <th scope="row">
-        <PlayerLink playerId={player.playerId} onSelectPlayer={onSelectPlayer}>
-          {player.playerName}
-        </PlayerLink>
-      </th>
-      <td className="atlas-training-table__numeric">{player.age}</td>
-      <td>{player.trainingType ?? "—"}</td>
-      <td>{player.trainingKind ?? "—"}</td>
-      <td className="atlas-training-table__numeric">{formatPercentage(player.intensity)}</td>
-      <td>
-        {player.skillChanges.length > 0
-          ? player.skillChanges
-              .map((change) => `${change.skill} ${change.delta > 0 ? "+" : ""}${change.delta}`)
-              .join(", ")
-          : "—"}
-      </td>
-      <td className="atlas-training-table__numeric">{formatPercentage(player.progress)}</td>
-      <td className="atlas-training-table__numeric">{formatTalent(player.talent)}</td>
-      <td className="atlas-training-table__numeric">{formatNumber(player.nextSkillUp)}</td>
-      <td className="atlas-training-table__numeric">{formatEta(player.etaWeeks)}</td>
-      <td>
-        <TrainingStatus status={player.status} />
-      </td>
-    </tr>
-  );
-}
-
-interface TrainingStatusProps {
-  status: TrainingStatusLabel | null;
-}
-
-function TrainingStatus({ status }: TrainingStatusProps) {
-  return <StatusBadge status={status} />;
-}
-
-interface RecentTrainingProgressProps {
-  history: TrainingReport[];
-  players: TrainingPageData["players"];
-}
-
-function RecentTrainingProgress({ history, players }: RecentTrainingProgressProps) {
-  const playerNames = new Map(players.map((player) => [String(player.playerId), player.name]));
-  const changes = history
-    .flatMap((report) =>
-      (report.skillChanges ?? []).map((change) => ({
-        key: `${report.playerId}-${report.gameWeek}-${change.skill}`,
-        playerName: playerNames.get(String(report.playerId)) ?? String(report.playerId),
-        skill: change.skill,
-        delta: change.delta
-      }))
-    )
-    .slice(-10)
-    .reverse();
-
-  return (
-    <section className="atlas-training-panel" aria-labelledby="recent-progress-title">
-      <PanelTitle id="recent-progress-title" title="Recent Progress" />
-      {changes.length === 0 ? (
-        <PanelMessage>No recent skill changes detected.</PanelMessage>
-      ) : (
-        <ul className="atlas-training-attention-list">
-          {changes.map((change) => (
-            <li className="atlas-training-attention-item" key={change.key}>
-              <span>
-                {change.playerName} · {change.skill} {change.delta > 0 ? "+" : ""}
-                {change.delta}
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
   );
 }
 
