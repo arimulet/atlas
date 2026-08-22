@@ -23,6 +23,7 @@ import {
 import {
   createSquadAttentionFindings,
   createSquadPlayerRows,
+  isSquadSkillRequiredForPosition,
   SQUAD_SKILL_DEFINITIONS,
   type SquadPlayerRow
 } from "../../view-models/squad-view-model";
@@ -64,7 +65,7 @@ export function Squad({
     planning: squadPlanning,
     rows
   });
-  const [marketSort, setMarketSort] = useState<MarketSort>("default");
+  const [marketSort, setMarketSort] = useState<MarketSort>("current");
   const sortedRows = useMemo(
     () => sortSquadRowsByMarketValue(filteredRows, marketSort),
     [filteredRows, marketSort]
@@ -230,13 +231,11 @@ function SquadPlanningFiltersBar({
           }
         >
           <option value="all">All profiles</option>
-          {(["goalkeeper", "defender", "midfielder", "forward"] as const).map(
-            (profile) => (
-              <option key={profile} value={profile}>
-                {profileLabel(profile)}
-              </option>
-            )
-          )}
+          {(["goalkeeper", "defender", "midfielder", "forward"] as const).map((profile) => (
+            <option key={profile} value={profile}>
+              {profileLabel(profile)}
+            </option>
+          ))}
         </select>
       </label>
     </div>
@@ -355,6 +354,7 @@ function SquadTable({ onSaveSquadRole, onSelectPlayer, planning, rows, status }:
               onSaveSquadRole={onSaveSquadRole}
               onSelectPlayer={onSelectPlayer}
               planning={planning}
+              position={position.code}
               rows={positionRows}
             />
           </section>
@@ -368,6 +368,7 @@ interface SquadPositionTableProps {
   onSaveSquadRole: SquadTableProps["onSaveSquadRole"];
   onSelectPlayer: (playerId: string) => void;
   planning: SquadTableProps["planning"];
+  position: TrainingPositionCode;
   rows: SquadPlayerRow[];
 }
 
@@ -375,6 +376,7 @@ function SquadPositionTable({
   onSaveSquadRole,
   onSelectPlayer,
   planning,
+  position,
   rows
 }: SquadPositionTableProps) {
   const playersById = new Map(
@@ -386,7 +388,6 @@ function SquadPositionTable({
         <colgroup>
           <col className="is-player" />
           <col className="is-age" />
-          <col className="is-planning" />
           <col className="is-form" />
           {SQUAD_SKILL_DEFINITIONS.map((skill) => (
             <col className="is-skill" key={skill.key} />
@@ -394,10 +395,11 @@ function SquadPositionTable({
           <col className="is-market-value" />
           <col className="is-projected-value" />
           <col className="is-status" />
+          <col className="is-planning" />
         </colgroup>
         <thead>
           <tr className="atlas-squad-table__group-row">
-            <th colSpan={3} scope="colgroup">
+            <th colSpan={2} scope="colgroup">
               Player
             </th>
             <th
@@ -410,23 +412,41 @@ function SquadPositionTable({
             <th className="is-market-group" colSpan={2} scope="colgroup">
               Market Value
             </th>
-            <th scope="colgroup">Status</th>
+            <th className="is-status-group" scope="colgroup">
+              Status
+            </th>
+            <th className="is-planning-group" scope="colgroup">
+              Planning
+            </th>
           </tr>
           <tr>
             <th scope="col">Player</th>
             <th scope="col">Age</th>
-            <th scope="col">Planning</th>
             <th scope="col" title="Form">
               Form
             </th>
             {SQUAD_SKILL_DEFINITIONS.map((skill) => (
-              <th scope="col" key={skill.key}>
+              <th
+                className={
+                  isSquadSkillRequiredForPosition(position, skill.key)
+                    ? "is-position-skill"
+                    : undefined
+                }
+                key={skill.key}
+                scope="col"
+                title={
+                  isSquadSkillRequiredForPosition(position, skill.key)
+                    ? `Required for ${TRAINING_POSITION_TITLES[position]}`
+                    : undefined
+                }
+              >
                 {skill.shortLabel}
               </th>
             ))}
             <th scope="col">Current</th>
             <th scope="col">Projected</th>
             <th scope="col">Status</th>
+            <th scope="col">Planning</th>
           </tr>
         </thead>
         <tbody>
@@ -437,6 +457,7 @@ function SquadPositionTable({
                 onSaveSquadRole={onSaveSquadRole}
                 onSelectPlayer={onSelectPlayer}
                 planningPlayer={playersById.get(row.playerId) ?? null}
+                position={position}
                 row={row}
               />
             ))
@@ -458,6 +479,7 @@ interface SquadPlayerRowViewProps {
   onSelectPlayer: (playerId: string) => void;
   planningPlayer:
     NonNullable<SquadTableProps["planning"]>["assessment"]["depthPlayers"][number] | null;
+  position: TrainingPositionCode;
   row: SquadPlayerRow;
 }
 
@@ -465,10 +487,9 @@ function SquadPlayerRowView({
   onSaveSquadRole,
   onSelectPlayer,
   planningPlayer,
+  position,
   row
 }: SquadPlayerRowViewProps) {
-  const manualRole = planningPlayer?.manualRole?.role ?? null;
-  const automaticRole = planningPlayer?.automaticRole ?? null;
   return (
     <tr>
       <th scope="row">
@@ -477,49 +498,12 @@ function SquadPlayerRowView({
         </PlayerLink>
       </th>
       <td className="atlas-squad-table__numeric">{row.age}</td>
-      <td>
-        {planningPlayer ? (
-          <div className="atlas-squad-planning-cell">
-            <div
-              className="atlas-squad-planning-cell__summary"
-              title={`Current contribution: ${formatContributionScore(planningPlayer.currentContributionScore)} · Future contribution: ${formatContributionScore(planningPlayer.futureContributionScore)}`}
-            >
-              <span className={`atlas-squad-planning-badge is-${planningPlayer.role}`}>
-                {roleLabel(planningPlayer.role)}
-              </span>
-              <span className="atlas-squad-planning-cell__lifecycle">
-                {lifecycleLabel(planningPlayer.lifecycle)}
-              </span>
-            </div>
-            {automaticRole && manualRole && automaticRole !== manualRole ? (
-              <small>{describeManualRoleConflict(automaticRole, manualRole)}</small>
-            ) : null}
-            <select
-              aria-label={`Manual squad role for ${row.playerName}`}
-              value={manualRole ?? "automatic"}
-              onChange={(event) => {
-                const value = event.target.value;
-                void onSaveSquadRole(
-                  row.playerId,
-                  value === "automatic" ? null : (value as SquadRole)
-                );
-              }}
-            >
-              <option value="automatic">Automatic</option>
-              {roleOptions().map((role) => (
-                <option key={role} value={role}>
-                  {roleOptionLabel(role)}
-                </option>
-              ))}
-            </select>
-          </div>
-        ) : (
-          "—"
-        )}
-      </td>
       <td className="atlas-squad-table__numeric">{row.form ?? "—"}</td>
       {SQUAD_SKILL_DEFINITIONS.map((skill) => (
-        <td className="atlas-squad-table__numeric" key={skill.key}>
+        <td
+          className={`atlas-squad-table__numeric${isSquadSkillRequiredForPosition(position, skill.key) ? " is-position-skill" : ""}`}
+          key={skill.key}
+        >
           {row.skills[skill.key] ?? "—"}
         </td>
       ))}
@@ -532,7 +516,163 @@ function SquadPlayerRowView({
       <td>
         <SquadStatus status={row.training.status} />
       </td>
+      <td>
+        <SquadPlanningRoleControl
+          onSaveSquadRole={onSaveSquadRole}
+          playerId={row.playerId}
+          playerName={row.playerName}
+          planningPlayer={planningPlayer}
+        />
+      </td>
     </tr>
+  );
+}
+
+interface SquadPlanningRoleControlProps {
+  onSaveSquadRole: SquadTableProps["onSaveSquadRole"];
+  playerId: string;
+  playerName: string;
+  planningPlayer: SquadPlayerRowViewProps["planningPlayer"];
+}
+
+function SquadPlanningRoleControl({
+  onSaveSquadRole,
+  playerId,
+  playerName,
+  planningPlayer
+}: SquadPlanningRoleControlProps) {
+  const manualRole = planningPlayer?.manualRole?.role ?? null;
+  const automaticRole = planningPlayer?.automaticRole ?? null;
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<SquadRole | "automatic">(
+    manualRole ?? "automatic"
+  );
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
+
+  if (planningPlayer === null) {
+    return "—";
+  }
+
+  const handleEdit = () => {
+    setSelectedRole(manualRole ?? "automatic");
+    setSaveMessage(null);
+    setIsEditorOpen(true);
+  };
+
+  const handleCancel = () => {
+    setSelectedRole(manualRole ?? "automatic");
+    setIsEditorOpen(false);
+  };
+
+  const handleConfirm = async () => {
+    setIsSaving(true);
+    setSaveMessage(null);
+
+    try {
+      await onSaveSquadRole(playerId, selectedRole === "automatic" ? null : selectedRole);
+      setIsEditorOpen(false);
+      setSaveMessage("Saved");
+    } catch (error) {
+      setSaveMessage(error instanceof Error ? error.message : "Unable to save squad role.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <div className="atlas-squad-planning-cell">
+      <div className="atlas-squad-planning-cell__overview">
+        <div
+          className="atlas-squad-planning-cell__summary"
+          title={`Current contribution: ${formatContributionScore(planningPlayer.currentContributionScore)} · Future contribution: ${formatContributionScore(planningPlayer.futureContributionScore)}`}
+        >
+          <span className={`atlas-squad-planning-badge is-${planningPlayer.role}`}>
+            {roleLabel(planningPlayer.role)}
+          </span>
+          <span className="atlas-squad-planning-cell__lifecycle">
+            {lifecycleLabel(planningPlayer.lifecycle)}
+          </span>
+        </div>
+        {!isEditorOpen ? (
+          <button
+            aria-label={`Edit squad role for ${playerName}`}
+            className="atlas-squad-planning-cell__action"
+            onClick={handleEdit}
+            title="Edit squad role"
+            type="button"
+          >
+            <RoleActionIcon type="edit" />
+          </button>
+        ) : null}
+      </div>
+      {automaticRole && manualRole && automaticRole !== manualRole ? (
+        <small>{describeManualRoleConflict(automaticRole, manualRole)}</small>
+      ) : null}
+      {saveMessage ? (
+        <small className={saveMessage === "Saved" ? "is-success" : "is-error"}>{saveMessage}</small>
+      ) : null}
+      {isEditorOpen ? (
+        <div className="atlas-squad-planning-cell__editor">
+          <select
+            aria-label={`Manual squad role for ${playerName}`}
+            disabled={isSaving}
+            value={selectedRole}
+            onChange={(event) => setSelectedRole(event.target.value as SquadRole | "automatic")}
+          >
+            <option value="automatic">Automatic</option>
+            {roleOptions().map((role) => (
+              <option key={role} value={role}>
+                {roleOptionLabel(role)}
+              </option>
+            ))}
+          </select>
+          <div className="atlas-squad-planning-cell__actions">
+            <button
+              aria-label={`Cancel squad role edit for ${playerName}`}
+              className="atlas-squad-planning-cell__action is-cancel"
+              disabled={isSaving}
+              onClick={handleCancel}
+              title="Cancel"
+              type="button"
+            >
+              <RoleActionIcon type="cancel" />
+            </button>
+            <button
+              aria-label={`Save squad role for ${playerName}`}
+              className="atlas-squad-planning-cell__action is-confirm"
+              disabled={isSaving}
+              onClick={() => void handleConfirm()}
+              title="Save squad role"
+              type="button"
+            >
+              <RoleActionIcon type="confirm" />
+            </button>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function RoleActionIcon({ type }: { type: "edit" | "cancel" | "confirm" }) {
+  const path =
+    type === "edit"
+      ? "M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25ZM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83Z"
+      : type === "cancel"
+        ? "m6 6 12 12M18 6 6 18"
+        : "m5 13 4 4L19 7";
+
+  return (
+    <svg aria-hidden="true" fill={type === "edit" ? "currentColor" : "none"} viewBox="0 0 24 24">
+      <path
+        d={path}
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="2"
+      />
+    </svg>
   );
 }
 

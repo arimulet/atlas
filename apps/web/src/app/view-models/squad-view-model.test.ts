@@ -1,9 +1,19 @@
 import { describe, expect, it } from "vitest";
 
 import type { PlayerDevelopment, TrainingPageData } from "@atlas/web/app/types";
-import { createSquadPlayerRows } from "./squad-view-model";
+import { createSquadPlayerRows, isSquadSkillRequiredForPosition } from "./squad-view-model";
 
 describe("createSquadPlayerRows", () => {
+  it("identifies the skills required for each training position", () => {
+    expect(isSquadSkillRequiredForPosition("GK", "keeper")).toBe(true);
+    expect(isSquadSkillRequiredForPosition("DEF", "defender")).toBe(true);
+    expect(isSquadSkillRequiredForPosition("DEF", "playmaker")).toBe(false);
+    expect(isSquadSkillRequiredForPosition("MID", "playmaker")).toBe(true);
+    expect(isSquadSkillRequiredForPosition("ATT", "striker")).toBe(true);
+    expect(isSquadSkillRequiredForPosition("ATT", "passing")).toBe(false);
+    expect(isSquadSkillRequiredForPosition("GK", "striker")).toBe(false);
+  });
+
   it("maps the shared training projection summary without deriving development values", () => {
     const training: TrainingPageData = {
       snapshotId: "snapshot-1",

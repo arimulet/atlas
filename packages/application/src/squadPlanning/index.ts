@@ -187,22 +187,45 @@ export async function getSquadPlanningRecommendations(
 
 export async function getSquadRoleAssignment(input: {
   playerId: number;
-  clubId: number;
+  clubId: ClubId;
 }): Promise<PersistedSquadRoleAssignment | null> {
-  return roleAssignmentRepository.findByPlayerId(input);
+  return roleAssignmentRepository.findByPlayerId({
+    ...input,
+    clubId: await resolveNumericClubId(input.clubId)
+  });
 }
 
 export async function saveSquadRoleAssignment(
-  input: SaveSquadRoleAssignmentInput
+  input: Omit<SaveSquadRoleAssignmentInput, "clubId"> & { clubId: ClubId }
 ): Promise<PersistedSquadRoleAssignment> {
-  return roleAssignmentRepository.saveManualOverride(input);
+  return roleAssignmentRepository.saveManualOverride({
+    ...input,
+    clubId: await resolveNumericClubId(input.clubId)
+  });
 }
 
 export async function resetSquadRoleAssignment(input: {
   playerId: number;
-  clubId: number;
+  clubId: ClubId;
 }): Promise<void> {
-  await roleAssignmentRepository.deleteManualOverride(input);
+  await roleAssignmentRepository.deleteManualOverride({
+    ...input,
+    clubId: await resolveNumericClubId(input.clubId)
+  });
+}
+
+async function resolveNumericClubId(clubId: ClubId): Promise<number> {
+  const numericClubId = Number(clubId);
+  if (Number.isInteger(numericClubId) && numericClubId > 0) {
+    return numericClubId;
+  }
+
+  const club = await clubRepository.findById(String(clubId));
+  if (!club) {
+    throw new Error(`Club not found: ${clubId}`);
+  }
+
+  return club.clubId;
 }
 
 function buildPlayerContext(

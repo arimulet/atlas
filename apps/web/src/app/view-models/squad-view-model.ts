@@ -1,4 +1,5 @@
 import { formatTrainingPriority } from "../formatters";
+import { DEVELOPMENT_PROFILES, type DevelopmentProfile } from "@atlas/domain";
 import type {
   PlayerDevelopment,
   SquadPlanningBundle,
@@ -8,6 +9,7 @@ import {
   createTrainingPlayerRows,
   trainedSkillForPosition,
   trainingPositionCode,
+  type TrainingPositionCode,
   type TrainingDiagnostic,
   type TrainingStatusLabel
 } from "./training-view-model";
@@ -29,6 +31,34 @@ export const SQUAD_SKILL_DEFINITIONS = [
 ] as const;
 
 export type SquadSkillKey = (typeof SQUAD_SKILL_DEFINITIONS)[number]["key"];
+
+const TRAINING_POSITION_DEVELOPMENT_PROFILES: Record<TrainingPositionCode, DevelopmentProfile> = {
+  GK: "goalkeeper",
+  DEF: "defender",
+  MID: "midfielder",
+  ATT: "forward"
+};
+
+const DEEMPHASIZED_SQUAD_SKILLS: Readonly<
+  Partial<Record<TrainingPositionCode, readonly SquadSkillKey[]>>
+> = {
+  DEF: ["playmaker"],
+  ATT: ["passing"]
+};
+
+export function isSquadSkillRequiredForPosition(
+  position: TrainingPositionCode,
+  skill: SquadSkillKey
+): boolean {
+  const profile = TRAINING_POSITION_DEVELOPMENT_PROFILES[position];
+  const deemphasizedSkills = DEEMPHASIZED_SQUAD_SKILLS[position] ?? [];
+
+  return (
+    DEVELOPMENT_PROFILES[profile].relevantSkills.some(
+      (relevantSkill) => relevantSkill.skill === skill
+    ) && !deemphasizedSkills.includes(skill)
+  );
+}
 
 export interface SquadPlayerRow {
   playerId: string;
