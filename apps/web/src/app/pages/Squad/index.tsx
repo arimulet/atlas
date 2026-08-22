@@ -4,7 +4,6 @@ import type { SquadRole } from "@atlas/domain";
 import { AttentionIcon } from "../../components/AttentionIcon";
 import { CountryNameFlag } from "../../components/CountryNameFlag";
 import { PlayerLink } from "../../components/PlayerLink";
-import { StatusBadge } from "../../components/StatusBadge";
 import type { SquadAttentionProps, SquadTableProps, SquadProps } from "./types";
 import {
   SquadPlanningSections,
@@ -394,7 +393,6 @@ function SquadPositionTable({
             <col className="is-skill" key={skill.key} />
           ))}
           <col className="is-market-value" />
-          <col className="is-status" />
           <col className="is-planning" />
         </colgroup>
         <thead>
@@ -411,9 +409,6 @@ function SquadPositionTable({
             </th>
             <th className="is-market-group" scope="colgroup">
               Market Value
-            </th>
-            <th className="is-status-group" scope="colgroup">
-              Status
             </th>
             <th className="is-planning-group" scope="colgroup">
               Planning
@@ -445,7 +440,6 @@ function SquadPositionTable({
               </th>
             ))}
             <th scope="col">Current</th>
-            <th scope="col">Status</th>
             <th scope="col">Planning</th>
           </tr>
         </thead>
@@ -463,7 +457,7 @@ function SquadPositionTable({
             ))
           ) : (
             <tr>
-              <td className="atlas-squad-table__empty" colSpan={15}>
+              <td className="atlas-squad-table__empty" colSpan={14}>
                 No players assigned.
               </td>
             </tr>
@@ -498,6 +492,7 @@ function SquadPlayerRowView({
           <PlayerLink playerId={row.playerId} onSelectPlayer={onSelectPlayer}>
             {row.playerName}
           </PlayerLink>
+          <SquadStatusIcon status={row.training.status} />
         </span>
       </th>
       <td className="atlas-squad-table__numeric">{row.age}</td>
@@ -513,9 +508,6 @@ function SquadPlayerRowView({
       ))}
       <td className="atlas-squad-table__numeric">
         {row.marketValue?.current.expected.label ?? "—"}
-      </td>
-      <td>
-        <SquadStatus status={row.training.status} />
       </td>
       <td>
         <SquadPlanningRoleControl
@@ -677,12 +669,30 @@ function RoleActionIcon({ type }: { type: "edit" | "cancel" | "confirm" }) {
   );
 }
 
-interface SquadStatusProps {
+interface SquadStatusIconProps {
   status: SquadPlayerRow["training"]["status"];
 }
 
-function SquadStatus({ status }: SquadStatusProps) {
-  return <StatusBadge status={status} />;
+function SquadStatusIcon({ status }: SquadStatusIconProps) {
+  if (status === null) {
+    return null;
+  }
+
+  const path = status === "Info" ? "M12 8v4m0 4h.01" : "M12 7v6m0 4h.01";
+
+  return (
+    <span
+      aria-label={`Status: ${status}`}
+      className={`atlas-squad-player-status is-${status.toLowerCase()}`}
+      role="img"
+      title={status}
+    >
+      <svg aria-hidden="true" fill="none" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
+        <path d={path} stroke="currentColor" strokeLinecap="round" strokeWidth="2" />
+      </svg>
+    </span>
+  );
 }
 
 interface SquadMessageProps {
