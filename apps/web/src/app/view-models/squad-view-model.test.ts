@@ -24,6 +24,7 @@ describe("createSquadPlayerRows", () => {
           id: "snapshot-player-1",
           playerId: 42,
           name: "Player One",
+          countryName: "Argentina",
           age: 18,
           form: 17,
           training: { position: 2, advanced: true }
@@ -66,6 +67,7 @@ describe("createSquadPlayerRows", () => {
 
     expect(rows[0]).toEqual(
       expect.objectContaining({
+        countryName: "Argentina",
         form: 17,
         training: expect.objectContaining({ progress: 82 }),
         development: { talent: 3.4, nextSkillUp: 14, etaWeeks: 2 }

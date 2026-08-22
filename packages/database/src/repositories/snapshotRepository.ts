@@ -1,5 +1,6 @@
 import { Types, type ClientSession } from "mongoose";
 import { ClubModel } from "../models/club.js";
+import { CountryModel } from "../models/country.js";
 import { PlayerModel } from "../models/player.js";
 import { SnapshotModel } from "../models/snapshot.js";
 import type {
@@ -121,11 +122,33 @@ export class MongoSnapshotRepository {
     }
 
     const players = await PlayerModel.find({ clubId: snapshots[0]!.clubId })
-      .select({ playerId: 1, name: 1 })
+      .select({ playerId: 1, name: 1, countryId: 1 })
       .lean();
-    const names = new Map(players.map((player) => [player.playerId, player.name]));
+    const countryIds = [
+      ...new Set(
+        players.flatMap((player) =>
+          typeof player.countryId === "number" ? [player.countryId] : []
+        )
+      )
+    ];
+    const countries = await CountryModel.find({ countryId: { $in: countryIds } })
+      .select({ countryId: 1, name: 1 })
+      .lean();
+    const countryNames = new Map(countries.map((country) => [country.countryId, country.name]));
+    const playerDetails = new Map(
+      players.map((player) => [
+        player.playerId,
+        {
+          name: player.name,
+          countryName:
+            typeof player.countryId === "number"
+              ? (countryNames.get(player.countryId) ?? null)
+              : null
+        }
+      ])
+    );
 
-    return snapshots.map((snapshot) => mapSnapshot(snapshot, names));
+    return snapshots.map((snapshot) => mapSnapshot(snapshot, playerDetails));
   }
 
   private async hydrateSnapshot(snapshot: SnapshotDocumentShape): Promise<PersistedSnapshot> {
@@ -196,7 +219,7 @@ interface SnapshotDocumentShape {
 
 function mapSnapshot(
   snapshot: SnapshotDocumentShape,
-  playerNames: ReadonlyMap<number, string>
+  playerDetails: ReadonlyMap<number, { name: string; countryName: string | null }>
 ): PersistedSnapshot {
   return {
     id: snapshot._id.toString(),
@@ -209,7 +232,8 @@ function mapSnapshot(
     players: snapshot.players.map((player) => ({
       id: player._id.toString(),
       playerId: player.playerId,
-      name: playerNames.get(player.playerId) ?? player.name ?? `Player ${player.playerId}`,
+      name: playerDetails.get(player.playerId)?.name ?? player.name ?? `Player ${player.playerId}`,
+      countryName: playerDetails.get(player.playerId)?.countryName ?? null,
       age: player.age,
       wage: player.wage,
       value: player.value,

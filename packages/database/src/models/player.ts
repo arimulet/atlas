@@ -9,6 +9,7 @@ const playerSchema = new Schema(
     clubId: { type: Number, required: true, min: 1 },
     name: { type: String, required: true, trim: true },
     countryId: { type: Number, default: null, min: 1 },
+    countryName: { type: String, default: null, trim: true },
     age: { type: Number, default: null, min: 1 },
     position: { type: String, default: null },
     skills: { type: Schema.Types.Mixed, default: {} },

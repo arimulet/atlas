@@ -22,6 +22,7 @@ export interface TrainingPagePlayer {
   id: string;
   playerId: number;
   name: string;
+  countryName?: string | null;
   age: number;
   form?: number | null;
   training: PersistedPlayerSnapshot["training"];

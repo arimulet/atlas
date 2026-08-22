@@ -7,6 +7,7 @@ import {
   formatTalent,
   formatTrainingPriority
 } from "../../formatters";
+import { CountryNameFlag } from "../../components/CountryNameFlag";
 import { PlayerLink } from "../../components/PlayerLink";
 import { isSquadSkillRequiredForPosition } from "../../view-models/squad-view-model";
 import { TrainingDetails } from "./TrainingDetails";
@@ -206,6 +207,9 @@ function TrainingPlayerRows({
           >
             {isDetailsOpen ? "−" : "+"}
           </button>
+          {sourcePlayer?.countryName ? (
+            <CountryNameFlag countryName={sourcePlayer.countryName} />
+          ) : null}
           <PlayerLink playerId={player.playerId} onSelectPlayer={onSelectPlayer}>
             {player.playerName}
           </PlayerLink>

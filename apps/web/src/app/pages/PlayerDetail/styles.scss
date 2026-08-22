@@ -9,8 +9,11 @@
 }
 
 .atlas .atlas-player-detail__header h1 {
+  align-items: center;
   color: var(--atlas-text);
+  display: flex;
   font-size: 1.55rem;
+  gap: 8px;
   line-height: 1.1;
   margin: 8px 0 5px;
 }

@@ -9,6 +9,7 @@ export interface ResolvePlayerIdentityInput {
   clubId: number;
   name: string;
   countryId?: number | null;
+  countryName?: string | null;
   age?: number | null;
   position?: PlayerPosition;
   skills?: Record<string, number>;
@@ -27,6 +28,7 @@ export class MongoPlayerRepository {
     const $set: Record<string, unknown> = { name: input.name };
 
     if (input.countryId !== undefined) $set.countryId = input.countryId;
+    if (input.countryName !== undefined) $set.countryName = input.countryName;
     if (input.age !== undefined) $set.age = input.age;
     if (input.position !== undefined) $set.position = input.position;
     if (input.skills !== undefined) $set.skills = input.skills;
@@ -68,6 +70,7 @@ function mapPlayer(player: {
   clubId: number;
   name: string;
   countryId?: number | null;
+  countryName?: string | null;
   age?: number | null;
   position?: string | null;
   skills?: Record<string, number> | null;
@@ -83,6 +86,7 @@ function mapPlayer(player: {
     clubId: player.clubId,
     name: player.name,
     countryId: player.countryId ?? null,
+    countryName: player.countryName ?? null,
     age: player.age ?? null,
     position: player.position ?? null,
     skills: player.skills ?? null,

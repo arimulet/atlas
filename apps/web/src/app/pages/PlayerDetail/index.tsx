@@ -5,6 +5,7 @@ import { ProjectionPanel } from "./ProjectionPanel";
 import { TalentPanel } from "./TalentPanel";
 import { formatDateTime, formatNumber, formatPercentage } from "../../formatters";
 import { AttentionIcon } from "../../components/AttentionIcon";
+import { CountryNameFlag } from "../../components/CountryNameFlag";
 import { StatusBadge } from "../../components/StatusBadge";
 import {
   createPlayerDetailViewModel,
@@ -188,7 +189,10 @@ function PlayerHeader({ onBack, player, training }: PlayerHeaderProps) {
       <button className="atlas-player-detail__back" type="button" onClick={onBack}>
         ← Back
       </button>
-      <h1>{player.name}</h1>
+      <h1>
+        {player.countryName ? <CountryNameFlag countryName={player.countryName} /> : null}
+        <span>{player.name}</span>
+      </h1>
       <p>
         {player.age} · {training.position ?? "—"} · {training.trainedSkill ?? "—"}
         {training.trainingKind ? ` · ${training.trainingKind}` : ""}

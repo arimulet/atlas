@@ -511,6 +511,7 @@ function mapPlayer(
     id: player.id,
     playerId: player.playerId,
     name: player.name,
+    countryName: player.countryName,
     age: player.age,
     form: player.form,
     training: player.training,

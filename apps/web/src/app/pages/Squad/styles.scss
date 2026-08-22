@@ -265,6 +265,16 @@
   font-weight: 700;
 }
 
+.atlas .atlas-squad-player-name {
+  align-items: center;
+  display: inline-flex;
+  gap: 6px;
+}
+
+.atlas .atlas-squad-player-name img {
+  flex: 0 0 auto;
+}
+
 .atlas .atlas-squad-table tbody td:nth-child(4),
 .atlas .atlas-squad-table tbody td:nth-child(13),
 .atlas .atlas-squad-table tbody td:nth-child(14),

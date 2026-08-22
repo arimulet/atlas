@@ -860,6 +860,11 @@
   padding: 3px 6px;
 }
 
+.atlas .atlas-training-player-detail__toggle + img {
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
 .atlas .atlas-training-progress-modal li {
   grid-template-columns: minmax(0, 1fr) auto;
 }

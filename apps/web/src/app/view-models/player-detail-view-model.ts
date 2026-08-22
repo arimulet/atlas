@@ -41,6 +41,7 @@ export interface PlayerDetailViewModel {
   player: {
     id: string;
     name: string;
+    countryName?: string | null;
     age: number;
   };
   developmentPlayer: (DevelopmentPlayer & { age: number }) | null;
@@ -170,6 +171,7 @@ export function createPlayerDetailViewModel(
     player: {
       id: String(player.playerId),
       name: player.name,
+      countryName: player.countryName,
       age: player.age
     },
     developmentPlayer: createDevelopmentPlayer(String(player.playerId), observedPlayer),
