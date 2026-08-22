@@ -1,5 +1,9 @@
 import { formatTrainingPriority } from "../formatters";
-import { calculateRequiredTrainingPoints, type DevelopmentPlayer } from "@atlas/domain";
+import {
+  calculateRequiredTrainingPoints,
+  calculateWeeklyTrainingPointsByKind,
+  type DevelopmentPlayer
+} from "@atlas/domain";
 import type {
   DashboardStatus,
   DiagnosticFinding,
@@ -146,13 +150,16 @@ export function createPlayerDetailViewModel(
       ? null
       : (observedPlayer?.skills[trainedSkillDefinition.key] ?? null);
   const talentEstimate = player.talentEstimate ?? null;
-  const nextSkillUp = createProjectionNextSkillUp({
+  const trainingProjection = createTrainingProjection({
     currentSkillLevel,
+    history: (input.training?.history ?? []).filter((report) =>
+      identifiersMatch(report.playerId, player.playerId)
+    ),
     skill: trainedSkillDefinition?.key ?? null,
     talentEstimate,
-    latestReport: player.latestReport ?? null,
     age: player.age
   });
+  const nextSkillUp = trainingProjection?.nextSkillUp;
   const marketPlayer = input.squadPlanning?.assessment.depthPlayers.find(
     (candidate) =>
       identifiersMatch(candidate.playerId, observedPlayer?.playerId) ||
@@ -185,7 +192,7 @@ export function createPlayerDetailViewModel(
       current: {
         skill: trainedSkill === null ? null : formatTrainingPriority(trainedSkill),
         level: currentSkillLevel,
-        progress: trainingRow.progress
+        progress: trainingProjection?.progress ?? trainingRow.progress
       },
       nextSkillUp
     },
@@ -298,39 +305,80 @@ function skillLabelForKey(skill: string): string {
   return definition === undefined ? skill : formatTrainingPriority(definition.trainingPriority);
 }
 
-function createProjectionNextSkillUp(input: {
+function createTrainingProjection(input: {
+  age: number;
   currentSkillLevel: number | null;
+  history: NonNullable<TrainingPageData["history"]>;
   skill: SkillKey | null;
   talentEstimate: TrainingPageData["players"][number]["talentEstimate"];
-  latestReport: NonNullable<TrainingPageData["history"]>[number] | null;
-  age: number;
-}): PlayerDetailViewModel["projection"]["nextSkillUp"] {
+}): {
+  progress: number;
+  nextSkillUp: { targetLevel: number; estimatedWeeks: number | null };
+} | null {
   if (
     input.currentSkillLevel === null ||
     input.currentSkillLevel >= 18 ||
     input.talentEstimate?.value === null ||
     input.talentEstimate?.value === undefined ||
-    input.talentEstimate.confidence === "unknown" ||
-    input.talentEstimate.confidence === "low" ||
-    input.latestReport?.kind !== "advanced" ||
-    input.latestReport.intensity <= 0 ||
     input.skill === null
   ) {
-    return undefined;
+    return null;
   }
 
   const trainingSkill = toTrainingCostSkill(input.skill);
-  const required = calculateRequiredTrainingPoints({
+  const history = [...input.history].sort((left, right) => left.gameWeek - right.gameWeek);
+  const lastSkillUp = [...history]
+    .reverse()
+    .find((report) =>
+      report.skillChanges?.some(
+        (change) => trainingSkillForReport(change.skill) === trainingSkill && change.delta > 0
+      )
+    );
+  if (!lastSkillUp) return null;
+
+  const effectiveWeeks = history
+    .filter(
+      (report) =>
+        report.gameWeek > lastSkillUp.gameWeek &&
+        trainingSkillForReport(report.type) === trainingSkill
+    )
+    .filter((report) => report.kind !== "missing")
+    .map((report) => {
+      if (report.kind === "missing") return 0;
+
+      return calculateWeeklyTrainingPointsByKind({
+        intensity: report.intensity,
+        kind: report.kind
+      });
+    });
+  const accumulatedPoints = effectiveWeeks.reduce((total, points) => total + points, 0);
+  const requiredPoints = calculateRequiredTrainingPoints({
     talent: input.talentEstimate.value,
     age: input.age,
     skill: trainingSkill,
     targetSkillLevel: input.currentSkillLevel + 1
-  });
+  }).requiredTrainingPoints;
+  const remainingPoints = Math.max(0, requiredPoints - accumulatedPoints);
+  const averageWeeklyPoints =
+    effectiveWeeks.length === 0 ? null : accumulatedPoints / effectiveWeeks.length;
 
   return {
-    targetLevel: input.currentSkillLevel + 1,
-    estimatedWeeks: required.requiredTrainingPoints / input.latestReport.intensity
+    progress: Math.min(100, Math.max(0, (accumulatedPoints / requiredPoints) * 100)),
+    nextSkillUp: {
+      targetLevel: input.currentSkillLevel + 1,
+      estimatedWeeks:
+        averageWeeklyPoints && averageWeeklyPoints > 0
+          ? remainingPoints / averageWeeklyPoints
+          : null
+    }
   };
+}
+
+function trainingSkillForReport(skill: string): ReturnType<typeof toTrainingCostSkill> {
+  if (skill === "defender") return "defending";
+  if (skill === "playmaker") return "playmaking";
+  if (skill === "striker") return "scoring";
+  return skill as ReturnType<typeof toTrainingCostSkill>;
 }
 
 function toTrainingCostSkill(
