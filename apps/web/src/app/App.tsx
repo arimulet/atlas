@@ -249,7 +249,7 @@ export function App() {
   const handleSaveSquadRole = useCallback(
     async (playerId: string, role: SquadRole | null): Promise<void> => {
       if (!activeClubId) {
-        return;
+        throw new Error("No active club is available to save the squad role.");
       }
 
       if (role === null) {
@@ -258,7 +258,12 @@ export function App() {
         await saveSquadRoleAssignment(activeClubId, playerId, role);
       }
 
-      await loadSquadPlanning(activeClubId);
+      const reloaded = await loadSquadPlanning(activeClubId);
+      if (!reloaded) {
+        throw new Error(
+          "Squad role was saved, but the updated squad planning could not be loaded."
+        );
+      }
     },
     [activeClubId, loadSquadPlanning]
   );

@@ -243,8 +243,13 @@
 }
 
 .atlas .atlas-squad-table__group-row .is-skills-group,
+.atlas .atlas-squad-table__group-row .is-market-group,
+.atlas .atlas-squad-table__group-row .is-status-group,
+.atlas .atlas-squad-table__group-row .is-planning-group,
 .atlas .atlas-squad-table thead tr:nth-child(2) th:nth-child(3),
-.atlas .atlas-squad-table thead tr:nth-child(2) th:nth-child(13) {
+.atlas .atlas-squad-table thead tr:nth-child(2) th:nth-child(12),
+.atlas .atlas-squad-table thead tr:nth-child(2) th:nth-child(14),
+.atlas .atlas-squad-table thead tr:nth-child(2) th:nth-child(15) {
   border-left: 1px solid var(--atlas-border);
 }
 
@@ -259,7 +264,9 @@
 }
 
 .atlas .atlas-squad-table tbody td:nth-child(3),
-.atlas .atlas-squad-table tbody td:nth-child(13) {
+.atlas .atlas-squad-table tbody td:nth-child(12),
+.atlas .atlas-squad-table tbody td:nth-child(14),
+.atlas .atlas-squad-table tbody td:nth-child(15) {
   border-left: 1px solid color-mix(in srgb, var(--atlas-border) 72%, transparent);
 }
 
@@ -279,6 +286,11 @@
 .atlas .atlas-squad-table__numeric,
 .atlas .atlas-squad-table__center {
   text-align: center !important;
+}
+
+.atlas .atlas-squad-table .is-position-skill {
+  color: var(--atlas-text);
+  font-weight: 800;
 }
 
 .atlas .atlas-squad-table .atlas-training-position-badge {
@@ -453,6 +465,16 @@
   display: grid;
   gap: 4px;
 }
+.atlas .atlas-squad-planning-cell__overview,
+.atlas .atlas-squad-planning-cell__editor,
+.atlas .atlas-squad-planning-cell__actions {
+  align-items: center;
+  display: flex;
+}
+.atlas .atlas-squad-planning-cell__overview {
+  gap: 6px;
+  justify-content: space-between;
+}
 .atlas .atlas-squad-planning-cell__summary {
   align-items: center;
   display: flex;
@@ -462,6 +484,50 @@
 .atlas .atlas-squad-planning-cell small {
   color: var(--atlas-text-muted);
   font-size: 0.62rem;
+}
+.atlas .atlas-squad-planning-cell small.is-success {
+  color: var(--semantic-success-text);
+}
+.atlas .atlas-squad-planning-cell small.is-error {
+  color: var(--semantic-error-text);
+  white-space: normal;
+}
+.atlas .atlas-squad-planning-cell__editor {
+  gap: 5px;
+}
+.atlas .atlas-squad-planning-cell__editor select {
+  min-width: 0;
+}
+.atlas .atlas-squad-planning-cell__actions {
+  gap: 2px;
+}
+.atlas .atlas-squad-planning-cell__action {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
+  color: var(--atlas-text-muted);
+  cursor: pointer;
+  display: inline-flex;
+  height: 22px;
+  justify-content: center;
+  padding: 3px;
+  width: 22px;
+}
+.atlas .atlas-squad-planning-cell__action:hover:not(:disabled) {
+  background: var(--atlas-surface-hover);
+  color: var(--atlas-text);
+}
+.atlas .atlas-squad-planning-cell__action:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+.atlas .atlas-squad-planning-cell__action.is-confirm {
+  color: var(--semantic-success-text);
+}
+.atlas .atlas-squad-planning-cell__action svg {
+  height: 14px;
+  width: 14px;
 }
 .atlas .atlas-squad-planning-cell select,
 .atlas .atlas-squad-filters select {

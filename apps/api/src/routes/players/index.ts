@@ -60,7 +60,7 @@ async function playerRoutes(server: FastifyInstance) {
     "/:playerId/squad-role",
     async (request) => {
       const { clubId, playerId } = playerDevelopmentTargetParamsSchema.parse(request.params);
-      return getSquadRoleAssignment({ clubId: Number(clubId), playerId });
+      return getSquadRoleAssignment({ clubId, playerId });
     }
   );
 
@@ -69,7 +69,7 @@ async function playerRoutes(server: FastifyInstance) {
     async (request) => {
       const { clubId, playerId } = playerDevelopmentTargetParamsSchema.parse(request.params);
       const body = squadRoleAssignmentBodySchema.parse(request.body);
-      return saveSquadRoleAssignment({ clubId: Number(clubId), playerId, role: body.role });
+      return saveSquadRoleAssignment({ clubId, playerId, role: body.role });
     }
   );
 
@@ -77,7 +77,7 @@ async function playerRoutes(server: FastifyInstance) {
     "/:playerId/squad-role",
     async (request, reply) => {
       const { clubId, playerId } = playerDevelopmentTargetParamsSchema.parse(request.params);
-      await resetSquadRoleAssignment({ clubId: Number(clubId), playerId });
+      await resetSquadRoleAssignment({ clubId, playerId });
       return reply.code(204).send();
     }
   );

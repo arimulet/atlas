@@ -157,7 +157,7 @@ export async function saveSquadRoleAssignment(
   });
 
   if (!response.ok) {
-    throw new Error("Squad role API returned an unexpected response.");
+    throw new Error(await apiErrorMessage(response, "Unable to save squad role"));
   }
 }
 
@@ -167,8 +167,36 @@ export async function resetSquadRoleAssignment(clubId: string, playerId: string)
   });
 
   if (!response.ok) {
-    throw new Error("Squad role API returned an unexpected response.");
+    throw new Error(await apiErrorMessage(response, "Unable to reset squad role"));
   }
+}
+
+async function apiErrorMessage(response: Response, fallback: string): Promise<string> {
+  const body: unknown = await response.json().catch(() => null);
+  const message = errorMessageFromBody(body);
+
+  return message
+    ? `${fallback} (${response.status}): ${message}`
+    : `${fallback} (${response.status}).`;
+}
+
+function errorMessageFromBody(body: unknown): string | null {
+  if (typeof body !== "object" || body === null || !("importResult" in body)) {
+    return null;
+  }
+
+  const importResult = body.importResult;
+  if (typeof importResult !== "object" || importResult === null || !("errors" in importResult)) {
+    return null;
+  }
+
+  const errors = importResult.errors;
+  if (!Array.isArray(errors) || errors.length === 0) {
+    return null;
+  }
+
+  const firstError = errors[0];
+  return typeof firstError?.message === "string" ? firstError.message : null;
 }
 
 export async function fetchPlayerDevelopmentTarget(
