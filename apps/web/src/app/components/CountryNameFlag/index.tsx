@@ -8,7 +8,7 @@ const COUNTRY_LANGUAGES = COUNTRY_LOCALES.map((locale) => locale.locale);
 const FLAG_STYLE: CSSProperties = {
   width: "1.5em",
   height: "1.5em",
-  borderRadius: "2px",
+  borderRadius: "6px",
   objectFit: "cover"
 };
 
