@@ -76,13 +76,8 @@ export interface PlayerDetailViewModel {
     };
   };
   diagnostics: DiagnosticFinding[];
-  recentSkillUps: Array<{
-    date: string | null;
-    skill: string;
-    fromLevel: number;
-    toLevel: number;
-  }>;
   trainingHistory: Array<{
+    date: string | null;
     week: number;
     type: string;
     kind: "advanced" | "formation" | "missing";
@@ -199,7 +194,6 @@ export function createPlayerDetailViewModel(
       nextSkillUp
     },
     diagnostics: diagnosticFindingsForPlayer(input.trainingDiagnostic, player),
-    recentSkillUps: createRecentSkillUps(input.training, observedPlayer?.playerId ?? null),
     trainingHistory: createTrainingHistoryRows(input.training, observedPlayer?.playerId ?? null),
     marketValue: marketPlayer
       ? createPlayerMarketValueViewModel(marketPlayer, input.currency ?? null)
@@ -261,26 +255,6 @@ export function createPlayerTrainingProjectionSummaries(
   return summaries;
 }
 
-function createRecentSkillUps(
-  training: TrainingPageData | null,
-  playerId: string | null
-): PlayerDetailViewModel["recentSkillUps"] {
-  return (training?.history ?? [])
-    .filter((report) => identifiersMatch(report.playerId, playerId))
-    .flatMap((report) =>
-      (report.skillChanges ?? [])
-        .filter((change) => change.direction === "up")
-        .map((change) => ({
-          date: report.date?.toString() ?? null,
-          skill: skillLabelForKey(change.skill),
-          fromLevel: change.before,
-          toLevel: change.after
-        }))
-    )
-    .slice(-10)
-    .reverse();
-}
-
 function createTrainingHistoryRows(
   training: TrainingPageData | null,
   playerId: string | null
@@ -289,6 +263,7 @@ function createTrainingHistoryRows(
     .filter((report) => identifiersMatch(report.playerId, playerId))
     .sort((left, right) => right.gameWeek - left.gameWeek)
     .map((report) => ({
+      date: report.date?.toString() ?? null,
       week: report.gameWeek,
       type: report.type,
       kind: report.kind,
