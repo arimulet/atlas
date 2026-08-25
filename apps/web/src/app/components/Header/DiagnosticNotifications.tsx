@@ -9,9 +9,12 @@ interface DiagnosticNotificationsProps {
 
 export function DiagnosticNotifications({ diagnostics }: DiagnosticNotificationsProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const hasDiagnostics = diagnostics.length > 0;
+  const alertDiagnostics = diagnostics.filter(
+    (diagnostic) => diagnostic.severity === "high" || diagnostic.severity === "medium"
+  );
+  const hasDiagnostics = alertDiagnostics.length > 0;
   const notificationCountLabel =
-    diagnostics.length > 99 ? "99+" : diagnostics.length.toLocaleString("es-AR");
+    alertDiagnostics.length > 99 ? "99+" : alertDiagnostics.length.toLocaleString("es-AR");
 
   const handleToggle = () => {
     setIsOpen((currentValue) => !currentValue);
@@ -24,7 +27,7 @@ export function DiagnosticNotifications({ diagnostics }: DiagnosticNotifications
         aria-expanded={isOpen}
         aria-label={
           hasDiagnostics
-            ? "Notificaciones: " + diagnostics.length + " hallazgo(s) de diagnóstico"
+            ? "Notificaciones: " + alertDiagnostics.length + " hallazgo(s) de diagnóstico"
             : "Notificaciones"
         }
         className="atlas-diagnostic-notifications__button"
@@ -50,12 +53,12 @@ export function DiagnosticNotifications({ diagnostics }: DiagnosticNotifications
         >
           <header className="atlas-diagnostic-notifications__panel-header">
             <strong>Notificaciones</strong>
-            {hasDiagnostics ? <span>{diagnostics.length} hallazgo(s)</span> : null}
+            {hasDiagnostics ? <span>{alertDiagnostics.length} hallazgo(s)</span> : null}
           </header>
 
           {hasDiagnostics ? (
             <ul className="atlas-diagnostic-notifications__list">
-              {diagnostics.map((diagnostic, index) => {
+              {alertDiagnostics.map((diagnostic, index) => {
                 const playerName = diagnostic.parameters?.playerName;
 
                 return (
