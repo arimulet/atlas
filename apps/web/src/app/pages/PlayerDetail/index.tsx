@@ -3,6 +3,7 @@ import type { PlayerDetailProps } from "./types";
 import { ProjectionPanel } from "./ProjectionPanel";
 import { formatDateTime, formatNumber, formatPercentage } from "../../formatters";
 import { CountryNameFlag } from "../../components/CountryNameFlag";
+import { DiagnosticNotifications } from "../../components/Header/DiagnosticNotifications";
 import { StatusBadge } from "../../components/StatusBadge";
 import {
   createPlayerDetailViewModel,
@@ -17,7 +18,6 @@ export function PlayerDetail({
   clubId,
   development,
   onBack,
-  onViewDiagnostics,
   playerId,
   training,
   trainingDiagnostic,
@@ -63,7 +63,6 @@ export function PlayerDetail({
       player={viewModel}
       training={training}
       onBack={onBack}
-      onViewDiagnostics={onViewDiagnostics}
     />
   );
 }
@@ -73,23 +72,17 @@ interface PlayerDetailContentProps {
   player: PlayerDetailViewModel;
   training: PlayerDetailProps["training"];
   onBack: PlayerDetailProps["onBack"];
-  onViewDiagnostics: PlayerDetailProps["onViewDiagnostics"];
 }
 
 function PlayerDetailContent({
   clubId,
   player: viewModel,
   training,
-  onBack,
-  onViewDiagnostics
+  onBack
 }: PlayerDetailContentProps) {
   return (
     <div className="atlas-player-detail">
-      <PlayerHeader
-        player={viewModel.player}
-        onBack={onBack}
-        onViewDiagnostics={onViewDiagnostics}
-      />
+      <PlayerHeader diagnostics={viewModel.diagnostics} player={viewModel.player} onBack={onBack} />
       <PlayerPersonalInfoPanel player={viewModel.player} training={viewModel.training} />
       <div className="atlas-player-detail__summary-grid">
         <SkillsPanel skills={viewModel.skills} />
@@ -174,30 +167,19 @@ class DevelopmentPlanBoundary extends Component<
 }
 
 interface PlayerHeaderProps {
+  diagnostics: PlayerDetailViewModel["diagnostics"];
   player: PlayerDetailViewModel["player"];
   onBack: () => void;
-  onViewDiagnostics: () => void;
 }
 
-function PlayerHeader({ onBack, onViewDiagnostics, player }: PlayerHeaderProps) {
+function PlayerHeader({ diagnostics, onBack, player }: PlayerHeaderProps) {
   return (
     <header className="atlas-player-detail__header">
       <div className="atlas-player-detail__header-actions">
         <button className="atlas-player-detail__back" type="button" onClick={onBack}>
           ← Back
         </button>
-        <button
-          aria-label="View diagnostics"
-          className="atlas-player-detail__diagnostics"
-          title="View diagnostics"
-          type="button"
-          onClick={onViewDiagnostics}
-        >
-          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
-            <path d="M10 21h4" />
-          </svg>
-        </button>
+        <DiagnosticNotifications diagnostics={diagnostics} showAll />
       </div>
       <h1>
         {player.countryName ? <CountryNameFlag countryName={player.countryName} /> : null}

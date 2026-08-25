@@ -1,20 +1,27 @@
 import type { DiagnosticFinding } from "@atlas/web/app/types";
-import { useState } from "react";
+import { useId, useState } from "react";
 
 import { describeDiagnosticsFinding } from "../../view-models/diagnostics-view-model";
 
 interface DiagnosticNotificationsProps {
   diagnostics: readonly DiagnosticFinding[];
+  showAll?: boolean;
 }
 
-export function DiagnosticNotifications({ diagnostics }: DiagnosticNotificationsProps) {
+export function DiagnosticNotifications({
+  diagnostics,
+  showAll = false
+}: DiagnosticNotificationsProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const alertDiagnostics = diagnostics.filter(
-    (diagnostic) => diagnostic.severity === "high" || diagnostic.severity === "medium"
-  );
-  const hasDiagnostics = alertDiagnostics.length > 0;
+  const panelId = useId();
+  const displayedDiagnostics = showAll
+    ? diagnostics
+    : diagnostics.filter(
+        (diagnostic) => diagnostic.severity === "high" || diagnostic.severity === "medium"
+      );
+  const hasDiagnostics = displayedDiagnostics.length > 0;
   const notificationCountLabel =
-    alertDiagnostics.length > 99 ? "99+" : alertDiagnostics.length.toLocaleString("es-AR");
+    displayedDiagnostics.length > 99 ? "99+" : displayedDiagnostics.length.toLocaleString("es-AR");
 
   const handleToggle = () => {
     setIsOpen((currentValue) => !currentValue);
@@ -23,11 +30,11 @@ export function DiagnosticNotifications({ diagnostics }: DiagnosticNotifications
   return (
     <div className="atlas-diagnostic-notifications">
       <button
-        aria-controls="atlas-diagnostic-notifications-panel"
+        aria-controls={panelId}
         aria-expanded={isOpen}
         aria-label={
           hasDiagnostics
-            ? "Notificaciones: " + alertDiagnostics.length + " hallazgo(s) de diagnóstico"
+            ? "Notificaciones: " + displayedDiagnostics.length + " hallazgo(s) de diagnóstico"
             : "Notificaciones"
         }
         className="atlas-diagnostic-notifications__button"
@@ -48,17 +55,17 @@ export function DiagnosticNotifications({ diagnostics }: DiagnosticNotifications
       {isOpen ? (
         <section
           className="atlas-diagnostic-notifications__panel"
-          id="atlas-diagnostic-notifications-panel"
+          id={panelId}
           aria-label="Notificaciones de diagnóstico"
         >
           <header className="atlas-diagnostic-notifications__panel-header">
             <strong>Notificaciones</strong>
-            {hasDiagnostics ? <span>{alertDiagnostics.length} hallazgo(s)</span> : null}
+            {hasDiagnostics ? <span>{displayedDiagnostics.length} hallazgo(s)</span> : null}
           </header>
 
           {hasDiagnostics ? (
             <ul className="atlas-diagnostic-notifications__list">
-              {alertDiagnostics.map((diagnostic, index) => {
+              {displayedDiagnostics.map((diagnostic, index) => {
                 const playerName = diagnostic.parameters?.playerName;
 
                 return (

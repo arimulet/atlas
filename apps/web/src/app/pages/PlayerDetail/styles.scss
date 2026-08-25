@@ -1003,41 +1003,5 @@
   align-items: center;
   display: flex;
   gap: 8px;
-}
-
-.atlas .atlas-player-detail__diagnostics {
-  align-items: center;
-  background: transparent;
-  border: 1px solid var(--atlas-border);
-  border-radius: var(--atlas-radius-sm);
-  color: var(--atlas-text-secondary);
-  cursor: pointer;
-  display: inline-flex;
-  height: 28px;
-  justify-content: center;
-  padding: 0;
-  width: 28px;
-}
-
-.atlas .atlas-player-detail__diagnostics svg {
-  fill: none;
-  height: 15px;
-  stroke: currentColor;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 1.8;
-  width: 15px;
-}
-
-.atlas .atlas-player-detail__diagnostics:hover,
-.atlas .atlas-player-detail__diagnostics:focus-visible {
-  border-color: var(--atlas-accent);
-  color: var(--atlas-accent);
-}
-
-.atlas .atlas-player-detail__diagnostics:focus-visible {
-  box-shadow:
-    0 0 0 2px var(--atlas-bg),
-    0 0 0 4px var(--atlas-accent);
-  outline: 0;
+  justify-content: space-between;
 }

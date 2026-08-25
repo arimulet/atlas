@@ -371,7 +371,6 @@ export function App() {
           development={playerDevelopment}
           onBack={handleBackFromPlayerDetail}
           onBackToSquad={() => navigate(pathForMainView("squad"), { replace: true })}
-          onViewDiagnostics={() => navigate(pathForMainView("diagnostics"))}
           playerId={route.kind === "player-detail" ? route.playerId : ""}
           training={training}
           trainingDiagnostic={trainingDiagnostic}
