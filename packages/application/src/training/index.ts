@@ -52,7 +52,9 @@ export async function getTrainingPageData(clubId: ClubId): Promise<TrainingPageD
     throw new Error(`Club not found: ${clubId}`);
   }
 
-  const latestSnapshot = (await snapshotRepository.listByClub(clubId)).at(-1) ?? null;
+  const snapshots = await snapshotRepository.listByClub(clubId);
+  const latestSnapshot = snapshots.at(-1) ?? null;
+  const previousSnapshot = snapshots.at(-2) ?? null;
   const history = await trainingWeekRepository.listByClub(club.clubId);
   const latestByPlayer = new Map<number, (typeof history)[number]>();
 
@@ -91,7 +93,14 @@ export async function getTrainingPageData(clubId: ClubId): Promise<TrainingPageD
     configuration: club.training,
     players:
       latestSnapshot?.players.map((player) =>
-        mapPlayer(player, latestByPlayer, talentByPlayer.get(player.playerId) ?? null)
+        mapPlayer(
+          player,
+          previousSnapshot?.players.find(
+            (previousPlayer) => previousPlayer.playerId === player.playerId
+          )?.value ?? null,
+          latestByPlayer,
+          talentByPlayer.get(player.playerId) ?? null
+        )
       ) ?? [],
     history
   };
@@ -504,6 +513,7 @@ function toPersistedSkillsChange(
 
 function mapPlayer(
   player: PersistedPlayerSnapshot,
+  previousValue: number | null,
   latestByPlayer: ReadonlyMap<number, TrainingPageData["history"][number]>,
   talentEstimate: ReturnType<typeof estimateTalentFromTrainingHistory> | null
 ): TrainingPageData["players"][number] {
@@ -515,6 +525,8 @@ function mapPlayer(
     age: player.age,
     form: player.form,
     training: player.training,
+    value: player.value,
+    valueChange: previousValue === null ? null : player.value - previousValue,
     latestReport: latestByPlayer.get(player.playerId) ?? null,
     talentEstimate
   };

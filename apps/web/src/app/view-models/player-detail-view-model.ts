@@ -22,6 +22,7 @@ import {
 } from "./training-view-model";
 import {
   createPlayerMarketValueViewModel,
+  formatMarketMoney,
   type PlayerMarketValueViewModel
 } from "./market-value-view-model";
 
@@ -85,6 +86,11 @@ export interface PlayerDetailViewModel {
     name: string;
     countryName?: string | null;
     age: number;
+    gameValue: string | null;
+    gameValueChange: {
+      direction: "up" | "down";
+      label: string;
+    } | null;
   };
   developmentPlayer: (DevelopmentPlayer & { age: number }) | null;
   skills: Array<{
@@ -219,7 +225,14 @@ export function createPlayerDetailViewModel(
       id: String(player.playerId),
       name: player.name,
       countryName: player.countryName,
-      age: player.age
+      age: player.age,
+      gameValue:
+        player.value === null || player.value === undefined
+          ? marketPlayer?.sokkerValue === null || marketPlayer?.sokkerValue === undefined
+            ? null
+            : formatMarketMoney(marketPlayer.sokkerValue, input.currency ?? null)
+          : formatMarketMoney(player.value, input.currency ?? null),
+      gameValueChange: gameValueChange(player.valueChange ?? null, input.currency ?? null)
     },
     developmentPlayer: createDevelopmentPlayer(String(player.playerId), observedPlayer),
     skills: SKILL_DEFINITIONS.map((definition) => {
@@ -334,6 +347,20 @@ function createTrainingHistoryRows(
         direction: change.direction
       }))
     }));
+}
+
+function gameValueChange(
+  valueChange: number | null,
+  currency: string | null
+): PlayerDetailViewModel["player"]["gameValueChange"] {
+  if (valueChange === null || valueChange === 0) {
+    return null;
+  }
+
+  return {
+    direction: valueChange > 0 ? "up" : "down",
+    label: formatMarketMoney(Math.abs(valueChange), currency)
+  };
 }
 
 function importantSkillsForPlayer(

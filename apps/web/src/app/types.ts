@@ -256,6 +256,8 @@ export interface TrainingPagePlayer {
     position: number;
     advanced: boolean;
   };
+  value?: number | null;
+  valueChange?: number | null;
   latestReport?: TrainingReport | null;
   talentEstimate?: TalentEstimate | null;
 }

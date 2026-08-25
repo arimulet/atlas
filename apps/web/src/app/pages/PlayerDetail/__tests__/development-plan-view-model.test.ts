@@ -7,7 +7,7 @@ import {
 
 function createPlayer(): PlayerDetailViewModel {
   return {
-    player: { id: "7", name: "Test Player", age: 18 },
+    player: { id: "7", name: "Test Player", age: 18, gameValue: null, gameValueChange: null },
     developmentPlayer: {
       playerId: 7,
       age: 18,
