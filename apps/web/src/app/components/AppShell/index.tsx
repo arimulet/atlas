@@ -7,7 +7,7 @@ import { AppShellProps } from "./types";
 export function AppShell({
   activeView,
   children,
-  diagnostics,
+  diagnosticAlertCount,
   isSokkerImportOpen,
   onViewChange,
   onCloseSokkerImport,
@@ -17,9 +17,10 @@ export function AppShell({
 }: AppShellProps) {
   return (
     <div className="atlas atlas-app-shell">
-      <Header diagnostics={diagnostics} onOpenSokkerImporter={onOpenSokkerImport} />
+      <Header onOpenSokkerImporter={onOpenSokkerImport} />
       <Sidebar
         activeView={activeView}
+        diagnosticAlertCount={diagnosticAlertCount}
         onViewChange={onViewChange}
       />
       <MainContent navigationKey={navigationKey}>{children}</MainContent>
