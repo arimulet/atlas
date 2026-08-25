@@ -11,6 +11,5 @@ export interface PlayerDetailProps {
   squadPlanning: SquadPlanningBundle | null;
   currency: string | null;
   onBack: () => void;
-  onViewDiagnostics: () => void;
   onBackToSquad: () => void;
 }
