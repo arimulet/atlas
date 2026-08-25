@@ -17,6 +17,7 @@ export function PlayerDetail({
   clubId,
   development,
   onBack,
+  onViewDiagnostics,
   playerId,
   training,
   trainingDiagnostic,
@@ -62,6 +63,7 @@ export function PlayerDetail({
       player={viewModel}
       training={training}
       onBack={onBack}
+      onViewDiagnostics={onViewDiagnostics}
     />
   );
 }
@@ -71,17 +73,23 @@ interface PlayerDetailContentProps {
   player: PlayerDetailViewModel;
   training: PlayerDetailProps["training"];
   onBack: PlayerDetailProps["onBack"];
+  onViewDiagnostics: PlayerDetailProps["onViewDiagnostics"];
 }
 
 function PlayerDetailContent({
   clubId,
   player: viewModel,
   training,
-  onBack
+  onBack,
+  onViewDiagnostics
 }: PlayerDetailContentProps) {
   return (
     <div className="atlas-player-detail">
-      <PlayerHeader player={viewModel.player} onBack={onBack} />
+      <PlayerHeader
+        player={viewModel.player}
+        onBack={onBack}
+        onViewDiagnostics={onViewDiagnostics}
+      />
       <PlayerPersonalInfoPanel player={viewModel.player} training={viewModel.training} />
       <div className="atlas-player-detail__summary-grid">
         <SkillsPanel skills={viewModel.skills} />
@@ -168,14 +176,29 @@ class DevelopmentPlanBoundary extends Component<
 interface PlayerHeaderProps {
   player: PlayerDetailViewModel["player"];
   onBack: () => void;
+  onViewDiagnostics: () => void;
 }
 
-function PlayerHeader({ onBack, player }: PlayerHeaderProps) {
+function PlayerHeader({ onBack, onViewDiagnostics, player }: PlayerHeaderProps) {
   return (
     <header className="atlas-player-detail__header">
-      <button className="atlas-player-detail__back" type="button" onClick={onBack}>
-        ← Back
-      </button>
+      <div className="atlas-player-detail__header-actions">
+        <button className="atlas-player-detail__back" type="button" onClick={onBack}>
+          ← Back
+        </button>
+        <button
+          aria-label="View diagnostics"
+          className="atlas-player-detail__diagnostics"
+          title="View diagnostics"
+          type="button"
+          onClick={onViewDiagnostics}
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
+            <path d="M10 21h4" />
+          </svg>
+        </button>
+      </div>
       <h1>
         {player.countryName ? <CountryNameFlag countryName={player.countryName} /> : null}
         <span>{player.name}</span>
@@ -183,7 +206,6 @@ function PlayerHeader({ onBack, player }: PlayerHeaderProps) {
     </header>
   );
 }
-
 interface SkillsPanelProps {
   skills: PlayerDetailViewModel["skills"];
 }
@@ -235,10 +257,7 @@ function formatLastWeekSkillChange(change: {
   return `Last week: ${direction} ${change.levelDelta} skill ${noun}`;
 }
 
-function formatSkillChangeDelta(change: {
-  direction: "up" | "down";
-  levelDelta: number;
-}): string {
+function formatSkillChangeDelta(change: { direction: "up" | "down"; levelDelta: number }): string {
   const sign = change.direction === "up" ? "+" : "−";
 
   return `${sign}${change.levelDelta}`;
