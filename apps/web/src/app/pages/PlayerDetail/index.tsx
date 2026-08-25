@@ -13,6 +13,7 @@ import {
 import { PlayerDevelopmentPlan } from "./PlayerDevelopmentPlan";
 import { usePlayerDevelopmentPlan } from "./usePlayerDevelopmentPlan";
 import { PlayerMarketValueSection } from "./MarketValuePanel";
+import { PlayerPersonalInfoPanel } from "./PlayerPersonalInfoPanel";
 
 export function PlayerDetail({
   clubId,
@@ -88,12 +89,13 @@ function PlayerDetailContent({
 }: PlayerDetailContentProps) {
   return (
     <div className="atlas-player-detail">
-      <PlayerHeader player={viewModel.player} training={viewModel.training} onBack={onBack} />
+      <PlayerHeader player={viewModel.player} onBack={onBack} />
       <PlayerAttention
         diagnosticAvailable={trainingDiagnostic !== null}
         diagnostics={viewModel.diagnostics}
         status={trainingStatus}
       />
+      <PlayerPersonalInfoPanel player={viewModel.player} training={viewModel.training} />
       <div className="atlas-player-detail__summary-grid">
         <SkillsPanel skills={viewModel.skills} />
         <TrainingPanel training={viewModel.training} />
@@ -178,11 +180,10 @@ class DevelopmentPlanBoundary extends Component<
 
 interface PlayerHeaderProps {
   player: PlayerDetailViewModel["player"];
-  training: PlayerDetailViewModel["training"];
   onBack: () => void;
 }
 
-function PlayerHeader({ onBack, player, training }: PlayerHeaderProps) {
+function PlayerHeader({ onBack, player }: PlayerHeaderProps) {
   return (
     <header className="atlas-player-detail__header">
       <button className="atlas-player-detail__back" type="button" onClick={onBack}>
@@ -192,10 +193,6 @@ function PlayerHeader({ onBack, player, training }: PlayerHeaderProps) {
         {player.countryName ? <CountryNameFlag countryName={player.countryName} /> : null}
         <span>{player.name}</span>
       </h1>
-      <p>
-        {player.age} · {training.position ?? "—"} · {training.trainedSkill ?? "—"}
-        {training.trainingKind ? ` · ${training.trainingKind}` : ""}
-      </p>
     </header>
   );
 }

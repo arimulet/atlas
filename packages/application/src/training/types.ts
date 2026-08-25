@@ -26,6 +26,8 @@ export interface TrainingPagePlayer {
   age: number;
   form?: number | null;
   training: PersistedPlayerSnapshot["training"];
+  value: number;
+  valueChange: number | null;
   latestReport: PersistedPlayerTrainingWeek | null;
   talentEstimate: TalentEstimate | null;
 }
