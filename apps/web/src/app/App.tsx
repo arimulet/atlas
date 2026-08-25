@@ -288,6 +288,7 @@ export function App() {
   return (
     <AppShell
       activeView={route.kind === "main" ? route.view : null}
+      diagnostics={trainingDiagnostic?.findings ?? []}
       isSokkerImportOpen={isSokkerImportOpen}
       navigationKey={route.path}
       onViewChange={(view) => navigate(pathForMainView(view))}
