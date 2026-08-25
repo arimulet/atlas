@@ -1,5 +1,6 @@
 import type {
   ClubDashboard,
+  DiagnosticFinding,
   ImportResponse,
   PlayerDevelopment,
   RealYouthAcademyPlanning,
@@ -86,6 +87,18 @@ export async function fetchTrainingPageData(clubId: string): Promise<TrainingPag
   return body;
 }
 
+export async function fetchClubDiagnostic(
+  clubId: string
+): Promise<{ findings: DiagnosticFinding[] } | null> {
+  const response = await fetch("/api/clubs/" + clubId + "/diagnostics");
+  const body = (await response.json()) as { findings: DiagnosticFinding[] } | null;
+
+  if (!response.ok) {
+    throw new Error("Diagnostics API returned an unexpected response.");
+  }
+
+  return body;
+}
 export async function fetchWeeklyTrainingIntelligence(
   clubId: string
 ): Promise<WeeklyTrainingIntelligence> {

@@ -4,6 +4,7 @@ export * from "./clubHistorical/index.js";
 export * from "./clubOperatingSettings/index.js";
 export * from "./club/index.js";
 export * from "./club/types.js";
+export * from "./diagnostics/index.js";
 export * from "./economy/index.js";
 export * from "./marketPlanning/index.js";
 export * from "./squadPlanning/index.js";

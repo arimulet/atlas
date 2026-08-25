@@ -3,6 +3,7 @@ import {
   compareClubSnapshots,
   generateClubHistoricalFindings,
   getClubDashboard,
+  getClubDiagnostic,
   getFinancialStrategyAssessment,
   getInvestmentSafety,
   getClubOperatingSettings,
@@ -71,6 +72,11 @@ async function clubRoutes(server: FastifyInstance) {
     return getTrainingPageData(clubId);
   });
 
+  server.get<{ Params: GetClubDashboardParams }>("/diagnostics", async (request) => {
+    const { clubId } = request.params;
+
+    return getClubDiagnostic(clubId);
+  });
   server.get<{ Params: GetClubDashboardParams }>("/training/intelligence", async (request) => {
     const { clubId } = request.params;
 
