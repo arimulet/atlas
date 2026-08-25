@@ -105,6 +105,11 @@
   font-size: 0.78rem;
 }
 
+.atlas .atlas-player-detail__skills-grid > div.is-important dt {
+  color: var(--atlas-text);
+  font-weight: 700;
+}
+
 .atlas .atlas-player-detail__skills-grid dd,
 .atlas .atlas-player-detail__data-list dd {
   align-items: center;
@@ -114,6 +119,40 @@
   font-weight: 700;
   gap: 8px;
   margin: 0;
+}
+
+.atlas .atlas-player-detail__skill-value {
+  align-items: center;
+  display: inline-flex;
+  gap: 4px;
+}
+
+.atlas .atlas-player-detail__skill-level {
+  color: var(--atlas-text-secondary);
+  font-weight: 500;
+}
+
+.atlas .atlas-player-detail__skill-value.is-up,
+.atlas .atlas-player-detail__skill-value.is-up .atlas-player-detail__skill-level {
+  color: var(--semantic-success-text);
+}
+
+.atlas .atlas-player-detail__skill-value.is-down,
+.atlas .atlas-player-detail__skill-value.is-down .atlas-player-detail__skill-level {
+  color: var(--semantic-error-text);
+}
+
+.atlas .atlas-player-detail__skill-change {
+  font-size: 0.72rem;
+  font-weight: 750;
+}
+
+.atlas .atlas-player-detail__skill-change.is-up {
+  color: var(--semantic-success-text);
+}
+
+.atlas .atlas-player-detail__skill-change.is-down {
+  color: var(--semantic-error-text);
 }
 
 .atlas .atlas-player-detail__data-list {
