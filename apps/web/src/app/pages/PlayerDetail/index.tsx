@@ -98,12 +98,12 @@ function PlayerDetailContent({
         <SkillsPanel skills={viewModel.skills} />
         <TrainingPanel training={viewModel.training} />
       </div>
-      <PlayerMarketValueSection marketValue={viewModel.marketValue ?? null} />
       <ProjectionPanel
         projection={viewModel.projection}
         talent={viewModel.talent}
         training={viewModel.training}
       />
+      <PlayerMarketValueSection marketValue={viewModel.marketValue ?? null} />
       <DevelopmentPlanBoundary key={viewModel.player.id}>
         <DevelopmentPlanSection clubId={clubId} player={viewModel} training={training} />
       </DevelopmentPlanBoundary>
