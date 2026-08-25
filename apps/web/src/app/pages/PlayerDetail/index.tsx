@@ -2,7 +2,6 @@ import { Component, type ReactNode } from "react";
 import type { DiagnosticFinding, DiagnosticParameterValue } from "@atlas/web/app/types";
 import type { PlayerDetailProps } from "./types";
 import { ProjectionPanel } from "./ProjectionPanel";
-import { TalentPanel } from "./TalentPanel";
 import { formatDateTime, formatNumber, formatPercentage } from "../../formatters";
 import { AttentionIcon } from "../../components/AttentionIcon";
 import { CountryNameFlag } from "../../components/CountryNameFlag";
@@ -95,15 +94,16 @@ function PlayerDetailContent({
         diagnostics={viewModel.diagnostics}
         status={trainingStatus}
       />
-      <PlayerMarketValueSection marketValue={viewModel.marketValue ?? null} />
       <div className="atlas-player-detail__summary-grid">
         <SkillsPanel skills={viewModel.skills} />
         <TrainingPanel training={viewModel.training} />
       </div>
-      <div className="atlas-player-detail__secondary-grid">
-        <TalentPanel talent={viewModel.talent} />
-        <ProjectionPanel projection={viewModel.projection} training={viewModel.training} />
-      </div>
+      <PlayerMarketValueSection marketValue={viewModel.marketValue ?? null} />
+      <ProjectionPanel
+        projection={viewModel.projection}
+        talent={viewModel.talent}
+        training={viewModel.training}
+      />
       <DevelopmentPlanBoundary key={viewModel.player.id}>
         <DevelopmentPlanSection clubId={clubId} player={viewModel} training={training} />
       </DevelopmentPlanBoundary>

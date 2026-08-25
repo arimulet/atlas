@@ -6,42 +6,22 @@ interface TalentPanelProps {
 }
 
 export function TalentPanel({ talent }: TalentPanelProps) {
+  if (talent.estimated === null) {
+    return (
+      <p className="atlas-player-detail__talent-summary atlas-player-detail__message">
+        <strong>Talent</strong>
+        <span>Not enough training history to estimate.</span>
+      </p>
+    );
+  }
+
   return (
-    <section className="atlas-player-detail-panel" aria-labelledby="player-detail-talent-title">
-      <h2
-        className="atlas-player-detail-panel__title atlas-section-title"
-        id="player-detail-talent-title"
-      >
-        Talent
-      </h2>
-      {talent.estimated === null ? (
-        <p className="atlas-player-detail__message">Not enough training history to estimate talent.</p>
-      ) : (
-        <dl className="atlas-player-detail__data-list">
-          <div className="atlas-player-detail__data-list-row--primary">
-            <dt>Estimated talent</dt>
-            <dd>{formatTalent(talent.estimated)}</dd>
-          </div>
-          {talent.confidence !== undefined ? (
-            <div>
-              <dt>Confidence</dt>
-              <dd>{talent.confidence}</dd>
-            </div>
-          ) : null}
-          {talent.observations !== undefined ? (
-            <div>
-              <dt>Complete training cycles</dt>
-              <dd>{talent.observations}</dd>
-            </div>
-          ) : null}
-          {talent.updatedAt !== undefined ? (
-            <div>
-              <dt>Last update</dt>
-              <dd>{talent.updatedAt}</dd>
-            </div>
-          ) : null}
-        </dl>
-      )}
-    </section>
+    <p className="atlas-player-detail__talent-summary">
+      <strong>Talent {formatTalent(talent.estimated)}</strong>
+      {talent.confidence ? <span>{talent.confidence} confidence</span> : null}
+      {talent.observations !== undefined ? (
+        <span>{talent.observations} complete training cycles</span>
+      ) : null}
+    </p>
   );
 }
