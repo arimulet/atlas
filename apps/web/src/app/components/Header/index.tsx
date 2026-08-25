@@ -1,6 +1,7 @@
+import { DiagnosticNotifications } from "./DiagnosticNotifications";
 import { HeaderProps } from "./types";
 
-export function Header({ onOpenSokkerImporter }: HeaderProps) {
+export function Header({ diagnostics, onOpenSokkerImporter }: HeaderProps) {
   return (
     <header className="atlas-header">
       <div className="atlas-brand" aria-label="ATLAS">
@@ -11,6 +12,7 @@ export function Header({ onOpenSokkerImporter }: HeaderProps) {
       </div>
 
       <div className="atlas-header__tools">
+        <DiagnosticNotifications diagnostics={diagnostics} />
         <button type="button" className="atlas-import-button" onClick={onOpenSokkerImporter}>
           <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <path d="M20 11a8 8 0 0 0-14.7-4.3L4 8" />

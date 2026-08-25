@@ -279,7 +279,7 @@ const roleLabels: Record<string, string> = {
   striker: "delantero"
 };
 
-function describeDiagnosticsFinding(finding: DiagnosticFinding): string {
+export function describeDiagnosticsFinding(finding: DiagnosticFinding): string {
   const parameters = finding.parameters ?? {};
 
   if (finding.code.startsWith("squad-balance.") && finding.code.endsWith(".deficit")) {

@@ -1,9 +1,7 @@
 import { Component, type ReactNode } from "react";
-import type { DiagnosticFinding, DiagnosticParameterValue } from "@atlas/web/app/types";
 import type { PlayerDetailProps } from "./types";
 import { ProjectionPanel } from "./ProjectionPanel";
 import { formatDateTime, formatNumber, formatPercentage } from "../../formatters";
-import { AttentionIcon } from "../../components/AttentionIcon";
 import { CountryNameFlag } from "../../components/CountryNameFlag";
 import { StatusBadge } from "../../components/StatusBadge";
 import {
@@ -63,8 +61,6 @@ export function PlayerDetail({
       clubId={clubId ?? null}
       player={viewModel}
       training={training}
-      trainingDiagnostic={trainingDiagnostic}
-      trainingStatus={trainingStatus}
       onBack={onBack}
     />
   );
@@ -74,8 +70,6 @@ interface PlayerDetailContentProps {
   clubId: string | null;
   player: PlayerDetailViewModel;
   training: PlayerDetailProps["training"];
-  trainingDiagnostic: PlayerDetailProps["trainingDiagnostic"];
-  trainingStatus: PlayerDetailProps["trainingStatus"];
   onBack: PlayerDetailProps["onBack"];
 }
 
@@ -83,18 +77,11 @@ function PlayerDetailContent({
   clubId,
   player: viewModel,
   training,
-  trainingDiagnostic,
-  trainingStatus,
   onBack
 }: PlayerDetailContentProps) {
   return (
     <div className="atlas-player-detail">
       <PlayerHeader player={viewModel.player} onBack={onBack} />
-      <PlayerAttention
-        diagnosticAvailable={trainingDiagnostic !== null}
-        diagnostics={viewModel.diagnostics}
-        status={trainingStatus}
-      />
       <PlayerPersonalInfoPanel player={viewModel.player} training={viewModel.training} />
       <div className="atlas-player-detail__summary-grid">
         <SkillsPanel skills={viewModel.skills} />
@@ -194,45 +181,6 @@ function PlayerHeader({ onBack, player }: PlayerHeaderProps) {
         <span>{player.name}</span>
       </h1>
     </header>
-  );
-}
-
-interface PlayerAttentionProps {
-  diagnosticAvailable: boolean;
-  diagnostics: PlayerDetailViewModel["diagnostics"];
-  status: PlayerDetailProps["trainingStatus"];
-}
-
-function PlayerAttention({ diagnosticAvailable, diagnostics, status }: PlayerAttentionProps) {
-  const unavailableMessage =
-    status === "loading"
-      ? "Loading diagnostics..."
-      : status === "error"
-        ? "Training diagnostics are unavailable."
-        : status === "idle"
-          ? "Import a club snapshot to inspect player diagnostics."
-          : "Player diagnostics are not available in the current snapshot model.";
-
-  return (
-    <section className="atlas-player-detail-panel atlas-player-detail-panel--attention">
-      <PanelTitle title="Player Attention" />
-      {status !== "ready" || !diagnosticAvailable ? (
-        <p className="atlas-player-detail__message">{unavailableMessage}</p>
-      ) : diagnostics.length > 0 ? (
-        <ul className="atlas-player-detail__attention-list">
-          {diagnostics.map((finding) => (
-            <li className={`is-${finding.severity}`} key={`${finding.code}-${finding.severity}`}>
-              <AttentionIcon severity={finding.severity} />
-              <span>{describePlayerFinding(finding)}</span>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="atlas-player-detail__message atlas-player-detail__message--quiet">
-          ✓ No issues requiring attention
-        </p>
-      )}
-    </section>
   );
 }
 
@@ -395,71 +343,4 @@ function DataRow({ label, value }: DataRowProps) {
       <dd>{value}</dd>
     </div>
   );
-}
-
-const roleLabels: Record<string, string> = {
-  goalkeeper: "arquero",
-  defender: "defensor",
-  midfielder: "mediocampista",
-  winger: "extremo",
-  striker: "delantero"
-};
-
-function describePlayerFinding(finding: DiagnosticFinding): string {
-  const parameters = finding.parameters ?? {};
-
-  if (finding.code.startsWith("squad-balance.") && finding.code.endsWith(".deficit")) {
-    return (
-      "La plantilla tiene " +
-      formatDiagnosticNumber(parameters.currentCount) +
-      " jugador(es) en " +
-      diagnosticRoleLabel(parameters.role) +
-      "; el mínimo de referencia es " +
-      formatDiagnosticNumber(parameters.minimum) +
-      "."
-    );
-  }
-
-  switch (finding.code) {
-    case "economic-risk.high-wage-low-value-ratio":
-      return (
-        diagnosticStringValue(parameters.playerName) +
-        " tiene un salario alto (" +
-        formatDiagnosticNumber(parameters.wage) +
-        ") en relación con su valor estimado (" +
-        formatDiagnosticNumber(parameters.value) +
-        ")."
-      );
-    case "asset-risk.senior-high-value":
-      return (
-        diagnosticStringValue(parameters.playerName) +
-        " combina una edad senior con un valor estimado relevante (" +
-        formatDiagnosticNumber(parameters.value) +
-        ")."
-      );
-    case "training-potential.young-role-fit":
-      return (
-        diagnosticStringValue(parameters.playerName) +
-        " es joven y muestra un buen ajuste para su rol."
-      );
-    case "follow-up.incomplete-player-data":
-      return (
-        diagnosticStringValue(parameters.playerName) +
-        " requiere seguimiento porque sus datos importados están incompletos."
-      );
-    default:
-      return finding.code;
-  }
-}
-
-function diagnosticRoleLabel(value: DiagnosticParameterValue | undefined): string {
-  return roleLabels[diagnosticStringValue(value)] ?? diagnosticStringValue(value);
-}
-
-function diagnosticStringValue(value: DiagnosticParameterValue | undefined): string {
-  return value === null || value === undefined ? "dato no disponible" : String(value);
-}
-
-function formatDiagnosticNumber(value: DiagnosticParameterValue | undefined): string {
-  return typeof value === "number" ? value.toLocaleString("es-AR") : diagnosticStringValue(value);
 }
