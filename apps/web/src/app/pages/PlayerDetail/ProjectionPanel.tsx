@@ -1,12 +1,14 @@
 import type { PlayerDetailViewModel } from "../../view-models/player-detail-view-model";
 import { formatEta, formatNumber, formatPercentage } from "../../formatters";
+import { TalentPanel } from "./TalentPanel";
 
 interface ProjectionPanelProps {
   projection: PlayerDetailViewModel["projection"];
+  talent: PlayerDetailViewModel["talent"];
   training: PlayerDetailViewModel["training"];
 }
 
-export function ProjectionPanel({ projection, training }: ProjectionPanelProps) {
+export function ProjectionPanel({ projection, talent, training }: ProjectionPanelProps) {
   return (
     <section className="atlas-player-detail-panel" aria-labelledby="player-detail-projection-title">
       <h2
@@ -15,6 +17,7 @@ export function ProjectionPanel({ projection, training }: ProjectionPanelProps) 
       >
         Potential Projection
       </h2>
+      <TalentPanel talent={talent} />
       <p className="atlas-player-detail__projection-assumption">Assuming current training</p>
       <dl className="atlas-player-detail__data-list">
         <DataRow label="Position" value={training.position ?? "—"} />

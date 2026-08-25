@@ -110,6 +110,20 @@
   font-weight: 700;
 }
 
+.atlas .atlas-player-detail__skills-grid > div:not(.is-important)
+  .atlas-player-detail__skill-value,
+.atlas .atlas-player-detail__skills-grid > div:not(.is-important)
+  .atlas-player-detail__skill-level {
+  font-weight: 400;
+}
+
+.atlas .atlas-player-detail__skills-grid > div.is-important
+  .atlas-player-detail__skill-value,
+.atlas .atlas-player-detail__skills-grid > div.is-important
+  .atlas-player-detail__skill-level {
+  font-weight: 700;
+}
+
 .atlas .atlas-player-detail__skills-grid dd,
 .atlas .atlas-player-detail__data-list dd {
   align-items: center;
@@ -205,6 +219,27 @@
 
 .atlas .atlas-player-detail__data-list-row--primary dd {
   font-size: 1rem;
+}
+
+.atlas .atlas-player-detail__talent-summary {
+  align-items: baseline;
+  color: var(--atlas-text-secondary);
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 0.76rem;
+  gap: 0 8px;
+  margin: -4px 0 12px;
+}
+
+.atlas .atlas-player-detail__talent-summary strong {
+  color: var(--atlas-text);
+  font-size: 0.8rem;
+}
+
+.atlas .atlas-player-detail__talent-summary span:not(:last-child)::after {
+  color: var(--atlas-text-muted);
+  content: "·";
+  margin-left: 8px;
 }
 
 .atlas .atlas-player-detail__projection-assumption {

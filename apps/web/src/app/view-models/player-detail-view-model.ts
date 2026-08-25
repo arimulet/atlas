@@ -17,7 +17,8 @@ import {
   trainingPositionCode,
   trainingStatusForPlayer,
   type TrainingDiagnostic,
-  type TrainingPlayerRow
+  type TrainingPlayerRow,
+  type TrainingPositionCode
 } from "./training-view-model";
 import {
   createPlayerMarketValueViewModel,
@@ -45,6 +46,15 @@ const IMPORTANT_SKILLS_BY_POSITION: Readonly<
   midfielder: ["playmaker", "passing", "technique", "pace"],
   winger: ["pace", "technique", "passing", "playmaker"],
   striker: ["striker", "pace", "technique", "passing"]
+};
+
+const IMPORTANT_SKILLS_BY_TRAINING_POSITION: Readonly<
+  Record<TrainingPositionCode, readonly SkillKey[]>
+> = {
+  GK: IMPORTANT_SKILLS_BY_POSITION.goalkeeper,
+  DEF: IMPORTANT_SKILLS_BY_POSITION.defender,
+  MID: IMPORTANT_SKILLS_BY_POSITION.midfielder,
+  ATT: IMPORTANT_SKILLS_BY_POSITION.striker
 };
 
 const SKILL_LEVEL_LABELS: Readonly<Record<number, string>> = {
@@ -194,9 +204,10 @@ export function createPlayerDetailViewModel(
     age: player.age
   });
   const nextSkillUp = trainingProjection?.nextSkillUp;
-  const observedPosition = toObservedPosition(observedPlayer?.observedPosition ?? null);
-  const importantSkills =
-    observedPosition === null ? [] : IMPORTANT_SKILLS_BY_POSITION[observedPosition];
+  const importantSkills = importantSkillsForPlayer(
+    observedPlayer?.observedPosition,
+    player.training.position
+  );
   const marketPlayer = input.squadPlanning?.assessment.depthPlayers.find(
     (candidate) =>
       identifiersMatch(candidate.playerId, observedPlayer?.playerId) ||
@@ -323,6 +334,21 @@ function createTrainingHistoryRows(
         direction: change.direction
       }))
     }));
+}
+
+function importantSkillsForPlayer(
+  observedPosition: string | null | undefined,
+  trainingPosition: number
+): readonly SkillKey[] {
+  const normalizedObservedPosition = toObservedPosition(observedPosition ?? null);
+
+  if (normalizedObservedPosition !== null) {
+    return IMPORTANT_SKILLS_BY_POSITION[normalizedObservedPosition];
+  }
+
+  const positionCode = trainingPositionCode(trainingPosition);
+
+  return positionCode === null ? [] : IMPORTANT_SKILLS_BY_TRAINING_POSITION[positionCode];
 }
 
 function skillLevelLabel(level: number | null): string | null {

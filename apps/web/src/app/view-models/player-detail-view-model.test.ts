@@ -157,7 +157,7 @@ describe("createPlayerDetailViewModel", () => {
             snapshotPlayerId: "snapshot-player-1",
             name: "Player One",
             age: 20,
-            observedPosition: "midfielder",
+            observedPosition: null,
             skills: { playmaker: 12, defender: 7 }
           }
         ]
@@ -176,5 +176,8 @@ describe("createPlayerDetailViewModel", () => {
     });
 
     expect(viewModel?.player.name).toBe("Player One");
+    expect(viewModel?.skills.find((skill) => skill.key === "playmaker")).toMatchObject({
+      isImportant: true
+    });
   });
 });
