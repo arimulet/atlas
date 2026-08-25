@@ -35,7 +35,6 @@ function createPlayer(): PlayerDetailViewModel {
     talent: { estimated: 8, confidence: "high", observations: 3 },
     projection: { current: { skill: "Defensa", level: 10, progress: null } },
     diagnostics: [],
-    recentSkillUps: [],
     trainingHistory: []
   };
 }

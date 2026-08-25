@@ -107,7 +107,6 @@ function PlayerDetailContent({
       <DevelopmentPlanBoundary key={viewModel.player.id}>
         <DevelopmentPlanSection clubId={clubId} player={viewModel} training={training} />
       </DevelopmentPlanBoundary>
-      <ProgressPanel rows={viewModel.recentSkillUps} />
       <TrainingHistoryPanel rows={viewModel.trainingHistory} />
     </div>
   );
@@ -286,44 +285,6 @@ function TrainingPanel({ training }: TrainingPanelProps) {
   );
 }
 
-interface ProgressPanelProps {
-  rows: PlayerDetailViewModel["recentSkillUps"];
-}
-
-function ProgressPanel({ rows }: ProgressPanelProps) {
-  return (
-    <section className="atlas-player-detail-panel" aria-labelledby="player-detail-progress-title">
-      <PanelTitle id="player-detail-progress-title" title="Recent Progress" />
-      {rows.length === 0 ? (
-        <p className="atlas-player-detail__message">No recent skill-ups detected.</p>
-      ) : (
-        <div className="atlas-player-detail__table-wrap">
-          <table className="atlas-player-detail__table">
-            <thead>
-              <tr>
-                <th scope="col">Date</th>
-                <th scope="col">Skill</th>
-                <th scope="col">Change</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => (
-                <tr key={`${row.date}-${row.skill}-${row.toLevel}`}>
-                  <td>{formatDateTime(row.date)}</td>
-                  <th scope="row">{row.skill}</th>
-                  <td>
-                    {row.fromLevel} → {row.toLevel}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </section>
-  );
-}
-
 interface TrainingHistoryPanelProps {
   rows: PlayerDetailViewModel["trainingHistory"];
 }
@@ -339,6 +300,7 @@ function TrainingHistoryPanel({ rows }: TrainingHistoryPanelProps) {
           <table className="atlas-player-detail__table">
             <thead>
               <tr>
+                <th scope="col">Date</th>
                 <th scope="col">Week</th>
                 <th scope="col">Type</th>
                 <th scope="col">Kind</th>
@@ -349,6 +311,7 @@ function TrainingHistoryPanel({ rows }: TrainingHistoryPanelProps) {
             <tbody>
               {rows.map((row) => (
                 <tr key={row.week}>
+                  <td>{formatDateTime(row.date)}</td>
                   <th scope="row">W{row.week}</th>
                   <td>{row.type}</td>
                   <td>{row.kind}</td>
