@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
   fetchClubDashboard,
+  fetchClubDiagnostic,
   fetchPlayerDevelopment,
   fetchRealYouthAcademyPlanning,
   fetchSquadDepthAnalysis,
@@ -114,16 +115,22 @@ export function App() {
     setTrainingStatus("loading");
 
     try {
-      setTraining(await fetchTrainingPageData(clubId));
+      const [trainingData, diagnostic] = await Promise.all([
+        fetchTrainingPageData(clubId),
+        fetchClubDiagnostic(clubId)
+      ]);
+
+      setTraining(trainingData);
+      setTrainingDiagnostic(diagnostic);
       setTrainingStatus("ready");
       return true;
     } catch {
       setTraining(null);
+      setTrainingDiagnostic(null);
       setTrainingStatus("error");
       return false;
     }
   }, []);
-
   const loadPlayerDevelopment = useCallback(async (clubId: string): Promise<boolean> => {
     try {
       setPlayerDevelopment(await fetchPlayerDevelopment(clubId));
@@ -217,8 +224,6 @@ export function App() {
           loadPlayerDevelopment(body.importResult.clubId),
           loadYouthPipeline(body.importResult.clubId)
         ]);
-
-        setTrainingDiagnostic(body.diagnostic);
 
         if (
           !dashboardLoaded ||
