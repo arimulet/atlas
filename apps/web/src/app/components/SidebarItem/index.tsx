@@ -1,6 +1,6 @@
 import { SidebarItemProps } from "./types";
 
-export function SidebarItem({ item, isActive, onSelect }: SidebarItemProps) {
+export function SidebarItem({ badgeCount, item, isActive, onSelect }: SidebarItemProps) {
   return (
     <a
       href={item.path}
@@ -26,6 +26,11 @@ export function SidebarItem({ item, isActive, onSelect }: SidebarItemProps) {
         {item.icon}
       </span>
       <span>{item.label}</span>
+      {badgeCount && badgeCount > 0 ? (
+        <span className="atlas-sidebar-item__badge" aria-label={badgeCount + " diagnostic alerts"}>
+          {badgeCount}
+        </span>
+      ) : null}
     </a>
   );
 }

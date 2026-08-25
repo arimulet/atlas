@@ -12,7 +12,7 @@ const navigationItems: NavigationItem[] = [
   { id: "diagnostics", label: "Diagnostics", icon: "!", path: pathForMainView("diagnostics") }
 ];
 
-export function Sidebar({ activeView, onViewChange }: SidebarProps) {
+export function Sidebar({ activeView, diagnosticAlertCount, onViewChange }: SidebarProps) {
   return (
     <aside className="atlas-sidebar">
       <div className="atlas-sidebar__navigation">
@@ -22,13 +22,13 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
             <SidebarItem
               key={item.id}
               item={item}
+              badgeCount={item.id === "diagnostics" ? diagnosticAlertCount : undefined}
               isActive={activeView === item.id}
               onSelect={onViewChange}
             />
           ))}
         </nav>
       </div>
-
     </aside>
   );
 }

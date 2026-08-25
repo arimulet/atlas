@@ -83,6 +83,14 @@ export function App() {
     [playerDevelopment, training, trainingDiagnostic, trainingStatus]
   );
 
+  const diagnosticAlertCount = useMemo(
+    () =>
+      trainingDiagnostic?.findings.filter(
+        (diagnostic) => diagnostic.severity === "high" || diagnostic.severity === "medium"
+      ).length ?? 0,
+    [trainingDiagnostic]
+  );
+
   const loadDashboard = useCallback(async (clubId: string): Promise<boolean> => {
     setDashboardStatus("loading");
 
@@ -293,7 +301,7 @@ export function App() {
   return (
     <AppShell
       activeView={route.kind === "main" ? route.view : null}
-      diagnostics={trainingDiagnostic?.findings ?? []}
+      diagnosticAlertCount={diagnosticAlertCount}
       isSokkerImportOpen={isSokkerImportOpen}
       navigationKey={route.path}
       onViewChange={(view) => navigate(pathForMainView(view))}

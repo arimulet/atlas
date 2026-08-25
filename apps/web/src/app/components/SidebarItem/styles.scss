@@ -35,6 +35,20 @@
     }
   }
 
+  &__badge {
+    align-items: center;
+    background: var(--semantic-error-border);
+    border-radius: 999px;
+    color: #ffffff;
+    display: inline-flex;
+    font-size: 0.64rem;
+    font-weight: 800;
+    justify-content: center;
+    line-height: 1;
+    margin-left: auto;
+    min-width: 18px;
+    padding: 3px 5px;
+  }
   &__icon {
     align-items: center;
     color: var(--atlas-text-muted);
