@@ -37,6 +37,38 @@ const SKILL_DEFINITIONS = [
 
 type SkillKey = (typeof SKILL_DEFINITIONS)[number]["key"];
 
+const IMPORTANT_SKILLS_BY_POSITION: Readonly<
+  Record<NonNullable<DevelopmentPlayer["observedPosition"]>, readonly SkillKey[]>
+> = {
+  goalkeeper: ["keeper", "pace", "passing"],
+  defender: ["defender", "pace", "technique", "playmaker"],
+  midfielder: ["playmaker", "passing", "technique", "pace"],
+  winger: ["pace", "technique", "passing", "playmaker"],
+  striker: ["striker", "pace", "technique", "passing"]
+};
+
+const SKILL_LEVEL_LABELS: Readonly<Record<number, string>> = {
+  0: "trágico",
+  1: "terrible",
+  2: "deficiente",
+  3: "pobre",
+  4: "débil",
+  5: "regular",
+  6: "aceptable",
+  7: "bueno",
+  8: "sólido",
+  9: "muy bueno",
+  10: "excelente",
+  11: "formidable",
+  12: "destacado",
+  13: "increíble",
+  14: "brillante",
+  15: "mágico",
+  16: "sobrenatural",
+  17: "divino",
+  18: "superdivino"
+};
+
 export interface PlayerDetailViewModel {
   player: {
     id: string;
@@ -49,6 +81,12 @@ export interface PlayerDetailViewModel {
     key: SkillKey;
     label: string;
     value: number | null;
+    levelLabel: string | null;
+    isImportant: boolean;
+    lastWeekChange: {
+      direction: "up" | "down";
+      levelDelta: number;
+    } | null;
   }>;
   training: TrainingPlayerRow & {
     position: string | null;
@@ -156,6 +194,9 @@ export function createPlayerDetailViewModel(
     age: player.age
   });
   const nextSkillUp = trainingProjection?.nextSkillUp;
+  const observedPosition = toObservedPosition(observedPlayer?.observedPosition ?? null);
+  const importantSkills =
+    observedPosition === null ? [] : IMPORTANT_SKILLS_BY_POSITION[observedPosition];
   const marketPlayer = input.squadPlanning?.assessment.depthPlayers.find(
     (candidate) =>
       identifiersMatch(candidate.playerId, observedPlayer?.playerId) ||
@@ -170,11 +211,18 @@ export function createPlayerDetailViewModel(
       age: player.age
     },
     developmentPlayer: createDevelopmentPlayer(String(player.playerId), observedPlayer),
-    skills: SKILL_DEFINITIONS.map((definition) => ({
-      key: definition.key,
-      label: formatTrainingPriority(definition.trainingPriority),
-      value: observedPlayer?.skills[definition.key] ?? null
-    })),
+    skills: SKILL_DEFINITIONS.map((definition) => {
+      const value = observedPlayer?.skills[definition.key] ?? null;
+
+      return {
+        key: definition.key,
+        label: formatTrainingPriority(definition.trainingPriority),
+        value,
+        levelLabel: skillLevelLabel(value),
+        isImportant: importantSkills.includes(definition.key),
+        lastWeekChange: lastWeekSkillChange(player.latestReport, definition.key)
+      };
+    }),
     training: {
       ...trainingRow,
       position: trainingPositionCode(player.training.position),
@@ -220,7 +268,7 @@ function createDevelopmentPlayer(
   };
 }
 
-function toObservedPosition(value: string | null): DevelopmentPlayer["observedPosition"] {
+function toObservedPosition(value: string | null): NonNullable<DevelopmentPlayer["observedPosition"]> | null {
   return value === "goalkeeper" ||
     value === "defender" ||
     value === "midfielder" ||
@@ -275,6 +323,26 @@ function createTrainingHistoryRows(
         direction: change.direction
       }))
     }));
+}
+
+function skillLevelLabel(level: number | null): string | null {
+  return level === null ? null : (SKILL_LEVEL_LABELS[level] ?? null);
+}
+
+function lastWeekSkillChange(
+  report: TrainingPageData["players"][number]["latestReport"],
+  skill: SkillKey
+): PlayerDetailViewModel["skills"][number]["lastWeekChange"] {
+  const change = report?.skillChanges?.find(
+    (candidate) => trainingSkillForReport(candidate.skill) === toTrainingCostSkill(skill)
+  );
+
+  return change === undefined
+    ? null
+    : {
+        direction: change.direction,
+        levelDelta: Math.abs(change.delta)
+      };
 }
 
 function skillLabelForKey(skill: string): string {

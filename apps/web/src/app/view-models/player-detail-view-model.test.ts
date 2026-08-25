@@ -15,7 +15,35 @@ describe("createPlayerDetailViewModel", () => {
           playerId: 42,
           name: "Player One",
           age: 20,
-          training: { position: 2, advanced: true }
+          training: { position: 2, advanced: true },
+          latestReport: {
+            playerId: 42,
+            gameWeek: 1200,
+            seasonWeek: 20,
+            date: "2026-08-14",
+            type: "playmaking",
+            kind: "advanced",
+            intensity: 100,
+            age: 20,
+            skills: { playmaking: 12, defending: 7 },
+            skillsChange: { playmaking: 1, defending: -1 },
+            skillChanges: [
+              {
+                skill: "playmaking",
+                before: 11,
+                after: 12,
+                delta: 1,
+                direction: "up"
+              },
+              {
+                skill: "defending",
+                before: 8,
+                after: 7,
+                delta: -1,
+                direction: "down"
+              }
+            ]
+          }
         }
       ]
     };
@@ -34,7 +62,7 @@ describe("createPlayerDetailViewModel", () => {
             name: "Player One",
             age: 20,
             observedPosition: "midfielder",
-            skills: { playmaker: 12 }
+            skills: { playmaker: 12, defender: 7 }
           }
         ]
       },
@@ -59,6 +87,17 @@ describe("createPlayerDetailViewModel", () => {
     expect(viewModel?.talent.estimated).toBeNull();
     expect(viewModel?.projection.nextSkillUp).toBeUndefined();
     expect(viewModel?.projection.horizon).toBeUndefined();
+    expect(viewModel?.skills.find((skill) => skill.key === "playmaker")).toMatchObject({
+      value: 12,
+      levelLabel: "destacado",
+      isImportant: true,
+      lastWeekChange: { direction: "up", levelDelta: 1 }
+    });
+    expect(viewModel?.skills.find((skill) => skill.key === "defender")).toMatchObject({
+      value: 7,
+      isImportant: false,
+      lastWeekChange: { direction: "down", levelDelta: 1 }
+    });
   });
 
   it("matches a professional id when the API returns it as a number", () => {
@@ -72,7 +111,35 @@ describe("createPlayerDetailViewModel", () => {
           playerId: 42,
           name: "Player One",
           age: 20,
-          training: { position: 2, advanced: true }
+          training: { position: 2, advanced: true },
+          latestReport: {
+            playerId: 42,
+            gameWeek: 1200,
+            seasonWeek: 20,
+            date: "2026-08-14",
+            type: "playmaking",
+            kind: "advanced",
+            intensity: 100,
+            age: 20,
+            skills: { playmaking: 12, defending: 7 },
+            skillsChange: { playmaking: 1, defending: -1 },
+            skillChanges: [
+              {
+                skill: "playmaking",
+                before: 11,
+                after: 12,
+                delta: 1,
+                direction: "up"
+              },
+              {
+                skill: "defending",
+                before: 8,
+                after: 7,
+                delta: -1,
+                direction: "down"
+              }
+            ]
+          }
         }
       ]
     };
@@ -91,7 +158,7 @@ describe("createPlayerDetailViewModel", () => {
             name: "Player One",
             age: 20,
             observedPosition: "midfielder",
-            skills: { playmaker: 12 }
+            skills: { playmaker: 12, defender: 7 }
           }
         ]
       },

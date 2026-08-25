@@ -249,14 +249,54 @@ function SkillsPanel({ skills }: SkillsPanelProps) {
       <PanelTitle id="player-detail-skills-title" title="Skills" />
       <dl className="atlas-player-detail__skills-grid">
         {skills.map((skill) => (
-          <div key={skill.key}>
+          <div className={skill.isImportant ? "is-important" : undefined} key={skill.key}>
             <dt>{skill.label}</dt>
-            <dd>{formatNumber(skill.value)}</dd>
+            <dd>
+              <span
+                className={
+                  skill.lastWeekChange
+                    ? `atlas-player-detail__skill-value is-${skill.lastWeekChange.direction}`
+                    : "atlas-player-detail__skill-value"
+                }
+              >
+                <span>{formatNumber(skill.value)}</span>
+                {skill.levelLabel ? (
+                  <span className="atlas-player-detail__skill-level">({skill.levelLabel})</span>
+                ) : null}
+              </span>
+              {skill.lastWeekChange ? (
+                <span
+                  aria-label={formatLastWeekSkillChange(skill.lastWeekChange)}
+                  className={`atlas-player-detail__skill-change is-${skill.lastWeekChange.direction}`}
+                >
+                  {formatSkillChangeDelta(skill.lastWeekChange)}
+                </span>
+              ) : null}
+            </dd>
           </div>
         ))}
       </dl>
     </section>
   );
+}
+
+function formatLastWeekSkillChange(change: {
+  direction: "up" | "down";
+  levelDelta: number;
+}): string {
+  const direction = change.direction === "up" ? "gained" : "lost";
+  const noun = change.levelDelta === 1 ? "level" : "levels";
+
+  return `Last week: ${direction} ${change.levelDelta} skill ${noun}`;
+}
+
+function formatSkillChangeDelta(change: {
+  direction: "up" | "down";
+  levelDelta: number;
+}): string {
+  const sign = change.direction === "up" ? "+" : "−";
+
+  return `${sign}${change.levelDelta}`;
 }
 
 interface TrainingPanelProps {
