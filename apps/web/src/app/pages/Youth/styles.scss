@@ -419,13 +419,13 @@
 
   .atlas-youth-table {
     border-collapse: collapse;
-    min-width: 1060px;
+    min-width: 1140px;
     table-layout: fixed;
     width: 100%;
   }
 
   .atlas-youth-table__player-column {
-    width: 26%;
+    width: 24%;
   }
 
   .atlas-youth-table__age-column {
@@ -434,7 +434,15 @@
 
   .atlas-youth-table__level-column,
   .atlas-youth-table__expected-level-column {
-    width: 16%;
+    width: 15%;
+  }
+
+  .atlas-youth-table__weeks-column {
+    width: 7%;
+  }
+
+  .atlas-youth-table__expected-age-column {
+    width: 8%;
   }
 
   .atlas-youth-table__initial-weeks-column {
@@ -443,10 +451,6 @@
 
   .atlas-youth-table__pops-column,
   .atlas-youth-table__talent-column {
-    width: 9%;
-  }
-
-  .atlas-youth-table__weeks-column {
     width: 7%;
   }
 

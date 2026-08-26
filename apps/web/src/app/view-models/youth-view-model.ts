@@ -17,6 +17,7 @@ export interface YouthPlayerRow {
   position: string | null;
   level: YouthLevelValue | null;
   expectedLevel: number | null;
+  expectedAge: number | null;
   initialWeeks: number | null;
   levelPops: number | null;
   talent: number | null;
@@ -47,6 +48,7 @@ export function createYouthPlayerRows(planning: RealYouthAcademyPlanning | null)
             change: player.skillChange
           },
     expectedLevel: player.expectedLevel,
+    expectedAge: player.projectedPromotionAge,
     initialWeeks: player.initialWeeks,
     levelPops: player.levelPops,
     talent: player.talent,

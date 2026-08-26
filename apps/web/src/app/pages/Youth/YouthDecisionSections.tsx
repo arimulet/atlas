@@ -10,14 +10,12 @@ import {
 
 interface YouthDecisionSectionsProps {
   models: YouthDecisionViewModel[];
-  summary: YouthSummaryViewModel;
   onSelectPlayer: (playerId: string) => void;
   status: "idle" | "loading" | "ready" | "error";
 }
 
 export function YouthDecisionSections({
   models,
-  summary,
   onSelectPlayer,
   status
 }: YouthDecisionSectionsProps) {
@@ -29,7 +27,6 @@ export function YouthDecisionSections({
 
   return (
     <>
-      <YouthSummary summary={summary} />
       <section
         className="atlas-youth-panel atlas-youth-panel--decisions"
         aria-labelledby="youth-decisions-title"
@@ -78,7 +75,7 @@ export function YouthDecisionSections({
   );
 }
 
-function YouthSummary({ summary }: { summary: YouthSummaryViewModel }) {
+export function YouthSummary({ summary }: { summary: YouthSummaryViewModel }) {
   return (
     <section className="atlas-youth-summary" aria-labelledby="youth-summary-title">
       <div>
@@ -89,7 +86,6 @@ function YouthSummary({ summary }: { summary: YouthSummaryViewModel }) {
         <SummaryMetric label="Decision candidates" value={String(summary.decisionCandidates)} />
         <SummaryMetric label="Train" value={String(summary.counts.train)} />
         <SummaryMetric label="Keep" value={String(summary.counts.keep)} />
-        <SummaryMetric label="Sell" value={String(summary.counts.sell)} />
         <SummaryMetric label="Release" value={String(summary.counts.release)} />
         <SummaryMetric label="Hold" value={String(summary.counts.hold)} />
         <SummaryMetric
