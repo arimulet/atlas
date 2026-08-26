@@ -305,6 +305,17 @@
   margin: -3px 0 10px;
 }
 
+.atlas .atlas-player-detail__projection-header {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.atlas .atlas-player-detail__projection-header .atlas-player-detail-panel__title {
+  margin-bottom: 12px;
+}
+
 .atlas .atlas-player-detail__projection-section {
   border-top: 1px solid color-mix(in srgb, var(--atlas-border) 72%, transparent);
   margin-top: 12px;

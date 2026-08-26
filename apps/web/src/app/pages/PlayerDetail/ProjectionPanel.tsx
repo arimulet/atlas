@@ -1,6 +1,7 @@
 import type { PlayerDetailViewModel } from "../../view-models/player-detail-view-model";
 import { formatEta, formatNumber, formatPercentage } from "../../formatters";
 import { TalentPanel } from "./TalentPanel";
+import { StatusBadge } from "../../components/StatusBadge";
 
 interface ProjectionPanelProps {
   projection: PlayerDetailViewModel["projection"];
@@ -11,21 +12,17 @@ interface ProjectionPanelProps {
 export function ProjectionPanel({ projection, talent, training }: ProjectionPanelProps) {
   return (
     <section className="atlas-player-detail-panel" aria-labelledby="player-detail-projection-title">
-      <h2
-        className="atlas-player-detail-panel__title atlas-section-title"
-        id="player-detail-projection-title"
-      >
-        Potential Projection
-      </h2>
+      <div className="atlas-player-detail__projection-header">
+        <h2
+          className="atlas-player-detail-panel__title atlas-section-title"
+          id="player-detail-projection-title"
+        >
+          Potential Projection
+        </h2>
+        <StatusBadge status={training.status} />
+      </div>
       <TalentPanel talent={talent} />
       <p className="atlas-player-detail__projection-assumption">Assuming current training</p>
-      <dl className="atlas-player-detail__data-list">
-        <DataRow label="Position" value={training.position ?? "—"} />
-        <DataRow label="Trained Skill" value={training.trainedSkill ?? "—"} />
-        <DataRow label="Training type" value={training.trainingType ?? "—"} />
-        <DataRow label="Training kind" value={training.trainingKind ?? "—"} />
-        <DataRow label="Intensity" value={formatPercentage(training.intensity)} />
-      </dl>
 
       <div className="atlas-player-detail__projection-section">
         <h3>Current</h3>
