@@ -14,7 +14,7 @@ import { useYouthDecisionEngine } from "./useYouthDecisionEngine";
 export function Youth({ clubId, currency, onSelectPlayer, youthAcademy, youthStatus }: YouthProps) {
   const rows = createYouthPlayerRows(youthAcademy);
   const attentionItems = createYouthAttentionItems(youthAcademy);
-  const schoolRows = rows.filter((row) => row.promotion !== "Promoted");
+  const schoolRows = rows.filter((row) => row.status !== "Promoted");
   const decisionEngine = useYouthDecisionEngine({ clubId, currency, youthAcademy });
 
   return (
@@ -114,7 +114,6 @@ function YouthPlayers({ planning, rows, status }: YouthPlayersProps) {
             <col className="atlas-youth-table__weeks-column" />
             <col className="atlas-youth-table__progress-column" />
             <col className="atlas-youth-table__promotion-column" />
-            <col className="atlas-youth-table__status-column" />
           </colgroup>
           <thead>
             <tr>
@@ -125,7 +124,6 @@ function YouthPlayers({ planning, rows, status }: YouthPlayersProps) {
               <th scope="col">Weeks Left</th>
               <th scope="col">Progress</th>
               <th scope="col">Promotion</th>
-              <th scope="col">Status</th>
             </tr>
           </thead>
           <tbody>
@@ -153,7 +151,7 @@ function YouthPlayers({ planning, rows, status }: YouthPlayersProps) {
 function YouthTableMessage({ message }: { message: string }) {
   return (
     <tr>
-      <td className="atlas-youth-table__empty" colSpan={8}>
+      <td className="atlas-youth-table__empty" colSpan={7}>
         {message}
       </td>
     </tr>
@@ -163,20 +161,22 @@ function YouthTableMessage({ message }: { message: string }) {
 function YouthPlayerTableRow({ row }: { row: YouthPlayerRow }) {
   return (
     <tr>
-      <th scope="row">{row.name}</th>
+      <th scope="row">
+        <span className="atlas-youth-table__player-name">
+          <span>{row.name}</span>
+          {row.status !== null && row.status !== "In academy" ? (
+            <span className={`atlas-youth-player-indicator is-${statusClass(row.status)}`}>
+              {row.status}
+            </span>
+          ) : null}
+        </span>
+      </th>
       <td className="atlas-youth-table__center">{row.age}</td>
       <td className="atlas-youth-table__center">{row.position ?? "—"}</td>
       <td>{formatLevel(row.level)}</td>
       <td className="atlas-youth-table__center">{row.weeksLeft ?? "—"}</td>
       <td className="atlas-youth-table__center">{formatProgress(row.progress)}</td>
       <td className="atlas-youth-table__center">{row.promotion ?? "—"}</td>
-      <td>
-        <span
-          className={`atlas-youth-status${row.status ? ` is-${statusClass(row.status)}` : " is-empty"}`}
-        >
-          {row.status ?? "—"}
-        </span>
-      </td>
     </tr>
   );
 }
