@@ -26,6 +26,7 @@ import {
   type PlayerMarketValueViewModel
 } from "./market-value-view-model";
 import { PLAYER_SKILL_DEFINITIONS, type PlayerSkillKey } from "./player-skills";
+import { skillLevelLabel } from "./skill-level-label";
 
 const SKILL_DEFINITIONS = [
   { key: "stamina", trainingPriority: 1 },
@@ -57,28 +58,6 @@ const IMPORTANT_SKILLS_BY_TRAINING_POSITION: Readonly<
   DEF: IMPORTANT_SKILLS_BY_POSITION.defender,
   MID: IMPORTANT_SKILLS_BY_POSITION.midfielder,
   ATT: IMPORTANT_SKILLS_BY_POSITION.striker
-};
-
-const SKILL_LEVEL_LABELS: Readonly<Record<number, string>> = {
-  0: "trágico",
-  1: "terrible",
-  2: "deficiente",
-  3: "pobre",
-  4: "débil",
-  5: "regular",
-  6: "aceptable",
-  7: "bueno",
-  8: "sólido",
-  9: "muy bueno",
-  10: "excelente",
-  11: "formidable",
-  12: "destacado",
-  13: "increíble",
-  14: "brillante",
-  15: "mágico",
-  16: "sobrenatural",
-  17: "divino",
-  18: "superdivino"
 };
 
 export interface PlayerDetailViewModel {
@@ -449,10 +428,6 @@ function importantSkillsForPlayer(
   const positionCode = trainingPositionCode(trainingPosition);
 
   return positionCode === null ? [] : IMPORTANT_SKILLS_BY_TRAINING_POSITION[positionCode];
-}
-
-function skillLevelLabel(level: number | null): string | null {
-  return level === null ? null : (SKILL_LEVEL_LABELS[level] ?? null);
 }
 
 function lastWeekSkillChange(

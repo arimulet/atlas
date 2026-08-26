@@ -3,6 +3,7 @@ import {
   MongoJuniorRepository,
   MongoSnapshotRepository
 } from "@atlas/database";
+import type { PersistedSnapshot } from "@atlas/database";
 import type {
   RealYouthAcademyPlayerPlan,
   RealYouthAcademyPlanning,
@@ -42,6 +43,8 @@ export const getRealYouthAcademyPlanning = async (
   const initialWeeksByJuniorId = new Map(
     currentJuniors.map((junior) => [junior.juniorId, junior.initialWeeks])
   );
+  const latestCompletedTrainingSkillChanges =
+    calculateLatestCompletedYouthSkillChanges(snapshotsWithJuniors);
   const warnings: YouthAcademyWarning[] = [];
   const observedPlayers: YouthAcademyObservedPlayer[] = latest.juniors.map((p) => {
     return {
@@ -52,6 +55,7 @@ export const getRealYouthAcademyPlanning = async (
       initialWeeksRemaining: initialWeeksByJuniorId.get(p.playerId) ?? null,
       weeksRemaining: p.weeksRemaining,
       skill: p.skill,
+      skillChange: latestCompletedTrainingSkillChanges.get(p.playerId) ?? null,
       status: p.status
     };
   });
@@ -257,6 +261,7 @@ function classifyYouthPlayer(player: YouthAcademyObservedPlayer): RealYouthAcade
     weeksInAcademy,
     projectedPromotionAge,
     skill: player.skill,
+    skillChange: player.skillChange,
     status: player.status,
     category,
     severity,
@@ -271,4 +276,45 @@ function isHighLevel(skill: number | null): boolean {
   return skill !== null && skill >= 8;
 }
 
+export function calculateLatestCompletedYouthSkillChanges(
+  snapshots: readonly PersistedSnapshot[]
+): Map<number, number> {
+  const currentGameWeek = snapshots.at(-1)?.gameWeek ?? null;
+
+  if (currentGameWeek === null) {
+    return new Map();
+  }
+
+  const latestSnapshotByCompletedGameWeek = new Map<number, PersistedSnapshot>();
+
+  for (const snapshot of snapshots) {
+    if (snapshot.gameWeek !== null && snapshot.gameWeek !== currentGameWeek) {
+      latestSnapshotByCompletedGameWeek.set(snapshot.gameWeek, snapshot);
+    }
+  }
+
+  const completedTrainingSnapshots = [...latestSnapshotByCompletedGameWeek.values()];
+  const latestCompletedTraining = completedTrainingSnapshots.at(-1) ?? null;
+  const previousCompletedTraining = completedTrainingSnapshots.at(-2) ?? null;
+
+  if (!latestCompletedTraining || !previousCompletedTraining) {
+    return new Map();
+  }
+
+  const previousSkillByJuniorId = new Map(
+    previousCompletedTraining.juniors.map((junior) => [junior.playerId, junior.skill] as const)
+  );
+
+  return new Map(
+    latestCompletedTraining.juniors.flatMap((junior) => {
+      const previousSkill = previousSkillByJuniorId.get(junior.playerId);
+
+      if (junior.skill === null || previousSkill === null || previousSkill === undefined) {
+        return [];
+      }
+
+      return [[junior.playerId, junior.skill - previousSkill] as const];
+    })
+  );
+}
 export * from "./types.js";

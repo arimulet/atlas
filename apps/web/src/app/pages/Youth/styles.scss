@@ -419,31 +419,25 @@
 
   .atlas-youth-table {
     border-collapse: collapse;
-    min-width: 780px;
+    min-width: 600px;
     table-layout: fixed;
     width: 100%;
   }
 
   .atlas-youth-table__player-column {
-    width: 29%;
+    width: 42%;
   }
 
-  .atlas-youth-table__age-column,
-  .atlas-youth-table__position-column {
-    width: 9%;
+  .atlas-youth-table__age-column {
+    width: 12%;
   }
 
   .atlas-youth-table__level-column {
-    width: 19%;
+    width: 26%;
   }
 
-  .atlas-youth-table__weeks-column,
-  .atlas-youth-table__progress-column {
-    width: 11%;
-  }
-
-  .atlas-youth-table__promotion-column {
-    width: 11%;
+  .atlas-youth-table__weeks-column {
+    width: 20%;
   }
 
   .atlas-youth-table th,
@@ -485,6 +479,36 @@
     color: var(--atlas-text-muted) !important;
     height: 36px;
     text-align: left;
+  }
+
+  .atlas-youth-skill-level {
+    align-items: center;
+    display: inline-flex;
+    gap: 7px;
+  }
+
+  .atlas-youth-skill-change {
+    font-size: 0.7rem;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+
+  .atlas-youth-skill-change.is-up {
+    color: var(--semantic-success-text);
+  }
+
+  .atlas-youth-skill-change.is-down {
+    color: var(--semantic-error-text);
+  }
+
+  .atlas-youth-table__player-name-value.is-up,
+  .atlas-youth-skill-level__value.is-up {
+    color: var(--semantic-success-text);
+  }
+
+  .atlas-youth-table__player-name-value.is-down,
+  .atlas-youth-skill-level__value.is-down {
+    color: var(--semantic-error-text);
   }
 
   .atlas-youth-table__player-name {
