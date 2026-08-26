@@ -34,7 +34,6 @@ export function PlayerPersonalInfoPanel({ player, training }: PlayerPersonalInfo
             </span>
           }
         />
-        <InfoFact label="Position" value={positionLabel(training.position)} />
         <InfoFact
           label="Country"
           value={
@@ -48,6 +47,7 @@ export function PlayerPersonalInfoPanel({ player, training }: PlayerPersonalInfo
             )
           }
         />
+        <InfoFact label="Position" value={positionLabel(training.position)} />
         <InfoFact
           label="Training"
           value={
@@ -55,7 +55,10 @@ export function PlayerPersonalInfoPanel({ player, training }: PlayerPersonalInfo
               <span aria-hidden="true" title={trainingKindLabel(training.trainingKind)}>
                 {trainingKindIcon(training.trainingKind)}
               </span>
-              <span>{training.trainingType ?? "—"}</span>
+              <span>{training.trainedSkill ?? "—"}</span>
+              {training.intensity !== null && training.intensity > 0 ? (
+                <strong>{training.intensity}%</strong>
+              ) : null}
             </span>
           }
         />
