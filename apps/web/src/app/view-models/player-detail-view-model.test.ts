@@ -46,7 +46,7 @@ describe("createPlayerDetailViewModel", () => {
           kind: "formation",
           intensity: 85,
           age: 20,
-          skills: { defending: 8 },
+          skills: { defending: 8, playmaking: 12 },
           skillsChange: {}
         },
         {
@@ -59,7 +59,7 @@ describe("createPlayerDetailViewModel", () => {
           kind: "missing",
           intensity: 0,
           age: 20,
-          skills: {},
+          skills: { playmaking: 11 },
           skillsChange: {}
         }
       ],
@@ -170,19 +170,14 @@ describe("createPlayerDetailViewModel", () => {
       "playmaker",
       "striker"
     ]);
-    expect(history[0]!.skills.find((skill) => skill.key === "playmaker")).toMatchObject({
+    expect(history[1]!.skills.find((skill) => skill.key === "playmaker")).toMatchObject({
       value: 12,
       levelLabel: "destacado",
-      isTrained: true,
       change: { direction: "up", levelDelta: 1 }
     });
-    expect(history[0]!.skills.find((skill) => skill.key === "striker")).toMatchObject({
-      value: 6
-    });
-    expect(history[0]!.skills.find((skill) => skill.key === "defender")).toMatchObject({
-      value: 7,
-      isTrained: false,
-      change: { direction: "down", levelDelta: 1 }
+    expect(history[1]!.skills.find((skill) => skill.key === "defender")).toMatchObject({
+      value: 8,
+      change: null
     });
     expect(history[2]!).toMatchObject({ kind: "missing", type: "General" });
   });

@@ -341,34 +341,39 @@ function createTrainingHistoryRows(
   training: TrainingPageData | null,
   playerId: string | null
 ): PlayerDetailViewModel["trainingHistory"] {
-  return (training?.history ?? [])
+  const reports = (training?.history ?? [])
     .filter((report) => identifiersMatch(report.playerId, playerId))
-    .sort((left, right) => right.gameWeek - left.gameWeek)
-    .map((report) => {
-      const trainedSkill = playerSkillKeyForReportSkill(report.type);
+    .sort((left, right) => right.gameWeek - left.gameWeek);
 
-      return {
-        id: report.id ?? `${report.gameWeek}-${report.season ?? "unknown"}-${report.seasonWeek}`,
-        season: report.season ?? null,
-        seasonWeek: report.seasonWeek,
-        type: trainingTypeLabel(report.type),
-        kind: report.kind,
-        intensity: report.intensity,
-        skills: PLAYER_SKILL_DEFINITIONS.map((skill) => {
-          const value = trainingHistorySkillValue(report.skills, skill.key);
+  return reports.map((report, index) => {
+    const previousReport = reports[index + 1];
+    const trainedSkill = playerSkillKeyForReportSkill(report.type);
 
-          return {
-            key: skill.key,
-            label: skillLabelForKey(skill.key),
-            shortLabel: skill.shortLabel,
-            value,
-            levelLabel: skillLevelLabel(value),
-            isTrained: trainedSkill === skill.key,
-            change: trainingHistorySkillChange(report, skill.key)
-          };
-        })
-      };
-    });
+    return {
+      id: report.id ?? `${report.gameWeek}-${report.season ?? "unknown"}-${report.seasonWeek}`,
+      season: report.season ?? null,
+      seasonWeek: report.seasonWeek,
+      type: trainingTypeLabel(report.type),
+      kind: report.kind,
+      intensity: report.intensity,
+      skills: PLAYER_SKILL_DEFINITIONS.map((skill) => {
+        const value = trainingHistorySkillValue(report.skills, skill.key);
+        const previousValue = previousReport
+          ? trainingHistorySkillValue(previousReport.skills, skill.key)
+          : null;
+
+        return {
+          key: skill.key,
+          label: skillLabelForKey(skill.key),
+          shortLabel: skill.shortLabel,
+          value,
+          levelLabel: skillLevelLabel(value),
+          isTrained: trainedSkill === skill.key,
+          change: trainingHistorySkillChange(value, previousValue)
+        };
+      })
+    };
+  });
 }
 
 function trainingHistorySkillValue(
@@ -380,26 +385,14 @@ function trainingHistorySkillValue(
 }
 
 function trainingHistorySkillChange(
-  report: NonNullable<TrainingPageData["history"]>[number],
-  skill: PlayerSkillKey
+  currentValue: number | null,
+  previousValue: number | null
 ): { direction: "up" | "down"; levelDelta: number } | null {
-  const reportSkill = trainingSkillForReport(skill);
-  const reportedChange = report.skillChanges?.find(
-    (change) => trainingSkillForReport(change.skill) === reportSkill
-  );
-
-  if (reportedChange !== undefined && reportedChange.delta !== 0) {
-    return {
-      direction: reportedChange.direction,
-      levelDelta: Math.abs(reportedChange.delta)
-    };
-  }
-
-  const delta = report.skillsChange[reportSkill] ?? report.skillsChange[skill];
-
-  if (delta === undefined || delta === 0) {
+  if (currentValue === null || previousValue === null || currentValue === previousValue) {
     return null;
   }
+
+  const delta = currentValue - previousValue;
 
   return {
     direction: delta > 0 ? "up" : "down",

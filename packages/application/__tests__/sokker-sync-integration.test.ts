@@ -109,6 +109,16 @@ describe("Sokker sync end-to-end", () => {
       type: "pace",
       kind: "advanced",
       intensity: 0,
+      skills: {
+        stamina: 8,
+        keeper: 1,
+        playmaking: 9,
+        passing: 10,
+        technique: 9,
+        defending: 5,
+        striker: 4,
+        pace: 11
+      },
       skillsChange: { pace: 1, passing: -1, up: 1, down: 1 }
     });
 

@@ -9,6 +9,7 @@ import {
   withMongoTransaction,
   type MongoSession,
   type PersistedClubStaffMember,
+  type PersistedPlayerSkills,
   type PersistedPlayerSkillsChange
 } from "@atlas/database";
 
@@ -219,6 +220,7 @@ export class SokkerSyncPersistence {
             kind: report.kind,
             intensity: report.intensity,
             age: report.age,
+            skills: mapPersistedSkills(report.skills),
             skillsChange: mapPersistedSkillsChange(report.skillsChange)
           },
           session
@@ -258,6 +260,20 @@ function createRepositories(): SokkerSyncPersistenceRepositories {
   };
 }
 
+function mapPersistedSkills(
+  skills: SokkerSyncPayload["trainingWeeks"][number]["skills"]
+): PersistedPlayerSkills {
+  return {
+    stamina: skills.stamina,
+    keeper: skills.keeper,
+    playmaking: skills.playmaking,
+    passing: skills.passing,
+    technique: skills.technique,
+    defending: skills.defending,
+    striker: skills.striker,
+    pace: skills.pace
+  };
+}
 function mapPersistedSkillsChange(
   change: SokkerSyncPayload["trainingWeeks"][number]["skillsChange"]
 ): PersistedPlayerSkillsChange {
