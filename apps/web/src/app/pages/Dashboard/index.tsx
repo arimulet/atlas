@@ -113,36 +113,88 @@ function FinancialStrategyAlerts({
       className="atlas-dashboard-panel atlas-dashboard-panel--financial"
       aria-labelledby="financial-strategy-alerts-title"
     >
-      <PanelHeading id="financial-strategy-alerts-title" title="Financial Strategy" />
+      <div className="atlas-dashboard-panel__heading">
+        <div>
+          <span className="atlas-dashboard-planning__eyebrow">Financial strategy</span>
+          <h2 id="financial-strategy-alerts-title" className="atlas-dashboard-panel__title">
+            Capital priorities
+          </h2>
+        </div>
+        <span className="atlas-dashboard-planning__quiet">
+          {alerts.length} {alerts.length === 1 ? "priority" : "priorities"}
+        </span>
+      </div>
       {hasMaterialPositionRisk ? (
-        <p className="atlas-dashboard-financial-alert is-high">
-          Financial position: {financialStrategy.viewModel?.position.statusLabel}
-        </p>
+        <div
+          className={
+            "atlas-dashboard-financial-alert is-" + financialStrategy.viewModel?.position.status
+          }
+          role="status"
+        >
+          <span>Financial position</span>
+          <strong>{financialStrategy.viewModel?.position.statusLabel}</strong>
+        </div>
       ) : null}
-      <ul className="atlas-dashboard-financial-list">
-        {alerts.slice(0, 4).map((alert) => (
-          <li key={alert.id}>
-            <span
-              className={`atlas-dashboard-financial-priority is-${alert.priority.toLowerCase()}`}
+      {alerts.length === 0 ? (
+        <PanelMessage tone="success">No critical funding priorities detected.</PanelMessage>
+      ) : (
+        <div className="atlas-dashboard-financial-list">
+          {alerts.slice(0, 4).map((alert) => (
+            <article
+              className={"atlas-dashboard-recommendation is-" + alert.priority.toLowerCase()}
+              key={alert.id}
             >
-              {alert.priority}
-            </span>
-            <span>
-              <strong>{alert.title}</strong>
-              <small>{alert.description}</small>
-              {alert.playerIds[0] !== undefined ? (
-                <PlayerLink playerId={String(alert.playerIds[0])} onSelectPlayer={onSelectPlayer}>
-                  View player
-                </PlayerLink>
+              <div className="atlas-dashboard-recommendation__meta">
+                <span
+                  className={"atlas-dashboard-planning-badge is-" + alert.priority.toLowerCase()}
+                >
+                  {alert.priority}
+                </span>
+                <span>{alert.horizon}</span>
+                <span>{alert.confidence} confidence</span>
+              </div>
+              <h3>{alert.title}</h3>
+              <p>{alert.description}</p>
+              {alert.financialImpact.length > 0 ? (
+                <div className="atlas-dashboard-financial-impact">
+                  {alert.financialImpact.map((impact) => (
+                    <span key={impact}>{impact}</span>
+                  ))}
+                </div>
               ) : null}
-            </span>
-          </li>
-        ))}
-      </ul>
+              {alert.playerIds.length > 0 ? (
+                <div className="atlas-dashboard-recommendation__players">
+                  {alert.playerIds.map((playerId, index) => (
+                    <PlayerLink
+                      key={alert.id + "-" + playerId}
+                      playerId={String(playerId)}
+                      onSelectPlayer={onSelectPlayer}
+                    >
+                      {alert.playerNames[index] ?? "Player " + playerId}
+                    </PlayerLink>
+                  ))}
+                </div>
+              ) : null}
+              {alert.reasons.length > 0 || alert.risks.length > 0 ? (
+                <details>
+                  <summary>Why this matters</summary>
+                  <ul>
+                    {alert.reasons.map((reason) => (
+                      <li key={"reason-" + reason}>{reason}</li>
+                    ))}
+                    {alert.risks.map((risk) => (
+                      <li key={"risk-" + risk}>{risk}</li>
+                    ))}
+                  </ul>
+                </details>
+              ) : null}
+            </article>
+          ))}
+        </div>
+      )}
     </section>
   );
 }
-
 interface AttentionPanelProps {
   items: AttentionItem[];
   onSelectPlayer: (playerId: string) => void;
