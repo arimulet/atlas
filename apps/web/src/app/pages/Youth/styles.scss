@@ -419,25 +419,35 @@
 
   .atlas-youth-table {
     border-collapse: collapse;
-    min-width: 600px;
+    min-width: 1060px;
     table-layout: fixed;
     width: 100%;
   }
 
   .atlas-youth-table__player-column {
-    width: 42%;
-  }
-
-  .atlas-youth-table__age-column {
-    width: 12%;
-  }
-
-  .atlas-youth-table__level-column {
     width: 26%;
   }
 
+  .atlas-youth-table__age-column {
+    width: 7%;
+  }
+
+  .atlas-youth-table__level-column,
+  .atlas-youth-table__expected-level-column {
+    width: 16%;
+  }
+
+  .atlas-youth-table__initial-weeks-column {
+    width: 10%;
+  }
+
+  .atlas-youth-table__pops-column,
+  .atlas-youth-table__talent-column {
+    width: 9%;
+  }
+
   .atlas-youth-table__weeks-column {
-    width: 20%;
+    width: 7%;
   }
 
   .atlas-youth-table th,

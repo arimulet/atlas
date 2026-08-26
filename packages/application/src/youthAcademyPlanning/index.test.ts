@@ -1,7 +1,10 @@
 import type { PersistedSnapshot } from "@atlas/database";
 import { describe, expect, it } from "vitest";
 
-import { calculateLatestCompletedYouthSkillChanges } from "./index.js";
+import {
+  calculateLatestCompletedYouthSkillChanges,
+  calculateYouthDevelopmentMetrics
+} from "./index.js";
 
 describe("calculateLatestCompletedYouthSkillChanges", () => {
   it("ignores the active game week and compares the last two completed trainings", () => {
@@ -26,6 +29,29 @@ describe("calculateLatestCompletedYouthSkillChanges", () => {
   });
 });
 
+describe("calculateYouthDevelopmentMetrics", () => {
+  it("derives pops, talent, and expected level from the academy history", () => {
+    expect(
+      calculateYouthDevelopmentMetrics({
+        initialLevel: 6,
+        initialWeeks: 10,
+        currentLevel: 8,
+        weeksRemaining: 4
+      })
+    ).toEqual({ levelPops: 2, talent: 3, expectedLevel: 9 });
+  });
+
+  it("does not project talent until a level pop has been observed", () => {
+    expect(
+      calculateYouthDevelopmentMetrics({
+        initialLevel: 6,
+        initialWeeks: 10,
+        currentLevel: 6,
+        weeksRemaining: 4
+      })
+    ).toEqual({ levelPops: 0, talent: null, expectedLevel: null });
+  });
+});
 function createSnapshot(gameWeek: number, skill: number): PersistedSnapshot {
   return {
     id: `snapshot-${gameWeek}-${skill}`,

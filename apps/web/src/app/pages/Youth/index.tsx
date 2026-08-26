@@ -5,6 +5,8 @@ import {
 } from "@atlas/web/app/view-models/youth-view-model";
 import type { YouthProps } from "./types";
 import { AttentionIcon } from "../../components/AttentionIcon";
+import { formatTalent } from "../../formatters";
+import { skillLevelLabel } from "../../view-models/skill-level-label";
 import { YouthDecisionSections } from "./YouthDecisionSections";
 import { useYouthDecisionEngine } from "./useYouthDecisionEngine";
 
@@ -52,6 +54,10 @@ function YouthPlayers({ planning, rows, status }: YouthPlayersProps) {
             <col className="atlas-youth-table__age-column" />
             <col className="atlas-youth-table__level-column" />
             <col className="atlas-youth-table__weeks-column" />
+            <col className="atlas-youth-table__expected-level-column" />
+            <col className="atlas-youth-table__initial-weeks-column" />
+            <col className="atlas-youth-table__pops-column" />
+            <col className="atlas-youth-table__talent-column" />
           </colgroup>
           <thead>
             <tr>
@@ -59,6 +65,14 @@ function YouthPlayers({ planning, rows, status }: YouthPlayersProps) {
               <th scope="col">Age</th>
               <th scope="col">Current Level</th>
               <th scope="col">Weeks Left</th>
+              <th scope="col" title="Projected level at promotion, based on observed talent.">
+                Expected Level
+              </th>
+              <th scope="col">Initial Weeks</th>
+              <th scope="col">Level Pops</th>
+              <th scope="col" title="Average academy weeks per level pop. Lower is better.">
+                Talent
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -86,7 +100,7 @@ function YouthPlayers({ planning, rows, status }: YouthPlayersProps) {
 function YouthTableMessage({ message }: { message: string }) {
   return (
     <tr>
-      <td className="atlas-youth-table__empty" colSpan={4}>
+      <td className="atlas-youth-table__empty" colSpan={8}>
         {message}
       </td>
     </tr>
@@ -131,16 +145,28 @@ function YouthPlayerTableRow({ row }: { row: YouthPlayerRow }) {
         </span>
       </td>
       <td className="atlas-youth-table__center">{row.weeksLeft ?? "—"}</td>
+      <td>{formatLevelValue(row.expectedLevel)}</td>
+      <td className="atlas-youth-table__center">{row.initialWeeks ?? "—"}</td>
+      <td className="atlas-youth-table__center">{formatLevelPops(row.levelPops)}</td>
+      <td className="atlas-youth-table__center">{formatYouthTalent(row.talent)}</td>
     </tr>
   );
 }
 
 function formatLevel(level: YouthPlayerRow["level"]): string {
-  if (level === null) {
-    return "—";
-  }
+  return level === null ? "—" : formatLevelValue(level.value);
+}
 
-  return `${level.label ?? "—"} [${level.value}]`;
+function formatLevelValue(level: number | null): string {
+  return level === null ? "—" : `${skillLevelLabel(level)} [${level}]`;
+}
+
+function formatLevelPops(levelPops: number | null): string {
+  return levelPops === null ? "—" : `+${levelPops}`;
+}
+
+function formatYouthTalent(talent: number | null): string {
+  return formatTalent(talent);
 }
 
 function changeClass(change: number | null): string {
