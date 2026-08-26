@@ -6,7 +6,6 @@ import {
   type YouthPlayerRow
 } from "@atlas/web/app/view-models/youth-view-model";
 import type { YouthProps } from "./types";
-import { formatPercentage } from "../../formatters";
 import { AttentionIcon } from "../../components/AttentionIcon";
 import { YouthDecisionSections } from "./YouthDecisionSections";
 import { useYouthDecisionEngine } from "./useYouthDecisionEngine";
@@ -22,6 +21,7 @@ export function Youth({ clubId, currency, onSelectPlayer, youthAcademy, youthSta
       <header className="atlas-youth__header">
         <h1>Youth</h1>
       </header>
+      <YouthPlayers rows={schoolRows} status={youthStatus} planning={youthAcademy} />
 
       <YouthDecisionSections
         models={decisionEngine.decisionCandidates}
@@ -30,7 +30,6 @@ export function Youth({ clubId, currency, onSelectPlayer, youthAcademy, youthSta
         summary={decisionEngine.summary}
       />
       <YouthAttention items={attentionItems} status={youthStatus} />
-      <YouthPlayers rows={schoolRows} status={youthStatus} planning={youthAcademy} />
     </div>
   );
 }
@@ -109,21 +108,15 @@ function YouthPlayers({ planning, rows, status }: YouthPlayersProps) {
           <colgroup>
             <col className="atlas-youth-table__player-column" />
             <col className="atlas-youth-table__age-column" />
-            <col className="atlas-youth-table__position-column" />
             <col className="atlas-youth-table__level-column" />
             <col className="atlas-youth-table__weeks-column" />
-            <col className="atlas-youth-table__progress-column" />
-            <col className="atlas-youth-table__promotion-column" />
           </colgroup>
           <thead>
             <tr>
               <th scope="col">Player</th>
               <th scope="col">Age</th>
-              <th scope="col">Position</th>
               <th scope="col">Current Level</th>
               <th scope="col">Weeks Left</th>
-              <th scope="col">Progress</th>
-              <th scope="col">Promotion</th>
             </tr>
           </thead>
           <tbody>
@@ -151,7 +144,7 @@ function YouthPlayers({ planning, rows, status }: YouthPlayersProps) {
 function YouthTableMessage({ message }: { message: string }) {
   return (
     <tr>
-      <td className="atlas-youth-table__empty" colSpan={7}>
+      <td className="atlas-youth-table__empty" colSpan={4}>
         {message}
       </td>
     </tr>
@@ -159,11 +152,15 @@ function YouthTableMessage({ message }: { message: string }) {
 }
 
 function YouthPlayerTableRow({ row }: { row: YouthPlayerRow }) {
+  const skillChangeClass = changeClass(row.level?.change ?? null);
+
   return (
     <tr>
       <th scope="row">
         <span className="atlas-youth-table__player-name">
-          <span>{row.name}</span>
+          <span className={`atlas-youth-table__player-name-value${skillChangeClass}`}>
+            {row.name}
+          </span>
           {row.status !== null && row.status !== "In academy" ? (
             <span className={`atlas-youth-player-indicator is-${statusClass(row.status)}`}>
               {row.status}
@@ -172,11 +169,15 @@ function YouthPlayerTableRow({ row }: { row: YouthPlayerRow }) {
         </span>
       </th>
       <td className="atlas-youth-table__center">{row.age}</td>
-      <td className="atlas-youth-table__center">{row.position ?? "—"}</td>
-      <td>{formatLevel(row.level)}</td>
+      <td>
+        <span className="atlas-youth-skill-level">
+          <span className={`atlas-youth-skill-level__value${skillChangeClass}`}>
+            {formatLevel(row.level)}
+          </span>
+          <SkillChangeIndicator change={row.level?.change ?? null} />
+        </span>
+      </td>
       <td className="atlas-youth-table__center">{row.weeksLeft ?? "—"}</td>
-      <td className="atlas-youth-table__center">{formatProgress(row.progress)}</td>
-      <td className="atlas-youth-table__center">{row.promotion ?? "—"}</td>
     </tr>
   );
 }
@@ -186,11 +187,30 @@ function formatLevel(level: YouthPlayerRow["level"]): string {
     return "—";
   }
 
-  return level.label === null ? String(level.value) : `${level.value} · ${level.label}`;
+  return `${level.label ?? "—"} [${level.value}]`;
 }
 
-function formatProgress(progress: number | null): string {
-  return formatPercentage(progress);
+function changeClass(change: number | null): string {
+  if (change === null || change === 0) {
+    return "";
+  }
+
+  return ` is-${change > 0 ? "up" : "down"}`;
+}
+
+function SkillChangeIndicator({ change }: { change: number | null }) {
+  if (change === null || change === 0) {
+    return null;
+  }
+
+  const isIncrease = change > 0;
+
+  return (
+    <span className={`atlas-youth-skill-change is-${isIncrease ? "up" : "down"}`}>
+      {isIncrease ? "↑" : "↓"} {isIncrease ? "+" : ""}
+      {change}
+    </span>
+  );
 }
 
 function statusClass(status: NonNullable<YouthPlayerRow["status"]>): string {

@@ -266,6 +266,7 @@ function createYouthAcademy(): RealYouthAcademyPlanning {
           weeksRemaining: 2,
           projectedPromotionAge: 17,
           skill: 7,
+          skillChange: null,
           status: "ready_for_promotion",
           category: "ready_for_promotion",
           severity: "info",

@@ -642,6 +642,7 @@ export interface RealYouthAcademyPlayerPlan {
   weeksRemaining: number | null;
   projectedPromotionAge: number | null;
   skill: number | null;
+  skillChange: number | null;
   status: "in_academy" | "ready_for_promotion" | "promoted";
   category: RealYouthAcademyCategory;
   severity: Severity;

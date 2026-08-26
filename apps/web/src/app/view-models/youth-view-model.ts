@@ -3,6 +3,7 @@ import type {
   RealYouthAcademyPlanning,
   Severity
 } from "@atlas/web/app/types";
+import { skillLevelLabel } from "./skill-level-label";
 
 export type YouthStatusLabel = "In academy" | "Promotion" | "Promoted" | "Attention" | "Review";
 export type YouthPromotionLabel = "Ready" | "Promoted";
@@ -10,6 +11,7 @@ export type YouthPromotionLabel = "Ready" | "Promoted";
 export interface YouthLevelValue {
   value: number;
   label: string | null;
+  change: number | null;
 }
 
 export interface YouthPlayerRow {
@@ -44,7 +46,14 @@ export function createYouthPlayerRows(planning: RealYouthAcademyPlanning | null)
     name: player.name,
     age: player.age,
     position: null,
-    level: player.skill === null ? null : { value: player.skill, label: null },
+    level:
+      player.skill === null
+        ? null
+        : {
+            value: player.skill,
+            label: skillLevelLabel(player.skill),
+            change: player.skillChange
+          },
     weeksLeft: player.weeksRemaining,
     progress: null,
     promotion: youthPromotionForPlayer(player),
