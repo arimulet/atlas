@@ -330,6 +330,7 @@ export function App() {
         />
       ) : activeView === "squad" ? (
         <Squad
+          clubId={activeClubId}
           currency={dashboard?.club.currency ?? null}
           development={playerDevelopment}
           onSelectPlayer={handleSelectPlayer}
@@ -355,7 +356,6 @@ export function App() {
         <Youth
           clubId={activeClubId}
           currency={dashboard?.club.currency ?? null}
-          onSelectPlayer={handleSelectPlayer}
           youthAcademy={youthAcademy}
           youthStatus={youthStatus}
         />
