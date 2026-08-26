@@ -419,13 +419,13 @@
 
   .atlas-youth-table {
     border-collapse: collapse;
-    min-width: 900px;
+    min-width: 780px;
     table-layout: fixed;
     width: 100%;
   }
 
   .atlas-youth-table__player-column {
-    width: 25%;
+    width: 29%;
   }
 
   .atlas-youth-table__age-column,
@@ -444,10 +444,6 @@
 
   .atlas-youth-table__promotion-column {
     width: 11%;
-  }
-
-  .atlas-youth-table__status-column {
-    width: 13%;
   }
 
   .atlas-youth-table th,
@@ -491,7 +487,14 @@
     text-align: left;
   }
 
-  .atlas-youth-status {
+  .atlas-youth-table__player-name {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .atlas-youth-player-indicator {
     border: 1px solid currentColor;
     border-radius: 4px;
     display: inline-block;
@@ -502,21 +505,20 @@
     white-space: nowrap;
   }
 
-  .atlas-youth-status.is-promotion,
-  .atlas-youth-status.is-promoted {
+  .atlas-youth-player-indicator.is-promotion,
+  .atlas-youth-player-indicator.is-promoted {
     color: var(--semantic-info-text);
   }
 
-  .atlas-youth-status.is-attention {
+  .atlas-youth-player-indicator.is-attention {
     color: var(--semantic-warning-text);
   }
 
-  .atlas-youth-status.is-review {
+  .atlas-youth-player-indicator.is-review {
     color: var(--semantic-info-text);
   }
 
-  .atlas-youth-status.is-in-academy,
-  .atlas-youth-status.is-empty {
+  .atlas-youth-player-indicator.is-in-academy {
     color: var(--atlas-text-muted);
   }
 }
