@@ -1005,3 +1005,75 @@
   gap: 8px;
   justify-content: space-between;
 }
+.atlas .atlas-player-detail__history-table {
+  min-width: 640px;
+}
+
+.atlas .atlas-player-detail__history-period {
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.atlas .atlas-player-detail__history-training {
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.atlas .atlas-player-detail__history-training strong {
+  color: var(--atlas-text-muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.atlas .atlas-player-detail__history-kind {
+  display: inline-block;
+  font-size: 0.9rem;
+  margin-right: 6px;
+  text-align: center;
+  vertical-align: middle;
+  width: 14px;
+}
+
+.atlas .atlas-player-detail__history-kind.is-advanced {
+  color: var(--atlas-accent);
+}
+
+.atlas .atlas-player-detail__history-kind.is-formation {
+  color: var(--atlas-text-secondary);
+}
+
+.atlas .atlas-player-detail__history-kind.is-missing {
+  color: var(--semantic-error-text);
+}
+
+.atlas .atlas-player-detail__history-skill {
+  min-width: 38px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.atlas .atlas-player-detail__history-skill.is-trained {
+  background: color-mix(in srgb, var(--atlas-accent) 14%, transparent);
+  color: var(--atlas-text);
+  font-weight: 750;
+}
+
+.atlas .atlas-player-detail__history-skill.is-up,
+.atlas .atlas-player-detail__history-skill.is-up .atlas-player-detail__history-skill-change {
+  color: var(--semantic-success-text);
+}
+
+.atlas .atlas-player-detail__history-skill.is-down,
+.atlas .atlas-player-detail__history-skill.is-down .atlas-player-detail__history-skill-change {
+  color: var(--semantic-error-text);
+}
+
+.atlas .atlas-player-detail__history-skill-change {
+  font-size: 0.65rem;
+  font-weight: 750;
+  margin-left: 3px;
+}
+.atlas .atlas-player-detail__history-table tr.is-season-start > th,
+.atlas .atlas-player-detail__history-table tr.is-season-start > td {
+  border-top: 2px solid color-mix(in srgb, var(--atlas-accent) 42%, var(--atlas-border));
+}

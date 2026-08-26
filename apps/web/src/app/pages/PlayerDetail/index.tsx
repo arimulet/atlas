@@ -1,7 +1,7 @@
 import { Component, type ReactNode } from "react";
 import type { PlayerDetailProps } from "./types";
 import { ProjectionPanel } from "./ProjectionPanel";
-import { formatDateTime, formatNumber, formatPercentage } from "../../formatters";
+import { formatNumber, formatPercentage } from "../../formatters";
 import { CountryNameFlag } from "../../components/CountryNameFlag";
 import { DiagnosticNotifications } from "../../components/Header/DiagnosticNotifications";
 import { StatusBadge } from "../../components/StatusBadge";
@@ -276,6 +276,7 @@ interface TrainingHistoryPanelProps {
 }
 
 function TrainingHistoryPanel({ rows }: TrainingHistoryPanelProps) {
+  const skills = rows[0]?.skills ?? [];
   return (
     <section className="atlas-player-detail-panel" aria-labelledby="player-detail-history-title">
       <PanelTitle id="player-detail-history-title" title="Training History" />
@@ -283,32 +284,53 @@ function TrainingHistoryPanel({ rows }: TrainingHistoryPanelProps) {
         <p className="atlas-player-detail__message">No training history available.</p>
       ) : (
         <div className="atlas-player-detail__table-wrap">
-          <table className="atlas-player-detail__table">
+          <table className="atlas-player-detail__table atlas-player-detail__history-table">
             <thead>
               <tr>
-                <th scope="col">Date</th>
-                <th scope="col">Week</th>
-                <th scope="col">Type</th>
-                <th scope="col">Kind</th>
-                <th scope="col">Intensity</th>
-                <th scope="col">Skill Changes</th>
+                <th scope="col">Season / Week</th>
+                <th scope="col">Training</th>
+                {skills.map((skill) => (
+                  <th key={skill.key} scope="col" title={skill.label}>
+                    {skill.shortLabel}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
-              {rows.map((row) => (
-                <tr key={row.week}>
-                  <td>{formatDateTime(row.date)}</td>
-                  <th scope="row">W{row.week}</th>
-                  <td>{row.type}</td>
-                  <td>{row.kind}</td>
-                  <td>{row.intensity}%</td>
-                  <td>
-                    {row.skillChanges.length === 0
-                      ? "—"
-                      : row.skillChanges
-                          .map((change) => `${change.skill} ${change.before} → ${change.after}`)
-                          .join(", ")}
+              {rows.map((row, index) => (
+                <tr
+                  className={
+                    index > 0 && row.season !== rows[index - 1]?.season
+                      ? "is-season-start"
+                      : undefined
+                  }
+                  key={row.id}
+                >
+                  <th className="atlas-player-detail__history-period" scope="row">
+                    S{row.season ?? "—"} · W{row.seasonWeek}
+                  </th>
+                  <td className="atlas-player-detail__history-training">
+                    <TrainingHistoryKind kind={row.kind} />
+                    {row.intensity > 0 ? <strong>{row.intensity}%</strong> : null}
                   </td>
+                  {row.skills.map((skill) => (
+                    <td
+                      className={`atlas-player-detail__history-skill${skill.isTrained ? " is-trained" : ""}${skill.change ? ` is-${skill.change.direction}` : ""}`}
+                      key={skill.key}
+                      title={trainingHistorySkillTitle(skill)}
+                    >
+                      <span>{formatNumber(skill.value)}</span>
+                      {skill.change ? (
+                        <span
+                          aria-hidden="true"
+                          className="atlas-player-detail__history-skill-change"
+                        >
+                          {skill.change.direction === "up" ? "↑" : "↓"}
+                          {skill.change.levelDelta}
+                        </span>
+                      ) : null}
+                    </td>
+                  ))}
                 </tr>
               ))}
             </tbody>
@@ -317,6 +339,44 @@ function TrainingHistoryPanel({ rows }: TrainingHistoryPanelProps) {
       )}
     </section>
   );
+}
+
+function TrainingHistoryKind({
+  kind
+}: {
+  kind: PlayerDetailViewModel["trainingHistory"][number]["kind"];
+}) {
+  const presentation =
+    kind === "advanced"
+      ? { icon: "⚡", label: "Advanced training" }
+      : kind === "formation"
+        ? { icon: "◌", label: "Formation training" }
+        : { icon: "⊘", label: "No training recorded" };
+
+  return (
+    <span
+      aria-label={presentation.label}
+      className={`atlas-player-detail__history-kind is-${kind}`}
+      title={presentation.label}
+    >
+      {presentation.icon}
+    </span>
+  );
+}
+
+function trainingHistorySkillTitle(
+  skill: PlayerDetailViewModel["trainingHistory"][number]["skills"][number]
+): string {
+  const level =
+    skill.value === null
+      ? "—"
+      : `${skill.value}${skill.levelLabel ? ` (${skill.levelLabel})` : ""}`;
+  const change =
+    skill.change === null
+      ? ""
+      : ` · ${skill.change.direction === "up" ? "+" : "−"}${skill.change.levelDelta}`;
+
+  return `${skill.label}: ${level}${change}`;
 }
 
 interface PanelTitleProps {

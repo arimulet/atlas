@@ -25,6 +25,7 @@ import {
   formatMarketMoney,
   type PlayerMarketValueViewModel
 } from "./market-value-view-model";
+import { PLAYER_SKILL_DEFINITIONS, type PlayerSkillKey } from "./player-skills";
 
 const SKILL_DEFINITIONS = [
   { key: "stamina", trainingPriority: 1 },
@@ -131,16 +132,23 @@ export interface PlayerDetailViewModel {
   };
   diagnostics: DiagnosticFinding[];
   trainingHistory: Array<{
-    date: string | null;
-    week: number;
+    id: string;
+    season: number | null;
+    seasonWeek: number;
     type: string;
     kind: "advanced" | "formation" | "missing";
     intensity: number;
-    skillChanges: Array<{
-      skill: string;
-      before: number;
-      after: number;
-      direction: "up" | "down";
+    skills: Array<{
+      key: PlayerSkillKey;
+      label: string;
+      shortLabel: string;
+      value: number | null;
+      levelLabel: string | null;
+      isTrained: boolean;
+      change: {
+        direction: "up" | "down";
+        levelDelta: number;
+      } | null;
     }>;
   }>;
   marketValue?: PlayerMarketValueViewModel | null;
@@ -292,7 +300,9 @@ function createDevelopmentPlayer(
   };
 }
 
-function toObservedPosition(value: string | null): NonNullable<DevelopmentPlayer["observedPosition"]> | null {
+function toObservedPosition(
+  value: string | null
+): NonNullable<DevelopmentPlayer["observedPosition"]> | null {
   return value === "goalkeeper" ||
     value === "defender" ||
     value === "midfielder" ||
@@ -334,19 +344,89 @@ function createTrainingHistoryRows(
   return (training?.history ?? [])
     .filter((report) => identifiersMatch(report.playerId, playerId))
     .sort((left, right) => right.gameWeek - left.gameWeek)
-    .map((report) => ({
-      date: report.date?.toString() ?? null,
-      week: report.gameWeek,
-      type: report.type,
-      kind: report.kind,
-      intensity: report.intensity,
-      skillChanges: (report.skillChanges ?? []).map((change) => ({
-        skill: skillLabelForKey(change.skill),
-        before: change.before,
-        after: change.after,
-        direction: change.direction
-      }))
-    }));
+    .map((report) => {
+      const trainedSkill = playerSkillKeyForReportSkill(report.type);
+
+      return {
+        id: report.id ?? `${report.gameWeek}-${report.season ?? "unknown"}-${report.seasonWeek}`,
+        season: report.season ?? null,
+        seasonWeek: report.seasonWeek,
+        type: trainingTypeLabel(report.type),
+        kind: report.kind,
+        intensity: report.intensity,
+        skills: PLAYER_SKILL_DEFINITIONS.map((skill) => {
+          const value = trainingHistorySkillValue(report.skills, skill.key);
+
+          return {
+            key: skill.key,
+            label: skillLabelForKey(skill.key),
+            shortLabel: skill.shortLabel,
+            value,
+            levelLabel: skillLevelLabel(value),
+            isTrained: trainedSkill === skill.key,
+            change: trainingHistorySkillChange(report, skill.key)
+          };
+        })
+      };
+    });
+}
+
+function trainingHistorySkillValue(
+  skills: NonNullable<TrainingPageData["history"]>[number]["skills"],
+  skill: PlayerSkillKey
+): number | null {
+  const reportSkill = trainingSkillForReport(skill);
+  return skills[reportSkill] ?? skills[skill] ?? null;
+}
+
+function trainingHistorySkillChange(
+  report: NonNullable<TrainingPageData["history"]>[number],
+  skill: PlayerSkillKey
+): { direction: "up" | "down"; levelDelta: number } | null {
+  const reportSkill = trainingSkillForReport(skill);
+  const reportedChange = report.skillChanges?.find(
+    (change) => trainingSkillForReport(change.skill) === reportSkill
+  );
+
+  if (reportedChange !== undefined && reportedChange.delta !== 0) {
+    return {
+      direction: reportedChange.direction,
+      levelDelta: Math.abs(reportedChange.delta)
+    };
+  }
+
+  const delta = report.skillsChange[reportSkill] ?? report.skillsChange[skill];
+
+  if (delta === undefined || delta === 0) {
+    return null;
+  }
+
+  return {
+    direction: delta > 0 ? "up" : "down",
+    levelDelta: Math.abs(delta)
+  };
+}
+
+function playerSkillKeyForReportSkill(skill: string): PlayerSkillKey | null {
+  const trainingSkill = trainingSkillForReport(skill);
+
+  if (trainingSkill === "defending") return "defender";
+  if (trainingSkill === "playmaking") return "playmaker";
+  if (trainingSkill === "scoring") return "striker";
+
+  return PLAYER_SKILL_DEFINITIONS.some((definition) => definition.key === trainingSkill)
+    ? trainingSkill
+    : null;
+}
+
+function trainingTypeLabel(type: string): string {
+  const skill = playerSkillKeyForReportSkill(type);
+
+  if (skill !== null) {
+    return skillLabelForKey(skill);
+  }
+
+  return type === "general" ? "General" : type;
 }
 
 function gameValueChange(
