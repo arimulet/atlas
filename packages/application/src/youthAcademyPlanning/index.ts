@@ -4,6 +4,7 @@ import {
   MongoSnapshotRepository
 } from "@atlas/database";
 import type { PersistedSnapshot } from "@atlas/database";
+import { WEEKS_PER_SOKKER_SEASON } from "@atlas/domain";
 import type {
   RealYouthAcademyPlayerPlan,
   RealYouthAcademyPlanning,
@@ -59,7 +60,7 @@ export const getRealYouthAcademyPlanning = async (
     };
   });
 
-  const playerPlans = observedPlayers.map((player) => classifyYouthPlayer(player));
+  const playerPlans = observedPlayers.map((player) => classifyYouthPlayer(player, latest.week));
 
   const categoryCounts: Record<YouthAcademyCategory, number> = {
     standout_prospect: 0,
@@ -146,7 +147,10 @@ function buildEmptyPlanning(clubId: ClubId, academyInvestment: string): RealYout
   };
 }
 
-function classifyYouthPlayer(player: YouthAcademyObservedPlayer): RealYouthAcademyPlayerPlan {
+function classifyYouthPlayer(
+  player: YouthAcademyObservedPlayer,
+  currentSeasonWeek: number | null
+): RealYouthAcademyPlayerPlan {
   const signals: YouthAcademySignal[] = [];
   const warnings: YouthAcademyWarning[] = [];
   const evidence: YouthAcademyEvidence[] = [
@@ -171,8 +175,11 @@ function classifyYouthPlayer(player: YouthAcademyObservedPlayer): RealYouthAcade
     evidence.push({ kind: "observed", label: "Skill", value: player.skill });
   }
 
-  const projectedPromotionAge =
-    player.weeksRemaining !== null ? player.age + Math.floor(player.weeksRemaining / 16) : null;
+  const projectedPromotionAge = calculateProjectedPromotionAge({
+    age: player.age,
+    currentSeasonWeek,
+    weeksRemaining: player.weeksRemaining
+  });
   const developmentMetrics = calculateYouthDevelopmentMetrics({
     initialLevel: player.initialLevel,
     initialWeeks: player.initialWeeks,
@@ -359,5 +366,26 @@ export function calculateYouthDevelopmentMetrics(input: {
     talent,
     expectedLevel: input.currentLevel + Math.floor(input.weeksRemaining / talent)
   };
+}
+
+export function calculateProjectedPromotionAge(input: {
+  age: number;
+  currentSeasonWeek: number | null;
+  weeksRemaining: number | null;
+}): number | null {
+  if (
+    input.weeksRemaining === null ||
+    input.currentSeasonWeek === null ||
+    input.currentSeasonWeek < 1 ||
+    input.currentSeasonWeek > WEEKS_PER_SOKKER_SEASON
+  ) {
+    return null;
+  }
+
+  const seasonChanges = Math.floor(
+    (input.currentSeasonWeek - 1 + input.weeksRemaining) / WEEKS_PER_SOKKER_SEASON
+  );
+
+  return input.age + seasonChanges;
 }
 export * from "./types.js";

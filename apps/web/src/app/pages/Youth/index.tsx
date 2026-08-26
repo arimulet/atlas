@@ -7,7 +7,7 @@ import type { YouthProps } from "./types";
 import { AttentionIcon } from "../../components/AttentionIcon";
 import { formatTalent } from "../../formatters";
 import { skillLevelLabel } from "../../view-models/skill-level-label";
-import { YouthDecisionSections } from "./YouthDecisionSections";
+import { YouthDecisionSections, YouthSummary } from "./YouthDecisionSections";
 import { useYouthDecisionEngine } from "./useYouthDecisionEngine";
 
 export function Youth({ clubId, currency, onSelectPlayer, youthAcademy, youthStatus }: YouthProps) {
@@ -20,13 +20,13 @@ export function Youth({ clubId, currency, onSelectPlayer, youthAcademy, youthSta
       <header className="atlas-youth__header">
         <h1>Youth</h1>
       </header>
+      <YouthSummary summary={decisionEngine.summary} />
       <YouthPlayers rows={schoolRows} status={youthStatus} planning={youthAcademy} />
 
       <YouthDecisionSections
         models={decisionEngine.decisionCandidates}
         onSelectPlayer={onSelectPlayer}
         status={decisionEngine.status}
-        summary={decisionEngine.summary}
       />
     </div>
   );
@@ -55,6 +55,7 @@ function YouthPlayers({ planning, rows, status }: YouthPlayersProps) {
             <col className="atlas-youth-table__level-column" />
             <col className="atlas-youth-table__weeks-column" />
             <col className="atlas-youth-table__expected-level-column" />
+            <col className="atlas-youth-table__expected-age-column" />
             <col className="atlas-youth-table__initial-weeks-column" />
             <col className="atlas-youth-table__pops-column" />
             <col className="atlas-youth-table__talent-column" />
@@ -67,6 +68,9 @@ function YouthPlayers({ planning, rows, status }: YouthPlayersProps) {
               <th scope="col">Weeks Left</th>
               <th scope="col" title="Projected level at promotion, based on observed talent.">
                 Expected Level
+              </th>
+              <th scope="col" title="Age projected at promotion.">
+                Expected Age
               </th>
               <th scope="col">Initial Weeks</th>
               <th scope="col">Level Pops</th>
@@ -100,7 +104,7 @@ function YouthPlayers({ planning, rows, status }: YouthPlayersProps) {
 function YouthTableMessage({ message }: { message: string }) {
   return (
     <tr>
-      <td className="atlas-youth-table__empty" colSpan={8}>
+      <td className="atlas-youth-table__empty" colSpan={9}>
         {message}
       </td>
     </tr>
@@ -146,6 +150,7 @@ function YouthPlayerTableRow({ row }: { row: YouthPlayerRow }) {
       </td>
       <td className="atlas-youth-table__center">{row.weeksLeft ?? "—"}</td>
       <td>{formatLevelValue(row.expectedLevel)}</td>
+      <td className="atlas-youth-table__center">{row.expectedAge ?? "—"}</td>
       <td className="atlas-youth-table__center">{row.initialWeeks ?? "—"}</td>
       <td className="atlas-youth-table__center">{formatLevelPops(row.levelPops)}</td>
       <td className="atlas-youth-table__center">{formatYouthTalent(row.talent)}</td>

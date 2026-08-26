@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   calculateLatestCompletedYouthSkillChanges,
+  calculateProjectedPromotionAge,
   calculateYouthDevelopmentMetrics
 } from "./index.js";
 
@@ -50,6 +51,19 @@ describe("calculateYouthDevelopmentMetrics", () => {
         weeksRemaining: 4
       })
     ).toEqual({ levelPops: 0, talent: null, expectedLevel: null });
+  });
+});
+describe("calculateProjectedPromotionAge", () => {
+  it("accounts for the season change before promotion", () => {
+    expect(
+      calculateProjectedPromotionAge({ age: 19, currentSeasonWeek: 10, weeksRemaining: 14 })
+    ).toBe(20);
+  });
+
+  it("keeps the current age when promotion happens before the season ends", () => {
+    expect(
+      calculateProjectedPromotionAge({ age: 19, currentSeasonWeek: 10, weeksRemaining: 3 })
+    ).toBe(19);
   });
 });
 function createSnapshot(gameWeek: number, skill: number): PersistedSnapshot {

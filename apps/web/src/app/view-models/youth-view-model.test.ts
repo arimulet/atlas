@@ -16,6 +16,7 @@ describe("youth view model", () => {
       position: null,
       level: { value: 8, label: "sólido", change: 1 },
       expectedLevel: 8,
+      expectedAge: null,
       initialWeeks: 8,
       levelPops: 2,
       talent: 4,
