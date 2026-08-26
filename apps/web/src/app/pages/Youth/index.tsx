@@ -1,8 +1,6 @@
 import type { DashboardStatus, RealYouthAcademyPlanning } from "@atlas/web/app/types";
 import {
-  createYouthAttentionItems,
   createYouthPlayerRows,
-  type YouthAttentionItem,
   type YouthPlayerRow
 } from "@atlas/web/app/view-models/youth-view-model";
 import type { YouthProps } from "./types";
@@ -12,7 +10,6 @@ import { useYouthDecisionEngine } from "./useYouthDecisionEngine";
 
 export function Youth({ clubId, currency, onSelectPlayer, youthAcademy, youthStatus }: YouthProps) {
   const rows = createYouthPlayerRows(youthAcademy);
-  const attentionItems = createYouthAttentionItems(youthAcademy);
   const schoolRows = rows.filter((row) => row.status !== "Promoted");
   const decisionEngine = useYouthDecisionEngine({ clubId, currency, youthAcademy });
 
@@ -29,62 +26,7 @@ export function Youth({ clubId, currency, onSelectPlayer, youthAcademy, youthSta
         status={decisionEngine.status}
         summary={decisionEngine.summary}
       />
-      <YouthAttention items={attentionItems} status={youthStatus} />
     </div>
-  );
-}
-
-interface YouthAttentionProps {
-  items: YouthAttentionItem[];
-  status: DashboardStatus;
-}
-
-function YouthAttention({ items, status }: YouthAttentionProps) {
-  return (
-    <section
-      className="atlas-youth-panel atlas-youth-panel--attention"
-      aria-labelledby="youth-attention-title"
-    >
-      <h2 id="youth-attention-title" className="atlas-youth-panel__title atlas-section-title">
-        Youth Attention
-      </h2>
-      {status === "loading" ? (
-        <p className="atlas-youth-panel__message">Loading youth players...</p>
-      ) : null}
-      {status === "error" ? (
-        <p className="atlas-youth-panel__message is-error">Unable to load youth players.</p>
-      ) : null}
-      {status === "idle" ? (
-        <p className="atlas-youth-panel__message">No youth issues requiring attention.</p>
-      ) : null}
-      {status === "ready" && items.length === 0 ? (
-        <p className="atlas-youth-panel__message is-clear">✓ No youth issues requiring attention</p>
-      ) : null}
-      {status === "ready" && items.length > 0 ? (
-        <ul className="atlas-youth-attention-list">
-          {items.map((item) => (
-            <YouthAttentionItemView item={item} key={item.id} />
-          ))}
-        </ul>
-      ) : null}
-    </section>
-  );
-}
-
-interface YouthAttentionItemViewProps {
-  item: YouthAttentionItem;
-}
-
-function YouthAttentionItemView({ item }: YouthAttentionItemViewProps) {
-  return (
-    <li className={`atlas-youth-attention-item is-${item.severity}`}>
-      <AttentionIcon severity={item.severity} />
-      <span>
-        {item.playerName ? <strong>{item.playerName}</strong> : null}
-        {item.playerName ? " · " : null}
-        {item.message}
-      </span>
-    </li>
   );
 }
 
@@ -161,7 +103,18 @@ function YouthPlayerTableRow({ row }: { row: YouthPlayerRow }) {
           <span className={`atlas-youth-table__player-name-value${skillChangeClass}`}>
             {row.name}
           </span>
-          {row.status !== null && row.status !== "In academy" ? (
+          {row.attentions.map((attention) => (
+            <span
+              aria-label={attention.message}
+              className="atlas-youth-player-attention"
+              key={attention.id}
+              role="img"
+              title={attention.message}
+            >
+              <AttentionIcon severity={attention.severity} />
+            </span>
+          ))}
+          {row.status !== null && row.status !== "In academy" && row.status !== "Attention" ? (
             <span className={`atlas-youth-player-indicator is-${statusClass(row.status)}`}>
               {row.status}
             </span>

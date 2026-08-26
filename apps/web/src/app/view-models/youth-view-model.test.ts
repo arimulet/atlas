@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { RealYouthAcademyPlanning } from "@atlas/web/app/types";
-import { createYouthAttentionItems, createYouthPlayerRows } from "./youth-view-model";
+import { createYouthPlayerRows } from "./youth-view-model";
 
 describe("youth view model", () => {
   it("maps observed youth fields without inventing position or progress", () => {
@@ -22,33 +22,29 @@ describe("youth view model", () => {
     });
   });
 
-  it("orders existing youth signals by severity and caps attention at five items", () => {
-    const planning = createPlanning();
+  it("maps each player attention for inline display", () => {
+    const rows = createYouthPlayerRows(createPlanning());
 
-    const items = createYouthAttentionItems(planning);
-
-    expect(items).toEqual([
+    expect(rows[0]?.attentions).toEqual([
       {
-        id: "youth-2-youth_stagnation_risk",
-        playerName: "Luis Costa",
+        id: "youth_ready_for_promotion",
+        message: "Ready for promotion",
+        severity: "info"
+      }
+    ]);
+    expect(rows[1]?.attentions).toEqual([
+      {
+        id: "youth_stagnation_risk",
         message: "Stagnation risk",
         severity: "medium"
       },
       {
-        id: "youth-1-youth_ready_for_promotion",
-        playerName: "Ana Silva",
-        message: "Ready for promotion",
-        severity: "info"
-      },
-      {
-        id: "youth-2-missing_skill",
-        playerName: "Luis Costa",
+        id: "missing_skill",
         message: "Missing current-level data",
         severity: "info"
       }
     ]);
   });
-
   it("uses the persisted promotion status instead of inferring it from weeks", () => {
     const planning = createPlanning();
     const academyPlayerPlanning = {
