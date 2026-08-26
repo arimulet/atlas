@@ -40,9 +40,7 @@ export const getRealYouthAcademyPlanning = async (
   }
 
   const currentJuniors = await juniorRepository.listByClub(club.clubId);
-  const initialWeeksByJuniorId = new Map(
-    currentJuniors.map((junior) => [junior.juniorId, junior.initialWeeks])
-  );
+  const currentJuniorById = new Map(currentJuniors.map((junior) => [junior.juniorId, junior]));
   const latestCompletedTrainingSkillChanges =
     calculateLatestCompletedYouthSkillChanges(snapshotsWithJuniors);
   const warnings: YouthAcademyWarning[] = [];
@@ -52,7 +50,8 @@ export const getRealYouthAcademyPlanning = async (
       playerId: p.playerId,
       name: p.name,
       age: p.age,
-      initialWeeksRemaining: initialWeeksByJuniorId.get(p.playerId) ?? null,
+      initialLevel: currentJuniorById.get(p.playerId)?.initialLevel ?? p.initialLevel,
+      initialWeeks: currentJuniorById.get(p.playerId)?.initialWeeks ?? null,
       weeksRemaining: p.weeksRemaining,
       skill: p.skill,
       skillChange: latestCompletedTrainingSkillChanges.get(p.playerId) ?? null,
@@ -160,8 +159,8 @@ function classifyYouthPlayer(player: YouthAcademyObservedPlayer): RealYouthAcade
   }
 
   const weeksInAcademy =
-    player.initialWeeksRemaining !== null && player.weeksRemaining !== null
-      ? player.initialWeeksRemaining - player.weeksRemaining + 1
+    player.initialWeeks !== null && player.weeksRemaining !== null
+      ? player.initialWeeks - player.weeksRemaining + 1
       : null;
 
   if (weeksInAcademy !== null) {
@@ -174,6 +173,12 @@ function classifyYouthPlayer(player: YouthAcademyObservedPlayer): RealYouthAcade
 
   const projectedPromotionAge =
     player.weeksRemaining !== null ? player.age + Math.floor(player.weeksRemaining / 16) : null;
+  const developmentMetrics = calculateYouthDevelopmentMetrics({
+    initialLevel: player.initialLevel,
+    initialWeeks: player.initialWeeks,
+    currentLevel: player.skill,
+    weeksRemaining: player.weeksRemaining
+  });
 
   if (projectedPromotionAge !== null) {
     evidence.push({
@@ -256,12 +261,16 @@ function classifyYouthPlayer(player: YouthAcademyObservedPlayer): RealYouthAcade
     playerId: player.playerId,
     name: player.name,
     age: player.age,
-    initialWeeksRemaining: player.initialWeeksRemaining,
+    initialLevel: player.initialLevel,
+    initialWeeks: player.initialWeeks,
     weeksRemaining: player.weeksRemaining,
     weeksInAcademy,
     projectedPromotionAge,
     skill: player.skill,
     skillChange: player.skillChange,
+    levelPops: developmentMetrics.levelPops,
+    talent: developmentMetrics.talent,
+    expectedLevel: developmentMetrics.expectedLevel,
     status: player.status,
     category,
     severity,
@@ -316,5 +325,39 @@ export function calculateLatestCompletedYouthSkillChanges(
       return [[junior.playerId, junior.skill - previousSkill] as const];
     })
   );
+}
+
+export function calculateYouthDevelopmentMetrics(input: {
+  initialLevel: number | null;
+  initialWeeks: number | null;
+  currentLevel: number | null;
+  weeksRemaining: number | null;
+}): {
+  levelPops: number | null;
+  talent: number | null;
+  expectedLevel: number | null;
+} {
+  if (input.initialLevel === null || input.currentLevel === null) {
+    return { levelPops: null, talent: null, expectedLevel: null };
+  }
+
+  const levelPops = input.currentLevel - input.initialLevel;
+
+  if (
+    levelPops <= 0 ||
+    input.initialWeeks === null ||
+    input.weeksRemaining === null ||
+    input.initialWeeks <= input.weeksRemaining
+  ) {
+    return { levelPops: Math.max(levelPops, 0), talent: null, expectedLevel: null };
+  }
+
+  const talent = (input.initialWeeks - input.weeksRemaining) / levelPops;
+
+  return {
+    levelPops,
+    talent,
+    expectedLevel: input.currentLevel + Math.floor(input.weeksRemaining / talent)
+  };
 }
 export * from "./types.js";

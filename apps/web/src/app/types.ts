@@ -627,6 +627,8 @@ export interface RealYouthAcademyObservedPlayer {
   externalId: string | null;
   name: string;
   age: number;
+  initialLevel: number | null;
+  initialWeeks: number | null;
   weeksInAcademy: number | null;
   weeksRemaining: number | null;
   skill: number | null;
@@ -638,11 +640,16 @@ export interface RealYouthAcademyPlayerPlan {
   externalId: string | null;
   name: string;
   age: number;
+  initialLevel: number | null;
+  initialWeeks: number | null;
   weeksInAcademy: number | null;
   weeksRemaining: number | null;
   projectedPromotionAge: number | null;
   skill: number | null;
   skillChange: number | null;
+  levelPops: number | null;
+  talent: number | null;
+  expectedLevel: number | null;
   status: "in_academy" | "ready_for_promotion" | "promoted";
   category: RealYouthAcademyCategory;
   severity: Severity;

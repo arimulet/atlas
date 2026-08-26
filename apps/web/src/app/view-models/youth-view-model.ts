@@ -16,6 +16,10 @@ export interface YouthPlayerRow {
   age: number;
   position: string | null;
   level: YouthLevelValue | null;
+  expectedLevel: number | null;
+  initialWeeks: number | null;
+  levelPops: number | null;
+  talent: number | null;
   weeksLeft: number | null;
   progress: number | null;
   attentions: YouthPlayerAttention[];
@@ -42,6 +46,10 @@ export function createYouthPlayerRows(planning: RealYouthAcademyPlanning | null)
             label: skillLevelLabel(player.skill),
             change: player.skillChange
           },
+    expectedLevel: player.expectedLevel,
+    initialWeeks: player.initialWeeks,
+    levelPops: player.levelPops,
+    talent: player.talent,
     weeksLeft: player.weeksRemaining,
     progress: null,
     attentions: youthAttentionForPlayer(player),
