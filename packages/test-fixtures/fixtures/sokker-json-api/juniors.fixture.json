@@ -1,0 +1,22 @@
+{
+  "juniors": [
+    {
+      "id": 501,
+      "teamId": 6038,
+      "name": "Junior One",
+      "fullName": { "name": "Junior", "surname": "One", "full": "Junior One" },
+      "skill": 7,
+      "age": 16,
+      "weeksLeft": 8
+    },
+    {
+      "id": 502,
+      "teamId": 6038,
+      "name": "Junior Two",
+      "fullName": { "name": "Junior", "surname": "Two", "full": "Junior Two" },
+      "skill": 9,
+      "age": 17,
+      "weeksLeft": 0
+    }
+  ]
+}

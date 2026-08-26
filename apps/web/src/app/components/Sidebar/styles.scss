@@ -1,0 +1,28 @@
+.atlas-sidebar {
+  background: #151e23;
+  border-right: 1px solid var(--atlas-border);
+  display: flex;
+  flex-direction: column;
+  grid-column: 1;
+  grid-row: 2;
+  min-height: 0;
+  padding: var(--atlas-space-4) var(--atlas-space-3) 14px;
+
+  &__navigation {
+    min-height: 0;
+  }
+
+  &__label {
+    color: var(--atlas-text-muted);
+    font-size: 0.66rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    margin: 0 10px 9px;
+    text-transform: uppercase;
+  }
+
+  nav {
+    display: grid;
+    gap: 3px;
+  }
+}

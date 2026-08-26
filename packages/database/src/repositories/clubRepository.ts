@@ -1,65 +1,61 @@
-import { Types } from "mongoose";
+import { Types, type ClientSession } from "mongoose";
 import { ClubModel } from "../models/club.js";
-import type { PersistedClub } from "./types.js";
+import type { PersistedClub, PersistedClubStaffMember } from "./types.js";
 
 export type ClubId = string | number;
 
 export interface SaveClubInput {
   clubId: number;
   country: number;
-  training?: {
-    GK: number | null;
-    DEF: number | null;
-    MID: number | null;
-    ATT: number | null;
-  } | null;
+  training: {
+    GK: number;
+    DEF: number;
+    MID: number;
+    ATT: number;
+  };
   name: string;
   gameWeek?: number | null;
   week?: number | null;
   lastSnapshotDate?: Date | null;
-  sourceType?: string | null;
   observedAt?: Date | null;
-  currency: { name: string; rate: number };
+  currency: string;
+  budget?: number | null;
+  staff?: PersistedClubStaffMember[];
 }
 
 export interface UpdateClubManualProfileInput {
   clubId: ClubId;
-  currency?: { name: string; rate: number };
   week?: number | null;
   assumptions?: Array<{ key: string; value: string }>;
   preferences?: Array<{ key: string; value: string }>;
 }
 
 export class MongoClubRepository {
-  async save(input: SaveClubInput): Promise<PersistedClub> {
+  async save(input: SaveClubInput, session?: ClientSession): Promise<PersistedClub> {
     const $set: Record<string, unknown> = {
       name: input.name,
       country: input.country,
+      currency: input.currency,
       week: input.week ?? null,
       lastSnapshotDate: input.lastSnapshotDate ?? null,
-      sourceType: input.sourceType ?? null,
       observedAt: input.observedAt ?? null
     };
+
+    if (input.budget !== undefined) {
+      $set.budget = input.budget;
+    }
 
     if (input.gameWeek !== undefined) {
       $set.gameWeek = input.gameWeek;
     }
 
-    if (input.training !== undefined) {
-      $set.training = input.training;
-    }
+    $set.training = input.training;
 
-    if (!input.clubId) {
-      const club = await ClubModel.create({
-        clubId: input.clubId,
-        ...$set
-      });
-      return mapClub(club.toObject());
+    if (input.staff !== undefined) {
+      $set.staff = input.staff;
     }
 
     const $setOnInsert: Record<string, unknown> = { clubId: input.clubId };
-
-    $setOnInsert["settings.currency"] = { name: input.currency.name, rate: input.currency.rate };
 
     const club = await ClubModel.findOneAndUpdate(
       { clubId: input.clubId },
@@ -67,7 +63,7 @@ export class MongoClubRepository {
         $set,
         $setOnInsert
       },
-      { new: true, upsert: true }
+      { new: true, upsert: true, session }
     );
 
     return mapClub(club.toObject());
@@ -82,12 +78,7 @@ export class MongoClubRepository {
     const updatedAt = new Date();
     const $set: Record<string, unknown> = {};
 
-    if ("currency" in input) {
-      if (input.currency) {
-        $set["settings.currency"] = { name: input.currency.name, rate: input.currency.rate };
-      }
-    }
-    if ("week" in input) $set["settings.week"] = input.week ?? null;
+    if (input.week !== undefined) $set["settings.week"] = input.week ?? null;
     if (input.assumptions) {
       $set["settings.assumptions"] = input.assumptions.map((record) => ({ ...record, updatedAt }));
     }
@@ -120,47 +111,39 @@ function mapClub(club: {
   clubId?: number | null;
   country?: number | null;
   training?: {
-    GK?: number | null;
-    DEF?: number | null;
-    MID?: number | null;
-    ATT?: number | null;
+    GK?: number;
+    DEF?: number;
+    MID?: number;
+    ATT?: number;
   } | null;
   name: string;
   gameWeek?: number | null;
   week?: number | null;
   lastSnapshotDate?: Date | null;
-  sourceType?: string | null;
   observedAt?: Date | null;
+  currency?: string;
+  staff?: PersistedClubStaffMember[];
   settings?: {
-    currency?: { name: string; rate: number };
     week?: number | null;
     assumptions?: Array<{ key: string; value: string; updatedAt: Date }>;
     preferences?: Array<{ key: string; value: string; updatedAt: Date }>;
   } | null;
+  budget?: number | null;
 }): PersistedClub {
   return {
     id: club._id.toString(),
     clubId: club.clubId ?? 0,
     country: club.country ?? 0,
     name: club.name,
-    training: club.training
-      ? {
-          GK: club.training.GK ?? null,
-          DEF: club.training.DEF ?? null,
-          MID: club.training.MID ?? null,
-          ATT: club.training.ATT ?? null
-        }
-      : null,
+    currency: club.currency ?? "UNK",
+    budget: club.budget ?? null,
+    staff: club.staff ?? [],
+    training: requireNumericTraining(club.training),
     gameWeek: club.gameWeek ?? null,
     week: club.week ?? null,
     lastSnapshotDate: club.lastSnapshotDate ?? null,
-    sourceType: club.sourceType ?? null,
     observedAt: club.observedAt ?? null,
     settings: {
-      currency: {
-        name: club.settings?.currency?.name ?? "UNK",
-        rate: club.settings?.currency?.rate ?? 1
-      },
       week: club.settings?.week ?? null,
       assumptions: club.settings?.assumptions ?? [],
       preferences: club.settings?.preferences ?? []
@@ -168,3 +151,38 @@ function mapClub(club: {
   };
 }
 
+function requireNumericTraining(
+  training: {
+    GK?: number;
+    DEF?: number;
+    MID?: number;
+    ATT?: number;
+  } | null | undefined
+): PersistedClub["training"] {
+  const GK = training?.GK;
+  const DEF = training?.DEF;
+  const MID = training?.MID;
+  const ATT = training?.ATT;
+
+  if (
+    training === null ||
+    training === undefined ||
+    typeof GK !== "number" ||
+    !Number.isFinite(GK) ||
+    typeof DEF !== "number" ||
+    !Number.isFinite(DEF) ||
+    typeof MID !== "number" ||
+    !Number.isFinite(MID) ||
+    typeof ATT !== "number" ||
+    !Number.isFinite(ATT)
+  ) {
+    throw new Error("Club training configuration is missing numeric values for every position.");
+  }
+
+  return {
+    GK,
+    DEF,
+    MID,
+    ATT
+  };
+}

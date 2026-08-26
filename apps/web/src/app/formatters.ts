@@ -1,14 +1,15 @@
 import type { MoneyTotal } from "@atlas/web/app/types";
 
 export function formatMoney(
-  total: MoneyTotal | null | undefined,
-  countryDetails?: { currencyName: string, currencyRate: number } | null
+  total: MoneyTotal | null,
+  countryDetails?: { currencyName: string; currencyRate: number } | null
 ): string {
-  if (!total) {
-    return "Not available";
+  if (total === null) {
+    return "\u2014";
   }
 
   let value: string;
+
   if (countryDetails) {
     const convertedAmount = Math.round(total.amount / countryDetails.currencyRate);
     value = `${countryDetails.currencyName} ${convertedAmount.toLocaleString("en-US")}`;
@@ -19,21 +20,35 @@ export function formatMoney(
   return total.isComplete ? value : `${value} (incomplete)`;
 }
 
-export function formatConvertedMoney(amount: number, countryDetails?: { currencyName: string, currencyRate: number } | null): string {
-  if (countryDetails) {
-    const convertedAmount = Math.round(amount / countryDetails.currencyRate);
-    return `${countryDetails.currencyName} ${convertedAmount.toLocaleString("en-US")}`;
-  }
-  return `UNK ${amount.toLocaleString("en-US")}`;
+export function formatNumber(value: number | null): string {
+  return value === null ? "\u2014" : value.toLocaleString("en-US");
 }
 
-export function formatNullable(value: string | number | null | undefined): string {
-  return value === null || value === undefined || value === "" ? "Not set" : value.toString();
+export function formatPercentage(value: number | null): string {
+  return value === null
+    ? "\u2014"
+    : `${value.toLocaleString("en-US", { maximumFractionDigits: 1 })}%`;
+}
+
+export function formatTalent(value: number | null): string {
+  return value === null ? "\u2014" : value.toLocaleString("en-US", { maximumFractionDigits: 1 });
+}
+
+export function formatEta(value: number | null): string {
+  if (value === null) {
+    return "\u2014";
+  }
+
+  if (value < 1) {
+    return "<1w";
+  }
+
+  return `~${value.toLocaleString("en-US", { maximumFractionDigits: 1 })}w`;
 }
 
 export function formatDateTime(value: string | null): string {
-  if (!value) {
-    return "Not available";
+  if (value === null) {
+    return "\u2014";
   }
 
   return new Date(value).toLocaleString("en-US", {
@@ -45,15 +60,11 @@ export function formatDateTime(value: string | null): string {
   });
 }
 
-export function formatLabel(value: string): string {
-  return value
-    .split(/[-.]/)
-    .map((part) => part[0]?.toUpperCase() + part.slice(1))
-    .join(" ");
+export function formatAdvanced(value: boolean): string {
+  return value ? "\u2713" : "\u2014";
 }
 
 export function formatTrainingPriority(value: number): string {
-  if (value === null || value === undefined || Number.isNaN(value)) return "Not set";
   const mapping: Record<number, string> = {
     1: "Condicion",
     2: "Porteria",
@@ -64,5 +75,6 @@ export function formatTrainingPriority(value: number): string {
     7: "Anotacion",
     8: "Rapidez"
   };
-  return mapping[value] || value.toString();
+
+  return mapping[value] ?? value.toString();
 }

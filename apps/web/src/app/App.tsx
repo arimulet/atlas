@@ -2,60 +2,49 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
   fetchClubDashboard,
+  fetchClubDiagnostic,
   fetchPlayerDevelopment,
   fetchRealYouthAcademyPlanning,
-  fetchSquadMarketPlanning,
-  fetchSquadEconomy,
+  fetchSquadDepthAnalysis,
+  fetchSquadPlanning,
+  fetchSquadPlanningRecommendations,
   fetchYouthPipelinePlanning,
-  syncSokkerXml
+  fetchTrainingPageData,
+  resetSquadRoleAssignment,
+  saveSquadRoleAssignment,
+  syncSokker
 } from "@atlas/web/app/api";
-import { DashboardPanel } from "@atlas/web/app/components/DashboardPanel";
-import { DiagnosticPanel } from "@atlas/web/app/components/DiagnosticPanel";
-import { PlayerDevelopmentPanel } from "@atlas/web/app/components/PlayerDevelopmentPanel";
-import { SquadMarketPlanningPanel } from "@atlas/web/app/components/SquadMarketPlanningPanel";
-import { SquadEconomyPanel } from "@atlas/web/app/components/SquadEconomyPanel";
-import { SummaryPanel } from "@atlas/web/app/components/SummaryPanel";
-import { YouthPipelinePlanningPanel } from "@atlas/web/app/components/YouthPipelinePlanningPanel";
-import { YouthAcademyPlanningPanel } from "@atlas/web/app/components/YouthAcademyPlanningPanel";
 import type {
   ClubDashboard,
   DashboardStatus,
-  DiagnosticFinding,
-  ImportIssue,
   ImportResponse,
-  ImportStatus,
   PlayerDevelopment,
   RealYouthAcademyPlanning,
-  SquadEconomy,
-  SquadMarketPlanning,
+  SquadPlanningBundle,
+  SquadRole,
+  TrainingPageData,
   YouthPipelinePlanning
-} from "./types";
-import { Section } from "./components/Section";
-import { IssueList } from "./components/IssueList";
-import { SokkerSyncModal } from "./components/SokkerSyncModal";
-import { AppV2 } from "./app-v2/AppV2";
-import { UiVersionSwitch } from "./app-v2/components/UiVersionSwitch";
-import type { AppLegacyProps } from "./app-legacy/types";
-import { readUiVersion, uiVersionStorageKey, type UiVersion } from "./ui-version";
+} from "@atlas/web/app/types";
+import { AppShell } from "./components/AppShell";
+import { Dashboard } from "./pages/Dashboard";
+import { Finances } from "./pages/Finances";
+import { Squad } from "./pages/Squad";
+import { Training } from "./pages/Training";
+import { PlayerDetail } from "./pages/PlayerDetail";
+import { Youth } from "./pages/Youth";
+import { Diagnostics } from "./pages/Diagnostics";
+import { createPlayerTrainingProjectionSummaries } from "./view-models/player-detail-view-model";
+import type { SokkerImportCredentials } from "./components/SokkerImporterForm/types";
+import type { ViewId } from "./types";
+import { pathForMainView, pathForPlayerDetail, useRouter } from "./routing";
+import { useFinancialStrategy } from "./features/financialStrategy/useFinancialStrategy";
 
 const lastClubStorageKey = "atlas.lastClubId";
 
 export function App() {
-  const [uiVersion, setUiVersion] = useState<UiVersion>(() => readUiVersion());
-
-  const handleUiVersionChange = useCallback((version: UiVersion) => {
-    window.localStorage.setItem(uiVersionStorageKey, version);
-    setUiVersion(version);
-  }, []);
-
-  return uiVersion === "legacy" ? (
-    <AppLegacy uiVersion={uiVersion} onUiVersionChange={handleUiVersionChange} />
-  ) : (
-    <AppV2 uiVersion={uiVersion} onUiVersionChange={handleUiVersionChange} />
-  );
-}
-
-export function AppLegacy({ uiVersion, onUiVersionChange }: AppLegacyProps) {
+  const { goBack, navigate, route } = useRouter();
+  const activeView: ViewId = route.kind === "player-detail" ? "player-detail" : route.view;
+  const [isSokkerImportOpen, setIsSokkerImportOpen] = useState(false);
   const [activeClubId, setActiveClubId] = useState<string | null>(() =>
     window.localStorage.getItem(lastClubStorageKey)
   );
@@ -63,321 +52,353 @@ export function AppLegacy({ uiVersion, onUiVersionChange }: AppLegacyProps) {
     activeClubId ? "loading" : "idle"
   );
   const [dashboard, setDashboard] = useState<ClubDashboard | null>(null);
-  const [activeView, setActiveView] = useState<
-    | "dashboard"
-    | "squad-economy"
-    | "player-development"
-    | "squad-market-planning"
-    | "youth-pipeline-planning"
-    | "real-youth-academy"
-  >("dashboard");
-  const [squadEconomyStatus, setSquadEconomyStatus] = useState<DashboardStatus>("idle");
-  const [squadEconomy, setSquadEconomy] = useState<SquadEconomy | null>(null);
-  const [playerDevelopmentStatus, setPlayerDevelopmentStatus] = useState<DashboardStatus>("idle");
-  const [playerDevelopment, setPlayerDevelopment] = useState<PlayerDevelopment | null>(null);
-  const [squadMarketPlanningStatus, setSquadMarketPlanningStatus] =
-    useState<DashboardStatus>("idle");
-  const [squadMarketPlanning, setSquadMarketPlanning] = useState<SquadMarketPlanning | null>(null);
-  const [youthPipelinePlanningStatus, setYouthPipelinePlanningStatus] =
-    useState<DashboardStatus>("idle");
-  const [youthPipelinePlanning, setYouthPipelinePlanning] = useState<YouthPipelinePlanning | null>(
-    null
+  const [youthStatus, setYouthStatus] = useState<DashboardStatus>(
+    activeClubId ? "loading" : "idle"
   );
-  const [realYouthAcademyStatus, setRealYouthAcademyStatus] = useState<DashboardStatus>("idle");
-  const [realYouthAcademy, setRealYouthAcademy] = useState<RealYouthAcademyPlanning | null>(null);
+  const [youthAcademy, setYouthAcademy] = useState<RealYouthAcademyPlanning | null>(null);
+  const [youthPipelineStatus, setYouthPipelineStatus] = useState<DashboardStatus>(
+    activeClubId ? "loading" : "idle"
+  );
+  const [youthPipeline, setYouthPipeline] = useState<YouthPipelinePlanning | null>(null);
+  const [trainingStatus, setTrainingStatus] = useState<DashboardStatus>(
+    activeClubId ? "loading" : "idle"
+  );
+  const [training, setTraining] = useState<TrainingPageData | null>(null);
+  const [trainingDiagnostic, setTrainingDiagnostic] = useState<ImportResponse["diagnostic"]>(null);
+  const [playerDevelopment, setPlayerDevelopment] = useState<PlayerDevelopment | null>(null);
+  const [squadPlanningStatus, setSquadPlanningStatus] = useState<DashboardStatus>(
+    activeClubId ? "loading" : "idle"
+  );
+  const [squadPlanning, setSquadPlanning] = useState<SquadPlanningBundle | null>(null);
+  const projectionSummaries = useMemo(
+    () =>
+      trainingStatus === "ready"
+        ? createPlayerTrainingProjectionSummaries({
+            development: playerDevelopment,
+            training,
+            trainingDiagnostic,
+            trainingStatus
+          })
+        : undefined,
+    [playerDevelopment, training, trainingDiagnostic, trainingStatus]
+  );
 
-  const [status, setStatus] = useState<ImportStatus>("idle");
-  const [message, setMessage] = useState("Club dashboard ready.");
-  const [result, setResult] = useState<ImportResponse | null>(null);
-  const [errors, setErrors] = useState<ImportIssue[]>([]);
+  const diagnosticAlertCount = useMemo(
+    () =>
+      trainingDiagnostic?.findings.filter(
+        (diagnostic) => diagnostic.severity === "high" || diagnostic.severity === "medium"
+      ).length ?? 0,
+    [trainingDiagnostic]
+  );
 
-  const [isSokkerModalOpen, setIsSokkerModalOpen] = useState(false);
-
-  const findingsByCategory = useMemo(() => {
-    const groups = new Map<string, DiagnosticFinding[]>();
-
-    result?.diagnostic?.findings.forEach((finding) => {
-      groups.set(finding.category, [...(groups.get(finding.category) ?? []), finding]);
-    });
-
-    return [...groups.entries()];
-  }, [result]);
-
-  const loadDashboard = useCallback(async (clubId: string) => {
+  const loadDashboard = useCallback(async (clubId: string): Promise<boolean> => {
     setDashboardStatus("loading");
 
     try {
       setDashboard(await fetchClubDashboard(clubId));
       setDashboardStatus("ready");
+      return true;
     } catch {
       setDashboard(null);
       setDashboardStatus("error");
+      return false;
     }
   }, []);
 
-  const openSquadEconomy = useCallback(async () => {
-    if (!activeClubId) {
-      return;
-    }
-
-    setActiveView("squad-economy");
-    setSquadEconomyStatus("loading");
+  const loadYouthAcademy = useCallback(async (clubId: string): Promise<boolean> => {
+    setYouthStatus("loading");
 
     try {
-      setSquadEconomy(await fetchSquadEconomy(activeClubId));
-      setSquadEconomyStatus("ready");
+      setYouthAcademy(await fetchRealYouthAcademyPlanning(clubId));
+      setYouthStatus("ready");
+      return true;
     } catch {
-      setSquadEconomy(null);
-      setSquadEconomyStatus("error");
+      setYouthAcademy(null);
+      setYouthStatus("error");
+      return false;
     }
-  }, [activeClubId]);
+  }, []);
 
-  const openPlayerDevelopment = useCallback(async () => {
-    if (!activeClubId) {
-      return;
-    }
-
-    setActiveView("player-development");
-    setPlayerDevelopmentStatus("loading");
+  const loadTraining = useCallback(async (clubId: string): Promise<boolean> => {
+    setTrainingStatus("loading");
 
     try {
-      setPlayerDevelopment(await fetchPlayerDevelopment(activeClubId));
-      setPlayerDevelopmentStatus("ready");
+      const [trainingData, diagnostic] = await Promise.all([
+        fetchTrainingPageData(clubId),
+        fetchClubDiagnostic(clubId)
+      ]);
+
+      setTraining(trainingData);
+      setTrainingDiagnostic(diagnostic);
+      setTrainingStatus("ready");
+      return true;
+    } catch {
+      setTraining(null);
+      setTrainingDiagnostic(null);
+      setTrainingStatus("error");
+      return false;
+    }
+  }, []);
+  const loadPlayerDevelopment = useCallback(async (clubId: string): Promise<boolean> => {
+    try {
+      setPlayerDevelopment(await fetchPlayerDevelopment(clubId));
+      return true;
     } catch {
       setPlayerDevelopment(null);
-      setPlayerDevelopmentStatus("error");
+      return false;
     }
-  }, [activeClubId]);
+  }, []);
 
-  const openSquadMarketPlanning = useCallback(async () => {
-    if (!activeClubId) {
-      return;
-    }
-
-    setActiveView("squad-market-planning");
-    setSquadMarketPlanningStatus("loading");
+  const loadSquadPlanning = useCallback(async (clubId: string): Promise<boolean> => {
+    setSquadPlanningStatus("loading");
 
     try {
-      setSquadMarketPlanning(await fetchSquadMarketPlanning(activeClubId));
-      setSquadMarketPlanningStatus("ready");
+      const [assessment, depth, recommendations] = await Promise.all([
+        fetchSquadPlanning(clubId),
+        fetchSquadDepthAnalysis(clubId),
+        fetchSquadPlanningRecommendations(clubId)
+      ]);
+
+      setSquadPlanning({ assessment, depth, recommendations });
+      setSquadPlanningStatus("ready");
+      return true;
     } catch {
-      setSquadMarketPlanning(null);
-      setSquadMarketPlanningStatus("error");
+      setSquadPlanning(null);
+      setSquadPlanningStatus("error");
+      return false;
     }
-  }, [activeClubId]);
+  }, []);
 
-  const openYouthPipelinePlanning = useCallback(async () => {
-    if (!activeClubId) {
-      return;
-    }
-
-    setActiveView("youth-pipeline-planning");
-    setYouthPipelinePlanningStatus("loading");
+  const loadYouthPipeline = useCallback(async (clubId: string): Promise<boolean> => {
+    setYouthPipelineStatus("loading");
 
     try {
-      setYouthPipelinePlanning(await fetchYouthPipelinePlanning(activeClubId));
-      setYouthPipelinePlanningStatus("ready");
+      setYouthPipeline(await fetchYouthPipelinePlanning(clubId));
+      setYouthPipelineStatus("ready");
+      return true;
     } catch {
-      setYouthPipelinePlanning(null);
-      setYouthPipelinePlanningStatus("error");
+      setYouthPipeline(null);
+      setYouthPipelineStatus("error");
+      return false;
     }
-  }, [activeClubId]);
-
-  const openRealYouthAcademy = useCallback(async () => {
-    if (!activeClubId) {
-      return;
-    }
-
-    setActiveView("real-youth-academy");
-    setRealYouthAcademyStatus("loading");
-
-    try {
-      setRealYouthAcademy(await fetchRealYouthAcademyPlanning(activeClubId));
-      setRealYouthAcademyStatus("ready");
-    } catch {
-      setRealYouthAcademy(null);
-      setRealYouthAcademyStatus("error");
-    }
-  }, [activeClubId]);
+  }, []);
 
   useEffect(() => {
-    if (activeClubId) {
-      void loadDashboard(activeClubId);
+    if (!activeClubId) {
+      return;
     }
-  }, [activeClubId, loadDashboard]);
 
-  const handleSokkerSync = useCallback(
-    async (login: string, pass: string) => {
-      setStatus("loading");
-      setMessage("Sincronizando con Sokker XML...");
-      setResult(null);
-      setErrors([]);
+    void loadDashboard(activeClubId);
+    void loadYouthAcademy(activeClubId);
+    void loadTraining(activeClubId);
+    void loadPlayerDevelopment(activeClubId);
+    void loadYouthPipeline(activeClubId);
+    void loadSquadPlanning(activeClubId);
+  }, [
+    activeClubId,
+    loadDashboard,
+    loadPlayerDevelopment,
+    loadTraining,
+    loadYouthAcademy,
+    loadYouthPipeline,
+    loadSquadPlanning
+  ]);
 
-      try {
-        const { response, body } = await syncSokkerXml({ login, password: pass });
+  const handleSokkerImport = useCallback(
+    async (credentials: SokkerImportCredentials) => {
+      const { response, body } = await syncSokker(credentials);
 
-        if (!response.ok || body.importResult.status === "rejected") {
-          setStatus("error");
-          setMessage("Sincronización rechazada.");
-          setResult(body);
-          setErrors(body.importResult.errors);
-          return;
-        }
+      if (!response.ok || body.importResult.status === "rejected") {
+        const message = body.importResult.errors
+          .map((error) => (error.path ? `${error.path}: ${error.message}` : error.message))
+          .join(" ");
 
-        if (body.importResult.clubId) {
-          window.localStorage.setItem(lastClubStorageKey, body.importResult.clubId);
-          setActiveClubId(body.importResult.clubId);
-          await loadDashboard(body.importResult.clubId);
-        }
-
-        setStatus("success");
-        setMessage(
-          body.importResult.status === "accepted-with-warnings"
-            ? "Sincronización completada con advertencias."
-            : "Sincronización completada exitosamente."
-        );
-        setResult(body);
-        setIsSokkerModalOpen(false);
-      } catch (error) {
-        setStatus("error");
-        setMessage("Error de conexión al sincronizar.");
-        setErrors([
-          {
-            path: "api",
-            message: error instanceof Error ? error.message : "Unknown sync error."
-          }
-        ]);
+        throw new Error(message || "No se pudieron actualizar los datos.");
       }
+
+      if (body.importResult.clubId) {
+        window.localStorage.setItem(lastClubStorageKey, body.importResult.clubId);
+        setActiveClubId(body.importResult.clubId);
+        const [
+          dashboardLoaded,
+          youthLoaded,
+          trainingLoaded,
+          developmentLoaded,
+          youthPipelineLoaded
+        ] = await Promise.all([
+          loadDashboard(body.importResult.clubId),
+          loadYouthAcademy(body.importResult.clubId),
+          loadTraining(body.importResult.clubId),
+          loadPlayerDevelopment(body.importResult.clubId),
+          loadYouthPipeline(body.importResult.clubId)
+        ]);
+
+        if (
+          !dashboardLoaded ||
+          !youthLoaded ||
+          !trainingLoaded ||
+          !developmentLoaded ||
+          !youthPipelineLoaded
+        ) {
+          throw new Error("Datos actualizados, pero no se pudo recargar el Dashboard.");
+        }
+
+        void loadSquadPlanning(body.importResult.clubId);
+        setIsSokkerImportOpen(false);
+      }
+
+      return body;
     },
-    [loadDashboard]
+    [
+      loadDashboard,
+      loadPlayerDevelopment,
+      loadSquadPlanning,
+      loadTraining,
+      loadYouthAcademy,
+      loadYouthPipeline
+    ]
   );
 
+  const handleSaveSquadRole = useCallback(
+    async (playerId: string, role: SquadRole | null): Promise<void> => {
+      if (!activeClubId) {
+        throw new Error("No active club is available to save the squad role.");
+      }
+
+      if (role === null) {
+        await resetSquadRoleAssignment(activeClubId, playerId);
+      } else {
+        await saveSquadRoleAssignment(activeClubId, playerId, role);
+      }
+
+      const reloaded = await loadSquadPlanning(activeClubId);
+      if (!reloaded) {
+        throw new Error(
+          "Squad role was saved, but the updated squad planning could not be loaded."
+        );
+      }
+    },
+    [activeClubId, loadSquadPlanning]
+  );
+
+  const handleSelectPlayer = useCallback(
+    (playerId: string) => {
+      navigate(pathForPlayerDetail(playerId));
+    },
+    [navigate]
+  );
+
+  const handleBackFromPlayerDetail = useCallback(() => {
+    goBack(pathForMainView("squad"));
+  }, [goBack]);
+
+  const financialStrategy = useFinancialStrategy({
+    clubId: activeClubId,
+    currency: dashboard?.club.currency ?? null,
+    squadPlanning
+  });
+
   return (
-    <main className="app-shell">
-      <section className="workspace">
-        <header className="topbar">
-          <div>
-            <p className="eyebrow">ATLAS</p>
-            <h1>Club dashboard</h1>
-          </div>
-          <div className="legacy-topbar-actions">
-            <UiVersionSwitch activeVersion={uiVersion} onChange={onUiVersionChange} />
-            <div className={`status-pill ${status}`}>{message}</div>
-          </div>
-        </header>
-
-        {activeView === "squad-economy" ? (
-          <SquadEconomyPanel
-            squadEconomy={squadEconomy}
-            status={squadEconomyStatus}
-            onBack={() => setActiveView("dashboard")}
-          />
-        ) : activeView === "player-development" ? (
-          <PlayerDevelopmentPanel
-            playerDevelopment={playerDevelopment}
-            status={playerDevelopmentStatus}
-            onBack={() => setActiveView("dashboard")}
-          />
-        ) : activeView === "squad-market-planning" ? (
-          <SquadMarketPlanningPanel
-            squadMarketPlanning={squadMarketPlanning}
-            status={squadMarketPlanningStatus}
-            onBack={() => setActiveView("dashboard")}
-          />
-        ) : activeView === "youth-pipeline-planning" ? (
-          <YouthPipelinePlanningPanel
-            youthPipelinePlanning={youthPipelinePlanning}
-            status={youthPipelinePlanningStatus}
-            onBack={() => setActiveView("dashboard")}
-          />
-        ) : activeView === "real-youth-academy" ? (
-          <YouthAcademyPlanningPanel
-            realYouthAcademyPlanning={realYouthAcademy}
-            status={realYouthAcademyStatus}
-            onBack={() => setActiveView("dashboard")}
-          />
-        ) : (
-          <DashboardPanel
-            dashboard={dashboard}
-            status={dashboardStatus}
-            onOpenSquadEconomy={() => void openSquadEconomy()}
-            onOpenPlayerDevelopment={() => void openPlayerDevelopment()}
-            onOpenSquadMarketPlanning={() => void openSquadMarketPlanning()}
-            onOpenYouthPipelinePlanning={() => void openYouthPipelinePlanning()}
-            onOpenRealYouthAcademy={() => void openRealYouthAcademy()}
-          />
-        )}
-
-        {activeView === "dashboard" ? (
-          <section
-            className="dropzone"
-            style={{
-              marginTop: "16px",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              borderStyle: "solid"
-            }}
-          >
-            <div>
-              <p className="eyebrow">Integración Oficial</p>
-              <h2>Sincronización Sokker XML</h2>
-              <p>
-                Conecta directamente con Sokker para descargar tus juveniles, profesionales y estado
-                económico en tiempo real.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setIsSokkerModalOpen(true)}
-              style={{ background: "var(--accent-color, #007bff)", color: "#fff", border: "none" }}
-            >
-              Iniciar Sincronización
-            </button>
-          </section>
-        ) : null}
-
-        {activeView === "dashboard" && status === "loading" ? (
-          <p className="loading">Processing import...</p>
-        ) : null}
-
-        {activeView === "dashboard" && errors.length > 0 ? (
-          <Section title="Blocking errors" tone="error">
-            <IssueList
-              issues={errors.map((error) => ({ code: error.path, message: error.message }))}
-            />
-          </Section>
-        ) : null}
-
-        {activeView === "dashboard" && result?.importResult.warnings.length ? (
-          <Section title="Warnings" tone="warning">
-            <IssueList
-              issues={result.importResult.warnings.map((warning) => ({
-                code: warning.path,
-                message: warning.message
-              }))}
-            />
-          </Section>
-        ) : null}
-
-        {activeView === "dashboard" && result?.summary ? (
-          <SummaryPanel summary={result.summary} />
-        ) : null}
-
-        {activeView === "dashboard" ? (
-          <DiagnosticPanel
-            findingsByCategory={findingsByCategory}
-            currency={result?.summary?.currency ?? null}
-          />
-        ) : null}
-
-        <SokkerSyncModal
-          isOpen={isSokkerModalOpen}
-          onClose={() => setIsSokkerModalOpen(false)}
-          onSync={handleSokkerSync}
-          isLoading={status === "loading"}
+    <AppShell
+      activeView={route.kind === "main" ? route.view : null}
+      diagnosticAlertCount={diagnosticAlertCount}
+      isSokkerImportOpen={isSokkerImportOpen}
+      navigationKey={route.path}
+      onViewChange={(view) => navigate(pathForMainView(view))}
+      onCloseSokkerImport={() => setIsSokkerImportOpen(false)}
+      onOpenSokkerImport={() => setIsSokkerImportOpen(true)}
+      onSokkerImport={handleSokkerImport}
+    >
+      {activeView === "dashboard" ? (
+        <Dashboard
+          dashboard={dashboard}
+          dashboardStatus={dashboardStatus}
+          onSelectPlayer={handleSelectPlayer}
+          youthAcademy={youthAcademy}
+          youthStatus={youthStatus}
+          squadPlanning={squadPlanning}
+          squadPlanningStatus={squadPlanningStatus}
+          financialStrategy={financialStrategy}
         />
-      </section>
-    </main>
+      ) : activeView === "finances" ? (
+        <Finances
+          dashboard={dashboard}
+          onSelectPlayer={handleSelectPlayer}
+          squadPlanning={squadPlanning}
+          status={dashboardStatus}
+          financialStrategy={financialStrategy}
+        />
+      ) : activeView === "squad" ? (
+        <Squad
+          clubId={activeClubId}
+          currency={dashboard?.club.currency ?? null}
+          development={playerDevelopment}
+          onSelectPlayer={handleSelectPlayer}
+          onSaveSquadRole={handleSaveSquadRole}
+          projectionSummaries={projectionSummaries}
+          squadPlanning={squadPlanning}
+          squadPlanningStatus={squadPlanningStatus}
+          training={training}
+          trainingDiagnostic={trainingDiagnostic}
+          trainingStatus={trainingStatus}
+        />
+      ) : activeView === "training" ? (
+        <Training
+          clubId={activeClubId}
+          development={playerDevelopment}
+          onSelectPlayer={handleSelectPlayer}
+          projectionSummaries={projectionSummaries}
+          training={training}
+          trainingDiagnostic={trainingDiagnostic}
+          trainingStatus={trainingStatus}
+        />
+      ) : activeView === "youth" ? (
+        <Youth
+          clubId={activeClubId}
+          currency={dashboard?.club.currency ?? null}
+          youthAcademy={youthAcademy}
+          youthStatus={youthStatus}
+        />
+      ) : activeView === "diagnostics" ? (
+        <Diagnostics
+          dashboardStatus={dashboardStatus}
+          development={playerDevelopment}
+          onSelectPlayer={handleSelectPlayer}
+          training={training}
+          trainingDiagnostic={trainingDiagnostic}
+          trainingStatus={trainingStatus}
+          youthAcademy={youthAcademy}
+          youthPipeline={youthPipeline}
+          youthPipelineStatus={youthPipelineStatus}
+          youthStatus={youthStatus}
+        />
+      ) : activeView === "player-detail" ? (
+        <PlayerDetail
+          clubId={activeClubId}
+          currency={dashboard?.club.currency ?? null}
+          development={playerDevelopment}
+          onBack={handleBackFromPlayerDetail}
+          onBackToSquad={() => navigate(pathForMainView("squad"), { replace: true })}
+          playerId={route.kind === "player-detail" ? route.playerId : ""}
+          training={training}
+          trainingDiagnostic={trainingDiagnostic}
+          trainingStatus={trainingStatus}
+          squadPlanning={squadPlanning}
+        />
+      ) : (
+        <div className="atlas-placeholder">
+          <span className="atlas-placeholder__eyebrow">ATLAS</span>
+          <h1>Módulo en preparación</h1>
+          <p>
+            La navegación ya está preparada; el contenido funcional se migrará en una siguiente
+            etapa.
+          </p>
+          <div className="atlas-placeholder__section">
+            <span>Sección seleccionada</span>
+            <strong>{activeView}</strong>
+          </div>
+        </div>
+      )}
+    </AppShell>
   );
 }

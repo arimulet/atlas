@@ -1,6 +1,15 @@
 import mongoose, { Schema, model, type InferSchemaType, type Model } from "mongoose";
+import { ensureMongooseModels } from "./mongoose-model-registry.js";
 
-const observedPositionValues = ["goalkeeper", "defender", "midfielder", "winger", "striker"] as const;
+ensureMongooseModels();
+
+const observedPositionValues = [
+  "goalkeeper",
+  "defender",
+  "midfielder",
+  "winger",
+  "striker"
+] as const;
 
 const trainingSchema = new Schema(
   {
@@ -27,7 +36,6 @@ const skillSetSchema = new Schema(
 const playerSnapshotSchema = new Schema(
   {
     playerId: { type: Number, required: true, min: 1 },
-    name: { type: String, required: true },
     age: { type: Number, required: true, min: 1 },
     wage: { type: Number, required: true, min: 0 },
     value: { type: Number, required: true, min: 0 },
@@ -48,9 +56,9 @@ const playerSnapshotSchema = new Schema(
 const juniorSnapshotSchema = new Schema(
   {
     playerId: { type: Number, required: true, min: 1 },
-    name: { type: String, required: true },
+    name: { type: String, required: true, trim: true },
     age: { type: Number, required: true, min: 1 },
-    initialWeeksRemaining: { type: Number, default: null },
+    initialLevel: { type: Number, default: null, min: 0 },
     weeksRemaining: { type: Number, default: null },
     skill: { type: Number, required: true, min: 0 },
     status: {
@@ -64,22 +72,13 @@ const juniorSnapshotSchema = new Schema(
 
 const snapshotSchema = new Schema(
   {
-    clubId: { type: Schema.Types.ObjectId, ref: "Club", required: true, index: true },
+    clubId: { type: Number, required: true, min: 1, index: true },
     schemaVersion: { type: String, required: true },
     snapshotDate: { type: Date, required: true, index: true },
     gameWeek: { type: Number, default: null },
     week: { type: Number, default: null },
+    naturalKey: { type: String, default: null },
     importedAt: { type: Date, required: true, default: () => new Date() },
-    source: {
-      type: {
-        type: String,
-        required: true
-      },
-      exportedAt: { type: Date, required: true },
-      pageUrl: { type: String, default: null },
-      locale: { type: String, default: null }
-    },
-    sourceVersion: { type: String, default: null },
     players: [playerSnapshotSchema],
     juniors: [juniorSnapshotSchema]
   },
@@ -87,9 +86,13 @@ const snapshotSchema = new Schema(
 );
 
 snapshotSchema.index({ clubId: 1, snapshotDate: 1 });
+snapshotSchema.index(
+  { clubId: 1, gameWeek: 1, naturalKey: 1 },
+  { unique: true, partialFilterExpression: { naturalKey: { $type: "string" } } }
+);
 
 type SnapshotDocument = InferSchemaType<typeof snapshotSchema>;
 
 export const SnapshotModel =
-  (mongoose.models.Snapshot as Model<SnapshotDocument> | undefined) ??
+  (mongoose.models?.Snapshot as Model<SnapshotDocument> | undefined) ??
   model<SnapshotDocument>("Snapshot", snapshotSchema);

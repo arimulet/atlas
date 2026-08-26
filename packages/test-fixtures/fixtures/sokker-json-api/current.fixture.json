@@ -1,0 +1,41 @@
+{
+  "id": 91,
+  "name": "Ada",
+  "team": {
+    "id": 6038,
+    "name": "River Plate Forever",
+    "rank": 3,
+    "rankPosition": 1,
+    "emblem": "river-emblem",
+    "country": { "code": 32, "name": "Argentina" },
+    "colors": { "primary": "red" },
+    "training": { "gk": 2, "def": 6, "mid": 8, "att": 7 },
+    "nationalType": 0,
+    "bankrupt": false,
+    "league": null,
+    "rankTrend": null
+  },
+  "budget": { "value": 123456, "currency": "ARS" },
+  "roles": [],
+  "plus": false,
+  "hasTrialPlus": false,
+  "hasSubscription": false,
+  "plusDeadline": null,
+  "subscriptionNextPayment": null,
+  "today": {
+    "season": 78,
+    "week": 1205,
+    "seasonWeek": 8,
+    "day": 3,
+    "date": { "value": "2026-08-20", "timestamp": 1780000000 }
+  },
+  "dateTime": null,
+  "enabledFeatures": [],
+  "sl": "",
+  "nationalTeamId": 0,
+  "nationalTeam": null,
+  "firstLogin": false,
+  "lock": { "transfersLocked": false, "readOnlyMode": false },
+  "settings": { "locale": "en", "theme": "dark" },
+  "bankruptDeadline": null
+}

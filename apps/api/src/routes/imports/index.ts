@@ -1,93 +1,52 @@
 import {
-  importClubMatches,
-  importPlayerSnapshotMvp,
-  validatePlayerSnapshotImport,
-  SokkerXmlProvider
+  createSokkerDataProvider,
+  loadSokkerSyncPayload,
+  persistSokkerSync,
+  type SokkerSyncValidationIssue,
+  validateSokkerSyncPayload
 } from "@atlas/application";
-import { sokkerMatchesImportRequestSchema, sokkerSyncRequestSchema } from "../../schemas.js";
 import { FastifyInstance } from "fastify";
+import { sokkerSyncRequestSchema } from "../../schemas.js";
+
+interface ImportIssue {
+  path: string;
+  message: string;
+}
 
 async function importsRoutes(server: FastifyInstance) {
-  server.post("/player-snapshot/validate", async (request) => {
-    return validatePlayerSnapshotImport({ payload: request.body });
-  });
-
-  server.post("/player-snapshot", async (request, reply) => {
-    const result = await importPlayerSnapshotMvp({ payload: request.body });
-
-    if (result.importResult.status === "rejected") {
-      reply.code(422);
-    }
-
-    return result;
-  });
-
   server.post("/sokker-sync", async (request, reply) => {
     try {
       const credentials = sokkerSyncRequestSchema.parse(request.body);
-      const provider = new SokkerXmlProvider();
+      const provider = createSokkerDataProvider(credentials);
+      const loadedPayload = await loadSokkerSyncPayload(provider);
+      const validation = validateSokkerSyncPayload(loadedPayload);
 
-      const xmlData = await provider.importFullTeamData(credentials);
-
-      // Reconstruct payload for player snapshot
-      const playerSnapshotPayload = {
-        schemaVersion: "atlas.player-snapshot.v0",
-        source: {
-          type: "sokker-xml-import",
-          exportedAt: xmlData.importedAt.toISOString(),
-          locale: null
-        },
-        club: {
-          clubId: Number(xmlData.clubProfile.externalId),
-          country: xmlData.clubProfile.countryId,
-          name: xmlData.clubProfile.name,
-          training: xmlData.clubProfile.training,
-          gameWeek: xmlData.clubProfile.gameWeek
-        },
-        snapshot: {
-          snapshotDate: xmlData.importedAt.toISOString().split("T")[0],
-          gameWeek: xmlData.clubProfile.gameWeek,
-          week: xmlData.clubProfile.week
-        },
-        players: xmlData.players,
-        juniors: xmlData.juniors
-      };
-
-      const playerResult = await importPlayerSnapshotMvp({ payload: playerSnapshotPayload });
-
-      if (playerResult.importResult.status === "rejected") {
+      if (validation.status === "invalid") {
         reply.code(422);
+        return {
+          importResult: {
+            status: "rejected" as const,
+            errors: mapSyncIssues(validation.errors),
+            warnings: mapSyncIssues(validation.warnings),
+            clubId: null,
+            importedPlayerCount: 0
+          },
+          summary: null,
+          diagnostic: null
+        };
       }
 
-      const matches = await importClubMatches({
-        clubId: Number(xmlData.clubProfile.externalId),
-        credentials
-      });
-
-      return { ...playerResult, matches };
+      const persistence = await persistSokkerSync(validation);
+      return createSyncPersistenceResponse(persistence, validation.warnings);
     } catch (error) {
       reply.code(422);
 
-      let message = error instanceof Error ? error.message : String(error);
-      if (
-        error &&
-        typeof error === "object" &&
-        "format" in error &&
-        typeof (error as { format: unknown }).format === "function"
-      ) {
-        // It's a Zod error, let's make it readable
-        const e = error as unknown as {
-          issues: Array<{ path: (string | number)[]; message: string }>;
-        };
-        message =
-          "XML Validation Error: " +
-          e.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join(", ");
-      }
-
       return {
         importResult: {
-          status: "rejected",
-          errors: [{ path: "api", message }],
+          status: "rejected" as const,
+          errors: [
+            { path: "api", message: error instanceof Error ? error.message : String(error) }
+          ],
           warnings: [],
           clubId: null,
           importedPlayerCount: 0
@@ -97,22 +56,34 @@ async function importsRoutes(server: FastifyInstance) {
       };
     }
   });
+}
 
-  server.post("/sokker-matches", async (request, reply) => {
-    try {
-      const input = sokkerMatchesImportRequestSchema.parse(request.body);
-      return await importClubMatches({
-        clubId: input.clubId,
-        credentials: { login: input.login, password: input.password }
-      });
-    } catch (error) {
-      reply.code(422);
-      return {
-        status: "rejected",
-        errors: [{ path: "api", message: error instanceof Error ? error.message : String(error) }]
-      };
-    }
-  });
+function mapSyncIssues(issues: readonly SokkerSyncValidationIssue[]): ImportIssue[] {
+  return issues.map((issue) => ({
+    path: issue.path ?? "sokker-sync",
+    message: `[${issue.code}] ${issue.message}`
+  }));
+}
+
+function createSyncPersistenceResponse(
+  persistence: Awaited<ReturnType<typeof persistSokkerSync>>,
+  warnings: readonly SokkerSyncValidationIssue[]
+) {
+  return {
+    importResult: {
+      status: warnings.length > 0 ? ("accepted-with-warnings" as const) : ("accepted" as const),
+      errors: [],
+      warnings: mapSyncIssues(warnings),
+      importEventId: persistence.syncRunId,
+      snapshotId: persistence.snapshotId,
+      clubId: persistence.clubId,
+      playerIds: [],
+      importedPlayerCount: persistence.upserted.players
+    },
+    summary: null,
+    diagnostic: null,
+    persistence
+  };
 }
 
 export default importsRoutes;

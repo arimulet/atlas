@@ -1,5 +1,42 @@
-export type ImportStatus = "idle" | "loading" | "success" | "error";
+import type { MainViewId } from "./routing";
+import type {
+  AdvancedTrainingOptimization,
+  PlayerTrainingRecommendation,
+  SquadDepthAnalysis,
+  SquadDepthPlayer,
+  SquadPlanningRecommendations,
+  SquadRole,
+  SquadRoleAssignment,
+  WeeklyTrainingReport
+} from "@atlas/domain";
+export type { YouthDecisionPlanning } from "@atlas/application";
+
+export type { SquadRole } from "@atlas/domain";
+
+export type ViewId = MainViewId | "player-detail";
+
+export interface NavigationItem {
+  id: MainViewId;
+  label: string;
+  icon: string;
+  path: string;
+}
+
 export type DashboardStatus = "idle" | "loading" | "ready" | "error";
+
+export interface SquadPlanningData {
+  players: SquadDepthPlayer[];
+  summary: Record<SquadRole, number>;
+  manualAssignments: SquadRoleAssignment[];
+  currentGameWeek: number | null;
+  depthPlayers: SquadDepthPlayer[];
+}
+
+export interface SquadPlanningBundle {
+  assessment: SquadPlanningData;
+  depth: SquadDepthAnalysis;
+  recommendations: SquadPlanningRecommendations;
+}
 export type SourceKind = "observed" | "manual" | "effective";
 export type SquadEconomyEvidenceKind = "observed" | "manual" | "derived" | "inferred";
 export type SkillChangeDirection = "up" | "down" | "stable" | "insufficient_data";
@@ -7,6 +44,8 @@ export type PlayerDevelopmentFindingType =
   "improvement" | "stagnation" | "decline" | "insufficient_data";
 export type YouthPipelineCategory =
   "standout_prospect" | "follow_up" | "stagnation_risk" | "insufficient_data";
+export type SquadMarketCategory =
+  "sale_candidate" | "protection_candidate" | "follow_up" | "insufficient_signal";
 
 export interface ImportIssue {
   path: string;
@@ -77,13 +116,6 @@ export interface ImportResponse {
   diagnostic: {
     findings: DiagnosticFinding[];
   } | null;
-  matches?: {
-    discovered: number;
-    finished: number;
-    imported: number;
-    skipped: number;
-    failed: number;
-  };
 }
 
 export interface ManualRecord {
@@ -105,40 +137,38 @@ export interface ClubDashboard {
     id: string;
     clubId: number;
     name: string;
+    currency: string;
+    budget: number | null;
     gameWeek: number | null;
     week: number | null;
     lastSnapshotDate: string | null;
-    sourceType: string | null;
     observedAt: string | null;
     settings: {
-      currency: CurrencySettings;
       assumptions: ManualRecord[];
       preferences: ManualRecord[];
     };
     profile: {
       externalId: string | null;
       name: string;
-      currency: CurrencySettings;
+      currency: string;
       week: number | null;
     };
     training: {
-      GK: number | null;
-      DEF: number | null;
-      MID: number | null;
-      ATT: number | null;
-    } | null;
+      GK: number;
+      DEF: number;
+      MID: number;
+      ATT: number;
+    };
   };
   settings: {
     observed: {
       week: number | null;
     };
     settings: {
-      currency: CurrencySettings;
       week: number | null;
       preferences: Partial<Record<OperatingPreferenceKey, string>>;
     };
     effective: {
-      currency: CurrencySettings;
       week: number | null;
       preferences: Record<OperatingPreferenceKey, string>;
     };
@@ -172,23 +202,84 @@ export interface TrainingPageData {
   snapshotId: string | null;
   snapshotDate: string | null;
   configuration: {
-    GK: number | null;
-    DEF: number | null;
-    MID: number | null;
-    ATT: number | null;
+    GK: number;
+    DEF: number;
+    MID: number;
+    ATT: number;
   } | null;
   players: TrainingPagePlayer[];
+  history?: TrainingReport[];
+}
+
+export type WeeklyTrainingReportResponse = Omit<WeeklyTrainingReport, "date"> & {
+  date: string;
+};
+
+export interface WeeklyTrainingIntelligence {
+  report: WeeklyTrainingReportResponse;
+  recommendations: PlayerTrainingRecommendation[];
+  advancedOptimization: AdvancedTrainingOptimization;
+}
+
+export interface TrainingReport {
+  id?: string;
+  playerId: number;
+  gameWeek: number;
+  season?: number | null;
+  seasonWeek: number;
+  date: string;
+  type: string;
+  kind: "advanced" | "formation" | "missing";
+  intensity: number;
+  age: number;
+  skills: Record<string, number | undefined>;
+  skillsChange: Record<string, number>;
+  skillChanges?: TrainingSkillChange[];
+}
+
+export interface TrainingSkillChange {
+  skill: string;
+  before: number;
+  after: number;
+  delta: number;
+  direction: "up" | "down";
 }
 
 export interface TrainingPagePlayer {
   id: string;
+  playerId: number;
   name: string;
+  countryName?: string | null;
   age: number;
   form?: number | null;
   training: {
     position: number;
     advanced: boolean;
   };
+  value?: number | null;
+  valueChange?: number | null;
+  latestReport?: TrainingReport | null;
+  talentEstimate?: TalentEstimate | null;
+}
+
+export interface TalentEstimate {
+  value: number | null;
+  confidence: "unknown" | "low" | "medium" | "high";
+  evidenceCount: number;
+  evidences: TalentEvidence[];
+}
+
+export interface TalentEvidence {
+  playerId: number;
+  skill: string;
+  fromLevel: number;
+  toLevel: number;
+  fromWeek: number;
+  toWeek: number;
+  trainingWeeks: number;
+  accumulatedTrainingPoints: number;
+  estimatedTalent: number;
+  confidence: number;
 }
 
 export interface ClubDashboardDevelopmentSummary {
@@ -305,205 +396,6 @@ export interface OperationalArea {
   label: string;
   status: "available" | "ready" | "planned";
   summary: string;
-}
-
-export type SquadMarketCategory =
-  "sale_candidate" | "protection_candidate" | "follow_up" | "insufficient_signal";
-
-export interface SquadMarketPlanning {
-  clubId: string;
-  snapshotId: string | null;
-  snapshotDate: string | null;
-  observed: {
-    players: SquadMarketObservedPlayer[];
-    coverage: {
-      playerCount: number;
-      playersWithWage: number;
-      playersWithValue: number;
-      playersWithStableIdentity: number;
-    };
-  };
-  manual: {
-    marketStrategy: string;
-  };
-  derived: {
-    categoryCounts: Record<SquadMarketCategory, number>;
-    players: SquadMarketPlayerPlan[];
-  };
-  warnings: SquadMarketWarning[];
-}
-
-export interface SquadMarketObservedPlayer {
-  playerId: string | null;
-  externalId: string | null;
-  snapshotPlayerId: string;
-  name: string;
-  age: number;
-  role: {
-    label: string;
-    source: "observed" | "inferred" | "unknown";
-  };
-  wage: { amount: number; currency: string | null };
-  value: { amount: number; currency: string | null };
-}
-
-export interface SquadMarketPlayerPlan {
-  playerId: string | null;
-  snapshotPlayerId: string;
-  name: string;
-  age: number;
-  role: {
-    label: string;
-    source: "observed" | "inferred" | "unknown";
-  };
-  category: SquadMarketCategory;
-  severity: Severity;
-  confidence: "low" | "medium" | "high";
-  rationale: string;
-  timing: SquadMarketTiming;
-  signals: SquadMarketSignal[];
-  warnings: SquadMarketWarning[];
-}
-
-export interface SquadMarketTiming {
-  label: string;
-  window: {
-    from: string | null;
-    to: string | null;
-    snapshotCount: number;
-  };
-  dataUsed: string[];
-  mainReasons: string[];
-  limits: string[];
-}
-
-export interface SquadMarketSignal {
-  code: string;
-  severity: Severity;
-  confidence: "low" | "medium" | "high";
-  message: string;
-  evidence: SquadMarketEvidence[];
-}
-
-export interface SquadMarketWarning {
-  code: string;
-  message: string;
-  evidence: SquadMarketEvidence[];
-}
-
-export interface SquadMarketEvidence {
-  kind: SquadEconomyEvidenceKind;
-  label: string;
-  value: string | number | null;
-}
-
-export interface SquadEconomy {
-  clubId: string;
-  countryDetails: {
-    name: string;
-    currencyName: string;
-    currencyRate: number;
-  } | null;
-  snapshotId: string | null;
-  snapshotDate: string | null;
-  observed: {
-    players: SquadEconomyObservedPlayer[];
-    coverage: {
-      playerCount: number;
-      playersWithWage: number;
-      playersWithValue: number;
-      wageCurrency: string | null;
-      valueCurrency: string | null;
-    };
-  };
-  manual: {
-    currency: CurrencySettings;
-    riskTolerance: string;
-  };
-  derived: {
-    totalWage: MoneyTotal;
-    totalValue: MoneyTotal;
-    wageToValueRatio: number | null;
-    playerDetails: SquadEconomyPlayerDetail[];
-    concentration: {
-      wage: SquadEconomyConcentration[];
-      value: SquadEconomyConcentration[];
-    };
-  };
-  historical: {
-    comparableSnapshotCount: number;
-    previousSnapshot: SquadEconomyHistoricalSnapshot | null;
-    currentSnapshot: SquadEconomyHistoricalSnapshot | null;
-    changes: {
-      totalWageDelta: number | null;
-      totalWageDeltaPercent: number | null;
-      totalValueDelta: number | null;
-      totalValueDeltaPercent: number | null;
-      wageToValueRatioDelta: number | null;
-    };
-  };
-  findings: SquadEconomyFinding[];
-  warnings: SquadEconomyWarning[];
-}
-
-export interface SquadEconomyObservedPlayer {
-  playerId: string | null;
-  snapshotPlayerId: string;
-  name: string;
-  age: number;
-  wage: { amount: number; currency: string | null };
-  value: { amount: number; currency: string | null };
-}
-
-export interface SquadEconomyConcentration {
-  playerId: string | null;
-  snapshotPlayerId: string;
-  name: string;
-  amount: number;
-  currency: string | null;
-  share: number | null;
-}
-
-export interface SquadEconomyPlayerDetail {
-  playerId: string | null;
-  snapshotPlayerId: string;
-  name: string;
-  age: number;
-  wage: { amount: number; currency: string | null };
-  value: { amount: number; currency: string | null };
-  wageShare: number | null;
-  valueShare: number | null;
-  wageToValueRatio: number | null;
-  warnings: SquadEconomyWarning[];
-}
-
-export interface SquadEconomyHistoricalSnapshot {
-  snapshotId: string;
-  snapshotDate: string;
-  totalWage: MoneyTotal;
-  totalValue: MoneyTotal;
-  wageToValueRatio: number | null;
-}
-
-export interface SquadEconomyFinding {
-  code: string;
-  severity: Severity;
-  confidence: "low" | "medium" | "high";
-  title: string;
-  description: string;
-  evidence: SquadEconomyEvidence[];
-}
-
-export interface SquadEconomyWarning {
-  code: string;
-  message: string;
-  evidence: SquadEconomyEvidence[];
-}
-
-export interface SquadEconomyEvidence {
-  kind: SquadEconomyEvidenceKind;
-  label: string;
-  value: string | number | null;
 }
 
 export interface PlayerDevelopment {
@@ -735,6 +627,8 @@ export interface RealYouthAcademyObservedPlayer {
   externalId: string | null;
   name: string;
   age: number;
+  initialLevel: number | null;
+  initialWeeks: number | null;
   weeksInAcademy: number | null;
   weeksRemaining: number | null;
   skill: number | null;
@@ -746,10 +640,16 @@ export interface RealYouthAcademyPlayerPlan {
   externalId: string | null;
   name: string;
   age: number;
+  initialLevel: number | null;
+  initialWeeks: number | null;
   weeksInAcademy: number | null;
   weeksRemaining: number | null;
   projectedPromotionAge: number | null;
   skill: number | null;
+  skillChange: number | null;
+  levelPops: number | null;
+  talent: number | null;
+  expectedLevel: number | null;
   status: "in_academy" | "ready_for_promotion" | "promoted";
   category: RealYouthAcademyCategory;
   severity: Severity;

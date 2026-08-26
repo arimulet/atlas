@@ -9,12 +9,10 @@ export interface ClubOperatingSettings {
     week: number | null;
   };
   settings: {
-    currency: { name: string; rate: number };
     week: number | null;
     preferences: Partial<Record<OperatingPreferenceKey, OperatingPreferenceValue>>;
   };
   effective: {
-    currency: { name: string; rate: number };
     week: number | null;
     preferences: Record<OperatingPreferenceKey, OperatingPreferenceValue>;
   };
@@ -23,14 +21,12 @@ export interface ClubOperatingSettings {
 export interface UpdateClubOperatingSettingsInput {
   clubId: ClubId;
   settings: {
-    currency?: { name: string; rate: number };
     week?: number | null;
     preferences?: Partial<Record<OperatingPreferenceKey, OperatingPreferenceValue | null>>;
   };
 }
 
 export interface ValidatedManualOperatingSettingsUpdate {
-  currency?: { name: string; rate: number };
   week?: number | null;
   preferences?: Partial<Record<OperatingPreferenceKey, OperatingPreferenceValue | null>>;
 }

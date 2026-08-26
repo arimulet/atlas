@@ -3,21 +3,31 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import {
   ClubModel,
-  ImportEventModel,
+  JuniorModel,
   MongoClubRepository,
-  MongoImportEventRepository,
+  MongoJuniorRepository,
+  MongoPlayerDevelopmentTargetRepository,
+  MongoSquadRoleAssignmentRepository,
   MongoPlayerRepository,
   MongoSnapshotRepository,
   PlayerModel,
+  PlayerTransferModel,
+  getPlayerDevelopmentTargetModel,
+  getSquadRoleAssignmentModel,
   SnapshotModel,
+  migrateClubProfileDocuments,
+  migrateDevelopmentProfileKeys,
+  migrateSnapshotClubIds,
   type SaveSnapshotInput
 } from "../src/index.js";
 
 let mongo: MongoMemoryServer;
 
 const clubs = new MongoClubRepository();
-const importEvents = new MongoImportEventRepository();
+const juniors = new MongoJuniorRepository();
 const players = new MongoPlayerRepository();
+const developmentTargets = new MongoPlayerDevelopmentTargetRepository();
+const squadRoleAssignments = new MongoSquadRoleAssignmentRepository();
 const snapshots = new MongoSnapshotRepository();
 
 describe("Mongo repositories", () => {
@@ -29,8 +39,11 @@ describe("Mongo repositories", () => {
   beforeEach(async () => {
     await Promise.all([
       ClubModel.deleteMany({}),
-      ImportEventModel.deleteMany({}),
+      JuniorModel.deleteMany({}),
       PlayerModel.deleteMany({}),
+      PlayerTransferModel.deleteMany({}),
+      getPlayerDevelopmentTargetModel().deleteMany({}),
+      getSquadRoleAssignmentModel().deleteMany({}),
       SnapshotModel.deleteMany({})
     ]);
   });
@@ -41,7 +54,13 @@ describe("Mongo repositories", () => {
   });
 
   it("saves a valid normalized snapshot", async () => {
-    const club = await clubs.save({ clubId: 1, country: 1, name: "River Plate Forever", currency: { name: "ARS", rate: 100 } });
+    const club = await clubs.save({
+      clubId: 1,
+      country: 1,
+      name: "River Plate Forever",
+      training: { GK: 2, DEF: 6, MID: 4, ATT: 7 },
+      currency: "ARS"
+    });
     const player = await players.resolveHistoricalIdentity({
       playerId: 1001,
       clubId: club.clubId,
@@ -49,11 +68,11 @@ describe("Mongo repositories", () => {
     });
 
     const saved = await snapshots.save(
-      buildSnapshotInput({ clubId: club.id, playerId: player.playerId })
+      buildSnapshotInput({ clubId: club.clubId, playerId: player.playerId })
     );
 
     expect(saved.id).toEqual(expect.any(String));
-    expect(saved.clubId).toBe(club.id);
+    expect(saved.clubId).toBe(club.clubId);
     expect(saved.schemaVersion).toBe("atlas.player-snapshot.v0");
     expect(saved.gameWeek).toBe(1201);
     expect(saved.week).toBe(4);
@@ -65,35 +84,93 @@ describe("Mongo repositories", () => {
       value: 450000
     });
     expect(saved.juniors).toHaveLength(1);
+    expect((await SnapshotModel.findById(saved.id).lean())?.players[0]).not.toHaveProperty("name");
+    expect(Object.hasOwn((await SnapshotModel.findById(saved.id).lean()) ?? {}, "source")).toBe(
+      false
+    );
     expect(saved.juniors[0]).toMatchObject({
       playerId: 5001,
       name: "Matias Cantero",
       age: 16,
+      initialLevel: 8,
       weeksRemaining: 4,
       skill: 8,
       status: "in_academy"
     });
   });
 
+  it("keeps the current junior state by club and external id", async () => {
+    const first = await juniors.resolveCurrentIdentity({
+      juniorId: 5001,
+      clubId: 1,
+      name: "Matias Cantero",
+      age: 16,
+      currentLevel: 8,
+      weeksLeft: 4
+    });
+    const second = await juniors.resolveCurrentIdentity({
+      juniorId: 5001,
+      clubId: 1,
+      name: "Matias Cantero",
+      age: 17,
+      currentLevel: 9,
+      weeksLeft: 0
+    });
+
+    await juniors.markMissingStatuses(1, [], [5001]);
+
+    expect(second.id).toBe(first.id);
+    expect(await JuniorModel.countDocuments({ clubId: 1, juniorId: 5001 })).toBe(1);
+    expect(await juniors.findByJuniorId({ clubId: 1, juniorId: 5001 })).toMatchObject({
+      age: 17,
+      initialAge: 16,
+      initialLevel: 8,
+      currentLevel: 9,
+      initialWeeks: 4,
+      weeksLeft: 0,
+      status: "promoted"
+    });
+  });
+
+  it("migrates legacy club budget and currency fields without deleting the document", async () => {
+    const inserted = await ClubModel.collection.insertOne({
+      clubId: 99,
+      country: 1,
+      name: "Legacy Club",
+      budget: { value: 13221420, currency: "ARS" },
+      settings: { currency: { name: "ARS", rate: 1 }, preferences: [] }
+    });
+
+    const result = await migrateClubProfileDocuments();
+    const migrated = await ClubModel.collection.findOne({ _id: inserted.insertedId });
+
+    expect(result.migrated).toBe(1);
+    expect(migrated?.budget).toBe(13221420);
+    expect(migrated?.currency).toBe("ARS");
+    expect(migrated).not.toHaveProperty("budget.value");
+    expect(migrated).not.toHaveProperty("settings.currency");
+  });
+
   it("persists observed club profile separately from manual configuration", async () => {
     const club = await clubs.save({
-      clubId: 1, country: 1,
+      clubId: 1,
+      country: 1,
       name: "River Plate Forever",
       week: 4,
       lastSnapshotDate: new Date("2026-08-05T00:00:00.000Z"),
-      sourceType: "sokker-dom-export",
       observedAt: new Date("2026-08-05T20:00:00.000Z"),
-      currency: { name: "ARS", rate: 100 }
+      training: { GK: 2, DEF: 6, MID: 4, ATT: 7 },
+      currency: "ARS"
     });
 
     expect(club).toMatchObject({
       clubId: 1,
       name: "River Plate Forever",
-      week: 4,
-      sourceType: "sokker-dom-export"
+      week: 4
     });
+    expect(club).not.toHaveProperty("sourceType");
+    expect(club).toMatchObject({ currency: "ARS" });
     expect(club.settings).toMatchObject({
-      currency: { name: "ARS", rate: 100 },
       week: null,
       assumptions: [],
       preferences: [
@@ -103,7 +180,61 @@ describe("Mongo repositories", () => {
         { key: "market.strategy", value: "balanced" }
       ]
     });
-    // The settings assertions above replace this block.
+  });
+
+  it("migrates legacy snapshot ObjectId references to numeric club ids", async () => {
+    const club = await clubs.save({
+      clubId: 1,
+      country: 1,
+      name: "River Plate Forever",
+      training: { GK: 2, DEF: 6, MID: 4, ATT: 7 },
+      currency: "ARS"
+    });
+    const inserted = await SnapshotModel.collection.insertOne({
+      clubId: new mongoose.Types.ObjectId(club.id),
+      schemaVersion: "atlas.player-snapshot.v0",
+      snapshotDate: new Date("2026-08-05T00:00:00.000Z"),
+      importedAt: new Date("2026-08-05T20:00:00.000Z"),
+      players: [],
+      juniors: []
+    });
+
+    const result = await migrateSnapshotClubIds();
+    const migrated = await SnapshotModel.collection.findOne({ _id: inserted.insertedId });
+
+    expect(result.migrated).toBe(1);
+    expect(migrated?.clubId).toBe(1);
+  });
+
+  it("migrates legacy development profile keys", async () => {
+    const developmentTarget = await getPlayerDevelopmentTargetModel().collection.insertOne({
+      playerId: 100,
+      clubId: 1,
+      profile: "central_defender",
+      targetLevels: {},
+      targetAge: null
+    });
+    const transfer = await PlayerTransferModel.collection.insertOne({
+      transferKey: "legacy-development-profile",
+      transferDate: new Date("2026-08-21T00:00:00.000Z"),
+      salePrice: 1_000_000,
+      age: 20,
+      skills: {},
+      source: "test",
+      developmentProfile: "central_midfielder"
+    });
+
+    const result = await migrateDevelopmentProfileKeys();
+    const migratedTarget = await getPlayerDevelopmentTargetModel().collection.findOne({
+      _id: developmentTarget.insertedId
+    });
+    const migratedTransfer = await PlayerTransferModel.collection.findOne({
+      _id: transfer.insertedId
+    });
+
+    expect(result).toEqual({ developmentTargets: 1, playerTransfers: 1 });
+    expect(migratedTarget?.profile).toBe("defender");
+    expect(migratedTransfer?.developmentProfile).toBe("midfielder");
   });
 
   it("updates manual club configuration without changing observed Sokker data", async () => {
@@ -112,12 +243,12 @@ describe("Mongo repositories", () => {
       country: 1,
       name: "River Plate Forever",
       week: 4,
-      currency: { name: "ARS", rate: 100 }
+      training: { GK: 2, DEF: 6, MID: 4, ATT: 7 },
+      currency: "ARS"
     });
 
     const updated = await clubs.updateManualProfile({
       clubId: club.id,
-      currency: { name: "ARS", rate: 100 },
       assumptions: [{ key: "market-risk", value: "Keep liquidity buffer before buying." }],
       preferences: [{ key: "training-focus", value: "Prioritize playmaking trainees." }]
     });
@@ -128,7 +259,6 @@ describe("Mongo repositories", () => {
       week: 4
     });
     expect(updated.settings).toMatchObject({
-      currency: { name: "ARS", rate: 100 },
       week: null
     });
     expect(updated.settings.assumptions[0]).toMatchObject({
@@ -138,14 +268,20 @@ describe("Mongo repositories", () => {
   });
 
   it("retrieves a snapshot by id", async () => {
-    const club = await clubs.save({ clubId: 1, country: 1, name: "River Plate Forever", currency: { name: "ARS", rate: 100 } });
+    const club = await clubs.save({
+      clubId: 1,
+      country: 1,
+      name: "River Plate Forever",
+      training: { GK: 2, DEF: 6, MID: 4, ATT: 7 },
+      currency: "ARS"
+    });
     const player = await players.resolveHistoricalIdentity({
       playerId: 1001,
       clubId: club.clubId,
       name: "Tomas Alvarez"
     });
     const saved = await snapshots.save(
-      buildSnapshotInput({ clubId: club.id, playerId: player.playerId })
+      buildSnapshotInput({ clubId: club.clubId, playerId: player.playerId })
     );
 
     const found = await snapshots.findById(saved.id);
@@ -155,8 +291,20 @@ describe("Mongo repositories", () => {
   });
 
   it("lists snapshots for a club", async () => {
-    const club = await clubs.save({ clubId: 1, country: 1, name: "River Plate Forever", currency: { name: "ARS", rate: 100 } });
-    const otherClub = await clubs.save({ clubId: 2, country: 1, name: "Atlas Wanderers", currency: { name: "ARS", rate: 100 } });
+    const club = await clubs.save({
+      clubId: 1,
+      country: 1,
+      name: "River Plate Forever",
+      training: { GK: 2, DEF: 6, MID: 4, ATT: 7 },
+      currency: "ARS"
+    });
+    const otherClub = await clubs.save({
+      clubId: 2,
+      country: 1,
+      name: "Atlas Wanderers",
+      training: { GK: 2, DEF: 6, MID: 4, ATT: 7 },
+      currency: "ARS"
+    });
     const player = await players.resolveHistoricalIdentity({
       playerId: 1001,
       clubId: club.clubId,
@@ -165,17 +313,19 @@ describe("Mongo repositories", () => {
 
     await snapshots.save(
       buildSnapshotInput({
-        clubId: club.id,
+        clubId: club.clubId,
         playerId: player.playerId,
         snapshotDate: new Date("2026-08-06T00:00:00.000Z")
       })
     );
-    await snapshots.save(buildSnapshotInput({ clubId: club.id, playerId: player.playerId }));
-    await snapshots.save(buildSnapshotInput({ clubId: otherClub.id, playerId: player.playerId }));
+    await snapshots.save(buildSnapshotInput({ clubId: club.clubId, playerId: player.playerId }));
+    await snapshots.save(
+      buildSnapshotInput({ clubId: otherClub.clubId, playerId: player.playerId })
+    );
 
-    const list = await snapshots.listByClub(club.id);
+    const list = await snapshots.listByClub(club.clubId);
 
-    expect(list.map((snapshot) => snapshot.clubId)).toEqual([club.id, club.id]);
+    expect(list.map((snapshot) => snapshot.clubId)).toEqual([club.clubId, club.clubId]);
     expect(list.map((snapshot) => snapshot.snapshotDate.toISOString())).toEqual([
       "2026-08-05T00:00:00.000Z",
       "2026-08-06T00:00:00.000Z"
@@ -183,7 +333,13 @@ describe("Mongo repositories", () => {
   });
 
   it("retrieves snapshots by club and date", async () => {
-    const club = await clubs.save({ clubId: 1, country: 1, name: "River Plate Forever", currency: { name: "ARS", rate: 100 } });
+    const club = await clubs.save({
+      clubId: 1,
+      country: 1,
+      name: "River Plate Forever",
+      training: { GK: 2, DEF: 6, MID: 4, ATT: 7 },
+      currency: "ARS"
+    });
     const player = await players.resolveHistoricalIdentity({
       playerId: 1001,
       clubId: club.clubId,
@@ -192,10 +348,10 @@ describe("Mongo repositories", () => {
     const snapshotDate = new Date("2026-08-05T00:00:00.000Z");
 
     const saved = await snapshots.save(
-      buildSnapshotInput({ clubId: club.id, playerId: player.playerId, snapshotDate })
+      buildSnapshotInput({ clubId: club.clubId, playerId: player.playerId, snapshotDate })
     );
 
-    const found = await snapshots.findByClubAndDate(club.id, snapshotDate);
+    const found = await snapshots.findByClubAndDate(club.clubId, snapshotDate);
 
     expect(found.map((snapshot) => snapshot.id)).toEqual([saved.id]);
   });
@@ -245,34 +401,57 @@ describe("Mongo repositories", () => {
     );
   });
 
-  it("persists an import event with warnings", async () => {
-    const event = await importEvents.create({
-      schemaVersion: "atlas.player-snapshot.v0",
-      sourceType: "sokker-dom-export",
-      status: "accepted-with-warnings",
-      errors: [],
-      warnings: [
-        {
-          path: "players.0.externalId",
-          message: "Missing externalId; player identity may require manual review."
-        }
-      ]
+  it("keeps manual development overrides separate from Sokker player sync", async () => {
+    const saved = await developmentTargets.saveManualOverride({
+      clubId: 1,
+      playerId: 1001,
+      profile: "forward",
+      targetLevels: { striker: 15 },
+      targetAge: 24
     });
 
-    const found = await importEvents.findById(event.id);
+    await players.resolveHistoricalIdentity({
+      playerId: 1001,
+      clubId: 1,
+      name: "Updated Tomas",
+      position: "MID",
+      skills: { striker: 12 }
+    });
 
-    expect(found?.status).toBe("accepted-with-warnings");
-    expect(found?.warnings).toEqual([
-      {
-        path: "players.0.externalId",
-        message: "Missing externalId; player identity may require manual review."
-      }
-    ]);
+    const override = await developmentTargets.findByPlayerId({ clubId: 1, playerId: 1001 });
+
+    expect(saved).toMatchObject({ profile: "forward", targetAge: 24 });
+    expect(override).toMatchObject({ profile: "forward", targetAge: 24 });
+    expect(override?.targetLevels).toEqual({ striker: 15 });
+  });
+
+  it("keeps a manual squad role override when Sokker player state is synced", async () => {
+    const saved = await squadRoleAssignments.saveManualOverride({
+      clubId: 1,
+      playerId: 1001,
+      role: "core"
+    });
+
+    await players.resolveHistoricalIdentity({
+      playerId: 1001,
+      clubId: 1,
+      name: "Updated Tomas",
+      age: 29,
+      skills: { defender: 14 }
+    });
+
+    const override = await squadRoleAssignments.findByPlayerId({ clubId: 1, playerId: 1001 });
+    const raw = await getSquadRoleAssignmentModel().findOne({ clubId: 1, playerId: 1001 }).lean();
+
+    expect(saved).toMatchObject({ role: "core", source: "manual" });
+    expect(override).toMatchObject({ role: "core", source: "manual" });
+    expect(raw).not.toHaveProperty("currentContributionScore");
+    expect(raw).not.toHaveProperty("lifecycle");
   });
 });
 
 function buildSnapshotInput(overrides: {
-  clubId: string;
+  clubId: number;
   playerId: number;
   snapshotDate?: Date;
 }): SaveSnapshotInput {
@@ -283,12 +462,6 @@ function buildSnapshotInput(overrides: {
     gameWeek: 1201,
     week: 4,
     importedAt: new Date("2026-08-05T20:00:00.000Z"),
-    source: {
-      type: "sokker-dom-export",
-      exportedAt: new Date("2026-08-05T20:00:00.000Z"),
-      pageUrl: "https://example.sokker.org/players",
-      locale: "es-AR"
-    },
     players: [
       {
         playerId: overrides.playerId,
@@ -317,7 +490,7 @@ function buildSnapshotInput(overrides: {
         playerId: 5001,
         name: "Matias Cantero",
         age: 16,
-        initialWeeksRemaining: 4,
+        initialLevel: 8,
         weeksRemaining: 4,
         skill: 8,
         status: "in_academy"

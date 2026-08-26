@@ -2,7 +2,10 @@ import mongoose from "mongoose";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { ClubModel, MongoClubRepository } from "@atlas/database";
-import { getClubOperatingSettings, updateClubOperatingSettings } from "../src/clubOperatingSettings/index.js";
+import {
+  getClubOperatingSettings,
+  updateClubOperatingSettings
+} from "../src/clubOperatingSettings/index.js";
 
 let mongo: MongoMemoryServer;
 
@@ -29,14 +32,14 @@ describe("Club operating settings use cases", () => {
       country: 1,
       name: "River Plate Forever",
       week: 4,
-      currency: { name: "ARS", rate: 100 }
+      training: { GK: 2, DEF: 6, MID: 4, ATT: 7 },
+      currency: "ARS"
     });
 
     const settings = await getClubOperatingSettings(club.id);
 
     expect(settings.observed).toEqual({ week: 4 });
     expect(settings.settings).toEqual({
-      currency: { name: "ARS", rate: 100 },
       week: null,
       preferences: {
         "economy.riskTolerance": "balanced",
@@ -46,7 +49,6 @@ describe("Club operating settings use cases", () => {
       }
     });
     expect(settings.effective).toEqual({
-      currency: { name: "ARS", rate: 100 },
       week: 4,
       preferences: {
         "economy.riskTolerance": "balanced",
@@ -63,13 +65,13 @@ describe("Club operating settings use cases", () => {
       country: 1,
       name: "River Plate Forever",
       week: 4,
-      currency: { name: "ARS", rate: 100 }
+      training: { GK: 2, DEF: 6, MID: 4, ATT: 7 },
+      currency: "ARS"
     });
 
     const settings = await updateClubOperatingSettings({
       clubId: club.id,
       settings: {
-        currency: { name: " ars ", rate: 100 },
         week: 6,
         preferences: {
           "economy.riskTolerance": "conservative",
@@ -82,7 +84,6 @@ describe("Club operating settings use cases", () => {
 
     expect(settings.observed).toEqual({ week: 4 });
     expect(settings.settings).toMatchObject({
-      currency: { name: "ars", rate: 100 },
       week: 6,
       preferences: {
         "economy.riskTolerance": "conservative",
@@ -92,13 +93,12 @@ describe("Club operating settings use cases", () => {
       }
     });
     expect(settings.effective).toMatchObject({
-      currency: { name: "ars", rate: 100 },
       week: 6
     });
 
     const persisted = await ClubModel.findById(club.id).lean();
     expect(persisted?.week).toBe(4);
-    expect(persisted?.settings?.currency).toEqual({ name: "ars", rate: 100 });
+    expect(persisted?.currency).toBe("ARS");
     expect(persisted?.settings?.preferences.map((preference) => preference.key).sort()).toEqual([
       "academy.investment",
       "economy.riskTolerance",
@@ -107,12 +107,15 @@ describe("Club operating settings use cases", () => {
     ]);
   });
 
-  it("validates currency, week and preference values clearly", async () => {
-    const club = await clubs.save({ clubId: 1, country: 1, name: "River Plate Forever", currency: { name: "ARS", rate: 100 } });
+  it("validates week and preference values clearly", async () => {
+    const club = await clubs.save({
+      clubId: 1,
+      country: 1,
+      name: "River Plate Forever",
+      training: { GK: 2, DEF: 6, MID: 4, ATT: 7 },
+      currency: "ARS"
+    });
 
-    await expect(
-      updateClubOperatingSettings({ clubId: club.id, settings: { currency: { name: "", rate: 100 } } })
-    ).rejects.toThrow("Currency must include a valid name and rate.");
     await expect(
       updateClubOperatingSettings({ clubId: club.id, settings: { week: 17 } })
     ).rejects.toThrow("Operating week must be an integer between 1 and 16.");
@@ -130,7 +133,8 @@ describe("Club operating settings use cases", () => {
       country: 1,
       name: "River Plate Forever",
       week: 4,
-      currency: { name: "ARS", rate: 100 }
+      training: { GK: 2, DEF: 6, MID: 4, ATT: 7 },
+      currency: "ARS"
     });
 
     await updateClubOperatingSettings({
@@ -164,13 +168,13 @@ describe("Club operating settings use cases", () => {
       country: 1,
       name: "River Plate Forever",
       week: 4,
-      currency: { name: "ARS", rate: 100 }
+      training: { GK: 2, DEF: 6, MID: 4, ATT: 7 },
+      currency: "ARS"
     });
 
     await updateClubOperatingSettings({
       clubId: club.id,
       settings: {
-        currency: { name: "ARS", rate: 100 },
         week: 6
       }
     });
@@ -184,7 +188,6 @@ describe("Club operating settings use cases", () => {
     });
 
     expect(settings.settings).toMatchObject({
-      currency: { name: "ARS", rate: 100 },
       week: 6,
       preferences: {
         "market.strategy": "opportunistic"

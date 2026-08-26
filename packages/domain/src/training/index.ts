@@ -1,18 +1,16 @@
 import {
-  ADVANCED_BASE_EFFICIENCY,
   AGE_TRAINING_FACTOR,
   BASE_TRAINING_AGE,
   BASE_TRAINING_POINTS,
+  DEFAULT_TALENT_FOR_RELATIVE_COMPARISON,
   DEFAULT_TALENT_PROFILE_MINIMUM_OBSERVATIONS,
-  FIRST_EFFICIENCY_THRESHOLD,
-  FIRST_SEGMENT_EFFICIENCY,
-  FRIENDLY_MATCH_WEIGHT,
   MAX_EFFICIENCY,
-  MAX_EQUIVALENT_MINUTES,
   MAX_SKILL_LEVEL,
   MAX_TRAINING_EFFICIENCY,
   SKILL_LEVEL_TRAINING_FACTOR,
   SKILL_TRAINING_BASE_LEVEL,
+  TRAINING_KIND_EFFECTIVENESS,
+  TRAINING_RECOMMENDATION_SCORE_NORMALIZATION_BASE,
   SUPPORTED_TRAINING_SKILLS
 } from "./constants.js";
 import type {
@@ -24,13 +22,18 @@ import type {
   SkillProgressObservationConfidence,
   SkillProgressObservationInput,
   SkillProgressObservationStatus,
+  Skill,
+  SkillChange,
   TalentProfile,
   TalentProfileEffectiveTrainingCyclesSource,
   TalentProfileInput,
   TalentProfileSegment,
   TalentSkillProfile,
-  TrainingEfficiencyInput,
-  TrainingEfficiencyResult,
+  PlayerSkill,
+  PlayerSkills,
+  PlayerSkillsChange,
+  PlayerTrainingWeek,
+  TrainingKind,
   TrainingPosition,
   TrainingType,
   TrainingSkillLevels,
@@ -41,6 +44,9 @@ import type {
   SkillUpObservation,
   SkillUpObservationCompleteness,
   TalentObservation,
+  TalentConfidence,
+  TalentEstimate,
+  TalentEvidence,
   TalentObservationProfile,
   TalentObservationProfileInput,
   TalentObservationSkillProfile,
@@ -49,18 +55,52 @@ import type {
   RequiredTrainingPointsInput,
   RequiredTrainingPointsResult,
   TalentEstimationInput,
-  TalentEstimationResult
+  TalentEstimationResult,
+  DevelopmentReturnScoreInput,
+  TrainingOptionScoreBreakdown,
+  TrainingPointsByKindInput,
+  WeeklyTrainingPlayerInput,
+  WeeklyTrainingPlayerReport,
+  WeeklyTrainingReport,
+  WeeklyTrainingReportInput
 } from "./types.js";
+
+const PLAYER_SKILLS: readonly PlayerSkill[] = [
+  "pace",
+  "stamina",
+  "keeper",
+  "playmaking",
+  "passing",
+  "technique",
+  "defending",
+  "striker"
+];
 
 export {
   AGE_TRAINING_FACTOR,
   BASE_TRAINING_AGE,
   BASE_TRAINING_POINTS,
+  DEFAULT_TALENT_FOR_RELATIVE_COMPARISON,
   DEFAULT_TALENT_PROFILE_MINIMUM_OBSERVATIONS,
   MAX_SKILL_LEVEL,
   MAX_TRAINING_EFFICIENCY,
   SKILL_LEVEL_TRAINING_FACTOR,
-  SKILL_TRAINING_BASE_LEVEL
+  SKILL_TRAINING_BASE_LEVEL,
+  TRAINING_KIND_EFFECTIVENESS,
+  ADVANCED_TRAINING_SLOT_COUNT,
+  ADVANCED_SLOT_HIGH_DEVELOPMENT_POTENTIAL_THRESHOLD,
+  ADVANCED_SLOT_REPLACEMENT_THRESHOLD,
+  TRAINING_RECOMMENDATION_HIGH_NEXT_LEVEL_WEEKS,
+  TRAINING_RECOMMENDATION_MIN_HISTORY_WEEKS,
+  TRAINING_RECOMMENDATION_RECENT_SWITCH_THRESHOLD,
+  TRAINING_RECOMMENDATION_SCORE_NORMALIZATION_BASE,
+  TRAINING_RECOMMENDATION_SKILL_UP_SOON_WEEKS,
+  TRAINING_RECOMMENDATION_SWITCH_THRESHOLD,
+  TRAINING_CALIBRATION_HIGH_PREDICTION_ERROR_WEEKS,
+  TRAINING_CALIBRATION_MIN_FLAPPING_OBSERVATIONS,
+  TRAINING_CALIBRATION_BORDERLINE_RANK_START,
+  TRAINING_CALIBRATION_BORDERLINE_RANK_END,
+  TRAINING_CALIBRATION_RANK_INSTABILITY_DELTA
 } from "./constants.js";
 
 export type {
@@ -72,6 +112,9 @@ export type {
   SkillProgressObservationConfidence,
   SkillProgressObservationInput,
   SkillProgressObservationStatus,
+  Skill,
+  SkillChange,
+  SkillChangeDirection,
   TalentProfile,
   TalentProfileEffectiveTrainingCyclesSource,
   TalentProfileEvidenceReference,
@@ -79,8 +122,11 @@ export type {
   TalentProfileSegment,
   TalentProfileStatus,
   TalentSkillProfile,
-  TrainingEfficiencyInput,
-  TrainingEfficiencyResult,
+  PlayerSkill,
+  PlayerSkills,
+  PlayerSkillsChange,
+  PlayerTrainingWeek,
+  TrainingKind,
   TrainingPosition,
   TrainingType,
   TrainingSkillLevels,
@@ -91,6 +137,9 @@ export type {
   SkillUpObservation,
   SkillUpObservationCompleteness,
   TalentObservation,
+  TalentConfidence,
+  TalentEstimate,
+  TalentEvidence,
   TalentObservationProfile,
   TalentObservationProfileInput,
   TalentObservationSkillProfile,
@@ -100,7 +149,45 @@ export type {
   RequiredTrainingPointsInput,
   RequiredTrainingPointsResult,
   TalentEstimationInput,
-  TalentEstimationResult
+  TalentEstimationResult,
+  TrainingRecommendationStatus,
+  TrainingRecommendationConfidence,
+  TrainingRecommendationPlayer,
+  PlayerTrainingRecommendationContext,
+  TrainingOptionEvaluation,
+  TrainingRecommendationReason,
+  PlayerTrainingRecommendation,
+  DevelopmentReturnScoreInput,
+  TrainingOptionScoreBreakdown,
+  TrainingPointsByKindInput,
+  AdvancedTrainingCandidateContext,
+  AdvancedSlotEvaluation,
+  AdvancedTrainingRankingEntry,
+  AdvancedTrainingRecommendation,
+  AdvancedSlotReason,
+  AdvancedTrainingPlayerRecommendation,
+  AdvancedSlotReplacement,
+  AdvancedSlotScoreInput,
+  AdvancedTrainingOptimization,
+  AdvancedScoreBreakdown,
+  CalibrationWarning,
+  CalibrationConfidence,
+  TrainingCalibrationEntry,
+  SkillUpBacktestPrediction,
+  SkillUpBacktestSummary,
+  RecommendationCalibrationObservation,
+  RankingStability,
+  AdvancedTrainingCalibrationSummary,
+  CalibrationWarningSummary,
+  TrainingCalibrationScenario,
+  TrainingCalibrationDatasetSelection,
+  TrainingCalibrationPlayerContext,
+  WeeklyTrainingCalibrationInput,
+  WeeklyTrainingCalibrationReport,
+  WeeklyTrainingPlayerInput,
+  WeeklyTrainingPlayerReport,
+  WeeklyTrainingReport,
+  WeeklyTrainingReportInput
 } from "./types.js";
 
 export function calculateAgeTrainingCostFactor(age: number): number {
@@ -111,63 +198,6 @@ export function calculateAgeTrainingCostFactor(age: number): number {
 
 export function calculateRelativeTrainingSpeed(age: number): number {
   return 1 / calculateAgeTrainingCostFactor(age);
-}
-
-export function calculateEquivalentTrainingMinutes(
-  officialMinutes: number,
-  friendlyMinutes: number
-): number {
-  assertNonNegativeFinite(officialMinutes, "officialMinutes");
-  assertNonNegativeFinite(friendlyMinutes, "friendlyMinutes");
-
-  return officialMinutes + friendlyMinutes * FRIENDLY_MATCH_WEIGHT;
-}
-
-export function calculateFormationTrainingEfficiency(equivalentMinutes: number): number {
-  assertNonNegativeFinite(equivalentMinutes, "equivalentMinutes");
-
-  if (equivalentMinutes >= MAX_EQUIVALENT_MINUTES) {
-    return MAX_EFFICIENCY;
-  }
-
-  const unroundedEfficiency =
-    equivalentMinutes <= FIRST_EFFICIENCY_THRESHOLD
-      ? (equivalentMinutes * FIRST_SEGMENT_EFFICIENCY) / FIRST_EFFICIENCY_THRESHOLD
-      : FIRST_SEGMENT_EFFICIENCY +
-        (equivalentMinutes - FIRST_EFFICIENCY_THRESHOLD) *
-          ((MAX_EFFICIENCY - FIRST_SEGMENT_EFFICIENCY) /
-            (MAX_EQUIVALENT_MINUTES - FIRST_EFFICIENCY_THRESHOLD));
-
-  return Math.min(MAX_EFFICIENCY, Math.round(unroundedEfficiency));
-}
-
-export function calculateAdvancedTrainingEfficiency(formationEfficiency: number): number {
-  assertEfficiency(formationEfficiency, "formationEfficiency");
-
-  return Math.min(MAX_EFFICIENCY, Math.floor(ADVANCED_BASE_EFFICIENCY + formationEfficiency / 2));
-}
-
-export function calculateTrainingEfficiency(
-  input: TrainingEfficiencyInput
-): TrainingEfficiencyResult {
-  assertBoolean(input.advancedTraining, "advancedTraining");
-
-  const equivalentMinutes = calculateEquivalentTrainingMinutes(
-    input.officialMinutes,
-    input.friendlyMinutes
-  );
-  const formationEfficiency = calculateFormationTrainingEfficiency(equivalentMinutes);
-  const trainingType: TrainingType = input.advancedTraining ? "advanced" : "formation";
-  const trainingEfficiency = input.advancedTraining
-    ? calculateAdvancedTrainingEfficiency(formationEfficiency)
-    : formationEfficiency;
-
-  return {
-    equivalentMinutes,
-    formationEfficiency,
-    trainingEfficiency,
-    trainingType
-  };
 }
 
 export function calculateSkillTrainingCostFactor(
@@ -192,51 +222,108 @@ export function calculateSkillTrainingSpeedFactor(input: SkillTrainingCostInput)
   return 1 / calculateSkillTrainingCostFactor(input).costFactor;
 }
 
-export function calculateWeeklyTrainingPoints(trainingEfficiency: number): number {
-  assertEfficiency(trainingEfficiency, "trainingEfficiency");
+export function calculateWeeklyTrainingPoints(intensity: number): number {
+  assertEfficiency(intensity, "intensity");
 
-  return trainingEfficiency;
+  return intensity;
+}
+
+export function calculateWeeklyTrainingPointsByKind(input: TrainingPointsByKindInput): number {
+  const baseTrainingPoints = calculateWeeklyTrainingPoints(input.intensity);
+  return baseTrainingPoints * TRAINING_KIND_EFFECTIVENESS[input.kind];
 }
 
 export function createTrainingWeek(input: TrainingWeekInput): TrainingWeek {
   assertPlayerId(input.playerId);
-  assertPositiveInteger(input.week, "week");
-  assertSupportedSkill(input.skill);
-  assertNonNegativeFinite(input.officialMinutes, "officialMinutes");
-  assertNonNegativeFinite(input.friendlyMinutes, "friendlyMinutes");
-  assertBoolean(input.advancedTraining, "advancedTraining");
-  assertAge(input.playerAge, "playerAge");
-  assertSkillLevel(input.skillLevelBefore, "skillLevelBefore");
-  assertSkillLevel(input.skillLevelAfter, "skillLevelAfter");
+  assertPositiveInteger(input.gameWeek, "gameWeek");
+  assertPositiveInteger(input.seasonWeek, "seasonWeek");
+  assertDate(input.date);
+  assertTrainingType(input.type);
+  assertTrainingKind(input.kind);
+  assertEfficiency(input.intensity, "intensity");
+  assertAge(input.age, "age");
+  assertSkills(input.skills, "skills");
+  assertSkillChanges(input.skillsChange);
 
-  const efficiency = calculateTrainingEfficiency({
-    officialMinutes: input.officialMinutes,
-    friendlyMinutes: input.friendlyMinutes,
-    advancedTraining: input.advancedTraining
-  }).trainingEfficiency;
+  const skill = input.skill ?? trainingSkillForType(input.type);
+  assertSupportedSkill(skill);
+  const skillLevelAfter = skillValue(input.skills, skill) ?? input.skillLevelAfter ?? 0;
+  const skillLevelBefore =
+    skillChangeValue(input.skillsChange, skill) === undefined
+      ? (input.skillLevelBefore ?? skillLevelAfter)
+      : skillLevelAfter - skillChangeValue(input.skillsChange, skill)!;
+  assertSkillLevel(skillLevelBefore, "skillLevelBefore");
+  assertSkillLevel(skillLevelAfter, "skillLevelAfter");
 
   const skillLevelsBefore = Object.freeze(
-    normalizeSkillLevels(input.skillLevelsBefore, input.skill, input.skillLevelBefore)
+    normalizeSkillLevels(input.skillLevelsBefore, skill, skillLevelBefore)
   );
   const skillLevelsAfter = Object.freeze(
-    normalizeSkillLevels(input.skillLevelsAfter, input.skill, input.skillLevelAfter)
+    normalizeSkillLevels(input.skillLevelsAfter, skill, skillLevelAfter)
   );
+  const skillChanges = Object.freeze(deriveSkillChanges(input.skills, input.skillsChange));
 
   return Object.freeze({
+    ...input,
     playerId: input.playerId,
-    week: input.week,
-    skill: input.skill,
-    officialMinutes: input.officialMinutes,
-    friendlyMinutes: input.friendlyMinutes,
-    advancedTraining: input.advancedTraining,
-    playerAge: input.playerAge,
-    skillLevelBefore: input.skillLevelBefore,
-    skillLevelAfter: input.skillLevelAfter,
+    week: input.gameWeek,
+    skill,
+    playerAge: input.age,
+    skillLevelBefore,
+    skillLevelAfter,
     skillLevelsBefore,
     skillLevelsAfter,
-    trainingEfficiency: efficiency,
-    trainingPoints: calculateWeeklyTrainingPoints(efficiency)
+    trainingPoints: calculateWeeklyTrainingPoints(input.intensity),
+    skillChanges,
+    date: new Date(input.date),
+    skills: Object.freeze({ ...input.skills }),
+    skillsChange: Object.freeze({ ...input.skillsChange })
   });
+}
+
+/**
+ * Derives visible skill events from Sokker's factual skill levels and deltas.
+ * The individual deltas are authoritative; `up` and `down` are consistency
+ * counters only.
+ */
+export function deriveSkillChanges(
+  skills: PlayerSkills,
+  changes: PlayerSkillsChange
+): SkillChange[] {
+  const skillChanges: SkillChange[] = [];
+
+  for (const skill of PLAYER_SKILLS) {
+    const delta = changes[skill];
+    const after = skills[skill];
+
+    if (delta === undefined || delta === 0 || after === undefined) {
+      continue;
+    }
+
+    skillChanges.push({
+      skill,
+      before: after - delta,
+      after,
+      delta,
+      direction: delta > 0 ? "up" : "down"
+    });
+  }
+
+  const positiveChanges = skillChanges.filter((change) => change.delta > 0).length;
+  const negativeChanges = skillChanges.filter((change) => change.delta < 0).length;
+
+  if (positiveChanges !== changes.up || negativeChanges !== changes.down) {
+    console.warn(
+      `Sokker skillsChange counters are inconsistent: expected ${changes.up}/${changes.down}, ` +
+        `derived ${positiveChanges}/${negativeChanges}.`
+    );
+  }
+
+  return skillChanges;
+}
+
+export function createPlayerTrainingWeek(input: TrainingWeekInput): PlayerTrainingWeek {
+  return createTrainingWeek(input);
 }
 
 export function createTrainingHistory(
@@ -299,25 +386,265 @@ export function getTrainingWeeksForSkill(
   return getTrainingWeeks(history).filter((week) => week.skill === skill);
 }
 
+export function buildWeeklyTrainingReport(input: WeeklyTrainingReportInput): WeeklyTrainingReport {
+  const allWeeks = input.players.flatMap((player) => getTrainingWeeks(player.history));
+  const gameWeek = input.gameWeek ?? latestGameWeek(allWeeks);
+  assertPositiveInteger(gameWeek, "gameWeek");
+
+  const weeklyPlayers = input.players
+    .map((player) => buildWeeklyTrainingPlayerReport(player, gameWeek, input.talents))
+    .filter((player): player is WeeklyTrainingPlayerReport => player !== null);
+
+  const selectedWeek = allWeeks.find((week) => week.week === gameWeek);
+  const date = input.date ?? selectedWeek?.date;
+  if (!date) {
+    throw new Error(`No training report date is available for gameWeek ${gameWeek}.`);
+  }
+  assertDate(date);
+
+  const advancedPlayers = weeklyPlayers.filter(
+    (player) => player.training.kind === "advanced"
+  ).length;
+  const formationPlayers = weeklyPlayers.filter(
+    (player) => player.training.kind === "formation"
+  ).length;
+  const totalIntensity = weeklyPlayers.reduce(
+    (total, player) => total + player.training.intensity,
+    0
+  );
+
+  return {
+    gameWeek,
+    date: new Date(date),
+    players: weeklyPlayers,
+    summary: {
+      trainedPlayers: weeklyPlayers.length,
+      advancedPlayers,
+      formationPlayers,
+      skillUps: weeklyPlayers.filter((player) => player.skill.skillUp).length,
+      averageIntensity: weeklyPlayers.length === 0 ? 0 : totalIntensity / weeklyPlayers.length
+    }
+  };
+}
+
+export function calculateDevelopmentReturnScore(input: DevelopmentReturnScoreInput): number | null {
+  return calculateDevelopmentReturnScoreBreakdown(input)?.developmentReturnScore ?? null;
+}
+
+export function calculateDevelopmentReturnScoreBreakdown(
+  input: DevelopmentReturnScoreInput
+): TrainingOptionScoreBreakdown | null {
+  if (
+    input.currentSkillLevel >= MAX_SKILL_LEVEL ||
+    input.expectedWeeklyTrainingPoints <= 0 ||
+    !Number.isFinite(input.expectedWeeklyTrainingPoints)
+  ) {
+    return null;
+  }
+
+  const talent = input.talent ?? DEFAULT_TALENT_FOR_RELATIVE_COMPARISON;
+  const requiredTraining = calculateRequiredTrainingPoints({
+    talent,
+    age: input.age,
+    skill: input.skill,
+    targetSkillLevel: input.currentSkillLevel + 1
+  });
+  const expectedTrainingCost =
+    requiredTraining.requiredTrainingPoints / input.expectedWeeklyTrainingPoints;
+  const expectedDevelopmentValue = (MAX_SKILL_LEVEL - input.currentSkillLevel) / MAX_SKILL_LEVEL;
+  const rawScore = expectedDevelopmentValue / expectedTrainingCost;
+  const developmentReturnScore =
+    rawScore / (TRAINING_RECOMMENDATION_SCORE_NORMALIZATION_BASE + rawScore);
+
+  return {
+    skill: input.skill,
+    level: input.currentSkillLevel,
+    requiredPoints: requiredTraining.requiredTrainingPoints,
+    weeklyPoints: input.expectedWeeklyTrainingPoints,
+    estimatedWeeks: expectedTrainingCost,
+    developmentValue: expectedDevelopmentValue,
+    ageCostFactor: requiredTraining.ageCostFactor,
+    skillCostFactor: requiredTraining.skillCostFactor,
+    talent,
+    developmentReturnScore
+  };
+}
+
+function buildWeeklyTrainingPlayerReport(
+  input: WeeklyTrainingPlayerInput,
+  gameWeek: number,
+  talents: WeeklyTrainingReportInput["talents"]
+): WeeklyTrainingPlayerReport | null {
+  const weeks = getTrainingWeeks(input.history);
+  const currentWeek = weeks.find((week) => week.week === gameWeek);
+
+  if (!currentWeek || currentWeek.kind === "missing") {
+    return null;
+  }
+
+  const skillChange = currentWeek.skillChanges.find(
+    (change) => toTrainingCostSkill(change.skill) === currentWeek.skill
+  );
+  const skillUp = skillChange?.direction === "up";
+  const previousLevel = skillChange
+    ? currentWeek.skillLevelBefore
+    : previousObservedSkillLevel(weeks, currentWeek);
+  const talent = input.talent !== undefined ? input.talent : talentForPlayer(input, talents);
+  const progress = buildWeeklyProgress(weeks, currentWeek, talent);
+
+  return {
+    playerId: currentWeek.playerId,
+    gameWeek,
+    training: {
+      skill: currentWeek.skill,
+      kind: currentWeek.kind,
+      intensity: currentWeek.intensity
+    },
+    skill: {
+      previousLevel,
+      currentLevel: currentWeek.skillLevelAfter,
+      skillUp
+    },
+    trainingPoints: {
+      earned: calculateWeeklyTrainingPoints(currentWeek.intensity),
+      estimatedProgress: progress?.estimatedProgress ?? null,
+      remainingToNextLevel: progress?.remainingToNextLevel ?? null,
+      estimatedWeeksToNextLevel: progress?.estimatedWeeksToNextLevel ?? null
+    }
+  };
+}
+
+function previousObservedSkillLevel(
+  weeks: readonly TrainingWeek[],
+  currentWeek: TrainingWeek
+): number {
+  const previousWeek = [...weeks]
+    .reverse()
+    .find((week) => week.week < currentWeek.week && week.skill === currentWeek.skill);
+
+  return previousWeek?.skillLevelAfter ?? currentWeek.skillLevelBefore;
+}
+
+interface WeeklyProgress {
+  estimatedProgress: number;
+  remainingToNextLevel: number;
+  estimatedWeeksToNextLevel: number | null;
+}
+
+function buildWeeklyProgress(
+  weeks: readonly TrainingWeek[],
+  currentWeek: TrainingWeek,
+  talent: number | null | undefined
+): WeeklyProgress | null {
+  if (talent === null || talent === undefined || currentWeek.skillLevelAfter >= MAX_SKILL_LEVEL) {
+    return null;
+  }
+
+  const relevantWeeks = weeks.filter((week) => week.week <= currentWeek.week);
+  const skillUps = detectSkillUps({ playerId: currentWeek.playerId, weeks: relevantWeeks }).filter(
+    (skillUp) => skillUp.skill === currentWeek.skill
+  );
+  const lastSkillUp = skillUps.at(-1);
+  if (!lastSkillUp) {
+    return null;
+  }
+
+  const accumulationWeeks = relevantWeeks.filter(
+    (week) => week.week > lastSkillUp.week && week.week <= currentWeek.week
+  );
+  if (!hasCompleteTrainingHistory(accumulationWeeks, lastSkillUp.week + 1, currentWeek.week)) {
+    return null;
+  }
+
+  const accumulatedTrainingPoints = accumulationWeeks
+    .filter((week) => week.skill === currentWeek.skill)
+    .reduce((total, week) => total + calculateWeeklyTrainingPoints(week.intensity), 0);
+  const requiredTraining = calculateRequiredTrainingPoints({
+    talent,
+    age: currentWeek.playerAge,
+    skill: currentWeek.skill,
+    targetSkillLevel: currentWeek.skillLevelAfter + 1
+  });
+  const remainingToNextLevel = Math.max(
+    0,
+    requiredTraining.requiredTrainingPoints - accumulatedTrainingPoints
+  );
+  const estimatedProgress = Math.min(
+    1,
+    Math.max(0, accumulatedTrainingPoints / requiredTraining.requiredTrainingPoints)
+  );
+  const expectedWeeklyTrainingPoints = calculateWeeklyTrainingPoints(currentWeek.intensity);
+
+  return {
+    estimatedProgress,
+    remainingToNextLevel,
+    estimatedWeeksToNextLevel:
+      remainingToNextLevel === 0
+        ? 0
+        : expectedWeeklyTrainingPoints > 0
+          ? remainingToNextLevel / expectedWeeklyTrainingPoints
+          : null
+  };
+}
+
+function hasCompleteTrainingHistory(
+  weeks: readonly TrainingWeek[],
+  startWeek: number,
+  endWeek: number
+): boolean {
+  if (endWeek < startWeek) {
+    return true;
+  }
+
+  return (
+    weeks.length === endWeek - startWeek + 1 &&
+    weeks.every((week, index) => week.week === startWeek + index)
+  );
+}
+
+function talentForPlayer(
+  input: WeeklyTrainingPlayerInput,
+  talents: WeeklyTrainingReportInput["talents"]
+): number | null {
+  const explicitTalent = readTalent(talents, input.history.playerId);
+  if (explicitTalent !== undefined) {
+    return explicitTalent;
+  }
+
+  return estimateTalentFromTrainingHistory(input.history).value;
+}
+
+function readTalent(
+  talents: WeeklyTrainingReportInput["talents"],
+  playerId: number
+): number | null | undefined {
+  if (!talents) {
+    return undefined;
+  }
+
+  return "get" in talents ? talents.get(playerId) : talents[playerId];
+}
+
+function latestGameWeek(weeks: readonly TrainingWeek[]): number {
+  const latestWeek = weeks.reduce((latest, week) => Math.max(latest, week.week), 0);
+  if (latestWeek === 0) {
+    throw new Error("At least one training week is required to build a report.");
+  }
+  return latestWeek;
+}
+
 export function detectSkillUps(history: TrainingHistory): SkillUp[] {
-  const weeks = getTrainingWeeks(history);
   const skillUps: SkillUp[] = [];
 
-  for (let index = 1; index < weeks.length; index += 1) {
-    const previousWeek = weeks[index - 1]!;
-    const currentWeek = weeks[index]!;
-
-    for (const skill of SUPPORTED_TRAINING_SKILLS) {
-      const fromLevel = previousSkillLevel(previousWeek, skill);
-      const toLevel = previousSkillLevel(currentWeek, skill);
-
-      if (fromLevel !== null && toLevel !== null && toLevel > fromLevel) {
+  for (const currentWeek of getTrainingWeeks(history)) {
+    for (const change of currentWeek.skillChanges) {
+      if (change.direction === "up") {
         skillUps.push({
           playerId: history.playerId,
-          skill,
-          fromLevel,
-          toLevel,
-          levelDelta: toLevel - fromLevel,
+          skill: toTrainingCostSkill(change.skill),
+          fromLevel: change.before,
+          toLevel: change.after,
+          levelDelta: change.delta,
           week: currentWeek.week
         });
       }
@@ -325,6 +652,166 @@ export function detectSkillUps(history: TrainingHistory): SkillUp[] {
   }
 
   return skillUps;
+}
+
+export function detectTalentEvidence(history: TrainingHistory): TalentEvidence[] {
+  const weeks = getTrainingWeeks(history);
+  const popsBySkill = new Map<Skill, SkillChangeEvent>();
+  const evidences: TalentEvidence[] = [];
+
+  for (const week of weeks) {
+    for (const change of week.skillChanges) {
+      if (change.direction !== "up") {
+        continue;
+      }
+
+      const currentPop: SkillChangeEvent = { week, change };
+      const previousPop = popsBySkill.get(change.skill);
+
+      if (previousPop) {
+        const evidence = buildTalentEvidence(previousPop, currentPop, weeks, history.playerId);
+        if (evidence) {
+          evidences.push(evidence);
+        }
+      }
+
+      popsBySkill.set(change.skill, currentPop);
+    }
+  }
+
+  return evidences;
+}
+
+export function estimateTalentFromEvidence(evidences: readonly TalentEvidence[]): TalentEstimate {
+  if (evidences.length === 0) {
+    return { value: null, confidence: "unknown", evidenceCount: 0, evidences: [] };
+  }
+
+  const ordered = [...evidences].sort((left, right) => left.toWeek - right.toWeek);
+  const values = ordered.map((evidence) => evidence.estimatedTalent);
+  const robustValues = robustTalentValues(values);
+  const representative =
+    robustValues.reduce((total, value) => total + value, 0) / robustValues.length;
+  const dispersion = relativeDispersion(robustValues, representative);
+  const confidence = talentConfidenceFor(ordered.length, dispersion);
+
+  return {
+    value: Number.isFinite(representative) ? representative : null,
+    confidence,
+    evidenceCount: ordered.length,
+    evidences: ordered
+  };
+}
+
+export function estimateTalentFromTrainingHistory(history: TrainingHistory): TalentEstimate {
+  return estimateTalentFromEvidence(detectTalentEvidence(history));
+}
+
+interface SkillChangeEvent {
+  week: TrainingWeek;
+  change: SkillChange;
+}
+
+function buildTalentEvidence(
+  initialPop: SkillChangeEvent,
+  finalPop: SkillChangeEvent,
+  weeks: readonly TrainingWeek[],
+  playerId: number
+): TalentEvidence | null {
+  if (
+    initialPop.change.delta !== 1 ||
+    finalPop.change.delta !== 1 ||
+    initialPop.change.after !== finalPop.change.before ||
+    finalPop.week.week <= initialPop.week.week
+  ) {
+    return null;
+  }
+
+  const firstTrainingWeek = initialPop.week.week + 1;
+  const trainingWeeks = weeks.filter(
+    (week) => week.week >= firstTrainingWeek && week.week <= finalPop.week.week
+  );
+
+  if (hasMissingWeeksBetween(trainingWeeks, firstTrainingWeek, finalPop.week.week)) {
+    return null;
+  }
+
+  if (
+    trainingWeeks.some(
+      (week) =>
+        week.kind === "formation" ||
+        (week.kind === "missing" && week.intensity !== 0) ||
+        (week.kind !== "missing" &&
+          (week.kind !== "advanced" || !isTrainingTypeForSkill(week.type, finalPop.change.skill)))
+    )
+  ) {
+    return null;
+  }
+
+  const skill = toTrainingCostSkill(finalPop.change.skill);
+  const accumulatedTrainingPoints = trainingWeeks.reduce(
+    (total, week) => total + week.trainingPoints,
+    0
+  );
+  const ageWeightedTrainingPoints = trainingWeeks.reduce(
+    (total, week) => total + week.trainingPoints * calculateAgeTrainingCostFactor(week.playerAge),
+    0
+  );
+  const skillCost = calculateSkillTrainingCostFactor({
+    skill,
+    targetSkillLevel: finalPop.change.after
+  });
+  const estimatedTalent = ageWeightedTrainingPoints / (skillCost.costFactor * BASE_TRAINING_POINTS);
+
+  return {
+    playerId,
+    skill: finalPop.change.skill,
+    fromLevel: finalPop.change.before,
+    toLevel: finalPop.change.after,
+    fromWeek: initialPop.week.week,
+    toWeek: finalPop.week.week,
+    trainingWeeks: trainingWeeks.length,
+    accumulatedTrainingPoints,
+    estimatedTalent,
+    confidence: 1
+  };
+}
+
+function isTrainingTypeForSkill(type: TrainingType, skill: Skill): boolean {
+  return type === skill || (skill === "striker" && type === "striker");
+}
+
+function toTrainingCostSkill(skill: Skill): SkillTrainingCostSkill {
+  return skill === "striker" ? "scoring" : skill;
+}
+
+function robustTalentValues(values: readonly number[]): number[] {
+  const medianValue = median([...values]);
+  return values.length >= 3
+    ? values.filter((value) => Math.abs(value - medianValue) <= Math.max(1, medianValue * 0.5))
+    : [...values];
+}
+
+function relativeDispersion(values: readonly number[], center: number): number {
+  if (values.length < 2 || center === 0) {
+    return 0;
+  }
+
+  const variance =
+    values.reduce((total, value) => total + Math.pow(value - center, 2), 0) / values.length;
+  return Math.sqrt(variance) / Math.abs(center);
+}
+
+function talentConfidenceFor(count: number, dispersion: number): TalentConfidence {
+  let confidence: TalentConfidence = count >= 3 ? "high" : count === 2 ? "medium" : "low";
+
+  if (dispersion > 0.5) {
+    confidence = "low";
+  } else if (dispersion > 0.25 && confidence === "high") {
+    confidence = "medium";
+  }
+
+  return confidence;
 }
 
 export function buildSkillUpObservations(history: TrainingHistory): SkillUpObservation[] {
@@ -384,10 +871,6 @@ export function buildSkillUpObservations(history: TrainingHistory): SkillUpObser
   return observations;
 }
 
-function previousSkillLevel(week: TrainingWeek, skill: SkillTrainingCostSkill): number | null {
-  return week.skillLevelsAfter[skill] ?? week.skillLevelsBefore[skill] ?? null;
-}
-
 function determineCompleteness(input: {
   previousPop: SkillUp | undefined;
   levelDelta: number;
@@ -440,18 +923,29 @@ function compareTrainingWeeks(left: TrainingWeek, right: TrainingWeek): number {
 
 function assertTrainingWeek(week: TrainingWeek): void {
   assertPlayerId(week.playerId);
-  assertPositiveInteger(week.week, "week");
+  assertPositiveInteger(week.gameWeek, "gameWeek");
+  assertPositiveInteger(week.seasonWeek, "seasonWeek");
+  assertDate(week.date);
+  assertTrainingType(week.type);
+  assertTrainingKind(week.kind);
+  assertEfficiency(week.intensity, "intensity");
+  assertSkills(week.skills, "skills");
+  assertSkillChanges(week.skillsChange);
   assertSupportedSkill(week.skill);
-  assertNonNegativeFinite(week.officialMinutes, "officialMinutes");
-  assertNonNegativeFinite(week.friendlyMinutes, "friendlyMinutes");
-  assertBoolean(week.advancedTraining, "advancedTraining");
   assertAge(week.playerAge, "playerAge");
   assertSkillLevel(week.skillLevelBefore, "skillLevelBefore");
   assertSkillLevel(week.skillLevelAfter, "skillLevelAfter");
   normalizeSkillLevels(week.skillLevelsBefore, week.skill, week.skillLevelBefore);
   normalizeSkillLevels(week.skillLevelsAfter, week.skill, week.skillLevelAfter);
-  assertEfficiency(week.trainingEfficiency, "trainingEfficiency");
   assertNonNegativeFinite(week.trainingPoints, "trainingPoints");
+  for (const change of week.skillChanges) {
+    assertPlayerSkill(change.skill);
+    assertSkillLevel(change.before, `skillChanges.${change.skill}.before`);
+    assertSkillLevel(change.after, `skillChanges.${change.skill}.after`);
+    if (change.delta !== change.after - change.before) {
+      throw new Error(`skillChanges.${change.skill}.delta does not match before/after.`);
+    }
+  }
 }
 
 function assertPositiveInteger(value: number, fieldName: string): void {
@@ -556,9 +1050,9 @@ function buildTalentObservationSkillProfile(
   minimumObservations: number
 ): TalentObservationSkillProfile {
   const estimatedTalents = observations.map((observation) => observation.estimatedTalent);
-  const targetSkillLevels = [...new Set(observations.map((observation) => observation.toLevel))].sort(
-    (left, right) => left - right
-  );
+  const targetSkillLevels = [
+    ...new Set(observations.map((observation) => observation.toLevel))
+  ].sort((left, right) => left - right);
 
   return {
     skill,
@@ -585,18 +1079,12 @@ function createEmptyTalentObservationProfiles(): Record<
   return skills;
 }
 
-function assertTalentObservationPlayer(
-  observation: TalentObservation,
-  playerId: number
-): void {
+function assertTalentObservationPlayer(observation: TalentObservation, playerId: number): void {
   assertSupportedSkill(observation.skill);
   assertPositiveInteger(observation.popWeek, "popWeek");
   assertPositiveFinite(observation.estimatedTalent, "estimatedTalent");
 
-  if (
-    observation.playerId !== playerId ||
-    observation.sourceObservation.playerId !== playerId
-  ) {
+  if (observation.playerId !== playerId || observation.sourceObservation.playerId !== playerId) {
     throw new Error("All TalentObservations must belong to the profile playerId.");
   }
 
@@ -903,10 +1391,97 @@ function assertEfficiency(value: number, fieldName: string): void {
   }
 }
 
-function assertBoolean(value: boolean, fieldName: string): void {
-  if (typeof value !== "boolean") {
-    throw new Error(`${fieldName} must be a boolean.`);
+function assertDate(value: Date): void {
+  if (!(value instanceof Date) || Number.isNaN(value.getTime())) {
+    throw new Error("date must be a valid Date.");
   }
+}
+
+function assertTrainingKind(value: TrainingKind): void {
+  if (!["advanced", "formation", "missing"].includes(value)) {
+    throw new Error("kind must be advanced, formation, or missing.");
+  }
+}
+
+function assertTrainingType(value: TrainingType): void {
+  if (
+    ![
+      "general",
+      "stamina",
+      "keeper",
+      "playmaking",
+      "passing",
+      "technique",
+      "defending",
+      "striker",
+      "pace"
+    ].includes(value)
+  ) {
+    throw new Error("Unsupported training type.");
+  }
+}
+
+function assertSkills(skills: PlayerSkills, fieldName: string): void {
+  for (const [skill, level] of Object.entries(skills)) {
+    if (level !== undefined) {
+      assertPlayerSkill(skill);
+      assertSkillLevel(level, `${fieldName}.${skill}`);
+    }
+  }
+}
+
+function assertSkillChanges(changes: PlayerSkillsChange): void {
+  assertNonNegativeFinite(changes.up, "skillsChange.up");
+  assertNonNegativeFinite(changes.down, "skillsChange.down");
+
+  for (const [skill, change] of Object.entries(changes)) {
+    if (skill !== "up" && skill !== "down" && change !== undefined) {
+      assertPlayerSkill(skill);
+      if (!Number.isInteger(change)) {
+        throw new Error(`skillsChange.${skill} must be an integer.`);
+      }
+    }
+  }
+}
+
+function assertPlayerSkill(skill: string): asserts skill is PlayerSkill {
+  if (
+    ![
+      "stamina",
+      "keeper",
+      "playmaking",
+      "passing",
+      "technique",
+      "defending",
+      "striker",
+      "pace"
+    ].includes(skill)
+  ) {
+    throw new Error(`Unsupported player skill: ${skill}.`);
+  }
+}
+
+function trainingSkillForType(type: TrainingType): SkillTrainingCostSkill {
+  if (type === "striker") {
+    return "scoring";
+  }
+
+  if (type === "general" || type === "stamina" || type === "keeper") {
+    return "pace";
+  }
+
+  return type;
+}
+
+function skillValue(skills: PlayerSkills, skill: SkillTrainingCostSkill): number | undefined {
+  return skills[skill === "scoring" ? "striker" : skill];
+}
+
+function skillChangeValue(
+  changes: PlayerSkillsChange,
+  skill: SkillTrainingCostSkill
+): number | undefined {
+  return changes[skill === "scoring" ? "striker" : skill];
 }
 
 function assertSupportedSkill(
@@ -1123,3 +1698,7 @@ function assertObservationPlayer(observation: SkillProgressObservation, playerId
     throw new Error("All observations must belong to the profile playerId.");
   }
 }
+
+export * from "./recommendations.js";
+export * from "./advanced-slots.js";
+export * from "./calibration.js";

@@ -1,31 +1,64 @@
+export type PersistedDevelopmentProfile =
+  "goalkeeper" | "defender" | "wing_defender" | "midfielder" | "winger" | "forward";
+
+export type PersistedDevelopmentSkill =
+  "stamina" | "pace" | "technique" | "passing" | "keeper" | "defender" | "playmaker" | "striker";
+
 export type ObservedPosition = "goalkeeper" | "defender" | "midfielder" | "winger" | "striker";
 
-export interface PersistedImportIssue {
-  path: string;
-  message: string;
+export type PersistedTrainingSkill =
+  "stamina" | "keeper" | "playmaking" | "passing" | "technique" | "defending" | "striker" | "pace";
+
+export interface PersistedTrainingSkillChange {
+  skill: PersistedTrainingSkill;
+  before: number;
+  after: number;
+  delta: number;
+  direction: "up" | "down";
+}
+
+export type PersistedPlayerSkills = Partial<Record<PersistedTrainingSkill, number>>;
+
+export interface PersistedPlayerSkillsChange extends PersistedPlayerSkills {
+  up: number;
+  down: number;
+}
+
+export interface PersistedClubStaffMember {
+  trainerId: number;
+  name: string;
+  assignment: "HEAD" | "ASSISTANT" | "YOUTH";
+  contracted: boolean;
+  salary: number;
+  age: number;
+  skills: Record<string, { level: number; effectivenessPercent: number }>;
+  averageEffectivenessPercent: number;
+  status: string;
+  active: boolean;
 }
 
 export interface PersistedClub {
   id: string;
   clubId: number;
   country: number;
+  currency: string;
   training: {
-    GK: number | null;
-    DEF: number | null;
-    MID: number | null;
-    ATT: number | null;
-  } | null;
+    GK: number;
+    DEF: number;
+    MID: number;
+    ATT: number;
+  };
   name: string;
+  budget: number | null;
+  staff: PersistedClubStaffMember[];
   gameWeek: number | null;
   week: number | null;
   lastSnapshotDate: Date | null;
-  sourceType: string | null;
   observedAt: Date | null;
   settings: PersistedClubSettings;
 }
 
 export interface PersistedClubSettings {
-  currency: { name: string; rate: number };
   week?: number | null;
   assumptions: PersistedClubSettingsRecord[];
   preferences: PersistedClubSettingsRecord[];
@@ -42,18 +75,99 @@ export interface PersistedPlayer {
   playerId: number;
   clubId: number;
   name: string;
+  countryId: number | null;
+  countryName?: string | null;
+  age: number | null;
+  position: string | null;
+  skills: Record<string, number> | null;
+  marketValue: number | null;
+  wage: number | null;
+  cards: { yellow: number; red: number };
+  injury: { days: number | null; severe: boolean | null };
+  currentGameWeek: number | null;
 }
 
-export interface PersistedImportEvent {
+export interface PersistedJunior {
   id: string;
-  schemaVersion: string | null;
-  sourceType: string | null;
-  status: "accepted" | "accepted-with-warnings" | "rejected";
-  errors: PersistedImportIssue[];
-  warnings: PersistedImportIssue[];
-  clubId: string | null;
-  snapshotId: string | null;
-  importedAt: Date;
+  juniorId: number;
+  clubId: number;
+  name: string;
+  initialAge: number;
+  age: number;
+  initialLevel: number;
+  currentLevel: number;
+  initialWeeks: number;
+  weeksLeft: number;
+  status: "in_academy" | "promoted" | "rejected";
+}
+
+export type PersistedPlayerTransferSource = string;
+export type PersistedTransferDataQuality = "complete" | "partial" | "weak";
+export type PersistedSalePriceType = "final_sale" | "unknown";
+export type PersistedTransferFormation = "GK" | "DEF" | "MID" | "ATT";
+export type PersistedTransferProfile =
+  "goalkeeper" | "defender" | "wing_defender" | "midfielder" | "winger" | "forward";
+export type PersistedTransferSkills = Partial<
+  Record<
+    "stamina" | "pace" | "technique" | "passing" | "keeper" | "defender" | "playmaker" | "striker",
+    number | null
+  >
+>;
+
+export interface PersistedPlayerTransfer {
+  id: string;
+  transferKey: string;
+  transferId?: string;
+  playerId?: number;
+  transferDate: Date;
+  gameWeek?: number | null;
+  salePrice: number;
+  currency?: string | null;
+  normalizedSalePrice?: number | null;
+  age: number;
+  skills: PersistedTransferSkills;
+  formation?: PersistedTransferFormation | null;
+  developmentProfile?: PersistedTransferProfile | null;
+  sokkerValue?: number | null;
+  source: PersistedPlayerTransferSource;
+  dataQuality?: PersistedTransferDataQuality;
+  salePriceType?: PersistedSalePriceType;
+}
+
+export type SavePlayerTransferInput = Omit<PersistedPlayerTransfer, "id" | "transferKey">;
+
+export interface PersistedPlayerDevelopmentOverride {
+  id: string;
+  playerId: number;
+  clubId: number;
+  profile: PersistedDevelopmentProfile | null;
+  targetLevels: Partial<Record<PersistedDevelopmentSkill, number>>;
+  targetAge: number | null;
+}
+
+export type PersistedSquadRole =
+  "core" | "developing" | "prospect" | "rotation" | "depth" | "transition";
+
+export interface PersistedSquadRoleAssignment {
+  id: string;
+  playerId: number;
+  clubId: number;
+  role: PersistedSquadRole;
+  source: "manual";
+}
+
+export interface SaveSquadRoleAssignmentInput {
+  playerId: number;
+  clubId: number;
+  role: PersistedSquadRole;
+}
+
+export interface SavePlayerDevelopmentOverrideInput {
+  playerId: number;
+  clubId: number;
+  profile?: PersistedDevelopmentProfile | null;
+  targetLevels?: Partial<Record<PersistedDevelopmentSkill, number>>;
+  targetAge?: number | null;
 }
 
 export interface SnapshotMoney {
@@ -76,6 +190,7 @@ export interface PersistedPlayerSnapshot {
   id: string;
   playerId: number;
   name: string;
+  countryName?: string | null;
   age: number;
   wage: number;
   value: number;
@@ -94,29 +209,20 @@ export interface PersistedJuniorSnapshot {
   playerId: number;
   name: string;
   age: number;
-  initialWeeksRemaining: number | null;
+  initialLevel: number | null;
   weeksRemaining: number | null;
   skill: number | null;
   status: "in_academy" | "ready_for_promotion" | "promoted";
 }
 
-export interface SnapshotSource {
-  type: string;
-  exportedAt: Date;
-  pageUrl: string | null;
-  locale: string | null;
-}
-
 export interface PersistedSnapshot {
   id: string;
-  clubId: string;
+  clubId: number;
   schemaVersion: string;
   snapshotDate: Date;
   gameWeek: number | null;
   week: number | null;
   importedAt: Date;
-  source: SnapshotSource;
-  sourceVersion: string | null;
   players: PersistedPlayerSnapshot[];
   juniors: PersistedJuniorSnapshot[];
 }
@@ -126,45 +232,39 @@ export interface PersistedYouthPlayerSnapshot {
   playerId: number;
   name: string;
   age: number;
-  initialWeeksRemaining: number | null;
+  initialLevel: number | null;
   weeksRemaining: number | null;
   skill: number | null;
   status: "in_academy" | "ready_for_promotion" | "promoted";
 }
 
-export interface PersistedMatchPlayerAppearance {
-  playerId: number;
-  number: number;
-  formation: "GK" | "DEF" | "MID" | "ATT";
-  role: "STARTER" | "SUBSTITUTE_USED" | "SUBSTITUTE_UNUSED";
-  timeIn: number;
-  timeOut: number;
-  minutesPlayed: number;
-}
-
-export interface PersistedMatch {
-  id: number;
+export interface PersistedPlayerTrainingWeek {
+  id: string;
   clubId: number;
+  playerId: number;
   gameWeek: number;
-  week: number;
-  playedAt: Date;
-  leagueId: number;
-  matchType: "OFFICIAL" | "FRIENDLY" | "NOT_ELIGIBLE";
-  side: "HOME" | "AWAY";
-  opponent: {
-    id: number;
-    name: string;
-  };
-  score: {
-    club: number;
-    opponent: number;
-  };
-  players: PersistedMatchPlayerAppearance[];
+  season: number | null;
+  seasonWeek: number;
+  date: Date;
+  type:
+    | "general"
+    | "stamina"
+    | "keeper"
+    | "playmaking"
+    | "passing"
+    | "technique"
+    | "defending"
+    | "striker"
+    | "pace";
+  kind: "advanced" | "formation" | "missing";
+  intensity: number;
+  age: number;
+  skills: PersistedPlayerSkills;
+  skillsChange: PersistedPlayerSkillsChange;
+  skillChanges: PersistedTrainingSkillChange[];
 }
 
-export interface SaveMatchInput extends Omit<PersistedMatch, "id"> {
-  id: number;
-}
+export type SavePlayerTrainingWeekInput = Omit<PersistedPlayerTrainingWeek, "id" | "skillChanges">;
 
 export interface PersistedCountry {
   id: string;

@@ -4,13 +4,51 @@ export const clubParamsSchema = z.object({
   clubId: z.string().min(1)
 });
 
+export const playerDevelopmentTargetParamsSchema = clubParamsSchema.extend({
+  playerId: z.coerce.number().int().positive()
+});
+
+export const playerDevelopmentTargetBodySchema = z
+  .object({
+    profile: z
+      .enum([
+        "goalkeeper",
+        "defender",
+        "wing_defender",
+        "midfielder",
+        "winger",
+        "forward"
+      ])
+      .nullable()
+      .optional(),
+    targetLevels: z
+      .record(
+        z.enum([
+          "stamina",
+          "pace",
+          "technique",
+          "passing",
+          "keeper",
+          "defender",
+          "playmaker",
+          "striker"
+        ]),
+        z.number().int().min(1).max(18)
+      )
+      .optional(),
+    targetAge: z.number().int().min(1).nullable().optional()
+  })
+  .strict();
+
+export const squadRoleAssignmentBodySchema = z
+  .object({
+    role: z.enum(["core", "developing", "prospect", "rotation", "depth", "transition"])
+  })
+  .strict();
+
 export const sokkerSyncRequestSchema = z.object({
   login: z.string().min(1),
   password: z.string().min(1)
-});
-
-export const sokkerMatchesImportRequestSchema = sokkerSyncRequestSchema.extend({
-  clubId: z.number().int().positive()
 });
 
 const settingsRecordSchema = z.object({
@@ -23,7 +61,6 @@ export const updateClubProfileBodySchema = z
     settings: z
       .object({
         name: z.string().nullable().optional(),
-        currency: z.object({ name: z.string(), rate: z.number() }).optional(),
         week: z.number().int().nullable().optional(),
         assumptions: z.array(settingsRecordSchema).optional(),
         preferences: z.array(settingsRecordSchema).optional()
@@ -36,7 +73,6 @@ export const updateClubOperatingSettingsBodySchema = z
   .object({
     settings: z
       .object({
-        currency: z.object({ name: z.string(), rate: z.number() }).optional(),
         week: z.number().int().nullable().optional(),
         preferences: z
           .object({
@@ -71,3 +107,9 @@ export const compareClubSnapshotsBodySchema = z
     targetSnapshotDate: z.string().min(1).optional()
   })
   .default({});
+
+export const investmentSafetyBodySchema = z
+  .object({
+    amount: z.number().finite().min(0)
+  })
+  .strict();

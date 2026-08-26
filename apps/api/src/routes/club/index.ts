@@ -2,11 +2,14 @@ import {
   calculateClubHistoricalTrends,
   compareClubSnapshots,
   generateClubHistoricalFindings,
-  getClubMatchesPageData,
   getClubDashboard,
+  getClubDiagnostic,
+  getFinancialStrategyAssessment,
+  getInvestmentSafety,
   getClubOperatingSettings,
   getClubProfile,
   getClubSnapshots,
+  getWeeklyTrainingIntelligence,
   getTrainingPageData,
   updateClubOperatingSettings,
   updateClubProfile
@@ -14,6 +17,7 @@ import {
 import { FastifyInstance } from "fastify";
 import {
   compareClubSnapshotsBodySchema,
+  investmentSafetyBodySchema,
   updateClubOperatingSettingsBodySchema,
   updateClubProfileBodySchema
 } from "@atlas/api/schemas";
@@ -46,16 +50,37 @@ async function clubRoutes(server: FastifyInstance) {
     return dashboard;
   });
 
+  server.get<{ Params: GetClubDashboardParams }>("/financial-strategy", async (request) => {
+    const { clubId } = request.params;
+
+    return getFinancialStrategyAssessment(clubId);
+  });
+
+  server.post<{ Params: GetClubDashboardParams }>(
+    "/financial-strategy/investment-safety",
+    async (request) => {
+      const { clubId } = request.params;
+      const { amount } = investmentSafetyBodySchema.parse(request.body);
+
+      return getInvestmentSafety(clubId, amount);
+    }
+  );
+
   server.get<{ Params: GetClubDashboardParams }>("/training", async (request) => {
     const { clubId } = request.params;
 
     return getTrainingPageData(clubId);
   });
 
-  server.get<{ Params: GetClubDashboardParams }>("/matches", async (request) => {
+  server.get<{ Params: GetClubDashboardParams }>("/diagnostics", async (request) => {
     const { clubId } = request.params;
 
-    return getClubMatchesPageData(clubId);
+    return getClubDiagnostic(clubId);
+  });
+  server.get<{ Params: GetClubDashboardParams }>("/training/intelligence", async (request) => {
+    const { clubId } = request.params;
+
+    return getWeeklyTrainingIntelligence(clubId);
   });
 
   server.patch<{ Params: PatchClubProfileParams }>("/profile", async (request) => {

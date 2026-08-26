@@ -35,9 +35,11 @@ export interface YouthAcademyObservedPlayer {
   playerId: number;
   name: string;
   age: number;
-  initialWeeksRemaining: number | null;
+  initialLevel: number | null;
+  initialWeeks: number | null;
   weeksRemaining: number | null;
   skill: number | null;
+  skillChange: number | null;
   status: "in_academy" | "ready_for_promotion" | "promoted";
 }
 
@@ -46,11 +48,16 @@ export interface RealYouthAcademyPlayerPlan {
   playerId: number;
   name: string;
   age: number;
-  initialWeeksRemaining: number | null;
+  initialLevel: number | null;
+  initialWeeks: number | null;
   weeksRemaining: number | null;
   weeksInAcademy: number | null;
   projectedPromotionAge: number | null;
   skill: number | null;
+  skillChange: number | null;
+  levelPops: number | null;
+  talent: number | null;
+  expectedLevel: number | null;
   status: "in_academy" | "ready_for_promotion" | "promoted";
   category: YouthAcademyCategory;
   severity: Severity;

@@ -1,14 +1,40 @@
 import type {
   ClubDashboard,
+  DiagnosticFinding,
   ImportResponse,
   PlayerDevelopment,
   RealYouthAcademyPlanning,
-  SquadEconomy,
-  SquadMarketPlanning,
+  SquadPlanningData,
   TrainingPageData,
+  WeeklyTrainingIntelligence,
   YouthPipelinePlanning
 } from "./types";
-import type { MatchesPageData } from "./app-v2/pages/MatchesV2/types";
+import type { YouthDecisionPlanning } from "@atlas/application";
+import type {
+  CapitalAllocationPlan,
+  ClubFinancialAssessment,
+  FinancialStrategyPlan,
+  InvestmentSafetyAssessment,
+  PlayerDevelopmentTargetOverride,
+  SquadDepthAnalysis,
+  SquadPlanningRecommendations,
+  SquadRole
+} from "@atlas/domain";
+
+export interface FinancialStrategyData {
+  financialAssessment: ClubFinancialAssessment;
+  capitalAllocation: CapitalAllocationPlan;
+  strategyPlan: FinancialStrategyPlan;
+}
+
+export interface PlayerDevelopmentTargetOverrideResponse {
+  id: string;
+  playerId: number;
+  clubId: number;
+  profile: PlayerDevelopmentTargetOverride["profile"];
+  targetLevels: NonNullable<PlayerDevelopmentTargetOverride["targetLevels"]>;
+  targetAge: number | null;
+}
 
 export async function fetchClubDashboard(clubId: string): Promise<ClubDashboard> {
   const response = await fetch(`/api/clubs/${clubId}/dashboard`);
@@ -16,6 +42,35 @@ export async function fetchClubDashboard(clubId: string): Promise<ClubDashboard>
 
   if (!response.ok || !body) {
     throw new Error("Dashboard API returned an unexpected response.");
+  }
+
+  return body;
+}
+
+export async function fetchFinancialStrategy(clubId: string): Promise<FinancialStrategyData> {
+  const response = await fetch(`/api/clubs/${clubId}/financial-strategy`);
+  const body = (await response.json()) as FinancialStrategyData;
+
+  if (!response.ok || !body) {
+    throw new Error("Financial strategy API returned an unexpected response.");
+  }
+
+  return body;
+}
+
+export async function fetchInvestmentSafety(
+  clubId: string,
+  amount: number
+): Promise<InvestmentSafetyAssessment> {
+  const response = await fetch(`/api/clubs/${clubId}/financial-strategy/investment-safety`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ amount })
+  });
+  const body = (await response.json()) as InvestmentSafetyAssessment;
+
+  if (!response.ok || !body) {
+    throw new Error("Investment safety API returned an unexpected response.");
   }
 
   return body;
@@ -32,23 +87,26 @@ export async function fetchTrainingPageData(clubId: string): Promise<TrainingPag
   return body;
 }
 
-export async function fetchMatchesPageData(clubId: string): Promise<MatchesPageData> {
-  const response = await fetch(`/api/clubs/${clubId}/matches`);
-  const body = (await response.json()) as MatchesPageData;
+export async function fetchClubDiagnostic(
+  clubId: string
+): Promise<{ findings: DiagnosticFinding[] } | null> {
+  const response = await fetch("/api/clubs/" + clubId + "/diagnostics");
+  const body = (await response.json()) as { findings: DiagnosticFinding[] } | null;
 
-  if (!response.ok || !body) {
-    throw new Error("Matches API returned an unexpected response.");
+  if (!response.ok) {
+    throw new Error("Diagnostics API returned an unexpected response.");
   }
 
   return body;
 }
-
-export async function fetchSquadEconomy(clubId: string): Promise<SquadEconomy> {
-  const response = await fetch(`/api/clubs/${clubId}/economy`);
-  const body = (await response.json()) as SquadEconomy;
+export async function fetchWeeklyTrainingIntelligence(
+  clubId: string
+): Promise<WeeklyTrainingIntelligence> {
+  const response = await fetch(`/api/clubs/${clubId}/training/intelligence`);
+  const body = (await response.json()) as WeeklyTrainingIntelligence;
 
   if (!response.ok || !body) {
-    throw new Error("Squad economy API returned an unexpected response.");
+    throw new Error("Weekly Training Intelligence API returned an unexpected response.");
   }
 
   return body;
@@ -65,15 +123,144 @@ export async function fetchPlayerDevelopment(clubId: string): Promise<PlayerDeve
   return body;
 }
 
-export async function fetchSquadMarketPlanning(clubId: string): Promise<SquadMarketPlanning> {
-  const response = await fetch(`/api/clubs/${clubId}/economy/squad-market-planning`);
-  const body = (await response.json()) as SquadMarketPlanning;
+export async function fetchSquadPlanning(clubId: string): Promise<SquadPlanningData> {
+  const response = await fetch(`/api/clubs/${clubId}/players/squad-planning`);
+  const body = (await response.json()) as SquadPlanningData;
 
   if (!response.ok || !body) {
-    throw new Error("Squad market planning API returned an unexpected response.");
+    throw new Error("Squad Planning API returned an unexpected response.");
   }
 
   return body;
+}
+
+export async function fetchSquadDepthAnalysis(clubId: string): Promise<SquadDepthAnalysis> {
+  const response = await fetch(`/api/clubs/${clubId}/players/squad-depth`);
+  const body = (await response.json()) as SquadDepthAnalysis;
+
+  if (!response.ok || !body) {
+    throw new Error("Squad depth API returned an unexpected response.");
+  }
+
+  return body;
+}
+
+export async function fetchSquadPlanningRecommendations(
+  clubId: string
+): Promise<SquadPlanningRecommendations> {
+  const response = await fetch(`/api/clubs/${clubId}/players/squad-planning-recommendations`);
+  const body = (await response.json()) as SquadPlanningRecommendations;
+
+  if (!response.ok || !body) {
+    throw new Error("Squad planning recommendations API returned an unexpected response.");
+  }
+
+  return body;
+}
+
+export async function saveSquadRoleAssignment(
+  clubId: string,
+  playerId: string,
+  role: SquadRole
+): Promise<void> {
+  const response = await fetch(`/api/clubs/${clubId}/players/${playerId}/squad-role`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ role })
+  });
+
+  if (!response.ok) {
+    throw new Error(await apiErrorMessage(response, "Unable to save squad role"));
+  }
+}
+
+export async function resetSquadRoleAssignment(clubId: string, playerId: string): Promise<void> {
+  const response = await fetch(`/api/clubs/${clubId}/players/${playerId}/squad-role`, {
+    method: "DELETE"
+  });
+
+  if (!response.ok) {
+    throw new Error(await apiErrorMessage(response, "Unable to reset squad role"));
+  }
+}
+
+async function apiErrorMessage(response: Response, fallback: string): Promise<string> {
+  const body: unknown = await response.json().catch(() => null);
+  const message = errorMessageFromBody(body);
+
+  return message
+    ? `${fallback} (${response.status}): ${message}`
+    : `${fallback} (${response.status}).`;
+}
+
+function errorMessageFromBody(body: unknown): string | null {
+  if (typeof body !== "object" || body === null || !("importResult" in body)) {
+    return null;
+  }
+
+  const importResult = body.importResult;
+  if (typeof importResult !== "object" || importResult === null || !("errors" in importResult)) {
+    return null;
+  }
+
+  const errors = importResult.errors;
+  if (!Array.isArray(errors) || errors.length === 0) {
+    return null;
+  }
+
+  const firstError = errors[0];
+  return typeof firstError?.message === "string" ? firstError.message : null;
+}
+
+export async function fetchPlayerDevelopmentTarget(
+  clubId: string,
+  playerId: string
+): Promise<PlayerDevelopmentTargetOverrideResponse | null> {
+  const response = await fetch(`/api/clubs/${clubId}/players/${playerId}/development-target`);
+
+  if (response.status === 404) {
+    return null;
+  }
+
+  const body = (await response.json()) as PlayerDevelopmentTargetOverrideResponse | null;
+
+  if (!response.ok) {
+    throw new Error("Development target API returned an unexpected response.");
+  }
+
+  return body;
+}
+
+export async function savePlayerDevelopmentTarget(
+  clubId: string,
+  playerId: string,
+  override: PlayerDevelopmentTargetOverride
+): Promise<PlayerDevelopmentTargetOverrideResponse> {
+  const response = await fetch(`/api/clubs/${clubId}/players/${playerId}/development-target`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(override)
+  });
+  const body = (await response.json()) as PlayerDevelopmentTargetOverrideResponse;
+
+  if (!response.ok || !body) {
+    throw new Error("Development target API returned an unexpected response.");
+  }
+
+  return body;
+}
+
+export async function resetPlayerDevelopmentTarget(
+  clubId: string,
+  playerId: string
+): Promise<void> {
+  const response = await fetch(`/api/clubs/${clubId}/players/${playerId}/development-target`, {
+    method: "DELETE"
+  });
+
+  if (!response.ok) {
+    throw new Error("Development target API returned an unexpected response.");
+  }
 }
 
 export async function fetchYouthPipelinePlanning(clubId: string): Promise<YouthPipelinePlanning> {
@@ -82,6 +269,17 @@ export async function fetchYouthPipelinePlanning(clubId: string): Promise<YouthP
 
   if (!response.ok || !body) {
     throw new Error("Youth pipeline planning API returned an unexpected response.");
+  }
+
+  return body;
+}
+
+export async function fetchYouthDecisionPlanning(clubId: string): Promise<YouthDecisionPlanning> {
+  const response = await fetch(`/api/clubs/${clubId}/players/youth-decision-planning`);
+  const body = (await response.json()) as YouthDecisionPlanning;
+
+  if (!response.ok || !body) {
+    throw new Error("Youth decision planning API returned an unexpected response.");
   }
 
   return body;
@@ -100,20 +298,7 @@ export async function fetchRealYouthAcademyPlanning(
   return body;
 }
 
-export async function importPlayerSnapshot(payload: unknown): Promise<{
-  response: Response;
-  body: ImportResponse;
-}> {
-  const response = await fetch("/api/imports/player-snapshot", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
-  });
-
-  return { response, body: await readImportResponse(response) };
-}
-
-export async function syncSokkerXml(payload: unknown): Promise<{
+export async function syncSokker(payload: unknown): Promise<{
   response: Response;
   body: ImportResponse;
 }> {

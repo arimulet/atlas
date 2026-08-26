@@ -1,0 +1,1387 @@
+.atlas .atlas-training {
+  display: grid;
+  gap: 14px;
+  max-width: 1440px;
+}
+
+.atlas .atlas-training__header {
+  padding: 2px 0 4px;
+}
+
+.atlas .atlas-training__header h1 {
+  color: var(--atlas-text);
+  font-size: 1.35rem;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.atlas .atlas-training-panel {
+  background: var(--atlas-surface);
+  border: 1px solid var(--atlas-border);
+  border-radius: var(--atlas-radius-md);
+  min-width: 0;
+  padding: 14px 16px;
+}
+
+.atlas .atlas-training-panel--attention {
+  border-color: color-mix(in srgb, var(--semantic-warning-border) 55%, var(--atlas-border));
+}
+
+.atlas .atlas-training-panel__title {
+  color: var(--atlas-text);
+  font-size: 0.82rem;
+  font-weight: 750;
+  letter-spacing: 0.07em;
+  margin: 0 0 12px;
+  text-transform: uppercase;
+}
+
+.atlas .atlas-training-panel__message {
+  color: var(--atlas-text-secondary);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.atlas .atlas-training-panel__message.is-error {
+  color: var(--semantic-error-text);
+}
+
+.atlas .atlas-training-attention-list {
+  display: grid;
+  gap: 7px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.atlas .atlas-training-attention-item {
+  align-items: baseline;
+  color: var(--atlas-text-secondary);
+  display: flex;
+  font-size: 0.78rem;
+  gap: 8px;
+  line-height: 1.35;
+}
+
+.atlas .atlas-training-configuration {
+  display: grid;
+  gap: 10px 24px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.atlas .atlas-training-configuration__item {
+  align-items: center;
+  display: flex;
+  gap: 9px;
+  min-width: 0;
+}
+
+.atlas .atlas-training-configuration__item strong {
+  color: var(--atlas-text);
+  font-size: 0.82rem;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.atlas .atlas-training-position-badge {
+  align-items: center;
+  border: 1px solid var(--atlas-border);
+  border-radius: 4px;
+  color: var(--atlas-accent);
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-size: 0.65rem;
+  font-weight: 800;
+  justify-content: center;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  min-height: 21px;
+  min-width: 31px;
+  padding: 3px 5px;
+}
+
+.atlas .atlas-training-position-sections {
+  display: grid;
+  gap: 14px;
+}
+
+.atlas .atlas-training-position-section {
+  background: var(--atlas-surface);
+  border: 1px solid var(--atlas-border);
+  border-radius: var(--atlas-radius-md);
+  min-width: 0;
+  padding: 12px 16px 8px;
+}
+
+.atlas .atlas-training-position-section__header {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  margin-bottom: 9px;
+}
+
+.atlas .atlas-training-position-section__header h2 {
+  color: var(--atlas-text);
+  font-size: 0.86rem;
+  font-weight: 750;
+  margin: 0;
+}
+
+.atlas .atlas-training-position-section__header > span {
+  color: var(--atlas-text-muted);
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+
+.atlas .atlas-training-table-wrap {
+  overflow-x: auto;
+}
+
+.atlas .atlas-training-table {
+  border-collapse: collapse;
+  min-width: 1040px;
+  table-layout: fixed;
+  width: 100%;
+}
+
+.atlas .atlas-training-table th,
+.atlas .atlas-training-table td {
+  border-bottom: 1px solid color-mix(in srgb, var(--atlas-border) 72%, transparent);
+  font-size: 0.78rem;
+  height: 36px;
+  padding: 6px 8px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.atlas .atlas-training-table thead th {
+  color: var(--atlas-text-muted);
+  font-size: 0.65rem;
+  font-weight: 750;
+  height: 27px;
+  letter-spacing: 0.07em;
+  padding-top: 0;
+  text-transform: uppercase;
+}
+
+.atlas .atlas-training-table thead th:not(:first-child):not(:last-child),
+.atlas .atlas-training-table__numeric {
+  text-align: center;
+}
+
+.atlas .atlas-training-table col:nth-child(1) {
+  width: 29%;
+}
+
+.atlas .atlas-training-table col:nth-child(2) {
+  width: 6%;
+}
+
+.atlas .atlas-training-table col:nth-child(3) {
+  width: 8%;
+}
+
+.atlas .atlas-training-table col:nth-child(4) {
+  width: 8%;
+}
+
+.atlas .atlas-training-table col:nth-child(5) {
+  width: 10%;
+}
+
+.atlas .atlas-training-table col:nth-child(6) {
+  width: 10%;
+}
+
+.atlas .atlas-training-table col:nth-child(7) {
+  width: 7%;
+}
+
+.atlas .atlas-training-table col:nth-child(8) {
+  width: 8%;
+}
+
+.atlas .atlas-training-table col:nth-child(9) {
+  width: 6%;
+}
+
+.atlas .atlas-training-table col:nth-child(10) {
+  width: 8%;
+}
+
+.atlas .atlas-training-table tbody th {
+  color: var(--atlas-text);
+  font-weight: 700;
+}
+
+.atlas .atlas-training-table tbody td {
+  color: var(--atlas-text-secondary);
+}
+
+.atlas .atlas-training-table tbody tr:last-child th,
+.atlas .atlas-training-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.atlas .atlas-training-table th:first-child,
+.atlas .atlas-training-table td:first-child {
+  padding-left: 0;
+}
+
+.atlas .atlas-training-table__empty {
+  color: var(--atlas-text-muted) !important;
+  font-size: 0.72rem !important;
+  padding-bottom: 3px !important;
+  padding-top: 3px !important;
+}
+
+.atlas .atlas-training-advanced {
+  color: var(--atlas-text-muted);
+  font-size: 0.95rem;
+}
+
+.atlas .atlas-training-advanced.is-active {
+  color: var(--semantic-success-text);
+}
+
+.atlas .atlas-training-intelligence {
+  display: grid;
+  gap: 14px;
+}
+
+.atlas .atlas-training-intelligence__heading,
+.atlas .atlas-training-intelligence__section-heading {
+  align-items: baseline;
+  display: flex;
+  gap: 14px;
+  justify-content: space-between;
+}
+
+.atlas .atlas-training-intelligence__heading {
+  padding: 4px 0 0;
+}
+
+.atlas .atlas-training-intelligence__eyebrow {
+  color: var(--atlas-accent);
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+
+.atlas .atlas-training-intelligence__heading h2 {
+  color: var(--atlas-text);
+  font-size: 1.08rem;
+  margin: 0;
+}
+
+.atlas .atlas-training-intelligence__week,
+.atlas .atlas-training-intelligence__slot-count {
+  color: var(--atlas-text-muted);
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+.atlas .atlas-training-intelligence__summary {
+  background: var(--atlas-surface);
+  border: 1px solid var(--atlas-border);
+  border-radius: var(--atlas-radius-md);
+  display: grid;
+  gap: 1px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  overflow: hidden;
+}
+
+.atlas .atlas-training-intelligence__metric {
+  background: color-mix(in srgb, var(--atlas-surface) 88%, var(--atlas-accent));
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  padding: 12px 14px;
+}
+
+.atlas .atlas-training-intelligence__metric strong {
+  color: var(--atlas-text);
+  font-size: 1.08rem;
+  font-weight: 750;
+}
+
+.atlas .atlas-training-intelligence__metric span {
+  color: var(--atlas-text-muted);
+  font-size: 0.67rem;
+  text-transform: uppercase;
+}
+
+.atlas .atlas-training-intelligence__section {
+  background: var(--atlas-surface);
+  border: 1px solid var(--atlas-border);
+  border-radius: var(--atlas-radius-md);
+  min-width: 0;
+  padding: 14px 16px;
+}
+
+.atlas .atlas-training-intelligence__section--attention {
+  border-color: color-mix(in srgb, var(--semantic-warning-border) 55%, var(--atlas-border));
+}
+
+.atlas .atlas-training-intelligence__title {
+  color: var(--atlas-text);
+  font-size: 0.82rem;
+  font-weight: 750;
+  margin: 0 0 11px;
+}
+
+.atlas .atlas-training-intelligence__message,
+.atlas .atlas-training-intelligence__hint {
+  color: var(--atlas-text-secondary);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.atlas .atlas-training-intelligence__message.is-error {
+  color: var(--semantic-error-text);
+}
+
+.atlas .atlas-training-intelligence__hint {
+  color: var(--semantic-info-text);
+  margin: -3px 0 11px;
+}
+
+.atlas .atlas-training-intelligence__attention-list,
+.atlas .atlas-training-intelligence__replacements {
+  display: grid;
+  gap: 8px;
+}
+
+.atlas .atlas-training-intelligence__attention-card {
+  align-items: center;
+  border: 1px solid var(--atlas-border);
+  border-left: 3px solid var(--semantic-warning-border);
+  border-radius: 6px;
+  display: flex;
+  gap: 10px;
+  min-width: 0;
+  padding: 9px 11px;
+}
+
+.atlas .atlas-training-intelligence__attention-card.is-high {
+  border-left-color: var(--semantic-error-text);
+}
+
+.atlas .atlas-training-intelligence__attention-card.is-low {
+  border-left-color: var(--semantic-info-text);
+}
+
+.atlas .atlas-training-intelligence__attention-icon {
+  align-items: center;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  color: var(--semantic-warning-text);
+  display: inline-flex;
+  flex: 0 0 20px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  height: 20px;
+  justify-content: center;
+  width: 20px;
+}
+
+.atlas
+  .atlas-training-intelligence__attention-card.is-high
+  .atlas-training-intelligence__attention-icon {
+  color: var(--semantic-error-text);
+}
+
+.atlas
+  .atlas-training-intelligence__attention-card.is-low
+  .atlas-training-intelligence__attention-icon {
+  color: var(--semantic-info-text);
+}
+
+.atlas .atlas-training-intelligence__attention-copy {
+  min-width: 0;
+}
+
+.atlas .atlas-training-intelligence__attention-copy strong {
+  color: var(--atlas-text);
+  display: block;
+  font-size: 0.79rem;
+}
+
+.atlas .atlas-training-intelligence__attention-copy p {
+  color: var(--atlas-text-secondary);
+  font-size: 0.75rem;
+  line-height: 1.4;
+  margin: 2px 0 0;
+}
+
+.atlas .atlas-training-intelligence__attention-card button,
+.atlas .atlas-training-intelligence__filters button {
+  background: transparent;
+  border: 1px solid var(--atlas-border);
+  color: var(--atlas-text-secondary);
+  font-size: 0.68rem;
+  padding: 5px 8px;
+  white-space: nowrap;
+}
+
+.atlas .atlas-training-intelligence__attention-card button {
+  margin-left: auto;
+}
+
+.atlas .atlas-training-intelligence__attention-card button:hover,
+.atlas .atlas-training-intelligence__attention-card button:focus-visible,
+.atlas .atlas-training-intelligence__filters button:hover,
+.atlas .atlas-training-intelligence__filters button:focus-visible {
+  border-color: var(--atlas-accent);
+  color: var(--atlas-accent);
+  outline: 0;
+}
+
+.atlas .atlas-training-intelligence__replacements {
+  margin: 0 0 12px;
+}
+
+.atlas .atlas-training-intelligence__replacement {
+  background: color-mix(in srgb, var(--atlas-accent) 8%, var(--atlas-surface));
+  border: 1px solid color-mix(in srgb, var(--atlas-accent) 38%, var(--atlas-border));
+  border-radius: 6px;
+  padding: 10px 12px;
+}
+
+.atlas .atlas-training-intelligence__replacement-label {
+  color: var(--atlas-accent);
+  display: block;
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  margin-bottom: 5px;
+  text-transform: uppercase;
+}
+
+.atlas .atlas-training-intelligence__replacement-players {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.atlas .atlas-training-intelligence__replacement-players .atlas-player-link {
+  color: var(--atlas-text);
+  font-size: 0.8rem;
+  font-weight: 750;
+}
+
+.atlas .atlas-training-intelligence__replacement p {
+  color: var(--atlas-text-secondary);
+  font-size: 0.73rem;
+  margin: 5px 0 0;
+}
+
+.atlas .atlas-training-intelligence__table-wrap {
+  overflow-x: auto;
+}
+
+.atlas .atlas-training-intelligence__table {
+  border-collapse: collapse;
+  min-width: 760px;
+  width: 100%;
+}
+
+.atlas .atlas-training-intelligence__table th,
+.atlas .atlas-training-intelligence__table td {
+  border-bottom: 1px solid color-mix(in srgb, var(--atlas-border) 72%, transparent);
+  font-size: 0.75rem;
+  padding: 8px 7px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.atlas .atlas-training-intelligence__table thead th {
+  color: var(--atlas-text-muted);
+  font-size: 0.63rem;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.atlas .atlas-training-intelligence__table tbody th {
+  color: var(--atlas-text);
+  font-weight: 700;
+}
+
+.atlas .atlas-training-intelligence__table tbody td {
+  color: var(--atlas-text-secondary);
+}
+
+.atlas .atlas-training-intelligence__table tbody tr.is-outside {
+  background: color-mix(in srgb, var(--semantic-warning-text) 5%, transparent);
+}
+
+.atlas .atlas-training-intelligence__table tbody tr.is-skill-up {
+  background: color-mix(in srgb, var(--semantic-success-text) 7%, transparent);
+}
+
+.atlas .atlas-training-intelligence__table tbody tr:last-child th,
+.atlas .atlas-training-intelligence__table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.atlas .atlas-training-intelligence__numeric {
+  text-align: center !important;
+}
+
+.atlas .atlas-training-intelligence__secondary {
+  color: var(--atlas-text-muted) !important;
+  font-size: 0.68rem !important;
+}
+
+.atlas .atlas-training-intelligence__status {
+  color: var(--atlas-text-secondary);
+}
+
+.atlas .atlas-training-intelligence__status:first-letter {
+  color: var(--atlas-accent);
+}
+
+.atlas .atlas-training-intelligence__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  justify-content: flex-end;
+}
+
+.atlas .atlas-training-intelligence__filters button.is-active {
+  background: var(--atlas-accent);
+  border-color: var(--atlas-accent);
+  color: var(--atlas-bg);
+}
+
+.atlas .atlas-training-intelligence__progress-cell {
+  min-width: 120px;
+}
+
+.atlas .atlas-training-intelligence__progress {
+  align-items: center;
+  display: flex;
+  gap: 7px;
+}
+
+.atlas .atlas-training-intelligence__progress-bar {
+  background: var(--atlas-border);
+  border-radius: 3px;
+  display: inline-block;
+  height: 4px;
+  overflow: hidden;
+  width: 45px;
+}
+
+.atlas .atlas-training-intelligence__progress-bar > span {
+  background: var(--atlas-accent);
+  display: block;
+  height: 100%;
+}
+
+.atlas .atlas-training-intelligence__skill-up {
+  background: color-mix(in srgb, var(--semantic-success-text) 15%, transparent);
+  border-radius: 3px;
+  color: var(--semantic-success-text);
+  display: inline-block;
+  font-size: 0.58rem;
+  font-weight: 800;
+  margin-left: 7px;
+  padding: 2px 4px;
+  text-transform: uppercase;
+  vertical-align: 1px;
+}
+
+.atlas .atlas-training-intelligence__recommendation {
+  color: var(--atlas-text);
+  display: block;
+}
+
+.atlas .atlas-training-intelligence__table small {
+  color: var(--atlas-text-muted);
+  display: block;
+  font-size: 0.62rem;
+  margin-top: 2px;
+}
+
+.atlas .atlas-training-intelligence__empty {
+  color: var(--atlas-text-muted) !important;
+  padding: 14px 0 !important;
+  text-align: center !important;
+}
+
+@media (max-width: 700px) {
+  .atlas .atlas-training-configuration {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .atlas .atlas-training-intelligence__summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .atlas .atlas-training-intelligence__metric:last-child {
+    grid-column: span 2;
+  }
+
+  .atlas .atlas-training-intelligence__heading,
+  .atlas .atlas-training-intelligence__section-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .atlas .atlas-training-intelligence__filters {
+    justify-content: flex-start;
+  }
+}
+
+.atlas .atlas-training__header {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.atlas .atlas-training__recent-progress-button,
+.atlas .atlas-training-player-detail summary {
+  background: var(--atlas-surface-raised, var(--atlas-surface));
+  border: 1px solid var(--atlas-border);
+  border-radius: var(--atlas-radius-sm);
+  color: var(--atlas-text-secondary);
+  cursor: pointer;
+  font: inherit;
+}
+
+.atlas .atlas-training__recent-progress-button {
+  font-size: 0.75rem;
+  padding: 7px 10px;
+}
+
+.atlas .atlas-training-table--skills {
+  min-width: 1080px;
+}
+
+.atlas .atlas-training-table--skills .atlas-training-table__columns-row,
+.atlas .atlas-training-table--skills .atlas-training-table__columns-row th {
+  background: color-mix(in srgb, var(--atlas-surface-hover) 28%, transparent);
+  border-bottom: 1px solid var(--atlas-border);
+  color: var(--atlas-text-secondary);
+  font-size: 0.62rem;
+  height: 24px;
+  padding-bottom: 3px;
+  padding-top: 0;
+}
+
+.atlas .atlas-training-table__skill.is-skill-up,
+.atlas .atlas-training-progress-modal .is-skill-up {
+  color: var(--semantic-success-text) !important;
+  font-weight: 800;
+}
+
+.atlas .atlas-training-table__skill.is-skill-down,
+.atlas .atlas-training-progress-modal .is-skill-down {
+  color: var(--semantic-error-text) !important;
+  font-weight: 800;
+}
+
+.atlas .atlas-training-kind {
+  font-size: 0.82rem;
+}
+
+.atlas .atlas-training-kind.is-advanced {
+  color: var(--semantic-success-text);
+}
+
+.atlas .atlas-training-kind.is-formation {
+  color: var(--atlas-accent);
+}
+
+.atlas .atlas-training-player-detail-row td {
+  border-bottom: 0;
+  padding: 0 0 7px;
+}
+
+.atlas .atlas-training-player-detail summary {
+  display: inline-block;
+  font-size: 0.68rem;
+  margin-top: 2px;
+  padding: 4px 7px;
+}
+
+.atlas .atlas-training-player-detail__content {
+  border-left: 2px solid var(--atlas-border);
+  display: grid;
+  gap: 10px;
+  margin: 8px 0 2px;
+  padding: 8px 10px;
+}
+
+.atlas .atlas-training-player-detail__content dl {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 0;
+}
+
+.atlas .atlas-training-player-detail__content dt,
+.atlas .atlas-training-player-detail__content h3 {
+  color: var(--atlas-text-muted);
+  font-size: 0.63rem;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  margin: 0 0 3px;
+  text-transform: uppercase;
+}
+
+.atlas .atlas-training-player-detail__content dd,
+.atlas .atlas-training-player-detail__content li,
+.atlas .atlas-training-player-detail__message {
+  color: var(--atlas-text-secondary);
+  font-size: 0.73rem;
+  margin: 0;
+}
+
+.atlas .atlas-training-player-detail__content ul {
+  display: grid;
+  gap: 3px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.atlas .atlas-training-progress-modal__backdrop {
+  align-items: center;
+  background: color-mix(in srgb, #000 58%, transparent);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  position: fixed;
+  z-index: 20;
+}
+
+.atlas .atlas-training-progress-modal {
+  background: var(--atlas-surface);
+  border: 1px solid var(--atlas-border);
+  border-radius: var(--atlas-radius-md);
+  box-shadow: 0 18px 60px color-mix(in srgb, #000 45%, transparent);
+  max-height: min(680px, calc(100vh - 30px));
+  max-width: min(680px, calc(100vw - 30px));
+  overflow: auto;
+  padding: 18px;
+  width: 100%;
+}
+
+.atlas .atlas-training-progress-modal__header {
+  align-items: start;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.atlas .atlas-training-progress-modal__header span {
+  color: var(--atlas-text-muted);
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.atlas .atlas-training-progress-modal h2 {
+  color: var(--atlas-text);
+  font-size: 1rem;
+  margin: 3px 0 0;
+}
+
+.atlas .atlas-training-progress-modal__header button {
+  background: transparent;
+  border: 0;
+  color: var(--atlas-text-muted);
+  cursor: pointer;
+  font-size: 1.25rem;
+}
+
+.atlas .atlas-training-progress-modal ul {
+  display: grid;
+  gap: 6px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.atlas .atlas-training-progress-modal li {
+  display: grid;
+  font-size: 0.78rem;
+  gap: 8px;
+  grid-template-columns: 80px minmax(0, 1fr) auto;
+}
+
+@media (max-width: 700px) {
+  .atlas .atlas-training-player-detail__content dl {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.atlas .atlas-training-table--skills thead .atlas-training-table__columns-row th:nth-child(3),
+.atlas .atlas-training-table--skills tbody td:nth-child(3) {
+  border-left: 1px solid var(--atlas-border);
+}
+
+.atlas .atlas-training-table--skills thead .atlas-training-table__columns-row th:nth-child(11),
+.atlas .atlas-training-table--skills tbody td:nth-child(11) {
+  border-left: 1px solid var(--atlas-border);
+}
+
+.atlas .atlas-training-table--skills .is-position-skill {
+  color: var(--atlas-text);
+  font-weight: 800;
+}
+
+.atlas .atlas-training-kind {
+  margin-left: 6px;
+}
+
+.atlas .atlas-training-player-detail__toggle {
+  background: var(--atlas-surface-raised, var(--atlas-surface));
+  border: 1px solid var(--atlas-border);
+  border-radius: var(--atlas-radius-sm);
+  color: var(--atlas-text-secondary);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.78rem;
+  line-height: 1;
+  margin-right: 7px;
+  padding: 3px 6px;
+}
+
+.atlas .atlas-training-player-detail__toggle + img {
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.atlas .atlas-training-progress-modal li {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.atlas .atlas-training-table__skill {
+  position: relative;
+}
+
+.atlas .atlas-training-table__skill-marker {
+  left: calc(50% + 1.1em);
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.atlas .atlas-training-table__skill.is-skill-up {
+  background: color-mix(in srgb, var(--semantic-success-text) 13%, transparent);
+}
+
+.atlas .atlas-training-table__skill.is-skill-down {
+  background: color-mix(in srgb, var(--semantic-error-text) 13%, transparent);
+}
+
+.atlas .atlas-training-table__skill-marker {
+  left: calc(50% + 0.8em);
+}
+
+.atlas .atlas-training-table__recommendation {
+  color: var(--atlas-text-secondary);
+  font-size: 0.72rem;
+  white-space: normal;
+}
+
+.atlas .atlas-training-status-indicator {
+  align-items: center;
+  border-radius: 50%;
+  display: inline-flex;
+  font-size: 0.65rem;
+  font-weight: 800;
+  height: 15px;
+  justify-content: center;
+  margin-left: 5px;
+  width: 15px;
+}
+
+.atlas .atlas-training-status-indicator.is-critical {
+  background: color-mix(in srgb, var(--semantic-error-text) 18%, transparent);
+  color: var(--semantic-error-text);
+}
+
+.atlas .atlas-training-status-indicator.is-attention {
+  background: color-mix(in srgb, var(--semantic-warning-text) 18%, transparent);
+  color: var(--semantic-warning-text);
+}
+
+.atlas .atlas-training-status-indicator.is-info {
+  background: color-mix(in srgb, var(--atlas-accent) 18%, transparent);
+  color: var(--atlas-accent);
+}
+
+.atlas .atlas-training-table--skills thead .atlas-training-table__columns-row th:nth-child(11),
+.atlas .atlas-training-table--skills tbody td:nth-child(11) {
+  border-left: 1px solid var(--atlas-border);
+}
+
+.atlas .atlas-training-table-wrap {
+  overflow-x: hidden;
+}
+
+.atlas .atlas-training-table,
+.atlas .atlas-training-table--skills {
+  min-width: 0;
+}
+
+.atlas .atlas-training-table--skills th,
+.atlas .atlas-training-table--skills td {
+  font-size: 0.7rem;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+.atlas .atlas-training-table--skills th:first-child,
+.atlas .atlas-training-table--skills td:first-child {
+  width: 22%;
+}
+
+.atlas .atlas-training-table--skills th:nth-child(2),
+.atlas .atlas-training-table--skills td:nth-child(2) {
+  width: 5%;
+}
+
+.atlas .atlas-training-table--skills th:nth-child(n + 3):nth-child(-n + 10),
+.atlas .atlas-training-table--skills td:nth-child(n + 3):nth-child(-n + 10) {
+  width: 5%;
+}
+
+.atlas .atlas-training-table--skills th:last-child,
+.atlas .atlas-training-table__recommendation {
+  white-space: normal;
+  width: 33%;
+}
+
+.atlas .atlas-training-table__recommendation:empty::after {
+  content: "";
+}
+
+@media (max-width: 700px) {
+  .atlas .atlas-training-table--skills th,
+  .atlas .atlas-training-table--skills td {
+    font-size: 0.62rem;
+    padding-left: 2px;
+    padding-right: 2px;
+  }
+
+  .atlas .atlas-training-player-detail__toggle {
+    margin-right: 3px;
+    padding-left: 4px;
+    padding-right: 4px;
+  }
+}
+
+.atlas .atlas-training-table--skills col.is-player {
+  width: 25%;
+}
+
+.atlas .atlas-training-table--skills col.is-age {
+  width: 5%;
+}
+
+.atlas .atlas-training-table--skills col.is-skill {
+  width: 5.25%;
+}
+
+.atlas .atlas-training-table--skills col.is-recommendation {
+  width: 28%;
+}
+
+.atlas .atlas-training-table--skills th:first-child,
+.atlas .atlas-training-table--skills td:first-child,
+.atlas .atlas-training-table--skills th:nth-child(2),
+.atlas .atlas-training-table--skills td:nth-child(2),
+.atlas .atlas-training-table--skills th:nth-child(n + 3):nth-child(-n + 10),
+.atlas .atlas-training-table--skills td:nth-child(n + 3):nth-child(-n + 10),
+.atlas .atlas-training-table--skills th:last-child,
+.atlas .atlas-training-table__recommendation {
+  width: auto;
+}
+
+.atlas .atlas-training-details {
+  display: grid;
+  gap: 12px;
+}
+
+.atlas .atlas-training-details__season {
+  display: grid;
+  gap: 6px;
+}
+
+.atlas .atlas-training-details__season h3 {
+  color: var(--atlas-text);
+  font-size: 0.74rem;
+  margin: 0;
+}
+
+.atlas .atlas-training-details__table-wrap {
+  overflow-x: auto;
+}
+
+.atlas .atlas-training-details table {
+  border-collapse: collapse;
+  min-width: 620px;
+  width: 100%;
+}
+
+.atlas .atlas-training-details th,
+.atlas .atlas-training-details td {
+  border-bottom: 1px solid color-mix(in srgb, var(--atlas-border) 72%, transparent);
+  color: var(--atlas-text-secondary);
+  font-size: 0.68rem;
+  padding: 5px 7px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.atlas .atlas-training-details thead th {
+  color: var(--atlas-text-muted);
+  font-size: 0.6rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.atlas .atlas-training-details th:first-child,
+.atlas .atlas-training-details tbody th {
+  color: var(--atlas-text);
+  text-align: left;
+}
+
+.atlas .atlas-training-details tr.is-active-skill {
+  background: color-mix(in srgb, var(--atlas-accent) 9%, transparent);
+}
+
+.atlas .atlas-training-details__effectiveness {
+  font-variant-numeric: tabular-nums;
+}
+
+.atlas .atlas-training-details__progress {
+  align-items: center;
+  display: grid;
+  gap: 4px;
+  grid-template-columns: auto 54px;
+  justify-content: center;
+}
+
+.atlas .atlas-training-details__progress-bar {
+  background: var(--atlas-surface-raised, var(--atlas-surface));
+  border-radius: 999px;
+  height: 5px;
+  overflow: hidden;
+}
+
+.atlas .atlas-training-details__progress-bar > span {
+  background: var(--atlas-accent);
+  display: block;
+  height: 100%;
+}
+
+.atlas .atlas-training-details {
+  border-collapse: collapse;
+  min-width: 760px;
+  table-layout: fixed;
+  width: 100%;
+}
+
+.atlas .atlas-training-details__season,
+.atlas .atlas-training-details__season h3 {
+  display: contents;
+}
+
+.atlas .atlas-training-details th,
+.atlas .atlas-training-details td {
+  min-width: 76px;
+  vertical-align: top;
+}
+
+.atlas .atlas-training-details th:first-child,
+.atlas .atlas-training-details tbody th {
+  min-width: 90px;
+}
+
+.atlas .atlas-training-details td.is-active-skill {
+  background: color-mix(in srgb, var(--atlas-accent) 9%, transparent);
+}
+
+.atlas .atlas-training-details__weeks {
+  display: grid;
+  gap: 4px;
+}
+
+.atlas .atlas-training-details__week {
+  align-items: baseline;
+  background: var(--atlas-surface-raised, var(--atlas-surface));
+  border-radius: 3px;
+  display: flex;
+  gap: 4px;
+  justify-content: space-between;
+  padding: 3px 4px;
+}
+
+.atlas .atlas-training-details__week small {
+  color: var(--atlas-text-muted);
+  font-size: 0.58rem;
+}
+
+.atlas .atlas-training-details__week strong {
+  color: var(--atlas-text-secondary);
+  font-size: 0.66rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.atlas .atlas-training-details__empty {
+  color: var(--atlas-text-muted);
+}
+
+.atlas .atlas-training-details__projection {
+  border-top: 1px solid var(--atlas-border);
+  color: var(--atlas-text-secondary);
+  display: grid;
+  font-size: 0.62rem;
+  gap: 5px;
+  margin-top: 6px;
+  padding-top: 6px;
+}
+
+.atlas .atlas-training-details__sessions {
+  display: grid;
+  gap: 4px;
+}
+
+.atlas .atlas-training-details__session {
+  align-items: center;
+  display: grid;
+  gap: 4px;
+  grid-template-columns: auto minmax(26px, 1fr) auto;
+}
+
+.atlas .atlas-training-details__session small {
+  color: var(--atlas-text-muted);
+  font-size: 0.56rem;
+}
+
+.atlas .atlas-training-details__session strong {
+  color: var(--atlas-text-secondary);
+  font-size: 0.6rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.atlas .atlas-training-details__session-bar {
+  background: var(--atlas-surface-raised, var(--atlas-surface));
+  border-radius: 999px;
+  height: 6px;
+  overflow: hidden;
+}
+
+.atlas .atlas-training-details__session-bar > span {
+  background: var(--atlas-accent);
+  display: block;
+  height: 100%;
+}
+
+.atlas .atlas-training-details__session.is-advanced .atlas-training-details__session-bar > span {
+  background: var(--semantic-success-text);
+}
+
+.atlas .atlas-training-details__session.is-missing .atlas-training-details__session-bar > span {
+  background: var(--atlas-text-muted);
+}
+
+.atlas .atlas-training-details__sessions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.atlas .atlas-training-details__session {
+  display: grid;
+  gap: 2px;
+  grid-template-columns: auto minmax(18px, 1fr) auto;
+  min-width: 54px;
+}
+
+.atlas .atlas-training-details__session.is-residual .atlas-training-details__session-bar > span {
+  background: var(--semantic-error-text);
+}
+
+.atlas .atlas-training-details__session.is-idle .atlas-training-details__session-bar > span {
+  background: var(--atlas-text-muted);
+}
+
+.atlas .atlas-training-details thead th:not(:first-child) {
+  text-align: center;
+}
+
+.atlas .atlas-training-details__sessions {
+  justify-content: center;
+}
+
+.atlas .atlas-training-details col.is-season {
+  width: 9%;
+}
+
+.atlas .atlas-training-details col.is-skill {
+  width: 11.375%;
+}
+
+.atlas .atlas-training-details__sessions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  justify-content: initial;
+}
+
+.atlas .atlas-training-details__session {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  min-width: 0;
+}
+
+.atlas .atlas-training-details {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.atlas .atlas-training-details tbody,
+.atlas .atlas-training-details tbody tr {
+  width: 100%;
+}
+
+.atlas .atlas-training-details col.is-season {
+  width: 9%;
+}
+
+.atlas .atlas-training-details col.is-skill {
+  width: auto;
+}
+
+.atlas .atlas-training-details th,
+.atlas .atlas-training-details td,
+.atlas .atlas-training-details th:first-child,
+.atlas .atlas-training-details tbody th {
+  min-width: 0;
+}
+
+.atlas .atlas-training-details__table-wrap {
+  min-width: 0;
+  width: 100%;
+}
+
+.atlas table.atlas-training-details {
+  display: table;
+  width: 100%;
+}
+
+.atlas .atlas-training-details__sessions {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.atlas .atlas-training-details__level-groups {
+  display: grid;
+  gap: 6px;
+}
+
+.atlas .atlas-training-details__level-group {
+  border-top: 1px solid color-mix(in srgb, var(--atlas-border) 72%, transparent);
+  display: grid;
+  gap: 4px;
+  padding-top: 4px;
+}
+
+.atlas .atlas-training-details__level-group:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.atlas .atlas-training-details__level {
+  color: var(--atlas-text);
+  font-size: 0.61rem;
+  font-weight: 800;
+}
+
+.atlas .atlas-training-details__level-group {
+  align-items: center;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.atlas .atlas-training-details__level-group .atlas-training-details__sessions {
+  order: 1;
+}
+
+.atlas .atlas-training-details__level {
+  order: 2;
+}
+
+.atlas .atlas-training-details__level-group {
+  border-top-color: color-mix(in srgb, var(--atlas-accent) 42%, var(--atlas-border));
+  border-top-width: 2px;
+  margin-top: 5px;
+  padding-top: 7px;
+}
+
+.atlas .atlas-training-details__level-group:first-child {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+.atlas .atlas-training-details__session.is-formation .atlas-training-details__session-bar > span {
+  background: var(--semantic-warning-text);
+}
+
+.atlas .atlas-training-table--skills col.is-player {
+  width: 25%;
+}
+
+.atlas .atlas-training-table--skills col.is-talent {
+  width: 6%;
+}
+
+.atlas .atlas-training-table--skills col.is-age {
+  width: 4%;
+}
+
+.atlas .atlas-training-table--skills col.is-skill {
+  width: 5.25%;
+}
+
+.atlas .atlas-training-table--skills col.is-recommendation {
+  width: 23%;
+}
+
+.atlas .atlas-training-player-detail__content dl {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+/* Age remains independent; Skills starts at STA and ends at SCO. */
+.atlas .atlas-training-table--skills thead .atlas-training-table__columns-row th:nth-child(3),
+.atlas .atlas-training-table--skills tbody td:nth-child(3) {
+  border-left: 1px solid var(--atlas-border);
+}
+
+.atlas .atlas-training-table--skills thead .atlas-training-table__columns-row th:nth-child(4),
+.atlas .atlas-training-table--skills tbody td:nth-child(4) {
+  border-left: 1px solid var(--atlas-border);
+}
+
+.atlas .atlas-training-table--skills thead .atlas-training-table__columns-row th:nth-child(11),
+.atlas .atlas-training-table--skills tbody td:nth-child(11) {
+  border-left: 0;
+}
+
+.atlas .atlas-training-table--skills thead .atlas-training-table__columns-row th:nth-child(12),
+.atlas .atlas-training-table--skills tbody td:nth-child(12) {
+  border-left: 1px solid var(--atlas-border);
+}
