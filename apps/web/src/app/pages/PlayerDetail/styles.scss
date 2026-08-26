@@ -60,6 +60,12 @@
   text-transform: uppercase;
 }
 
+.atlas .atlas-player-detail__summary-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .atlas .atlas-player-personal-info__grid {
   display: grid;
   gap: 12px;
@@ -116,12 +122,6 @@
 
 .atlas .atlas-player-personal-info__value-change.is-down {
   color: var(--semantic-error-text);
-}
-
-.atlas .atlas-player-detail__summary-grid {
-  display: grid;
-  gap: 14px;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .atlas .atlas-player-detail__secondary-grid {
@@ -303,6 +303,17 @@
   color: var(--atlas-text-secondary);
   font-size: 0.76rem;
   margin: -3px 0 10px;
+}
+
+.atlas .atlas-player-detail__projection-header {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.atlas .atlas-player-detail__projection-header .atlas-player-detail-panel__title {
+  margin-bottom: 12px;
 }
 
 .atlas .atlas-player-detail__projection-section {

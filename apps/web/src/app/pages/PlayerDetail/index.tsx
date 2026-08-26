@@ -1,10 +1,17 @@
 import { Component, type ReactNode } from "react";
 import type { PlayerDetailProps } from "./types";
 import { ProjectionPanel } from "./ProjectionPanel";
+<<<<<<< Updated upstream
 import { formatNumber, formatPercentage } from "../../formatters";
+=======
+<<<<<<< Updated upstream
+import { formatDateTime, formatNumber, formatPercentage } from "../../formatters";
+=======
+import { formatNumber } from "../../formatters";
+>>>>>>> Stashed changes
+>>>>>>> Stashed changes
 import { CountryNameFlag } from "../../components/CountryNameFlag";
 import { DiagnosticNotifications } from "../../components/Header/DiagnosticNotifications";
-import { StatusBadge } from "../../components/StatusBadge";
 import {
   createPlayerDetailViewModel,
   type PlayerDetailViewModel
@@ -86,13 +93,12 @@ function PlayerDetailContent({
       <PlayerPersonalInfoPanel player={viewModel.player} training={viewModel.training} />
       <div className="atlas-player-detail__summary-grid">
         <SkillsPanel skills={viewModel.skills} />
-        <TrainingPanel training={viewModel.training} />
+        <ProjectionPanel
+          projection={viewModel.projection}
+          talent={viewModel.talent}
+          training={viewModel.training}
+        />
       </div>
-      <ProjectionPanel
-        projection={viewModel.projection}
-        talent={viewModel.talent}
-        training={viewModel.training}
-      />
       <PlayerMarketValueSection marketValue={viewModel.marketValue ?? null} />
       <DevelopmentPlanBoundary key={viewModel.player.id}>
         <DevelopmentPlanSection clubId={clubId} player={viewModel} training={training} />
@@ -245,32 +251,6 @@ function formatSkillChangeDelta(change: { direction: "up" | "down"; levelDelta: 
   return `${sign}${change.levelDelta}`;
 }
 
-interface TrainingPanelProps {
-  training: PlayerDetailViewModel["training"];
-}
-
-function TrainingPanel({ training }: TrainingPanelProps) {
-  return (
-    <section className="atlas-player-detail-panel" aria-labelledby="player-detail-training-title">
-      <PanelTitle id="player-detail-training-title" title="Training" />
-      <dl className="atlas-player-detail__data-list">
-        <DataRow label="Position" value={training.position ?? "—"} />
-        <DataRow label="Trained Skill" value={training.trainedSkill ?? "—"} />
-        <DataRow label="Training type" value={training.trainingType ?? "—"} />
-        <DataRow label="Training kind" value={training.trainingKind ?? "—"} />
-        <DataRow label="Intensity" value={formatPercentage(training.intensity)} />
-        <DataRow label="Progress" value={formatPercentage(training.progress)} />
-        <div>
-          <dt>Status</dt>
-          <dd>
-            <StatusBadge status={training.status} />
-          </dd>
-        </div>
-      </dl>
-    </section>
-  );
-}
-
 interface TrainingHistoryPanelProps {
   rows: PlayerDetailViewModel["trainingHistory"];
 }
@@ -389,19 +369,5 @@ function PanelTitle({ id, title }: PanelTitleProps) {
     <h2 className="atlas-player-detail-panel__title atlas-section-title" id={id}>
       {title}
     </h2>
-  );
-}
-
-interface DataRowProps {
-  label: string;
-  value: string | number;
-}
-
-function DataRow({ label, value }: DataRowProps) {
-  return (
-    <div>
-      <dt>{label}</dt>
-      <dd>{value}</dd>
-    </div>
   );
 }
