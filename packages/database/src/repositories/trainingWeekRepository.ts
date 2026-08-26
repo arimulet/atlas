@@ -84,9 +84,13 @@ function mapTrainingWeek(
   snapshots: readonly TrainingSnapshot[]
 ): PersistedPlayerTrainingWeek {
   const snapshotPlayer = findSnapshotPlayer(week, snapshots);
-  const skills = snapshotPlayer
-    ? mapSnapshotSkills(snapshotPlayer.skills)
-    : readSkills(week.skills);
+  const storedSkills = readSkills(week.skills);
+  const skills =
+    Object.keys(storedSkills).length > 0
+      ? storedSkills
+      : snapshotPlayer
+        ? mapSnapshotSkills(snapshotPlayer.skills)
+        : storedSkills;
   const skillsChange = readSkillsChange(week.skillsChange);
 
   return {
@@ -111,9 +115,9 @@ function findSnapshotPlayer(
   week: TrainingWeekShape,
   snapshots: readonly TrainingSnapshot[]
 ): TrainingSnapshot["players"][number] | null {
-  const afterTraining = snapshots.find((snapshot) => snapshot.gameWeek === week.gameWeek + 1);
   const sameWeek = snapshots.find((snapshot) => snapshot.gameWeek === week.gameWeek);
-  const snapshot = afterTraining ?? sameWeek;
+  const afterTraining = snapshots.find((snapshot) => snapshot.gameWeek === week.gameWeek + 1);
+  const snapshot = sameWeek ?? afterTraining;
   return snapshot?.players.find((player) => player.playerId === week.playerId) ?? null;
 }
 

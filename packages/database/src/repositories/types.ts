@@ -264,10 +264,7 @@ export interface PersistedPlayerTrainingWeek {
   skillChanges: PersistedTrainingSkillChange[];
 }
 
-export type SavePlayerTrainingWeekInput = Omit<
-  PersistedPlayerTrainingWeek,
-  "id" | "skills" | "skillChanges"
->;
+export type SavePlayerTrainingWeekInput = Omit<PersistedPlayerTrainingWeek, "id" | "skillChanges">;
 
 export interface PersistedCountry {
   id: string;

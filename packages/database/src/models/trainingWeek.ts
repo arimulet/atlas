@@ -29,6 +29,7 @@ const trainingWeekSchema = new Schema(
     kind: { type: String, enum: ["advanced", "formation", "missing"], required: true },
     intensity: { type: Number, required: true, min: 0, max: 100 },
     age: { type: Number, required: true, min: 16 },
+    skills: { type: Schema.Types.Mixed, required: true },
     skillsChange: { type: Schema.Types.Mixed, required: true }
   },
   { timestamps: true }

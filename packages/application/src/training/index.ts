@@ -350,17 +350,19 @@ export async function getWeeklyTrainingCalibration(
     const snapshotPlayer = latestSnapshot?.players.find(
       (player) => player.playerId === history.playerId
     );
-    return [{
-      player: {
-        playerId: history.playerId,
-        age: currentWeek.playerAge,
-        position: snapshotPlayer?.observedPosition ?? null,
-        skills: currentWeek.skills
-      },
-      weeklyReport: report,
-      trainingHistory: history,
-      talent: talentByPlayer.get(history.playerId) ?? null
-    }];
+    return [
+      {
+        player: {
+          playerId: history.playerId,
+          age: currentWeek.playerAge,
+          position: snapshotPlayer?.observedPosition ?? null,
+          skills: currentWeek.skills
+        },
+        weeklyReport: report,
+        trainingHistory: history,
+        talent: talentByPlayer.get(history.playerId) ?? null
+      }
+    ];
   });
   const recommendations = buildTrainingRecommendations(recommendationContexts);
   const recommendationByPlayer = new Map(
@@ -376,32 +378,36 @@ export async function getWeeklyTrainingCalibration(
     if (!currentWeek) {
       return [];
     }
-    return [{
-      ...context,
-      trainingRecommendation: recommendationByPlayer.get(context.player.playerId),
-      currentTraining: {
-        skill: currentWeek.skill,
-        kind: snapshotPlayer
-          ? snapshotPlayer.training.advanced
-            ? "advanced" as const
-            : "formation" as const
-          : currentWeek.kind === "missing"
-            ? "formation" as const
-            : currentWeek.kind,
-        intensity: currentWeek.intensity
+    return [
+      {
+        ...context,
+        trainingRecommendation: recommendationByPlayer.get(context.player.playerId),
+        currentTraining: {
+          skill: currentWeek.skill,
+          kind: snapshotPlayer
+            ? snapshotPlayer.training.advanced
+              ? ("advanced" as const)
+              : ("formation" as const)
+            : currentWeek.kind === "missing"
+              ? ("formation" as const)
+              : currentWeek.kind,
+          intensity: currentWeek.intensity
+        }
       }
-    }];
+    ];
   });
   const advancedOptimization = optimizeAdvancedTrainingSlots(
     advancedContexts,
     weeklyReport.gameWeek
   );
-  const calibrationPlayers: TrainingCalibrationPlayerContext[] = advancedContexts.map((context) => ({
-    player: context.player,
-    trainingHistory: context.trainingHistory,
-    currentTraining: context.currentTraining,
-    currentlyAdvanced: context.currentTraining.kind === "advanced"
-  }));
+  const calibrationPlayers: TrainingCalibrationPlayerContext[] = advancedContexts.map(
+    (context) => ({
+      player: context.player,
+      trainingHistory: context.trainingHistory,
+      currentTraining: context.currentTraining,
+      currentlyAdvanced: context.currentTraining.kind === "advanced"
+    })
+  );
 
   const datasetSelection = selectTrainingCalibrationDataset(calibrationPlayers);
   return buildWeeklyTrainingCalibrationReport({
@@ -487,6 +493,7 @@ export async function importTrainingReports(
       kind: report.kind,
       intensity: report.intensity,
       age: report.age,
+      skills: toPersistedSkills(report.skills),
       skillsChange: toPersistedSkillsChange(report.skillsChange)
     });
   }
@@ -494,6 +501,18 @@ export async function importTrainingReports(
   return reports.length;
 }
 
+function toPersistedSkills(skills: PlayerTrainingWeekDto["skills"]): PersistedPlayerSkills {
+  return {
+    stamina: skills.stamina,
+    keeper: skills.keeper,
+    playmaking: skills.playmaking,
+    passing: skills.passing,
+    technique: skills.technique,
+    defending: skills.defending,
+    striker: skills.striker,
+    pace: skills.pace
+  };
+}
 function toPersistedSkillsChange(
   change: PlayerTrainingWeekDto["skillsChange"]
 ): PersistedPlayerSkillsChange {
