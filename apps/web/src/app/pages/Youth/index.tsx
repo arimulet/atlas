@@ -7,10 +7,10 @@ import type { YouthProps } from "./types";
 import { AttentionIcon } from "../../components/AttentionIcon";
 import { formatTalent } from "../../formatters";
 import { skillLevelLabel } from "../../view-models/skill-level-label";
-import { YouthDecisionSections, YouthSummary } from "./YouthDecisionSections";
+import { YouthSummary } from "./YouthDecisionSections";
 import { useYouthDecisionEngine } from "./useYouthDecisionEngine";
 
-export function Youth({ clubId, currency, onSelectPlayer, youthAcademy, youthStatus }: YouthProps) {
+export function Youth({ clubId, currency, youthAcademy, youthStatus }: YouthProps) {
   const rows = createYouthPlayerRows(youthAcademy);
   const schoolRows = rows.filter((row) => row.status !== "Promoted");
   const decisionEngine = useYouthDecisionEngine({ clubId, currency, youthAcademy });
@@ -22,12 +22,6 @@ export function Youth({ clubId, currency, onSelectPlayer, youthAcademy, youthSta
       </header>
       <YouthSummary summary={decisionEngine.summary} />
       <YouthPlayers rows={schoolRows} status={youthStatus} planning={youthAcademy} />
-
-      <YouthDecisionSections
-        models={decisionEngine.decisionCandidates}
-        onSelectPlayer={onSelectPlayer}
-        status={decisionEngine.status}
-      />
     </div>
   );
 }
