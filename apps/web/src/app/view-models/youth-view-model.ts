@@ -1,8 +1,4 @@
-import type {
-  RealYouthAcademyPlayerPlan,
-  RealYouthAcademyPlanning,
-  Severity
-} from "@atlas/web/app/types";
+import type { RealYouthAcademyPlayerPlan, RealYouthAcademyPlanning } from "@atlas/web/app/types";
 import { skillLevelLabel } from "./skill-level-label";
 
 export type YouthStatusLabel = "In academy" | "Promotion" | "Promoted" | "Attention" | "Review";
@@ -22,24 +18,16 @@ export interface YouthPlayerRow {
   level: YouthLevelValue | null;
   weeksLeft: number | null;
   progress: number | null;
+  attentions: YouthPlayerAttention[];
   promotion: YouthPromotionLabel | null;
   status: YouthStatusLabel | null;
 }
 
-export interface YouthAttentionItem {
+export interface YouthPlayerAttention {
   id: string;
-  playerName: string | null;
   message: string;
-  severity: Severity;
+  severity: RealYouthAcademyPlayerPlan["severity"];
 }
-
-const severityOrder: Record<Severity, number> = {
-  high: 4,
-  medium: 3,
-  low: 2,
-  info: 1
-};
-
 export function createYouthPlayerRows(planning: RealYouthAcademyPlanning | null): YouthPlayerRow[] {
   return (planning?.derived.players ?? []).map((player) => ({
     id: player.id,
@@ -56,71 +44,28 @@ export function createYouthPlayerRows(planning: RealYouthAcademyPlanning | null)
           },
     weeksLeft: player.weeksRemaining,
     progress: null,
+    attentions: youthAttentionForPlayer(player),
     promotion: youthPromotionForPlayer(player),
     status: youthStatusForPlayer(player)
   }));
 }
 
-export function createYouthAttentionItems(
-  planning: RealYouthAcademyPlanning | null
-): YouthAttentionItem[] {
-  if (!planning) {
-    return [];
-  }
-
-  const items: Array<YouthAttentionItem & { order: number }> = [];
-  let order = 0;
-
-  for (const player of planning.derived.players) {
-    for (const signal of player.signals) {
-      if (signal.code === "standout_youth_prospect") {
-        continue;
-      }
-
-      items.push({
-        id: `${player.id}-${signal.code}`,
-        playerName: player.name,
+function youthAttentionForPlayer(player: RealYouthAcademyPlayerPlan): YouthPlayerAttention[] {
+  return [
+    ...player.signals
+      .filter((signal) => signal.code !== "standout_youth_prospect")
+      .map((signal) => ({
+        id: signal.code,
         message: signal.message,
-        severity: signal.severity,
-        order: order++
-      });
-    }
-
-    for (const warning of player.warnings) {
-      items.push({
-        id: `${player.id}-${warning.code}`,
-        playerName: player.name,
-        message: youthWarningMessage(warning.code),
-        severity: "info",
-        order: order++
-      });
-    }
-  }
-
-  for (const warning of planning.warnings) {
-    items.push({
-      id: `planning-${warning.code}`,
-      playerName: null,
+        severity: signal.severity
+      })),
+    ...player.warnings.map((warning) => ({
+      id: warning.code,
       message: youthWarningMessage(warning.code),
-      severity: "info",
-      order: order++
-    });
-  }
-
-  return items
-    .sort(
-      (first, second) =>
-        severityOrder[second.severity] - severityOrder[first.severity] || first.order - second.order
-    )
-    .slice(0, 5)
-    .map((item) => ({
-      id: item.id,
-      playerName: item.playerName,
-      message: item.message,
-      severity: item.severity
-    }));
+      severity: "info" as const
+    }))
+  ];
 }
-
 function youthStatusForPlayer(player: RealYouthAcademyPlayerPlan): YouthStatusLabel {
   if (player.category === "stagnation_risk") {
     return "Attention";
