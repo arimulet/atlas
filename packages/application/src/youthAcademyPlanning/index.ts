@@ -342,7 +342,7 @@ export function calculateLatestCompletedYouthSkillChanges(
   }
 
   const gameWeeks = Array.from(latestSnapshotByGameWeek.keys()).sort((a, b) => b - a);
-  
+
   if (gameWeeks.length < 2) {
     return new Map();
   }
