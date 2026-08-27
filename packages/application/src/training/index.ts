@@ -1,7 +1,9 @@
 import {
   MongoClubRepository,
+  MongoJuniorRepository,
   MongoSnapshotRepository,
   MongoTrainingWeekRepository,
+  type PersistedJunior,
   type PersistedPlayerSkills,
   type PersistedPlayerSkillsChange,
   type PersistedPlayerSnapshot
@@ -16,7 +18,8 @@ import {
   selectTrainingCalibrationDataset,
   type PlayerSkill,
   type PlayerSkills,
-  type PlayerSkillsChange
+  type PlayerSkillsChange,
+  type SkillTrainingCostSkill
 } from "@atlas/domain";
 import type {
   AdvancedTrainingCandidateContext,
@@ -32,6 +35,7 @@ import type { PlayerTrainingWeekDto } from "../importer/types.js";
 import type { TrainingPageData, WeeklyTrainingIntelligence } from "./types.js";
 
 const clubRepository = new MongoClubRepository();
+const juniorRepository = new MongoJuniorRepository();
 const snapshotRepository = new MongoSnapshotRepository();
 const trainingWeekRepository = new MongoTrainingWeekRepository();
 const DOMAIN_PLAYER_SKILLS: readonly PlayerSkill[] = [
@@ -163,7 +167,6 @@ export async function getTrainingRecommendations(
     talents
   });
   const latestSnapshot = snapshots.at(-1);
-
   return buildTrainingRecommendations(
     weeklyReport.players.flatMap((playerReport) => {
       const history = histories.find((candidate) => candidate.playerId === playerReport.playerId);
@@ -203,9 +206,10 @@ export async function getAdvancedTrainingOptimization(
     throw new Error(`Club not found: ${clubId}`);
   }
 
-  const [reports, snapshots] = await Promise.all([
+  const [reports, snapshots, juniors] = await Promise.all([
     trainingWeekRepository.listByClub(club.clubId),
-    snapshotRepository.listByClub(clubId)
+    snapshotRepository.listByClub(clubId),
+    juniorRepository.listByClub(club.clubId)
   ]);
   const histories = buildTrainingHistories(reports);
   const talentByPlayer = new Map<number, ReturnType<typeof estimateTalentFromTrainingHistory>>();
@@ -225,6 +229,12 @@ export async function getAdvancedTrainingOptimization(
     talents
   });
   const latestSnapshot = snapshots.at(-1);
+  const academyTalentByPlayer = new Map(
+    juniors.flatMap((junior) => {
+      const talent = academyTalentForPromotedJunior(junior);
+      return talent === null ? [] : [[junior.juniorId, talent] as const];
+    })
+  );
   const weeklyReportByPlayer = new Map(
     weeklyReport.players.map((playerReport) => [playerReport.playerId, playerReport])
   );
@@ -260,7 +270,7 @@ export async function getAdvancedTrainingOptimization(
     recommendationByPlayer.set(recommendation.playerId, recommendation);
   });
 
-  const contexts: AdvancedTrainingCandidateContext[] = histories.flatMap((history) => {
+  const historicalContexts: AdvancedTrainingCandidateContext[] = histories.flatMap((history) => {
     const currentWeek = history.weeks.find((week) => week.week === weeklyReport.gameWeek);
     if (!currentWeek) {
       return [];
@@ -269,12 +279,18 @@ export async function getAdvancedTrainingOptimization(
     const snapshotPlayer = latestSnapshot?.players.find(
       (player) => player.playerId === history.playerId
     );
+    const projectedIntensity = currentWeek.intensity > 0 ? currentWeek.intensity : null;
+    const academyTalent = academyTalentByPlayer.get(history.playerId);
     return [
       {
         player: {
           playerId: history.playerId,
           age: currentWeek.playerAge,
-          position: snapshotPlayer?.observedPosition ?? null,
+          position:
+            snapshotPlayer?.observedPosition ??
+            (snapshotPlayer
+              ? trialPositionForTrainingPosition(snapshotPlayer.training.position)
+              : null),
           skills: currentWeek.skills
         },
         weeklyReport: weeklyReportByPlayer.get(history.playerId),
@@ -289,10 +305,39 @@ export async function getAdvancedTrainingOptimization(
             : currentWeek.kind,
           intensity: currentWeek.intensity
         },
-        talent: talentByPlayer.get(history.playerId) ?? null
+        talent: talentByPlayer.get(history.playerId) ?? null,
+        ...(validSeniorTrainingWeekCount(history) < 2 && projectedIntensity !== null
+          ? {
+              trial: {
+                projectedIntensity,
+                ...(academyTalent !== undefined ? { academyTalent } : {})
+              }
+            }
+          : {})
       }
     ];
   });
+  const historicalPlayerIds = new Set(historicalContexts.map((context) => context.player.playerId));
+  const historyByPlayer = new Map(histories.map((history) => [history.playerId, history]));
+  const trialContexts: AdvancedTrainingCandidateContext[] = (latestSnapshot?.players ?? [])
+    .filter((player) => {
+      const history = historyByPlayer.get(player.playerId);
+      return (
+        !historicalPlayerIds.has(player.playerId) &&
+        validSeniorTrainingWeekCount(history ?? null) < 2
+      );
+    })
+    .map((player) =>
+      buildSnapshotTrialContext({
+        player,
+        trainingHistory: historyByPlayer.get(player.playerId) ?? {
+          playerId: player.playerId,
+          weeks: []
+        },
+        academyTalent: academyTalentByPlayer.get(player.playerId)
+      })
+    );
+  const contexts = [...historicalContexts, ...trialContexts];
 
   return optimizeAdvancedTrainingSlots(contexts, weeklyReport.gameWeek);
 }
@@ -552,3 +597,98 @@ function mapPlayer(
 }
 
 export * from "./types.js";
+
+function trialPositionForTrainingPosition(
+  position: number
+): AdvancedTrainingCandidateContext["player"]["position"] {
+  if (position === 0) return "goalkeeper";
+  if (position === 1) return "defender";
+  if (position === 3) return "striker";
+  if (position === 2) return "midfielder";
+  return null;
+}
+
+function trialSkillForTrainingPosition(position: number): SkillTrainingCostSkill | null {
+  if (position === 0) return "keeper";
+  if (position === 1) return "defending";
+  if (position === 2) return "playmaking";
+  if (position === 3) return "scoring";
+  return null;
+}
+
+function buildSnapshotTrialContext(input: {
+  player: PersistedPlayerSnapshot;
+  trainingHistory: TrainingHistory;
+  academyTalent: number | undefined;
+}): AdvancedTrainingCandidateContext {
+  const position = trialPositionForTrainingPosition(input.player.training.position);
+  const skill = trialSkillForTrainingPosition(input.player.training.position);
+  const hasTrainingTarget = position !== null && skill !== null;
+
+  return {
+    player: {
+      playerId: input.player.playerId,
+      age: input.player.age,
+      position,
+      skills: toDomainSnapshotSkills(input.player.skills)
+    },
+    trainingHistory: input.trainingHistory,
+    currentTraining: {
+      skill: skill ?? "stamina",
+      kind: hasTrainingTarget
+        ? input.player.training.advanced
+          ? "advanced"
+          : "formation"
+        : "missing",
+      intensity: 0
+    },
+    ...(hasTrainingTarget
+      ? {
+          trial: {
+            projectedIntensity: 100,
+            ...(input.academyTalent !== undefined ? { academyTalent: input.academyTalent } : {})
+          }
+        }
+      : {})
+  };
+}
+
+function toDomainSnapshotSkills(skills: PersistedPlayerSnapshot["skills"]): PlayerSkills {
+  const domainSkills: PlayerSkills = {};
+  if (skills.stamina !== null) domainSkills.stamina = skills.stamina;
+  if (skills.pace !== null) domainSkills.pace = skills.pace;
+  if (skills.technique !== null) domainSkills.technique = skills.technique;
+  if (skills.passing !== null) domainSkills.passing = skills.passing;
+  if (skills.keeper !== null) domainSkills.keeper = skills.keeper;
+  if (skills.defender !== null) domainSkills.defending = skills.defender;
+  if (skills.playmaker !== null) domainSkills.playmaking = skills.playmaker;
+  if (skills.striker !== null) domainSkills.striker = skills.striker;
+  return domainSkills;
+}
+
+function academyTalentForPromotedJunior(junior: PersistedJunior): number | null {
+  if (
+    junior.status !== "promoted" ||
+    junior.currentLevel <= junior.initialLevel ||
+    junior.initialWeeks <= junior.weeksLeft
+  ) {
+    return null;
+  }
+
+  const talent =
+    (junior.initialWeeks - junior.weeksLeft) / (junior.currentLevel - junior.initialLevel);
+  return Number.isFinite(talent) && talent > 0 ? talent : null;
+}
+
+function validSeniorTrainingWeekCount(history: TrainingHistory | null): number {
+  if (!history) {
+    return 0;
+  }
+
+  return history.weeks.filter(
+    (week) =>
+      (week.kind === "advanced" || week.kind === "formation") &&
+      week.intensity !== undefined &&
+      week.intensity > 0
+  ).length;
+}

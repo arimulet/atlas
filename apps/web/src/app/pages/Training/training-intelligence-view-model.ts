@@ -219,6 +219,7 @@ export function advancedRecommendationLabel(
   return {
     keep_advanced: "Keep advanced",
     promote_to_advanced: "Promote",
+    trial_advanced: "Trial advanced",
     remove_from_advanced: "Remove",
     keep_formation: "Keep formation",
     hold: "Hold"
@@ -307,6 +308,7 @@ function createAttentionItems(input: {
   for (const recommendation of input.advancedRecommendations) {
     if (
       recommendation.status !== "promote_to_advanced" &&
+      recommendation.status !== "trial_advanced" &&
       recommendation.status !== "remove_from_advanced" &&
       recommendation.status !== "hold"
     ) {
@@ -315,7 +317,8 @@ function createAttentionItems(input: {
 
     const playerName =
       input.playerById.get(recommendation.playerId)?.name ?? `Player ${recommendation.playerId}`;
-    const isPromotion = recommendation.status === "promote_to_advanced";
+    const isPromotion =
+      recommendation.status === "promote_to_advanced" || recommendation.status === "trial_advanced";
     const isHold = recommendation.status === "hold";
     items.push({
       playerId: recommendation.playerId,
@@ -324,13 +327,17 @@ function createAttentionItems(input: {
       title: isHold
         ? "Advanced slot decision is on hold"
         : isPromotion
-          ? "Promote to advanced training"
+          ? recommendation.status === "trial_advanced"
+            ? "Trial advanced training"
+            : "Promote to advanced training"
           : "Remove from advanced training",
       description: `${playerName}: ${
         isHold
           ? "The optimizer needs more consistent evidence before changing this slot."
           : isPromotion
-            ? "This player is inside the recommended advanced slots."
+            ? recommendation.status === "trial_advanced"
+              ? "This is a provisional advanced-training trial that requires validation with real weeks."
+              : "This player is inside the recommended advanced slots."
             : "Another candidate has a meaningfully better marginal development return."
       }`,
       action: isHold ? undefined : { label: "Review slot" }

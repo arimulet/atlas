@@ -1,4 +1,4 @@
-﻿import type { SkillTrainingCostSkill } from "./types.js";
+import type { SkillTrainingCostSkill } from "./types.js";
 
 export const BASE_TRAINING_AGE = 16;
 export const AGE_TRAINING_FACTOR = 1.094;
@@ -25,6 +25,8 @@ export const TRAINING_KIND_EFFECTIVENESS = {
 } as const;
 export const ADVANCED_TRAINING_SLOT_COUNT = 10;
 export const ADVANCED_SLOT_REPLACEMENT_THRESHOLD = 0.05;
+export const ADVANCED_SLOT_TRIAL_REPLACEMENT_THRESHOLD = 0.12;
+export const ADVANCED_SLOT_MAX_TRIALS = 1;
 export const ADVANCED_SLOT_HIGH_DEVELOPMENT_POTENTIAL_THRESHOLD = 0.5;
 
 // Calibration thresholds are diagnostic signals. They do not change a training

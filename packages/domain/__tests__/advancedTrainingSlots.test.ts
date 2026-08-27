@@ -28,6 +28,7 @@ function candidate(input: {
   talent?: TalentEstimate | null;
   historyWeeks?: number;
   trainingRecommendation?: PlayerTrainingRecommendation;
+  trial?: { projectedIntensity: number; academyTalent?: number | null };
 }): AdvancedTrainingCandidateContext {
   const skill = input.skill ?? "pace";
   const level = input.level ?? 10;
@@ -50,7 +51,14 @@ function candidate(input: {
   const player: TrainingRecommendationPlayer = {
     playerId: input.playerId,
     age: input.age ?? 20,
-    position: skill === "keeper" ? "goalkeeper" : skill === "defending" ? "defender" : "midfielder",
+    position:
+      skill === "keeper"
+        ? "goalkeeper"
+        : skill === "defending"
+          ? "defender"
+          : skill === "scoring"
+            ? "striker"
+            : "midfielder",
     skills: { [playerSkill]: level }
   };
 
@@ -63,7 +71,8 @@ function candidate(input: {
       intensity: 100
     },
     talent: input.talent === undefined ? talent() : input.talent,
-    trainingRecommendation: input.trainingRecommendation
+    trainingRecommendation: input.trainingRecommendation,
+    ...(input.trial !== undefined ? { trial: input.trial } : {})
   };
 }
 
@@ -240,6 +249,158 @@ describe("advanced training slot optimizer", () => {
     expect(result.recommendations.every((recommendation) => recommendation.status === "hold")).toBe(
       true
     );
+  });
+
+  it("recommends an eligible new player as a provisional advanced-training trial", () => {
+    const result = optimize([
+      ...Array.from({ length: 10 }, (_, index) =>
+        candidate({ playerId: index + 1, kind: "advanced", level: 17, age: 30 })
+      ),
+      candidate({
+        playerId: 11,
+        age: 16,
+        level: 1,
+        historyWeeks: 0,
+        trial: { projectedIntensity: 100, academyTalent: 0.5 }
+      })
+    ]);
+
+    const recommendation = result.recommendations.find((item) => item.playerId === 11);
+    expect(recommendation?.status).toBe("trial_advanced");
+    expect(recommendation?.reasons).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ type: "new_player_trial_candidate" }),
+        expect.objectContaining({ type: "academy_talent_signal" }),
+        expect.objectContaining({ type: "projected_advanced_return" }),
+        expect.objectContaining({ type: "insufficient_senior_training_evidence" })
+      ])
+    );
+  });
+
+  it("does not recommend a trial when it does not clear the stricter replacement margin", () => {
+    const result = optimize([
+      ...Array.from({ length: 10 }, (_, index) =>
+        candidate({ playerId: index + 1, kind: "advanced", age: 16, level: 4 })
+      ),
+      candidate({
+        playerId: 11,
+        age: 16,
+        level: 4,
+        historyWeeks: 0,
+        trial: { projectedIntensity: 100 }
+      })
+    ]);
+
+    expect(result.recommendations.find((item) => item.playerId === 11)?.status).toBe(
+      "keep_formation"
+    );
+    expect(result.recommendedAdvancedPlayerIds).not.toContain(11);
+  });
+
+  it("limits provisional advanced training to one simultaneous trial", () => {
+    const result = optimize([
+      ...Array.from({ length: 10 }, (_, index) =>
+        candidate({ playerId: index + 1, kind: "advanced", level: 17, age: 30 })
+      ),
+      candidate({
+        playerId: 11,
+        age: 16,
+        level: 1,
+        historyWeeks: 0,
+        trial: { projectedIntensity: 100, academyTalent: 0.5 }
+      }),
+      candidate({
+        playerId: 12,
+        age: 16,
+        level: 1,
+        historyWeeks: 0,
+        trial: { projectedIntensity: 100, academyTalent: 0.6 }
+      })
+    ]);
+
+    const trialRecommendations = result.recommendations.filter(
+      (recommendation) => recommendation.status === "trial_advanced"
+    );
+    expect(trialRecommendations).toHaveLength(1);
+    expect(result.recommendations.find((item) => item.playerId === 12)?.reasons).toContainEqual({
+      type: "trial_slot_limit_reached"
+    });
+  });
+
+  it("moves a trial into normal ranking after two valid senior training weeks", () => {
+    const trialResult = optimize([
+      candidate({
+        playerId: 1,
+        age: 16,
+        level: 4,
+        historyWeeks: 1,
+        trial: { projectedIntensity: 100, academyTalent: 0.5 }
+      })
+    ]);
+    const normalResult = optimize([
+      candidate({
+        playerId: 1,
+        age: 16,
+        level: 4,
+        historyWeeks: 2,
+        talent: talent(2),
+        trial: { projectedIntensity: 100, academyTalent: 0.5 }
+      })
+    ]);
+
+    expect(trialResult.recommendations[0]?.status).toBe("trial_advanced");
+    expect(trialResult.recommendations[0]?.evaluation.confidence).toBe("medium");
+    expect(normalResult.recommendations[0]?.status).toBe("promote_to_advanced");
+    expect(normalResult.ranking[0]?.isTrial).toBe(false);
+  });
+
+  it("prioritizes observed senior talent over the academy signal after the trial period", () => {
+    const withAcademySignal = optimize([
+      candidate({
+        playerId: 1,
+        age: 18,
+        level: 4,
+        historyWeeks: 2,
+        talent: talent(2),
+        trial: { projectedIntensity: 100, academyTalent: 0.25 }
+      })
+    ]);
+    const withoutAcademySignal = optimize([
+      candidate({ playerId: 1, age: 18, level: 4, historyWeeks: 2, talent: talent(2) })
+    ]);
+
+    expect(
+      withAcademySignal.recommendations[0]?.evaluation.scoreBreakdown?.talentContribution
+    ).toBe(2);
+    expect(withAcademySignal.recommendations[0]?.evaluation.advancedScore).toBe(
+      withoutAcademySignal.recommendations[0]?.evaluation.advancedScore
+    );
+  });
+
+  it("holds a trial candidate without a usable projected intensity", () => {
+    const result = optimize([
+      candidate({
+        playerId: 1,
+        historyWeeks: 0,
+        trial: { projectedIntensity: 0 }
+      })
+    ]);
+
+    expect(result.recommendations[0]?.status).toBe("hold");
+  });
+
+  it("holds a trial candidate without a target skill or position profile", () => {
+    const incomplete = candidate({
+      playerId: 1,
+      historyWeeks: 0,
+      trial: { projectedIntensity: 100 }
+    });
+    incomplete.player.position = null;
+    delete incomplete.player.skills.pace;
+
+    const result = optimize([incomplete]);
+
+    expect(result.recommendations[0]?.status).toBe("hold");
   });
 
   it("uses the skill recommended by Iteration 2 for potential", () => {

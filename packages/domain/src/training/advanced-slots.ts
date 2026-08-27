@@ -7,7 +7,9 @@ import {
 } from "./index.js";
 import {
   ADVANCED_SLOT_HIGH_DEVELOPMENT_POTENTIAL_THRESHOLD,
+  ADVANCED_SLOT_MAX_TRIALS,
   ADVANCED_SLOT_REPLACEMENT_THRESHOLD,
+  ADVANCED_SLOT_TRIAL_REPLACEMENT_THRESHOLD,
   ADVANCED_TRAINING_SLOT_COUNT,
   BASE_TRAINING_AGE,
   MAX_EFFICIENCY,
@@ -38,10 +40,11 @@ export function optimizeAdvancedTrainingSlots(
   const candidates = contexts.map((context) => evaluateCandidate(context, resolvedGameWeek));
   const eligible = candidates.filter((candidate) => candidate.isEligible);
   const ranking = buildRanking(eligible);
-  const idealIds = ranking
-    .filter((entry) => entry.score !== null)
+  const idealIds = eligible
+    .filter((candidate) => !candidate.isTrial && candidate.evaluation.advancedScore !== null)
+    .sort(compareCandidates)
     .slice(0, ADVANCED_TRAINING_SLOT_COUNT)
-    .map((entry) => entry.playerId);
+    .map((candidate) => candidate.evaluation.playerId);
   const recommendedIds = selectOperationalAdvancedPlayers(candidates, eligible, idealIds);
   const operationalRanking = ranking.map((entry) => ({
     ...entry,
@@ -52,7 +55,8 @@ export function optimizeAdvancedTrainingSlots(
     buildPlayerRecommendation(candidate, recommendedIds, operationalRanking, replacements)
   );
   const promotions = recommendations.filter(
-    (recommendation) => recommendation.status === "promote_to_advanced"
+    (recommendation) =>
+      recommendation.status === "promote_to_advanced" || recommendation.status === "trial_advanced"
   ).length;
   const removals = recommendations.filter(
     (recommendation) => recommendation.status === "remove_from_advanced"
@@ -119,9 +123,7 @@ export function buildAdvancedScoreBreakdown(input: {
     marginalTrainingGain: input.marginalTrainingPoints / MAX_EFFICIENCY,
     developmentPotential: input.developmentPotentialScore,
     talentContribution: input.optionBreakdown?.talent,
-    ageContribution: input.optionBreakdown
-      ? 1 / input.optionBreakdown.ageCostFactor
-      : 1,
+    ageContribution: input.optionBreakdown ? 1 / input.optionBreakdown.ageCostFactor : 1,
     finalScore
   };
 }
@@ -132,6 +134,7 @@ interface EvaluatedCandidate {
   isEligible: boolean;
   currentlyAdvanced: boolean;
   confidence: TrainingRecommendationConfidence;
+  isTrial: boolean;
 }
 
 function evaluateCandidate(
@@ -139,9 +142,12 @@ function evaluateCandidate(
   gameWeek: number
 ): EvaluatedCandidate {
   const currentTraining = context.currentTraining;
-  const isEligible = isEligibleForAdvancedTraining(context.player, currentTraining);
-  const currentlyAdvanced = currentTraining.kind === "advanced";
   const history = historyForPlayer(context.trainingHistory, context.player.playerId);
+  const isTrial = validSeniorTrainingWeekCount(history) < 2 && context.trial !== undefined;
+  const isEligible = isTrial
+    ? isEligibleForTrial(context)
+    : isEligibleForAdvancedTraining(context.player, currentTraining);
+  const currentlyAdvanced = currentTraining.kind === "advanced";
   const confidence = candidateConfidence(context, history, gameWeek, isEligible);
   const currentSkill = currentTraining.skill;
 
@@ -160,16 +166,20 @@ function evaluateCandidate(
       },
       isEligible,
       currentlyAdvanced,
-      confidence
+      confidence,
+      isTrial
     };
   }
 
+  const projectedIntensity = isTrial
+    ? context.trial!.projectedIntensity
+    : currentTraining.intensity;
   const calculatedAdvancedTrainingPoints = calculateWeeklyTrainingPointsByKind({
-    intensity: currentTraining.intensity,
+    intensity: projectedIntensity,
     kind: "advanced"
   });
   const calculatedFormationTrainingPoints = calculateWeeklyTrainingPointsByKind({
-    intensity: currentTraining.intensity,
+    intensity: isTrial ? projectedIntensity : currentTraining.intensity,
     kind: "formation"
   });
   const expectedAdvancedTrainingPoints =
@@ -187,7 +197,9 @@ function evaluateCandidate(
       ? null
       : calculateDevelopmentReturnScoreBreakdown({
           age: context.player.age,
-          talent: context.talent?.value ?? null,
+          talent: isTrial
+            ? (context.trial?.academyTalent ?? null)
+            : (context.talent?.value ?? null),
           skill: preferredSkill,
           currentSkillLevel: preferredLevel,
           expectedWeeklyTrainingPoints: expectedAdvancedTrainingPoints
@@ -221,8 +233,27 @@ function evaluateCandidate(
     },
     isEligible,
     currentlyAdvanced,
-    confidence
+    confidence,
+    isTrial
   };
+}
+
+function isEligibleForTrial(context: AdvancedTrainingCandidateContext): boolean {
+  const trial = context.trial;
+  const skill = preferredSkillFor(context);
+  return (
+    trial !== undefined &&
+    Number.isFinite(trial.projectedIntensity) &&
+    trial.projectedIntensity > 0 &&
+    trial.projectedIntensity <= MAX_EFFICIENCY &&
+    Number.isInteger(context.player.playerId) &&
+    context.player.playerId > 0 &&
+    Number.isFinite(context.player.age) &&
+    context.player.age >= BASE_TRAINING_AGE &&
+    context.player.position !== null &&
+    isSkillTrainableForPosition(context.player.position, skill) &&
+    levelForPreferredSkill(context, skill) !== null
+  );
 }
 
 function preferredSkillFor(context: AdvancedTrainingCandidateContext): SkillTrainingCostSkill {
@@ -267,8 +298,13 @@ function candidateConfidence(
   gameWeek: number,
   isEligible: boolean
 ): TrainingRecommendationConfidence {
-  if (!isEligible || !history || history.weeks.length < 2) {
+  if (!isEligible || !history) {
     return "low";
+  }
+
+  const validWeekCount = validSeniorTrainingWeekCount(history);
+  if (validWeekCount < 2) {
+    return validWeekCount === 1 && context.trial !== undefined ? "medium" : "low";
   }
 
   const currentWeek = history.weeks.find((week) => week.week === gameWeek);
@@ -293,12 +329,26 @@ function candidateConfidence(
   return "low";
 }
 
+function validSeniorTrainingWeekCount(history: TrainingHistory | null): number {
+  if (!history) {
+    return 0;
+  }
+
+  return history.weeks.filter(
+    (week) =>
+      (week.kind === "advanced" || week.kind === "formation") &&
+      week.intensity !== undefined &&
+      week.intensity > 0
+  ).length;
+}
+
 function buildRanking(candidates: readonly EvaluatedCandidate[]): AdvancedTrainingRankingEntry[] {
   return [...candidates].sort(compareCandidates).map((candidate, index) => ({
     playerId: candidate.evaluation.playerId,
     rank: index + 1,
     score: candidate.evaluation.advancedScore,
     currentlyAdvanced: candidate.currentlyAdvanced,
+    isTrial: candidate.isTrial,
     recommendedAdvanced: false,
     confidence: candidate.confidence
   }));
@@ -323,7 +373,7 @@ function selectOperationalAdvancedPlayers(
   idealIds: readonly number[]
 ): number[] {
   const selected = eligible
-    .filter((candidate) => candidate.currentlyAdvanced)
+    .filter((candidate) => candidate.currentlyAdvanced && !candidate.isTrial)
     .sort(compareCandidates)
     .slice(0, ADVANCED_TRAINING_SLOT_COUNT)
     .map((candidate) => candidate.evaluation.playerId);
@@ -332,6 +382,7 @@ function selectOperationalAdvancedPlayers(
     .filter(
       (candidate) =>
         !candidate.currentlyAdvanced &&
+        !candidate.isTrial &&
         idealIdSet.has(candidate.evaluation.playerId) &&
         candidate.evaluation.advancedScore !== null &&
         candidate.confidence !== "low"
@@ -356,6 +407,43 @@ function selectOperationalAdvancedPlayers(
 
     const replaceableIndex = selected.indexOf(replaceable.evaluation.playerId);
     selected[replaceableIndex] = candidate.evaluation.playerId;
+  }
+
+  const trialCandidates = eligible
+    .filter((candidate) => candidate.isTrial)
+    .sort(compareCandidates)
+    .slice(0, ADVANCED_SLOT_MAX_TRIALS);
+  const trial = trialCandidates[0];
+  if (trial?.currentlyAdvanced) {
+    if (selected.length >= ADVANCED_TRAINING_SLOT_COUNT) {
+      const weakest = selected
+        .map((id) => candidates.find((candidate) => candidate.evaluation.playerId === id))
+        .filter((candidate): candidate is EvaluatedCandidate => candidate !== undefined)
+        .sort(compareCandidates)
+        .at(-1);
+      if (weakest) {
+        selected[selected.indexOf(weakest.evaluation.playerId)] = trial.evaluation.playerId;
+      }
+    } else {
+      selected.push(trial.evaluation.playerId);
+    }
+  } else if (trial && selected.length < ADVANCED_TRAINING_SLOT_COUNT) {
+    selected.push(trial.evaluation.playerId);
+  } else if (trial) {
+    const weakest = selected
+      .map((id) => candidates.find((candidate) => candidate.evaluation.playerId === id))
+      .filter((candidate): candidate is EvaluatedCandidate => candidate !== undefined)
+      .sort(compareCandidates)
+      .at(-1);
+    if (
+      weakest &&
+      trial.evaluation.advancedScore !== null &&
+      weakest.evaluation.advancedScore !== null &&
+      trial.evaluation.advancedScore - weakest.evaluation.advancedScore >
+        ADVANCED_SLOT_TRIAL_REPLACEMENT_THRESHOLD
+    ) {
+      selected[selected.indexOf(weakest.evaluation.playerId)] = trial.evaluation.playerId;
+    }
   }
 
   return selected.slice(0, ADVANCED_TRAINING_SLOT_COUNT);
@@ -404,8 +492,8 @@ function buildReplacements(
     if (
       !promote ||
       !remove ||
-      promote.confidence === "low" ||
-      remove.confidence === "low" ||
+      (!promote.isTrial && promote.confidence === "low") ||
+      (!promote.isTrial && remove.confidence === "low") ||
       promote.evaluation.advancedScore === null ||
       remove.evaluation.advancedScore === null
     ) {
@@ -413,7 +501,10 @@ function buildReplacements(
     }
 
     const scoreDifference = promote.evaluation.advancedScore - remove.evaluation.advancedScore;
-    if (scoreDifference <= ADVANCED_SLOT_REPLACEMENT_THRESHOLD) {
+    const replacementThreshold = promote.isTrial
+      ? ADVANCED_SLOT_TRIAL_REPLACEMENT_THRESHOLD
+      : ADVANCED_SLOT_REPLACEMENT_THRESHOLD;
+    if (scoreDifference <= replacementThreshold) {
       continue;
     }
 
@@ -447,11 +538,13 @@ function buildPlayerRecommendation(
   const replacement = replacements.find(
     (item) => item.promotePlayerId === playerId || item.removePlayerId === playerId
   );
-  const reasons = reasonsForCandidate(candidate, recommendedAdvanced, rank, replacement);
+  const reasons = reasonsForCandidate(candidate, recommendedAdvanced, rank, ranking, replacement);
   let status: AdvancedTrainingRecommendation;
 
-  if (!candidate.isEligible || candidate.confidence === "low") {
+  if (!candidate.isEligible || (!candidate.isTrial && candidate.confidence === "low")) {
     status = "hold";
+  } else if (candidate.isTrial && recommendedAdvanced) {
+    status = "trial_advanced";
   } else if (candidate.currentlyAdvanced && recommendedAdvanced) {
     status = "keep_advanced";
   } else if (!candidate.currentlyAdvanced && recommendedAdvanced) {
@@ -476,6 +569,7 @@ function reasonsForCandidate(
   candidate: EvaluatedCandidate,
   recommendedAdvanced: boolean,
   rank: number | null,
+  ranking: readonly AdvancedTrainingRankingEntry[],
   replacement: AdvancedSlotReplacement | undefined
 ): AdvancedSlotReason[] {
   if (!candidate.isEligible || candidate.evaluation.advancedScore === null) {
@@ -484,6 +578,28 @@ function reasonsForCandidate(
 
   const reasons: AdvancedSlotReason[] = [];
   const evaluation = candidate.evaluation;
+  if (candidate.isTrial) {
+    reasons.push(
+      { type: "new_player_trial_candidate" },
+      { type: "insufficient_senior_training_evidence" }
+    );
+    if (
+      candidate.context.trial?.academyTalent !== null &&
+      candidate.context.trial?.academyTalent !== undefined
+    )
+      reasons.push({ type: "academy_talent_signal", value: candidate.context.trial.academyTalent });
+    if (evaluation.advancedScore !== null)
+      reasons.push({ type: "projected_advanced_return", value: evaluation.advancedScore });
+    const anotherTrialIsRecommended = ranking.some(
+      (entry) =>
+        entry.playerId !== candidate.evaluation.playerId &&
+        entry.isTrial &&
+        entry.recommendedAdvanced
+    );
+    if (!recommendedAdvanced && anotherTrialIsRecommended) {
+      reasons.push({ type: "trial_slot_limit_reached" });
+    }
+  }
   if (evaluation.marginalTrainingPoints !== null) {
     reasons.push({ type: "high_marginal_training_gain", value: evaluation.marginalTrainingPoints });
   }
