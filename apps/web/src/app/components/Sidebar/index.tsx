@@ -1,24 +1,52 @@
+import {
+  LayoutDashboard,
+  Users,
+  Dumbbell,
+  UserCog,
+  GraduationCap,
+  CircleDollarSign,
+  Activity
+} from "lucide-react";
 import { pathForMainView } from "../../routing";
 import type { NavigationGroup } from "../../types";
 import { SidebarItem } from "../SidebarItem";
 import { SidebarProps } from "./types";
 
+const ICON_SIZE = 20;
+
 const navigationGroups: NavigationGroup[] = [
   {
     id: "general",
     label: "General",
-    items: [{ id: "dashboard", label: "Dashboard", icon: "⌂", path: pathForMainView("dashboard") }]
+    items: [
+      {
+        id: "dashboard",
+        label: "Dashboard",
+        icon: <LayoutDashboard size={ICON_SIZE} />,
+        path: pathForMainView("dashboard")
+      }
+    ]
   },
   {
     id: "first-team",
     label: "Primer Equipo",
     items: [
-      { id: "squad", label: "Squad", icon: "S", path: pathForMainView("squad") },
-      { id: "training", label: "Training", icon: "T", path: pathForMainView("training") },
+      {
+        id: "squad",
+        label: "Squad",
+        icon: <Users size={ICON_SIZE} />,
+        path: pathForMainView("squad")
+      },
+      {
+        id: "training",
+        label: "Training",
+        icon: <Dumbbell size={ICON_SIZE} />,
+        path: pathForMainView("training")
+      },
       {
         id: "player-decisions",
         label: "Player Decisions",
-        icon: "D",
+        icon: <UserCog size={ICON_SIZE} />,
         path: pathForMainView("player-decisions")
       }
     ]
@@ -26,18 +54,37 @@ const navigationGroups: NavigationGroup[] = [
   {
     id: "academy",
     label: "Academia",
-    items: [{ id: "youth", label: "Youth", icon: "Y", path: pathForMainView("youth") }]
+    items: [
+      {
+        id: "youth",
+        label: "Youth",
+        icon: <GraduationCap size={ICON_SIZE} />,
+        path: pathForMainView("youth")
+      }
+    ]
   },
   {
     id: "admin",
     label: "Administración",
-    items: [{ id: "finances", label: "Finances", icon: "$", path: pathForMainView("finances") }]
+    items: [
+      {
+        id: "finances",
+        label: "Finances",
+        icon: <CircleDollarSign size={ICON_SIZE} />,
+        path: pathForMainView("finances")
+      }
+    ]
   },
   {
     id: "system",
     label: "Sistema",
     items: [
-      { id: "diagnostics", label: "Diagnostics", icon: "!", path: pathForMainView("diagnostics") }
+      {
+        id: "diagnostics",
+        label: "Diagnostics",
+        icon: <Activity size={ICON_SIZE} />,
+        path: pathForMainView("diagnostics")
+      }
     ]
   }
 ];
