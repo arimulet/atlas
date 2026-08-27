@@ -1,6 +1,11 @@
 import { Types, type ClientSession } from "mongoose";
 import { PlayerModel } from "../models/player.js";
-import type { PersistedPlayer } from "./types.js";
+import type {
+  PersistedDevelopmentProfile,
+  PersistedPlayer,
+  PersistedPlayerDevelopmentOverride,
+  SavePlayerDevelopmentOverrideInput
+} from "./types.js";
 
 export type PlayerPosition = "GK" | "DEF" | "MID" | "ATT" | null;
 
@@ -62,6 +67,63 @@ export class MongoPlayerRepository {
     const player = await PlayerModel.findById(id);
     return player ? mapPlayer(player.toObject()) : null;
   }
+
+  async findDevelopmentOverride(input: {
+    playerId: number;
+    clubId: number;
+  }): Promise<PersistedPlayerDevelopmentOverride | null> {
+    const player = await this.findByPlayerId(input);
+    if (!player?.development) return null;
+
+    return {
+      id: player.id,
+      playerId: player.playerId,
+      clubId: player.clubId,
+      profile: player.development.profile,
+      targetLevels: player.development.targetLevels
+    };
+  }
+
+  async saveDevelopmentOverride(
+    input: SavePlayerDevelopmentOverrideInput
+  ): Promise<PersistedPlayerDevelopmentOverride> {
+    const player = await PlayerModel.findOneAndUpdate(
+      { playerId: input.playerId, clubId: input.clubId },
+      {
+        $set: {
+          development: {
+            profile: input.profile ?? null,
+            targetLevels: input.targetLevels ?? {}
+          }
+        }
+      },
+      { new: true, runValidators: true }
+    );
+
+    if (!player) {
+      throw new Error(`Player not found: ${input.clubId}/${input.playerId}`);
+    }
+
+    const mapped = mapPlayer(player.toObject());
+    if (!mapped.development) {
+      throw new Error(`Development override was not saved: ${input.clubId}/${input.playerId}`);
+    }
+
+    return {
+      id: mapped.id,
+      playerId: mapped.playerId,
+      clubId: mapped.clubId,
+      profile: mapped.development.profile,
+      targetLevels: mapped.development.targetLevels
+    };
+  }
+
+  async deleteDevelopmentOverride(input: { playerId: number; clubId: number }): Promise<void> {
+    await PlayerModel.updateOne(
+      { playerId: input.playerId, clubId: input.clubId },
+      { $unset: { development: 1 } }
+    );
+  }
 }
 
 function mapPlayer(player: {
@@ -79,7 +141,25 @@ function mapPlayer(player: {
   cards?: { yellow?: number; red?: number } | null;
   injury?: { days?: number | null; severe?: boolean | null } | null;
   currentGameWeek?: number | null;
+  development?: {
+    profile?: PersistedDevelopmentProfile | null;
+    targetLevels?: Map<string, number> | Record<string, number> | null;
+  } | null;
 }): PersistedPlayer {
+  const development = player.development
+    ? {
+        profile: player.development.profile ?? null,
+        targetLevels: player.development.targetLevels
+          ? player.development.targetLevels instanceof Map
+            ? Object.fromEntries(player.development.targetLevels.entries())
+            : player.development.targetLevels
+          : {}
+      }
+    : null;
+  const hasDevelopmentOverride =
+    development !== null &&
+    (development.profile !== null || Object.keys(development.targetLevels).length > 0);
+
   return {
     id: player._id.toString(),
     playerId: player.playerId,
@@ -100,6 +180,7 @@ function mapPlayer(player: {
       days: player.injury?.days ?? null,
       severe: player.injury?.severe ?? null
     },
-    currentGameWeek: player.currentGameWeek ?? null
+    currentGameWeek: player.currentGameWeek ?? null,
+    development: hasDevelopmentOverride ? development : null
   };
 }

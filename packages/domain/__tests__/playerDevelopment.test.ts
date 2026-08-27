@@ -134,14 +134,13 @@ describe("Player Development Plan", () => {
     expect(target.targetSkills.find((skill) => skill.skill === "defender")?.targetLevel).toBe(14);
   });
 
-  it("preserves manual levels and target age while deriving priorities from the profile", () => {
+  it("preserves manual levels while deriving priorities from the profile", () => {
     const target = buildDefaultDevelopmentTarget(player(), "defender", {
       profile: "defender",
-      targetLevels: { defender: 16, pace: 11 },
-      targetAge: 24
+      targetLevels: { defender: 16, pace: 11 }
     });
 
-    expect(target).toMatchObject({ source: "manual", targetAge: 24 });
+    expect(target).toMatchObject({ source: "manual" });
     expect(target.targetSkills).toContainEqual({
       skill: "defender",
       targetLevel: 16,

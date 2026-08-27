@@ -33,7 +33,6 @@ export interface PlayerDevelopmentTargetOverrideResponse {
   clubId: number;
   profile: PlayerDevelopmentTargetOverride["profile"];
   targetLevels: NonNullable<PlayerDevelopmentTargetOverride["targetLevels"]>;
-  targetAge: number | null;
 }
 
 export async function fetchClubDashboard(clubId: string): Promise<ClubDashboard> {
