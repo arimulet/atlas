@@ -115,7 +115,10 @@ function createYouthDecisionContext(
     observedPosition: null
   };
   const youthPlayer = { ...developmentPlayer, name: player.playerName };
-  const prospect = assessYouthProspect({ player: developmentPlayer });
+  const prospect = assessYouthProspect({
+    player: developmentPlayer,
+    trainingHistory: player.trainingHistory ? [player.trainingHistory] : undefined
+  });
 
   return {
     player,

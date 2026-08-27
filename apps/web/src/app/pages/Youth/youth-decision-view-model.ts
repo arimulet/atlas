@@ -99,7 +99,8 @@ const decisionLabels: Record<YouthDecision, string> = {
   keep: "Keep",
   sell: "Sell",
   release: "Release",
-  hold: "Hold"
+  hold: "Hold",
+  unknown: "Unknown"
 };
 
 const confidenceLabels: Record<Confidence, string> = {
@@ -124,7 +125,14 @@ export function createYouthSummaryViewModel(
   return {
     academyPlayers,
     decisionCandidates: planning?.summary.recommendations.length ?? 0,
-    counts: planning?.summary.counts ?? { train: 0, keep: 0, sell: 0, release: 0, hold: 0 },
+    counts: planning?.summary.counts ?? {
+      train: 0,
+      keep: 0,
+      sell: 0,
+      release: 0,
+      hold: 0,
+      unknown: 0
+    },
     highPriorityDecisions: planning?.summary.highPriorityDecisions ?? 0
   };
 }
@@ -235,8 +243,14 @@ export function mapYouthDecisionReason(reason: YouthDecisionReason): YouthDecisi
       };
     case "insufficient_evidence":
       return {
-        title: "More evidence required",
-        description: "ATLAS needs more evidence before making a firm recommendation."
+        title: "Evaluation incomplete",
+        description: "ATLAS cannot evaluate this player because essential information is missing."
+      };
+    case "insufficient_training_snapshots":
+      return {
+        title: "More training snapshots required",
+        description:
+          "ATLAS needs at least three training observations before recommending a decision."
       };
   }
 }
@@ -532,7 +546,7 @@ function compareYouthDecisionViewModels(
   right: YouthDecisionViewModel
 ): number {
   const priority = { high: 3, medium: 2, low: 1 };
-  const action = { train: 5, sell: 4, release: 3, keep: 2, hold: 1 };
+  const action = { hold: 6, unknown: 5, train: 4, sell: 3, release: 2, keep: 1 };
   const confidence = { high: 3, medium: 2, low: 1 };
   return (
     priority[right.priority] - priority[left.priority] ||

@@ -88,7 +88,8 @@ function createPlanning(candidates: YouthDecisionCandidate[]): YouthDecisionPlan
         keep: recommendations.filter((item) => item.decision === "keep").length,
         sell: recommendations.filter((item) => item.decision === "sell").length,
         release: recommendations.filter((item) => item.decision === "release").length,
-        hold: recommendations.filter((item) => item.decision === "hold").length
+        hold: recommendations.filter((item) => item.decision === "hold").length,
+        unknown: recommendations.filter((item) => item.decision === "unknown").length
       },
       highPriorityDecisions: recommendations.filter((item) => item.priority === "high").length,
       advancedCandidates: 0
@@ -111,7 +112,8 @@ function createCandidate(
   const prospect: YouthProspectAssessment = {
     ...assessYouthProspect({ player }),
     prospectScore,
-    confidence: "high"
+    confidence: "high",
+    reasons: [{ type: "training_evidence", observationCount: 3 }]
   };
   const opportunity: YouthDevelopmentOpportunity = {
     playerId,

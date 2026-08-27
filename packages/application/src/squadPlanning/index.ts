@@ -146,7 +146,8 @@ export async function getSquadAssessment(clubId: ClubId): Promise<SquadAssessmen
       formation: context?.formation ?? null,
       marketValue: marketValue?.current ?? null,
       marketProjection: marketValue?.projection ?? null,
-      marketTrainingComparison: marketValue?.trainingComparison ?? null
+      marketTrainingComparison: marketValue?.trainingComparison ?? null,
+      trainingHistory: context?.trainingHistory ?? null
     };
   });
 
@@ -274,6 +275,7 @@ function buildPlayerContext(
     projection,
     hasDevelopmentPlan: developmentOverride !== null,
     talent,
+    trainingHistory: history,
     training: {
       kind: player.training.advanced ? "advanced" : (latestTraining?.kind ?? "formation"),
       intensity: latestTraining?.intensity ?? null,

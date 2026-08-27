@@ -85,7 +85,8 @@ export function summarizeYouthDecisions(
     keep: 0,
     sell: 0,
     release: 0,
-    hold: 0
+    hold: 0,
+    unknown: 0
   };
   for (const recommendation of recommendations) counts[recommendation.decision] += 1;
 
@@ -258,9 +259,10 @@ function chooseDecision(
   const development = scores.developmentOpportunity;
   const economics = scores.economicOpportunity;
   const resource = scores.resourceEfficiency;
-  if (prospect === null || clubFit === null || development === null) return "hold";
+  if (prospect === null || clubFit === null || development === null) return "unknown";
   if (context.prospect.confidence === "low" || context.opportunity.opportunity === "unknown")
-    return "hold";
+    return "unknown";
+  if (!hasSufficientTrainingSnapshots(context)) return "hold";
 
   const sportingTrain =
     prospect >= config.highProspectThreshold &&
@@ -311,7 +313,15 @@ function chooseDecision(
     return "keep";
   }
   if (evidence.strongCurrentValue && economics !== null && economics >= 0.5) return "sell";
-  return "hold";
+  return "unknown";
+}
+
+function hasSufficientTrainingSnapshots(context: YouthDecisionContext): boolean {
+  const observations = context.prospect.reasons.find(
+    (reason): reason is Extract<typeof reason, { type: "training_evidence" }> =>
+      reason.type === "training_evidence"
+  )?.observationCount;
+  return (observations ?? 0) >= 3;
 }
 
 function stabilizeDecision(
@@ -338,7 +348,7 @@ function stabilizeDecision(
   if (scoreChanges.every((change) => change <= config.decisionStabilityMargin)) {
     return previous.decision;
   }
-  if (previous.decision === "release" || decision === "release") return "hold";
+  if (previous.decision === "release" || decision === "release") return "unknown";
   if (
     (previous.decision === "train" || decision === "train") &&
     context.prospect.confidence !== "high"
@@ -415,7 +425,8 @@ function buildReasons(
   if (recommendedProfile && recommendedProfile !== context.prospect.suggestedProfile) {
     reasons.push({ type: "better_alternative_profile", profile: recommendedProfile });
   }
-  if (decision === "hold") reasons.push({ type: "insufficient_evidence" });
+  if (decision === "unknown") reasons.push({ type: "insufficient_evidence" });
+  if (decision === "hold") reasons.push({ type: "insufficient_training_snapshots" });
   return uniqueReasons(reasons);
 }
 
@@ -470,7 +481,7 @@ function calculatePriority(
   evidence: EconomicEvidence,
   config: YouthDecisionConfig
 ): YouthDecisionPriority {
-  if (decision === "release" || decision === "hold") return "low";
+  if (decision === "release" || decision === "hold" || decision === "unknown") return "low";
   const urgency = Math.max(
     scores.prospectQuality ?? 0,
     scores.clubFit ?? 0,
@@ -490,7 +501,8 @@ function compareDecisions(
   const priorityRank: Record<YouthDecisionPriority, number> = { high: 3, medium: 2, low: 1 };
   const confidenceRank: Record<Confidence, number> = { high: 3, medium: 2, low: 1 };
   const needRank: Record<YouthDecision, number> = {
-    hold: 5,
+    hold: 6,
+    unknown: 5,
     train: 4,
     sell: 3,
     keep: 2,
@@ -581,7 +593,8 @@ function isNegativeReason(reason: YouthDecisionReason): boolean {
     "high_resource_competition",
     "low_development_upside",
     "low_economic_value",
-    "insufficient_evidence"
+    "insufficient_evidence",
+    "insufficient_training_snapshots"
   ].includes(reason.type);
 }
 
