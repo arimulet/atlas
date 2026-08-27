@@ -1,37 +1,65 @@
 import { pathForMainView } from "../../routing";
-import type { NavigationItem } from "../../types";
+import type { NavigationGroup } from "../../types";
 import { SidebarItem } from "../SidebarItem";
 import { SidebarProps } from "./types";
 
-const navigationItems: NavigationItem[] = [
-  { id: "dashboard", label: "Dashboard", icon: "⌂", path: pathForMainView("dashboard") },
-  { id: "squad", label: "Squad", icon: "S", path: pathForMainView("squad") },
+const navigationGroups: NavigationGroup[] = [
   {
-    id: "player-decisions",
-    label: "Player Decisions",
-    icon: "D",
-    path: pathForMainView("player-decisions")
+    id: "general",
+    label: "General",
+    items: [{ id: "dashboard", label: "Dashboard", icon: "⌂", path: pathForMainView("dashboard") }]
   },
-  { id: "training", label: "Training", icon: "T", path: pathForMainView("training") },
-  { id: "youth", label: "Youth", icon: "Y", path: pathForMainView("youth") },
-  { id: "finances", label: "Finances", icon: "$", path: pathForMainView("finances") },
-  { id: "diagnostics", label: "Diagnostics", icon: "!", path: pathForMainView("diagnostics") }
+  {
+    id: "first-team",
+    label: "Primer Equipo",
+    items: [
+      { id: "squad", label: "Squad", icon: "S", path: pathForMainView("squad") },
+      { id: "training", label: "Training", icon: "T", path: pathForMainView("training") },
+      {
+        id: "player-decisions",
+        label: "Player Decisions",
+        icon: "D",
+        path: pathForMainView("player-decisions")
+      }
+    ]
+  },
+  {
+    id: "academy",
+    label: "Academia",
+    items: [{ id: "youth", label: "Youth", icon: "Y", path: pathForMainView("youth") }]
+  },
+  {
+    id: "admin",
+    label: "Administración",
+    items: [{ id: "finances", label: "Finances", icon: "$", path: pathForMainView("finances") }]
+  },
+  {
+    id: "system",
+    label: "Sistema",
+    items: [
+      { id: "diagnostics", label: "Diagnostics", icon: "!", path: pathForMainView("diagnostics") }
+    ]
+  }
 ];
 
 export function Sidebar({ activeView, diagnosticAlertCount, onViewChange }: SidebarProps) {
   return (
     <aside className="atlas-sidebar">
       <div className="atlas-sidebar__navigation">
-        <p className="atlas-sidebar__label">Navigation</p>
         <nav aria-label="ATLAS modules">
-          {navigationItems.map((item) => (
-            <SidebarItem
-              key={item.id}
-              item={item}
-              badgeCount={item.id === "diagnostics" ? diagnosticAlertCount : undefined}
-              isActive={activeView === item.id}
-              onSelect={onViewChange}
-            />
+          {navigationGroups.map((group) => (
+            <div key={group.id} className="atlas-sidebar__group" style={{ marginBottom: "1.5rem" }}>
+              <p className="atlas-sidebar__label">{group.label}</p>
+              {group.items.map((item) => (
+                <SidebarItem
+                  key={item.id}
+                  item={item}
+                  badgeCount={item.id === "diagnostics" ? diagnosticAlertCount : undefined}
+                  isActive={activeView === item.id}
+                  onSelect={onViewChange}
+                />
+              ))}
+            </div>
           ))}
         </nav>
       </div>
