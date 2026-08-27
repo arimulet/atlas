@@ -14,7 +14,6 @@ import { SidebarItem } from "../SidebarItem";
 import { SidebarProps } from "./types";
 
 const ICON_SIZE = 20;
-
 const navigationGroups: NavigationGroup[] = [
   {
     id: "general",
