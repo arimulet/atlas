@@ -127,7 +127,6 @@ export class MongoPlayerRepository {
       { $unset: { development: 1 } }
     );
   }
-
   async listSquadRoles(clubId: number): Promise<PersistedSquadRoleAssignment[]> {
     const players = await PlayerModel.find({
       clubId,
@@ -223,8 +222,8 @@ function mapPlayer(player: {
     injury: {
       days: player.injury?.days ?? null,
       severe: player.injury?.severe ?? null
-    },
-    currentGameWeek: player.currentGameWeek ?? null,
+      },
+      currentGameWeek: player.currentGameWeek ?? null,
     role: player.role ?? null,
     development: hasDevelopmentOverride ? development : null
   };
