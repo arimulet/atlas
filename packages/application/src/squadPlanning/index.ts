@@ -131,7 +131,6 @@ export async function getSquadAssessment(clubId: ClubId): Promise<SquadAssessmen
       latest.snapshotDate
     )
   );
-
   const countryRepo = new MongoCountryRepository();
   const allCountries = await countryRepo.getAll();
   const clubCountry = allCountries.find(c => c.currencyName === club.currency || c.countryId === club.country);
@@ -318,7 +317,7 @@ function createMarketValues(
       talent: context.talent ?? null
     };
     try {
-      const current = calibratePlayerMarketValue(marketContext, transfers);
+      const current = calibratePlayerMarketValue(marketContext, []);
       const projection =
         context.developmentPlan && context.trainingPath && context.projection
           ? projectPlayerMarketValue({
@@ -328,12 +327,12 @@ function createMarketValues(
               projection: context.projection,
               currentMarketValue: current,
               talent: context.talent ?? null,
-              transfers
+              transfers: []
             })
           : null;
       const trainingComparison =
         context.developmentPlan && context.trainingPath
-          ? createMarketTrainingComparison(context, player, current, transfers)
+          ? createMarketTrainingComparison(context, player, current)
           : null;
       values.set(context.playerId, { current, projection, trainingComparison });
     } catch {
@@ -371,7 +370,7 @@ function createMarketTrainingComparison(
         projection: advancedProjection,
         currentMarketValue: current,
         talent: context.talent ?? null,
-        transfers
+        transfers: []
       },
       formation: {
         player,
@@ -380,7 +379,7 @@ function createMarketTrainingComparison(
         projection: formationProjection,
         currentMarketValue: current,
         talent: context.talent ?? null,
-        transfers
+        transfers: []
       },
       fixedHorizonWeeks: PLAYER_MARKET_VALUE_COMPARISON_HORIZON_WEEKS
     });
