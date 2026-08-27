@@ -131,7 +131,7 @@ describe("Player Development Plan", () => {
   it("never creates an automatic target below the current skill", () => {
     const target = buildDefaultDevelopmentTarget(player(), "defender");
 
-    expect(target.targetSkills.find((skill) => skill.skill === "defender")?.targetLevel).toBe(14);
+    expect(target.targetSkills.find((skill) => skill.skill === "defender")?.targetLevel).toBe(17);
   });
 
   it("preserves manual levels while deriving priorities from the profile", () => {
@@ -222,7 +222,7 @@ describe("Player Development Plan", () => {
   it("reports a target as completed only when every target skill is complete", () => {
     const planner = new PlayerDevelopmentPlanner();
     const plan = planner.createPlan(
-      player({ skills: { defender: 15, pace: 14, technique: 12, playmaker: 10 } }),
+      player({ skills: { defender: 17, pace: 17, technique: 14, playmaker: 13 } }),
       {
         profile: "defender"
       }

@@ -82,6 +82,11 @@ export interface SquadPlanningConfig {
   coreContributionThreshold: number;
   usefulContributionThreshold: number;
   highFutureContributionThreshold: number;
+  corePrimarySkillMinimum: number;
+  rotationPrimarySkillMinimum: number;
+  coreStaminaMinimum: number;
+  rotationStaminaMinimum: number;
+  prospectMaximumAge: number;
   prospectPotentialThreshold: number;
   developmentGapThreshold: number;
   transitionDevelopmentThreshold: number;

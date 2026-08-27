@@ -25,7 +25,7 @@ function player(overrides: Partial<SquadPlayerContext> = {}): SquadPlayerContext
   return {
     playerId: 1,
     age: 24,
-    skills: { defender: 9, pace: 9, technique: 8 },
+    skills: { stamina: 11, defender: 9, pace: 9, technique: 8 },
     profile: "defender",
     developmentTarget: { ...target },
     training: { kind: "advanced" },
@@ -36,20 +36,38 @@ function player(overrides: Partial<SquadPlayerContext> = {}): SquadPlayerContext
 }
 
 function withLevels(
-  levels: { defender: number; pace: number; technique: number },
+  levels: {
+    defender: number;
+    pace: number;
+    technique: number;
+    stamina?: number;
+    playmaker?: number;
+  },
   overrides: Partial<SquadPlayerContext> = {}
 ): SquadPlayerContext {
-  return player({ skills: levels, ...overrides });
+  return player({ skills: { stamina: 11, ...levels }, ...overrides });
 }
 
 describe("squad planning domain", () => {
   it("classifies a strong current player as core", () => {
     const assessment = assessSquadRole(
-      withLevels({ defender: 15, pace: 14, technique: 12 }, { age: 24 })
+      withLevels({ defender: 17, pace: 17, technique: 12 }, { age: 24 })
     );
 
     expect(assessment.role).toBe("core");
     expect(assessment.reasons).toContainEqual({ type: "high_current_contribution" });
+  });
+
+  it("keeps an elite 28-year-old defender as core", () => {
+    const assessment = assessSquadRole(
+      withLevels(
+        { defender: 17, pace: 17, technique: 12, playmaker: 11 },
+        { age: 28, developmentTarget: null }
+      )
+    );
+
+    expect(assessment.role).toBe("core");
+    expect(assessment.lifecycle).toBe("prime");
   });
 
   it("classifies a young high-potential player as prospect", () => {
@@ -72,9 +90,28 @@ describe("squad planning domain", () => {
     expect(assessment.reasons).toContainEqual({ type: "active_development_plan" });
   });
 
+  it("classifies a raw 19-year-old defender as a prospect", () => {
+    const assessment = assessSquadRole(
+      withLevels(
+        { defender: 9, pace: 11, technique: 7, playmaker: 8, stamina: 3 },
+        {
+          age: 19,
+          developmentTarget: null,
+          developmentPlan: null,
+          trainingPath: null,
+          projection: null,
+          talent: null
+        }
+      )
+    );
+
+    expect(assessment.role).toBe("prospect");
+    expect(assessment.lifecycle).toBe("prospect");
+  });
+
   it("classifies a useful secondary player as rotation", () => {
     const assessment = assessSquadRole(
-      withLevels({ defender: 11, pace: 10, technique: 9 }, { age: 25, developmentTarget: null })
+      withLevels({ defender: 15, pace: 15, technique: 9 }, { age: 25, developmentTarget: null })
     );
 
     expect(assessment.role).toBe("rotation");
@@ -112,7 +149,7 @@ describe("squad planning domain", () => {
 
   it("does not use age alone to determine the role", () => {
     const strong = assessSquadRole(
-      withLevels({ defender: 15, pace: 14, technique: 12 }, { age: 22, ageFactor: 1.8 })
+      withLevels({ defender: 17, pace: 17, technique: 12 }, { age: 22, ageFactor: 1.8 })
     );
     const weak = assessSquadRole(
       withLevels({ defender: 4, pace: 5, technique: 4 }, { age: 22, ageFactor: 1.8 })
@@ -123,7 +160,7 @@ describe("squad planning domain", () => {
 
   it("allows players of the same age to have different lifecycle stages", () => {
     const developed = calculatePlayerLifecycle(
-      withLevels({ defender: 15, pace: 14, technique: 12 }, { age: 22, ageFactor: 1.8 })
+      withLevels({ defender: 17, pace: 17, technique: 12 }, { age: 22, ageFactor: 1.8 })
     );
     const developing = calculatePlayerLifecycle(
       withLevels({ defender: 10, pace: 10, technique: 9 }, { age: 22, ageFactor: 1.8 })
@@ -177,7 +214,7 @@ describe("squad planning domain", () => {
 
   it("calculates deterministic relative percentiles and summary", () => {
     const contexts = [
-      withLevels({ defender: 15, pace: 14, technique: 12 }, { playerId: 2 }),
+      withLevels({ defender: 17, pace: 17, technique: 12 }, { playerId: 2 }),
       withLevels({ defender: 10, pace: 9, technique: 8 }, { playerId: 1 }),
       withLevels({ defender: 5, pace: 5, technique: 5 }, { playerId: 3 })
     ];

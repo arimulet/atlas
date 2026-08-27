@@ -120,7 +120,7 @@ describe("createDevelopmentPlanViewModel", () => {
   it("derives profile editor defaults from the domain catalog", () => {
     const defaults = targetDefaultsForProfile("defender", { defender: 13, pace: 8 });
 
-    expect(defaults).toMatchObject({ defender: 13, pace: 10, technique: 9, playmaker: 7 });
+    expect(defaults).toMatchObject({ defender: 17, pace: 17, technique: 14, playmaker: 13 });
   });
 
   it("produces deterministic path rows and projected milestones", () => {
