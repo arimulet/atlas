@@ -294,17 +294,17 @@ export async function getAdvancedTrainingOptimization(
     const snapshotPlayer = latestSnapshot?.players.find(
       (player) => player.playerId === history.playerId
     );
-    const academyTalent = academyTalentByPlayer.get(history.playerId);
+  const academyTalent = academyTalentByPlayer.get(history.playerId);
     const seniorTalent = talentByPlayer.get(history.playerId);
     const hasObservedSeniorTalent =
       seniorTalent?.value !== null && seniorTalent?.value !== undefined;
     const isTrialCandidate =
       validSeniorTrainingWeekCount(history) < 2 ||
       (academyTalent !== undefined && !hasObservedSeniorTalent);
-    const projectedIntensity =
-      currentWeek.intensity > 0
-        ? currentWeek.intensity
-        : DEFAULT_TRIAL_ADVANCED_PROJECTED_INTENSITY;
+  const projectedIntensity =
+    currentWeek.intensity > 0
+      ? currentWeek.intensity
+      : DEFAULT_TRIAL_ADVANCED_PROJECTED_INTENSITY;
     return [
       {
         player: {
