@@ -295,23 +295,22 @@ function isHighLevel(skill: number | null): boolean {
 export function calculateLatestCompletedYouthSkillChanges(
   snapshots: readonly PersistedSnapshot[]
 ): Map<number, number> {
-  const currentGameWeek = snapshots.at(-1)?.gameWeek ?? null;
-
-  if (currentGameWeek === null) {
-    return new Map();
-  }
-
-  const latestSnapshotByCompletedGameWeek = new Map<number, PersistedSnapshot>();
+  const latestSnapshotByGameWeek = new Map<number, PersistedSnapshot>();
 
   for (const snapshot of snapshots) {
-    if (snapshot.gameWeek !== null && snapshot.gameWeek !== currentGameWeek) {
-      latestSnapshotByCompletedGameWeek.set(snapshot.gameWeek, snapshot);
+    if (snapshot.gameWeek === null) {
+      continue;
+    }
+
+    const currentSnapshot = latestSnapshotByGameWeek.get(snapshot.gameWeek);
+    if (currentSnapshot === undefined || isMoreRecentSnapshot(snapshot, currentSnapshot)) {
+      latestSnapshotByGameWeek.set(snapshot.gameWeek, snapshot);
     }
   }
 
-  const completedTrainingSnapshots = [...latestSnapshotByCompletedGameWeek.values()];
-  const latestCompletedTraining = completedTrainingSnapshots.at(-1) ?? null;
-  const previousCompletedTraining = completedTrainingSnapshots.at(-2) ?? null;
+  const currentGameWeek = Math.max(...latestSnapshotByGameWeek.keys());
+  const latestCompletedTraining = latestSnapshotByGameWeek.get(currentGameWeek - 1) ?? null;
+  const previousCompletedTraining = latestSnapshotByGameWeek.get(currentGameWeek - 2) ?? null;
 
   if (!latestCompletedTraining || !previousCompletedTraining) {
     return new Map();
@@ -332,6 +331,14 @@ export function calculateLatestCompletedYouthSkillChanges(
       return [[junior.playerId, junior.skill - previousSkill] as const];
     })
   );
+}
+
+function isMoreRecentSnapshot(candidate: PersistedSnapshot, current: PersistedSnapshot): boolean {
+  if (candidate.importedAt.getTime() !== current.importedAt.getTime()) {
+    return candidate.importedAt.getTime() > current.importedAt.getTime();
+  }
+
+  return candidate.snapshotDate.getTime() >= current.snapshotDate.getTime();
 }
 
 export function calculateYouthDevelopmentMetrics(input: {

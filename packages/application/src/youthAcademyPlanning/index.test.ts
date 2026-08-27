@@ -28,6 +28,25 @@ describe("calculateLatestCompletedYouthSkillChanges", () => {
 
     expect(changes).toEqual(new Map([[101, 2]]));
   });
+
+  it("does not infer a training change when the previous completed week is missing", () => {
+    const changes = calculateLatestCompletedYouthSkillChanges([
+      createSnapshot(24, 6),
+      createSnapshot(26, 8)
+    ]);
+
+    expect(changes).toEqual(new Map());
+  });
+
+  it("uses game weeks rather than snapshot import order", () => {
+    const changes = calculateLatestCompletedYouthSkillChanges([
+      createSnapshot(26, 8),
+      createSnapshot(24, 6),
+      createSnapshot(25, 7)
+    ]);
+
+    expect(changes).toEqual(new Map([[101, 1]]));
+  });
 });
 
 describe("calculateYouthDevelopmentMetrics", () => {
