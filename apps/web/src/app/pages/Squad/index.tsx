@@ -4,8 +4,6 @@ import type { SquadRole } from "@atlas/domain";
 import { AttentionIcon } from "../../components/AttentionIcon";
 import { CountryNameFlag } from "../../components/CountryNameFlag";
 import { PlayerLink } from "../../components/PlayerLink";
-import { YouthDecisionSections } from "../Youth/YouthDecisionSections";
-import { useYouthDecisionEngine } from "../Youth/useYouthDecisionEngine";
 import type { SquadAttentionProps, SquadTableProps, SquadProps } from "./types";
 import {
   SquadPlanningSections,
@@ -43,7 +41,6 @@ const TRAINING_POSITION_TITLES: Record<TrainingPositionCode, string> = {
 };
 
 export function Squad({
-  clubId,
   development,
   onSelectPlayer,
   onSaveSquadRole,
@@ -55,7 +52,6 @@ export function Squad({
   trainingStatus,
   currency
 }: SquadProps) {
-  const youthDecisionEngine = useYouthDecisionEngine({ clubId, currency, youthAcademy: null });
   const rows = createSquadPlayerRows({
     development,
     projectionSummaries,
@@ -123,11 +119,6 @@ export function Squad({
         rows={sortedRows}
         status={trainingStatus}
       />{" "}
-      <YouthDecisionSections
-        models={youthDecisionEngine.decisionCandidates}
-        onSelectPlayer={onSelectPlayer}
-        status={youthDecisionEngine.status}
-      />
     </div>
   );
 }

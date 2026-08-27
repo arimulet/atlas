@@ -31,6 +31,7 @@ import { Finances } from "./pages/Finances";
 import { Squad } from "./pages/Squad";
 import { Training } from "./pages/Training";
 import { PlayerDetail } from "./pages/PlayerDetail";
+import { PlayerDecisions } from "./pages/PlayerDecisions";
 import { Youth } from "./pages/Youth";
 import { Diagnostics } from "./pages/Diagnostics";
 import { createPlayerTrainingProjectionSummaries } from "./view-models/player-detail-view-model";
@@ -330,7 +331,6 @@ export function App() {
         />
       ) : activeView === "squad" ? (
         <Squad
-          clubId={activeClubId}
           currency={dashboard?.club.currency ?? null}
           development={playerDevelopment}
           onSelectPlayer={handleSelectPlayer}
@@ -341,6 +341,12 @@ export function App() {
           training={training}
           trainingDiagnostic={trainingDiagnostic}
           trainingStatus={trainingStatus}
+        />
+      ) : activeView === "player-decisions" ? (
+        <PlayerDecisions
+          clubId={activeClubId}
+          currency={dashboard?.club.currency ?? null}
+          onSelectPlayer={handleSelectPlayer}
         />
       ) : activeView === "training" ? (
         <Training

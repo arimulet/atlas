@@ -6,6 +6,12 @@ import { SidebarProps } from "./types";
 const navigationItems: NavigationItem[] = [
   { id: "dashboard", label: "Dashboard", icon: "⌂", path: pathForMainView("dashboard") },
   { id: "squad", label: "Squad", icon: "S", path: pathForMainView("squad") },
+  {
+    id: "player-decisions",
+    label: "Player Decisions",
+    icon: "D",
+    path: pathForMainView("player-decisions")
+  },
   { id: "training", label: "Training", icon: "T", path: pathForMainView("training") },
   { id: "youth", label: "Youth", icon: "Y", path: pathForMainView("youth") },
   { id: "finances", label: "Finances", icon: "$", path: pathForMainView("finances") },

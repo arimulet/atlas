@@ -1,0 +1,18 @@
+.atlas {
+  .atlas-player-decisions {
+    display: grid;
+    gap: 14px;
+    max-width: 1440px;
+  }
+
+  .atlas-player-decisions__header {
+    padding: 2px 0 4px;
+  }
+
+  .atlas-player-decisions__header h1 {
+    color: var(--atlas-text);
+    font-size: 1.35rem;
+    line-height: 1.2;
+    margin: 0;
+  }
+}
