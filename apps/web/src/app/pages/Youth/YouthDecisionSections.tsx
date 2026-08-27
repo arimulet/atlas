@@ -27,6 +27,7 @@ export function YouthDecisionSections({
 
   return (
     <>
+      {status === "ready" && models.length > 1 ? <YouthDecisionComparison models={models} /> : null}
       <section
         className="atlas-youth-panel atlas-youth-panel--decisions"
         aria-labelledby="youth-decisions-title"
@@ -70,7 +71,6 @@ export function YouthDecisionSections({
           </div>
         ) : null}
       </section>
-      {status === "ready" && models.length > 1 ? <YouthDecisionComparison models={models} /> : null}
     </>
   );
 }
@@ -146,9 +146,9 @@ function YouthDecisionComparison({ models }: { models: YouthDecisionViewModel[] 
     >
       <div className="atlas-youth-section-heading">
         <div>
-          <p className="atlas-youth-panel__eyebrow">Promoted players</p>
+          <p className="atlas-youth-panel__eyebrow">Player Decisions</p>
           <h2 id="youth-comparison-title" className="atlas-youth-panel__title atlas-section-title">
-            Decision Comparison
+            Candidate Comparison
           </h2>
         </div>
       </div>
