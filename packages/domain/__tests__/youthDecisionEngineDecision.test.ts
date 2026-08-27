@@ -29,7 +29,11 @@ function prospect(
   playerInput = player(),
   overrides: Partial<YouthProspectAssessment> = {}
 ): YouthProspectAssessment {
-  return { ...assessYouthProspect({ player: playerInput }), ...overrides };
+  return {
+    ...assessYouthProspect({ player: playerInput }),
+    reasons: [{ type: "training_evidence", observationCount: 3 }],
+    ...overrides
+  };
 }
 
 function opportunity(
@@ -221,7 +225,7 @@ describe("Youth Decision Recommendations", () => {
     expect(recommendation.decision).toBe("release");
   });
 
-  it("returns hold when essential evidence is missing", () => {
+  it("returns unknown when essential evidence is missing", () => {
     const recommendation = recommendYouthDecision(
       context({
         prospect: prospect(player(), { prospectScore: null, confidence: "low" }),
@@ -229,8 +233,23 @@ describe("Youth Decision Recommendations", () => {
       })
     );
 
-    expect(recommendation.decision).toBe("hold");
+    expect(recommendation.decision).toBe("unknown");
     expect(recommendation.reasons).toContainEqual({ type: "insufficient_evidence" });
+  });
+
+  it("returns hold when training snapshots are insufficient", () => {
+    const recommendation = recommendYouthDecision(
+      context({
+        prospect: prospect(player(), {
+          prospectScore: 0.8,
+          confidence: "high",
+          reasons: [{ type: "training_evidence", observationCount: 2 }]
+        })
+      })
+    );
+
+    expect(recommendation.decision).toBe("hold");
+    expect(recommendation.reasons).toContainEqual({ type: "insufficient_training_snapshots" });
   });
 
   it("does not release an excellent but congested prospect automatically", () => {

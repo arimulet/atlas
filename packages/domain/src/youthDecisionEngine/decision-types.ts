@@ -14,7 +14,7 @@ import type {
 import type { YouthDevelopmentOpportunity, YouthFitPlayer } from "./fit-types.js";
 import type { YouthProspectAssessment } from "./types.js";
 
-export type YouthDecision = "train" | "keep" | "sell" | "release" | "hold";
+export type YouthDecision = "train" | "keep" | "sell" | "release" | "hold" | "unknown";
 export type YouthDecisionPriority = "high" | "medium" | "low";
 
 export type YouthDecisionReason =
@@ -34,7 +34,8 @@ export type YouthDecisionReason =
   | { type: "better_alternative_profile"; profile: DevelopmentProfile }
   | { type: "low_development_upside" }
   | { type: "low_economic_value" }
-  | { type: "insufficient_evidence" };
+  | { type: "insufficient_evidence" }
+  | { type: "insufficient_training_snapshots" };
 
 export type YouthDecisionRisk =
   | { type: "talent_uncertain" }

@@ -13,7 +13,8 @@ interface YouthDecisionCardProps {
 
 export function YouthDecisionCard({ model, onSelectPlayer }: YouthDecisionCardProps) {
   const supportingReasons = model.candidate.opportunity.reasons.map(mapYouthFitReason);
-  const showLowConfidenceWarning = model.confidence === "low" && model.decision !== "hold";
+  const showLowConfidenceWarning =
+    model.confidence === "low" && model.decision !== "hold" && model.decision !== "unknown";
   const profileChanged = model.development.changedProfile;
 
   return (

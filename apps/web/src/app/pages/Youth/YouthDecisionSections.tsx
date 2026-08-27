@@ -88,6 +88,7 @@ export function YouthSummary({ summary }: { summary: YouthSummaryViewModel }) {
         <SummaryMetric label="Keep" value={String(summary.counts.keep)} />
         <SummaryMetric label="Release" value={String(summary.counts.release)} />
         <SummaryMetric label="Hold" value={String(summary.counts.hold)} />
+        <SummaryMetric label="Unknown" value={String(summary.counts.unknown)} />
         <SummaryMetric
           label="High-priority decisions"
           value={String(summary.highPriorityDecisions)}
@@ -120,6 +121,7 @@ function DecisionFilters({
     { value: "sell", label: "Sell" },
     { value: "release", label: "Release" },
     { value: "hold", label: "Hold" },
+    { value: "unknown", label: "Unknown" },
     { value: "high", label: "High priority" }
   ];
   return (
