@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { ClubModel, getSquadRoleAssignmentModel, MongoClubRepository } from "@atlas/database";
+import { ClubModel, MongoClubRepository, MongoPlayerRepository, PlayerModel } from "@atlas/database";
 import {
   getSquadRoleAssignment,
   resetSquadRoleAssignment,
@@ -12,6 +12,7 @@ import {
 let mongo: MongoMemoryServer;
 
 const clubs = new MongoClubRepository();
+const players = new MongoPlayerRepository();
 
 describe("squad role assignments", () => {
   beforeAll(async () => {
@@ -20,7 +21,7 @@ describe("squad role assignments", () => {
   });
 
   beforeEach(async () => {
-    await Promise.all([ClubModel.deleteMany({}), getSquadRoleAssignmentModel().deleteMany({})]);
+    await Promise.all([ClubModel.deleteMany({}), PlayerModel.deleteMany({})]);
   });
 
   afterAll(async () => {
@@ -35,6 +36,11 @@ describe("squad role assignments", () => {
       name: "River Plate Forever",
       training: { GK: 2, DEF: 6, MID: 4, ATT: 7 },
       currency: "ARS"
+    });
+    await players.resolveHistoricalIdentity({
+      clubId: club.clubId,
+      playerId: 100,
+      name: "Player One"
     });
 
     const saved = await saveSquadRoleAssignment({

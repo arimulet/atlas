@@ -114,7 +114,6 @@ describe("SokkerSyncPersistence", () => {
       "clubs",
       "juniors",
       "players",
-      "playertransfers",
       "snapshots",
       "syncruns",
       "trainingweeks"

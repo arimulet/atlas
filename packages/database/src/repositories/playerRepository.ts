@@ -4,7 +4,10 @@ import type {
   PersistedDevelopmentProfile,
   PersistedPlayer,
   PersistedPlayerDevelopmentOverride,
-  SavePlayerDevelopmentOverrideInput
+  SavePlayerDevelopmentOverrideInput,
+  PersistedSquadRole,
+  PersistedSquadRoleAssignment,
+  SaveSquadRoleAssignmentInput
 } from "./types.js";
 
 export type PlayerPosition = "GK" | "DEF" | "MID" | "ATT" | null;
@@ -124,6 +127,46 @@ export class MongoPlayerRepository {
       { $unset: { development: 1 } }
     );
   }
+
+  async listSquadRoles(clubId: number): Promise<PersistedSquadRoleAssignment[]> {
+    const players = await PlayerModel.find({
+      clubId,
+      role: { $exists: true, $ne: null }
+    }).sort({ playerId: 1 });
+
+    return players.map((player) => mapSquadRole(player.toObject()));
+  }
+
+  async findSquadRole(input: {
+    playerId: number;
+    clubId: number;
+  }): Promise<PersistedSquadRoleAssignment | null> {
+    const player = await this.findByPlayerId(input);
+    return player?.role ? mapSquadRole(player) : null;
+  }
+
+  async saveSquadRole(
+    input: SaveSquadRoleAssignmentInput
+  ): Promise<PersistedSquadRoleAssignment> {
+    const player = await PlayerModel.findOneAndUpdate(
+      { playerId: input.playerId, clubId: input.clubId },
+      { $set: { role: input.role } },
+      { new: true, runValidators: true }
+    );
+
+    if (!player) {
+      throw new Error(`Player not found: ${input.clubId}/${input.playerId}`);
+    }
+
+    return mapSquadRole(player.toObject());
+  }
+
+  async deleteSquadRole(input: { playerId: number; clubId: number }): Promise<void> {
+    await PlayerModel.updateOne(
+      { playerId: input.playerId, clubId: input.clubId },
+      { $unset: { role: 1 } }
+    );
+  }
 }
 
 function mapPlayer(player: {
@@ -141,6 +184,7 @@ function mapPlayer(player: {
   cards?: { yellow?: number; red?: number } | null;
   injury?: { days?: number | null; severe?: boolean | null } | null;
   currentGameWeek?: number | null;
+  role?: PersistedSquadRole | null;
   development?: {
     profile?: PersistedDevelopmentProfile | null;
     targetLevels?: Map<string, number> | Record<string, number> | null;
@@ -181,6 +225,32 @@ function mapPlayer(player: {
       severe: player.injury?.severe ?? null
     },
     currentGameWeek: player.currentGameWeek ?? null,
+    role: player.role ?? null,
     development: hasDevelopmentOverride ? development : null
+  };
+}
+
+function mapSquadRole(player: {
+  _id?: Types.ObjectId;
+  id?: string;
+  playerId: number;
+  clubId: number;
+  role?: PersistedSquadRole | null;
+}): PersistedSquadRoleAssignment {
+  if (!player.role) {
+    throw new Error(`Player has no squad role: ${player.clubId}/${player.playerId}`);
+  }
+
+  const id = player.id ?? player._id?.toString();
+  if (!id) {
+    throw new Error(`Player has no identifier: ${player.clubId}/${player.playerId}`);
+  }
+
+  return {
+    id,
+    playerId: player.playerId,
+    clubId: player.clubId,
+    role: player.role,
+    source: "manual"
   };
 }

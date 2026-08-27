@@ -42,6 +42,11 @@ const playerSchema = new Schema(
       severe: { type: Boolean, default: null }
     },
     currentGameWeek: { type: Number, default: null, min: 1 },
+    role: {
+      type: String,
+      enum: ["core", "developing", "prospect", "rotation", "depth", "transition"],
+      default: undefined
+    },
     development: { type: playerDevelopmentSchema, default: undefined }
   },
   { timestamps: true }
