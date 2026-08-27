@@ -142,6 +142,7 @@ function advanced(rank: number, score: number): NonNullable<YouthFitContext["adv
         rank,
         score,
         currentlyAdvanced: false,
+        isTrial: false,
         recommendedAdvanced: rank <= 10,
         confidence: "high"
       }

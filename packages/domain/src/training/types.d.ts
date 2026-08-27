@@ -338,6 +338,7 @@ export interface AdvancedTrainingCandidateContext {
     intensity: number;
   };
   talent?: TalentEstimate | null;
+  trial?: { projectedIntensity: number; academyTalent?: number | null };
 }
 
 export interface AdvancedSlotEvaluation {
@@ -365,12 +366,18 @@ export interface AdvancedTrainingRankingEntry {
   rank: number;
   score: number | null;
   currentlyAdvanced: boolean;
+  isTrial: boolean;
   recommendedAdvanced: boolean;
   confidence: TrainingRecommendationConfidence;
 }
 
 export type AdvancedTrainingRecommendation =
-  "keep_advanced" | "promote_to_advanced" | "remove_from_advanced" | "keep_formation" | "hold";
+  | "keep_advanced"
+  | "promote_to_advanced"
+  | "trial_advanced"
+  | "remove_from_advanced"
+  | "keep_formation"
+  | "hold";
 
 export type AdvancedSlotReason =
   | { type: "high_marginal_training_gain"; value: number }
@@ -380,7 +387,12 @@ export type AdvancedSlotReason =
   | { type: "within_recommended_top_slots"; rank: number }
   | { type: "below_advanced_cutoff"; rank: number }
   | { type: "difference_below_replacement_threshold" }
-  | { type: "insufficient_data" };
+  | { type: "insufficient_data" }
+  | { type: "new_player_trial_candidate" }
+  | { type: "academy_talent_signal"; value: number }
+  | { type: "projected_advanced_return"; value: number }
+  | { type: "insufficient_senior_training_evidence" }
+  | { type: "trial_slot_limit_reached" };
 
 export interface AdvancedTrainingPlayerRecommendation {
   playerId: number;
