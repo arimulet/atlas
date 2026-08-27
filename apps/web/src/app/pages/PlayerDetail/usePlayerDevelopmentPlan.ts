@@ -130,7 +130,6 @@ function toDomainOverride(
 ): PlayerDevelopmentTargetOverride {
   return {
     profile: response.profile,
-    targetLevels: response.targetLevels,
-    targetAge: response.targetAge
+    targetLevels: response.targetLevels
   };
 }

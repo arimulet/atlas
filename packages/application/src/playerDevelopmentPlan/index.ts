@@ -1,8 +1,10 @@
 import {
-  MongoPlayerDevelopmentTargetRepository,
+  MongoClubRepository,
+  MongoPlayerRepository,
   type PersistedPlayerDevelopmentOverride,
   type SavePlayerDevelopmentOverrideInput
 } from "@atlas/database";
+import type { ClubId } from "@atlas/database";
 import {
   PlayerDevelopmentPlanner,
   type DevelopmentPlayer,
@@ -56,24 +58,48 @@ export function buildPlayerDevelopmentPlan(
   return new PlayerDevelopmentPlanner().createPlan(player, manualOverride ?? {});
 }
 
-const playerDevelopmentTargetRepository = new MongoPlayerDevelopmentTargetRepository();
+const playerRepository = new MongoPlayerRepository();
+const clubRepository = new MongoClubRepository();
 
 export async function getPlayerDevelopmentTarget(input: {
   playerId: number;
-  clubId: number;
+  clubId: ClubId;
 }): Promise<PersistedPlayerDevelopmentOverride | null> {
-  return playerDevelopmentTargetRepository.findByPlayerId(input);
+  return playerRepository.findDevelopmentOverride({
+    ...input,
+    clubId: await resolveNumericClubId(input.clubId)
+  });
 }
 
 export async function savePlayerDevelopmentTarget(
-  input: SavePlayerDevelopmentOverrideInput
+  input: Omit<SavePlayerDevelopmentOverrideInput, "clubId"> & { clubId: ClubId }
 ): Promise<PersistedPlayerDevelopmentOverride> {
-  return playerDevelopmentTargetRepository.saveManualOverride(input);
+  return playerRepository.saveDevelopmentOverride({
+    ...input,
+    clubId: await resolveNumericClubId(input.clubId)
+  });
 }
 
 export async function resetPlayerDevelopmentTarget(input: {
   playerId: number;
-  clubId: number;
+  clubId: ClubId;
 }): Promise<void> {
-  await playerDevelopmentTargetRepository.deleteManualOverride(input);
+  await playerRepository.deleteDevelopmentOverride({
+    ...input,
+    clubId: await resolveNumericClubId(input.clubId)
+  });
+}
+
+async function resolveNumericClubId(clubId: ClubId): Promise<number> {
+  const numericClubId = Number(clubId);
+  if (Number.isInteger(numericClubId) && numericClubId > 0) {
+    return numericClubId;
+  }
+
+  const club = await clubRepository.findById(String(clubId));
+  if (!club) {
+    throw new Error(`Club not found: ${clubId}`);
+  }
+
+  return club.clubId;
 }

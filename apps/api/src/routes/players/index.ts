@@ -28,7 +28,7 @@ async function playerRoutes(server: FastifyInstance) {
     async (request) => {
       const { clubId, playerId } = playerDevelopmentTargetParamsSchema.parse(request.params);
 
-      return getPlayerDevelopmentTarget({ clubId: Number(clubId), playerId });
+      return getPlayerDevelopmentTarget({ clubId, playerId });
     }
   );
 
@@ -39,7 +39,7 @@ async function playerRoutes(server: FastifyInstance) {
       const body = playerDevelopmentTargetBodySchema.parse(request.body);
 
       return savePlayerDevelopmentTarget({
-        clubId: Number(clubId),
+        clubId,
         playerId,
         ...body
       });
@@ -51,7 +51,7 @@ async function playerRoutes(server: FastifyInstance) {
     async (request, reply) => {
       const { clubId, playerId } = playerDevelopmentTargetParamsSchema.parse(request.params);
 
-      await resetPlayerDevelopmentTarget({ clubId: Number(clubId), playerId });
+      await resetPlayerDevelopmentTarget({ clubId, playerId });
       return reply.code(204).send();
     }
   );

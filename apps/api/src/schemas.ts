@@ -22,7 +22,7 @@ export const playerDevelopmentTargetBodySchema = z
       .nullable()
       .optional(),
     targetLevels: z
-      .record(
+      .partialRecord(
         z.enum([
           "stamina",
           "pace",
@@ -36,7 +36,6 @@ export const playerDevelopmentTargetBodySchema = z
         z.number().int().min(1).max(18)
       )
       .optional(),
-    targetAge: z.number().int().min(1).nullable().optional()
   })
   .strict();
 

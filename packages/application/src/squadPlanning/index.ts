@@ -1,7 +1,7 @@
 import {
   MongoClubRepository,
   MongoSnapshotRepository,
-  MongoPlayerDevelopmentTargetRepository,
+  MongoPlayerRepository,
   MongoSquadRoleAssignmentRepository,
   MongoTrainingWeekRepository,
   MongoPlayerTransferRepository,
@@ -81,7 +81,7 @@ const clubRepository = new MongoClubRepository();
 const snapshotRepository = new MongoSnapshotRepository();
 const trainingWeekRepository = new MongoTrainingWeekRepository();
 const roleAssignmentRepository = new MongoSquadRoleAssignmentRepository();
-const developmentTargetRepository = new MongoPlayerDevelopmentTargetRepository();
+const playerRepository = new MongoPlayerRepository();
 const playerTransferRepository = new MongoPlayerTransferRepository();
 
 export async function getSquadAssessment(clubId: ClubId): Promise<SquadAssessmentData> {
@@ -115,7 +115,7 @@ export async function getSquadAssessment(clubId: ClubId): Promise<SquadAssessmen
         async (player) =>
           [
             player.playerId,
-            await developmentTargetRepository.findByPlayerId({
+            await playerRepository.findDevelopmentOverride({
               playerId: player.playerId,
               clubId: club.clubId
             })
@@ -245,8 +245,7 @@ function buildPlayerContext(
   };
   const override: PlayerDevelopmentTargetOverride = {
     profile: developmentOverride?.profile,
-    targetLevels: developmentOverride?.targetLevels,
-    targetAge: developmentOverride?.targetAge
+    targetLevels: developmentOverride?.targetLevels
   };
   const plan = buildPlan(developmentPlayer, override);
   const talent = history ? estimateTalentFromTrainingHistory(history) : null;

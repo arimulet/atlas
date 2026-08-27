@@ -30,7 +30,6 @@ export interface PlayerDevelopmentTarget {
   playerId: number;
   profile: DevelopmentProfile;
   targetSkills: DevelopmentTargetSkill[];
-  targetAge?: number;
   source: DevelopmentTargetSource;
 }
 
@@ -99,5 +98,4 @@ export interface PlayerDevelopmentGap {
 export interface PlayerDevelopmentTargetOverride {
   profile?: DevelopmentProfile | null;
   targetLevels?: Partial<Record<DevelopmentSkill, number>>;
-  targetAge?: number | null;
 }

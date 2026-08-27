@@ -182,9 +182,6 @@ export function buildDefaultDevelopmentTarget(
     playerId: player.playerId,
     profile,
     targetSkills,
-    ...(override.targetAge !== undefined && override.targetAge !== null
-      ? { targetAge: override.targetAge }
-      : {}),
     source: hasManualOverride(override) ? "manual" : "automatic"
   };
 }
@@ -318,8 +315,7 @@ function profileOrder(profile: DevelopmentProfile): number {
 function hasManualOverride(override: PlayerDevelopmentTargetOverride): boolean {
   return (
     override.profile !== undefined ||
-    override.targetLevels !== undefined ||
-    override.targetAge !== undefined
+    override.targetLevels !== undefined
   );
 }
 

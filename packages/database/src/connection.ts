@@ -1,6 +1,7 @@
 import mongoose, { type ClientSession } from "mongoose";
 import { migrateClubProfileDocuments } from "./migrations/club-profile.js";
 import { migrateDevelopmentProfileKeys } from "./migrations/development-profile-keys.js";
+import { migratePlayerDevelopmentTargets } from "./migrations/player-development-targets.js";
 import { migrateSnapshotClubIds } from "./migrations/snapshot-club-id.js";
 
 export type MongoSession = ClientSession;
@@ -8,6 +9,7 @@ export type MongoSession = ClientSession;
 export async function connectMongoDb(uri: string): Promise<typeof mongoose> {
   const connection = await mongoose.connect(uri);
   await migrateClubProfileDocuments();
+  await migratePlayerDevelopmentTargets();
   await migrateDevelopmentProfileKeys();
   await migrateSnapshotClubIds();
   return connection;
