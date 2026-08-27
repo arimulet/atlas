@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { MainViewId } from "./routing";
 import type {
   AdvancedTrainingOptimization,
@@ -18,7 +19,7 @@ export type ViewId = MainViewId | "player-detail";
 export interface NavigationItem {
   id: MainViewId;
   label: string;
-  icon: string;
+  icon: ReactNode;
   path: string;
 }
 
