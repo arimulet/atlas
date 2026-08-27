@@ -343,7 +343,66 @@
   }
 
   .atlas-youth-comparison-table {
-    min-width: 760px;
+    min-width: 860px;
+  }
+
+  .atlas-youth-comparison-table__player-column {
+    width: 22%;
+  }
+
+  .atlas-youth-comparison-table__advanced-column {
+    width: 7%;
+  }
+
+  .atlas-youth-comparison-table__rank-column,
+  .atlas-youth-comparison-table__age-column {
+    width: 8%;
+  }
+
+  .atlas-youth-comparison-table__profile-column,
+  .atlas-youth-comparison-table__prospect-column,
+  .atlas-youth-comparison-table__club-fit-column {
+    width: 11%;
+  }
+
+  .atlas-youth-comparison-table__market-column {
+    width: 12%;
+  }
+
+  .atlas-youth-comparison-table__decision-column {
+    width: 10%;
+  }
+
+  .atlas-youth-comparison-table__advanced-slot-icon {
+    align-items: center;
+    border: 1px solid currentColor;
+    border-radius: 999px;
+    display: inline-flex;
+    font-size: 0.78rem;
+    font-weight: 900;
+    height: 20px;
+    justify-content: center;
+    line-height: 1;
+    width: 20px;
+  }
+
+  .atlas-youth-comparison-table__advanced-slot-icon.is-recommended {
+    color: var(--semantic-success-text);
+  }
+
+  .atlas-youth-comparison-table__advanced-slot-icon.is-excluded {
+    color: var(--atlas-text-muted);
+  }
+
+  .atlas-youth-comparison-table__slot-divider th {
+    background: color-mix(in srgb, var(--atlas-accent) 10%, var(--atlas-surface));
+    border-bottom: 1px solid var(--atlas-accent);
+    border-top: 2px solid var(--atlas-accent);
+    color: var(--atlas-text);
+    font-size: 0.68rem;
+    letter-spacing: 0.06em;
+    padding: 9px 10px;
+    text-transform: uppercase;
   }
 
   @media (max-width: 900px) {

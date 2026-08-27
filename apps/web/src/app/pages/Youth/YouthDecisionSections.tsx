@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { Fragment, useMemo, useState, type ReactNode } from "react";
 
 import { YouthDecisionCard } from "./YouthDecisionCard";
 import {
@@ -140,7 +140,14 @@ function DecisionFilters({
   );
 }
 
+const ADVANCED_TRAINING_SLOT_COUNT = 10;
+
 function YouthDecisionComparison({ models }: { models: YouthDecisionViewModel[] }) {
+  const comparisonModels = [...models].sort(compareAdvancedTrainingFit);
+  const firstExcludedIndex = comparisonModels.findIndex(
+    (model) => !isRecommendedForAdvancedTraining(model)
+  );
+
   return (
     <section
       className="atlas-youth-panel atlas-youth-panel--comparison"
@@ -156,9 +163,22 @@ function YouthDecisionComparison({ models }: { models: YouthDecisionViewModel[] 
       </div>
       <div className="atlas-youth-table-wrap">
         <table className="atlas-youth-table atlas-youth-comparison-table">
+          <colgroup>
+            <col className="atlas-youth-comparison-table__player-column" />
+            <col className="atlas-youth-comparison-table__advanced-column" />
+            <col className="atlas-youth-comparison-table__rank-column" />
+            <col className="atlas-youth-comparison-table__age-column" />
+            <col className="atlas-youth-comparison-table__profile-column" />
+            <col className="atlas-youth-comparison-table__prospect-column" />
+            <col className="atlas-youth-comparison-table__club-fit-column" />
+            <col className="atlas-youth-comparison-table__market-column" />
+            <col className="atlas-youth-comparison-table__decision-column" />
+          </colgroup>
           <thead>
             <tr>
               <th scope="col">Player</th>
+              <th scope="col">Advanced</th>
+              <th scope="col">Advanced rank</th>
               <th scope="col">Age</th>
               <th scope="col">Profile</th>
               <th scope="col">Prospect</th>
@@ -168,25 +188,75 @@ function YouthDecisionComparison({ models }: { models: YouthDecisionViewModel[] 
             </tr>
           </thead>
           <tbody>
-            {models.map((model) => (
-              <tr key={model.playerId}>
-                <th scope="row">{model.playerName}</th>
-                <td>{model.age ?? "—"}</td>
-                <td>{model.profileLabel}</td>
-                <td>{model.prospectQualityLabel}</td>
-                <td>{model.clubFitLabel}</td>
-                <td>{model.market?.currentValueLabel ?? "—"}</td>
-                <td>
-                  <span className={`atlas-youth-decision-badge is-${model.decision}`}>
-                    {model.decisionLabel}
-                  </span>
-                </td>
-              </tr>
+            {comparisonModels.map((model, index) => (
+              <Fragment key={model.playerId}>
+                {index === firstExcludedIndex && firstExcludedIndex > 0 ? (
+                  <tr className="atlas-youth-comparison-table__slot-divider">
+                    <th colSpan={9} scope="rowgroup">
+                      Outside the {ADVANCED_TRAINING_SLOT_COUNT} recommended advanced-training slots
+                    </th>
+                  </tr>
+                ) : null}
+                <tr>
+                  <th scope="row">{model.playerName}</th>
+                  <td className="atlas-youth-table__center">
+                    <AdvancedTrainingSlotIcon model={model} />
+                  </td>
+                  <td className="atlas-youth-table__center">{formatAdvancedRank(model)}</td>
+                  <td>{model.age ?? "—"}</td>
+                  <td>{model.profileLabel}</td>
+                  <td>{model.prospectQualityLabel}</td>
+                  <td>{model.clubFitLabel}</td>
+                  <td>{model.market?.currentValueLabel ?? "—"}</td>
+                  <td>
+                    <span className={`atlas-youth-decision-badge is-${model.decision}`}>
+                      {model.decisionLabel}
+                    </span>
+                  </td>
+                </tr>
+              </Fragment>
             ))}
           </tbody>
         </table>
       </div>
     </section>
+  );
+}
+
+function compareAdvancedTrainingFit(
+  left: YouthDecisionViewModel,
+  right: YouthDecisionViewModel
+): number {
+  const leftRank = left.development.advancedRank ?? Number.POSITIVE_INFINITY;
+  const rightRank = right.development.advancedRank ?? Number.POSITIVE_INFINITY;
+  return leftRank - rightRank || left.playerName.localeCompare(right.playerName);
+}
+
+function isRecommendedForAdvancedTraining(model: YouthDecisionViewModel): boolean {
+  return (
+    model.development.advancedRank !== null &&
+    model.development.advancedRank <= ADVANCED_TRAINING_SLOT_COUNT
+  );
+}
+
+function formatAdvancedRank(model: YouthDecisionViewModel): string {
+  return model.development.advancedRank === null ? "—" : `#${model.development.advancedRank}`;
+}
+
+function AdvancedTrainingSlotIcon({ model }: { model: YouthDecisionViewModel }) {
+  const isRecommended = isRecommendedForAdvancedTraining(model);
+  const label = isRecommended
+    ? "Within the recommended advanced-training slots"
+    : "Outside the recommended advanced-training slots";
+
+  return (
+    <span
+      aria-label={label}
+      className={`atlas-youth-comparison-table__advanced-slot-icon ${isRecommended ? "is-recommended" : "is-excluded"}`}
+      role="img"
+    >
+      {isRecommended ? "✓" : "×"}
+    </span>
   );
 }
 
