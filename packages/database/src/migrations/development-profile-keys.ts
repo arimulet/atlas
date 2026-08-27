@@ -1,5 +1,4 @@
 import { PlayerModel } from "../models/player.js";
-import { PlayerTransferModel } from "../models/playerTransfer.js";
 
 const PROFILE_KEY_RENAMES = {
   central_defender: "defender",
@@ -8,7 +7,6 @@ const PROFILE_KEY_RENAMES = {
 
 export interface DevelopmentProfileKeyMigrationResult {
   players: number;
-  playerTransfers: number;
 }
 
 export async function migrateDevelopmentProfileKeys(): Promise<DevelopmentProfileKeyMigrationResult> {
@@ -20,21 +18,8 @@ export async function migrateDevelopmentProfileKeys(): Promise<DevelopmentProfil
       )
     )
   );
-  const playerTransferResults = await Promise.all(
-    Object.entries(PROFILE_KEY_RENAMES).map(([legacyProfile, developmentProfile]) =>
-      PlayerTransferModel.collection.updateMany(
-        { developmentProfile: legacyProfile },
-        { $set: { developmentProfile } }
-      )
-    )
-  );
-
   return {
     players: developmentTargetResults.reduce(
-      (total, result) => total + result.modifiedCount,
-      0
-    ),
-    playerTransfers: playerTransferResults.reduce(
       (total, result) => total + result.modifiedCount,
       0
     )

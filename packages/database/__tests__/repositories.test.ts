@@ -6,17 +6,16 @@ import {
   JuniorModel,
   MongoClubRepository,
   MongoJuniorRepository,
-  MongoSquadRoleAssignmentRepository,
   MongoPlayerRepository,
   MongoSnapshotRepository,
   PlayerModel,
-  PlayerTransferModel,
-  getSquadRoleAssignmentModel,
   SnapshotModel,
   migrateClubProfileDocuments,
   migrateDevelopmentProfileKeys,
   migratePlayerDevelopmentTargets,
+  removePlayerTransfersCollection,
   migrateSnapshotClubIds,
+  migrateSquadRoleAssignments,
   type SaveSnapshotInput
 } from "../src/index.js";
 
@@ -25,7 +24,6 @@ let mongo: MongoMemoryServer;
 const clubs = new MongoClubRepository();
 const juniors = new MongoJuniorRepository();
 const players = new MongoPlayerRepository();
-const squadRoleAssignments = new MongoSquadRoleAssignmentRepository();
 const snapshots = new MongoSnapshotRepository();
 
 describe("Mongo repositories", () => {
@@ -39,8 +37,6 @@ describe("Mongo repositories", () => {
       ClubModel.deleteMany({}),
       JuniorModel.deleteMany({}),
       PlayerModel.deleteMany({}),
-      PlayerTransferModel.deleteMany({}),
-      getSquadRoleAssignmentModel().deleteMany({}),
       SnapshotModel.deleteMany({})
     ]);
   });
@@ -213,25 +209,11 @@ describe("Mongo repositories", () => {
       { _id: new mongoose.Types.ObjectId(player.id) },
       { $set: { "development.profile": "central_defender" } }
     );
-    const transfer = await PlayerTransferModel.collection.insertOne({
-      transferKey: "legacy-development-profile",
-      transferDate: new Date("2026-08-21T00:00:00.000Z"),
-      salePrice: 1_000_000,
-      age: 20,
-      skills: {},
-      source: "test",
-      developmentProfile: "central_midfielder"
-    });
-
     const result = await migrateDevelopmentProfileKeys();
     const migratedPlayer = await PlayerModel.findById(player.id).lean();
-    const migratedTransfer = await PlayerTransferModel.collection.findOne({
-      _id: transfer.insertedId
-    });
 
-    expect(result).toEqual({ players: 1, playerTransfers: 1 });
+    expect(result).toEqual({ players: 1 });
     expect(migratedPlayer?.development?.profile).toBe("defender");
-    expect(migratedTransfer?.developmentProfile).toBe("midfielder");
   });
 
   it("moves legacy development targets into players and drops the old collection", async () => {
@@ -259,6 +241,42 @@ describe("Mongo repositories", () => {
       profile: "forward",
       targetLevels: { striker: 15 }
     });
+    expect(oldCollection).toBe(false);
+  });
+
+  it("moves legacy squad roles into players and drops the old collection", async () => {
+    const player = await players.resolveHistoricalIdentity({
+      playerId: 100,
+      clubId: 1,
+      name: "Legacy Player"
+    });
+    const legacyCollection = mongoose.connection.db!.collection("squadroleassignments");
+    await legacyCollection.insertOne({
+      playerId: player.playerId,
+      clubId: player.clubId,
+      role: "core"
+    });
+
+    const result = await migrateSquadRoleAssignments();
+    const migratedPlayer = await PlayerModel.findById(player.id).lean();
+    const oldCollection = await mongoose.connection.db!
+      .listCollections({ name: "squadroleassignments" }, { nameOnly: true })
+      .hasNext();
+
+    expect(result).toEqual({ migrated: 1, dropped: true });
+    expect(migratedPlayer?.role).toBe("core");
+    expect(oldCollection).toBe(false);
+  });
+
+  it("drops the legacy player transfers collection", async () => {
+    await mongoose.connection.db!.collection("playertransfers").insertOne({ legacy: true });
+
+    const result = await removePlayerTransfersCollection();
+    const oldCollection = await mongoose.connection.db!
+      .listCollections({ name: "playertransfers" }, { nameOnly: true })
+      .hasNext();
+
+    expect(result).toEqual({ dropped: true });
     expect(oldCollection).toBe(false);
   });
 
@@ -473,7 +491,12 @@ describe("Mongo repositories", () => {
   });
 
   it("keeps a manual squad role override when Sokker player state is synced", async () => {
-    const saved = await squadRoleAssignments.saveManualOverride({
+    await players.resolveHistoricalIdentity({
+      playerId: 1001,
+      clubId: 1,
+      name: "Tomas Alvarez"
+    });
+    const saved = await players.saveSquadRole({
       clubId: 1,
       playerId: 1001,
       role: "core"
@@ -487,13 +510,12 @@ describe("Mongo repositories", () => {
       skills: { defender: 14 }
     });
 
-    const override = await squadRoleAssignments.findByPlayerId({ clubId: 1, playerId: 1001 });
-    const raw = await getSquadRoleAssignmentModel().findOne({ clubId: 1, playerId: 1001 }).lean();
+    const override = await players.findSquadRole({ clubId: 1, playerId: 1001 });
+    const raw = await PlayerModel.findOne({ clubId: 1, playerId: 1001 }).lean();
 
     expect(saved).toMatchObject({ role: "core", source: "manual" });
     expect(override).toMatchObject({ role: "core", source: "manual" });
-    expect(raw).not.toHaveProperty("currentContributionScore");
-    expect(raw).not.toHaveProperty("lifecycle");
+    expect(raw?.role).toBe("core");
   });
 });
 

@@ -2,9 +2,7 @@ import {
   MongoClubRepository,
   MongoSnapshotRepository,
   MongoPlayerRepository,
-  MongoSquadRoleAssignmentRepository,
   MongoTrainingWeekRepository,
-  MongoPlayerTransferRepository,
   type PersistedPlayerSnapshot,
   type PersistedPlayerDevelopmentOverride,
   type PersistedPlayerTrainingWeek,
@@ -33,8 +31,7 @@ import {
   compareAdvancedAndFormationMarketValue,
   PLAYER_MARKET_VALUE_COMPARISON_HORIZON_WEEKS,
   projectPlayerMarketValue,
-  type PlayerMarketValuePlayerInput,
-  type PlayerTransferRecord
+  type PlayerMarketValuePlayerInput
 } from "@atlas/domain";
 import { createTrainingWeek, type PlayerSkills, type PlayerSkillsChange } from "@atlas/domain";
 import type { ClubId } from "../types.js";
@@ -80,19 +77,16 @@ export type { SquadPlanningRecommendations } from "@atlas/domain";
 const clubRepository = new MongoClubRepository();
 const snapshotRepository = new MongoSnapshotRepository();
 const trainingWeekRepository = new MongoTrainingWeekRepository();
-const roleAssignmentRepository = new MongoSquadRoleAssignmentRepository();
 const playerRepository = new MongoPlayerRepository();
-const playerTransferRepository = new MongoPlayerTransferRepository();
 
 export async function getSquadAssessment(clubId: ClubId): Promise<SquadAssessmentData> {
   const club = await clubRepository.findById(clubId.toString());
   if (!club) throw new Error(`Club not found: ${clubId}`);
 
-  const [snapshots, trainingWeeks, assignments, persistedTransfers] = await Promise.all([
+  const [snapshots, trainingWeeks, assignments] = await Promise.all([
     snapshotRepository.listByClub(clubId),
     trainingWeekRepository.listByClub(club.clubId),
-    roleAssignmentRepository.listByClub(club.clubId),
-    playerTransferRepository.findTransfersForCalibration().catch(() => [])
+    playerRepository.listSquadRoles(club.clubId)
   ]);
   const latest = snapshots.at(-1);
   if (!latest) {
@@ -133,10 +127,9 @@ export async function getSquadAssessment(clubId: ClubId): Promise<SquadAssessmen
       latest.snapshotDate
     )
   );
-  const transfers = persistedTransfers.map(mapTransferRecord);
   const assessment = assessSquad(contexts);
   const contextByPlayer = new Map(contexts.map((context) => [context.playerId, context]));
-  const marketValues = createMarketValues(contexts, transfers);
+  const marketValues = createMarketValues(contexts);
   const depthPlayers: SquadDepthPlayer[] = assessment.players.map((playerAssessment) => {
     const context = contextByPlayer.get(playerAssessment.playerId);
     const marketValue = marketValues.get(playerAssessment.playerId);
@@ -189,7 +182,7 @@ export async function getSquadRoleAssignment(input: {
   playerId: number;
   clubId: ClubId;
 }): Promise<PersistedSquadRoleAssignment | null> {
-  return roleAssignmentRepository.findByPlayerId({
+  return playerRepository.findSquadRole({
     ...input,
     clubId: await resolveNumericClubId(input.clubId)
   });
@@ -198,7 +191,7 @@ export async function getSquadRoleAssignment(input: {
 export async function saveSquadRoleAssignment(
   input: Omit<SaveSquadRoleAssignmentInput, "clubId"> & { clubId: ClubId }
 ): Promise<PersistedSquadRoleAssignment> {
-  return roleAssignmentRepository.saveManualOverride({
+  return playerRepository.saveSquadRole({
     ...input,
     clubId: await resolveNumericClubId(input.clubId)
   });
@@ -208,7 +201,7 @@ export async function resetSquadRoleAssignment(input: {
   playerId: number;
   clubId: ClubId;
 }): Promise<void> {
-  await roleAssignmentRepository.deleteManualOverride({
+  await playerRepository.deleteSquadRole({
     ...input,
     clubId: await resolveNumericClubId(input.clubId)
   });
@@ -292,8 +285,7 @@ function buildPlayerContext(
 }
 
 function createMarketValues(
-  contexts: readonly SquadPlayerContext[],
-  transfers: readonly PlayerTransferRecord[]
+  contexts: readonly SquadPlayerContext[]
 ): Map<number, MarketValueEntry> {
   const values = new Map<number, MarketValueEntry>();
 
@@ -306,7 +298,7 @@ function createMarketValues(
       talent: context.talent ?? null
     };
     try {
-      const current = calibratePlayerMarketValue(marketContext, transfers);
+      const current = calibratePlayerMarketValue(marketContext, []);
       const projection =
         context.developmentPlan && context.trainingPath && context.projection
           ? projectPlayerMarketValue({
@@ -316,12 +308,12 @@ function createMarketValues(
               projection: context.projection,
               currentMarketValue: current,
               talent: context.talent ?? null,
-              transfers
+              transfers: []
             })
           : null;
       const trainingComparison =
         context.developmentPlan && context.trainingPath
-          ? createMarketTrainingComparison(context, player, current, transfers)
+          ? createMarketTrainingComparison(context, player, current)
           : null;
       values.set(context.playerId, { current, projection, trainingComparison });
     } catch {
@@ -341,8 +333,7 @@ interface MarketValueEntry {
 function createMarketTrainingComparison(
   context: SquadPlayerContext,
   player: PlayerMarketValuePlayerInput,
-  current: ReturnType<typeof calibratePlayerMarketValue>,
-  transfers: readonly PlayerTransferRecord[]
+  current: ReturnType<typeof calibratePlayerMarketValue>
 ): ReturnType<typeof compareAdvancedAndFormationMarketValue> | null {
   if (!context.developmentPlan || !context.trainingPath || !context.projection) return null;
 
@@ -359,7 +350,7 @@ function createMarketTrainingComparison(
         projection: advancedProjection,
         currentMarketValue: current,
         talent: context.talent ?? null,
-        transfers
+        transfers: []
       },
       formation: {
         player,
@@ -368,7 +359,7 @@ function createMarketTrainingComparison(
         projection: formationProjection,
         currentMarketValue: current,
         talent: context.talent ?? null,
-        transfers
+        transfers: []
       },
       fixedHorizonWeeks: PLAYER_MARKET_VALUE_COMPARISON_HORIZON_WEEKS
     });
@@ -423,30 +414,6 @@ function toMarketValuePlayer(context: SquadPlayerContext): PlayerMarketValuePlay
     observedPosition: context.observedPosition ?? null,
     profile: context.profile ?? null,
     sokkerValue: context.sokkerValue ?? null
-  };
-}
-
-function mapTransferRecord(
-  transfer: Awaited<
-    ReturnType<MongoPlayerTransferRepository["findTransfersForCalibration"]>
-  >[number]
-): PlayerTransferRecord {
-  return {
-    ...(transfer.transferId ? { transferId: transfer.transferId } : {}),
-    ...(transfer.playerId === undefined ? {} : { playerId: transfer.playerId }),
-    transferDate: transfer.transferDate,
-    gameWeek: transfer.gameWeek,
-    salePrice: transfer.salePrice,
-    currency: transfer.currency,
-    normalizedSalePrice: transfer.normalizedSalePrice,
-    age: transfer.age,
-    skills: transfer.skills,
-    formation: transfer.formation,
-    developmentProfile: transfer.developmentProfile,
-    sokkerValue: transfer.sokkerValue,
-    source: transfer.source,
-    dataQuality: transfer.dataQuality,
-    salePriceType: transfer.salePriceType
   };
 }
 
