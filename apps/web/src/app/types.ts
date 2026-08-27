@@ -22,6 +22,12 @@ export interface NavigationItem {
   path: string;
 }
 
+export interface NavigationGroup {
+  id: string;
+  label: string;
+  items: NavigationItem[];
+}
+
 export type DashboardStatus = "idle" | "loading" | "ready" | "error";
 
 export interface SquadPlanningData {
