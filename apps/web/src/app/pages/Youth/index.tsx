@@ -8,19 +8,17 @@ import { AttentionIcon } from "../../components/AttentionIcon";
 import { formatTalent } from "../../formatters";
 import { skillLevelLabel } from "../../view-models/skill-level-label";
 import { YouthSummary } from "./YouthDecisionSections";
-import { useYouthDecisionEngine } from "./useYouthDecisionEngine";
 
 export function Youth({ clubId, currency, youthAcademy, youthStatus }: YouthProps) {
   const rows = createYouthPlayerRows(youthAcademy);
   const schoolRows = rows.filter((row) => row.status !== "Promoted");
-  const decisionEngine = useYouthDecisionEngine({ clubId, currency, youthAcademy });
 
   return (
     <div className="atlas-youth">
       <header className="atlas-youth__header">
         <h1>Youth</h1>
       </header>
-      <YouthSummary summary={decisionEngine.summary} />
+      <YouthSummary summary={{ academyPlayers: schoolRows.length }} />
       <YouthPlayers rows={schoolRows} status={youthStatus} planning={youthAcademy} />
     </div>
   );

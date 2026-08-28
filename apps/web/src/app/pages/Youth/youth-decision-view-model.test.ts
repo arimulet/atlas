@@ -9,7 +9,6 @@ import {
 import type { YouthDecisionCandidate, YouthDecisionPlanning } from "@atlas/application";
 import {
   createYouthDecisionViewModels,
-  createYouthSummaryViewModel,
   filterYouthDecisionViewModels,
   orderYouthDecisionComparisonModels,
   mapYouthDecisionReason,
@@ -158,20 +157,7 @@ describe("youth decision presentation model", () => {
     expect(ordered.map((model) => model.playerId)).toEqual(["3", "2", "1"]);
   });
 
-  it("summarizes academy and promoted decision candidates compactly", () => {
-    const planning = createPlanning([
-      createCandidate(1, 0.85, { clubFitScore: 0.85, opportunity: "excellent" })
-    ]);
 
-    const summary = createYouthSummaryViewModel(planning, 8);
-
-    expect(summary).toMatchObject({
-      academyPlayers: 8,
-      decisionCandidates: 1,
-      highPriorityDecisions: 1
-    });
-    expect(summary.counts.train).toBe(1);
-  });
 });
 
 function createPlanning(candidates: YouthDecisionCandidate[]): YouthDecisionPlanning {

@@ -9,9 +9,7 @@ import type {
 } from "@atlas/domain";
 import {
   createYouthDecisionViewModels,
-  createYouthSummaryViewModel,
-  type YouthDecisionViewModel,
-  type YouthSummaryViewModel
+  type YouthDecisionViewModel
 } from "./youth-decision-view-model";
 import type { YouthDecisionPlanning } from "@atlas/application";
 
@@ -24,7 +22,6 @@ export interface UseYouthDecisionEngineInput {
 export interface YouthDecisionEngineState {
   youthSchool: RealYouthAcademyPlanning["derived"]["players"];
   decisionCandidates: YouthDecisionViewModel[];
-  summary: YouthSummaryViewModel;
   assessments: YouthProspectAssessment[];
   opportunities: YouthDevelopmentOpportunity[];
   recommendations: YouthDecisionRecommendation[];
@@ -82,21 +79,12 @@ export function useYouthDecisionEngine({
     () => createYouthDecisionViewModels(planning, currency),
     [currency, planning]
   );
-  const summary = useMemo(
-    () =>
-      createYouthSummaryViewModel(
-        planning,
-        youthAcademy?.derived.players.filter((player) => player.status !== "promoted").length ?? 0
-      ),
-    [planning, youthAcademy]
-  );
   const candidates = planning?.candidates ?? [];
 
   return {
     youthSchool:
       youthAcademy?.derived.players.filter((player) => player.status !== "promoted") ?? [],
     decisionCandidates,
-    summary,
     assessments: candidates.map((candidate) => candidate.prospect),
     opportunities: candidates.map((candidate) => candidate.opportunity),
     recommendations: candidates.map((candidate) => candidate.recommendation),

@@ -100,12 +100,7 @@ export interface YouthResourceSummary {
   competitionLabel: string;
 }
 
-export interface YouthSummaryViewModel {
-  academyPlayers: number;
-  decisionCandidates: number;
-  counts: Record<YouthDecision, number>;
-  highPriorityDecisions: number;
-}
+
 
 const decisionLabels: Record<YouthDecision, string> = {
   train: "Train",
@@ -151,24 +146,7 @@ export function createYouthDecisionViewModels(
     .sort(compareYouthDecisionViewModels);
 }
 
-export function createYouthSummaryViewModel(
-  planning: YouthDecisionPlanning | null,
-  academyPlayers: number
-): YouthSummaryViewModel {
-  return {
-    academyPlayers,
-    decisionCandidates: planning?.summary.recommendations.length ?? 0,
-    counts: planning?.summary.counts ?? {
-      train: 0,
-      keep: 0,
-      sell: 0,
-      release: 0,
-      hold: 0,
-      unknown: 0
-    },
-    highPriorityDecisions: planning?.summary.highPriorityDecisions ?? 0
-  };
-}
+
 
 export function filterYouthDecisionViewModels(
   models: readonly YouthDecisionViewModel[],

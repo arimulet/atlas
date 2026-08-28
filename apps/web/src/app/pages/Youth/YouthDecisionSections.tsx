@@ -5,8 +5,7 @@ import {
   filterYouthDecisionViewModels,
   orderYouthDecisionComparisonModels,
   type YouthDecisionFilter,
-  type YouthDecisionViewModel,
-  type YouthSummaryViewModel
+  type YouthDecisionViewModel
 } from "./youth-decision-view-model";
 
 interface YouthDecisionSectionsProps {
@@ -76,37 +75,19 @@ export function YouthDecisionSections({
   );
 }
 
-export function YouthSummary({ summary }: { summary: YouthSummaryViewModel }) {
+export function YouthSummary({ summary }: { summary: { academyPlayers: number } }) {
   return (
     <section className="atlas-youth-summary" aria-labelledby="youth-summary-title">
       <div>
         <p className="atlas-youth-summary__eyebrow">Youth Academy</p>
         <h2 id="youth-summary-title">{summary.academyPlayers} players in school</h2>
       </div>
-      <div className="atlas-youth-summary__metrics">
-        <SummaryMetric label="Decision candidates" value={String(summary.decisionCandidates)} />
-        <SummaryMetric label="Train" value={String(summary.counts.train)} />
-        <SummaryMetric label="Keep" value={String(summary.counts.keep)} />
-        <SummaryMetric label="Release" value={String(summary.counts.release)} />
-        <SummaryMetric label="Hold" value={String(summary.counts.hold)} />
-        <SummaryMetric label="Unknown" value={String(summary.counts.unknown)} />
-        <SummaryMetric
-          label="High-priority decisions"
-          value={String(summary.highPriorityDecisions)}
-        />
-      </div>
+
     </section>
   );
 }
 
-function SummaryMetric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="atlas-youth-summary__metric">
-      <span>{label}</span>
-      <strong>{value}</strong>
-    </div>
-  );
-}
+
 
 function DecisionFilters({
   filter,
