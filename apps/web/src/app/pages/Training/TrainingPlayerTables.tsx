@@ -304,16 +304,32 @@ function TrainingKind({ kind }: { kind: TrainingPlayerRow["trainingKind"] }) {
 function TrainingStatusIndicator({ status }: { status: TrainingPlayerRow["status"] }) {
   if (status === null) return null;
 
-  const icon = status === "Critical" ? "⚠" : status === "Attention" ? "!" : "i";
+  const presentation = trainingStatusPresentation(status);
   return (
     <span
-      aria-label={`Training status: ${status}`}
-      className={`atlas-training-status-indicator is-${status.toLowerCase()}`}
-      title={`Training status: ${status}`}
+      aria-label={presentation.label}
+      className={`atlas-training-status-indicator is-${status.toLowerCase().replaceAll(" ", "-")}`}
+      title={presentation.label}
     >
-      {icon}
+      {presentation.icon}
     </span>
   );
+}
+
+function trainingStatusPresentation(status: NonNullable<TrainingPlayerRow["status"]>): {
+  icon: string;
+  label: string;
+} {
+  if (status === "Critical") return { icon: "⚠", label: "Critical training warning" };
+  if (status === "Attention") return { icon: "!", label: "Training warning" };
+  if (status === "Training prospect") {
+    return {
+      icon: "✦",
+      label: "Training prospect: young player with a strong role fit"
+    };
+  }
+
+  return { icon: "i", label: "Training information" };
 }
 function skillValue(
   skills: TrainingReport["skills"] | undefined,

@@ -51,6 +51,20 @@
   border-color: color-mix(in srgb, var(--semantic-warning-border) 55%, var(--atlas-border));
 }
 
+.atlas .atlas-player-detail__training-signal {
+  font-size: 0.74rem;
+  font-weight: 650;
+  margin: 0;
+}
+
+.atlas .atlas-player-detail__training-signal.is-prospect {
+  color: var(--semantic-success-text);
+}
+
+.atlas .atlas-player-detail__training-signal.is-warning {
+  color: var(--semantic-warning-text);
+}
+
 .atlas .atlas-player-detail-panel__title {
   color: var(--atlas-text);
   font-size: 0.82rem;
