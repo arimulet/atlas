@@ -11,6 +11,7 @@ import {
   createYouthDecisionViewModels,
   createYouthSummaryViewModel,
   filterYouthDecisionViewModels,
+  orderYouthDecisionComparisonModels,
   mapYouthDecisionReason,
   mapYouthDecisionRisk
 } from "./youth-decision-view-model";
@@ -44,6 +45,67 @@ describe("youth decision presentation model", () => {
     });
   });
 
+  it("exposes a trial advanced recommendation as provisional", () => {
+    const candidate = createCandidate(1, 0.85, { clubFitScore: 0.85, opportunity: "excellent" });
+    candidate.advancedTrainingRecommendation = {
+      playerId: 1,
+      status: "trial_advanced",
+      currentlyAdvanced: false,
+      recommendedAdvanced: true,
+      evaluation: {
+        playerId: 1,
+        currentSkill: "defending",
+        advancedScore: 0.7,
+        expectedAdvancedTrainingPoints: 100,
+        expectedFormationTrainingPoints: 50,
+        marginalTrainingPoints: 50,
+        developmentPotentialScore: 0.8,
+        confidence: "low"
+      },
+      reasons: [
+        { type: "new_player_trial_candidate" },
+        { type: "insufficient_senior_training_evidence" },
+        { type: "projected_advanced_return", value: 0.7 }
+      ]
+    };
+
+    const [model] = createYouthDecisionViewModels(createPlanning([candidate]), null);
+
+    expect(model?.advancedTraining).toEqual({
+      status: "trial_advanced",
+      recommended: true,
+      currentlyAdvanced: false,
+      comparisonRank: null,
+      slotCount: null,
+      isTrial: true,
+      profileQuality: null,
+      profileViability: null
+    });
+  });
+
+  it("exposes the configured advanced-training slot capacity", () => {
+    const planning = createPlanning([
+      createCandidate(1, 0.85, { clubFitScore: 0.85, opportunity: "excellent" })
+    ]);
+    planning.advancedTraining = {
+      gameWeek: 1,
+      slotCount: 10,
+      ranking: [],
+      recommendedAdvancedPlayerIds: [],
+      recommendations: [],
+      replacements: [],
+      summary: {
+        currentlyAdvanced: 9,
+        recommendedChanges: 0,
+        promotions: 0,
+        removals: 0
+      }
+    };
+
+    const [model] = createYouthDecisionViewModels(planning, null);
+
+    expect(model?.advancedTraining.slotCount).toBe(10);
+  });
   it("sorts by priority and action, then supports decision and priority filters", () => {
     const planning = createPlanning([
       createCandidate(2, 0.7, { clubFitScore: 0.7, opportunity: "good" }),
@@ -58,6 +120,42 @@ describe("youth decision presentation model", () => {
     expect(
       filterYouthDecisionViewModels(models, "train").every((model) => model.decision === "train")
     ).toBe(true);
+  });
+
+  it("places current advanced-training slots before excluded candidates", () => {
+    const models = createYouthDecisionViewModels(
+      createPlanning([
+        createCandidate(1, 0.8, { clubFitScore: 0.8, opportunity: "good" }),
+        createCandidate(2, 0.8, { clubFitScore: 0.8, opportunity: "good" }),
+        createCandidate(3, 0.8, { clubFitScore: 0.8, opportunity: "good" })
+      ]),
+      null
+    );
+    const [first, second, third] = models;
+
+    if (!first || !second || !third) {
+      throw new Error("Expected three decision comparison models.");
+    }
+
+    const ordered = orderYouthDecisionComparisonModels([
+      {
+        ...first,
+        development: { ...first.development, advancedRank: 7 },
+        advancedTraining: { ...first.advancedTraining, comparisonRank: 7 }
+      },
+      {
+        ...second,
+        development: { ...second.development, advancedRank: 8 },
+        advancedTraining: { ...second.advancedTraining, currentlyAdvanced: true, comparisonRank: 8 }
+      },
+      {
+        ...third,
+        development: { ...third.development, advancedRank: 2 },
+        advancedTraining: { ...third.advancedTraining, currentlyAdvanced: true, comparisonRank: 2 }
+      }
+    ]);
+
+    expect(ordered.map((model) => model.playerId)).toEqual(["3", "2", "1"]);
   });
 
   it("summarizes academy and promoted decision candidates compactly", () => {
@@ -148,6 +246,7 @@ function createCandidate(
     trainingPath: null,
     developmentProjection: null,
     marketValue: null,
-    marketProjection: null
+    marketProjection: null,
+    currentlyAdvanced: false
   };
 }

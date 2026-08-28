@@ -8,7 +8,7 @@ import type {
   PlayerTrainingPath
 } from "../playerDevelopment/index.js";
 import type { TrainingHistory } from "../training/types.js";
-import type { SquadPlayerAssessment } from "./types.js";
+import type { SquadPlayerAssessment, SquadTrainingContext } from "./types.js";
 import type {
   CalibratedPlayerMarketValueEstimate,
   PlayerMarketValueProjection,
@@ -119,6 +119,7 @@ export interface SquadDepthPlayer extends SquadPlayerAssessment {
   marketValue?: CalibratedPlayerMarketValueEstimate | null;
   marketProjection?: PlayerMarketValueProjection | null;
   marketTrainingComparison?: TrainingKindMarketValueComparison | null;
+  training?: SquadTrainingContext | null;
   trainingHistory?: TrainingHistory | null;
 }
 

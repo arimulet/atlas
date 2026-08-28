@@ -386,12 +386,37 @@
     width: 20px;
   }
 
-  .atlas-youth-comparison-table__advanced-slot-icon.is-recommended {
+  .atlas-youth-comparison-table__advanced-slot-icon.is-current {
     color: var(--semantic-success-text);
   }
 
   .atlas-youth-comparison-table__advanced-slot-icon.is-excluded {
     color: var(--atlas-text-muted);
+  }
+
+  .atlas-youth-comparison-table__advanced-slot-icon.is-trial {
+    color: var(--semantic-warning-text);
+  }
+
+  .atlas-youth-comparison-table tbody tr.is-trial th,
+  .atlas-youth-comparison-table tbody tr.is-trial td {
+    background: color-mix(in srgb, var(--semantic-warning-text) 6%, transparent);
+  }
+
+  .atlas-youth-comparison-table__slot-summary {
+    color: var(--atlas-text-muted);
+    font-size: 0.8rem;
+    margin: 10px 0 0;
+  }
+  .atlas-youth-comparison-table__trial-note,
+  .atlas-youth-decision-card__trial-advanced {
+    background: color-mix(in srgb, var(--semantic-warning-text) 9%, transparent);
+    border-left: 2px solid var(--semantic-warning-text);
+    color: var(--semantic-warning-text);
+    font-size: 0.72rem;
+    line-height: 1.4;
+    margin: 10px 0;
+    padding: 7px 9px;
   }
 
   .atlas-youth-comparison-table__slot-divider th {

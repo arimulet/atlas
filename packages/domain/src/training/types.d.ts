@@ -349,6 +349,7 @@ export interface AdvancedSlotEvaluation {
   expectedFormationTrainingPoints: number | null;
   marginalTrainingPoints: number | null;
   developmentPotentialScore: number | null;
+  trialProfileQuality?: number | null;
   scoreBreakdown?: AdvancedScoreBreakdown;
   confidence: TrainingRecommendationConfidence;
 }
@@ -356,6 +357,7 @@ export interface AdvancedSlotEvaluation {
 export interface AdvancedScoreBreakdown {
   marginalTrainingGain: number;
   developmentPotential: number;
+  profileQuality?: number;
   talentContribution?: number;
   ageContribution: number;
   finalScore: number;
@@ -392,6 +394,8 @@ export type AdvancedSlotReason =
   | { type: "academy_talent_signal"; value: number }
   | { type: "projected_advanced_return"; value: number }
   | { type: "insufficient_senior_training_evidence" }
+  | { type: "trial_profile_viable"; value: number }
+  | { type: "trial_profile_not_viable"; value: number; threshold: number }
   | { type: "trial_slot_limit_reached" };
 
 export interface AdvancedTrainingPlayerRecommendation {

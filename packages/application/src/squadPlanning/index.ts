@@ -147,6 +147,7 @@ export async function getSquadAssessment(clubId: ClubId): Promise<SquadAssessmen
       marketValue: marketValue?.current ?? null,
       marketProjection: marketValue?.projection ?? null,
       marketTrainingComparison: marketValue?.trainingComparison ?? null,
+      training: context?.training ?? null,
       trainingHistory: context?.trainingHistory ?? null
     };
   });

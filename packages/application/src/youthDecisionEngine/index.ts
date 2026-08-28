@@ -165,6 +165,11 @@ function toCandidate(
     trainingPath: entry.player.trainingPath ?? null,
     developmentProjection: entry.player.projection ?? null,
     marketValue: entry.player.marketValue ?? null,
-    marketProjection: entry.player.marketProjection ?? null
+    marketProjection: entry.player.marketProjection ?? null,
+    currentlyAdvanced: entry.player.training?.kind === "advanced",
+    advancedTrainingRecommendation:
+      entry.context.advancedTraining?.recommendations.find(
+        (candidate) => candidate.playerId === entry.player.playerId
+      ) ?? null
   };
 }
