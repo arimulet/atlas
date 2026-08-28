@@ -14,7 +14,7 @@ export class SokkerSyncLoader {
       this.loadResource("junior matches", () => this.provider.getJuniorMatches(current.calendar.season))
     ]);
 
-    // Enrich juniors with formation from XML (0 = GK, 1 = field). Fails gracefully if XML is unavailable.
+  // Enrich juniors with formation from XML (0 = GK, 1 = field). Fails gracefully if XML is unavailable.
     let juniorsWithFormation = juniors;
     try {
       const xmlEntries = await this.provider.getJuniorsXml();
@@ -27,8 +27,8 @@ export class SokkerSyncLoader {
       });
     } catch (e) {
       console.error("Failed to fetch/parse juniors XML:", e);
-      // XML not available — continue without formation data
-    }
+    // XML not available — continue without formation data
+  }
 
     const { parseJuniorMatchXml } = await import("./parsers/xml-match-parser.js");
 
@@ -39,7 +39,7 @@ export class SokkerSyncLoader {
           const lineup = await this.provider.getMatchLineup(m.matchId);
           const playerStats = parseJuniorMatchXml(xml, lineup);
           return { ...m, playerStats };
-        } catch {
+      } catch {
           return { ...m, playerStats: [] };
         }
       })
@@ -50,7 +50,7 @@ export class SokkerSyncLoader {
       players: training.players,
       trainingWeeks: training.trainingWeeks,
       trainers,
-      juniors: juniorsWithFormation,
+    juniors: juniorsWithFormation,
       trainingSummary,
       juniorMatches
     };

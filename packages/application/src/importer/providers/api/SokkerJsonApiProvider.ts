@@ -187,7 +187,7 @@ export class SokkerJsonApiProvider implements SokkerDataProvider {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async getMatchLineup(matchId: number): Promise<{ homePlayers: any[], awayPlayers: any[] }> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const response = await this.get<any>(`match/${matchId}/lineup`);
     return {
       homePlayers: response.homePlayers || [],

@@ -24,7 +24,7 @@ export class MongoJuniorMatchRepository {
   async findByMatchId(matchId: number): Promise<PersistedJuniorMatch | null> {
     const match = await JuniorMatchModel.findOne({ matchId }).lean();
     if (!match) return null;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return this.mapJuniorMatch(match as any);
   }
 
@@ -45,7 +45,7 @@ export class MongoJuniorMatchRepository {
       seasonWeek: match.seasonWeek,
       dateExpected: match.dateExpected,
       isFinished: match.isFinished,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
       playerStats: (match.playerStats || []).map((p: any) => ({
         playerId: p.playerId,
         position: p.position,
