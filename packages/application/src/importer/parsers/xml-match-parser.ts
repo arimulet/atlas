@@ -1,5 +1,5 @@
 import { XMLParser } from "fast-xml-parser";
-import type { JuniorMatchPlayerStatsDto, PlayerFormation } from "../types.js";
+import type { JuniorMatchPlayerStatsDto } from "../types.js";
 
 /**
  * Parses match XML and match lineup to extract player stats for junior players.
@@ -7,6 +7,7 @@ import type { JuniorMatchPlayerStatsDto, PlayerFormation } from "../types.js";
  */
 export function parseJuniorMatchXml(
   xmlData: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   lineup: { homePlayers: any[]; awayPlayers: any[] }
 ): JuniorMatchPlayerStatsDto[] {
   const parser = new XMLParser({
@@ -17,9 +18,11 @@ export function parseJuniorMatchXml(
 
   const parsed = parser.parse(xmlData);
   
-  let allPlayerStats: any[] = [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const allPlayerStats: any[] = [];
 
   // Recursively find any object that represents a player stat (has playerID or ID)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function findPlayers(obj: any) {
     if (!obj) return;
     if (Array.isArray(obj)) {
@@ -103,6 +106,8 @@ export function parseJuniorMatchXml(
             }
           }
         }
+      }
+
       juniorStats.push({
         playerId,
         position,

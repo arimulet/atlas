@@ -132,7 +132,9 @@ export class SokkerJsonApiProvider implements SokkerDataProvider {
     // The API ignores leagueType filters, so we fetch by season directly.
     // We make 2 requests (previous and current season) and filter locally.
     const [prevSeason, currentSeason] = await Promise.all([
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       this.get<{ matches: any[] }>(`team/${teamId}/match?filter[season]=${season - 1}&filter[limit]=100`),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       this.get<{ matches: any[] }>(`team/${teamId}/match?filter[season]=${season}&filter[limit]=100`)
     ]);
     
@@ -168,7 +170,9 @@ export class SokkerJsonApiProvider implements SokkerDataProvider {
     return response.text();
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async getMatchLineup(matchId: number): Promise<{ homePlayers: any[], awayPlayers: any[] }> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const response = await this.get<any>(`match/${matchId}/lineup`);
     return {
       homePlayers: response.homePlayers || [],

@@ -22,5 +22,6 @@ export interface SokkerDataProvider {
   getTrainingSummary(): Promise<TrainingSummaryDto>;
   getJuniorMatches(season: number): Promise<Omit<JuniorMatchDto, "playerStats">[]>;
   getMatchXml(matchId: number): Promise<string>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   getMatchLineup(matchId: number): Promise<{ homePlayers: any[], awayPlayers: any[] }>;
 }

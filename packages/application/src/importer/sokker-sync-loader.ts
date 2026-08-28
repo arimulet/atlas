@@ -23,7 +23,7 @@ export class SokkerSyncLoader {
           const lineup = await this.provider.getMatchLineup(m.matchId);
           const playerStats = parseJuniorMatchXml(xml, lineup);
           return { ...m, playerStats };
-        } catch (e) {
+        } catch {
           return { ...m, playerStats: [] };
         }
       })

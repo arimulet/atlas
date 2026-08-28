@@ -9,7 +9,7 @@ import { formatTalent } from "../../formatters";
 import { skillLevelLabel } from "../../view-models/skill-level-label";
 import { YouthSummary } from "./YouthDecisionSections";
 
-export function Youth({ clubId, currency, youthAcademy, youthStatus }: YouthProps) {
+export function Youth({ youthAcademy, youthStatus }: YouthProps) {
   const rows = createYouthPlayerRows(youthAcademy);
   const schoolRows = rows.filter((row) => row.status !== "Promoted");
 

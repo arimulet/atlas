@@ -41,4 +41,5 @@ juniorMatchSchema.index({ clubId: 1, season: -1, seasonWeek: -1 });
 export const JuniorMatchModel = (
   mongoose.models?.JuniorMatch ?? 
   model("JuniorMatch", juniorMatchSchema, "junior_matches")
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 ) as any;

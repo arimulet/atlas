@@ -253,7 +253,7 @@ export interface SaveCountryInput {
 
 export interface PersistedJuniorMatchPlayerStats {
   playerId: number;
-  position: "GK" | "DEF" | "MID" | "ATT" | null;
+  position: number | null;
   minutesPlayed: number;
   rating: number;
   goals: number;
