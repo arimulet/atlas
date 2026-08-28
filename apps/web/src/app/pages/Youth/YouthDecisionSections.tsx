@@ -123,6 +123,10 @@ function DecisionFilters({
 
 function YouthDecisionComparison({ models }: { models: YouthDecisionViewModel[] }) {
   const comparisonModels = orderYouthDecisionComparisonModels(models);
+  const currentSlots = comparisonModels.filter(isCurrentlyAdvanced).length;
+  const recommendedSlots = comparisonModels.filter(isRecommendedForAdvancedTraining).length;
+  const slotCount = comparisonModels.find((model) => model.advancedTraining.slotCount !== null)
+    ?.advancedTraining.slotCount;
   const firstExcludedIndex = comparisonModels.findIndex((model) => !isCurrentlyAdvanced(model));
 
   return (
@@ -138,6 +142,12 @@ function YouthDecisionComparison({ models }: { models: YouthDecisionViewModel[] 
           </h2>
         </div>
       </div>
+      {slotCount !== undefined && slotCount !== null ? (
+        <p className="atlas-youth-comparison-table__slot-summary">
+          {currentSlots} of {slotCount} advanced-training slots currently assigned in the game.
+          ATLAS recommends {recommendedSlots} of {slotCount}.
+        </p>
+      ) : null}
       {comparisonModels.some((model) => model.advancedTraining.isTrial) ? (
         <p className="atlas-youth-comparison-table__trial-note">
           ◌ Trial advanced is provisional and requires validation with real senior training weeks.
@@ -203,6 +213,10 @@ function YouthDecisionComparison({ models }: { models: YouthDecisionViewModel[] 
       </div>
     </section>
   );
+}
+
+function isRecommendedForAdvancedTraining(model: YouthDecisionViewModel): boolean {
+  return model.advancedTraining.recommended;
 }
 
 function isCurrentlyAdvanced(model: YouthDecisionViewModel): boolean {
