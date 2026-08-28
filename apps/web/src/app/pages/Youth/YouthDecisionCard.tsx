@@ -39,6 +39,13 @@ export function YouthDecisionCard({ model, onSelectPlayer }: YouthDecisionCardPr
         </div>
       </header>
 
+      {model.advancedTraining.isTrial ? (
+        <p className="atlas-youth-decision-card__trial-advanced">
+          ◌ Trial advanced training: this provisional slot requires validation with real senior
+          training weeks.
+        </p>
+      ) : null}
+
       {showLowConfidenceWarning ? (
         <p className="atlas-youth-decision-card__confidence-warning">
           Recommendation may change as more evidence becomes available.
@@ -99,6 +106,15 @@ export function YouthDecisionCard({ model, onSelectPlayer }: YouthDecisionCardPr
               label="Advanced training"
               value={`${capitalize(model.development.advancedOpportunity)}${model.development.advancedRank ? ` · #${model.development.advancedRank}` : ""}`}
             />
+            {model.advancedTraining.isTrial ? (
+              <MetricRow label="Advanced slot status" value="Trial advanced" />
+            ) : null}
+            {model.advancedTraining.profileViability === "below_minimum" ? (
+              <MetricRow
+                label="Trial profile"
+                value="Below the minimum quality for an advanced-training trial"
+              />
+            ) : null}
             {model.decision === "train" ? (
               <MetricRow label="Training priority" value={model.priorityLabel} />
             ) : null}

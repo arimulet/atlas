@@ -1,5 +1,6 @@
 import type {
   AdvancedTrainingOptimization,
+  AdvancedTrainingPlayerRecommendation,
   CalibratedPlayerMarketValueEstimate,
   DevelopmentProfile,
   PlayerDevelopmentPlan,
@@ -28,6 +29,8 @@ export interface YouthDecisionCandidate {
   developmentProjection: PlayerDevelopmentProjection | null;
   marketValue: CalibratedPlayerMarketValueEstimate | null;
   marketProjection: PlayerMarketValueProjection | null;
+  currentlyAdvanced: boolean;
+  advancedTrainingRecommendation?: AdvancedTrainingPlayerRecommendation | null;
 }
 
 export interface YouthDecisionPlanning {

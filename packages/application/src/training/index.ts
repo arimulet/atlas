@@ -48,6 +48,7 @@ const DOMAIN_PLAYER_SKILLS: readonly PlayerSkill[] = [
   "striker",
   "pace"
 ];
+const DEFAULT_TRIAL_ADVANCED_PROJECTED_INTENSITY = 100;
 
 export async function getTrainingPageData(clubId: ClubId): Promise<TrainingPageData> {
   const club = await clubRepository.findById(clubId.toString());
@@ -229,10 +230,24 @@ export async function getAdvancedTrainingOptimization(
     talents
   });
   const latestSnapshot = snapshots.at(-1);
-  const academyTalentByPlayer = new Map(
+  const academyTalentByJuniorId = new Map(
     juniors.flatMap((junior) => {
       const talent = academyTalentForPromotedJunior(junior);
       return talent === null ? [] : [[junior.juniorId, talent] as const];
+    })
+  );
+  const academyTalentByJuniorName = new Map(
+    juniors.flatMap((junior) => {
+      const talent = academyTalentForPromotedJunior(junior);
+      return talent === null ? [] : [[normalizePlayerName(junior.name), talent] as const];
+    })
+  );
+  const academyTalentByPlayer = new Map(
+    (latestSnapshot?.players ?? []).flatMap((player) => {
+      const talent =
+        academyTalentByJuniorId.get(player.playerId) ??
+        academyTalentByJuniorName.get(normalizePlayerName(player.name));
+      return talent === undefined ? [] : [[player.playerId, talent] as const];
     })
   );
   const weeklyReportByPlayer = new Map(
@@ -279,8 +294,17 @@ export async function getAdvancedTrainingOptimization(
     const snapshotPlayer = latestSnapshot?.players.find(
       (player) => player.playerId === history.playerId
     );
-    const projectedIntensity = currentWeek.intensity > 0 ? currentWeek.intensity : null;
     const academyTalent = academyTalentByPlayer.get(history.playerId);
+    const seniorTalent = talentByPlayer.get(history.playerId);
+    const hasObservedSeniorTalent =
+      seniorTalent?.value !== null && seniorTalent?.value !== undefined;
+    const isTrialCandidate =
+      validSeniorTrainingWeekCount(history) < 2 ||
+      (academyTalent !== undefined && !hasObservedSeniorTalent);
+    const projectedIntensity =
+      currentWeek.intensity > 0
+        ? currentWeek.intensity
+        : DEFAULT_TRIAL_ADVANCED_PROJECTED_INTENSITY;
     return [
       {
         player: {
@@ -306,7 +330,7 @@ export async function getAdvancedTrainingOptimization(
           intensity: currentWeek.intensity
         },
         talent: talentByPlayer.get(history.playerId) ?? null,
-        ...(validSeniorTrainingWeekCount(history) < 2 && projectedIntensity !== null
+        ...(isTrialCandidate
           ? {
               trial: {
                 projectedIntensity,
@@ -645,7 +669,7 @@ function buildSnapshotTrialContext(input: {
     ...(hasTrainingTarget
       ? {
           trial: {
-            projectedIntensity: 100,
+            projectedIntensity: DEFAULT_TRIAL_ADVANCED_PROJECTED_INTENSITY,
             ...(input.academyTalent !== undefined ? { academyTalent: input.academyTalent } : {})
           }
         }
@@ -666,6 +690,13 @@ function toDomainSnapshotSkills(skills: PersistedPlayerSnapshot["skills"]): Play
   return domainSkills;
 }
 
+function normalizePlayerName(name: string): string {
+  return name
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .trim()
+    .toLocaleLowerCase();
+}
 function academyTalentForPromotedJunior(junior: PersistedJunior): number | null {
   if (
     junior.status !== "promoted" ||

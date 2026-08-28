@@ -1,4 +1,10 @@
 import {
+  DEVELOPMENT_PRIORITY_WEIGHTS,
+  DEVELOPMENT_PROFILES
+} from "../playerDevelopment/profiles.js";
+import type { DevelopmentProfile, DevelopmentSkill } from "../playerDevelopment/types.js";
+
+import {
   calculateDevelopmentReturnScoreBreakdown,
   calculateWeeklyTrainingPointsByKind,
   detectSkillUps,
@@ -8,6 +14,7 @@ import {
 import {
   ADVANCED_SLOT_HIGH_DEVELOPMENT_POTENTIAL_THRESHOLD,
   ADVANCED_SLOT_MAX_TRIALS,
+  ADVANCED_SLOT_TRIAL_MIN_PROFILE_QUALITY,
   ADVANCED_SLOT_REPLACEMENT_THRESHOLD,
   ADVANCED_SLOT_TRIAL_REPLACEMENT_THRESHOLD,
   ADVANCED_TRAINING_SLOT_COUNT,
@@ -29,8 +36,30 @@ import type {
   TrainingHistory,
   TrainingRecommendationConfidence,
   TrainingRecommendationPlayer,
+  PlayerSkill,
   TrainingOptionScoreBreakdown
 } from "./types.js";
+
+const TRIAL_PROFILE_BY_POSITION: Readonly<
+  Record<NonNullable<TrainingRecommendationPlayer["position"]>, DevelopmentProfile>
+> = {
+  goalkeeper: "goalkeeper",
+  defender: "defender",
+  midfielder: "midfielder",
+  winger: "winger",
+  striker: "forward"
+};
+
+const TRAINING_SKILL_BY_DEVELOPMENT_SKILL: Readonly<Record<DevelopmentSkill, PlayerSkill>> = {
+  stamina: "stamina",
+  keeper: "keeper",
+  pace: "pace",
+  technique: "technique",
+  passing: "passing",
+  defender: "defending",
+  playmaker: "playmaking",
+  striker: "striker"
+};
 
 export function optimizeAdvancedTrainingSlots(
   contexts: readonly AdvancedTrainingCandidateContext[],
@@ -113,18 +142,23 @@ export function buildAdvancedScoreBreakdown(input: {
   marginalTrainingPoints: number;
   developmentPotentialScore: number;
   optionBreakdown?: TrainingOptionScoreBreakdown | null;
+  trialProfileQuality?: number | null;
+  advancedScore?: number | null;
 }): AdvancedSlotEvaluation["scoreBreakdown"] | null {
-  const finalScore = calculateAdvancedSlotScore(input);
-  if (finalScore === null) {
+  const baseScore = calculateAdvancedSlotScore(input);
+  if (baseScore === null) {
     return null;
   }
 
   return {
     marginalTrainingGain: input.marginalTrainingPoints / MAX_EFFICIENCY,
     developmentPotential: input.developmentPotentialScore,
+    ...(input.trialProfileQuality !== null && input.trialProfileQuality !== undefined
+      ? { profileQuality: input.trialProfileQuality }
+      : {}),
     talentContribution: input.optionBreakdown?.talent,
     ageContribution: input.optionBreakdown ? 1 / input.optionBreakdown.ageCostFactor : 1,
-    finalScore
+    finalScore: input.advancedScore ?? baseScore
   };
 }
 
@@ -132,6 +166,7 @@ interface EvaluatedCandidate {
   context: AdvancedTrainingCandidateContext;
   evaluation: AdvancedSlotEvaluation;
   isEligible: boolean;
+  trialProfileQuality: number | null;
   currentlyAdvanced: boolean;
   confidence: TrainingRecommendationConfidence;
   isTrial: boolean;
@@ -144,8 +179,9 @@ function evaluateCandidate(
   const currentTraining = context.currentTraining;
   const history = historyForPlayer(context.trainingHistory, context.player.playerId);
   const isTrial = validSeniorTrainingWeekCount(history) < 2 && context.trial !== undefined;
+  const trialProfileQuality = isTrial ? calculateTrialProfileQuality(context) : null;
   const isEligible = isTrial
-    ? isEligibleForTrial(context)
+    ? isEligibleForTrial(context, trialProfileQuality)
     : isEligibleForAdvancedTraining(context.player, currentTraining);
   const currentlyAdvanced = currentTraining.kind === "advanced";
   const confidence = candidateConfidence(context, history, gameWeek, isEligible);
@@ -162,12 +198,14 @@ function evaluateCandidate(
         expectedFormationTrainingPoints: null,
         marginalTrainingPoints: null,
         developmentPotentialScore: null,
+        trialProfileQuality,
         confidence
       },
       isEligible,
       currentlyAdvanced,
       confidence,
-      isTrial
+      isTrial,
+      trialProfileQuality
     };
   }
 
@@ -205,17 +243,22 @@ function evaluateCandidate(
           expectedWeeklyTrainingPoints: expectedAdvancedTrainingPoints
         });
   const developmentPotentialScore = developmentPotentialBreakdown?.developmentReturnScore ?? null;
-  const advancedScore =
+  const baseAdvancedScore =
     developmentPotentialScore === null || marginalTrainingPoints === null
       ? null
       : calculateAdvancedSlotScore({ marginalTrainingPoints, developmentPotentialScore });
+  const advancedScore = isTrial
+    ? calculateTrialAdvancedScore(baseAdvancedScore, trialProfileQuality)
+    : baseAdvancedScore;
   const scoreBreakdown =
     developmentPotentialScore === null || marginalTrainingPoints === null
       ? null
       : buildAdvancedScoreBreakdown({
           marginalTrainingPoints,
           developmentPotentialScore,
-          optionBreakdown: developmentPotentialBreakdown
+          optionBreakdown: developmentPotentialBreakdown,
+          trialProfileQuality,
+          advancedScore
         });
 
   return {
@@ -228,17 +271,22 @@ function evaluateCandidate(
       expectedFormationTrainingPoints,
       marginalTrainingPoints,
       developmentPotentialScore,
+      trialProfileQuality,
       ...(scoreBreakdown ? { scoreBreakdown } : {}),
       confidence
     },
     isEligible,
     currentlyAdvanced,
     confidence,
-    isTrial
+    isTrial,
+    trialProfileQuality
   };
 }
 
-function isEligibleForTrial(context: AdvancedTrainingCandidateContext): boolean {
+function isEligibleForTrial(
+  context: AdvancedTrainingCandidateContext,
+  profileQuality: number | null
+): boolean {
   const trial = context.trial;
   const skill = preferredSkillFor(context);
   return (
@@ -252,8 +300,52 @@ function isEligibleForTrial(context: AdvancedTrainingCandidateContext): boolean 
     context.player.age >= BASE_TRAINING_AGE &&
     context.player.position !== null &&
     isSkillTrainableForPosition(context.player.position, skill) &&
-    levelForPreferredSkill(context, skill) !== null
+    levelForPreferredSkill(context, skill) !== null &&
+    profileQuality !== null &&
+    profileQuality >= ADVANCED_SLOT_TRIAL_MIN_PROFILE_QUALITY
   );
+}
+
+function calculateTrialProfileQuality(context: AdvancedTrainingCandidateContext): number | null {
+  const position = context.player.position;
+  if (position === null) {
+    return null;
+  }
+
+  const profile = TRIAL_PROFILE_BY_POSITION[position];
+  const definition = DEVELOPMENT_PROFILES[profile];
+  const totalWeight = definition.relevantSkills.reduce(
+    (total, skill) => total + DEVELOPMENT_PRIORITY_WEIGHTS[skill.priority],
+    0
+  );
+  if (totalWeight <= 0) {
+    return null;
+  }
+
+  let weightedQuality = 0;
+  for (const targetSkill of definition.relevantSkills) {
+    const trainingSkill = TRAINING_SKILL_BY_DEVELOPMENT_SKILL[targetSkill.skill];
+    const level = context.player.skills[trainingSkill];
+    if (level === undefined || !Number.isInteger(level) || level < 0 || level > MAX_SKILL_LEVEL) {
+      return null;
+    }
+
+    const weight = DEVELOPMENT_PRIORITY_WEIGHTS[targetSkill.priority];
+    weightedQuality += Math.min(level / targetSkill.defaultTargetLevel, 1) * weight;
+  }
+
+  return weightedQuality / totalWeight;
+}
+
+function calculateTrialAdvancedScore(
+  advancedScore: number | null,
+  profileQuality: number | null
+): number | null {
+  if (advancedScore === null || profileQuality === null) {
+    return null;
+  }
+
+  return (advancedScore + profileQuality) / 2;
 }
 
 function preferredSkillFor(context: AdvancedTrainingCandidateContext): SkillTrainingCostSkill {
@@ -573,6 +665,20 @@ function reasonsForCandidate(
   replacement: AdvancedSlotReplacement | undefined
 ): AdvancedSlotReason[] {
   if (!candidate.isEligible || candidate.evaluation.advancedScore === null) {
+    if (
+      candidate.isTrial &&
+      candidate.trialProfileQuality !== null &&
+      candidate.trialProfileQuality < ADVANCED_SLOT_TRIAL_MIN_PROFILE_QUALITY
+    ) {
+      return [
+        {
+          type: "trial_profile_not_viable",
+          value: candidate.trialProfileQuality,
+          threshold: ADVANCED_SLOT_TRIAL_MIN_PROFILE_QUALITY
+        }
+      ];
+    }
+
     return [{ type: "insufficient_data" }];
   }
 
@@ -583,6 +689,9 @@ function reasonsForCandidate(
       { type: "new_player_trial_candidate" },
       { type: "insufficient_senior_training_evidence" }
     );
+    if (candidate.trialProfileQuality !== null) {
+      reasons.push({ type: "trial_profile_viable", value: candidate.trialProfileQuality });
+    }
     if (
       candidate.context.trial?.academyTalent !== null &&
       candidate.context.trial?.academyTalent !== undefined

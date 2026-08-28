@@ -8,6 +8,7 @@ import {
   optimizeAdvancedTrainingSlots,
   type AdvancedTrainingCandidateContext,
   type PlayerTrainingRecommendation,
+  type PlayerSkills,
   type SkillTrainingCostSkill,
   type TalentEstimate,
   type TrainingRecommendationPlayer
@@ -24,15 +25,29 @@ function candidate(input: {
   skill?: SkillTrainingCostSkill;
   level?: number;
   kind?: "advanced" | "formation";
+  currentKind?: "advanced" | "formation" | "missing";
+  currentIntensity?: number;
   age?: number;
   talent?: TalentEstimate | null;
   historyWeeks?: number;
   trainingRecommendation?: PlayerTrainingRecommendation;
+  skills?: PlayerSkills;
   trial?: { projectedIntensity: number; academyTalent?: number | null };
 }): AdvancedTrainingCandidateContext {
   const skill = input.skill ?? "pace";
   const level = input.level ?? 10;
   const playerSkill = skill === "scoring" ? "striker" : skill;
+  const skills: PlayerSkills = {
+    keeper: 1,
+    pace: 6,
+    technique: 8,
+    passing: 8,
+    playmaking: 8,
+    defending: 8,
+    striker: 6,
+    ...input.skills,
+    [playerSkill]: level
+  };
   const historyWeeks = input.historyWeeks ?? 2;
   const weeks = Array.from({ length: historyWeeks }, (_, index) =>
     createTrainingWeek({
@@ -44,7 +59,7 @@ function candidate(input: {
       kind: input.kind ?? "formation",
       intensity: 100,
       age: input.age ?? 20,
-      skills: { [playerSkill]: level },
+      skills,
       skillsChange: { [playerSkill]: 0, up: 0, down: 0 }
     })
   );
@@ -59,7 +74,7 @@ function candidate(input: {
           : skill === "scoring"
             ? "striker"
             : "midfielder",
-    skills: { [playerSkill]: level }
+    skills
   };
 
   return {
@@ -67,8 +82,8 @@ function candidate(input: {
     trainingHistory: createTrainingHistory(input.playerId, weeks),
     currentTraining: {
       skill,
-      kind: input.kind ?? "formation",
-      intensity: 100
+      kind: input.currentKind ?? input.kind ?? "formation",
+      intensity: input.currentIntensity ?? 100
     },
     talent: input.talent === undefined ? talent() : input.talent,
     trainingRecommendation: input.trainingRecommendation,
@@ -251,6 +266,39 @@ describe("advanced training slot optimizer", () => {
     );
   });
 
+  it("prefers a viable profile over a fast but low-quality trial", () => {
+    const result = optimize([
+      candidate({
+        playerId: 1,
+        age: 17,
+        level: 0,
+        historyWeeks: 0,
+        skills: { playmaking: 7, passing: 0, technique: 4, pace: 0 },
+        trial: { projectedIntensity: 100 }
+      }),
+      candidate({
+        playerId: 2,
+        age: 18,
+        level: 8,
+        historyWeeks: 0,
+        skills: { playmaking: 7, passing: 9, technique: 8, pace: 8 },
+        trial: { projectedIntensity: 100 }
+      })
+    ]);
+
+    const lowQualityTrial = result.recommendations.find((item) => item.playerId === 1);
+    const viableTrial = result.recommendations.find((item) => item.playerId === 2);
+
+    expect(lowQualityTrial?.status).toBe("hold");
+    expect(lowQualityTrial?.reasons).toContainEqual(
+      expect.objectContaining({ type: "trial_profile_not_viable" })
+    );
+    expect(viableTrial?.status).toBe("trial_advanced");
+    expect(viableTrial?.evaluation.trialProfileQuality).toBeGreaterThan(
+      lowQualityTrial?.evaluation.trialProfileQuality ?? Number.POSITIVE_INFINITY
+    );
+  });
+
   it("recommends an eligible new player as a provisional advanced-training trial", () => {
     const result = optimize([
       ...Array.from({ length: 10 }, (_, index) =>
@@ -375,6 +423,20 @@ describe("advanced training slot optimizer", () => {
     expect(withAcademySignal.recommendations[0]?.evaluation.advancedScore).toBe(
       withoutAcademySignal.recommendations[0]?.evaluation.advancedScore
     );
+  });
+
+  it("ranks a trial with an explicit projected return despite zero actual current intensity", () => {
+    const result = optimize([
+      candidate({
+        playerId: 1,
+        historyWeeks: 1,
+        currentKind: "missing",
+        currentIntensity: 0,
+        trial: { projectedIntensity: 100 }
+      })
+    ]);
+
+    expect(result.recommendations[0]?.status).toBe("trial_advanced");
   });
 
   it("holds a trial candidate without a usable projected intensity", () => {

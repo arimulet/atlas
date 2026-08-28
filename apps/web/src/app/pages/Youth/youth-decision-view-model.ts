@@ -1,4 +1,5 @@
 import type {
+  AdvancedTrainingRecommendation,
   Confidence,
   DevelopmentProfile,
   YouthDecision,
@@ -45,6 +46,7 @@ export interface YouthDecisionViewModel {
   weaknesses: YouthDecisionMessage[];
   market: YouthMarketSummary | null;
   development: YouthDevelopmentSummary;
+  advancedTraining: YouthAdvancedTrainingSummary;
   succession: YouthSuccessionSummary | null;
   resourceCompetition: YouthResourceSummary | null;
   candidate: YouthDecisionCandidate;
@@ -70,6 +72,17 @@ export interface YouthDevelopmentSummary {
   opportunityLabel: string;
   formationViable: boolean;
   changedProfile: boolean;
+}
+
+export interface YouthAdvancedTrainingSummary {
+  status: AdvancedTrainingRecommendation | null;
+  recommended: boolean;
+  currentlyAdvanced: boolean;
+  comparisonRank: number | null;
+  slotCount: number | null;
+  isTrial: boolean;
+  profileQuality: number | null;
+  profileViability: "viable" | "below_minimum" | null;
 }
 
 export interface YouthSuccessionSummary {
@@ -113,8 +126,28 @@ export function createYouthDecisionViewModels(
   planning: YouthDecisionPlanning | null,
   currency: string | null
 ): YouthDecisionViewModel[] {
-  return (planning?.candidates ?? [])
-    .map((candidate) => createYouthDecisionViewModel(candidate, currency))
+  const models = (planning?.candidates ?? []).map((candidate) =>
+    createYouthDecisionViewModel(candidate, currency, planning?.advancedTraining?.slotCount ?? null)
+  );
+  const comparisonRanks = new Map(
+    models
+      .filter((model) => model.development.advancedRank !== null)
+      .sort((left, right) => {
+        const leftRank = left.development.advancedRank ?? Number.POSITIVE_INFINITY;
+        const rightRank = right.development.advancedRank ?? Number.POSITIVE_INFINITY;
+        return leftRank - rightRank || left.playerName.localeCompare(right.playerName);
+      })
+      .map((model, index) => [model.playerId, index + 1] as const)
+  );
+
+  return models
+    .map((model) => ({
+      ...model,
+      advancedTraining: {
+        ...model.advancedTraining,
+        comparisonRank: comparisonRanks.get(model.playerId) ?? null
+      }
+    }))
     .sort(compareYouthDecisionViewModels);
 }
 
@@ -144,6 +177,20 @@ export function filterYouthDecisionViewModels(
   if (filter === "all") return [...models];
   if (filter === "high") return models.filter((model) => model.priority === "high");
   return models.filter((model) => model.decision === filter);
+}
+
+export function orderYouthDecisionComparisonModels(
+  models: readonly YouthDecisionViewModel[]
+): YouthDecisionViewModel[] {
+  return [...models].sort((left, right) => {
+    if (left.advancedTraining.currentlyAdvanced !== right.advancedTraining.currentlyAdvanced) {
+      return left.advancedTraining.currentlyAdvanced ? -1 : 1;
+    }
+
+    const leftRank = left.advancedTraining.comparisonRank ?? Number.POSITIVE_INFINITY;
+    const rightRank = right.advancedTraining.comparisonRank ?? Number.POSITIVE_INFINITY;
+    return leftRank - rightRank || left.playerName.localeCompare(right.playerName);
+  });
 }
 
 export function profileLabel(profile: DevelopmentProfile | null): string {
@@ -427,10 +474,12 @@ export function mapYouthFitReason(reason: YouthFitReason): YouthDecisionMessage 
 
 export function createYouthDecisionViewModel(
   candidate: YouthDecisionCandidate,
-  currency: string | null
+  currency: string | null,
+  advancedTrainingSlotCount: number | null = null
 ): YouthDecisionViewModel {
   const recommendation = candidate.recommendation;
   const advanced = candidate.opportunity.advancedTraining;
+  const advancedTrainingRecommendation = candidate.advancedTrainingRecommendation ?? null;
   const succession = candidate.opportunity.succession;
   const capacity = candidate.opportunity.developmentCapacity;
   const completionWeeks =
@@ -481,6 +530,28 @@ export function createYouthDecisionViewModel(
       changedProfile:
         recommendation.recommendedProfile !== null &&
         recommendation.recommendedProfile !== candidate.initialProfile
+    },
+    advancedTraining: {
+      status: advancedTrainingRecommendation?.status ?? null,
+      recommended:
+        advancedTrainingRecommendation?.recommendedAdvanced ??
+        (advanced?.projectedRank !== null &&
+          advanced?.projectedRank !== undefined &&
+          advanced.projectedRank <= (advancedTrainingSlotCount ?? 10)),
+      currentlyAdvanced: candidate.currentlyAdvanced,
+      comparisonRank: null,
+      slotCount: advancedTrainingSlotCount,
+      isTrial: advancedTrainingRecommendation?.status === "trial_advanced",
+      profileQuality: advancedTrainingRecommendation?.evaluation.trialProfileQuality ?? null,
+      profileViability: advancedTrainingRecommendation?.reasons.some(
+        (reason) => reason.type === "trial_profile_not_viable"
+      )
+        ? "below_minimum"
+        : advancedTrainingRecommendation?.reasons.some(
+              (reason) => reason.type === "trial_profile_viable"
+            )
+          ? "viable"
+          : null
     },
     succession: succession
       ? {

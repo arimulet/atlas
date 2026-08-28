@@ -3,6 +3,7 @@ import { Fragment, useMemo, useState, type ReactNode } from "react";
 import { YouthDecisionCard } from "./YouthDecisionCard";
 import {
   filterYouthDecisionViewModels,
+  orderYouthDecisionComparisonModels,
   type YouthDecisionFilter,
   type YouthDecisionViewModel,
   type YouthSummaryViewModel
@@ -140,13 +141,13 @@ function DecisionFilters({
   );
 }
 
-const ADVANCED_TRAINING_SLOT_COUNT = 10;
-
 function YouthDecisionComparison({ models }: { models: YouthDecisionViewModel[] }) {
-  const comparisonModels = [...models].sort(compareAdvancedTrainingFit);
-  const firstExcludedIndex = comparisonModels.findIndex(
-    (model) => !isRecommendedForAdvancedTraining(model)
-  );
+  const comparisonModels = orderYouthDecisionComparisonModels(models);
+  const currentSlots = comparisonModels.filter(isCurrentlyAdvanced).length;
+  const recommendedSlots = comparisonModels.filter(isRecommendedForAdvancedTraining).length;
+  const slotCount = comparisonModels.find((model) => model.advancedTraining.slotCount !== null)
+    ?.advancedTraining.slotCount;
+  const firstExcludedIndex = comparisonModels.findIndex((model) => !isCurrentlyAdvanced(model));
 
   return (
     <section
@@ -161,6 +162,17 @@ function YouthDecisionComparison({ models }: { models: YouthDecisionViewModel[] 
           </h2>
         </div>
       </div>
+      {slotCount !== undefined && slotCount !== null ? (
+        <p className="atlas-youth-comparison-table__slot-summary">
+          {currentSlots} of {slotCount} advanced-training slots currently assigned in the game.
+          ATLAS recommends {recommendedSlots} of {slotCount}.
+        </p>
+      ) : null}
+      {comparisonModels.some((model) => model.advancedTraining.isTrial) ? (
+        <p className="atlas-youth-comparison-table__trial-note">
+          ◌ Trial advanced is provisional and requires validation with real senior training weeks.
+        </p>
+      ) : null}
       <div className="atlas-youth-table-wrap">
         <table className="atlas-youth-table atlas-youth-comparison-table">
           <colgroup>
@@ -177,7 +189,7 @@ function YouthDecisionComparison({ models }: { models: YouthDecisionViewModel[] 
           <thead>
             <tr>
               <th scope="col">Player</th>
-              <th scope="col">Advanced</th>
+              <th scope="col">Current slot</th>
               <th scope="col">Advanced rank</th>
               <th scope="col">Age</th>
               <th scope="col">Profile</th>
@@ -193,11 +205,11 @@ function YouthDecisionComparison({ models }: { models: YouthDecisionViewModel[] 
                 {index === firstExcludedIndex && firstExcludedIndex > 0 ? (
                   <tr className="atlas-youth-comparison-table__slot-divider">
                     <th colSpan={9} scope="rowgroup">
-                      Outside the {ADVANCED_TRAINING_SLOT_COUNT} recommended advanced-training slots
+                      Outside the current advanced-training slots
                     </th>
                   </tr>
                 ) : null}
-                <tr>
+                <tr className={model.advancedTraining.isTrial ? "is-trial" : undefined}>
                   <th scope="row">{model.playerName}</th>
                   <td className="atlas-youth-table__center">
                     <AdvancedTrainingSlotIcon model={model} />
@@ -223,39 +235,38 @@ function YouthDecisionComparison({ models }: { models: YouthDecisionViewModel[] 
   );
 }
 
-function compareAdvancedTrainingFit(
-  left: YouthDecisionViewModel,
-  right: YouthDecisionViewModel
-): number {
-  const leftRank = left.development.advancedRank ?? Number.POSITIVE_INFINITY;
-  const rightRank = right.development.advancedRank ?? Number.POSITIVE_INFINITY;
-  return leftRank - rightRank || left.playerName.localeCompare(right.playerName);
+function isRecommendedForAdvancedTraining(model: YouthDecisionViewModel): boolean {
+  return model.advancedTraining.recommended;
 }
 
-function isRecommendedForAdvancedTraining(model: YouthDecisionViewModel): boolean {
-  return (
-    model.development.advancedRank !== null &&
-    model.development.advancedRank <= ADVANCED_TRAINING_SLOT_COUNT
-  );
+function isCurrentlyAdvanced(model: YouthDecisionViewModel): boolean {
+  return model.advancedTraining.currentlyAdvanced;
 }
 
 function formatAdvancedRank(model: YouthDecisionViewModel): string {
-  return model.development.advancedRank === null ? "—" : `#${model.development.advancedRank}`;
+  return model.advancedTraining.comparisonRank === null
+    ? "—"
+    : `#${model.advancedTraining.comparisonRank}`;
 }
 
 function AdvancedTrainingSlotIcon({ model }: { model: YouthDecisionViewModel }) {
-  const isRecommended = isRecommendedForAdvancedTraining(model);
-  const label = isRecommended
-    ? "Within the recommended advanced-training slots"
-    : "Outside the recommended advanced-training slots";
+  const isCurrent = isCurrentlyAdvanced(model);
+  const hasInsufficientTrialProfile = model.advancedTraining.profileViability === "below_minimum";
+  const label = model.advancedTraining.isTrial
+    ? "Trial advanced training: provisional recommendation pending real senior training weeks"
+    : isCurrent
+      ? "Currently assigned to an advanced-training slot"
+      : hasInsufficientTrialProfile
+        ? "Outside the advanced-training slots: the profile does not meet the minimum quality for a trial"
+        : "Outside the current advanced-training slots";
 
   return (
     <span
       aria-label={label}
-      className={`atlas-youth-comparison-table__advanced-slot-icon ${isRecommended ? "is-recommended" : "is-excluded"}`}
+      className={`atlas-youth-comparison-table__advanced-slot-icon ${model.advancedTraining.isTrial ? "is-trial" : isCurrent ? "is-current" : "is-excluded"}`}
       role="img"
     >
-      {isRecommended ? "✓" : "×"}
+      {model.advancedTraining.isTrial ? "◌" : isCurrent ? "✓" : "×"}
     </span>
   );
 }
