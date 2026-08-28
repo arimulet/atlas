@@ -888,7 +888,6 @@
   background: color-mix(in srgb, var(--semantic-error-text) 13%, transparent);
 }
 
-
 .atlas .atlas-training-table__recommendation {
   color: var(--atlas-text-secondary);
   font-size: 0.72rem;
@@ -915,6 +914,11 @@
 .atlas .atlas-training-status-indicator.is-attention {
   background: color-mix(in srgb, var(--semantic-warning-text) 18%, transparent);
   color: var(--semantic-warning-text);
+}
+
+.atlas .atlas-training-status-indicator.is-training-prospect {
+  background: color-mix(in srgb, var(--semantic-success-text) 18%, transparent);
+  color: var(--semantic-success-text);
 }
 
 .atlas .atlas-training-status-indicator.is-info {

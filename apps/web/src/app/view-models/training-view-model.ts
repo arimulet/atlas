@@ -1,7 +1,7 @@
 import type { DiagnosticFinding, TrainingPageData, TrainingPagePlayer } from "@atlas/web/app/types";
 import type { PlayerTrainingProjectionSummary } from "./player-detail-view-model";
 
-export type TrainingStatusLabel = "Critical" | "Attention" | "Info";
+export type TrainingStatusLabel = "Critical" | "Attention" | "Training prospect" | "Info";
 
 export interface TrainingPlayerRow {
   playerId: string;
@@ -83,15 +83,7 @@ export function trainingStatusForPlayer(
         isFindingForPlayer(finding, String(player.playerId), player.name, player.id)
     ) ?? [];
 
-  const highestSeverity = findings.reduce<DiagnosticFinding["severity"] | null>(
-    (current, finding) =>
-      current === null || severityPriority(finding.severity) > severityPriority(current)
-        ? finding.severity
-        : current,
-    null
-  );
-
-  return highestSeverity === null ? null : statusLabelForSeverity(highestSeverity);
+  return findings.length === 0 ? null : "Training prospect";
 }
 
 export function diagnosticFindingsForPlayer(
@@ -143,23 +135,4 @@ export function compareDiagnosticSeverity(
   };
 
   return severityOrder[first.severity] - severityOrder[second.severity];
-}
-
-function statusLabelForSeverity(severity: DiagnosticFinding["severity"]): TrainingStatusLabel {
-  if (severity === "high") {
-    return "Critical";
-  }
-
-  if (severity === "info") {
-    return "Info";
-  }
-
-  return "Attention";
-}
-
-function severityPriority(severity: DiagnosticFinding["severity"]): number {
-  if (severity === "high") return 4;
-  if (severity === "medium") return 3;
-  if (severity === "low") return 2;
-  return 1;
 }

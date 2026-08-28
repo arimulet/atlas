@@ -22,6 +22,7 @@ export function ProjectionPanel({ projection, talent, training }: ProjectionPane
         <StatusBadge status={training.status} />
       </div>
       <TalentPanel talent={talent} />
+      <TrainingSignalSummary status={training.status} />
       <p className="atlas-player-detail__projection-assumption">Assuming current training</p>
 
       <div className="atlas-player-detail__projection-section">
@@ -70,6 +71,30 @@ export function ProjectionPanel({ projection, talent, training }: ProjectionPane
       ) : null}
     </section>
   );
+}
+
+function TrainingSignalSummary({
+  status
+}: {
+  status: PlayerDetailViewModel["training"]["status"];
+}) {
+  if (status === "Training prospect") {
+    return (
+      <p className="atlas-player-detail__training-signal is-prospect">
+        ✦ Training prospect: young player with a strong role fit.
+      </p>
+    );
+  }
+
+  if (status === "Attention" || status === "Critical") {
+    return (
+      <p className="atlas-player-detail__training-signal is-warning">
+        {status === "Critical" ? "⚠ Critical training warning." : "! Training requires review."}
+      </p>
+    );
+  }
+
+  return null;
 }
 
 interface DataRowProps {
