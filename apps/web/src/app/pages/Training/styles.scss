@@ -874,8 +874,8 @@
 }
 
 .atlas .atlas-training-table__skill-marker {
-  left: calc(50% + 1.1em);
   position: absolute;
+  right: calc(50% + 0.7em);
   top: 50%;
   transform: translateY(-50%);
 }
@@ -888,9 +888,6 @@
   background: color-mix(in srgb, var(--semantic-error-text) 13%, transparent);
 }
 
-.atlas .atlas-training-table__skill-marker {
-  left: calc(50% + 0.8em);
-}
 
 .atlas .atlas-training-table__recommendation {
   color: var(--atlas-text-secondary);
