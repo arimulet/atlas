@@ -308,9 +308,17 @@ export function calculateLatestCompletedYouthSkillChanges(
     }
   }
 
-  const currentGameWeek = Math.max(...latestSnapshotByGameWeek.keys());
-  const latestCompletedTraining = latestSnapshotByGameWeek.get(currentGameWeek - 1) ?? null;
-  const previousCompletedTraining = latestSnapshotByGameWeek.get(currentGameWeek - 2) ?? null;
+  const gameWeeks = Array.from(latestSnapshotByGameWeek.keys()).sort((a, b) => b - a);
+  
+  if (gameWeeks.length < 2) {
+    return new Map();
+  }
+
+  const latestWeek = gameWeeks[0] as number;
+  const previousWeek = latestWeek - 1;
+
+  const latestCompletedTraining = latestSnapshotByGameWeek.get(latestWeek) ?? null;
+  const previousCompletedTraining = latestSnapshotByGameWeek.get(previousWeek) ?? null;
 
   if (!latestCompletedTraining || !previousCompletedTraining) {
     return new Map();

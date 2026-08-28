@@ -8,7 +8,7 @@ import {
 } from "./index.js";
 
 describe("calculateLatestCompletedYouthSkillChanges", () => {
-  it("ignores the active game week and compares the last two completed trainings", () => {
+  it("compares the two most recent game weeks", () => {
     const changes = calculateLatestCompletedYouthSkillChanges([
       createSnapshot(24, 6),
       createSnapshot(25, 7),
@@ -21,15 +21,15 @@ describe("calculateLatestCompletedYouthSkillChanges", () => {
   it("uses the latest snapshot of each completed game week", () => {
     const changes = calculateLatestCompletedYouthSkillChanges([
       createSnapshot(24, 6),
-      createSnapshot(25, 7),
-      createSnapshot(25, 8),
+      createSnapshot(25, 6),
+      createSnapshot(26, 7),
       createSnapshot(26, 8)
     ]);
 
     expect(changes).toEqual(new Map([[101, 2]]));
   });
 
-  it("does not infer a training change when the previous completed week is missing", () => {
+  it("does not infer a training change when the previous week is missing", () => {
     const changes = calculateLatestCompletedYouthSkillChanges([
       createSnapshot(24, 6),
       createSnapshot(26, 8)
