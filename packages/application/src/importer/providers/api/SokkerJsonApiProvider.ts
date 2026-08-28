@@ -4,7 +4,8 @@ import type {
   JuniorDto,
   TrainerDto,
   TrainingDataDto,
-  TrainingSummaryDto
+  TrainingSummaryDto,
+  JuniorMatchDto
 } from "../../types.js";
 import type { SokkerDataProvider } from "../SokkerDataProvider.js";
 import type {
@@ -27,8 +28,48 @@ import {
 export class SokkerJsonApiProvider implements SokkerDataProvider {
   private sessionCookie: string | null = null;
   private loginPromise: Promise<void> | null = null;
+  private xmlSessionCookie: string | null = null;
+  private xmlLoginPromise: Promise<void> | null = null;
 
   constructor(private readonly credentials: SokkerCredentials) {}
+
+  private async loginXml(): Promise<void> {
+    if (this.xmlSessionCookie) return;
+    if (!this.xmlLoginPromise) {
+      this.xmlLoginPromise = this.authenticateXml().catch((err) => {
+        this.xmlLoginPromise = null;
+        throw err;
+      });
+    }
+    return this.xmlLoginPromise;
+  }
+
+  private async authenticateXml(): Promise<void> {
+    const params = new URLSearchParams();
+    params.append("ilogin", this.credentials.login);
+    params.append("ipassword", this.credentials.password);
+
+    const response = await fetch("https://sokker.org/start.php?session=xml", {
+      method: "POST",
+      body: params
+    });
+
+    if (!response.ok) {
+      throw new Error(`XML Auth failed with status ${response.status}`);
+    }
+
+    const setCookie = response.headers.get("set-cookie");
+    if (!setCookie) {
+      throw new Error("No set-cookie header returned from XML auth");
+    }
+
+    const match = setCookie.match(/XMLSESSID=([^;]+)/);
+    if (!match) {
+      throw new Error("XMLSESSID not found in set-cookie header");
+    }
+
+    this.xmlSessionCookie = match[0];
+  }
 
   async login(): Promise<void> {
     if (this.sessionCookie) {
@@ -82,6 +123,57 @@ export class SokkerJsonApiProvider implements SokkerDataProvider {
     const response = await this.get<SokkerTrainingSummaryApiDto>("training/summary");
 
     return mapResource("training summary", () => mapTrainingSummaryApiToTrainingSummary(response));
+  }
+
+  async getJuniorMatches(season: number): Promise<Omit<JuniorMatchDto, "playerStats">[]> {
+    const current = await this.getCurrent();
+    const teamId = current.team.id;
+    
+    // The API ignores leagueType filters, so we fetch by season directly.
+    // We make 2 requests (previous and current season) and filter locally.
+    const [prevSeason, currentSeason] = await Promise.all([
+      this.get<{ matches: any[] }>(`team/${teamId}/match?filter[season]=${season - 1}&filter[limit]=100`),
+      this.get<{ matches: any[] }>(`team/${teamId}/match?filter[season]=${season}&filter[limit]=100`)
+    ]);
+    
+    const allMatches = [...(prevSeason.matches || []), ...(currentSeason.matches || [])];
+    
+    const juniorMatches = allMatches
+      .filter(m => m.league?.type?.name === "junior" || m.league?.type?.name === "junior_qualify" || m.league?.type === "junior")
+      .map(m => ({
+        matchId: m.id,
+        clubId: teamId,
+        season: m.time?.gameDay?.season ?? current.calendar.season,
+        gameWeek: m.time?.gameDay?.week ?? current.calendar.gameWeek,
+        seasonWeek: m.time?.gameDay?.seasonWeek ?? m.round ?? current.calendar.seasonWeek,
+        dateExpected: m.time?.time?.dateTime ?? m.time?.gameDay?.date?.date ?? "",
+        isFinished: m.time?.wasPlayed ?? false
+      }));
+      
+    return juniorMatches;
+  }
+
+  async getMatchXml(matchId: number): Promise<string> {
+    await this.loginXml();
+    const response = await fetch(`https://sokker.org/xml/match-${matchId}.xml`, {
+      headers: {
+        cookie: this.xmlSessionCookie!
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch XML for match ${matchId} with status ${response.status}`);
+    }
+
+    return response.text();
+  }
+
+  async getMatchLineup(matchId: number): Promise<{ homePlayers: any[], awayPlayers: any[] }> {
+    const response = await this.get<any>(`match/${matchId}/lineup`);
+    return {
+      homePlayers: response.homePlayers || [],
+      awayPlayers: response.awayPlayers || []
+    };
   }
 
   private async get<T>(path: string): Promise<T> {

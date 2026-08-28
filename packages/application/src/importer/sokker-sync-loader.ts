@@ -6,12 +6,28 @@ export class SokkerSyncLoader {
 
   async load(): Promise<SokkerSyncPayload> {
     const current = await this.loadResource("current", () => this.provider.getCurrent());
-    const [training, trainers, juniors, trainingSummary] = await Promise.all([
+    const [training, trainers, juniors, trainingSummary, juniorMatchesRaw] = await Promise.all([
       this.loadResource("training", () => this.provider.getTraining()),
       this.loadResource("trainer", () => this.provider.getTrainers()),
       this.loadResource("junior", () => this.provider.getJuniors()),
-      this.loadResource("training summary", () => this.provider.getTrainingSummary())
+      this.loadResource("training summary", () => this.provider.getTrainingSummary()),
+      this.loadResource("junior matches", () => this.provider.getJuniorMatches(current.calendar.season))
     ]);
+
+    const { parseJuniorMatchXml } = await import("./parsers/xml-match-parser.js");
+
+    const juniorMatches = await Promise.all(
+      juniorMatchesRaw.filter(m => m.isFinished).map(async (m) => {
+        try {
+          const xml = await this.provider.getMatchXml(m.matchId);
+          const lineup = await this.provider.getMatchLineup(m.matchId);
+          const playerStats = parseJuniorMatchXml(xml, lineup);
+          return { ...m, playerStats };
+        } catch (e) {
+          return { ...m, playerStats: [] };
+        }
+      })
+    );
 
     return {
       current,
@@ -19,7 +35,8 @@ export class SokkerSyncLoader {
       trainingWeeks: training.trainingWeeks,
       trainers,
       juniors,
-      trainingSummary
+      trainingSummary,
+      juniorMatches
     };
   }
 

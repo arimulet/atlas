@@ -39,6 +39,9 @@ function createMockProvider() {
   const getTrainers = vi.fn(async () => trainers);
   const getJuniors = vi.fn(async () => juniors);
   const getTrainingSummary = vi.fn(async () => trainingSummary);
+  const getJuniorMatches = vi.fn(async () => []);
+  const getMatchXml = vi.fn(async () => "");
+  const getMatchLineup = vi.fn(async () => ({ homePlayers: [], awayPlayers: [] }));
 
   return {
     current,
@@ -51,13 +54,19 @@ function createMockProvider() {
       getTraining,
       getTrainers,
       getJuniors,
-      getTrainingSummary
+      getTrainingSummary,
+      getJuniorMatches,
+      getMatchXml,
+      getMatchLineup
     } satisfies SokkerDataProvider,
     getCurrent,
     getTraining,
     getTrainers,
     getJuniors,
-    getTrainingSummary
+    getTrainingSummary,
+    getJuniorMatches,
+    getMatchXml,
+    getMatchLineup
   };
 }
 
