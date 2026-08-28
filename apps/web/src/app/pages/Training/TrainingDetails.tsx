@@ -185,14 +185,16 @@ function groupReportsBySkillLevel(
 
   if (reports.length > 0) {
     const newestReport = reports[0];
-    const levelAfterTraining = skillLevel(newestReport, skill);
+    if (newestReport) {
+      const levelAfterTraining = skillLevel(newestReport, skill);
 
-    if (levelAfterTraining !== undefined && levelAfterTraining !== groups[0]?.level) {
-      groups.unshift({
-        key: `ending-${newestReport.gameWeek}-${levelAfterTraining}`,
-        level: levelAfterTraining,
-        reports: []
-      });
+      if (levelAfterTraining !== undefined && levelAfterTraining !== groups[0]?.level) {
+        groups.unshift({
+          key: `ending-${newestReport.gameWeek}-${levelAfterTraining}`,
+          level: levelAfterTraining,
+          reports: []
+        });
+      }
     }
   }
 
