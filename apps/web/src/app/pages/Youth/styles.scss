@@ -715,6 +715,25 @@
     color: var(--semantic-success-text) !important;
   }
 
+  .atlas-youth-skill-tragic-weak {
+    color: var(--atlas-text-muted) !important;
+  }
+
+  .atlas-youth-skill-regular-vgood {
+    color: var(--semantic-warning-text) !important;
+    font-weight: 600;
+  }
+
+  .atlas-youth-skill-excellent-incredible {
+    color: var(--semantic-success-text) !important;
+    font-weight: 600;
+  }
+
+  .atlas-youth-skill-brilliant-divine {
+    color: #43a047 !important; // Darker green that remains legible on dark themes
+    font-weight: 800;
+  }
+
   .performance-cell-wrapper {
     padding: 2px !important; // create the small margin between cells
   }

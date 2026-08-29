@@ -77,6 +77,14 @@ export function YouthPerformances({ clubId, youthAcademy }: YouthPerformancesPro
     return { text, className };
   };
 
+  const getSkillColorClass = (skill: number | null) => {
+    if (skill === null) return "";
+    if (skill <= 4) return "atlas-youth-skill-tragic-weak"; // 0-4 (tragico to debil)
+    if (skill <= 9) return "atlas-youth-skill-regular-vgood"; // 5-9 (regular to muy bueno)
+    if (skill <= 13) return "atlas-youth-skill-excellent-incredible"; // 10-13 (excelente to increible)
+    return "atlas-youth-skill-brilliant-divine"; // 14+ (brillante to divino)
+  };
+
   return (
     <div className="atlas-youth">
       <header className="atlas-youth__header">
@@ -104,7 +112,9 @@ export function YouthPerformances({ clubId, youthAcademy }: YouthPerformancesPro
                 {gks.map(p => (
                   <tr key={p.player.id}>
                     <th scope="row">{p.player.name}</th>
-                    <td>{p.player.skill !== null ? skillLevelLabel(p.player.skill) : "-"}</td>
+                    <td className={getSkillColorClass(p.player.skill)}>
+                      {p.player.skill !== null ? skillLevelLabel(p.player.skill) : "-"}
+                    </td>
                       {gkCols.map((_, i) => {
                         const match = p.stats?.gk?.[i];
                         const pts = formatPoints(match, true);
@@ -172,7 +182,9 @@ export function YouthPerformances({ clubId, youthAcademy }: YouthPerformancesPro
                       <td className="performance-cell-wrapper">
                         <div className={"performance-cell " + att.className}>{att.text}</div>
                       </td>
-                      <td>{p.player.skill !== null ? skillLevelLabel(p.player.skill) : "-"}</td>
+                      <td className={getSkillColorClass(p.player.skill)}>
+                        {p.player.skill !== null ? skillLevelLabel(p.player.skill) : "-"}
+                      </td>
                     </tr>
                   );
                 })}
