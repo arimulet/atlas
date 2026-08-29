@@ -105,11 +105,15 @@ export function YouthPerformances({ clubId, youthAcademy }: YouthPerformancesPro
                   <tr key={p.player.id}>
                     <th scope="row">{p.player.name}</th>
                     <td>{p.player.skill !== null ? skillLevelLabel(p.player.skill) : "-"}</td>
-                    {gkCols.map((_, i) => {
-                      const match = p.stats?.gk?.[i];
-                      const pts = formatPoints(match, true);
-                      return <td key={i} className={"performance-cell " + pts.className}>{pts.text}</td>;
-                    })}
+                      {gkCols.map((_, i) => {
+                        const match = p.stats?.gk?.[i];
+                        const pts = formatPoints(match, true);
+                        return (
+                          <td key={i} className="performance-cell-wrapper">
+                            <div className={"performance-cell " + pts.className}>{pts.text}</div>
+                          </td>
+                        );
+                      })}
                   </tr>
                 ))}
               </tbody>
@@ -135,33 +139,39 @@ export function YouthPerformances({ clubId, youthAcademy }: YouthPerformancesPro
                 <col style={{ width: "auto" }} />
               </colgroup>
               <thead>
-                <tr>
-                  <th>Player</th>
-                  <th className="atlas-youth-table__center">Position</th>
-                  <th className="atlas-youth-table__center">DEF</th>
-                  <th className="atlas-youth-table__center">MID</th>
-                  <th className="atlas-youth-table__center">ATT</th>
-                  <th>Level</th>
-                </tr>
+                  <tr>
+                    <th>Player</th>
+                    <th className="atlas-youth-table__center">Position</th>
+                    <th className="atlas-youth-table__center atlas-youth-header-def">DEF</th>
+                    <th className="atlas-youth-table__center atlas-youth-header-mid">MID</th>
+                    <th className="atlas-youth-table__center atlas-youth-header-att">ATT</th>
+                    <th>Level</th>
+                  </tr>
               </thead>
               <tbody>
                 {fieldPlayers.map(p => {
                   const def = formatPoints(p.stats?.def);
                   const mid = formatPoints(p.stats?.mid);
                   const att = formatPoints(p.stats?.att);
-                  const pos = p.stats?.calculatedPosition || "Sin pos.";
+                  const pos = p.stats?.calculatedPosition || "UNKNOWN";
                   
                   return (
                     <tr key={p.player.id}>
                       <th scope="row">{p.player.name}</th>
                       <td className="atlas-youth-table__center">
-                         <span className={"atlas-youth-decision-badge " + (pos === "Sin pos." ? "is-none" : "is-" + pos.toLowerCase())}>
+                         <span className={"atlas-youth-decision-badge " + (pos === "UNKNOWN" ? "is-none" : "is-" + pos.toLowerCase())}>
                            {pos}
                          </span>
                       </td>
-                      <td className={"performance-cell " + def.className}>{def.text}</td>
-                      <td className={"performance-cell " + mid.className}>{mid.text}</td>
-                      <td className={"performance-cell " + att.className}>{att.text}</td>
+                      <td className="performance-cell-wrapper">
+                        <div className={"performance-cell " + def.className}>{def.text}</div>
+                      </td>
+                      <td className="performance-cell-wrapper">
+                        <div className={"performance-cell " + mid.className}>{mid.text}</div>
+                      </td>
+                      <td className="performance-cell-wrapper">
+                        <div className={"performance-cell " + att.className}>{att.text}</div>
+                      </td>
                       <td>{p.player.skill !== null ? skillLevelLabel(p.player.skill) : "-"}</td>
                     </tr>
                   );

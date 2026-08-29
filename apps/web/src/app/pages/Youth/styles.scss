@@ -705,14 +705,34 @@
     white-space: nowrap;
   }
   
+  .atlas-youth-header-def {
+    color: var(--semantic-info-text) !important;
+  }
+  .atlas-youth-header-mid {
+    color: var(--semantic-error-text) !important;
+  }
+  .atlas-youth-header-att {
+    color: var(--semantic-success-text) !important;
+  }
+
+  .performance-cell-wrapper {
+    padding: 2px !important; // create the small margin between cells
+  }
+
   .performance-cell {
-    text-align: center !important;
-    vertical-align: middle !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    min-height: 28px;
     font-weight: 900;
     font-size: 1.1rem;
     color: rgba(0, 0, 0, 0.75) !important;
-    border: 1px solid var(--color-border);
-    padding: 0.5rem;
+    border: 1px solid #000;
+    border-radius: 4px;
+    padding: 0.2rem 0.5rem;
+    box-sizing: border-box;
     
     &.full-match {
       background-color: #81c784; // Light Green
@@ -726,9 +746,10 @@
       background-color: #e57373; // Light Red
       color: rgba(0, 0, 0, 0) !important; // Hide the 0
     }
-    
+
     &.empty-slot {
       background-color: transparent;
+      border-color: transparent; // No border for completely empty slots
     }
   }
 }
