@@ -54,7 +54,7 @@ export function YouthPlayerSkillChart({ history }: YouthPlayerSkillChartProps) {
           <Tooltip
             contentStyle={{ backgroundColor: "#1e1e1e", border: "1px solid #333", color: "#fff" }}
             labelStyle={{ color: "#aaa", marginBottom: "4px" }}
-            formatter={(value: any) => [`${value} - ${skillLevelLabel(Number(value))}`, "Skill"]}
+            formatter={(value: unknown) => [`${value} - ${skillLevelLabel(Number(value))}`, "Skill"]}
             labelFormatter={(label) => `Week: ${label}`}
           />
           <Line
