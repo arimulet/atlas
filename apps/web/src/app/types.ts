@@ -673,6 +673,14 @@ export interface RealYouthAcademyPlayerPlan {
   rationale: string;
   signals: RealYouthAcademySignal[];
   warnings: RealYouthAcademyWarning[];
+  history: YouthSkillHistoryEntry[];
+}
+
+export interface YouthSkillHistoryEntry {
+  gameWeek: number;
+  season: number;
+  seasonWeek: number;
+  skill: number;
 }
 
 export interface RealYouthAcademySignal {

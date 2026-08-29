@@ -132,7 +132,8 @@ function createPlanning(): RealYouthAcademyPlanning {
               evidence: []
             }
           ],
-          warnings: []
+          warnings: [] as import("@atlas/web/app/types").RealYouthAcademyWarning[],
+          history: [] as import("@atlas/web/app/types").YouthSkillHistoryEntry[]
         },
         {
           id: "youth-2",
@@ -150,10 +151,10 @@ function createPlanning(): RealYouthAcademyPlanning {
           talent: null,
           expectedLevel: null,
           formation: null, observations: "",
-          status: "in_academy",
-          category: "stagnation_risk",
-          severity: "medium",
-          confidence: "medium",
+          status: "in_academy" as const,
+          category: "stagnation_risk" as const,
+          severity: "medium" as const,
+          confidence: "medium" as const,
           rationale: "Review",
           signals: [
             {
@@ -163,14 +164,15 @@ function createPlanning(): RealYouthAcademyPlanning {
               message: "Stagnation risk",
               evidence: []
             }
-          ],
+          ] as import("@atlas/web/app/types").RealYouthAcademySignal[],
           warnings: [
             {
               code: "missing_skill",
               message: "The source message is intentionally not rendered verbatim.",
               evidence: []
             }
-          ]
+          ] as import("@atlas/web/app/types").RealYouthAcademyWarning[],
+          history: [] as import("@atlas/web/app/types").YouthSkillHistoryEntry[]
         }
       ]
     },

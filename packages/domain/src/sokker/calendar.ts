@@ -14,6 +14,14 @@ export function calculateGameWeek(season: number, seasonWeek: number): number {
   return SEASON_61_BASE_GAME_WEEK + (season - 61) * WEEKS_PER_SOKKER_SEASON + seasonWeek - 1;
 }
 
+export function getSokkerSeason(gameWeek: number): number {
+  if (Number.isInteger(gameWeek) === false || gameWeek < SEASON_61_BASE_GAME_WEEK) {
+    throw new Error("Unsupported Sokker game week " + gameWeek);
+  }
+
+  return 61 + Math.floor((gameWeek - SEASON_61_BASE_GAME_WEEK) / WEEKS_PER_SOKKER_SEASON);
+}
+
 export function normalizeSeasonWeek(gameWeek: number): number {
   if (Number.isInteger(gameWeek) === false || gameWeek < SEASON_61_BASE_GAME_WEEK) {
     throw new Error(
