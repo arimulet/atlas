@@ -96,7 +96,7 @@ describe("Sokker sync end-to-end", () => {
       weeksLeft: 8,
       status: "in_academy"
     });
-    expect(await SnapshotModel.exists({ gameWeek: 1205 })).toBeTruthy();
+    expect(await SnapshotModel.exists({ gameWeek: 1204 })).toBeTruthy();
     expect(await TrainingWeekModel.exists({ clubId: 6038, gameWeek: 1204 })).toBeTruthy();
     expect(await TrainingWeekModel.exists({ clubId: 6038, gameWeek: 1205 })).toBeFalsy();
 
@@ -122,7 +122,7 @@ describe("Sokker sync end-to-end", () => {
       skillsChange: { pace: 1, passing: -1, up: 1, down: 1 }
     });
 
-    const injuredSnapshot = await SnapshotModel.findOne({ gameWeek: 1205 }).lean();
+    const injuredSnapshot = await SnapshotModel.findOne({ gameWeek: 1204 }).lean();
     expect(injuredSnapshot?.players.find((player) => player.playerId === 39409355)).toMatchObject({
       availabilityStatus: "injured"
     });
@@ -136,7 +136,7 @@ describe("Sokker sync end-to-end", () => {
     await persistence.persist(validation);
     await persistence.persist(validation);
 
-    expect(await SnapshotModel.countDocuments({ gameWeek: 1205 })).toBe(1);
+    expect(await SnapshotModel.countDocuments({ gameWeek: 1204 })).toBe(1);
     expect(await TrainingWeekModel.countDocuments({ clubId: 6038, gameWeek: 1204 })).toBe(3);
     expect(await TrainingWeekModel.countDocuments({ clubId: 6038, gameWeek: 1205 })).toBe(0);
   });
