@@ -42,6 +42,8 @@ export async function getYouthPerformances(
   for (const match of matches) {
     if (!match.playerStats) continue;
     for (const stats of match.playerStats) {
+      if (stats.rating === 0) continue; // Ignore players that played but got 0 rating
+
       const jid = String(stats.playerId);
       if (!players[jid]) {
         players[jid] = {
