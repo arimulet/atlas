@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { fetchYouthPerformances } from "../../api";
 import { skillLevelLabel } from "../../view-models/skill-level-label";
-import { useYouthDecisionEngine } from "./useYouthDecisionEngine";
 import type { YouthMatchPerformancesDto, RealYouthAcademyPlanning } from "../../types";
 
 interface YouthPerformancesProps {
@@ -12,13 +11,6 @@ interface YouthPerformancesProps {
 export function YouthPerformances({ clubId, youthAcademy }: YouthPerformancesProps) {
   const [data, setData] = useState<YouthMatchPerformancesDto | null>(null);
   const [loading, setLoading] = useState(false);
-
-  // We need the decision engine to know the suggested profile (e.g., if they are a Goalkeeper but haven't played yet)
-  const { decisionCandidates } = useYouthDecisionEngine({
-    clubId,
-    currency: null,
-    youthAcademy
-  });
 
   useEffect(() => {
     if (!clubId) return;
@@ -33,21 +25,18 @@ export function YouthPerformances({ clubId, youthAcademy }: YouthPerformancesPro
     return loading ? <p className="atlas-youth-panel__message is-info">Cargando rendimientos...</p> : null;
   }
 
-  // GKs vs Field Players
+  // Separate GKs from field players using the formation field from Sokker XML (0 = GK, 1 = field)
   const gks = [];
   const fieldPlayers = [];
 
   for (const player of youthAcademy.derived.players) {
     if (player.status === "promoted") continue;
-    
-    const realPlayerId = player.playerId;
-    const stats = realPlayerId === undefined ? undefined : data.players[String(realPlayerId)];
-    const decisionCandidate = decisionCandidates.find(
-      (candidate) => candidate.playerId === String(realPlayerId)
-    );
-    
-    const isGK = stats?.calculatedPosition === "GK" || decisionCandidate?.initialProfile === "goalkeeper";
-    
+
+    const stats = data.players[String(player.playerId)];
+
+    // formation === 0 means GK per Sokker XML. If formation is null (not yet synced), fall back to stats.
+    const isGK = player.formation === 0 || (player.formation === null && stats?.calculatedPosition === "GK");
+
     if (isGK) {
       gks.push({ player, stats });
     } else {

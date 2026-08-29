@@ -298,7 +298,8 @@ describe("Sokker API canonical mappers", () => {
       name: { firstName: "Junior", lastName: "One", fullName: "Junior One" },
       age: 16,
       currentLevel: 7,
-      weeksLeft: 8
+      weeksLeft: 8,
+      formation: null
     });
     expect(junior).not.toHaveProperty("fullName");
   });

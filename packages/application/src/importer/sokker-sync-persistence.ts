@@ -149,7 +149,8 @@ export class SokkerSyncPersistence {
             name: junior.name.fullName,
             age: junior.age,
             currentLevel: junior.currentLevel,
-            weeksLeft: junior.weeksLeft
+            weeksLeft: junior.weeksLeft,
+            formation: junior.formation ?? null
           },
           session
         )

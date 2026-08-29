@@ -272,6 +272,7 @@ function createYouthAcademy(): RealYouthAcademyPlanning {
           levelPops: 2,
           talent: 6,
           expectedLevel: 7,
+          formation: null,
           status: "ready_for_promotion",
           category: "ready_for_promotion",
           severity: "info",

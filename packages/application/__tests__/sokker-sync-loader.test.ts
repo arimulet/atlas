@@ -38,6 +38,7 @@ function createMockProvider() {
   const getTraining = vi.fn(async (): Promise<TrainingDataDto> => training);
   const getTrainers = vi.fn(async () => trainers);
   const getJuniors = vi.fn(async () => juniors);
+  const getJuniorsXml = vi.fn(async () => []);
   const getTrainingSummary = vi.fn(async () => trainingSummary);
   const getJuniorMatches = vi.fn(async () => []);
   const getMatchXml = vi.fn(async () => "");
@@ -54,6 +55,7 @@ function createMockProvider() {
       getTraining,
       getTrainers,
       getJuniors,
+      getJuniorsXml,
       getTrainingSummary,
       getJuniorMatches,
       getMatchXml,
@@ -63,6 +65,7 @@ function createMockProvider() {
     getTraining,
     getTrainers,
     getJuniors,
+    getJuniorsXml,
     getTrainingSummary,
     getJuniorMatches,
     getMatchXml,

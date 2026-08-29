@@ -14,6 +14,7 @@ const juniorSchema = new Schema(
     currentLevel: { type: Number, required: true, min: 0 },
     initialWeeks: { type: Number, required: true, min: 0 },
     weeksLeft: { type: Number, required: true, min: 0 },
+    formation: { type: Number, default: null }, // 0 = GK, 1 = Field player
     status: {
       type: String,
       required: true,

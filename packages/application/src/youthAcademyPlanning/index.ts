@@ -56,6 +56,7 @@ export const getRealYouthAcademyPlanning = async (
       weeksRemaining: p.weeksRemaining,
       skill: p.skill,
       skillChange: latestCompletedTrainingSkillChanges.get(p.playerId) ?? null,
+      formation: currentJuniorById.get(p.playerId)?.formation ?? null,
       status: p.status
     };
   });
@@ -278,6 +279,7 @@ function classifyYouthPlayer(
     levelPops: developmentMetrics.levelPops,
     talent: developmentMetrics.talent,
     expectedLevel: developmentMetrics.expectedLevel,
+    formation: player.formation,
     status: player.status,
     category,
     severity,

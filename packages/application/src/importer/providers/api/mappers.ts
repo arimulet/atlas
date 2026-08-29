@@ -278,14 +278,15 @@ export function mapTrainersApiToTrainers(source: SokkerTrainerApiDto[]): Trainer
 }
 
 export function mapJuniorApiToJunior(source: SokkerJuniorApiDto): JuniorDto {
-  return {
-    id: source.id,
-    teamId: source.teamId,
-    name: mapName(source.fullName),
-    age: source.age,
-    currentLevel: source.skill,
-    weeksLeft: source.weeksLeft
-  };
+    return {
+      id: source.id,
+      teamId: source.teamId,
+      name: mapName(source.fullName),
+      age: source.age,
+      currentLevel: source.skill,
+      weeksLeft: source.weeksLeft,
+      formation: null
+    };
 }
 
 export function mapJuniorsApiToJuniors(source: SokkerJuniorApiDto[]): JuniorDto[] {

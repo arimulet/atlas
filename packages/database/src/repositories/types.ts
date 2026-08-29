@@ -105,6 +105,8 @@ export interface PersistedJunior {
   currentLevel: number;
   initialWeeks: number;
   weeksLeft: number;
+  formation: number | null;
+  skills: SnapshotSkillSet;
   status: "in_academy" | "promoted" | "rejected";
 }
 

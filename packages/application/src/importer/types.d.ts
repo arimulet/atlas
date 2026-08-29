@@ -162,6 +162,7 @@ export interface JuniorDto {
   age: number;
   currentLevel: number;
   weeksLeft: number;
+  formation: number | null; // 0 = GK, 1 = Field player (from XML)
 }
 
 export interface TrainingSummaryWeekDto {
