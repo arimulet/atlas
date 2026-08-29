@@ -466,9 +466,17 @@
 .atlas .atlas-squad-profile-table tbody tr:last-child td {
   border-bottom: 0;
 }
-.atlas .atlas-squad-profile-table details > summary {
+.atlas .atlas-squad-profile-detail__toggle {
+  background: var(--atlas-surface-raised, var(--atlas-surface));
+  border: 1px solid var(--atlas-border);
+  border-radius: var(--atlas-radius-sm);
+  color: var(--atlas-text-secondary);
   cursor: pointer;
-  list-style-position: inside;
+  font: inherit;
+  font-size: 0.78rem;
+  line-height: 1;
+  margin-right: 7px;
+  padding: 3px 6px;
 }
 .atlas .atlas-squad-depth-cell {
   display: grid;
@@ -571,11 +579,16 @@
   background: var(--atlas-surface-hover);
   border: 1px solid var(--atlas-border);
   border-radius: 7px;
+  box-sizing: border-box;
   display: grid;
   gap: 10px;
-  margin: 10px 0 2px;
-  min-width: 600px;
+  margin: 0;
+  min-width: 0;
   padding: 10px;
+  width: 100%;
+}
+.atlas .atlas-squad-profile-detail-row > td {
+  padding: 0 8px 10px;
 }
 .atlas .atlas-squad-profile-detail h4 {
   color: var(--atlas-text-muted);
@@ -583,6 +596,48 @@
   letter-spacing: 0.06em;
   margin: 0 0 5px;
   text-transform: uppercase;
+}
+.atlas .atlas-squad-profile-detail__recommendations {
+  display: grid;
+  gap: 6px;
+}
+.atlas .atlas-squad-profile-action {
+  border: 1px solid var(--atlas-border);
+  border-left: 3px solid var(--atlas-text-muted);
+  border-radius: 5px;
+  display: grid;
+  gap: 4px;
+  padding: 8px 10px;
+}
+.atlas .atlas-squad-profile-action.is-critical {
+  border-left-color: var(--semantic-error-text);
+}
+.atlas .atlas-squad-profile-action.is-high {
+  border-left-color: var(--semantic-warning-text);
+}
+.atlas .atlas-squad-profile-action.is-medium {
+  border-left-color: var(--semantic-info-text);
+}
+.atlas .atlas-squad-profile-action > strong {
+  color: var(--atlas-text);
+  font-size: 0.75rem;
+}
+.atlas .atlas-squad-profile-action__meta,
+.atlas .atlas-squad-profile-action__financial-impact {
+  color: var(--atlas-text-muted);
+  font-size: 0.64rem;
+  font-weight: 750;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.atlas .atlas-squad-profile-action__financial-impact {
+  color: var(--atlas-accent);
+}
+.atlas .atlas-squad-profile-action p {
+  color: var(--atlas-text-secondary);
+  font-size: 0.7rem;
+  line-height: 1.4;
+  margin: 0;
 }
 .atlas .atlas-squad-profile-detail ul {
   list-style: none;
