@@ -286,8 +286,9 @@ function createYouthAcademy(): RealYouthAcademyPlanning {
               message: "Ready for promotion.",
               evidence: [{ kind: "observed", label: "Weeks remaining", value: 2 }]
             }
-          ],
-          warnings: []
+          ] as import("@atlas/web/app/types").RealYouthAcademySignal[],
+          warnings: [] as import("@atlas/web/app/types").RealYouthAcademyWarning[],
+          history: [] as import("@atlas/web/app/types").YouthSkillHistoryEntry[]
         }
       ]
     },

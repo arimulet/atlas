@@ -4,7 +4,7 @@ import {
   MongoSnapshotRepository
 } from "@atlas/database";
 import type { PersistedSnapshot } from "@atlas/database";
-import { WEEKS_PER_SOKKER_SEASON } from "@atlas/domain";
+import { getSokkerSeason, normalizeSeasonWeek, WEEKS_PER_SOKKER_SEASON } from "@atlas/domain";
 import type {
   RealYouthAcademyPlayerPlan,
   RealYouthAcademyPlanning,
@@ -44,6 +44,33 @@ export const getRealYouthAcademyPlanning = async (
   const currentJuniorById = new Map(currentJuniors.map((junior) => [junior.juniorId, junior]));
   const latestCompletedTrainingSkillChanges =
     calculateLatestCompletedYouthSkillChanges(snapshotsWithJuniors);
+    
+  const historyByJuniorId = new Map<number, import("./types.js").YouthSkillHistoryEntry[]>();
+  const snapshotsSorted = [...snapshotsWithJuniors].sort(
+    (a, b) => (a.gameWeek ?? 0) - (b.gameWeek ?? 0)
+  );
+
+  for (const snapshot of snapshotsSorted) {
+    if (snapshot.gameWeek === null) continue;
+    const season = getSokkerSeason(snapshot.gameWeek);
+    const seasonWeek = normalizeSeasonWeek(snapshot.gameWeek);
+
+    for (const junior of snapshot.juniors) {
+      if (junior.skill === null) continue;
+
+      const history = historyByJuniorId.get(junior.playerId) ?? [];
+      if (!history.some((h) => h.gameWeek === snapshot.gameWeek)) {
+        history.push({
+          gameWeek: snapshot.gameWeek,
+          season,
+          seasonWeek,
+          skill: junior.skill
+        });
+      }
+      historyByJuniorId.set(junior.playerId, history);
+    }
+  }
+    
   const warnings: YouthAcademyWarning[] = [];
   const observedPlayers: YouthAcademyObservedPlayer[] = latest.juniors.map((p) => {
     return {
@@ -62,7 +89,7 @@ export const getRealYouthAcademyPlanning = async (
     };
   });
 
-  const playerPlans = observedPlayers.map((player) => classifyYouthPlayer(player, latest.week));
+  const playerPlans = observedPlayers.map((player) => classifyYouthPlayer(player, latest.week, historyByJuniorId.get(player.playerId) ?? []));
 
   const categoryCounts: Record<YouthAcademyCategory, number> = {
     standout_prospect: 0,
@@ -151,7 +178,8 @@ function buildEmptyPlanning(clubId: ClubId, academyInvestment: string): RealYout
 
 function classifyYouthPlayer(
   player: YouthAcademyObservedPlayer,
-  currentSeasonWeek: number | null
+  currentSeasonWeek: number | null,
+  history: import("./types.js").YouthSkillHistoryEntry[]
 ): RealYouthAcademyPlayerPlan {
   const signals: YouthAcademySignal[] = [];
   const warnings: YouthAcademyWarning[] = [];
@@ -288,7 +316,8 @@ function classifyYouthPlayer(
     confidence,
     rationale,
     signals,
-    warnings
+    warnings,
+    history
   };
 }
 
