@@ -11,43 +11,17 @@ import { skillLevelLabel } from "../../view-models/skill-level-label";
 import { YouthSummary } from "./YouthDecisionSections";
 import { YouthPlayerSkillChart } from "./YouthPlayerSkillChart";
 
-import { useState } from "react";
-import { YouthPerformances } from "./YouthPerformances";
-
-export function Youth({ clubId, youthAcademy, youthStatus }: YouthProps) {
+export function Youth({ clubId, currency, youthAcademy, youthStatus }: YouthProps) {
   const rows = createYouthPlayerRows(youthAcademy);
   const schoolRows = rows.filter((row) => row.status !== "Promoted");
-  
-  const [activeTab, setActiveTab] = useState<"academy" | "performances">("academy");
 
   return (
     <div className="atlas-youth">
       <header className="atlas-youth__header">
         <h1>Youth</h1>
-        <div className="atlas-youth-tabs">
-          <button 
-            className={`atlas-youth-tab ${activeTab === "academy" ? "is-active" : ""}`}
-            onClick={() => setActiveTab("academy")}
-          >
-            Academy
-          </button>
-          <button 
-            className={`atlas-youth-tab ${activeTab === "performances" ? "is-active" : ""}`}
-            onClick={() => setActiveTab("performances")}
-          >
-            Match Performances
-          </button>
-        </div>
       </header>
-      
-      {activeTab === "academy" ? (
-        <>
-          <YouthSummary summary={{ academyPlayers: schoolRows.length }} />
-          <YouthPlayers rows={schoolRows} status={youthStatus} planning={youthAcademy} />
-        </>
-      ) : (
-        <YouthPerformances clubId={clubId} youthAcademy={youthAcademy} />
-      )}
+      <YouthSummary summary={{ academyPlayers: schoolRows.length }} />
+      <YouthPlayers rows={schoolRows} status={youthStatus} planning={youthAcademy} />
     </div>
   );
 }
