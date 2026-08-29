@@ -45,11 +45,27 @@ export function YouthPerformances({ clubId, youthAcademy }: YouthPerformancesPro
   }
 
   fieldPlayers.sort((a, b) => {
-    const posA = a.stats?.calculatedPosition || "Z";
-    const posB = b.stats?.calculatedPosition || "Z";
-    if (posA < posB) return -1;
-    if (posA > posB) return 1;
-    return 0;
+    const getSortWeight = (pos: string | null) => {
+      if (pos === "RELEASE") return 3;
+      if (!pos) return 2; // Sin pos.
+      return 1; // DEF, MID, ATT
+    };
+    
+    const posA = a.stats?.calculatedPosition ?? null;
+    const posB = b.stats?.calculatedPosition ?? null;
+    
+    const weightA = getSortWeight(posA);
+    const weightB = getSortWeight(posB);
+    
+    if (weightA !== weightB) return weightA - weightB;
+
+    const posStrA = posA || "Z";
+    const posStrB = posB || "Z";
+    
+    if (posStrA < posStrB) return -1;
+    if (posStrA > posStrB) return 1;
+    
+    return a.player.name.localeCompare(b.player.name);
   });
 
   const gkCols = Array.from({ length: 32 }, (_, i) => i + 1);
