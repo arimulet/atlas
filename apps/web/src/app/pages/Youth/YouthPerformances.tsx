@@ -52,11 +52,10 @@ export function YouthPerformances({ clubId, youthAcademy }: YouthPerformancesPro
     return 0;
   });
 
-  const maxGkMatches = Math.max(...gks.map(g => g.stats?.gk?.length || 0), 10);
-  const gkCols = Array.from({ length: maxGkMatches }, (_, i) => i + 1);
+  const gkCols = Array.from({ length: 32 }, (_, i) => i + 1);
 
-  const formatPoints = (ratingObj: { rating: number, minutes: number } | null | undefined) => {
-    if (!ratingObj) return { text: "", className: "no-data" };
+  const formatPoints = (ratingObj: { rating: number, minutes: number } | null | undefined, isGk = false) => {
+    if (!ratingObj || ratingObj.rating === 0) return { text: "", className: isGk ? "empty-slot" : "no-data" };
     const text = String(ratingObj.rating);
     const className = ratingObj.minutes < 60 ? "half-match" : "full-match";
     return { text, className };
@@ -82,7 +81,7 @@ export function YouthPerformances({ clubId, youthAcademy }: YouthPerformancesPro
                 <tr>
                   <th style={{ minWidth: "150px" }}>Player</th>
                   <th style={{ minWidth: "100px" }}>Level</th>
-                  {gkCols.map(c => <th key={c} className="atlas-youth-table__center">{c}</th>)}
+                  {gkCols.map(c => <th key={c} className="atlas-youth-table__center" style={{ minWidth: "40px", padding: "8px 4px" }}>{c}</th>)}
                 </tr>
               </thead>
               <tbody>
@@ -92,7 +91,7 @@ export function YouthPerformances({ clubId, youthAcademy }: YouthPerformancesPro
                     <td>{p.player.skill !== null ? skillLevelLabel(p.player.skill) : "-"}</td>
                     {gkCols.map((_, i) => {
                       const match = p.stats?.gk?.[i];
-                      const pts = formatPoints(match);
+                      const pts = formatPoints(match, true);
                       return <td key={i} className={"performance-cell " + pts.className}>{pts.text}</td>;
                     })}
                   </tr>
@@ -112,17 +111,17 @@ export function YouthPerformances({ clubId, youthAcademy }: YouthPerformancesPro
           <div className="atlas-youth-table-wrap">
             <table className="atlas-youth-table atlas-youth-performances-table">
               <colgroup>
-                <col style={{ width: "25%" }} />
+                <col style={{ width: "35%" }} />
                 <col style={{ width: "15%" }} />
-                <col style={{ width: "15%" }} />
-                <col style={{ width: "15%" }} />
-                <col style={{ width: "15%" }} />
-                <col style={{ width: "15%" }} />
+                <col style={{ width: "60px" }} />
+                <col style={{ width: "60px" }} />
+                <col style={{ width: "60px" }} />
+                <col style={{ width: "auto" }} />
               </colgroup>
               <thead>
                 <tr>
                   <th>Player</th>
-                  <th>Position</th>
+                  <th className="atlas-youth-table__center">Position</th>
                   <th className="atlas-youth-table__center">DEF</th>
                   <th className="atlas-youth-table__center">MID</th>
                   <th className="atlas-youth-table__center">ATT</th>
@@ -139,7 +138,7 @@ export function YouthPerformances({ clubId, youthAcademy }: YouthPerformancesPro
                   return (
                     <tr key={p.player.id}>
                       <th scope="row">{p.player.name}</th>
-                      <td>
+                      <td className="atlas-youth-table__center">
                          <span className={"atlas-youth-decision-badge " + (pos === "Release" ? "is-release" : "is-retain")}>
                            {pos}
                          </span>

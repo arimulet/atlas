@@ -248,7 +248,7 @@
 
   .atlas-youth-decision-message-list li::before {
     color: var(--semantic-success-text);
-    content: "✓";
+    content: "âœ“";
     font-weight: 800;
   }
 
@@ -677,6 +677,8 @@
   }
 }
 
+
+
 // Youth Performances
 .atlas-youth-performances {
   display: flex;
@@ -685,38 +687,18 @@
 }
 
 .atlas-youth-performances-table {
-  .performance-cell {
-    text-align: center;
-    font-weight: bold;
-    color: var(--color-gray-900);
-    border: 1px solid var(--color-border);
-    padding: 0.5rem;
-    
-    &.full-match {
-      background-color: #81c784; // Light Green
-    }
-    
-    &.half-match {
-      background-color: #e0e0e0; // Grey
-    }
-    
-    &.no-data {
-      background-color: #e57373; // Light Red
-    }
+  table-layout: auto !important;
+  
+  th, td {
+    white-space: nowrap;
   }
-}
-// Youth Performances
-.atlas-youth-performances {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-}
-
-.atlas-youth-performances-table {
+  
   .performance-cell {
-    text-align: center;
-    font-weight: bold;
-    color: var(--color-gray-900);
+    text-align: center !important;
+    vertical-align: middle !important;
+    font-weight: 900;
+    font-size: 1.1rem;
+    color: rgba(0, 0, 0, 0.75) !important;
     border: 1px solid var(--color-border);
     padding: 0.5rem;
     
@@ -730,6 +712,11 @@
     
     &.no-data {
       background-color: #e57373; // Light Red
+      color: rgba(0, 0, 0, 0) !important; // Hide the 0
+    }
+    
+    &.empty-slot {
+      background-color: transparent;
     }
   }
 }
