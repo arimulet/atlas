@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { SquadRole } from "@atlas/domain";
 import { PlayerLink } from "../../components/PlayerLink";
 import {
@@ -66,6 +67,7 @@ interface SquadProfileDepthTableProps {
 }
 
 function SquadProfileDepthTable({ profiles, onSelectPlayer }: SquadProfileDepthTableProps) {
+  const [expandedProfile, setExpandedProfile] = useState<string | null>(null);
   return (
     <section
       className="atlas-squad-panel atlas-squad-panel--profiles"
@@ -92,8 +94,14 @@ function SquadProfileDepthTable({ profiles, onSelectPlayer }: SquadProfileDepthT
           <tbody>
             {profiles.map((profile) => (
               <ProfileDepthRow
+                isDetailsOpen={expandedProfile === profile.profile}
                 key={profile.profile}
                 onSelectPlayer={onSelectPlayer}
+                onToggleDetails={() =>
+                  setExpandedProfile((current) =>
+                    current === profile.profile ? null : profile.profile
+                  )
+                }
                 profile={profile}
               />
             ))}
@@ -105,39 +113,66 @@ function SquadProfileDepthTable({ profiles, onSelectPlayer }: SquadProfileDepthT
 }
 
 interface ProfileDepthRowProps {
+  isDetailsOpen: boolean;
   profile: SquadProfileViewModel;
   onSelectPlayer: (playerId: string) => void;
+  onToggleDetails: () => void;
 }
 
-function ProfileDepthRow({ onSelectPlayer, profile }: ProfileDepthRowProps) {
+function ProfileDepthRow({
+  isDetailsOpen,
+  onSelectPlayer,
+  onToggleDetails,
+  profile
+}: ProfileDepthRowProps) {
+  const detailsId = `squad-profile-${profile.profile}-details`;
+
   return (
-    <tr>
-      <th scope="row">
-        <details>
-          <summary>{profile.profileLabel}</summary>
-          <SquadProfileDetail onSelectPlayer={onSelectPlayer} profile={profile} />
-        </details>
-      </th>
-      <td>
-        <DepthCell snapshot={profile.current} />
-      </td>
-      <td>
-        <DepthCell snapshot={profile.nextSeason} />
-      </td>
-      <td>
-        <DepthCell snapshot={profile.mediumTerm} />
-      </td>
-      <td>
-        <span className={`atlas-squad-planning-badge is-${profile.successionStatus}`}>
-          {profile.successionLabel}
-        </span>
-      </td>
-      <td>
-        <span className={`atlas-squad-planning-badge is-${profile.status}`}>
-          {profile.statusLabel}
-        </span>
-      </td>
-    </tr>
+    <>
+      <tr>
+        <th scope="row">
+          <button
+            aria-controls={detailsId}
+            aria-expanded={isDetailsOpen}
+            aria-label={`${isDetailsOpen ? "Hide" : "View"} details for ${profile.profileLabel}`}
+            className="atlas-squad-profile-detail__toggle"
+            onClick={onToggleDetails}
+            type="button"
+          >
+            {isDetailsOpen ? "−" : "+"}
+          </button>
+          {profile.profileLabel}
+        </th>
+        <td>
+          <DepthCell snapshot={profile.current} />
+        </td>
+        <td>
+          <DepthCell snapshot={profile.nextSeason} />
+        </td>
+        <td>
+          <DepthCell snapshot={profile.mediumTerm} />
+        </td>
+        <td>
+          <span className={`atlas-squad-planning-badge is-${profile.successionStatus}`}>
+            {profile.successionLabel}
+          </span>
+        </td>
+        <td>
+          <span className={`atlas-squad-planning-badge is-${profile.status}`}>
+            {profile.statusLabel}
+          </span>
+        </td>
+      </tr>
+      {isDetailsOpen ? (
+        <tr className="atlas-squad-profile-detail-row">
+          <td colSpan={6}>
+            <div id={detailsId}>
+              <SquadProfileDetail onSelectPlayer={onSelectPlayer} profile={profile} />
+            </div>
+          </td>
+        </tr>
+      ) : null}
+    </>
   );
 }
 
@@ -177,6 +212,7 @@ function SquadProfileDetail({ onSelectPlayer, profile }: SquadProfileDetailProps
 
   return (
     <div className="atlas-squad-profile-detail">
+      <SquadProfileRecommendations profile={profile} />
       {groups.map((group) => {
         const players = profile.players.filter((player) => player.group === group.key);
         return players.length > 0 ? (
@@ -229,7 +265,49 @@ function SquadProfileDetail({ onSelectPlayer, profile }: SquadProfileDetailProps
     </div>
   );
 }
+function SquadProfileRecommendations({ profile }: { profile: SquadProfileViewModel }) {
+  const recommendations = profile.recommendations.filter(
+    (recommendation) => recommendation.type !== "maintain"
+  );
 
+  if (recommendations.length === 0) return null;
+
+  return (
+    <div className="atlas-squad-profile-detail__recommendations">
+      <h4>Recommended action</h4>
+      {recommendations.map((recommendation) => {
+        const financialImpact = financialImpactLabel(recommendation.type);
+
+        return (
+          <article
+            className={"atlas-squad-profile-action is-" + recommendation.priority}
+            key={recommendation.id}
+          >
+            <span className="atlas-squad-profile-action__meta">
+              {recommendation.priority} · {recommendation.horizonLabel}
+            </span>
+            <strong>{recommendation.title}</strong>
+            <p>{recommendation.description}</p>
+            {financialImpact ? (
+              <span className="atlas-squad-profile-action__financial-impact">
+                {financialImpact}
+              </span>
+            ) : null}
+          </article>
+        );
+      })}
+    </div>
+  );
+}
+
+function financialImpactLabel(type: SquadProfileViewModel["recommendations"][number]["type"]) {
+  if (type === "find_external") return "Requires funding · Review in Finances";
+  if (type === "accelerate_development")
+    return "Development support · No transfer budget estimated";
+  if (type === "prepare_successor") return "Succession planning · Review in Finances";
+
+  return null;
+}
 interface SquadSuccessionProps {
   profile: SquadProfileViewModel;
   onSelectPlayer: (playerId: string) => void;
