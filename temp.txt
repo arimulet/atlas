@@ -1,0 +1,1 @@
+.atlas-youth-gk-table .performance-cell { font-size: 0.75rem !important; padding: 1px !important; min-height: 22px !important; }
