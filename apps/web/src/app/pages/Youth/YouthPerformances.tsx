@@ -4,8 +4,6 @@ import { skillLevelLabel } from "../../view-models/skill-level-label";
 import { useYouthDecisionEngine } from "./useYouthDecisionEngine";
 import type { YouthMatchPerformancesDto, RealYouthAcademyPlanning } from "../../types";
 
-import type { YouthPlayerRow } from "../../view-models/youth-view-model";
-
 interface YouthPerformancesProps {
   clubId: string | null;
   youthAcademy: RealYouthAcademyPlanning | null;
@@ -42,9 +40,11 @@ export function YouthPerformances({ clubId, youthAcademy }: YouthPerformancesPro
   for (const player of youthAcademy.derived.players) {
     if (player.status === "promoted") continue;
     
-    const realPlayerId = (player as any).playerId;
-    const stats = data.players[String(realPlayerId)];
-    const decisionCandidate = decisionCandidates.find(c => c.playerId === String(realPlayerId));
+    const realPlayerId = player.playerId;
+    const stats = realPlayerId === undefined ? undefined : data.players[String(realPlayerId)];
+    const decisionCandidate = decisionCandidates.find(
+      (candidate) => candidate.playerId === String(realPlayerId)
+    );
     
     const isGK = stats?.calculatedPosition === "GK" || decisionCandidate?.initialProfile === "goalkeeper";
     
@@ -98,7 +98,7 @@ export function YouthPerformances({ clubId, youthAcademy }: YouthPerformancesPro
               </thead>
               <tbody>
                 {gks.map(p => (
-                  <tr key={(p.player as any).playerId}>
+                  <tr key={p.player.id}>
                     <th scope="row">{p.player.name}</th>
                     <td>{p.player.skill !== null ? skillLevelLabel(p.player.skill) : "-"}</td>
                     {gkCols.map((_, i) => {
@@ -148,7 +148,7 @@ export function YouthPerformances({ clubId, youthAcademy }: YouthPerformancesPro
                   const pos = p.stats?.calculatedPosition || "Release";
                   
                   return (
-                    <tr key={(p.player as any).playerId}>
+                    <tr key={p.player.id}>
                       <th scope="row">{p.player.name}</th>
                       <td>
                          <span className={"atlas-youth-decision-badge " + (pos === "Release" ? "is-release" : "is-retain")}>

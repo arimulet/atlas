@@ -636,6 +636,7 @@ export interface RealYouthAcademyPlanning {
 
 export interface RealYouthAcademyObservedPlayer {
   id: string;
+  playerId?: number;
   externalId: string | null;
   name: string;
   age: number;
@@ -649,6 +650,7 @@ export interface RealYouthAcademyObservedPlayer {
 
 export interface RealYouthAcademyPlayerPlan {
   id: string;
+  playerId?: number;
   externalId: string | null;
   name: string;
   age: number;
