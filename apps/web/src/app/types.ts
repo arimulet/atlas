@@ -10,7 +10,12 @@ import type {
   SquadRoleAssignment,
   WeeklyTrainingReport
 } from "@atlas/domain";
-export type { YouthDecisionPlanning } from "@atlas/application";
+export type { 
+  YouthDecisionPlanning,
+  YouthMatchPerformancesDto,
+  YouthPlayerMatchPerformanceDto,
+  YouthPlayerMatchRating
+} from "@atlas/application";
 
 export type { SquadRole } from "@atlas/domain";
 
@@ -631,6 +636,7 @@ export interface RealYouthAcademyPlanning {
 
 export interface RealYouthAcademyObservedPlayer {
   id: string;
+  playerId?: number;
   externalId: string | null;
   name: string;
   age: number;
@@ -644,6 +650,7 @@ export interface RealYouthAcademyObservedPlayer {
 
 export interface RealYouthAcademyPlayerPlan {
   id: string;
+  playerId?: number;
   externalId: string | null;
   name: string;
   age: number;

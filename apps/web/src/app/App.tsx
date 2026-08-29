@@ -33,6 +33,7 @@ import { Training } from "./pages/Training";
 import { PlayerDetail } from "./pages/PlayerDetail";
 import { PlayerDecisions } from "./pages/PlayerDecisions";
 import { Youth } from "./pages/Youth";
+import { YouthPerformances } from "./pages/Youth/YouthPerformances";
 import { Diagnostics } from "./pages/Diagnostics";
 import { createPlayerTrainingProjectionSummaries } from "./view-models/player-detail-view-model";
 import type { SokkerImportCredentials } from "./components/SokkerImporterForm/types";
@@ -364,6 +365,11 @@ export function App() {
           currency={dashboard?.club.currency ?? null}
           youthAcademy={youthAcademy}
           youthStatus={youthStatus}
+        />
+      ) : activeView === "youth-performances" ? (
+        <YouthPerformances
+          clubId={activeClubId}
+          youthAcademy={youthAcademy}
         />
       ) : activeView === "diagnostics" ? (
         <Diagnostics

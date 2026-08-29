@@ -28,6 +28,12 @@ export class MongoJuniorMatchRepository {
     return this.mapJuniorMatch(match as any);
   }
 
+  async findByClubId(clubId: number): Promise<PersistedJuniorMatch[]> {
+    const matches = await JuniorMatchModel.find({ clubId }).sort({ dateExpected: 1 }).lean();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return matches.map((m: any) => this.mapJuniorMatch(m));
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private mapJuniorMatch(match: any): PersistedJuniorMatch {
     return {
