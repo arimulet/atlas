@@ -11,7 +11,7 @@ import { skillLevelLabel } from "../../view-models/skill-level-label";
 import { YouthSummary } from "./YouthDecisionSections";
 import { YouthPlayerSkillChart } from "./YouthPlayerSkillChart";
 
-export function Youth({ clubId, currency, youthAcademy, youthStatus }: YouthProps) {
+export function Youth({ youthAcademy, youthStatus }: YouthProps) {
   const rows = createYouthPlayerRows(youthAcademy);
   const schoolRows = rows.filter((row) => row.status !== "Promoted");
 
