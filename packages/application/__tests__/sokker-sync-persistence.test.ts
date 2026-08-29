@@ -94,7 +94,7 @@ describe("SokkerSyncPersistence", () => {
       status: "in_academy"
     });
     const training = await TrainingWeekModel.findOne({ playerId: 40098056 }).lean();
-    expect(snapshot?.gameWeek).toBe(1205);
+    expect(snapshot?.gameWeek).toBe(1204);
     expect(training?.gameWeek).toBe(1204);
     expect(second.snapshotId).toBe(first.snapshotId);
   });
@@ -149,13 +149,13 @@ describe("SokkerSyncPersistence", () => {
     expect(await SnapshotModel.countDocuments({ naturalKey: "sokker-json-api-sync" })).toBe(2);
     expect(await TrainingWeekModel.countDocuments({ clubId: 6038 })).toBe(6);
     expect(
-      await SnapshotModel.exists({ naturalKey: "sokker-json-api-sync", gameWeek: 1205 })
+      await SnapshotModel.exists({ naturalKey: "sokker-json-api-sync", gameWeek: 1204 })
     ).toBeTruthy();
     expect(
-      await SnapshotModel.exists({ naturalKey: "sokker-json-api-sync", gameWeek: 1206 })
+      await SnapshotModel.exists({ naturalKey: "sokker-json-api-sync", gameWeek: 1205 })
     ).toBeTruthy();
     expect(await TrainingWeekModel.exists({ clubId: 6038, gameWeek: 1204 })).toBeTruthy();
-    expect(await TrainingWeekModel.exists({ clubId: 6038, gameWeek: 1205 })).toBeTruthy();
+    expect(await TrainingWeekModel.exists({ clubId: 6038, gameWeek: 1204 })).toBeTruthy();
   });
 
   it("replaces embedded staff and youth current state", async () => {

@@ -189,16 +189,20 @@ export class SokkerSyncPersistence {
       };
     });
 
+    const latestTrainingWeek = payload.trainingWeeks.length > 0 
+      ? (payload.trainingWeeks[0]?.gameWeek ?? payload.current.calendar.gameWeek)
+      : payload.current.calendar.gameWeek; // fallback in case API doesn't return training
+
     const snapshot = await persistStep(
       "PlayerSnapshot",
-      `${teamId}/${payload.current.calendar.gameWeek}`,
+      `${teamId}/${latestTrainingWeek}`,
       () =>
         this.repositories.snapshots.save(
           {
             clubId: club.clubId,
             schemaVersion: "atlas.player-snapshot.v0",
             snapshotDate: currentDate,
-            gameWeek: payload.current.calendar.gameWeek,
+            gameWeek: latestTrainingWeek,
             week: payload.current.calendar.seasonWeek,
             importedAt,
             naturalKey: SYNC_SNAPSHOT_NATURAL_KEY,
