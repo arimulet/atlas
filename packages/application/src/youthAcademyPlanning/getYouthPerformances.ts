@@ -41,10 +41,10 @@ function calculatePosition(p: YouthPlayerMatchPerformanceDto): "GK" | "DEF" | "M
     })[0]?.pos ?? "RELEASE";
   }
 
-  // If no candidates reached 20, but they played at least one valid field match, it's RELEASE
-  if (p.def || p.mid || p.att) return "RELEASE";
+  // To be RELEASE, they must have failed to reach 20 in ALL 3 field positions
+  if (p.def && p.mid && p.att) return "RELEASE";
 
-  // If they didn't play any valid matches, it's null (Sin posicion)
+  // If they haven't tested all positions yet, return null (Sin pos.)
   return null;
 }
 
