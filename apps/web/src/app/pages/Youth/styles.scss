@@ -190,10 +190,22 @@
     color: var(--semantic-warning-text);
   }
   .atlas-youth-decision-badge.is-release {
+    color: #000;
+    background-color: #e0e0e0;
+    border-color: #000;
+  }
+  .atlas-youth-decision-badge.is-hold,
+  .atlas-youth-decision-badge.is-none {
+    color: var(--atlas-text-muted);
+  }
+  .atlas-youth-decision-badge.is-def {
+    color: var(--semantic-info-text);
+  }
+  .atlas-youth-decision-badge.is-mid {
     color: var(--semantic-error-text);
   }
-  .atlas-youth-decision-badge.is-hold {
-    color: var(--atlas-text-muted);
+  .atlas-youth-decision-badge.is-att {
+    color: var(--semantic-success-text);
   }
 
   .atlas-youth-decision-card__meta {

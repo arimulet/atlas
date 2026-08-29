@@ -10,7 +10,7 @@ export interface YouthMatchPerformancesDto {
 
 export interface YouthPlayerMatchPerformanceDto {
   juniorId: number;
-  calculatedPosition: "GK" | "DEF" | "MID" | "ATT" | null;
+  calculatedPosition: "GK" | "DEF" | "MID" | "ATT" | "RELEASE" | null;
   gk: YouthPlayerMatchRating[];
   def: YouthPlayerMatchRating | null;
   mid: YouthPlayerMatchRating | null;

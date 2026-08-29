@@ -13,17 +13,39 @@ function isBetterPerformance(current: { rating: number; minutes: number } | null
   return newRating > current.rating;
 }
 
-function calculatePosition(p: YouthPlayerMatchPerformanceDto): "GK" | "DEF" | "MID" | "ATT" | null {
-  if (p.gk.length > 0) return "GK";
+function calculatePosition(p: YouthPlayerMatchPerformanceDto): "GK" | "DEF" | "MID" | "ATT" | "RELEASE" | null {
+  const candidates: Array<{ pos: "GK" | "DEF" | "MID" | "ATT"; rating: number; minutes: number }> = [];
+  
+  if (p.gk.length > 0) {
+    const bestGk = p.gk.reduce((best, current) => {
+      const bestFull = best.minutes >= 60;
+      const currentFull = current.minutes >= 60;
+      if (currentFull && !bestFull) return current;
+      if (bestFull && !currentFull) return best;
+      return current.rating > best.rating ? current : best;
+    }, p.gk[0]!);
+    candidates.push({ pos: "GK", rating: bestGk.rating, minutes: bestGk.minutes });
+  }
 
-  const candidates: Array<{ pos: "DEF" | "MID" | "ATT"; rating: number }> = [];
-  if (p.def && p.def.rating >= 20) candidates.push({ pos: "DEF", rating: p.def.rating });
-  if (p.mid && p.mid.rating >= 20) candidates.push({ pos: "MID", rating: p.mid.rating });
-  if (p.att && p.att.rating >= 20) candidates.push({ pos: "ATT", rating: p.att.rating });
+  if (p.def && p.def.rating >= 20) candidates.push({ pos: "DEF", rating: p.def.rating, minutes: p.def.minutes });
+  if (p.mid && p.mid.rating >= 20) candidates.push({ pos: "MID", rating: p.mid.rating, minutes: p.mid.minutes });
+  if (p.att && p.att.rating >= 20) candidates.push({ pos: "ATT", rating: p.att.rating, minutes: p.att.minutes });
 
-  if (candidates.length === 0) return null;
+  if (candidates.length > 0) {
+    return candidates.sort((a, b) => {
+      const aFull = a.minutes >= 60;
+      const bFull = b.minutes >= 60;
+      if (aFull && !bFull) return -1;
+      if (bFull && !aFull) return 1;
+      return b.rating - a.rating;
+    })[0]?.pos ?? "RELEASE";
+  }
 
-  return candidates.sort((a, b) => b.rating - a.rating)[0]?.pos ?? null;
+  // If no candidates reached 20, but they played at least one valid field match, it's RELEASE
+  if (p.def || p.mid || p.att) return "RELEASE";
+
+  // If they didn't play any valid matches, it's null (Sin posicion)
+  return null;
 }
 
 export async function getYouthPerformances(

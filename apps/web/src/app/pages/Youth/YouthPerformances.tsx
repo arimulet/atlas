@@ -133,13 +133,13 @@ export function YouthPerformances({ clubId, youthAcademy }: YouthPerformancesPro
                   const def = formatPoints(p.stats?.def);
                   const mid = formatPoints(p.stats?.mid);
                   const att = formatPoints(p.stats?.att);
-                  const pos = p.stats?.calculatedPosition || "Release";
+                  const pos = p.stats?.calculatedPosition || "Sin pos.";
                   
                   return (
                     <tr key={p.player.id}>
                       <th scope="row">{p.player.name}</th>
                       <td className="atlas-youth-table__center">
-                         <span className={"atlas-youth-decision-badge " + (pos === "Release" ? "is-release" : "is-retain")}>
+                         <span className={"atlas-youth-decision-badge " + (pos === "Sin pos." ? "is-none" : "is-" + pos.toLowerCase())}>
                            {pos}
                          </span>
                       </td>
