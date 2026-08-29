@@ -362,3 +362,21 @@ export async function fetchYouthPerformances(
 
   return body;
 }
+
+export async function patchYouthObservations(
+  clubId: string,
+  playerId: number,
+  observations: string
+): Promise<void> {
+  const response = await fetch(`/api/clubs/${clubId}/youth/players/${playerId}/observations`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ observations })
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to update youth observations");
+  }
+}

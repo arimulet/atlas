@@ -27,7 +27,7 @@
     .atlas-diagnostics,
     .atlas-player-detail
   ) {
-    display: grid;
+    display: grid; grid-template-columns: minmax(0, 1fr);
     gap: var(--atlas-page-gap);
     max-width: var(--atlas-page-max-width);
   }
@@ -190,7 +190,7 @@
     .atlas-finances-attention-list,
     .atlas-player-detail__attention-list
   ) {
-    display: grid;
+    display: grid; grid-template-columns: minmax(0, 1fr);
     gap: var(--atlas-space-2);
     list-style: none;
     margin: 0;

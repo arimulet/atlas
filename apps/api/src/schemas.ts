@@ -112,3 +112,7 @@ export const investmentSafetyBodySchema = z
     amount: z.number().finite().min(0)
   })
   .strict();
+
+export const patchYouthObservationsBodySchema = z.object({
+  observations: z.string().max(255)
+});

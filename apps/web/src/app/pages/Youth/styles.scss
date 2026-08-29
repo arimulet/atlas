@@ -699,7 +699,7 @@
 }
 
 .atlas-youth-performances-table {
-  table-layout: auto !important;
+  table-layout: auto !important; min-width: 0 !important;
   
   th, td {
     white-space: nowrap;
@@ -772,3 +772,6 @@
     }
   }
 }
+.atlas-youth-observations-input { width: 100%; min-width: 60px; box-sizing: border-box; border: 1px solid transparent; background: transparent; padding: 4px; border-radius: 4px; color: var(--atlas-text); font-size: 0.8rem; outline: none; } .atlas-youth-observations-input:hover, .atlas-youth-observations-input:focus { border-color: var(--atlas-border); background: rgba(0,0,0,0.1); }
+.atlas-youth-gk-table { table-layout: fixed !important; min-width: 0 !important; width: 100% !important; }
+.atlas-youth-gk-table .performance-cell { font-size: 0.75rem !important; padding: 1px !important; min-height: 22px !important; }
