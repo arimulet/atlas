@@ -5,7 +5,8 @@ import {
   UserCog,
   GraduationCap,
   CircleDollarSign,
-  Activity
+  Activity,
+  LineChart
 } from "lucide-react";
 import { pathForMainView } from "../../routing";
 import type { NavigationGroup } from "../../types";
@@ -60,6 +61,12 @@ const navigationGroups: NavigationGroup[] = [
         label: "Youth",
         icon: <GraduationCap size={ICON_SIZE} />,
         path: pathForMainView("youth")
+      },
+      {
+        id: "youth-performances",
+        label: "Performances",
+        icon: <LineChart size={ICON_SIZE} />,
+        path: pathForMainView("youth-performances")
       }
     ]
   },

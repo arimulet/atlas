@@ -705,3 +705,31 @@
     }
   }
 }
+// Youth Performances
+.atlas-youth-performances {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.atlas-youth-performances-table {
+  .performance-cell {
+    text-align: center;
+    font-weight: bold;
+    color: var(--color-gray-900);
+    border: 1px solid var(--color-border);
+    padding: 0.5rem;
+    
+    &.full-match {
+      background-color: #81c784; // Light Green
+    }
+    
+    &.half-match {
+      background-color: #e0e0e0; // Grey
+    }
+    
+    &.no-data {
+      background-color: #e57373; // Light Red
+    }
+  }
+}
