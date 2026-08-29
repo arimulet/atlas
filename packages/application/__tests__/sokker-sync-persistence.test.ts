@@ -112,6 +112,7 @@ describe("SokkerSyncPersistence", () => {
 
     expect(collectionNames).toEqual([
       "clubs",
+      "junior_matches",
       "juniors",
       "players",
       "snapshots",
@@ -242,7 +243,8 @@ function createPayload(): SokkerSyncPayload {
           juniors: { count: 0, skillsUp: 0 }
         }
       ]
-    }
+    },
+    juniorMatches: []
   };
 }
 

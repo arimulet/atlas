@@ -2,6 +2,7 @@ import {
   mongoTransactionsAvailable,
   MongoClubRepository,
   MongoJuniorRepository,
+  MongoJuniorMatchRepository,
   MongoPlayerRepository,
   MongoSnapshotRepository,
   MongoSyncRunRepository,
@@ -30,6 +31,7 @@ export interface SokkerSyncPersistenceRepositories {
   snapshots: MongoSnapshotRepository;
   syncRuns: MongoSyncRunRepository;
   trainingWeeks: MongoTrainingWeekRepository;
+  juniorMatches?: MongoJuniorMatchRepository;
 }
 
 export class SokkerSyncPersistence {
@@ -228,6 +230,21 @@ export class SokkerSyncPersistence {
       );
     }
 
+    if (this.repositories.juniorMatches && payload.juniorMatches) {
+      for (const match of payload.juniorMatches) {
+        await persistStep("JuniorMatch", `${match.matchId}`, () =>
+          this.repositories.juniorMatches!.save(
+            {
+              id: "", // Will be assigned by Mongo
+              ...match,
+              dateExpected: new Date(match.dateExpected)
+            },
+            session
+          )
+        );
+      }
+    }
+
     return {
       clubId: club.id,
       snapshotId: snapshot.id,
@@ -237,7 +254,8 @@ export class SokkerSyncPersistence {
         trainingWeeks: payload.trainingWeeks.length,
         trainers: payload.trainers.length,
         juniors: payload.juniors.length,
-        trainingSummaryWeeks: 0
+        trainingSummaryWeeks: 0,
+        juniorMatches: payload.juniorMatches?.length ?? 0
       }
     };
   }
@@ -256,7 +274,8 @@ function createRepositories(): SokkerSyncPersistenceRepositories {
     players: new MongoPlayerRepository(),
     snapshots: new MongoSnapshotRepository(),
     syncRuns: new MongoSyncRunRepository(),
-    trainingWeeks: new MongoTrainingWeekRepository()
+    trainingWeeks: new MongoTrainingWeekRepository(),
+    juniorMatches: new MongoJuniorMatchRepository()
   };
 }
 

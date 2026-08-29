@@ -250,3 +250,30 @@ export interface SaveCountryInput {
   currencyName: string;
   currencyRate: number;
 }
+
+export interface PersistedJuniorMatchPlayerStats {
+  playerId: number;
+  position: number | null;
+  minutesPlayed: number;
+  rating: number;
+  goals: number;
+  assists: number;
+  shoots: number;
+  fouls: number;
+  yellowCards: number;
+  redCards: number;
+  isInjured: boolean;
+  timeDefending: number;
+}
+
+export interface PersistedJuniorMatch {
+  id: string;
+  matchId: number;
+  clubId: number;
+  season: number;
+  gameWeek: number;
+  seasonWeek: number;
+  dateExpected: Date;
+  isFinished: boolean;
+  playerStats: PersistedJuniorMatchPlayerStats[];
+}

@@ -19,4 +19,6 @@ export * from "./repositories/juniorRepository.js";
 export * from "./repositories/snapshotRepository.js";
 export * from "./repositories/syncRunRepository.js";
 export * from "./repositories/trainingWeekRepository.js";
+export * from "./repositories/juniorMatchRepository.js";
+export * from "./models/juniorMatch.js";
 export * from "./repositories/types.js";

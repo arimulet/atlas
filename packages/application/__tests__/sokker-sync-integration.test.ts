@@ -227,7 +227,8 @@ function createFixtureProvider(): SokkerDataProvider {
     trainingWeeks: training.trainingWeeks,
     trainers,
     juniors,
-    trainingSummary: { weeks: [reportSummary, ...summary.weeks] }
+    trainingSummary: { weeks: [reportSummary, ...summary.weeks] },
+    juniorMatches: []
   };
 
   return {
@@ -238,7 +239,10 @@ function createFixtureProvider(): SokkerDataProvider {
     })),
     getTrainers: vi.fn(async () => payload.trainers),
     getJuniors: vi.fn(async () => payload.juniors),
-    getTrainingSummary: vi.fn(async () => payload.trainingSummary)
+    getTrainingSummary: vi.fn(async () => payload.trainingSummary),
+    getJuniorMatches: vi.fn(async () => payload.juniorMatches),
+    getMatchXml: vi.fn(async () => ""),
+    getMatchLineup: vi.fn(async () => ({ homePlayers: [], awayPlayers: [] }))
   };
 }
 
