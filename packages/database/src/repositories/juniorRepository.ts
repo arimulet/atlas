@@ -88,6 +88,10 @@ export class MongoJuniorRepository {
     const junior = await JuniorModel.findById(id);
     return junior ? mapJunior(junior.toObject()) : null;
   }
+
+  async updateObservations(clubId: number, juniorId: number, observations: string): Promise<void> {
+    await JuniorModel.updateOne({ clubId, juniorId }, { $set: { observations } });
+  }
 }
 
 function mapJunior(junior: {
@@ -102,6 +106,7 @@ function mapJunior(junior: {
   initialWeeks: number;
   weeksLeft: number;
   formation?: number | null;
+  observations?: string;
   status: JuniorStatus;
 }): PersistedJunior {
   return {
@@ -116,6 +121,7 @@ function mapJunior(junior: {
     initialWeeks: junior.initialWeeks,
     weeksLeft: junior.weeksLeft,
     formation: junior.formation ?? null,
+    observations: junior.observations ?? "",
     skills: {
       stamina: null,
       pace: null,

@@ -57,6 +57,7 @@ export const getRealYouthAcademyPlanning = async (
       skill: p.skill,
       skillChange: latestCompletedTrainingSkillChanges.get(p.playerId) ?? null,
       formation: currentJuniorById.get(p.playerId)?.formation ?? null,
+      observations: currentJuniorById.get(p.playerId)?.observations ?? "",
       status: p.status
     };
   });
@@ -280,6 +281,7 @@ function classifyYouthPlayer(
     talent: developmentMetrics.talent,
     expectedLevel: developmentMetrics.expectedLevel,
     formation: player.formation,
+    observations: player.observations,
     status: player.status,
     category,
     severity,
@@ -408,3 +410,4 @@ export function calculateProjectedPromotionAge(input: {
 export * from "./types.js";
 export * from "./youthMatchPerformancesTypes.js";
 export * from "./getYouthPerformances.js";
+export * from "./updateObservations.js";

@@ -665,6 +665,7 @@ export interface RealYouthAcademyPlayerPlan {
   talent: number | null;
   expectedLevel: number | null;
   formation: number | null;
+  observations: string;
   status: "in_academy" | "ready_for_promotion" | "promoted";
   category: RealYouthAcademyCategory;
   severity: Severity;

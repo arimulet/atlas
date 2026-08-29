@@ -41,6 +41,7 @@ export interface YouthAcademyObservedPlayer {
   skill: number | null;
   skillChange: number | null;
   formation: number | null;
+  observations: string;
   status: "in_academy" | "ready_for_promotion" | "promoted";
 }
 
@@ -60,6 +61,7 @@ export interface RealYouthAcademyPlayerPlan {
   talent: number | null;
   expectedLevel: number | null;
   formation: number | null; // 0 = GK, 1 = Field player (from Sokker XML)
+  observations: string;
   status: "in_academy" | "ready_for_promotion" | "promoted";
   category: YouthAcademyCategory;
   severity: Severity;

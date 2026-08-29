@@ -13,14 +13,16 @@ import {
   getTrainingPageData,
   updateClubOperatingSettings,
   updateClubProfile,
-  getYouthPerformances
+  getYouthPerformances,
+  updateYouthObservations
 } from "@atlas/application";
 import { FastifyInstance } from "fastify";
 import {
   compareClubSnapshotsBodySchema,
   investmentSafetyBodySchema,
   updateClubOperatingSettingsBodySchema,
-  updateClubProfileBodySchema
+  updateClubProfileBodySchema,
+  patchYouthObservationsBodySchema
 } from "@atlas/api/schemas";
 
 import {
@@ -31,7 +33,8 @@ import {
   GetClubProfileParams,
   GetClubSnapshotsParams,
   PatchClubOperatingSettingsParams,
-  PatchClubProfileParams
+  PatchClubProfileParams,
+  PatchYouthObservationsParams
 } from "./types";
 
 async function clubRoutes(server: FastifyInstance) {
@@ -155,6 +158,18 @@ async function clubRoutes(server: FastifyInstance) {
     const { clubId } = request.params;
     return getYouthPerformances(clubId);
   });
+
+  server.patch<{ Params: PatchYouthObservationsParams }>(
+    "/youth/players/:playerId/observations",
+    async (request, reply) => {
+      const { clubId, playerId } = request.params;
+      const { observations } = patchYouthObservationsBodySchema.parse(request.body);
+
+      await updateYouthObservations(clubId, Number(playerId), observations);
+
+      return reply.status(204).send();
+    }
+  );
 }
 
 export default clubRoutes;

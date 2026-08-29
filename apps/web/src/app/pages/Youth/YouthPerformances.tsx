@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { fetchYouthPerformances } from "../../api";
+import { fetchYouthPerformances, patchYouthObservations } from "../../api";
 import { skillLevelLabel } from "../../view-models/skill-level-label";
 import type { YouthMatchPerformancesDto, RealYouthAcademyPlanning } from "../../types";
 
@@ -7,6 +7,43 @@ interface YouthPerformancesProps {
   clubId: string | null;
   youthAcademy: RealYouthAcademyPlanning | null;
 }
+
+const EditableObservationCell = ({ 
+  clubId, 
+  playerId, 
+  initialValue 
+}: { 
+  clubId: string; 
+  playerId: number; 
+  initialValue: string; 
+}) => {
+  const [value, setValue] = useState(initialValue);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleBlur = async () => {
+    if (value === initialValue) return;
+    setIsSaving(true);
+    try {
+      await patchYouthObservations(clubId, playerId, value);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <input
+      type="text"
+      className="atlas-youth-observations-input"
+      value={value}
+      onChange={(e) => setValue(e.target.value)}
+      onBlur={handleBlur}
+      disabled={isSaving}
+      placeholder="Agregar nota..."
+    />
+  );
+};
 
 export function YouthPerformances({ clubId, youthAcademy }: YouthPerformancesProps) {
   const [data, setData] = useState<YouthMatchPerformancesDto | null>(null);
@@ -95,38 +132,50 @@ export function YouthPerformances({ clubId, youthAcademy }: YouthPerformancesPro
         <section className="atlas-youth-panel atlas-youth-panel--performances">
           <div className="atlas-youth-section-heading">
             <div>
-              <p className="atlas-youth-panel__eyebrow">Rendimientos cronológicos</p>
+              <p className="atlas-youth-panel__eyebrow">Rendimientos cronol├│gicos</p>
               <h2 className="atlas-youth-panel__title atlas-section-title">Arqueros</h2>
             </div>
           </div>
-          <div className="atlas-youth-table-wrap">
-            <table className="atlas-youth-table atlas-youth-performances-table">
-              <thead>
-                <tr>
-                  <th style={{ minWidth: "150px" }}>Player</th>
-                  <th style={{ minWidth: "100px" }}>Level</th>
-                  {gkCols.map(c => <th key={c} className="atlas-youth-table__center" style={{ minWidth: "40px", padding: "8px 4px" }}>{c}</th>)}
-                </tr>
-              </thead>
-              <tbody>
-                {gks.map(p => (
-                  <tr key={p.player.id}>
-                    <th scope="row">{p.player.name}</th>
-                    <td className={getSkillColorClass(p.player.skill)}>
-                      {p.player.skill !== null ? skillLevelLabel(p.player.skill) : "-"}
-                    </td>
-                      {gkCols.map((_, i) => {
-                        const match = p.stats?.gk?.[i];
-                        const pts = formatPoints(match, true);
-                        return (
-                          <td key={i} className="performance-cell-wrapper">
-                            <div className={"performance-cell " + pts.className}>{pts.text}</div>
-                          </td>
-                        );
-                      })}
+            <div className="atlas-youth-table-wrap">
+              <table className="atlas-youth-table atlas-youth-performances-table atlas-youth-gk-table">
+                <colgroup>
+                  <col style={{ width: "15%" }} />
+                  <col style={{ width: "10%" }} />
+                  <col style={{ width: "auto" }} />
+                  {gkCols.map(c => <col key={c} style={{ width: "2%" }} />)}
+                </colgroup>
+                <thead>
+                  <tr>
+                    <th>Player</th>
+                    <th>Level</th>
+                    <th>Obs.</th>
+                    {gkCols.map(c => <th key={c} className="atlas-youth-table__center" style={{ padding: "8px 2px", fontSize: "0.7rem" }}>{c}</th>)}
                   </tr>
-                ))}
-              </tbody>
+                </thead>
+                <tbody>
+                  {gks.map(p => (
+                    <tr key={p.player.id}>
+                      <th scope="row" style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{p.player.name}</th>
+                      <td className={getSkillColorClass(p.player.skill)}>
+                        {p.player.skill !== null ? skillLevelLabel(p.player.skill) : "-"}
+                      </td>
+                      <td>
+                        {clubId && p.player.playerId ? (
+                          <EditableObservationCell clubId={clubId} playerId={p.player.playerId} initialValue={p.player.observations} />
+                        ) : "-"}
+                      </td>
+                        {gkCols.map((_, i) => {
+                          const match = p.stats?.gk?.[i];
+                          const pts = formatPoints(match, true);
+                          return (
+                            <td key={i} className="performance-cell-wrapper" style={{ padding: "2px" }}>
+                              <div className={"performance-cell " + pts.className} style={{ minWidth: 0, padding: "2px" }}>{pts.text}</div>
+                            </td>
+                          );
+                        })}
+                    </tr>
+                  ))}
+                </tbody>
             </table>
           </div>
         </section>
@@ -134,30 +183,32 @@ export function YouthPerformances({ clubId, youthAcademy }: YouthPerformancesPro
         <section className="atlas-youth-panel atlas-youth-panel--performances" style={{ marginTop: "2rem" }}>
           <div className="atlas-youth-section-heading">
             <div>
-              <p className="atlas-youth-panel__eyebrow">Historial por Posición</p>
+              <p className="atlas-youth-panel__eyebrow">Historial por Posici├│n</p>
               <h2 className="atlas-youth-panel__title atlas-section-title">Jugadores de Campo</h2>
             </div>
           </div>
           <div className="atlas-youth-table-wrap">
             <table className="atlas-youth-table atlas-youth-performances-table">
-              <colgroup>
-                <col style={{ width: "35%" }} />
-                <col style={{ width: "15%" }} />
-                <col style={{ width: "60px" }} />
-                <col style={{ width: "60px" }} />
-                <col style={{ width: "60px" }} />
-                <col style={{ width: "auto" }} />
-              </colgroup>
-              <thead>
-                  <tr>
-                    <th>Player</th>
-                    <th className="atlas-youth-table__center">Position</th>
-                    <th className="atlas-youth-table__center atlas-youth-header-def">DEF</th>
-                    <th className="atlas-youth-table__center atlas-youth-header-mid">MID</th>
-                    <th className="atlas-youth-table__center atlas-youth-header-att">ATT</th>
-                    <th>Level</th>
-                  </tr>
-              </thead>
+                <colgroup>
+                  <col style={{ width: "20%" }} />
+                  <col style={{ width: "80px" }} />
+                  <col style={{ width: "60px" }} />
+                  <col style={{ width: "60px" }} />
+                  <col style={{ width: "60px" }} />
+                  <col style={{ width: "120px" }} />
+                  <col style={{ width: "auto" }} />
+                </colgroup>
+                <thead>
+                    <tr>
+                      <th>Player</th>
+                      <th className="atlas-youth-table__center">Position</th>
+                      <th className="atlas-youth-table__center atlas-youth-header-def">DEF</th>
+                      <th className="atlas-youth-table__center atlas-youth-header-mid">MID</th>
+                      <th className="atlas-youth-table__center atlas-youth-header-att">ATT</th>
+                      <th>Level</th>
+                      <th>Obs.</th>
+                    </tr>
+                </thead>
               <tbody>
                 {fieldPlayers.map(p => {
                   const def = formatPoints(p.stats?.def);
@@ -184,6 +235,11 @@ export function YouthPerformances({ clubId, youthAcademy }: YouthPerformancesPro
                       </td>
                       <td className={getSkillColorClass(p.player.skill)}>
                         {p.player.skill !== null ? skillLevelLabel(p.player.skill) : "-"}
+                      </td>
+                      <td>
+                        {clubId && p.player.playerId ? (
+                          <EditableObservationCell clubId={clubId} playerId={p.player.playerId} initialValue={p.player.observations} />
+                        ) : "-"}
                       </td>
                     </tr>
                   );
