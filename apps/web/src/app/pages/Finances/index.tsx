@@ -39,7 +39,6 @@ export function Finances({
       />
       <FundingPlanSection financialStrategy={financialStrategy} />
       <SquadAssetsSection financialStrategy={financialStrategy} onSelectPlayer={onSelectPlayer} />
-      <PayrollSafetySection financialStrategy={financialStrategy} />
       <DevelopmentCapitalSection financialStrategy={financialStrategy} />
       <ConflictsSection financialStrategy={financialStrategy} onSelectPlayer={onSelectPlayer} />
       {squadPlanning === null && status === "ready" ? (
@@ -383,37 +382,6 @@ function AssetList({
         ))}
       </ul>
     </div>
-  );
-}
-
-function PayrollSafetySection({
-  financialStrategy
-}: {
-  financialStrategy: FinancialStrategyState;
-}) {
-  const payroll = financialStrategy.viewModel?.payroll;
-  return (
-    <Section title="Payroll & Safety">
-      {payroll ? (
-        <>
-          <MetricGrid
-            metrics={[
-              ["Player Payroll", payroll.playerPayroll, `${payroll.playerShare} of known payroll`],
-              [
-                "Trainer Payroll",
-                payroll.trainerPayroll,
-                `${payroll.trainerShare} of known payroll`
-              ],
-              ["Known Payroll", payroll.totalPayroll, "Derived from active known wages"],
-              ["Known Payroll Coverage", payroll.coverage, "Cash divided by known weekly payroll"]
-            ]}
-          />
-          <p className="atlas-finances-panel__note">{payroll.explanation}</p>
-        </>
-      ) : (
-        <PanelMessage>Known payroll data is incomplete. Safety metrics are limited.</PanelMessage>
-      )}
-    </Section>
   );
 }
 

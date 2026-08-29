@@ -92,16 +92,6 @@ export interface SquadAssetViewModel {
   protectedAssets: Array<{ playerId: number; name: string; value: string; reasons: string[] }>;
 }
 
-export interface PayrollSafetyViewModel {
-  playerPayroll: string;
-  trainerPayroll: string;
-  totalPayroll: string;
-  playerShare: string;
-  trainerShare: string;
-  coverage: string;
-  explanation: string;
-}
-
 export interface DevelopmentCapitalViewModel {
   coveredPlayers: string;
   currentValue: string;
@@ -116,7 +106,6 @@ export interface FinancialStrategyViewModel {
   funding: StrategicFundingViewModel;
   recommendations: FinancialRecommendationViewModel[];
   assets: SquadAssetViewModel;
-  payroll: PayrollSafetyViewModel;
   developmentCapital: DevelopmentCapitalViewModel | null;
   conflicts: Array<{ playerId: number | null; playerName: string | null; description: string }>;
   criticalRecommendations: FinancialRecommendationViewModel[];
@@ -139,7 +128,6 @@ export function createFinancialStrategyViewModel(
     funding: createFundingViewModel(data.capitalAllocation, currency),
     recommendations,
     assets: createAssetViewModel(data, currency, playerNames),
-    payroll: createPayrollViewModel(data.financialAssessment),
     developmentCapital: createDevelopmentCapitalViewModel(data.financialAssessment, currency),
     conflicts: data.strategyPlan.conflicts.map((conflict) => ({
       playerId: conflict.playerId ?? null,
@@ -317,19 +305,6 @@ function createAssetViewModel(
         value: money(candidate.marketValue, currency),
         reasons: candidate.reasons.map((reason) => monetizationReasonLabel(reason))
       }))
-  };
-}
-
-function createPayrollViewModel(assessment: ClubFinancialAssessment): PayrollSafetyViewModel {
-  return {
-    playerPayroll: money(assessment.payroll.playersWeekly, null),
-    trainerPayroll: money(assessment.payroll.trainersWeekly, null),
-    totalPayroll: money(assessment.payroll.totalWeekly, null),
-    playerShare: percentage(assessment.payroll.composition.playerShare),
-    trainerShare: percentage(assessment.payroll.composition.trainerShare),
-    coverage: weeks(assessment.position.metrics.payrollCoverageWeeks),
-    explanation:
-      "Known payroll coverage measures how many weeks of currently known salaries the club's cash could cover. It is not a full cash-flow runway."
   };
 }
 
