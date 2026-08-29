@@ -155,6 +155,21 @@ export class SokkerJsonApiProvider implements SokkerDataProvider {
     return juniorMatches;
   }
 
+  async getJuniorsXml(): Promise<Array<{ id: number; formation: number | null }>> {
+    await this.loginXml();
+    const response = await fetch("https://sokker.org/xml/juniors.xml", {
+      headers: { cookie: this.xmlSessionCookie! }
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch juniors XML with status ${response.status}`);
+    }
+
+    const xmlText = await response.text();
+    const { parseJuniorsXml } = await import("../../parsers/xml-juniors-parser.js");
+    return parseJuniorsXml(xmlText);
+  }
+
   async getMatchXml(matchId: number): Promise<string> {
     await this.loginXml();
     const response = await fetch(`https://sokker.org/xml/match-${matchId}.xml`, {

@@ -14,6 +14,22 @@ export class SokkerSyncLoader {
       this.loadResource("junior matches", () => this.provider.getJuniorMatches(current.calendar.season))
     ]);
 
+    // Enrich juniors with formation from XML (0 = GK, 1 = field). Fails gracefully if XML is unavailable.
+    let juniorsWithFormation = juniors;
+    try {
+      const xmlEntries = await this.provider.getJuniorsXml();
+      console.log(`XML returned ${xmlEntries.length} juniors. Mapping formations...`);
+      const formationById = new Map(xmlEntries.map((e) => [e.id, e.formation]));
+      juniorsWithFormation = juniors.map((j) => {
+        const formation = formationById.has(j.id) ? (formationById.get(j.id) ?? null) : j.formation;
+        console.log(`Junior ${j.id}: formation from XML = ${formationById.get(j.id)}, final = ${formation}`);
+        return { ...j, formation };
+      });
+    } catch (e) {
+      console.error("Failed to fetch/parse juniors XML:", e);
+      // XML not available — continue without formation data
+    }
+
     const { parseJuniorMatchXml } = await import("./parsers/xml-match-parser.js");
 
     const juniorMatches = await Promise.all(
@@ -34,7 +50,7 @@ export class SokkerSyncLoader {
       players: training.players,
       trainingWeeks: training.trainingWeeks,
       trainers,
-      juniors,
+      juniors: juniorsWithFormation,
       trainingSummary,
       juniorMatches
     };

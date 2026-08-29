@@ -99,7 +99,8 @@ describe("Mongo repositories", () => {
       name: "Matias Cantero",
       age: 16,
       currentLevel: 8,
-      weeksLeft: 4
+      weeksLeft: 4,
+      formation: null
     });
     const second = await juniors.resolveCurrentIdentity({
       juniorId: 5001,
@@ -107,7 +108,8 @@ describe("Mongo repositories", () => {
       name: "Matias Cantero",
       age: 17,
       currentLevel: 9,
-      weeksLeft: 0
+      weeksLeft: 0,
+      formation: null
     });
 
     await juniors.markMissingStatuses(1, [], [5001]);

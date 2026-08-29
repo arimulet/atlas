@@ -19,6 +19,7 @@ export interface SokkerDataProvider {
   getTraining(): Promise<TrainingDataDto>;
   getTrainers(): Promise<TrainerDto[]>;
   getJuniors(): Promise<JuniorDto[]>;
+  getJuniorsXml(): Promise<Array<{ id: number; formation: number | null }>>;
   getTrainingSummary(): Promise<TrainingSummaryDto>;
   getJuniorMatches(season: number): Promise<Omit<JuniorMatchDto, "playerStats">[]>;
   getMatchXml(matchId: number): Promise<string>;
