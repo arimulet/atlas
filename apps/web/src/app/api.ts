@@ -349,3 +349,16 @@ function createEndpointError(message: string): ImportResponse {
     diagnostic: null
   };
 }
+
+export async function fetchYouthPerformances(
+  clubId: string
+): Promise<import("@atlas/application").YouthMatchPerformancesDto> {
+  const response = await fetch(`/api/clubs/${clubId}/youth/performances`);
+  const body = await response.json();
+
+  if (!response.ok || !body) {
+    throw new Error("Youth performances API returned an unexpected response.");
+  }
+
+  return body;
+}

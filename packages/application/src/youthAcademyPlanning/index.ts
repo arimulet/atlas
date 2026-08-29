@@ -404,3 +404,5 @@ export function calculateProjectedPromotionAge(input: {
   return input.age + seasonChanges;
 }
 export * from "./types.js";
+export * from "./youthMatchPerformancesTypes.js";
+export * from "./getYouthPerformances.js";

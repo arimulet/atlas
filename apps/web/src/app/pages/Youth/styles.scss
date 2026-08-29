@@ -649,3 +649,59 @@
     color: var(--atlas-text-muted);
   }
 }
+
+// Youth Tabs
+.atlas-youth-tabs {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+
+  .atlas-youth-tab {
+    background: none;
+    border: none;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+
+    &.is-active {
+      color: var(--color-text-primary);
+      border-bottom-color: var(--color-primary);
+      font-weight: 600;
+    }
+
+    &:hover:not(.is-active) {
+      color: var(--color-text-primary);
+    }
+  }
+}
+
+// Youth Performances
+.atlas-youth-performances {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.atlas-youth-performances-table {
+  .performance-cell {
+    text-align: center;
+    font-weight: bold;
+    color: var(--color-gray-900);
+    border: 1px solid var(--color-border);
+    padding: 0.5rem;
+    
+    &.full-match {
+      background-color: #81c784; // Light Green
+    }
+    
+    &.half-match {
+      background-color: #e0e0e0; // Grey
+    }
+    
+    &.no-data {
+      background-color: #e57373; // Light Red
+    }
+  }
+}

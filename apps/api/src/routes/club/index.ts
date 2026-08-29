@@ -12,7 +12,8 @@ import {
   getWeeklyTrainingIntelligence,
   getTrainingPageData,
   updateClubOperatingSettings,
-  updateClubProfile
+  updateClubProfile,
+  getYouthPerformances
 } from "@atlas/application";
 import { FastifyInstance } from "fastify";
 import {
@@ -148,6 +149,11 @@ async function clubRoutes(server: FastifyInstance) {
     const snapshotsCompare = await compareClubSnapshots({ clubId, ...body });
 
     return snapshotsCompare;
+  });
+
+  server.get<{ Params: GetClubDashboardParams }>("/youth/performances", async (request) => {
+    const { clubId } = request.params;
+    return getYouthPerformances(clubId);
   });
 }
 
