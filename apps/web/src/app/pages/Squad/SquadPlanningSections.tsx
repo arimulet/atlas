@@ -212,56 +212,60 @@ function SquadProfileDetail({ onSelectPlayer, profile }: SquadProfileDetailProps
 
   return (
     <div className="atlas-squad-profile-detail">
-      <SquadProfileRecommendations profile={profile} />
-      {groups.map((group) => {
-        const players = profile.players.filter((player) => player.group === group.key);
-        return players.length > 0 ? (
-          <div key={group.key}>
-            <h4>{group.label}</h4>
-            <ul>
-              {players.map((player) => (
-                <li key={player.playerId}>
-                  <PlayerLink playerId={player.playerId} onSelectPlayer={onSelectPlayer}>
-                    {player.name}
-                  </PlayerLink>
-                  <span>
-                    {player.age ?? "—"} · {player.roleLabel} · {player.lifecycleLabel}
-                  </span>
-                  <span>
-                    Current {player.currentContribution} · Future {player.futureContribution}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : null;
-      })}
-      <SquadSuccession profile={profile} onSelectPlayer={onSelectPlayer} />
-      {profile.dependencyRisk ? (
-        <p className="atlas-squad-profile-detail__notice">
-          <strong>Dependency risk.</strong> {profile.dependencyRisk.playerName} provides
-          significantly more current contribution than the next option (gap{" "}
-          {profile.dependencyRisk.contributionGap}).
-        </p>
-      ) : null}
-      {profile.congestionMessage ? (
-        <p className="atlas-squad-profile-detail__notice">
-          <strong>Development congestion.</strong> {profile.congestionMessage}
-        </p>
-      ) : null}
-      {profile.missingPipeline ? (
-        <p className="atlas-squad-profile-detail__notice">
-          <strong>No future pipeline.</strong> No developing or prospect player is currently
-          projected to cover this profile in the medium term.
-        </p>
-      ) : null}
-      {profile.reasons.length > 0 ? (
-        <ul className="atlas-squad-profile-detail__reasons">
-          {profile.reasons.map((reason) => (
-            <li key={reason}>{reason}</li>
-          ))}
-        </ul>
-      ) : null}
+      <div className="atlas-squad-profile-detail__roles">
+        {groups.map((group) => {
+          const players = profile.players.filter((player) => player.group === group.key);
+          return players.length > 0 ? (
+            <div key={group.key}>
+              <h4>{group.label}</h4>
+              <ul>
+                {players.map((player) => (
+                  <li key={player.playerId}>
+                    <PlayerLink playerId={player.playerId} onSelectPlayer={onSelectPlayer}>
+                      {player.name}
+                    </PlayerLink>
+                    <span>
+                      {player.age ?? "—"} · {player.roleLabel} · {player.lifecycleLabel}
+                    </span>
+                    <span>
+                      Current {player.currentContribution} · Future {player.futureContribution}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null;
+        })}
+      </div>
+      <div className="atlas-squad-profile-detail__insights">
+        <SquadProfileRecommendations profile={profile} />
+        <SquadSuccession profile={profile} onSelectPlayer={onSelectPlayer} />
+        {profile.dependencyRisk ? (
+          <p className="atlas-squad-profile-detail__notice">
+            <strong>Dependency risk.</strong> {profile.dependencyRisk.playerName} provides
+            significantly more current contribution than the next option (gap{" "}
+            {profile.dependencyRisk.contributionGap}).
+          </p>
+        ) : null}
+        {profile.congestionMessage ? (
+          <p className="atlas-squad-profile-detail__notice">
+            <strong>Development congestion.</strong> {profile.congestionMessage}
+          </p>
+        ) : null}
+        {profile.missingPipeline ? (
+          <p className="atlas-squad-profile-detail__notice">
+            <strong>No future pipeline.</strong> No developing or prospect player is currently
+            projected to cover this profile in the medium term.
+          </p>
+        ) : null}
+        {profile.reasons.length > 0 ? (
+          <ul className="atlas-squad-profile-detail__reasons">
+            {profile.reasons.map((reason) => (
+              <li key={reason}>{reason}</li>
+            ))}
+          </ul>
+        ) : null}
+      </div>
     </div>
   );
 }

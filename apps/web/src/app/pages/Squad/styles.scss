@@ -576,16 +576,24 @@
   padding: 3px 5px;
 }
 .atlas .atlas-squad-profile-detail {
+  align-items: start;
   background: var(--atlas-surface-hover);
   border: 1px solid var(--atlas-border);
   border-radius: 7px;
   box-sizing: border-box;
   display: grid;
   gap: 10px;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.9fr);
   margin: 0;
   min-width: 0;
   padding: 10px;
   width: 100%;
+}
+.atlas .atlas-squad-profile-detail__roles,
+.atlas .atlas-squad-profile-detail__insights {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
 }
 .atlas .atlas-squad-profile-detail-row > td {
   padding: 0 8px 10px;
@@ -694,6 +702,12 @@
 
 @media (max-width: 1000px) {
   .atlas .atlas-squad-planning-summary {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .atlas .atlas-squad-profile-detail {
     grid-template-columns: 1fr;
   }
 }
