@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildIdealDevelopmentTarget,
+  buildOperationalDevelopmentTarget,
   calculateDevelopmentGap,
   isDevelopmentTargetCompleted,
   PlayerDevelopmentPlanner,
@@ -134,6 +135,15 @@ describe("Player Development Plan", () => {
     expect(target.targetSkills.find((skill) => skill.skill === "defender")?.targetLevel).toBe(17);
   });
 
+  it("keeps feasible skill-ups when their return score is below the high-return badge threshold", () => {
+    const currentPlayer = player({ age: 20 });
+    const idealTarget = buildIdealDevelopmentTarget(currentPlayer, "defender");
+
+    const target = buildOperationalDevelopmentTarget(currentPlayer, idealTarget, 32);
+
+    expect(calculateDevelopmentGap(currentPlayer, target).totalGap).toBeGreaterThan(0);
+  });
+
   it("preserves manual levels while deriving priorities from the profile", () => {
     const target = new PlayerDevelopmentPlanner().buildDefaultTarget(player(), "defender", {
       profile: "defender",
@@ -141,13 +151,15 @@ describe("Player Development Plan", () => {
     });
 
     expect(target).toMatchObject({ source: "manual" });
-    expect(target.targetSkills).toEqual(expect.arrayContaining([
-      expect.objectContaining({
-        skill: "defender",
-        targetLevel: 16,
-        priority: "primary"
-      })
-    ]));
+    expect(target.targetSkills).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          skill: "defender",
+          targetLevel: 16,
+          priority: "primary"
+        })
+      ])
+    );
   });
 
   it("calculates gaps, completion, total gap and weighted progress", () => {
