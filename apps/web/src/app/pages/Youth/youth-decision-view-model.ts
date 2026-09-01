@@ -30,8 +30,10 @@ export interface YouthDecisionViewModel {
   decisionLabel: string;
   priority: "high" | "medium" | "low";
   priorityLabel: string;
-  confidence: Confidence;
-  confidenceLabel: string;
+  sportingConfidence: Confidence;
+  sportingConfidenceLabel: string;
+  economicConfidence: Confidence;
+  economicConfidenceLabel: string;
   prospectQualityLabel: string;
   developmentPotentialLabel: string;
   profileCoherenceLabel: string;
@@ -100,8 +102,6 @@ export interface YouthResourceSummary {
   competitionLabel: string;
 }
 
-
-
 const decisionLabels: Record<YouthDecision, string> = {
   train: "Train",
   keep: "Keep",
@@ -145,8 +145,6 @@ export function createYouthDecisionViewModels(
     }))
     .sort(compareYouthDecisionViewModels);
 }
-
-
 
 export function filterYouthDecisionViewModels(
   models: readonly YouthDecisionViewModel[],
@@ -477,8 +475,10 @@ export function createYouthDecisionViewModel(
     decisionLabel: decisionLabels[recommendation.decision],
     priority: recommendation.priority,
     priorityLabel: `${capitalize(recommendation.priority)} priority`,
-    confidence: recommendation.confidence,
-    confidenceLabel: confidenceLabels[recommendation.confidence],
+    sportingConfidence: recommendation.sportingConfidence,
+    sportingConfidenceLabel: confidenceLabels[recommendation.sportingConfidence],
+    economicConfidence: recommendation.economicConfidence,
+    economicConfidenceLabel: confidenceLabels[recommendation.economicConfidence],
     prospectQualityLabel: qualityLabel(recommendation.scores.prospectQuality),
     developmentPotentialLabel: qualityLabel(candidate.prospect.developmentPotentialScore),
     profileCoherenceLabel: qualityLabel(candidate.prospect.profileCoherenceScore),
@@ -600,7 +600,7 @@ function compareYouthDecisionViewModels(
   return (
     priority[right.priority] - priority[left.priority] ||
     action[right.decision] - action[left.decision] ||
-    confidence[right.confidence] - confidence[left.confidence] ||
+    confidence[right.sportingConfidence] - confidence[left.sportingConfidence] ||
     left.playerName.localeCompare(right.playerName) ||
     left.playerId.localeCompare(right.playerId)
   );

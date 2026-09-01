@@ -76,7 +76,8 @@ export interface YouthDecisionRecommendation {
   playerId: number;
   decision: YouthDecision;
   priority: YouthDecisionPriority;
-  confidence: Confidence;
+  sportingConfidence: Confidence;
+  economicConfidence: Confidence;
   scores: YouthDecisionScores;
   recommendedProfile: DevelopmentProfile | null;
   alternativeProfile: DevelopmentProfile | null;
