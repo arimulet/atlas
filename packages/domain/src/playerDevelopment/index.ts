@@ -9,7 +9,6 @@ import {
   createDevelopmentSimulationState,
   generateNextTrainingCandidates,
   selectBestTrainingCandidate,
-  DEVELOPMENT_PATH_HIGH_RETURN_THRESHOLD,
   MAX_DEVELOPMENT_PATH_STEPS
 } from "./training-path.js";
 import type {
@@ -206,7 +205,7 @@ export function buildOperationalDevelopmentTarget(
   };
 
   const state = createDevelopmentSimulationState(context);
-  const operationalTargetSkills = idealTarget.targetSkills.map(skill => ({
+  const operationalTargetSkills = idealTarget.targetSkills.map((skill) => ({
     skill: skill.skill,
     targetLevel: state.skills[skill.skill] ?? 0,
     priority: skill.priority,
@@ -216,7 +215,7 @@ export function buildOperationalDevelopmentTarget(
   while (state.stepsCompleted < MAX_DEVELOPMENT_PATH_STEPS) {
     const candidates = generateNextTrainingCandidates(context, state);
     const validCandidates = candidates.filter(
-      c => c.estimatedAgeAtStep < horizonAge && c.developmentReturnScore >= DEVELOPMENT_PATH_HIGH_RETURN_THRESHOLD
+      (candidate) => candidate.estimatedAgeAtStep < horizonAge
     );
 
     const best = selectBestTrainingCandidate(validCandidates, state.lastSkill);
@@ -229,20 +228,14 @@ export function buildOperationalDevelopmentTarget(
     state.stepsCompleted += 1;
     state.lastSkill = best.skill;
 
-    const targetSkill = operationalTargetSkills.find(s => s.skill === best.skill);
+    const targetSkill = operationalTargetSkills.find((s) => s.skill === best.skill);
     if (targetSkill) {
       targetSkill.targetLevel = best.toLevel;
       targetSkill.reasons = [
+        ...(targetSkill.priority === "primary" ? [{ type: "primary_skill" as const }] : []),
         { type: "within_development_horizon", age: best.estimatedAgeAtStep },
         { type: "positive_marginal_return", score: best.developmentReturnScore }
       ];
-    }
-  }
-
-  // Ensure all skills have at least primary_skill reason if they were already included without steps
-  for (const targetSkill of operationalTargetSkills) {
-    if (targetSkill.reasons.length === 0) {
-      targetSkill.reasons = [{ type: "primary_skill" }];
     }
   }
 
@@ -317,7 +310,9 @@ export interface PlayerDevelopmentPlan {
 }
 
 export class PlayerDevelopmentPlanner {
-  constructor(private readonly config: { developmentHorizonAge: number } = { developmentHorizonAge: 32 }) {}
+  constructor(
+    private readonly config: { developmentHorizonAge: number } = { developmentHorizonAge: 32 }
+  ) {}
 
   suggest(player: DevelopmentPlayer): DevelopmentProfileSuggestion {
     return suggestDevelopmentProfile(player);
@@ -328,8 +323,17 @@ export class PlayerDevelopmentPlanner {
     profile: DevelopmentProfile,
     override: PlayerDevelopmentTargetOverride = {}
   ): PlayerDevelopmentTarget {
-    const ideal = buildIdealDevelopmentTarget(player, profile, hasManualOverride(override) ? "manual" : "automatic");
-    return buildOperationalDevelopmentTarget(player, ideal, this.config.developmentHorizonAge, override);
+    const ideal = buildIdealDevelopmentTarget(
+      player,
+      profile,
+      hasManualOverride(override) ? "manual" : "automatic"
+    );
+    return buildOperationalDevelopmentTarget(
+      player,
+      ideal,
+      this.config.developmentHorizonAge,
+      override
+    );
   }
 
   calculateGap(player: DevelopmentPlayer, target: PlayerDevelopmentTarget): PlayerDevelopmentGap {
@@ -342,8 +346,17 @@ export class PlayerDevelopmentPlanner {
   ): PlayerDevelopmentPlan {
     const suggestion = suggestDevelopmentProfile(player);
     const profile = override.profile ?? suggestion.profile;
-    const idealTarget = buildIdealDevelopmentTarget(player, profile, hasManualOverride(override) ? "manual" : "automatic");
-    const target = buildOperationalDevelopmentTarget(player, idealTarget, this.config.developmentHorizonAge, override);
+    const idealTarget = buildIdealDevelopmentTarget(
+      player,
+      profile,
+      hasManualOverride(override) ? "manual" : "automatic"
+    );
+    const target = buildOperationalDevelopmentTarget(
+      player,
+      idealTarget,
+      this.config.developmentHorizonAge,
+      override
+    );
 
     return { suggestion, idealTarget, target, gap: calculateDevelopmentGap(player, target) };
   }
@@ -396,10 +409,7 @@ function profileOrder(profile: DevelopmentProfile): number {
 }
 
 function hasManualOverride(override: PlayerDevelopmentTargetOverride): boolean {
-  return (
-    override.profile !== undefined ||
-    override.targetLevels !== undefined
-  );
+  return override.profile !== undefined || override.targetLevels !== undefined;
 }
 
 function clamp(value: number, minimum: number, maximum: number): number {
