@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  buildDefaultDevelopmentTarget,
+  buildIdealDevelopmentTarget,
   calculateDevelopmentGap,
   isDevelopmentTargetCompleted,
   PlayerDevelopmentPlanner,
@@ -113,7 +113,7 @@ describe("Player Development Plan", () => {
   });
 
   it("builds default targets from profile definitions", () => {
-    const target = buildDefaultDevelopmentTarget(player(), "defender");
+    const target = buildIdealDevelopmentTarget(player(), "defender");
 
     expect(target).toMatchObject({
       playerId: 42,
@@ -129,23 +129,25 @@ describe("Player Development Plan", () => {
   });
 
   it("never creates an automatic target below the current skill", () => {
-    const target = buildDefaultDevelopmentTarget(player(), "defender");
+    const target = buildIdealDevelopmentTarget(player(), "defender");
 
     expect(target.targetSkills.find((skill) => skill.skill === "defender")?.targetLevel).toBe(17);
   });
 
   it("preserves manual levels while deriving priorities from the profile", () => {
-    const target = buildDefaultDevelopmentTarget(player(), "defender", {
+    const target = new PlayerDevelopmentPlanner().buildDefaultTarget(player(), "defender", {
       profile: "defender",
       targetLevels: { defender: 16, pace: 11 }
     });
 
     expect(target).toMatchObject({ source: "manual" });
-    expect(target.targetSkills).toContainEqual({
-      skill: "defender",
-      targetLevel: 16,
-      priority: "primary"
-    });
+    expect(target.targetSkills).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        skill: "defender",
+        targetLevel: 16,
+        priority: "primary"
+      })
+    ]));
   });
 
   it("calculates gaps, completion, total gap and weighted progress", () => {

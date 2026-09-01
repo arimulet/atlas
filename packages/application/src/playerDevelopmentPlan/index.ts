@@ -7,6 +7,7 @@ import {
 import type { ClubId } from "@atlas/database";
 import {
   PlayerDevelopmentPlanner,
+  SQUAD_PLANNING_CONFIG,
   type DevelopmentPlayer,
   type PlayerDevelopmentPlan,
   type PlayerDevelopmentTargetOverride
@@ -55,7 +56,9 @@ export function buildPlayerDevelopmentPlan(
   player: DevelopmentPlayer,
   manualOverride: PlayerDevelopmentTargetOverride | null = null
 ): PlayerDevelopmentPlan {
-  return new PlayerDevelopmentPlanner().createPlan(player, manualOverride ?? {});
+  return new PlayerDevelopmentPlanner({
+    developmentHorizonAge: SQUAD_PLANNING_CONFIG.advancedLifecycleAge
+  }).createPlan(player, manualOverride ?? {});
 }
 
 const playerRepository = new MongoPlayerRepository();
