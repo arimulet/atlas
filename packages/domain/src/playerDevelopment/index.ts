@@ -248,8 +248,9 @@ export function buildOperationalDevelopmentTarget(
 
   if (override.targetLevels) {
     for (const skill of operationalTargetSkills) {
-      if (override.targetLevels[skill.skill] !== undefined) {
-        skill.targetLevel = Math.max(player.skills[skill.skill] ?? 0, override.targetLevels[skill.skill]);
+      const requestedTarget = override.targetLevels[skill.skill];
+      if (requestedTarget !== undefined) {
+        skill.targetLevel = Math.max(player.skills[skill.skill] ?? 0, requestedTarget);
         skill.reasons = [{ type: "manual_override" }];
       }
     }
