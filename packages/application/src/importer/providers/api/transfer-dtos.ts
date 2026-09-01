@@ -1,7 +1,5 @@
 import { z } from "zod";
 
-const playerSkillSchema = z.record(z.string(), z.number().nullable().optional());
-
 export const sokkerTransferPlayerSchema = z.object({
   id: z.number(),
   info: z.object({

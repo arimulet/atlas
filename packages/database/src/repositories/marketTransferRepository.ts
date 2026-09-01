@@ -56,7 +56,7 @@ export async function acquireMarketTransferSyncRun(
   try {
     await newRun.save();
     return { runId: newRun._id.toString(), success: true };
-  } catch (error) {
+  } catch {
     return { runId: "", success: false };
   }
 }

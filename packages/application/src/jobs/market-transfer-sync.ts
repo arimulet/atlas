@@ -5,7 +5,6 @@ import {
   markMissingMarketTransferCurrent,
   getMissingMarketTransfers,
   deleteMarketTransferCurrent,
-  getMarketTransferCurrentByPlayerId,
   promoteToFinalMarketTransfer,
   getLastSuccessfulMarketTransferSyncRun,
   MongoCountryRepository
@@ -19,7 +18,7 @@ export async function runMarketTransferSyncJob(
   login: string,
   password: string,
   historyWindowDays: number = 3
-): Promise<{ runId?: string; success: boolean; reason?: any }> {
+): Promise<{ runId?: string; success: boolean; reason?: unknown }> {
   // Determine from and to dates
   const to = new Date();
   
@@ -130,7 +129,7 @@ export async function runMarketTransferSyncJob(
             counts.finalCreatedOrUpdated++;
           }
         }
-      } catch (err) {
+      } catch {
         // Log or ignore single player failure, we'll delete the current record anyway
         // or wait, if the API fails randomly, we might not want to delete it yet?
         // Usually if it's a 404, player is deleted. For safety, we just delete it.
@@ -146,7 +145,7 @@ export async function runMarketTransferSyncJob(
     return { runId, success: true };
   } catch (error) {
     const rawMsg = error instanceof Error ? error.message : String(error);
-    let parsedReason: any = rawMsg;
+    let parsedReason: unknown = rawMsg;
     try {
       parsedReason = JSON.parse(rawMsg);
     } catch {
