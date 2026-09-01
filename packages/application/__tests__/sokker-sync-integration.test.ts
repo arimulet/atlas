@@ -243,7 +243,10 @@ function createFixtureProvider(): SokkerDataProvider {
     getTrainingSummary: vi.fn(async () => payload.trainingSummary),
     getJuniorMatches: vi.fn(async () => payload.juniorMatches),
     getMatchXml: vi.fn(async () => ""),
-    getMatchLineup: vi.fn(async () => ({ homePlayers: [], awayPlayers: [] }))
+    getMatchLineup: vi.fn(async () => ({ homePlayers: [], awayPlayers: [] })),
+    getTransfers: vi.fn(async () => []),
+    getTransferHistory: vi.fn(async () => []),
+    getPlayerTransferHistory: vi.fn(async () => [])
   };
 }
 

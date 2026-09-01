@@ -7,6 +7,7 @@ import clubRoutes from "@atlas/api//routes/club";
 import playerRoutes from "@atlas/api//routes/players";
 import economyRoutes from "@atlas/api//routes/economy";
 import { clubParamsSchema } from "@atlas/api/schemas";
+import { internalJobsRoutes } from "./routes/internal/jobs.js";
 
 export function buildServer() {
   const server = Fastify({ logger: true });
@@ -23,6 +24,8 @@ export function buildServer() {
     prefix: "/api/clubs/:clubId/economy",
     schema: { params: clubParamsSchema }
   });
+  
+  server.register(internalJobsRoutes, { prefix: "/internal/jobs" });
 
   server.setErrorHandler((error, _request, reply) => {
     server.log.error(error);

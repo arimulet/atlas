@@ -12,7 +12,11 @@ import type {
  * Transport and external API details do not cross this interface. The
  * application layer depends on this contract rather than on Sokker's API.
  */
-import type { JuniorMatchDto } from "../types.js";
+import type {
+  JuniorMatchDto,
+  ActiveTransferDto,
+  FinalTransferDto
+} from "../types.js";
 
 export interface SokkerDataProvider {
   getCurrent(): Promise<CurrentClubContextDto>;
@@ -25,4 +29,7 @@ export interface SokkerDataProvider {
   getMatchXml(matchId: number): Promise<string>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   getMatchLineup(matchId: number): Promise<{ homePlayers: any[], awayPlayers: any[] }>;
+  getTransfers(limit: number, offset: number): Promise<ActiveTransferDto[]>;
+  getTransferHistory(limit: number, offset: number): Promise<FinalTransferDto[]>;
+  getPlayerTransferHistory(playerId: number): Promise<FinalTransferDto[]>;
 }
