@@ -4,6 +4,7 @@ import {
   calculateWeeklyTrainingPoints
 } from "../training/index.js";
 import { DEFAULT_TALENT_FOR_RELATIVE_COMPARISON, MAX_SKILL_LEVEL } from "../training/constants.js";
+import { WEEKS_PER_SOKKER_SEASON } from "../sokker/calendar.js";
 import { DEVELOPMENT_PRIORITY_WEIGHTS, DEVELOPMENT_PROFILES } from "./profiles.js";
 import type { DevelopmentPriority, DevelopmentSkill, PlayerDevelopmentTarget } from "./types.js";
 import type {
@@ -22,7 +23,7 @@ export const MAX_DEVELOPMENT_PATH_STEPS = 256;
 export const DEVELOPMENT_PATH_TIE_EPSILON = 0.05;
 export const DEVELOPMENT_PATH_LOW_COST_EPSILON = 0.1;
 export const DEVELOPMENT_PATH_HIGH_RETURN_THRESHOLD = 0.5;
-export const DEVELOPMENT_PATH_WEEKS_PER_YEAR = 52;
+export const DEVELOPMENT_PATH_WEEKS_PER_YEAR = WEEKS_PER_SOKKER_SEASON;
 export const DEFAULT_DEVELOPMENT_PATH_WEEKLY_POINTS = 100;
 
 const DEVELOPMENT_SKILL_ORDER: readonly DevelopmentSkill[] = [

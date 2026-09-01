@@ -11,6 +11,7 @@ import {
   createYouthDecisionViewModels,
   filterYouthDecisionViewModels,
   orderYouthDecisionComparisonModels,
+  mapDevelopmentProjectionWarning,
   mapYouthDecisionReason,
   mapYouthDecisionRisk
 } from "./youth-decision-view-model";
@@ -29,6 +30,12 @@ describe("youth decision presentation model", () => {
     });
   });
 
+  it("explains projection warnings in the presentation model", () => {
+    expect(mapDevelopmentProjectionWarning("projection_horizon_exceeded")).toEqual({
+      title: "Target exceeds projection horizon",
+      description: "The complete target is not viable within the modeled career horizon."
+    });
+  });
   it("keeps prospect quality and club fit as separate presentation labels", () => {
     const planning = createPlanning([
       createCandidate(1, 0.86, { clubFitScore: 0.2, opportunity: "poor" })
