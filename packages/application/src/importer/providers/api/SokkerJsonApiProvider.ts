@@ -236,6 +236,100 @@ export class SokkerJsonApiProvider implements SokkerDataProvider {
 
     this.sessionCookie = readSessionCookie(response.headers.get("set-cookie"));
   }
+
+  async getTransfers(limit: number, offset: number): Promise<import("../../types.js").ActiveTransferDto[]> {
+    const response = await this.get<unknown>(`transfer?filter[offset]=${offset}&filter[limit]=${limit}&filter[sort][by]=deadline`);
+    const { sokkerActiveTransfersResponseSchema } = await import("./transfer-dtos.js");
+    const parsed = sokkerActiveTransfersResponseSchema.parse(response);
+    
+    return (parsed.transfers || []).map(t => {
+      let deadlineStr = new Date().toISOString();
+      if (typeof t.deadline === "string") deadlineStr = t.deadline;
+      else if (t.deadline?.date?.date) deadlineStr = t.deadline.date.date;
+      else if (t.deadline?.value) deadlineStr = t.deadline.value;
+
+      // Sokker sends dates like "2026-09-01 11:09:10.000000" without timezone info.
+      // We must append 'Z' to treat it as UTC, avoiding local timezone shifts.
+      const match = deadlineStr.match(/^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2})/);
+      if (match) {
+        deadlineStr = `${match[1]}T${match[2]}Z`;
+      }
+
+      return {
+        playerId: t.player.id,
+        deadline: deadlineStr,
+        player: {
+          name: t.player.info?.name?.full ?? "Unknown",
+          countryId: t.player.info?.country?.code ?? 0,
+          age: t.player.info?.characteristics?.age ?? 0,
+          skills: (t.player.info?.skills || {}) as Record<string, number>
+        },
+        status: "active" as const,
+        firstSeenAt: new Date(),
+        lastSeenAt: new Date()
+      };
+    });
+  }
+
+  async getTransferHistory(limit: number, offset: number): Promise<import("../../types.js").FinalTransferDto[]> {
+    const response = await this.get<unknown>(`transfer/history?filter[offset]=${offset}&filter[limit]=${limit}`);
+    const { sokkerHistoryTransfersResponseSchema } = await import("./transfer-dtos.js");
+    const parsed = sokkerHistoryTransfersResponseSchema.parse(response);
+    
+    return (parsed.transfers || []).map(t => {
+      let dateStr = new Date().toISOString();
+      if (typeof t.date === "string") dateStr = t.date;
+      else if (t.date?.date?.date) dateStr = t.date.date.date;
+      else if (t.date?.value) dateStr = t.date.value;
+      else if (t.date?.date) dateStr = t.date.date;
+
+      let salePrice = 0;
+      let currency = "PLN";
+      if (typeof t.price === "number") salePrice = t.price;
+      else if (t.price?.bid?.value) salePrice = t.price.bid.value;
+      else if (t.price?.value) salePrice = t.price.value;
+      
+      if (typeof t.price === "object" && t.price) {
+         if (t.price.currency) currency = t.price.currency;
+         else if (t.price.bid?.currency) currency = t.price.bid.currency;
+      }
+      
+      return {
+        transferKey: `transfer-${t.id || t.player?.id || Date.now()}`,
+        playerId: t.player?.id ?? 0,
+        name: t.player?.info?.name?.full ?? "Unknown",
+        transferDate: new Date(dateStr).toISOString(),
+        salePrice,
+        currency,
+        age: t.player?.info?.characteristics?.age ?? 0
+      };
+    }).filter(t => t.playerId !== 0);
+  }
+
+  async getPlayerTransferHistory(playerId: number): Promise<import("../../types.js").FinalTransferDto[]> {
+    const response = await this.get<unknown>(`player/${playerId}/transfer`);
+    const { sokkerPlayerTransferHistoryResponseSchema } = await import("./transfer-dtos.js");
+    const parsed = sokkerPlayerTransferHistoryResponseSchema.parse(response);
+
+    return (parsed.transfers || []).map(t => {
+      let dateStr = new Date().toISOString();
+      if (t.date?.timestamp) {
+        dateStr = new Date(t.date.timestamp * 1000).toISOString();
+      } else if (t.date?.value) {
+        dateStr = t.date.value;
+      }
+
+      return {
+        transferKey: `transfer-${t.playerId}-${t.date?.timestamp || Date.now()}`,
+        playerId: t.playerId,
+        name: t.playerName?.full ?? "Unknown",
+        transferDate: dateStr,
+        salePrice: t.price?.value ?? 0,
+        currency: t.price?.currency ?? "PLN",
+        age: t.age ?? 0
+      };
+    });
+  }
 }
 
 function mapResource<T>(resource: string, mapper: () => T): T {

@@ -298,3 +298,23 @@ export interface SnapshotJuniorDto {
   skill: number;
   status: "in_academy";
 }
+export interface ActiveTransferDto {
+  playerId: number;
+  deadline: string;
+  player: {
+    name: string;
+    countryId: number;
+    age: number;
+    skills: Record<string, number | null>;
+  };
+}
+
+export interface FinalTransferDto {
+  transferKey: string;
+  playerId: number;
+  name: string;
+  transferDate: string;
+  salePrice: number;
+  currency: string;
+  age: number;
+}

@@ -280,3 +280,50 @@ export interface PersistedJuniorMatch {
   isFinished: boolean;
   playerStats: PersistedJuniorMatchPlayerStats[];
 }
+
+export interface PersistedMarketTransferCurrent {
+  playerId: number;
+  firstSeenAt: Date;
+  lastSeenAt: Date;
+  deadline: Date;
+  status: "active" | "missing";
+  lastSyncRunId: string;
+  player: {
+    name: string;
+    countryId: number;
+    age: number;
+    skills: Record<string, number>;
+  };
+}
+
+export interface PersistedMarketTransferSyncRun {
+  status: "running" | "completed" | "failed";
+  startedAt: Date;
+  finishedAt: Date | null;
+  leaseExpiresAt: Date;
+  historyWindow: {
+    from: Date;
+    to: Date;
+  };
+  counts: {
+    pagesRead: number;
+    currentUpserted: number;
+    currentMissing: number;
+    finalCreatedOrUpdated: number;
+    currentDeleted: number;
+  };
+  error: string | null;
+}
+
+export interface PersistedMarketTransfer {
+  transferKey: string;
+  playerId: number;
+  name: string;
+  transferDate: Date;
+  gameWeek: number;
+  season: number;
+  week: number;
+  salePrice: number;
+  age: number;
+  skills: Record<string, number>;
+}

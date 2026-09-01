@@ -7,7 +7,9 @@ import {
   type PersistedPlayerDevelopmentOverride,
   type PersistedPlayerTrainingWeek,
   type PersistedSquadRoleAssignment,
-  type SaveSquadRoleAssignmentInput
+  type SaveSquadRoleAssignmentInput,
+  findFinalMarketTransfersUpToDate,
+  MongoCountryRepository
 } from "@atlas/database";
 import {
   assessSquad,
@@ -129,9 +131,19 @@ export async function getSquadAssessment(clubId: ClubId): Promise<SquadAssessmen
       latest.snapshotDate
     )
   );
+
+  const countryRepo = new MongoCountryRepository();
+  const allCountries = await countryRepo.getAll();
+  const clubCountry = allCountries.find(c => c.currencyName === club.currency || c.countryId === club.country);
+  const currencyRate = clubCountry?.currencyRate ?? 1;
+  const currencyName = clubCountry?.currencyName ?? club.currency;
+
+  const rawTransfers = await findFinalMarketTransfersUpToDate(latest.snapshotDate);
+  const mappedTransfers = rawTransfers.map(t => mapMarketTransferToRecord(t, currencyName, currencyRate));
+
   const assessment = assessSquad(contexts);
   const contextByPlayer = new Map(contexts.map((context) => [context.playerId, context]));
-  const marketValues = createMarketValues(contexts);
+  const marketValues = createMarketValues(contexts, mappedTransfers);
   const depthPlayers: SquadDepthPlayer[] = assessment.players.map((playerAssessment) => {
     const context = contextByPlayer.get(playerAssessment.playerId);
     const marketValue = marketValues.get(playerAssessment.playerId);
@@ -292,7 +304,8 @@ function buildPlayerContext(
 }
 
 function createMarketValues(
-  contexts: readonly SquadPlayerContext[]
+  contexts: readonly SquadPlayerContext[],
+  transfers: import("@atlas/domain").PlayerTransferRecord[]
 ): Map<number, MarketValueEntry> {
   const values = new Map<number, MarketValueEntry>();
 
@@ -305,7 +318,7 @@ function createMarketValues(
       talent: context.talent ?? null
     };
     try {
-      const current = calibratePlayerMarketValue(marketContext, []);
+      const current = calibratePlayerMarketValue(marketContext, transfers);
       const projection =
         context.developmentPlan && context.trainingPath && context.projection
           ? projectPlayerMarketValue({
@@ -315,12 +328,12 @@ function createMarketValues(
               projection: context.projection,
               currentMarketValue: current,
               talent: context.talent ?? null,
-              transfers: []
+              transfers
             })
           : null;
       const trainingComparison =
         context.developmentPlan && context.trainingPath
-          ? createMarketTrainingComparison(context, player, current)
+          ? createMarketTrainingComparison(context, player, current, transfers)
           : null;
       values.set(context.playerId, { current, projection, trainingComparison });
     } catch {
@@ -340,7 +353,8 @@ interface MarketValueEntry {
 function createMarketTrainingComparison(
   context: SquadPlayerContext,
   player: PlayerMarketValuePlayerInput,
-  current: ReturnType<typeof calibratePlayerMarketValue>
+  current: ReturnType<typeof calibratePlayerMarketValue>,
+  transfers: import("@atlas/domain").PlayerTransferRecord[]
 ): ReturnType<typeof compareAdvancedAndFormationMarketValue> | null {
   if (!context.developmentPlan || !context.trainingPath || !context.projection) return null;
 
@@ -357,7 +371,7 @@ function createMarketTrainingComparison(
         projection: advancedProjection,
         currentMarketValue: current,
         talent: context.talent ?? null,
-        transfers: []
+        transfers
       },
       formation: {
         player,
@@ -366,7 +380,7 @@ function createMarketTrainingComparison(
         projection: formationProjection,
         currentMarketValue: current,
         talent: context.talent ?? null,
-        transfers: []
+        transfers
       },
       fixedHorizonWeeks: PLAYER_MARKET_VALUE_COMPARISON_HORIZON_WEEKS
     });
@@ -590,5 +604,32 @@ function mapAssignment(assignment: PersistedSquadRoleAssignment): SquadRoleAssig
     playerId: assignment.playerId,
     role: assignment.role,
     source: "manual"
+  };
+}
+function mapMarketTransferToRecord(
+  transfer: import("@atlas/database").PersistedMarketTransfer,
+  currencyName: string,
+  currencyRate: number
+): import("@atlas/domain").PlayerTransferRecord {
+  return {
+    transferId: transfer.transferKey,
+    playerId: transfer.playerId,
+    transferDate: transfer.transferDate,
+    gameWeek: transfer.gameWeek,
+    salePrice: Math.round(transfer.salePrice / currencyRate),
+    currency: currencyName,
+    age: transfer.age,
+    skills: {
+      stamina: transfer.skills.stamina ?? null,
+      pace: transfer.skills.pace ?? null,
+      technique: transfer.skills.technique ?? null,
+      passing: transfer.skills.passing ?? null,
+      keeper: transfer.skills.keeper ?? null,
+      defender: transfer.skills.defender ?? null,
+      playmaker: transfer.skills.playmaker ?? null,
+      striker: transfer.skills.striker ?? null
+    },
+    source: "imported",
+    salePriceType: "final_sale"
   };
 }

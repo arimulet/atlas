@@ -22,3 +22,7 @@ export * from "./repositories/trainingWeekRepository.js";
 export * from "./repositories/juniorMatchRepository.js";
 export * from "./models/juniorMatch.js";
 export * from "./repositories/types.js";
+export * from "./models/marketTransfer.js";
+export * from "./models/marketTransferCurrent.js";
+export * from "./models/marketTransferSyncRun.js";
+export * from "./repositories/marketTransferRepository.js";
