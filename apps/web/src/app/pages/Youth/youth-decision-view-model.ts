@@ -1,6 +1,7 @@
 import type {
   AdvancedTrainingRecommendation,
   Confidence,
+  DevelopmentProjectionWarning,
   DevelopmentProfile,
   YouthDecision,
   YouthDecisionReason,
@@ -69,6 +70,10 @@ export interface YouthDevelopmentSummary {
   recommendedProfile: DevelopmentProfile | null;
   recommendedProfileLabel: string;
   targetCompletionWeeks: number | null;
+  forecastConfidenceLabel: string;
+  forecastStatusLabel: string;
+  nextSkillUpLabel: string;
+  forecastWarnings: YouthDecisionMessage[];
   advancedOpportunity: string;
   advancedRank: number | null;
   opportunityLabel: string;
@@ -448,6 +453,79 @@ export function mapYouthFitReason(reason: YouthFitReason): YouthDecisionMessage 
   }
 }
 
+function projectionStatusLabel(
+  status: "projected" | "partial" | "unavailable" | undefined
+): string {
+  if (status === "projected") return "Complete";
+  if (status === "partial") return "Partial";
+  if (status === "unavailable") return "Unavailable";
+  return "Unknown";
+}
+
+function projectionNextSkillUpLabel(
+  projection: YouthDecisionCandidate["developmentProjection"]
+): string {
+  const step = projection?.steps[0];
+  if (!step || step.estimatedWeeks === null) return "Unknown";
+  return `${capitalize(step.skill)} ${step.toLevel} · ~${Math.round(step.estimatedWeeks)} weeks`;
+}
+
+export function mapDevelopmentProjectionWarning(
+  warning: DevelopmentProjectionWarning
+): YouthDecisionMessage {
+  switch (warning) {
+    case "unknown_current_sublevel":
+      return {
+        title: "Current sublevel unknown",
+        description: "The next skill-up starts from an unobserved partial level."
+      };
+    case "low_talent_confidence":
+      return {
+        title: "Talent estimate uncertain",
+        description: "Training speed has limited supporting evidence."
+      };
+    case "long_term_projection":
+      return {
+        title: "Long-term target",
+        description: "Part of the plan extends beyond two Sokker seasons."
+      };
+    case "advanced_training_assumed":
+      return {
+        title: "Advanced training assumed",
+        description: "The forecast assumes the player keeps advanced training."
+      };
+    case "formation_training_assumed":
+      return {
+        title: "Formation training assumed",
+        description: "The forecast assumes the player keeps formation training."
+      };
+    case "intensity_assumed":
+      return {
+        title: "Training intensity assumed",
+        description: "Future weeks use the latest observed intensity."
+      };
+    case "projection_horizon_exceeded":
+      return {
+        title: "Target exceeds projection horizon",
+        description: "The complete target is not viable within the modeled career horizon."
+      };
+    case "invalid_training_points":
+      return {
+        title: "Training points unavailable",
+        description: "The forecast cannot calculate valid weekly training points."
+      };
+    case "path_incomplete":
+      return {
+        title: "Development path incomplete",
+        description: "The complete target could not be scheduled."
+      };
+    case "continuous_training_not_assumed":
+      return {
+        title: "Continuous training not assumed",
+        description: "The forecast includes possible training interruptions."
+      };
+  }
+}
 export function createYouthDecisionViewModel(
   candidate: YouthDecisionCandidate,
   currency: string | null,
@@ -499,6 +577,14 @@ export function createYouthDecisionViewModel(
       recommendedProfile: developmentProfile,
       recommendedProfileLabel: profileLabel(developmentProfile),
       targetCompletionWeeks: completionWeeks,
+      forecastConfidenceLabel: candidate.developmentProjection
+        ? confidenceLabels[candidate.developmentProjection.confidence]
+        : "Unknown",
+      forecastStatusLabel: projectionStatusLabel(candidate.developmentProjection?.projectionStatus),
+      nextSkillUpLabel: projectionNextSkillUpLabel(candidate.developmentProjection),
+      forecastWarnings: (candidate.developmentProjection?.warnings ?? []).map(
+        mapDevelopmentProjectionWarning
+      ),
       advancedOpportunity: advanced?.opportunity ?? "unknown",
       advancedRank: advanced?.projectedRank ?? null,
       opportunityLabel: fitLabel(recommendation.scores.developmentOpportunity),

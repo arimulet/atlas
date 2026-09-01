@@ -99,9 +99,15 @@ export function YouthDecisionCard({ model, onSelectPlayer }: YouthDecisionCardPr
               />
             ) : null}
             <MetricRow
+              label="Projection status"
+              value={`${model.development.forecastStatusLabel} · ${model.development.forecastConfidenceLabel}`}
+            />
+            <MetricRow label="Next planned skill-up" value={model.development.nextSkillUpLabel} />
+            <MetricRow
               label="Target completion"
               value={formatWeeks(model.development.targetCompletionWeeks)}
             />
+            <MessageGroup title="Projection notes" messages={model.development.forecastWarnings} />
             <MetricRow
               label="Advanced training"
               value={`${capitalize(model.development.advancedOpportunity)}${model.development.advancedRank ? ` · #${model.development.advancedRank}` : ""}`}

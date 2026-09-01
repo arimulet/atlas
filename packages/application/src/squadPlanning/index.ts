@@ -16,7 +16,9 @@ import {
   generatePlayerTrainingPath,
   PlayerDevelopmentPlanner,
   projectDevelopment,
+  buildWeeklyTrainingReport,
   estimateTalentFromTrainingHistory,
+  type DevelopmentCurrentSkillProgress,
   type DevelopmentPlayer,
   type PlayerDevelopmentTargetOverride,
   type SquadPlayerContext,
@@ -245,6 +247,7 @@ function buildPlayerContext(
   const plan = buildPlan(developmentPlayer, override);
   const talent = history ? estimateTalentFromTrainingHistory(history) : null;
   const latestTraining = history?.weeks.at(-1);
+  const currentTrainingProgress = estimateCurrentTrainingProgress(history, talent, currentGameWeek);
   const trainingPath = generatePlayerTrainingPath({
     player: { ...developmentPlayer, age: player.age ?? 16 },
     target: plan.target,
@@ -259,6 +262,7 @@ function buildPlayerContext(
     trainingPath,
     talent,
     latestTraining,
+    currentTrainingProgress,
     currentGameWeek,
     currentDate
   });
@@ -420,6 +424,37 @@ function toMarketValuePlayer(context: SquadPlayerContext): PlayerMarketValuePlay
   };
 }
 
+function estimateCurrentTrainingProgress(
+  history: TrainingHistory | null,
+  talent: ReturnType<typeof estimateTalentFromTrainingHistory> | null,
+  currentGameWeek: number | null
+): DevelopmentCurrentSkillProgress | undefined {
+  if (!history || !talent?.value || currentGameWeek === null) return undefined;
+
+  try {
+    const report = buildWeeklyTrainingReport({
+      players: [{ history, talent: talent.value }],
+      gameWeek: currentGameWeek
+    }).players[0];
+    if (
+      !report ||
+      report.trainingPoints.estimatedProgress === null ||
+      report.trainingPoints.remainingToNextLevel === null
+    ) {
+      return undefined;
+    }
+
+    return {
+      skill: report.training.skill,
+      estimatedProgress: report.trainingPoints.estimatedProgress,
+      remainingToNextLevel: report.trainingPoints.remainingToNextLevel,
+      confidence:
+        talent.confidence === "high" ? "high" : talent.confidence === "medium" ? "medium" : "low"
+    };
+  } catch {
+    return undefined;
+  }
+}
 function buildProjection(input: {
   player: PersistedPlayerSnapshot;
   developmentPlayer: DevelopmentPlayer;
@@ -427,6 +462,7 @@ function buildProjection(input: {
   trainingPath: ReturnType<typeof generatePlayerTrainingPath>;
   talent: ReturnType<typeof estimateTalentFromTrainingHistory> | null;
   latestTraining: TrainingHistory["weeks"][number] | undefined;
+  currentTrainingProgress: DevelopmentCurrentSkillProgress | undefined;
   currentGameWeek: number | null;
   currentDate: Date;
 }) {
@@ -442,6 +478,7 @@ function buildProjection(input: {
       currentGameWeek: input.currentGameWeek,
       currentDate: input.currentDate,
       talent: input.talent,
+      currentTrainingProgress: input.currentTrainingProgress,
       trainingAssumptions: {
         trainingKind: input.latestTraining?.kind === "advanced" ? "advanced" : "formation",
         expectedIntensity: input.latestTraining?.intensity ?? 100,
