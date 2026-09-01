@@ -20,10 +20,17 @@ export interface DevelopmentPlayer {
   observedPosition?: ObservedPosition | null;
 }
 
+export type DevelopmentTargetReason =
+  | { type: "primary_skill" }
+  | { type: "within_development_horizon"; age: number }
+  | { type: "positive_marginal_return"; score: number }
+  | { type: "manual_override" };
+
 export interface DevelopmentTargetSkill {
   skill: DevelopmentSkill;
   targetLevel: number;
   priority: DevelopmentPriority;
+  reasons?: DevelopmentTargetReason[];
 }
 
 export interface PlayerDevelopmentTarget {
@@ -32,6 +39,7 @@ export interface PlayerDevelopmentTarget {
   targetSkills: DevelopmentTargetSkill[];
   source: DevelopmentTargetSource;
 }
+
 
 export interface DevelopmentProfileDefinition {
   id: DevelopmentProfile;
@@ -99,3 +107,4 @@ export interface PlayerDevelopmentTargetOverride {
   profile?: DevelopmentProfile | null;
   targetLevels?: Partial<Record<DevelopmentSkill, number>>;
 }
+

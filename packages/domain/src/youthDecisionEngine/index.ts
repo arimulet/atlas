@@ -7,7 +7,7 @@ import {
   type TrainingHistory
 } from "../training/index.js";
 import {
-  buildDefaultDevelopmentTarget,
+  buildIdealDevelopmentTarget,
   DEVELOPMENT_PRIORITY_WEIGHTS,
   DEVELOPMENT_PROFILES,
   evaluateDevelopmentProfiles,
@@ -82,7 +82,7 @@ export function assessYouthProspect(context: YouthProspectContext): YouthProspec
       : calculateFallbackCurrentQuality(allSkills, validAge);
   const suggestedDevelopmentTarget =
     profile && (context.includeSuggestedDevelopmentTarget ?? true)
-      ? buildDefaultDevelopmentTarget(player, profile)
+      ? buildIdealDevelopmentTarget(player, profile)
       : null;
   const developmentPotentialScore = profile
     ? calculateDevelopmentPotential({
@@ -349,7 +349,7 @@ function calculateDevelopmentPotential(input: {
 }): number | null {
   if (input.profileSkills.length === 0) return null;
 
-  const target = buildDefaultDevelopmentTarget(input.player, input.profile);
+  const target = buildIdealDevelopmentTarget(input.player, input.profile);
   const targetBySkill = new Map(target.targetSkills.map((skill) => [skill.skill, skill]));
   const observedTargetSkills = input.profileSkills.flatMap((skill) => {
     const targetSkill = targetBySkill.get(skill.skill);

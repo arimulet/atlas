@@ -78,9 +78,16 @@ export function PlayerDevelopmentPlan({
       </div>
       <TrainingAlignment plan={plan} />
       <Warnings plan={plan} />
-      <SkillTargets targets={plan.targets} />
+      <SkillTargets targets={plan.targets} title="Recommended target / Target operativo" />
       <TrainingPath path={plan.path} completed={plan.completed} />
       <Milestones plan={plan} />
+      <details className="atlas-player-development-plan__ideal-profile">
+        <summary>Ideal profile target (Long-term reference)</summary>
+        <p className="atlas-player-development-plan__ideal-note">
+          This is a long-term reference profile and not a direct recommendation for immediate training.
+        </p>
+        <SkillTargets targets={plan.idealTargets} title="Ideal Target" />
+      </details>
       {isEditorOpen ? (
         <EditDevelopmentTargetModal
           plan={plan}
@@ -100,7 +107,15 @@ function ProfileSummary({ plan }: { plan: DevelopmentPlanViewModel }) {
       <div>
         <span className="atlas-player-development-plan__eyebrow">Profile</span>
         <strong>{plan.profile.currentLabel}</strong>
-        <span>{plan.profile.source === "manual" ? "Manual target" : "ATLAS automatic target"}</span>
+        <span className="atlas-badge">{plan.profile.source === "manual" ? "Manual target" : "Automatic target"}</span>
+      </div>
+      <div>
+        <span className="atlas-player-development-plan__eyebrow">Operational Target Summary</span>
+        <p>
+          {plan.progress.remainingLevels} pending skill-ups ·{" "}
+          {plan.completion.estimatedWeeks !== null ? formatEta(plan.completion.estimatedWeeks) : "Unknown timeframe"} ·{" "}
+          {plan.completion.estimatedAge !== null ? `Age ~${plan.completion.estimatedAge.toLocaleString("en-US", { maximumFractionDigits: 1 })}` : "Unknown age"}
+        </p>
       </div>
       {plan.profile.hasConflict ? (
         <p>
@@ -230,9 +245,9 @@ function Warnings({ plan }: { plan: DevelopmentPlanViewModel }) {
   ) : null;
 }
 
-function SkillTargets({ targets }: { targets: DevelopmentPlanTargetRow[] }) {
+function SkillTargets({ targets, title }: { targets: DevelopmentPlanTargetRow[], title: string }) {
   return (
-    <PlanSection title="Skill targets">
+    <PlanSection title={title}>
       <div className="atlas-player-detail__table-wrap">
         <table className="atlas-player-detail__table">
           <thead>
@@ -243,6 +258,7 @@ function SkillTargets({ targets }: { targets: DevelopmentPlanTargetRow[] }) {
               <th>Remaining</th>
               <th>Priority</th>
               <th>Status</th>
+              <th>Reason</th>
             </tr>
           </thead>
           <tbody>
@@ -254,6 +270,7 @@ function SkillTargets({ targets }: { targets: DevelopmentPlanTargetRow[] }) {
                 <td>{target.remaining}</td>
                 <td>{capitalize(target.priority)}</td>
                 <td>{statusLabel(target.status)}</td>
+                <td>{target.reasons.join(", ")}</td>
               </tr>
             ))}
           </tbody>
