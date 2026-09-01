@@ -217,6 +217,20 @@ describe("Development Projection & Timeline", () => {
     expect(projection.steps[0]?.estimatedAge).toBe(19);
   });
 
+  it("keeps the target completion age aligned with its cumulative training time", () => {
+    const projection = projectDevelopment(
+      projectionContext([{ skill: "defender", targetLevel: 14, priority: "primary" }], {
+        currentTrainingProgress: { skill: "defender", remainingToNextLevel: 1 }
+      })
+    );
+    const completionWeeks = projection.completion.estimatedWeeks;
+    const completionAge = projection.completion.estimatedAge;
+
+    expect(completionWeeks).not.toBeNull();
+    expect(completionAge).toBe(18 + completionWeeks! / 13);
+    expect(completionAge).toBe(projection.steps.at(-1)?.estimatedAge);
+  });
+
   it("keeps the Sokker age progression in later projection steps", () => {
     const projection = projectDevelopment(
       projectionContext([{ skill: "defender", targetLevel: 14, priority: "primary" }], {
