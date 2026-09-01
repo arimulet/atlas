@@ -1,3 +1,12 @@
+import {
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis
+} from "recharts";
 import type {
   AdvancedImpactViewModel,
   MarketComparableViewModel,
@@ -214,32 +223,92 @@ function MarketProjection({
 
 function MarketProjectionChart({ points }: { points: ProjectionPointViewModel[] }) {
   if (points.length === 0) return null;
-  const values = points.map((point) => point.value.value);
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const spread = Math.max(max - min, 1);
-  const coordinates = points.map((point, index) => ({
-    x: points.length === 1 ? 300 : 24 + (index / (points.length - 1)) * 552,
-    y: 132 - ((point.value.value - min) / spread) * 104
+
+  const data = points.map((point) => ({
+    label: point.label,
+    value: point.value.value,
+    valueLabel: point.value.label,
+    rangeLabel: point.range?.label ?? null,
+    age: point.age,
+    weeks: point.weeks,
+    confidence: point.confidence.label
   }));
+
   return (
     <div className="atlas-market-value__chart-wrap">
-      <svg
+      <div
         className="atlas-market-value__chart"
         role="img"
-        aria-label="Estimated market value versus development timeline"
-        viewBox="0 0 600 160"
+        aria-label="Estimated market value by development milestone"
       >
-        <line x1="24" y1="132" x2="576" y2="132" />
-        <polyline points={coordinates.map((point) => `${point.x},${point.y}`).join(" ")} />
-        {coordinates.map((point, index) => (
-          <circle cx={point.x} cy={point.y} r="4" key={points[index]!.step} />
-        ))}
-      </svg>
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={data} margin={{ top: 12, right: 16, bottom: 4, left: 4 }}>
+            <CartesianGrid vertical={false} stroke="var(--atlas-border)" strokeDasharray="3 3" />
+            <XAxis
+              dataKey="label"
+              axisLine={false}
+              tickLine={false}
+              tickMargin={10}
+              stroke="var(--atlas-text-muted)"
+            />
+            <YAxis
+              axisLine={false}
+              tickLine={false}
+              tickMargin={8}
+              tickFormatter={formatCompactValue}
+              width={58}
+              stroke="var(--atlas-text-muted)"
+            />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: "var(--atlas-surface)",
+                border: "1px solid var(--atlas-border)",
+                borderRadius: "var(--atlas-radius-sm)"
+              }}
+              formatter={(value) => [formatMarketProjectionValue(value), "Estimated value"]}
+              labelStyle={{ color: "var(--atlas-text)" }}
+            />
+            <Line
+              type="monotone"
+              dataKey="value"
+              name="Estimated value"
+              stroke="var(--atlas-accent)"
+              strokeWidth={3}
+              dot={{
+                fill: "var(--atlas-surface)",
+                r: 4,
+                stroke: "var(--atlas-accent)",
+                strokeWidth: 3
+              }}
+              activeDot={{
+                fill: "var(--atlas-surface)",
+                r: 6,
+                stroke: "var(--atlas-accent)",
+                strokeWidth: 3
+              }}
+              isAnimationActive={false}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
 }
 
+function formatCompactValue(value: number): string {
+  return new Intl.NumberFormat("en-US", {
+    notation: "compact",
+    maximumFractionDigits: 1
+  }).format(value);
+}
+
+function formatMarketProjectionValue(value: unknown): string {
+  if (typeof value === "number") {
+    return value.toLocaleString("en-US");
+  }
+
+  return typeof value === "string" ? value : "—";
+}
 function ProjectionRow({ point }: { point: ProjectionPointViewModel }) {
   return (
     <div className="atlas-market-value__projection-row">

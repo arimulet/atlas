@@ -566,27 +566,17 @@
 
 .atlas .atlas-market-value__chart {
   display: block;
-  height: 150px;
+  height: 190px;
   width: 100%;
 }
 
-.atlas .atlas-market-value__chart line {
-  stroke: var(--atlas-border);
-  stroke-width: 1;
+.atlas .atlas-market-value__chart .recharts-cartesian-axis-tick-value {
+  fill: var(--atlas-text-muted);
+  font-size: 0.68rem;
 }
 
-.atlas .atlas-market-value__chart polyline {
-  fill: none;
-  stroke: var(--atlas-accent);
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 3;
-}
-
-.atlas .atlas-market-value__chart circle {
-  fill: var(--atlas-surface);
-  stroke: var(--atlas-accent);
-  stroke-width: 3;
+.atlas .atlas-market-value__chart .recharts-tooltip-item {
+  color: var(--atlas-text-secondary);
 }
 
 .atlas .atlas-market-value__projection-list {
