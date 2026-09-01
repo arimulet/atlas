@@ -7,6 +7,7 @@ import {
   XAxis,
   YAxis
 } from "recharts";
+import { WEEKS_PER_SOKKER_SEASON } from "@atlas/domain";
 import type {
   AdvancedImpactViewModel,
   MarketComparableViewModel,
@@ -312,23 +313,34 @@ function formatMarketProjectionValue(value: unknown): string {
 function ProjectionRow({ point }: { point: ProjectionPointViewModel }) {
   return (
     <div className="atlas-market-value__projection-row">
-      <div>
+      <div className="atlas-market-value__projection-timeline">
         <strong>{point.label}</strong>
         <small>
-          {point.age} years ·{" "}
-          {point.weeks === null
-            ? "—"
-            : `~${point.weeks.toLocaleString("en-US", { maximumFractionDigits: 1 })}w`}{" "}
-          · {point.confidence.label}
+          Age {point.age} · {formatProjectionTimeline(point.weeks)} · {point.confidence.label}
         </small>
         {point.range ? <small>{point.range.label}</small> : null}
       </div>
-      <strong>{point.value.label}</strong>
-      <span>{point.gainFromCurrent?.label ?? "—"}</span>
+      <div className="atlas-market-value__projection-metric">
+        <small>Projected value</small>
+        <strong>{point.value.label}</strong>
+      </div>
+      <div className="atlas-market-value__projection-metric">
+        <small>From current</small>
+        <span>{point.gainFromCurrent?.label ?? "—"}</span>
+      </div>
     </div>
   );
 }
 
+function formatProjectionTimeline(weeks: number | null): string {
+  if (weeks === null) return "Timeline unavailable";
+
+  const formattedWeeks = weeks.toLocaleString("en-US", { maximumFractionDigits: 1 });
+  const seasons = weeks / WEEKS_PER_SOKKER_SEASON;
+  const formattedSeasons = seasons.toLocaleString("en-US", { maximumFractionDigits: 1 });
+
+  return `${formattedWeeks} weeks · ${formattedSeasons} Sokker ${seasons === 1 ? "season" : "seasons"}`;
+}
 function TrainingValueEfficiency({ training }: { training: TrainingValueViewModel | null }) {
   if (!training) return null;
   return (

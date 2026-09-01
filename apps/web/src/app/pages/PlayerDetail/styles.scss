@@ -586,13 +586,25 @@
 
 .atlas .atlas-market-value__projection-row {
   border-bottom: 1px solid color-mix(in srgb, var(--atlas-border) 72%, transparent);
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   padding: 9px 0;
 }
 
-.atlas .atlas-market-value__projection-row > div {
+.atlas .atlas-market-value__projection-timeline,
+.atlas .atlas-market-value__projection-metric {
   display: grid;
   gap: 3px;
   min-width: 0;
+}
+
+.atlas .atlas-market-value__projection-metric {
+  justify-items: end;
+}
+
+.atlas .atlas-market-value__projection-metric small {
+  color: var(--atlas-text-muted);
 }
 
 .atlas .atlas-market-value__projection-row strong {
@@ -603,7 +615,6 @@
 .atlas .atlas-market-value__projection-row span {
   color: var(--atlas-text-secondary);
   font-size: 0.76rem;
-  min-width: 90px;
   text-align: right;
 }
 
@@ -633,6 +644,14 @@
   .atlas .atlas-market-value__timeline-summary,
   .atlas .atlas-market-value__training-summary {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .atlas .atlas-market-value__projection-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .atlas .atlas-market-value__projection-timeline {
+    grid-column: 1 / -1;
   }
 }
 

@@ -254,6 +254,7 @@ describe("market value presentation models", () => {
     expect(viewModel?.projection?.targetCompletion?.value.value).toBe(5_000_000);
     expect(viewModel?.projection?.peak?.value.value).toBe(2_900_000);
     expect(viewModel?.projection?.targetCompletion?.confidence.level).toBe("low");
+    expect(viewModel?.projection?.targetCompletion?.age).toBe("~19");
   });
 
   it("exposes training efficiency, diminishing and negative returns", () => {
