@@ -39,7 +39,7 @@ export function Finances({
       />
       <FundingPlanSection financialStrategy={financialStrategy} />
       <SquadAssetsSection financialStrategy={financialStrategy} onSelectPlayer={onSelectPlayer} />
-      <DevelopmentCapitalSection financialStrategy={financialStrategy} />
+
       <ConflictsSection financialStrategy={financialStrategy} onSelectPlayer={onSelectPlayer} />
       {squadPlanning === null && status === "ready" ? (
         <PanelMessage>
@@ -301,6 +301,7 @@ function SquadAssetsSection({
   onSelectPlayer: (playerId: string) => void;
 }) {
   const assets = financialStrategy.viewModel?.assets;
+  const development = financialStrategy.viewModel?.developmentCapital;
   if (!assets)
     return (
       <Section title="Squad Assets">
@@ -322,6 +323,7 @@ function SquadAssetsSection({
           ["Potential Liquidity", assets.potentialLiquidity, "Not cash until a transfer occurs"]
         ]}
       />
+      <DevelopmentUpside development={development} />
       {assets.distribution.length > 0 ? (
         <CompactList
           title="Asset distribution"
@@ -355,6 +357,29 @@ function SquadAssetsSection({
   );
 }
 
+interface DevelopmentUpsideProps {
+  development: NonNullable<FinancialStrategyState["viewModel"]>["developmentCapital"] | undefined;
+}
+
+function DevelopmentUpside({ development }: DevelopmentUpsideProps) {
+  if (!development) return null;
+
+  return (
+    <aside className="atlas-finances-development-upside" aria-label="Development upside">
+      <div>
+        <span>Development upside</span>
+        <small>
+          {development.coveredPlayers} · {development.confidence} confidence
+        </small>
+      </div>
+      <strong>{development.valueCreation}</strong>
+      <p>
+        Projected covered value: {development.currentValue} → {development.projectedValue}
+      </p>
+    </aside>
+  );
+}
+
 function AssetList({
   title,
   assets,
@@ -383,34 +408,6 @@ function AssetList({
       </ul>
     </div>
   );
-}
-
-function DevelopmentCapitalSection({
-  financialStrategy
-}: {
-  financialStrategy: FinancialStrategyState;
-}) {
-  const development = financialStrategy.viewModel?.developmentCapital;
-  return development ? (
-    <Section title="Development Capital">
-      <MetricGrid
-        metrics={[
-          [
-            "Projection Coverage",
-            development.coveredPlayers,
-            "Only valid projections are included"
-          ],
-          ["Current Covered Value", development.currentValue, "Derived market value"],
-          ["Projected Target Value", development.projectedValue, "Projected"],
-          [
-            "Potential Value Creation",
-            development.valueCreation,
-            `${development.confidence} confidence`
-          ]
-        ]}
-      />
-    </Section>
-  ) : null;
 }
 
 function ConflictsSection({
