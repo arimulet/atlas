@@ -38,6 +38,10 @@ describe("youth decision presentation model", () => {
 
     expect(model).toMatchObject({
       decision: "keep",
+      sportingConfidence: "high",
+      sportingConfidenceLabel: "High confidence",
+      economicConfidence: "low",
+      economicConfidenceLabel: "Low confidence",
       prospectQualityLabel: "Very High",
       clubFitLabel: "Poor",
       profileLabel: "Defender"
@@ -156,8 +160,6 @@ describe("youth decision presentation model", () => {
 
     expect(ordered.map((model) => model.playerId)).toEqual(["3", "2", "1"]);
   });
-
-
 });
 
 function createPlanning(candidates: YouthDecisionCandidate[]): YouthDecisionPlanning {

@@ -446,7 +446,7 @@ describe("Youth Decision Recommendations", () => {
     expect(congested.scores.prospectQuality).toBe(open.scores.prospectQuality);
   });
 
-  it("reduces confidence for uncertain market evidence and missing market data", () => {
+  it("keeps sporting confidence independent from uncertain or missing market evidence", () => {
     const uncertain = recommendYouthDecision(
       context({
         prospect: prospect(player(), { prospectScore: 0.8, confidence: "high" }),
@@ -460,9 +460,20 @@ describe("Youth Decision Recommendations", () => {
         opportunity: opportunity({ clubFitScore: 0.8 })
       })
     );
+    const supportedMarket = recommendYouthDecision(
+      context({
+        prospect: prospect(player(), { prospectScore: 0.8, confidence: "high" }),
+        opportunity: opportunity({ clubFitScore: 0.8 }),
+        marketValue: marketValue(1_000_000, "medium")
+      })
+    );
 
-    expect(uncertain.confidence).toBe("low");
-    expect(missing.confidence).toBe("low");
+    expect(uncertain.sportingConfidence).toBe("high");
+    expect(uncertain.economicConfidence).toBe("low");
+    expect(missing.sportingConfidence).toBe("high");
+    expect(missing.economicConfidence).toBe("low");
+    expect(supportedMarket.sportingConfidence).toBe("high");
+    expect(supportedMarket.economicConfidence).toBe("medium");
   });
 
   it("applies decision stability when a borderline recommendation changes without material evidence", () => {

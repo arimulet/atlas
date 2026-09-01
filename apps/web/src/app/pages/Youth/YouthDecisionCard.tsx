@@ -13,8 +13,8 @@ interface YouthDecisionCardProps {
 
 export function YouthDecisionCard({ model, onSelectPlayer }: YouthDecisionCardProps) {
   const supportingReasons = model.candidate.opportunity.reasons.map(mapYouthFitReason);
-  const showLowConfidenceWarning =
-    model.confidence === "low" && model.decision !== "hold" && model.decision !== "unknown";
+  const showLowSportingConfidenceWarning =
+    model.sportingConfidence === "low" && model.decision !== "hold" && model.decision !== "unknown";
   const profileChanged = model.development.changedProfile;
 
   return (
@@ -34,7 +34,7 @@ export function YouthDecisionCard({ model, onSelectPlayer }: YouthDecisionCardPr
             {model.decisionLabel}
           </span>
           <span className="atlas-youth-decision-card__meta">
-            {model.priorityLabel} · {model.confidenceLabel}
+            {model.priorityLabel} · Sporting: {model.sportingConfidenceLabel}
           </span>
         </div>
       </header>
@@ -46,9 +46,9 @@ export function YouthDecisionCard({ model, onSelectPlayer }: YouthDecisionCardPr
         </p>
       ) : null}
 
-      {showLowConfidenceWarning ? (
+      {showLowSportingConfidenceWarning ? (
         <p className="atlas-youth-decision-card__confidence-warning">
-          Recommendation may change as more evidence becomes available.
+          Sporting recommendation may change as more evidence becomes available.
         </p>
       ) : null}
 
@@ -154,8 +154,9 @@ export function YouthDecisionCard({ model, onSelectPlayer }: YouthDecisionCardPr
                   value.
                 </p>
               ) : null}
+              <MetricRow label="Economic confidence" value={model.economicConfidenceLabel} />
               <MetricRow
-                label="Market confidence"
+                label="Current market estimate confidence"
                 value={model.market.confidence ? capitalize(model.market.confidence) : "Unknown"}
               />
               {model.market.comparableSales !== null ? (

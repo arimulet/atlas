@@ -54,7 +54,8 @@ export function recommendYouthDecision(
     playerId: context.player.playerId,
     decision,
     priority: calculatePriority(decision, scores, economicEvidence, resolvedConfig),
-    confidence: calculateDecisionConfidence(context, economicEvidence, decision),
+    sportingConfidence: calculateSportingConfidence(context),
+    economicConfidence: calculateEconomicConfidence(economicEvidence),
     scores,
     recommendedProfile,
     alternativeProfile: context.opportunity.reprofileOpportunity?.viable
@@ -460,18 +461,15 @@ function buildRisks(
   return uniqueRisks(risks);
 }
 
-function calculateDecisionConfidence(
-  context: YouthDecisionContext,
-  evidence: EconomicEvidence,
-  decision: YouthDecision
-): Confidence {
-  let confidence = minimumConfidence(context.prospect.confidence, context.opportunity.confidence);
-  if (evidence.currentConfidence !== null)
-    confidence = minimumConfidence(confidence, evidence.currentConfidence);
-  else confidence = minimumConfidence(confidence, "low");
-  if (evidence.projectionConfidence !== null)
+function calculateSportingConfidence(context: YouthDecisionContext): Confidence {
+  return minimumConfidence(context.prospect.confidence, context.opportunity.confidence);
+}
+
+function calculateEconomicConfidence(evidence: EconomicEvidence): Confidence {
+  let confidence = evidence.currentConfidence ?? "low";
+  if (evidence.projectionConfidence !== null) {
     confidence = minimumConfidence(confidence, evidence.projectionConfidence);
-  if (decision === "release") confidence = minimumConfidence(confidence, "high");
+  }
   return confidence;
 }
 
@@ -511,7 +509,7 @@ function compareDecisions(
   return (
     needRank[right.decision] - needRank[left.decision] ||
     priorityRank[right.priority] - priorityRank[left.priority] ||
-    confidenceRank[right.confidence] - confidenceRank[left.confidence] ||
+    confidenceRank[right.sportingConfidence] - confidenceRank[left.sportingConfidence] ||
     (right.scores.prospectQuality ?? -1) - (left.scores.prospectQuality ?? -1) ||
     left.playerId - right.playerId
   );
