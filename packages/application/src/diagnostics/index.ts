@@ -33,7 +33,7 @@ export async function getClubDiagnostic(clubId: ClubId): Promise<BasicDiagnostic
   const currencyRate = clubCountry?.currencyRate ?? 1;
   const currencyName = clubCountry?.currencyName ?? club.currency;
 
-  const rawTransfers = await findFinalMarketTransfersUpToDate(latestSnapshot.snapshotDate);
+  const rawTransfers = await findFinalMarketTransfersUpToDate(new Date());
   const mappedTransfers = rawTransfers.map(t => mapMarketTransferToRecord(t, currencyName, currencyRate));
 
   return createSnapshotDiagnostic(latestSnapshot, club.currency, mappedTransfers);
