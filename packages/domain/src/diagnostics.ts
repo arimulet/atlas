@@ -66,6 +66,7 @@ export interface BasicDiagnosticPlayerSnapshot {
   age: number;
   wage: Money;
   value: Money;
+  calibratedValue?: Money | null;
   form: number | null;
   availabilityStatus: AvailabilityStatus | null;
   observedPosition: ObservedPosition | null;
@@ -292,7 +293,14 @@ function createEconomicRiskFindings(players: ClassifiedPlayer[]): BasicDiagnosti
 
 function createAssetRiskFindings(players: ClassifiedPlayer[]): BasicDiagnosticFinding[] {
   return players.flatMap(({ player }) => {
-    const isRisk = player.age >= 30 && player.value.amount >= ORIGINAL_ASSET_VALUE_THRESHOLD;
+    const valueToCheck = player.calibratedValue?.amount ?? null;
+    
+    // If we don't have a calibrated value, we skip the alert
+    if (valueToCheck === null) {
+      return [];
+    }
+
+    const isRisk = player.age >= 30 && valueToCheck >= ORIGINAL_ASSET_VALUE_THRESHOLD;
 
     if (!isRisk) {
       return [];
@@ -303,7 +311,7 @@ function createAssetRiskFindings(players: ClassifiedPlayer[]): BasicDiagnosticFi
         code: "asset-risk.senior-high-value",
         category: "asset-risk",
         severity:
-          player.age >= 33 || player.value.amount >= ORIGINAL_HIGH_ASSET_VALUE_THRESHOLD
+          player.age >= 33 || valueToCheck >= ORIGINAL_HIGH_ASSET_VALUE_THRESHOLD
             ? "high"
             : "medium",
         parameters: { playerName: player.name, age: player.age, value: player.value.amount },
