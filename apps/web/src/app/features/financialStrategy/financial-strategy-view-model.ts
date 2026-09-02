@@ -268,6 +268,14 @@ function createAssetViewModel(
       .filter((recommendation) => recommendation.type === "monetize_surplus_asset")
       .flatMap((recommendation) => recommendation.playerIds ?? [])
   );
+  const protectedPlayerIds = new Set(
+    data.strategyPlan.monetizationCandidates
+      .filter(
+        (c) => c.strategicProtection === "critical" || c.strategicProtection === "high"
+      )
+      .map((c) => c.playerId)
+  );
+
   return {
     estimatedValue: money(assessment.squadAssets.expected, currency),
     coverage: `${assessment.squadAssets.valuedPlayers}/${assessment.squadAssets.totalPlayers} players valued`,
@@ -285,7 +293,7 @@ function createAssetViewModel(
       : [],
     potentialLiquidity: money(allocation.potentialAssetLiquidity, currency),
     monetizable: allocation.monetizableAssets
-      .filter((asset) => asset.liquidityPotential !== "low" && asset.estimatedMarketValue !== null)
+      .filter((asset) => asset.liquidityPotential !== "low" && asset.estimatedMarketValue !== null && !protectedPlayerIds.has(asset.playerId))
       .sort((left, right) => (right.estimatedMarketValue ?? 0) - (left.estimatedMarketValue ?? 0))
       .map((asset) => ({
         playerId: asset.playerId,
