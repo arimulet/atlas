@@ -39,9 +39,20 @@ export function createSnapshotDiagnostic(
         form: player.form,
         availabilityStatus: player.availabilityStatus,
         observedPosition: player.observedPosition,
+        position: positionFromTraining(player.training.position),
         skills: player.skills
       }))
     },
     snapshot.importedAt
   );
+}
+
+function positionFromTraining(positionNum: number): string | null {
+  switch (positionNum) {
+    case 0: return "GK";
+    case 1: return "DEF";
+    case 2: return "MID";
+    case 3: return "ATT";
+    default: return null;
+  }
 }

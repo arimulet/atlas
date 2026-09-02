@@ -252,7 +252,11 @@ function contextFromEvidence(
 ): string | undefined {
   const context = evidence
     .filter((item) => item.value !== null && item.value !== undefined && item.value !== "")
-    .map((item) => `${item.label ?? item.code ?? "Evidence"}: ${String(item.value)}`)
+    .map((item) => {
+      const label = item.label ?? item.code ?? "Evidence";
+      const displayLabel = label === "player.missing-field" ? "Dato faltante" : label;
+      return `${displayLabel}: ${String(item.value)}`;
+    })
     .join(" · ");
 
   return context || undefined;
