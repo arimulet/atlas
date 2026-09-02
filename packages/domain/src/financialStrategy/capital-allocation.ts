@@ -579,13 +579,12 @@ function assessMonetizableAssets(
   return players
     .map((player) => {
       const estimate = estimates.get(player.playerId);
+      const isOverstocked = overstockedProfiles.has(player.profile ?? ("" as DevelopmentProfile));
       const liquidityPotential: MonetizableAssetAssessment["liquidityPotential"] =
-        overstockedProfiles.has(player.profile ?? ("" as DevelopmentProfile)) ||
-        player.role === "transition" ||
-        player.role === "depth"
-          ? "high"
-          : player.role === "core" || player.role === "developing"
-            ? "low"
+        player.role === "core" || player.role === "developing"
+          ? "low"
+          : player.role === "transition" || player.role === "depth" || isOverstocked
+            ? "high"
             : "medium";
       return {
         playerId: player.playerId,
