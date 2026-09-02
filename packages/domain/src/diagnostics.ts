@@ -397,7 +397,7 @@ function createFollowUpFindings(players: ClassifiedPlayer[]): BasicDiagnosticFin
   });
 }
 
-function roleFromObservedPosition(position: ObservedPosition | null): ObservedPosition | null {
+function roleFromObservedPosition(position: string | null): ObservedPosition | null {
   if (!position) {
     return null;
   }
