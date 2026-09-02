@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { useState } from "react";
+import { Info } from "lucide-react";
 import { formatMoney } from "../../formatters";
 import { PlayerLink } from "../../components/PlayerLink";
 import { StatusBadge } from "../../components/StatusBadge";
@@ -346,7 +347,14 @@ function SquadAssetsSection({
                 <PlayerLink playerId={String(asset.playerId)} onSelectPlayer={onSelectPlayer}>
                   {asset.name}
                 </PlayerLink>
-                <strong>{asset.value}</strong>
+                <strong>
+                  {asset.value}
+                  {asset.isTheoretical ? (
+                    <span title="Tasación teórica" className="atlas-finances-theoretical-icon" style={{ cursor: "help", marginLeft: "6px", opacity: 0.6, display: "inline-flex", verticalAlign: "text-bottom" }}>
+                      <Info size={16} />
+                    </span>
+                  ) : null}
+                </strong>
                 <small>{asset.reasons.join(" · ")}</small>
               </li>
             ))}
@@ -398,7 +406,14 @@ function AssetList({
             <PlayerLink playerId={String(asset.playerId)} onSelectPlayer={onSelectPlayer}>
               {asset.name}
             </PlayerLink>
-            <strong>{asset.value}</strong>
+            <strong>
+              {asset.value}
+              {asset.isTheoretical ? (
+                <span title="Tasación teórica" className="atlas-finances-theoretical-icon" style={{ cursor: "help", marginLeft: "6px", opacity: 0.6, display: "inline-flex", verticalAlign: "text-bottom" }}>
+                  <Info size={16} />
+                </span>
+              ) : null}
+            </strong>
             <small>
               {asset.role} · Liquidity potential: {asset.liquidity}
               {asset.recommended ? " · Recommended monetization" : ""}

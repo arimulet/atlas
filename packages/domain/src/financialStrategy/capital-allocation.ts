@@ -593,7 +593,8 @@ function assessMonetizableAssets(
         squadRole: player.role,
         strategicImportance: strategicImportance(player.role, config),
         liquidityPotential,
-        confidence: estimate?.confidence ?? "low"
+        confidence: estimate?.confidence ?? "low",
+        isTheoretical: estimate?.reasons.some(r => r.type === "no_comparable_market_evidence") ?? true
       };
     })
     .sort((left, right) => left.playerId - right.playerId);

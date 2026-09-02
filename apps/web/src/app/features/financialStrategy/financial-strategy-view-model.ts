@@ -88,8 +88,9 @@ export interface SquadAssetViewModel {
     role: string;
     liquidity: string;
     recommended: boolean;
+    isTheoretical: boolean;
   }>;
-  protectedAssets: Array<{ playerId: number; name: string; value: string; reasons: string[] }>;
+  protectedAssets: Array<{ playerId: number; name: string; value: string; reasons: string[]; isTheoretical: boolean }>;
 }
 
 export interface DevelopmentCapitalViewModel {
@@ -292,7 +293,8 @@ function createAssetViewModel(
         value: money(asset.estimatedMarketValue, currency),
         role: roleLabel(asset.squadRole),
         liquidity: titleCase(asset.liquidityPotential),
-        recommended: recommendationPlayerIds.has(asset.playerId)
+        recommended: recommendationPlayerIds.has(asset.playerId),
+        isTheoretical: asset.isTheoretical
       })),
     protectedAssets: data.strategyPlan.monetizationCandidates
       .filter(
@@ -303,7 +305,8 @@ function createAssetViewModel(
         playerId: candidate.playerId,
         name: playerNames.get(candidate.playerId) ?? `Player ${candidate.playerId}`,
         value: money(candidate.marketValue, currency),
-        reasons: candidate.reasons.map((reason) => monetizationReasonLabel(reason))
+        reasons: candidate.reasons.map((reason) => monetizationReasonLabel(reason)),
+        isTheoretical: candidate.isTheoretical
       }))
   };
 }
