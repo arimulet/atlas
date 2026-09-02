@@ -209,6 +209,7 @@ export function assessMonetizationCandidates(
         monetizationScore,
         strategicProtection,
         timing,
+        isTheoretical: estimate?.reasons.some(r => r.type === "no_comparable_market_evidence") ?? true,
         confidence: combineConfidence(
           estimate?.confidence ?? "low",
           projection?.confidence ?? "low",

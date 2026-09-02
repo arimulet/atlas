@@ -106,7 +106,9 @@ function toMarketValueEstimate(
   return {
     ...value.fundamental,
     estimatedValue: value.calibratedValue,
-    estimatedMarketValue: value.calibratedValue
+    estimatedMarketValue: value.calibratedValue,
+    confidence: value.confidence,
+    reasons: value.reasons
   };
 }
 

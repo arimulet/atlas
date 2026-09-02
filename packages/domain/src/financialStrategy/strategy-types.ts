@@ -113,6 +113,7 @@ export interface MonetizationCandidateAssessment {
   projectedPeakValue?: number | null;
   monetizationScore: number | null;
   strategicProtection: StrategicAssetProtection;
+  isTheoretical: boolean;
   timing: MonetizationTimingAssessment;
   confidence: Confidence;
   reasons: MonetizationCandidateReason[];
