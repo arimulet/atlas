@@ -74,6 +74,7 @@ describe("generateBasicDiagnostic", () => {
             name: "Senior Asset",
             age: 32,
             valueAmount: 2400000,
+            calibratedValueAmount: 2400000,
             observedPosition: "defender"
           })
         ]
@@ -192,6 +193,13 @@ function player(overrides: PartialPlayer = {}): BasicDiagnosticPlayerSnapshot {
       amount: overrides.valueAmount ?? 450000,
       currency: overrides.currency === undefined ? "ARS" : overrides.currency
     },
+    calibratedValue:
+      overrides.calibratedValueAmount === undefined
+        ? null
+        : {
+            amount: overrides.calibratedValueAmount,
+            currency: overrides.currency === undefined ? "ARS" : overrides.currency
+          },
     form: overrides.form === undefined ? 10 : overrides.form,
     availabilityStatus:
       overrides.availabilityStatus === undefined ? "available" : overrides.availabilityStatus,
@@ -217,6 +225,7 @@ interface PartialPlayer {
   age?: number;
   wageAmount?: number;
   valueAmount?: number;
+  calibratedValueAmount?: number;
   currency?: string | null;
   form?: number | null;
   availabilityStatus?: BasicDiagnosticPlayerSnapshot["availabilityStatus"];
