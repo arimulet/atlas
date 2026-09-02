@@ -436,10 +436,21 @@ function buildFindings(input: {
     ];
   }
 
+  if (input.current.age >= 24) {
+    return [];
+  }
+
+  let stagnationSeverity: Severity;
+  if (input.current.training.advanced) {
+    stagnationSeverity = "high";
+  } else {
+    stagnationSeverity = input.snapshotCount >= 3 ? "medium" : "low";
+  }
+
   return [
     {
       type: "stagnation",
-      severity: input.snapshotCount >= 3 ? "medium" : "low",
+      severity: stagnationSeverity,
       confidence: input.evolution.confidence,
       title: "Estancamiento observado",
       description:
@@ -513,11 +524,15 @@ function findPreviousComparablePlayer(
   player: PersistedPlayerSnapshot,
   snapshots: PersistedSnapshot[]
 ): ComparablePlayerPoint | null {
-  if (!player.playerId) {
+  if (!player.playerId || snapshots.length < 2) {
     return null;
   }
 
+  const latestDate = snapshots[snapshots.length - 1].snapshotDate.getTime();
+  const targetTimeDiff = 21 * 24 * 60 * 60 * 1000; // 21 days in milliseconds
+
   const previousSnapshots = snapshots.slice(0, -1).reverse();
+  let bestMatch: ComparablePlayerPoint | null = null;
 
   for (const snapshot of previousSnapshots) {
     const matches = snapshot.players.filter(
@@ -525,15 +540,22 @@ function findPreviousComparablePlayer(
     );
 
     if (matches.length === 1) {
-      return {
+      const point = {
         snapshotId: snapshot.id,
         snapshotDate: formatDate(snapshot.snapshotDate),
         player: matches[0]!
       };
+
+      const timeDiff = latestDate - snapshot.snapshotDate.getTime();
+      if (timeDiff >= targetTimeDiff) {
+        return point;
+      }
+
+      bestMatch = point;
     }
   }
 
-  return null;
+  return bestMatch;
 }
 
 function buildIdentityIndex(
