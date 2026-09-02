@@ -69,6 +69,7 @@ export interface BasicDiagnosticPlayerSnapshot {
   form: number | null;
   availabilityStatus: AvailabilityStatus | null;
   observedPosition: ObservedPosition | null;
+  position?: string | null;
   skills: Required<SkillSet>;
 }
 
@@ -100,15 +101,18 @@ const roleAliases: Record<string, PlayerRole> = {
   defender: "defender",
   defensa: "defender",
   df: "defender",
+  def: "defender",
   midfielder: "midfielder",
   medio: "midfielder",
   volante: "midfielder",
+  mid: "midfielder",
   winger: "winger",
   extremo: "winger",
   wing: "winger",
   striker: "striker",
   forward: "striker",
-  delantero: "striker"
+  delantero: "striker",
+  att: "striker"
 };
 
 export function generateBasicDiagnostic(
@@ -131,7 +135,7 @@ export function generateBasicDiagnostic(
 }
 
 function classifyPlayer(player: BasicDiagnosticPlayerSnapshot): ClassifiedPlayer {
-  const observedRole = roleFromObservedPosition(player.observedPosition);
+  const observedRole = roleFromObservedPosition(player.position ?? player.observedPosition);
 
   if (observedRole) {
     return {
@@ -139,7 +143,7 @@ function classifyPlayer(player: BasicDiagnosticPlayerSnapshot): ClassifiedPlayer
       role: observedRole,
       roleScore: roleScore(observedRole, player.skills),
       roleEvidence: [
-        trace("observed", "player.observed-position", player.observedPosition, {
+        trace("observed", "player.observed-position", player.position ?? player.observedPosition, {
           playerName: player.name
         }),
         trace("derived", "player.role-score", roleScore(observedRole, player.skills), {
@@ -373,7 +377,7 @@ function createFollowUpFindings(players: ClassifiedPlayer[]): BasicDiagnosticFin
         severity: missingFields.includes("playerId") ? "medium" : "low",
         parameters: { playerName: player.name, missingFields: missingFields.join(", ") },
         evidence: missingFields.map((field) =>
-          trace("observed", "player.missing-field", null, { playerName: player.name, field })
+          trace("observed", "player.missing-field", field, { playerName: player.name, field })
         ),
 
         assumptions: [
@@ -427,7 +431,7 @@ function missingFollowUpFields(player: BasicDiagnosticPlayerSnapshot): string[] 
     player.playerId ? null : "playerId",
     player.form === null ? "form" : null,
     player.availabilityStatus === null ? "availabilityStatus" : null,
-    player.observedPosition ? null : "observedPosition",
+    player.position ? null : "position",
     ...SUPPORTED_SKILLS.map((skillKey) =>
       player.skills[skillKey] === null ? `skills.${skillKey}` : null
     )
