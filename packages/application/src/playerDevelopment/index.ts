@@ -524,11 +524,13 @@ function findPreviousComparablePlayer(
   player: PersistedPlayerSnapshot,
   snapshots: PersistedSnapshot[]
 ): ComparablePlayerPoint | null {
-  if (!player.playerId || snapshots.length < 2) {
+  const latestSnapshot = snapshots.at(-1);
+
+  if (!player.playerId || snapshots.length < 2 || !latestSnapshot) {
     return null;
   }
 
-  const latestDate = snapshots[snapshots.length - 1].snapshotDate.getTime();
+  const latestDate = latestSnapshot.snapshotDate.getTime();
   const targetTimeDiff = 21 * 24 * 60 * 60 * 1000; // 21 days in milliseconds
 
   const previousSnapshots = snapshots.slice(0, -1).reverse();
