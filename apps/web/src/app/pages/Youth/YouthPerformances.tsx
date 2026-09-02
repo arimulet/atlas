@@ -40,7 +40,7 @@ const EditableObservationCell = ({
       onChange={(e) => setValue(e.target.value)}
       onBlur={handleBlur}
       disabled={isSaving}
-      placeholder="Agregar nota..."
+      placeholder="Add note..."
     />
   );
 };
@@ -59,7 +59,7 @@ export function YouthPerformances({ clubId, youthAcademy }: YouthPerformancesPro
   }, [clubId]);
 
   if (!youthAcademy || !data) {
-    return loading ? <p className="atlas-youth-panel__message is-info">Cargando rendimientos...</p> : null;
+    return loading ? <p className="atlas-youth-panel__message is-info">Loading performances...</p> : null;
   }
 
   // Separate GKs from field players using the formation field from Sokker XML (0 = GK, 1 = field)
@@ -125,15 +125,15 @@ export function YouthPerformances({ clubId, youthAcademy }: YouthPerformancesPro
   return (
     <div className="atlas-youth">
       <header className="atlas-youth__header">
-        <h1>Match Performances</h1>
+        <h1>Academy Performances</h1>
       </header>
 
       <div className="atlas-youth-performances">
         <section className="atlas-youth-panel atlas-youth-panel--performances">
           <div className="atlas-youth-section-heading">
             <div>
-              <p className="atlas-youth-panel__eyebrow">Rendimientos cronol├│gicos</p>
-              <h2 className="atlas-youth-panel__title atlas-section-title">Arqueros</h2>
+              <p className="atlas-youth-panel__eyebrow">Chronological Performances</p>
+              <h2 className="atlas-youth-panel__title atlas-section-title">Goalkeepers</h2>
             </div>
           </div>
             <div className="atlas-youth-table-wrap">
@@ -155,7 +155,9 @@ export function YouthPerformances({ clubId, youthAcademy }: YouthPerformancesPro
                 <tbody>
                   {gks.map(p => (
                     <tr key={p.player.id}>
-                      <th scope="row" style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{p.player.name}</th>
+                      <th scope="row" style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
+                        {p.player.name} <span style={{ fontWeight: "normal", color: "var(--color-text-secondary, #888)", fontSize: "0.9em" }}>({p.player.age}yo, {p.player.weeksRemaining ?? "-"}w)</span>
+                      </th>
                       <td className={getSkillColorClass(p.player.skill)}>
                         {p.player.skill !== null ? skillLevelLabel(p.player.skill) : "-"}
                       </td>
@@ -183,8 +185,8 @@ export function YouthPerformances({ clubId, youthAcademy }: YouthPerformancesPro
         <section className="atlas-youth-panel atlas-youth-panel--performances" style={{ marginTop: "2rem" }}>
           <div className="atlas-youth-section-heading">
             <div>
-              <p className="atlas-youth-panel__eyebrow">Historial por Posici├│n</p>
-              <h2 className="atlas-youth-panel__title atlas-section-title">Jugadores de Campo</h2>
+              <p className="atlas-youth-panel__eyebrow">History by Position</p>
+              <h2 className="atlas-youth-panel__title atlas-section-title">Field Players</h2>
             </div>
           </div>
           <div className="atlas-youth-table-wrap">
@@ -218,7 +220,9 @@ export function YouthPerformances({ clubId, youthAcademy }: YouthPerformancesPro
                   
                   return (
                     <tr key={p.player.id}>
-                      <th scope="row">{p.player.name}</th>
+                      <th scope="row">
+                        {p.player.name} <span style={{ fontWeight: "normal", color: "var(--color-text-secondary, #888)", fontSize: "0.9em" }}>({p.player.age}yo, {p.player.weeksRemaining ?? "-"}w)</span>
+                      </th>
                       <td className="atlas-youth-table__center">
                          <span className={"atlas-youth-decision-badge " + (pos === "UNKNOWN" ? "is-none" : "is-" + pos.toLowerCase())}>
                            {pos}
