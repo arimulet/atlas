@@ -29,7 +29,7 @@ export async function getClubDiagnostic(clubId: ClubId): Promise<BasicDiagnostic
   const latestSnapshot = (await snapshotRepository.listByClub(clubId)).at(-1);
   if (!latestSnapshot) return null;
 
-  const clubCountry = club.countryId ? await countryRepository.findById(club.countryId) : null;
+  const clubCountry = await countryRepository.getById(club.country);
   const currencyRate = clubCountry?.currencyRate ?? 1;
   const currencyName = clubCountry?.currencyName ?? club.currency;
 
@@ -60,8 +60,8 @@ export function createSnapshotDiagnostic(
            };
            const calibration = calibratePlayerMarketValue(context, transfers);
            // Only use it if we found actual comparable transfers on the market
-           if (calibration.sampleSize > 0) {
-             calibratedValue = calibration.expected;
+            if (calibration.comparableEstimate) {
+              calibratedValue = calibration.calibratedValue.expected;
            }
         }
 
@@ -107,7 +107,9 @@ function mapMarketTransferToRecord(
       defender: transfer.skills.defender ?? null,
       playmaker: transfer.skills.playmaker ?? null,
       striker: transfer.skills.striker ?? null
-    }
+    },
+    source: "imported",
+    salePriceType: "final_sale"
   };
 }
 
