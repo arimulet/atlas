@@ -40,10 +40,13 @@ import type { SokkerImportCredentials } from "./components/SokkerImporterForm/ty
 import type { ViewId } from "./types";
 import { pathForMainView, pathForPlayerDetail, useRouter } from "./routing";
 import { useFinancialStrategy } from "./features/financialStrategy/useFinancialStrategy";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import { AuthScreen } from "./pages/Auth/AuthScreen";
 
 const lastClubStorageKey = "atlas.lastClubId";
 
-export function App() {
+function AuthenticatedApp() {
+  const { user, loading } = useAuth();
   const { goBack, navigate, route } = useRouter();
   const activeView: ViewId = route.kind === "player-detail" ? "player-detail" : route.view;
   const [isSokkerImportOpen, setIsSokkerImportOpen] = useState(false);
@@ -300,6 +303,19 @@ export function App() {
     squadPlanning
   });
 
+  if (loading) {
+    return (
+      <div className="atlas-auth-loading-screen">
+        <span className="atlas-auth-spinner" aria-hidden="true" />
+        <span>Cargando ATLAS...</span>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <AuthScreen />;
+  }
+
   return (
     <AppShell
       activeView={route.kind === "main" ? route.view : null}
@@ -414,3 +430,12 @@ export function App() {
     </AppShell>
   );
 }
+
+export function App() {
+  return (
+    <AuthProvider>
+      <AuthenticatedApp />
+    </AuthProvider>
+  );
+}
+
