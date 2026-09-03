@@ -66,6 +66,11 @@ export class MongoPlayerRepository {
     return player ? mapPlayer(player.toObject()) : null;
   }
 
+  async listByClub(clubId: number): Promise<PersistedPlayer[]> {
+    const players = await PlayerModel.find({ clubId }).sort({ playerId: 1 });
+    return players.map((player) => mapPlayer(player.toObject()));
+  }
+
   async findById(id: string): Promise<PersistedPlayer | null> {
     const player = await PlayerModel.findById(id);
     return player ? mapPlayer(player.toObject()) : null;

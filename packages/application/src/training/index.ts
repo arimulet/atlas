@@ -1,6 +1,7 @@
 import {
   MongoClubRepository,
   MongoJuniorRepository,
+  MongoPlayerRepository,
   MongoSnapshotRepository,
   MongoTrainingWeekRepository,
   type PersistedJunior,
@@ -38,6 +39,24 @@ const clubRepository = new MongoClubRepository();
 const juniorRepository = new MongoJuniorRepository();
 const snapshotRepository = new MongoSnapshotRepository();
 const trainingWeekRepository = new MongoTrainingWeekRepository();
+const playerRepository = new MongoPlayerRepository();
+
+function resolvePlayerPosition(
+  player: { position?: string | null } | null | undefined,
+  snapshotPlayer?: { observedPosition?: string | null } | null
+): AdvancedTrainingCandidateContext["player"]["position"] {
+  const rawPosition = player?.position ?? snapshotPlayer?.observedPosition ?? null;
+  if (!rawPosition) {
+    return null;
+  }
+  const p = rawPosition.trim().toLowerCase();
+  if (p === "gk" || p === "goalkeeper") return "goalkeeper";
+  if (p === "def" || p === "defender") return "defender";
+  if (p === "mid" || p === "midfielder") return "midfielder";
+  if (p === "winger") return "winger";
+  if (p === "att" || p === "striker" || p === "forward") return "striker";
+  return null;
+}
 const DOMAIN_PLAYER_SKILLS: readonly PlayerSkill[] = [
   "stamina",
   "keeper",
@@ -146,10 +165,12 @@ export async function getTrainingRecommendations(
     throw new Error(`Club not found: ${clubId}`);
   }
 
-  const [reports, snapshots] = await Promise.all([
+  const [reports, snapshots, persistedPlayers] = await Promise.all([
     trainingWeekRepository.listByClub(club.clubId),
-    snapshotRepository.listByClub(clubId)
+    snapshotRepository.listByClub(clubId),
+    playerRepository.listByClub(club.clubId)
   ]);
+  const persistedPlayerMap = new Map(persistedPlayers.map((p) => [p.playerId, p]));
   const histories = buildTrainingHistories(reports);
   const talentByPlayer = new Map<number, ReturnType<typeof estimateTalentFromTrainingHistory>>();
 
@@ -179,13 +200,14 @@ export async function getTrainingRecommendations(
       const snapshotPlayer = latestSnapshot?.players.find(
         (player) => player.playerId === playerReport.playerId
       );
+      const persistedPlayer = persistedPlayerMap.get(playerReport.playerId);
 
       return [
         {
           player: {
             playerId: playerReport.playerId,
             age: currentWeek.playerAge,
-            position: snapshotPlayer?.observedPosition ?? null,
+            position: resolvePlayerPosition(persistedPlayer, snapshotPlayer),
             skills: currentWeek.skills
           },
           weeklyReport: playerReport,
@@ -207,11 +229,13 @@ export async function getAdvancedTrainingOptimization(
     throw new Error(`Club not found: ${clubId}`);
   }
 
-  const [reports, snapshots, juniors] = await Promise.all([
+  const [reports, snapshots, juniors, persistedPlayers] = await Promise.all([
     trainingWeekRepository.listByClub(club.clubId),
     snapshotRepository.listByClub(clubId),
-    juniorRepository.listByClub(club.clubId)
+    juniorRepository.listByClub(club.clubId),
+    playerRepository.listByClub(club.clubId)
   ]);
+  const persistedPlayerMap = new Map(persistedPlayers.map((p) => [p.playerId, p]));
   const histories = buildTrainingHistories(reports);
   const talentByPlayer = new Map<number, ReturnType<typeof estimateTalentFromTrainingHistory>>();
 
@@ -266,13 +290,14 @@ export async function getAdvancedTrainingOptimization(
       const snapshotPlayer = latestSnapshot?.players.find(
         (player) => player.playerId === playerReport.playerId
       );
+      const persistedPlayer = persistedPlayerMap.get(playerReport.playerId);
 
       return [
         {
           player: {
             playerId: playerReport.playerId,
             age: currentWeek.playerAge,
-            position: snapshotPlayer?.observedPosition ?? null,
+            position: resolvePlayerPosition(persistedPlayer, snapshotPlayer),
             skills: currentWeek.skills
           },
           weeklyReport: playerReport,
@@ -294,24 +319,25 @@ export async function getAdvancedTrainingOptimization(
     const snapshotPlayer = latestSnapshot?.players.find(
       (player) => player.playerId === history.playerId
     );
-  const academyTalent = academyTalentByPlayer.get(history.playerId);
+    const persistedPlayer = persistedPlayerMap.get(history.playerId);
+    const academyTalent = academyTalentByPlayer.get(history.playerId);
     const seniorTalent = talentByPlayer.get(history.playerId);
     const hasObservedSeniorTalent =
       seniorTalent?.value !== null && seniorTalent?.value !== undefined;
     const isTrialCandidate =
       validSeniorTrainingWeekCount(history) < 2 ||
       (academyTalent !== undefined && !hasObservedSeniorTalent);
-  const projectedIntensity =
-    currentWeek.intensity > 0
-      ? currentWeek.intensity
-      : DEFAULT_TRIAL_ADVANCED_PROJECTED_INTENSITY;
+    const projectedIntensity =
+      currentWeek.intensity > 0
+        ? currentWeek.intensity
+        : DEFAULT_TRIAL_ADVANCED_PROJECTED_INTENSITY;
     return [
       {
         player: {
           playerId: history.playerId,
           age: currentWeek.playerAge,
           position:
-            snapshotPlayer?.observedPosition ??
+            resolvePlayerPosition(persistedPlayer, snapshotPlayer) ??
             (snapshotPlayer
               ? trialPositionForTrainingPosition(snapshotPlayer.training.position)
               : null),
@@ -387,10 +413,12 @@ export async function getWeeklyTrainingCalibration(
     throw new Error(`Club not found: ${clubId}`);
   }
 
-  const [reports, snapshots] = await Promise.all([
+  const [reports, snapshots, persistedPlayers] = await Promise.all([
     trainingWeekRepository.listByClub(club.clubId),
-    snapshotRepository.listByClub(clubId)
+    snapshotRepository.listByClub(clubId),
+    playerRepository.listByClub(club.clubId)
   ]);
+  const persistedPlayerMap = new Map(persistedPlayers.map((p) => [p.playerId, p]));
   const histories = buildTrainingHistories(reports);
   const talentByPlayer = new Map<number, ReturnType<typeof estimateTalentFromTrainingHistory>>();
   for (const history of histories) {
@@ -419,12 +447,13 @@ export async function getWeeklyTrainingCalibration(
     const snapshotPlayer = latestSnapshot?.players.find(
       (player) => player.playerId === history.playerId
     );
+    const persistedPlayer = persistedPlayerMap.get(history.playerId);
     return [
       {
         player: {
           playerId: history.playerId,
           age: currentWeek.playerAge,
-          position: snapshotPlayer?.observedPosition ?? null,
+          position: resolvePlayerPosition(persistedPlayer, snapshotPlayer),
           skills: currentWeek.skills
         },
         weeklyReport: report,
