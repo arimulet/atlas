@@ -40,7 +40,8 @@ export class SokkerSyncPersistence {
   ) {}
 
   async persist(
-    validatedPayload: ValidatedSokkerSyncPayload
+    validatedPayload: ValidatedSokkerSyncPayload,
+    options?: { ownerUserId?: string | null; sokkerUsername?: string | null }
   ): Promise<SokkerSyncPersistenceResult> {
     const payload = validatedPayload.payload;
     const teamId = payload.current.team.id;
@@ -51,7 +52,7 @@ export class SokkerSyncPersistence {
     try {
       const useTransaction = mongoTransactionsAvailable();
       const persist = (session?: MongoSession) =>
-        this.persistResources(payload, importedAt, session);
+        this.persistResources(payload, importedAt, options, session);
       const resources = useTransaction ? await withMongoTransaction(persist) : await persist();
 
       await this.repositories.syncRuns.complete(syncRunId);
@@ -83,16 +84,29 @@ export class SokkerSyncPersistence {
   private async persistResources(
     payload: SokkerSyncPayload,
     importedAt: Date,
+    options?: { ownerUserId?: string | null; sokkerUsername?: string | null },
     session?: MongoSession
   ): Promise<
     Omit<SokkerSyncPersistenceResult, "syncRunId" | "teamId" | "gameWeek" | "usedTransaction">
   > {
     const teamId = payload.current.team.id;
     const currentDate = gameDate(payload.current.calendar.date);
+
+    if (options?.ownerUserId) {
+      const existingClub = await this.repositories.clubs.findByClubId(teamId);
+      if (existingClub?.ownerUserId && existingClub.ownerUserId !== options.ownerUserId) {
+        throw new Error(
+          `El club ID ${teamId} (${payload.current.team.name}) ya se encuentra vinculado a otra cuenta de usuario.`
+        );
+      }
+    }
+
     const club = await persistStep("Club", `${teamId}`, () =>
       this.repositories.clubs.save(
         {
           clubId: teamId,
+          ownerUserId: options?.ownerUserId ?? undefined,
+          sokkerUsername: options?.sokkerUsername ?? undefined,
           country: payload.current.team.country.code,
           name: payload.current.team.name,
           gameWeek: payload.current.calendar.gameWeek,
@@ -267,9 +281,10 @@ export class SokkerSyncPersistence {
 }
 
 export async function persistSokkerSync(
-  validatedPayload: ValidatedSokkerSyncPayload
+  validatedPayload: ValidatedSokkerSyncPayload,
+  options?: { ownerUserId?: string | null; sokkerUsername?: string | null }
 ): Promise<SokkerSyncPersistenceResult> {
-  return new SokkerSyncPersistence().persist(validatedPayload);
+  return new SokkerSyncPersistence().persist(validatedPayload, options);
 }
 
 function createRepositories(): SokkerSyncPersistenceRepositories {

@@ -1,27 +1,8 @@
 import { Types, type ClientSession } from "mongoose";
 import { ClubModel } from "../models/club.js";
-import type { PersistedClub, PersistedClubStaffMember } from "./types.js";
+import type { PersistedClub, PersistedClubStaffMember, SaveClubInput } from "./types.js";
 
 export type ClubId = string | number;
-
-export interface SaveClubInput {
-  clubId: number;
-  country: number;
-  training: {
-    GK: number;
-    DEF: number;
-    MID: number;
-    ATT: number;
-  };
-  name: string;
-  gameWeek?: number | null;
-  week?: number | null;
-  lastSnapshotDate?: Date | null;
-  observedAt?: Date | null;
-  currency: string;
-  budget?: number | null;
-  staff?: PersistedClubStaffMember[];
-}
 
 export interface UpdateClubManualProfileInput {
   clubId: ClubId;
@@ -55,6 +36,14 @@ export class MongoClubRepository {
       $set.staff = input.staff;
     }
 
+    if (input.ownerUserId !== undefined) {
+      $set.ownerUserId = input.ownerUserId;
+    }
+
+    if (input.sokkerUsername !== undefined) {
+      $set.sokkerUsername = input.sokkerUsername;
+    }
+
     const $setOnInsert: Record<string, unknown> = { clubId: input.clubId };
 
     const club = await ClubModel.findOneAndUpdate(
@@ -72,6 +61,16 @@ export class MongoClubRepository {
   async findById(id: string): Promise<PersistedClub | null> {
     const club = await ClubModel.findById(id);
     return club ? mapClub(club.toObject()) : null;
+  }
+
+  async findByClubId(clubId: number): Promise<PersistedClub | null> {
+    const club = await ClubModel.findOne({ clubId });
+    return club ? mapClub(club.toObject()) : null;
+  }
+
+  async findClubsByOwnerUserId(ownerUserId: string): Promise<PersistedClub[]> {
+    const clubs = await ClubModel.find({ ownerUserId });
+    return clubs.map((c) => mapClub(c.toObject()));
   }
 
   async updateManualProfile(input: UpdateClubManualProfileInput): Promise<PersistedClub> {
@@ -109,6 +108,8 @@ export class MongoClubRepository {
 function mapClub(club: {
   _id: Types.ObjectId;
   clubId?: number | null;
+  ownerUserId?: string | null;
+  sokkerUsername?: string | null;
   country?: number | null;
   training?: {
     GK?: number;
@@ -133,6 +134,8 @@ function mapClub(club: {
   return {
     id: club._id.toString(),
     clubId: club.clubId ?? 0,
+    ownerUserId: club.ownerUserId ?? null,
+    sokkerUsername: club.sokkerUsername ?? null,
     country: club.country ?? 0,
     name: club.name,
     currency: club.currency ?? "UNK",

@@ -13,10 +13,13 @@ interface ImportIssue {
   message: string;
 }
 
+import { parseAuthUser } from "../../auth-middleware.js";
+
 async function importsRoutes(server: FastifyInstance) {
   server.post("/sokker-sync", async (request, reply) => {
     try {
       const credentials = sokkerSyncRequestSchema.parse(request.body);
+      const authUser = parseAuthUser(request);
       const provider = createSokkerDataProvider(credentials);
       const loadedPayload = await loadSokkerSyncPayload(provider);
       const validation = validateSokkerSyncPayload(loadedPayload);
@@ -36,7 +39,10 @@ async function importsRoutes(server: FastifyInstance) {
         };
       }
 
-      const persistence = await persistSokkerSync(validation);
+      const persistence = await persistSokkerSync(validation, {
+        ownerUserId: authUser?.uid,
+        sokkerUsername: credentials.login
+      });
       return createSyncPersistenceResponse(persistence, validation.warnings);
     } catch (error) {
       reply.code(422);
