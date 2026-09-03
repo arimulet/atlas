@@ -1,1 +1,778 @@
-.atlas {  .atlas-youth {    display: grid;    gap: 14px;    max-width: 1440px;  }  .atlas-youth__header {    padding: 2px 0 4px;  }  .atlas-youth__header h1 {    color: var(--atlas-text);    font-size: 1.35rem;    line-height: 1.2;    margin: 0;  }  .atlas-youth-summary {    align-items: center;    background: var(--atlas-surface);    border: 1px solid var(--atlas-border);    border-radius: var(--atlas-radius-md);    display: flex;    gap: 24px;    justify-content: space-between;    padding: 14px 16px;  }  .atlas-youth-summary__eyebrow,  .atlas-youth-panel__eyebrow {    color: var(--atlas-accent);    font-size: 0.65rem;    font-weight: 800;    letter-spacing: 0.1em;    margin: 0 0 5px;    text-transform: uppercase;  }  .atlas-youth-summary h2 {    color: var(--atlas-text);    font-size: 1rem;    margin: 0;  }  .atlas-youth-summary__metrics {    display: flex;    flex-wrap: wrap;    gap: 10px;    justify-content: flex-end;  }  .atlas-youth-summary__metric {    border-left: 1px solid var(--atlas-border);    display: grid;    gap: 2px;    min-width: 76px;    padding-left: 10px;  }  .atlas-youth-summary__metric span {    color: var(--atlas-text-muted);    font-size: 0.64rem;  }  .atlas-youth-summary__metric strong {    color: var(--atlas-text);    font-size: 0.9rem;  }  .atlas-youth-section-heading {    align-items: flex-start;    display: flex;    gap: 16px;    justify-content: space-between;  }  .atlas-youth-panel__eyebrow {    margin-top: 0;  }  .atlas-youth-decision-filters {    display: flex;    flex-wrap: wrap;    gap: 5px;    justify-content: flex-end;  }  .atlas-youth-decision-filters button {    background: transparent;    border: 1px solid var(--atlas-border);    border-radius: 999px;    color: var(--atlas-text-muted);    cursor: pointer;    font: inherit;    font-size: 0.67rem;    padding: 5px 8px;  }  .atlas-youth-decision-filters button:hover,  .atlas-youth-decision-filters button.is-active {    background: color-mix(in srgb, var(--atlas-accent) 12%, transparent);    border-color: var(--atlas-accent);    color: var(--atlas-text);  }  .atlas-youth-decision-queue {    display: grid;    gap: 12px;  }  .atlas-youth-decision-card {    background: color-mix(in srgb, var(--atlas-surface) 86%, var(--atlas-background));    border: 1px solid var(--atlas-border);    border-left: 3px solid var(--atlas-text-muted);    border-radius: var(--atlas-radius-md);    padding: 14px 16px;  }  .atlas-youth-decision-card.is-train {    border-left-color: var(--semantic-success-text);  }  .atlas-youth-decision-card.is-keep {    border-left-color: var(--semantic-info-text);  }  .atlas-youth-decision-card.is-sell {    border-left-color: var(--semantic-warning-text);  }  .atlas-youth-decision-card.is-release {    border-left-color: var(--semantic-error-text);  }  .atlas-youth-decision-card.is-hold {    border-left-color: var(--atlas-text-muted);  }  .atlas-youth-decision-card__header {    align-items: flex-start;    display: flex;    gap: 16px;    justify-content: space-between;  }  .atlas-youth-decision-card__player {    align-items: baseline;    color: var(--atlas-text);    display: flex;    font-size: 0.95rem;    gap: 7px;    margin: 0;  }  .atlas-youth-decision-card__player > span {    color: var(--atlas-text-muted);    font-size: 0.75rem;    font-weight: 500;  }  .atlas-youth-decision-card__profile {    color: var(--atlas-text-secondary);    font-size: 0.75rem;    margin: 4px 0 0;  }  .atlas-youth-decision-card__decision {    align-items: flex-end;    display: grid;    gap: 5px;    justify-items: end;  }  .atlas-youth-decision-badge {    border: 1px solid currentColor;    border-radius: 5px;    display: inline-block;    font-size: 0.72rem;    font-weight: 850;    letter-spacing: 0.06em;    padding: 5px 8px;    text-transform: uppercase;    white-space: nowrap;  }  .atlas-youth-decision-badge.is-train {    color: var(--semantic-success-text);  }  .atlas-youth-decision-badge.is-keep {    color: var(--semantic-info-text);  }  .atlas-youth-decision-badge.is-sell {    color: var(--semantic-warning-text);  }  .atlas-youth-decision-badge.is-release {    color: #000;    background-color: #e0e0e0;    border-color: #000;  }  .atlas-youth-decision-badge.is-hold,  .atlas-youth-decision-badge.is-none {    color: var(--atlas-text-muted);  }  .atlas-youth-decision-badge.is-def {    color: var(--semantic-info-text);  }  .atlas-youth-decision-badge.is-mid {    color: var(--semantic-error-text);  }  .atlas-youth-decision-badge.is-att {    color: var(--semantic-success-text);  }  .atlas-youth-decision-card__meta {    color: var(--atlas-text-muted);    font-size: 0.68rem;    text-align: right;  }  .atlas-youth-decision-card__confidence-warning {    background: color-mix(in srgb, var(--semantic-warning-border) 15%, transparent);    border-radius: 4px;    color: var(--semantic-warning-text);    font-size: 0.72rem;    margin: 12px 0 0;    padding: 7px 9px;  }  .atlas-youth-decision-card__why,  .atlas-youth-decision-card__risks {    border-top: 1px solid color-mix(in srgb, var(--atlas-border) 75%, transparent);    margin-top: 12px;    padding-top: 10px;  }  .atlas-youth-decision-card__why h4,  .atlas-youth-decision-card__risks h4 {    color: var(--atlas-text-muted);    font-size: 0.66rem;    letter-spacing: 0.08em;    margin: 0 0 7px;    text-transform: uppercase;  }  .atlas-youth-decision-card__risks h4 {    color: var(--semantic-warning-text);  }  .atlas-youth-decision-message-list {    display: grid;    gap: 5px;    list-style: none;    margin: 0;    padding: 0;  }  .atlas-youth-decision-message-list li {    display: flex;    flex-wrap: wrap;    gap: 5px;    line-height: 1.35;  }  .atlas-youth-decision-message-list li::before {    color: var(--semantic-success-text);    content: "\2713";    font-weight: 800;  }  .atlas-youth-decision-card__risks .atlas-youth-decision-message-list li::before {    color: var(--semantic-warning-text);    content: "!";  }  .atlas-youth-decision-message-list strong {    color: var(--atlas-text-secondary);    font-size: 0.75rem;  }  .atlas-youth-decision-message-list span {    color: var(--atlas-text-muted);    font-size: 0.73rem;  }  .atlas-youth-decision-card__details {    border-top: 1px solid color-mix(in srgb, var(--atlas-border) 75%, transparent);    margin-top: 12px;    padding-top: 9px;  }  .atlas-youth-decision-card__details summary {    color: var(--atlas-text-secondary);    cursor: pointer;    font-size: 0.72rem;    font-weight: 700;  }  .atlas-youth-decision-details {    display: grid;    gap: 12px;    grid-template-columns: repeat(2, minmax(0, 1fr));    margin-top: 12px;  }  .atlas-youth-decision-detail-section {    border: 1px solid color-mix(in srgb, var(--atlas-border) 70%, transparent);    border-radius: 5px;    padding: 10px;  }  .atlas-youth-decision-detail-section h5 {    color: var(--atlas-text);    font-size: 0.7rem;    margin: 0 0 8px;    text-transform: uppercase;  }  .atlas-youth-decision-metric {    align-items: baseline;    display: flex;    font-size: 0.72rem;    gap: 8px;    justify-content: space-between;    padding: 3px 0;  }  .atlas-youth-decision-metric span {    color: var(--atlas-text-muted);  }  .atlas-youth-decision-metric strong {    color: var(--atlas-text-secondary);    text-align: right;  }  .atlas-youth-decision-additional-signal {    background: color-mix(in srgb, var(--semantic-warning-text) 8%, transparent);    color: var(--semantic-warning-text);    font-size: 0.7rem;    line-height: 1.4;    margin: 8px 0 0;    padding: 6px 8px;  }  .atlas-youth-decision-message-group {    margin-top: 9px;  }  .atlas-youth-decision-message-group h6 {    color: var(--atlas-text-muted);    font-size: 0.63rem;    margin: 0 0 5px;    text-transform: uppercase;  }  .atlas-youth-decision-empty {    color: var(--atlas-text-muted);    font-size: 0.72rem;    margin: 0;  }  .atlas-youth-comparison-table {    min-width: 860px;  }  .atlas-youth-comparison-table__player-column {    width: 22%;  }  .atlas-youth-comparison-table__advanced-column {    width: 7%;  }  .atlas-youth-comparison-table__rank-column,  .atlas-youth-comparison-table__age-column {    width: 8%;  }  .atlas-youth-comparison-table__profile-column,  .atlas-youth-comparison-table__prospect-column,  .atlas-youth-comparison-table__club-fit-column {    width: 11%;  }  .atlas-youth-comparison-table__market-column {    width: 12%;  }  .atlas-youth-comparison-table__decision-column {    width: 10%;  }  .atlas-youth-comparison-table__advanced-slot-icon {    align-items: center;    border: 1px solid currentColor;    border-radius: 999px;    display: inline-flex;    font-size: 0.78rem;    font-weight: 900;    height: 20px;    justify-content: center;    line-height: 1;    width: 20px;  }  .atlas-youth-comparison-table__advanced-slot-icon.is-current {    color: var(--semantic-success-text);  }  .atlas-youth-comparison-table__advanced-slot-icon.is-excluded {    color: var(--atlas-text-muted);  }  .atlas-youth-comparison-table__advanced-slot-icon.is-trial {    color: var(--semantic-warning-text);  }  .atlas-youth-comparison-table tbody tr.is-trial th,  .atlas-youth-comparison-table tbody tr.is-trial td {    background: color-mix(in srgb, var(--semantic-warning-text) 6%, transparent);  }  .atlas-youth-comparison-table__slot-summary {    color: var(--atlas-text-muted);    font-size: 0.8rem;    margin: 10px 0 0;  }  .atlas-youth-comparison-table__trial-note,  .atlas-youth-decision-card__trial-advanced {    background: color-mix(in srgb, var(--semantic-warning-text) 9%, transparent);    border-left: 2px solid var(--semantic-warning-text);    color: var(--semantic-warning-text);    font-size: 0.72rem;    line-height: 1.4;    margin: 10px 0;    padding: 7px 9px;  }  .atlas-youth-comparison-table__slot-divider th {    background: color-mix(in srgb, var(--atlas-accent) 10%, var(--atlas-surface));    border-bottom: 1px solid var(--atlas-accent);    border-top: 2px solid var(--atlas-accent);    color: var(--atlas-text);    font-size: 0.68rem;    letter-spacing: 0.06em;    padding: 9px 10px;    text-transform: uppercase;  }  @media (max-width: 900px) {    .atlas-youth-summary {      align-items: flex-start;      flex-direction: column;    }    .atlas-youth-summary__metrics {      justify-content: flex-start;    }    .atlas-youth-section-heading {      flex-direction: column;    }    .atlas-youth-decision-filters {      justify-content: flex-start;    }  }  @media (max-width: 640px) {    .atlas-youth-decision-card__header {      flex-direction: column;    }    .atlas-youth-decision-card__decision {      align-items: flex-start;      justify-items: start;    }    .atlas-youth-decision-card__meta {      text-align: left;    }    .atlas-youth-decision-details {      grid-template-columns: 1fr;    }  }  .atlas-youth-panel {    background: var(--atlas-surface);    border: 1px solid var(--atlas-border);    border-radius: var(--atlas-radius-md);    min-width: 0;    padding: 14px 16px;  }  .atlas-youth-panel--attention {    border-color: color-mix(in srgb, var(--semantic-warning-border) 55%, var(--atlas-border));  }  .atlas-youth-panel__title {    color: var(--atlas-text);    font-size: 0.9rem;    font-weight: 750;    letter-spacing: 0.01em;    margin: 0 0 12px;  }  .atlas-youth-panel__message {    color: var(--atlas-text-secondary);    font-size: 0.8rem;    line-height: 1.45;    margin: 0;  }  .atlas-youth-panel__message.is-clear {    color: var(--semantic-success-text);  }  .atlas-youth-panel__message.is-error {    color: var(--semantic-error-text);  }  .atlas-youth-table-wrap {    overflow-x: auto;  }  .atlas-youth-table {    border-collapse: collapse;    min-width: 1140px;    table-layout: fixed;    width: 100%;  }  .atlas-youth-table__player-column {    width: 24%;  }  .atlas-youth-table__age-column {    width: 7%;  }  .atlas-youth-table__level-column,  .atlas-youth-table__expected-level-column {    width: 15%;  }  .atlas-youth-table__weeks-column {    width: 7%;  }  .atlas-youth-table__expected-age-column {    width: 8%;  }  .atlas-youth-table__initial-weeks-column {    width: 10%;  }  .atlas-youth-table__pops-column,  .atlas-youth-table__talent-column {    width: 7%;  }  .atlas-youth-table th,  .atlas-youth-table td {    border-bottom: 1px solid color-mix(in srgb, var(--atlas-border) 72%, transparent);    color: var(--atlas-text-secondary);    font-size: 0.78rem;    min-height: 36px;    overflow-wrap: anywhere;    padding: 8px 10px;    text-align: left;    vertical-align: middle;  }  .atlas-youth-table thead th {    color: var(--atlas-text-muted);    font-size: 0.67rem;    font-weight: 750;    letter-spacing: 0.07em;    padding-bottom: 7px;    text-transform: uppercase;  }  .atlas-youth-table tbody tr:last-child th,  .atlas-youth-table tbody tr:last-child td {    border-bottom: 0;  }  .atlas-youth-table tbody th {    color: var(--atlas-text);    font-weight: 700;  }  .atlas-youth-table__center {    text-align: center !important;  }  .atlas-youth-table__empty {    color: var(--atlas-text-muted) !important;    height: 36px;    text-align: left;  }  .atlas-youth-skill-level {    align-items: center;    display: inline-flex;    gap: 7px;  }  .atlas-youth-skill-change {    font-size: 0.7rem;    font-weight: 800;    white-space: nowrap;  }  .atlas-youth-skill-change.is-up {    color: var(--semantic-success-text);  }  .atlas-youth-skill-change.is-down {    color: var(--semantic-error-text);  }  .atlas-youth-table__player-name-value.is-up,  .atlas-youth-skill-level__value.is-up {    color: var(--semantic-success-text);  }  .atlas-youth-table__player-name-value.is-down,  .atlas-youth-skill-level__value.is-down {    color: var(--semantic-error-text);  }  .atlas-youth-table__player-name {    align-items: center;    display: flex;    flex-wrap: wrap;    gap: 6px;  }  .atlas-youth-player-attention {    cursor: help;    display: inline-flex;  }  .atlas-youth-player-indicator {    border: 1px solid currentColor;    border-radius: 4px;    display: inline-block;    font-size: 0.67rem;    font-weight: 750;    line-height: 1.2;    padding: 3px 6px;    white-space: nowrap;  }  .atlas-youth-player-indicator.is-promotion,  .atlas-youth-player-indicator.is-promoted {    color: var(--semantic-info-text);  }  .atlas-youth-player-indicator.is-attention {    color: var(--semantic-warning-text);  }  .atlas-youth-player-indicator.is-review {    color: var(--semantic-info-text);  }  .atlas-youth-player-indicator.is-in-academy {    color: var(--atlas-text-muted);  }}// Youth Tabs.atlas-youth-tabs {  display: flex;  gap: 1rem;  margin-top: 1rem;  .atlas-youth-tab {    background: none;    border: none;    padding: 0.5rem 1rem;    font-size: 1rem;    color: var(--color-text-muted);    cursor: pointer;    border-bottom: 2px solid transparent;    &.is-active {      color: var(--color-text-primary);      border-bottom-color: var(--color-primary);      font-weight: 600;    }    &:hover:not(.is-active) {      color: var(--color-text-primary);    }  }}// Youth Performances.atlas-youth-performances {  display: flex;  flex-direction: column;  gap: 2rem;}.atlas-youth-performances-table {  table-layout: auto !important; min-width: 0 !important;    th, td {    white-space: nowrap;  }    .atlas-youth-header-def {    color: var(--semantic-info-text) !important;  }  .atlas-youth-header-mid {    color: var(--semantic-error-text) !important;  }  .atlas-youth-header-att {    color: var(--semantic-success-text) !important;  }  .atlas-youth-skill-tragic-weak {    color: var(--atlas-text-muted) !important;  }  .atlas-youth-skill-regular-vgood {    color: var(--semantic-warning-text) !important;    font-weight: 600;  }  .atlas-youth-skill-excellent-incredible {    color: var(--semantic-success-text) !important;    font-weight: 600;  }  .atlas-youth-skill-brilliant-divine {    color: #43a047 !important; // Darker green that remains legible on dark themes    font-weight: 800;  }  .performance-cell-wrapper {    padding: 2px !important; // create the small margin between cells  }  .performance-cell {    display: flex;    align-items: center;    justify-content: center;    width: 100%;    height: 100%;    min-height: 28px;    font-weight: 900;    font-size: 1.1rem;    color: rgba(0, 0, 0, 0.75) !important;    border: 1px solid #000;    border-radius: 4px;    padding: 0.2rem 0.5rem;    box-sizing: border-box;        &.full-match {      background-color: #81c784; // Light Green    }        &.half-match {      background-color: #e0e0e0; // Grey    }        &.no-data {      background-color: #e57373; // Light Red      color: rgba(0, 0, 0, 0) !important; // Hide the 0    }    &.empty-slot {      background-color: transparent;      border-color: transparent; // No border for completely empty slots    }  }}.atlas-youth-observations-input { width: 100%; min-width: 60px; box-sizing: border-box; border: 1px solid transparent; background: transparent; padding: 4px; border-radius: 4px; color: var(--atlas-text); font-size: 0.8rem; outline: none; } .atlas-youth-observations-input:hover, .atlas-youth-observations-input:focus { border-color: var(--atlas-border); background: rgba(0,0,0,0.1); }.atlas-youth-gk-table { table-layout: fixed !important; min-width: 0 !important; width: 100% !important; }.atlas-youth-gk-table .performance-cell { font-size: 0.75rem !important; padding: 1px !important; min-height: 22px !important; }
+﻿.atlas {
+  .atlas-youth {
+    display: grid;
+    gap: 14px;
+    max-width: 1440px;
+  }
+
+  .atlas-youth__header {
+    padding: 2px 0 4px;
+  }
+
+  .atlas-youth__header h1 {
+    color: var(--atlas-text);
+    font-size: 1.35rem;
+    line-height: 1.2;
+    margin: 0;
+  }
+
+  .atlas-youth-summary {
+    align-items: center;
+    background: var(--atlas-surface);
+    border: 1px solid var(--atlas-border);
+    border-radius: var(--atlas-radius-md);
+    display: flex;
+    gap: 24px;
+    justify-content: space-between;
+    padding: 14px 16px;
+  }
+
+  .atlas-youth-summary__eyebrow,
+  .atlas-youth-panel__eyebrow {
+    color: var(--atlas-accent);
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    margin: 0 0 5px;
+    text-transform: uppercase;
+  }
+
+  .atlas-youth-summary h2 {
+    color: var(--atlas-text);
+    font-size: 1rem;
+    margin: 0;
+  }
+
+  .atlas-youth-summary__metrics {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: flex-end;
+  }
+
+  .atlas-youth-summary__metric {
+    border-left: 1px solid var(--atlas-border);
+    display: grid;
+    gap: 2px;
+    min-width: 76px;
+    padding-left: 10px;
+  }
+
+  .atlas-youth-summary__metric span {
+    color: var(--atlas-text-muted);
+    font-size: 0.64rem;
+  }
+
+  .atlas-youth-summary__metric strong {
+    color: var(--atlas-text);
+    font-size: 0.9rem;
+  }
+
+  .atlas-youth-section-heading {
+    align-items: flex-start;
+    display: flex;
+    gap: 16px;
+    justify-content: space-between;
+  }
+
+  .atlas-youth-panel__eyebrow {
+    margin-top: 0;
+  }
+
+  .atlas-youth-decision-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    justify-content: flex-end;
+  }
+
+  .atlas-youth-decision-filters button {
+    background: transparent;
+    border: 1px solid var(--atlas-border);
+    border-radius: 999px;
+    color: var(--atlas-text-muted);
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.67rem;
+    padding: 5px 8px;
+  }
+
+  .atlas-youth-decision-filters button:hover,
+  .atlas-youth-decision-filters button.is-active {
+    background: color-mix(in srgb, var(--atlas-accent) 12%, transparent);
+    border-color: var(--atlas-accent);
+    color: var(--atlas-text);
+  }
+
+  .atlas-youth-decision-queue {
+    display: grid;
+    gap: 12px;
+  }
+
+  .atlas-youth-decision-card {
+    background: color-mix(in srgb, var(--atlas-surface) 86%, var(--atlas-background));
+    border: 1px solid var(--atlas-border);
+    border-left: 3px solid var(--atlas-text-muted);
+    border-radius: var(--atlas-radius-md);
+    padding: 14px 16px;
+  }
+
+  .atlas-youth-decision-card.is-train {
+    border-left-color: var(--semantic-success-text);
+  }
+  .atlas-youth-decision-card.is-keep {
+    border-left-color: var(--semantic-info-text);
+  }
+  .atlas-youth-decision-card.is-sell {
+    border-left-color: var(--semantic-warning-text);
+  }
+  .atlas-youth-decision-card.is-release {
+    border-left-color: var(--semantic-error-text);
+  }
+  .atlas-youth-decision-card.is-hold {
+    border-left-color: var(--atlas-text-muted);
+  }
+
+  .atlas-youth-decision-card__header {
+    align-items: flex-start;
+    display: flex;
+    gap: 16px;
+    justify-content: space-between;
+  }
+
+  .atlas-youth-decision-card__player {
+    align-items: baseline;
+    color: var(--atlas-text);
+    display: flex;
+    font-size: 0.95rem;
+    gap: 7px;
+    margin: 0;
+  }
+
+  .atlas-youth-decision-card__player > span {
+    color: var(--atlas-text-muted);
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+
+  .atlas-youth-decision-card__profile {
+    color: var(--atlas-text-secondary);
+    font-size: 0.75rem;
+    margin: 4px 0 0;
+  }
+
+  .atlas-youth-decision-card__decision {
+    align-items: flex-end;
+    display: grid;
+    gap: 5px;
+    justify-items: end;
+  }
+
+  .atlas-youth-decision-badge {
+    border: 1px solid currentColor;
+    border-radius: 5px;
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 850;
+    letter-spacing: 0.06em;
+    padding: 5px 8px;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .atlas-youth-decision-badge.is-train {
+    color: var(--semantic-success-text);
+  }
+  .atlas-youth-decision-badge.is-keep {
+    color: var(--semantic-info-text);
+  }
+  .atlas-youth-decision-badge.is-sell {
+    color: var(--semantic-warning-text);
+  }
+  .atlas-youth-decision-badge.is-release {
+    color: #000;
+    background-color: #e0e0e0;
+    border-color: #000;
+  }
+  .atlas-youth-decision-badge.is-hold,
+  .atlas-youth-decision-badge.is-none {
+    color: var(--atlas-text-muted);
+  }
+  .atlas-youth-decision-badge.is-def {
+    color: var(--semantic-info-text);
+  }
+  .atlas-youth-decision-badge.is-mid {
+    color: var(--semantic-error-text);
+  }
+  .atlas-youth-decision-badge.is-att {
+    color: var(--semantic-success-text);
+  }
+
+  .atlas-youth-decision-card__meta {
+    color: var(--atlas-text-muted);
+    font-size: 0.68rem;
+    text-align: right;
+  }
+
+  .atlas-youth-decision-card__confidence-warning {
+    background: color-mix(in srgb, var(--semantic-warning-border) 15%, transparent);
+    border-radius: 4px;
+    color: var(--semantic-warning-text);
+    font-size: 0.72rem;
+    margin: 12px 0 0;
+    padding: 7px 9px;
+  }
+
+  .atlas-youth-decision-card__why,
+  .atlas-youth-decision-card__risks {
+    border-top: 1px solid color-mix(in srgb, var(--atlas-border) 75%, transparent);
+    margin-top: 12px;
+    padding-top: 10px;
+  }
+
+  .atlas-youth-decision-card__why h4,
+  .atlas-youth-decision-card__risks h4 {
+    color: var(--atlas-text-muted);
+    font-size: 0.66rem;
+    letter-spacing: 0.08em;
+    margin: 0 0 7px;
+    text-transform: uppercase;
+  }
+
+  .atlas-youth-decision-card__risks h4 {
+    color: var(--semantic-warning-text);
+  }
+
+  .atlas-youth-decision-message-list {
+    display: grid;
+    gap: 5px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .atlas-youth-decision-message-list li {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    line-height: 1.35;
+  }
+
+  .atlas-youth-decision-message-list li::before {
+    color: var(--semantic-success-text);
+    content: "\2713";
+    font-weight: 800;
+  }
+
+  .atlas-youth-decision-card__risks .atlas-youth-decision-message-list li::before {
+    color: var(--semantic-warning-text);
+    content: "!";
+  }
+
+  .atlas-youth-decision-message-list strong {
+    color: var(--atlas-text-secondary);
+    font-size: 0.75rem;
+  }
+
+  .atlas-youth-decision-message-list span {
+    color: var(--atlas-text-muted);
+    font-size: 0.73rem;
+  }
+
+  .atlas-youth-decision-card__details {
+    border-top: 1px solid color-mix(in srgb, var(--atlas-border) 75%, transparent);
+    margin-top: 12px;
+    padding-top: 9px;
+  }
+
+  .atlas-youth-decision-card__details summary {
+    color: var(--atlas-text-secondary);
+    cursor: pointer;
+    font-size: 0.72rem;
+    font-weight: 700;
+  }
+
+  .atlas-youth-decision-details {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: 12px;
+  }
+
+  .atlas-youth-decision-detail-section {
+    border: 1px solid color-mix(in srgb, var(--atlas-border) 70%, transparent);
+    border-radius: 5px;
+    padding: 10px;
+  }
+
+  .atlas-youth-decision-detail-section h5 {
+    color: var(--atlas-text);
+    font-size: 0.7rem;
+    margin: 0 0 8px;
+    text-transform: uppercase;
+  }
+
+  .atlas-youth-decision-metric {
+    align-items: baseline;
+    display: flex;
+    font-size: 0.72rem;
+    gap: 8px;
+    justify-content: space-between;
+    padding: 3px 0;
+  }
+
+  .atlas-youth-decision-metric span {
+    color: var(--atlas-text-muted);
+  }
+  .atlas-youth-decision-metric strong {
+    color: var(--atlas-text-secondary);
+    text-align: right;
+  }
+
+  .atlas-youth-decision-additional-signal {
+    background: color-mix(in srgb, var(--semantic-warning-text) 8%, transparent);
+    color: var(--semantic-warning-text);
+    font-size: 0.7rem;
+    line-height: 1.4;
+    margin: 8px 0 0;
+    padding: 6px 8px;
+  }
+
+  .atlas-youth-decision-message-group {
+    margin-top: 9px;
+  }
+  .atlas-youth-decision-message-group h6 {
+    color: var(--atlas-text-muted);
+    font-size: 0.63rem;
+    margin: 0 0 5px;
+    text-transform: uppercase;
+  }
+
+  .atlas-youth-decision-empty {
+    color: var(--atlas-text-muted);
+    font-size: 0.72rem;
+    margin: 0;
+  }
+
+  .atlas-youth-comparison-table {
+    min-width: 860px;
+  }
+
+  .atlas-youth-comparison-table__player-column {
+    width: 22%;
+  }
+
+  .atlas-youth-comparison-table__advanced-column {
+    width: 7%;
+  }
+
+  .atlas-youth-comparison-table__rank-column,
+  .atlas-youth-comparison-table__age-column {
+    width: 8%;
+  }
+
+  .atlas-youth-comparison-table__profile-column,
+  .atlas-youth-comparison-table__prospect-column,
+  .atlas-youth-comparison-table__club-fit-column {
+    width: 11%;
+  }
+
+  .atlas-youth-comparison-table__market-column {
+    width: 12%;
+  }
+
+  .atlas-youth-comparison-table__decision-column {
+    width: 10%;
+  }
+
+  .atlas-youth-comparison-table__advanced-slot-icon {
+    align-items: center;
+    border: 1px solid currentColor;
+    border-radius: 999px;
+    display: inline-flex;
+    font-size: 0.78rem;
+    font-weight: 900;
+    height: 20px;
+    justify-content: center;
+    line-height: 1;
+    width: 20px;
+  }
+
+  .atlas-youth-comparison-table__advanced-slot-icon.is-current {
+    color: var(--semantic-success-text);
+  }
+
+  .atlas-youth-comparison-table__advanced-slot-icon.is-excluded {
+    color: var(--atlas-text-muted);
+  }
+
+  .atlas-youth-comparison-table__advanced-slot-icon.is-trial {
+    color: var(--semantic-warning-text);
+  }
+
+  .atlas-youth-comparison-table tbody tr.is-trial th,
+  .atlas-youth-comparison-table tbody tr.is-trial td {
+    background: color-mix(in srgb, var(--semantic-warning-text) 6%, transparent);
+  }
+
+  .atlas-youth-comparison-table__slot-summary {
+    color: var(--atlas-text-muted);
+    font-size: 0.8rem;
+    margin: 10px 0 0;
+  }
+  .atlas-youth-comparison-table__trial-note,
+  .atlas-youth-decision-card__trial-advanced {
+    background: color-mix(in srgb, var(--semantic-warning-text) 9%, transparent);
+    border-left: 2px solid var(--semantic-warning-text);
+    color: var(--semantic-warning-text);
+    font-size: 0.72rem;
+    line-height: 1.4;
+    margin: 10px 0;
+    padding: 7px 9px;
+  }
+
+  .atlas-youth-comparison-table__slot-divider th {
+    background: color-mix(in srgb, var(--atlas-accent) 10%, var(--atlas-surface));
+    border-bottom: 1px solid var(--atlas-accent);
+    border-top: 2px solid var(--atlas-accent);
+    color: var(--atlas-text);
+    font-size: 0.68rem;
+    letter-spacing: 0.06em;
+    padding: 9px 10px;
+    text-transform: uppercase;
+  }
+
+  @media (max-width: 900px) {
+    .atlas-youth-summary {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+    .atlas-youth-summary__metrics {
+      justify-content: flex-start;
+    }
+    .atlas-youth-section-heading {
+      flex-direction: column;
+    }
+    .atlas-youth-decision-filters {
+      justify-content: flex-start;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .atlas-youth-decision-card__header {
+      flex-direction: column;
+    }
+    .atlas-youth-decision-card__decision {
+      align-items: flex-start;
+      justify-items: start;
+    }
+    .atlas-youth-decision-card__meta {
+      text-align: left;
+    }
+    .atlas-youth-decision-details {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .atlas-youth-panel {
+    background: var(--atlas-surface);
+    border: 1px solid var(--atlas-border);
+    border-radius: var(--atlas-radius-md);
+    min-width: 0;
+    padding: 14px 16px;
+  }
+
+  .atlas-youth-panel--attention {
+    border-color: color-mix(in srgb, var(--semantic-warning-border) 55%, var(--atlas-border));
+  }
+
+  .atlas-youth-panel__title {
+    color: var(--atlas-text);
+    font-size: 0.9rem;
+    font-weight: 750;
+    letter-spacing: 0.01em;
+    margin: 0 0 12px;
+  }
+
+  .atlas-youth-panel__message {
+    color: var(--atlas-text-secondary);
+    font-size: 0.8rem;
+    line-height: 1.45;
+    margin: 0;
+  }
+
+  .atlas-youth-panel__message.is-clear {
+    color: var(--semantic-success-text);
+  }
+
+  .atlas-youth-panel__message.is-error {
+    color: var(--semantic-error-text);
+  }
+
+  .atlas-youth-table-wrap {
+    overflow-x: auto;
+  }
+
+  .atlas-youth-table {
+    border-collapse: collapse;
+    min-width: 1140px;
+    table-layout: fixed;
+    width: 100%;
+  }
+
+  .atlas-youth-table__player-column {
+    width: 24%;
+  }
+
+  .atlas-youth-table__age-column {
+    width: 7%;
+  }
+
+  .atlas-youth-table__level-column,
+  .atlas-youth-table__expected-level-column {
+    width: 15%;
+  }
+
+  .atlas-youth-table__weeks-column {
+    width: 7%;
+  }
+
+  .atlas-youth-table__expected-age-column {
+    width: 8%;
+  }
+
+  .atlas-youth-table__initial-weeks-column {
+    width: 10%;
+  }
+
+  .atlas-youth-table__pops-column,
+  .atlas-youth-table__talent-column {
+    width: 7%;
+  }
+
+  .atlas-youth-table th,
+  .atlas-youth-table td {
+    border-bottom: 1px solid color-mix(in srgb, var(--atlas-border) 72%, transparent);
+    color: var(--atlas-text-secondary);
+    font-size: 0.78rem;
+    min-height: 36px;
+    overflow-wrap: anywhere;
+    padding: 8px 10px;
+    text-align: left;
+    vertical-align: middle;
+  }
+
+  .atlas-youth-table thead th {
+    color: var(--atlas-text-muted);
+    font-size: 0.67rem;
+    font-weight: 750;
+    letter-spacing: 0.07em;
+    padding-bottom: 7px;
+    text-transform: uppercase;
+  }
+
+  .atlas-youth-table tbody tr:last-child th,
+  .atlas-youth-table tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
+  .atlas-youth-table tbody th {
+    color: var(--atlas-text);
+    font-weight: 700;
+  }
+
+  .atlas-youth-table__center {
+    text-align: center !important;
+  }
+
+  .atlas-youth-table__empty {
+    color: var(--atlas-text-muted) !important;
+    height: 36px;
+    text-align: left;
+  }
+
+  .atlas-youth-skill-level {
+    align-items: center;
+    display: inline-flex;
+    gap: 7px;
+  }
+
+  .atlas-youth-skill-change {
+    font-size: 0.7rem;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+
+  .atlas-youth-skill-change.is-up {
+    color: var(--semantic-success-text);
+  }
+
+  .atlas-youth-skill-change.is-down {
+    color: var(--semantic-error-text);
+  }
+
+  .atlas-youth-table__player-name-value.is-up,
+  .atlas-youth-skill-level__value.is-up {
+    color: var(--semantic-success-text);
+  }
+
+  .atlas-youth-table__player-name-value.is-down,
+  .atlas-youth-skill-level__value.is-down {
+    color: var(--semantic-error-text);
+  }
+
+  .atlas-youth-table__player-name {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .atlas-youth-player-attention {
+    cursor: help;
+    display: inline-flex;
+  }
+
+  .atlas-youth-player-indicator {
+    border: 1px solid currentColor;
+    border-radius: 4px;
+    display: inline-block;
+    font-size: 0.67rem;
+    font-weight: 750;
+    line-height: 1.2;
+    padding: 3px 6px;
+    white-space: nowrap;
+  }
+
+  .atlas-youth-player-indicator.is-promotion,
+  .atlas-youth-player-indicator.is-promoted {
+    color: var(--semantic-info-text);
+  }
+
+  .atlas-youth-player-indicator.is-attention {
+    color: var(--semantic-warning-text);
+  }
+
+  .atlas-youth-player-indicator.is-review {
+    color: var(--semantic-info-text);
+  }
+
+  .atlas-youth-player-indicator.is-in-academy {
+    color: var(--atlas-text-muted);
+  }
+}
+
+// Youth Tabs
+.atlas-youth-tabs {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+
+  .atlas-youth-tab {
+    background: none;
+    border: none;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+
+    &.is-active {
+      color: var(--color-text-primary);
+      border-bottom-color: var(--color-primary);
+      font-weight: 600;
+    }
+
+    &:hover:not(.is-active) {
+      color: var(--color-text-primary);
+    }
+  }
+}
+
+
+
+// Youth Performances
+.atlas-youth-performances {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.atlas-youth-performances-table {
+  table-layout: auto !important; min-width: 0 !important;
+  
+  th, td {
+    white-space: nowrap;
+  }
+  
+  .atlas-youth-header-def {
+    color: var(--semantic-info-text) !important;
+  }
+  .atlas-youth-header-mid {
+    color: var(--semantic-error-text) !important;
+  }
+  .atlas-youth-header-att {
+    color: var(--semantic-success-text) !important;
+  }
+
+  .atlas-youth-skill-tragic-weak {
+    color: var(--atlas-text-muted) !important;
+  }
+
+  .atlas-youth-skill-regular-vgood {
+    color: var(--semantic-warning-text) !important;
+    font-weight: 600;
+  }
+
+  .atlas-youth-skill-excellent-incredible {
+    color: var(--semantic-success-text) !important;
+    font-weight: 600;
+  }
+
+  .atlas-youth-skill-brilliant-divine {
+    color: #43a047 !important; // Darker green that remains legible on dark themes
+    font-weight: 800;
+  }
+
+  .performance-cell-wrapper {
+    padding: 2px !important; // create the small margin between cells
+  }
+
+  .performance-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    min-height: 28px;
+    font-weight: 900;
+    font-size: 1.1rem;
+    color: rgba(0, 0, 0, 0.75) !important;
+    border: 1px solid #000;
+    border-radius: 4px;
+    padding: 0.2rem 0.5rem;
+    box-sizing: border-box;
+    
+    &.full-match {
+      background-color: #81c784; // Light Green
+    }
+    
+    &.half-match {
+      background-color: #e0e0e0; // Grey
+    }
+    
+    &.no-data {
+      background-color: #e57373; // Light Red
+      color: rgba(0, 0, 0, 0) !important; // Hide the 0
+    }
+
+    &.empty-slot {
+      background-color: transparent;
+      border-color: transparent; // No border for completely empty slots
+    }
+  }
+}
+.atlas-youth-observations-input { width: 100%; min-width: 60px; box-sizing: border-box; border: 1px solid transparent; background: transparent; padding: 4px; border-radius: 4px; color: var(--atlas-text); font-size: 0.8rem; outline: none; } .atlas-youth-observations-input:hover, .atlas-youth-observations-input:focus { border-color: var(--atlas-border); background: rgba(0,0,0,0.1); }
+.atlas-youth-gk-table { table-layout: fixed !important; min-width: 0 !important; width: 100% !important; }
+.atlas-youth-gk-table .performance-cell { font-size: 0.75rem !important; padding: 1px !important; min-height: 22px !important; }
+

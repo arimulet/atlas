@@ -1,1 +1,138 @@
-import { Types, type ClientSession } from "mongoose";import { JuniorModel } from "../models/junior.js";import type { PersistedJunior } from "./types.js";export interface ResolveJuniorIdentityInput {  juniorId: number;  clubId: number;  name: string;  age: number;  currentLevel: number;  weeksLeft: number;  formation: number | null;}export type JuniorStatus = "in_academy" | "promoted" | "rejected";export class MongoJuniorRepository {  async resolveCurrentIdentity(    input: ResolveJuniorIdentityInput,    session?: ClientSession  ): Promise<PersistedJunior> {    const junior = await JuniorModel.findOneAndUpdate(      { clubId: input.clubId, juniorId: input.juniorId },      {        $set: {          name: input.name,          age: input.age,          currentLevel: input.currentLevel,          weeksLeft: input.weeksLeft,          status: "in_academy",          ...(input.formation !== null ? { formation: input.formation } : {})        },        $setOnInsert: {          clubId: input.clubId,          juniorId: input.juniorId,          initialAge: input.age,          initialLevel: input.currentLevel,          initialWeeks: input.weeksLeft        }      },      { new: true, upsert: true, runValidators: true, session }    );    return mapJunior(junior.toObject());  }  async findByJuniorId(input: {    juniorId: number;    clubId: number;  }): Promise<PersistedJunior | null> {    const junior = await JuniorModel.findOne({      juniorId: input.juniorId,      clubId: input.clubId    });    return junior ? mapJunior(junior.toObject()) : null;  }  async listByClub(clubId: number): Promise<PersistedJunior[]> {    const juniors = await JuniorModel.find({ clubId }).sort({ juniorId: 1 });    return juniors.map((junior) => mapJunior(junior.toObject()));  }  async markMissingStatuses(    clubId: number,    currentJuniorIds: readonly number[],    promotedJuniorIds: readonly number[],    session?: ClientSession  ): Promise<void> {    await JuniorModel.updateMany(      {        clubId,        juniorId: { $nin: currentJuniorIds, $in: promotedJuniorIds }      },      { $set: { status: "promoted" } },      { session }    );    await JuniorModel.updateMany(      {        clubId,        juniorId: { $nin: [...currentJuniorIds, ...promotedJuniorIds] }      },      { $set: { status: "rejected" } },      { session }    );  }  async findById(id: string): Promise<PersistedJunior | null> {    const junior = await JuniorModel.findById(id);    return junior ? mapJunior(junior.toObject()) : null;  }  async updateObservations(clubId: number, juniorId: number, observations: string): Promise<void> {    await JuniorModel.updateOne({ clubId, juniorId }, { $set: { observations } });  }}function mapJunior(junior: {  _id: Types.ObjectId;  juniorId: number;  clubId: number;  name: string;  initialAge: number;  age: number;  initialLevel: number;  currentLevel: number;  initialWeeks: number;  weeksLeft: number;  formation?: number | null;  observations?: string;  status: JuniorStatus;}): PersistedJunior {  return {    id: junior._id.toString(),    juniorId: junior.juniorId,    clubId: junior.clubId,    name: junior.name,    initialAge: junior.initialAge,    age: junior.age,    initialLevel: junior.initialLevel,    currentLevel: junior.currentLevel,    initialWeeks: junior.initialWeeks,    weeksLeft: junior.weeksLeft,    formation: junior.formation ?? null,    observations: junior.observations ?? "",    skills: {      stamina: null,      pace: null,      technique: null,      passing: null,      keeper: null,      defender: null,      playmaker: null,      striker: null    },    status: junior.status  };}
+﻿import { Types, type ClientSession } from "mongoose";
+import { JuniorModel } from "../models/junior.js";
+import type { PersistedJunior } from "./types.js";
+
+export interface ResolveJuniorIdentityInput {
+  juniorId: number;
+  clubId: number;
+  name: string;
+  age: number;
+  currentLevel: number;
+  weeksLeft: number;
+  formation: number | null;
+}
+
+export type JuniorStatus = "in_academy" | "promoted" | "rejected";
+
+export class MongoJuniorRepository {
+  async resolveCurrentIdentity(
+    input: ResolveJuniorIdentityInput,
+    session?: ClientSession
+  ): Promise<PersistedJunior> {
+    const junior = await JuniorModel.findOneAndUpdate(
+      { clubId: input.clubId, juniorId: input.juniorId },
+      {
+        $set: {
+          name: input.name,
+          age: input.age,
+          currentLevel: input.currentLevel,
+          weeksLeft: input.weeksLeft,
+          status: "in_academy",
+          ...(input.formation !== null ? { formation: input.formation } : {})
+        },
+        $setOnInsert: {
+          clubId: input.clubId,
+          juniorId: input.juniorId,
+          initialAge: input.age,
+          initialLevel: input.currentLevel,
+          initialWeeks: input.weeksLeft
+        }
+      },
+      { new: true, upsert: true, runValidators: true, session }
+    );
+
+    return mapJunior(junior.toObject());
+  }
+
+  async findByJuniorId(input: {
+    juniorId: number;
+    clubId: number;
+  }): Promise<PersistedJunior | null> {
+    const junior = await JuniorModel.findOne({
+      juniorId: input.juniorId,
+      clubId: input.clubId
+    });
+    return junior ? mapJunior(junior.toObject()) : null;
+  }
+
+  async listByClub(clubId: number): Promise<PersistedJunior[]> {
+    const juniors = await JuniorModel.find({ clubId }).sort({ juniorId: 1 });
+    return juniors.map((junior) => mapJunior(junior.toObject()));
+  }
+
+  async markMissingStatuses(
+    clubId: number,
+    currentJuniorIds: readonly number[],
+    promotedJuniorIds: readonly number[],
+    session?: ClientSession
+  ): Promise<void> {
+    await JuniorModel.updateMany(
+      {
+        clubId,
+        juniorId: { $nin: currentJuniorIds, $in: promotedJuniorIds }
+      },
+      { $set: { status: "promoted" } },
+      { session }
+    );
+    await JuniorModel.updateMany(
+      {
+        clubId,
+        juniorId: { $nin: [...currentJuniorIds, ...promotedJuniorIds] }
+      },
+      { $set: { status: "rejected" } },
+      { session }
+    );
+  }
+
+  async findById(id: string): Promise<PersistedJunior | null> {
+    const junior = await JuniorModel.findById(id);
+    return junior ? mapJunior(junior.toObject()) : null;
+  }
+
+  async updateObservations(clubId: number, juniorId: number, observations: string): Promise<void> {
+    await JuniorModel.updateOne({ clubId, juniorId }, { $set: { observations } });
+  }
+}
+
+function mapJunior(junior: {
+  _id: Types.ObjectId;
+  juniorId: number;
+  clubId: number;
+  name: string;
+  initialAge: number;
+  age: number;
+  initialLevel: number;
+  currentLevel: number;
+  initialWeeks: number;
+  weeksLeft: number;
+  formation?: number | null;
+  observations?: string;
+  status: JuniorStatus;
+}): PersistedJunior {
+  return {
+    id: junior._id.toString(),
+    juniorId: junior.juniorId,
+    clubId: junior.clubId,
+    name: junior.name,
+    initialAge: junior.initialAge,
+    age: junior.age,
+    initialLevel: junior.initialLevel,
+    currentLevel: junior.currentLevel,
+    initialWeeks: junior.initialWeeks,
+    weeksLeft: junior.weeksLeft,
+    formation: junior.formation ?? null,
+    observations: junior.observations ?? "",
+    skills: {
+      stamina: null,
+      pace: null,
+      technique: null,
+      passing: null,
+      keeper: null,
+      defender: null,
+      playmaker: null,
+      striker: null
+    },
+    status: junior.status
+  };
+}
+

@@ -1,1 +1,443 @@
-import {  MongoClubRepository,  MongoJuniorRepository,  MongoSnapshotRepository} from "@atlas/database";import type { PersistedSnapshot } from "@atlas/database";import { getSokkerSeason, normalizeSeasonWeek, WEEKS_PER_SOKKER_SEASON } from "@atlas/domain";import type {  RealYouthAcademyPlayerPlan,  RealYouthAcademyPlanning,  YouthAcademyCategory,  YouthAcademyEvidence,  YouthAcademyObservedPlayer,  YouthAcademySignal,  YouthAcademyWarning} from "./types.js";import { ClubId, buildClubOperatingSettings } from "@atlas/application";const clubRepository = new MongoClubRepository();const juniorRepository = new MongoJuniorRepository();const snapshotRepository = new MongoSnapshotRepository();export const getRealYouthAcademyPlanning = async (  clubId: ClubId): Promise<RealYouthAcademyPlanning> => {  const club = await clubRepository.findById(clubId.toString());  if (!club) {    throw new Error(`Club not found: ${clubId}`);  }  const settings = buildClubOperatingSettings(club);  const academyInvestment = settings.effective.preferences["academy.investment"] ?? "balanced";  const snapshots = await snapshotRepository.listByClub(clubId);  const snapshotsWithJuniors = snapshots.filter((snapshot) => snapshot.juniors.length > 0);  const latest = snapshotsWithJuniors.at(-1) ?? null;  if (!latest) {    return buildEmptyPlanning(clubId, academyInvestment);  }  const currentJuniors = await juniorRepository.listByClub(club.clubId);  const currentJuniorById = new Map(currentJuniors.map((junior) => [junior.juniorId, junior]));  const latestCompletedTrainingSkillChanges =    calculateLatestCompletedYouthSkillChanges(snapshotsWithJuniors);      const historyByJuniorId = new Map<number, import("./types.js").YouthSkillHistoryEntry[]>();  const snapshotsSorted = [...snapshotsWithJuniors].sort(    (a, b) => (a.gameWeek ?? 0) - (b.gameWeek ?? 0)  );  for (const snapshot of snapshotsSorted) {    if (snapshot.gameWeek === null) continue;    const season = getSokkerSeason(snapshot.gameWeek);    const seasonWeek = normalizeSeasonWeek(snapshot.gameWeek);    for (const junior of snapshot.juniors) {      if (junior.skill === null) continue;      const history = historyByJuniorId.get(junior.playerId) ?? [];      if (!history.some((h) => h.gameWeek === snapshot.gameWeek)) {        history.push({          gameWeek: snapshot.gameWeek,          season,          seasonWeek,          skill: junior.skill        });      }      historyByJuniorId.set(junior.playerId, history);    }  }      const warnings: YouthAcademyWarning[] = [];  const observedPlayers: YouthAcademyObservedPlayer[] = latest.juniors.map((p) => {    return {      id: p.id,      playerId: p.playerId,      name: p.name,      age: p.age,      initialLevel: currentJuniorById.get(p.playerId)?.initialLevel ?? p.initialLevel,      initialWeeks: currentJuniorById.get(p.playerId)?.initialWeeks ?? null,      weeksRemaining: p.weeksRemaining,      skill: p.skill,      skillChange: latestCompletedTrainingSkillChanges.get(p.playerId) ?? null,      formation: currentJuniorById.get(p.playerId)?.formation ?? null,      observations: currentJuniorById.get(p.playerId)?.observations ?? "",      status: p.status    };  });  const playerPlans = observedPlayers.map((player) => classifyYouthPlayer(player, latest.week, historyByJuniorId.get(player.playerId) ?? []));  const categoryCounts: Record<YouthAcademyCategory, number> = {    standout_prospect: 0,    ready_for_promotion: 0,    follow_up: 0,    stagnation_risk: 0,    insufficient_data: 0  };  for (const plan of playerPlans) {    categoryCounts[plan.category]++;  }  if (snapshotsWithJuniors.length < 2) {    warnings.push({      code: "insufficient_youth_snapshots",      message:        "Hay pocos snapshots de cantera; las proyecciones de promocion dependen de los datos observados actuales.",      evidence: [        { kind: "observed", label: "Snapshots de cantera", value: snapshotsWithJuniors.length }      ]    });  }  return {    clubId,    snapshotId: latest.id,    snapshotDate: latest.snapshotDate.toISOString().slice(0, 10),    observed: {      players: observedPlayers,      coverage: {        totalYouthCount: observedPlayers.length,        youthsWithWeeksRemaining: observedPlayers.filter((p) => p.weeksRemaining !== null).length,        youthsWithSkill: observedPlayers.length      },      source: "snapshot.juniors"    },    manual: {      academyInvestment    },    derived: {      categoryCounts,      players: playerPlans    },    warnings  };};function buildEmptyPlanning(clubId: ClubId, academyInvestment: string): RealYouthAcademyPlanning {  return {    clubId,    snapshotId: null,    snapshotDate: null,    observed: {      players: [],      coverage: {        totalYouthCount: 0,        youthsWithWeeksRemaining: 0,        youthsWithSkill: 0      },      source: "snapshot.juniors"    },    manual: {      academyInvestment    },    derived: {      categoryCounts: {        standout_prospect: 0,        ready_for_promotion: 0,        follow_up: 0,        stagnation_risk: 0,        insufficient_data: 0      },      players: []    },    warnings: [      {        code: "no_youth_snapshots",        message:          "Sin snapshots de cantera importados para este club; importa un snapshot de escuela juvenil para analizar prospectos.",        evidence: [{ kind: "observed", label: "Snapshots de cantera", value: 0 }]      }    ]  };}function classifyYouthPlayer(  player: YouthAcademyObservedPlayer,  currentSeasonWeek: number | null,  history: import("./types.js").YouthSkillHistoryEntry[]): RealYouthAcademyPlayerPlan {  const signals: YouthAcademySignal[] = [];  const warnings: YouthAcademyWarning[] = [];  const evidence: YouthAcademyEvidence[] = [    { kind: "observed", label: "Nombre", value: player.name },    { kind: "observed", label: "Edad", value: player.age }  ];  if (player.weeksRemaining !== null) {    evidence.push({ kind: "observed", label: "Semanas restantes", value: player.weeksRemaining });  }  const weeksInAcademy =    player.initialWeeks !== null && player.weeksRemaining !== null      ? player.initialWeeks - player.weeksRemaining + 1      : null;  if (weeksInAcademy !== null) {    evidence.push({ kind: "derived", label: "Semanas en academia", value: weeksInAcademy });  }  if (player.skill !== null) {    evidence.push({ kind: "observed", label: "Skill", value: player.skill });  }  const projectedPromotionAge = calculateProjectedPromotionAge({    age: player.age,    currentSeasonWeek,    weeksRemaining: player.weeksRemaining  });  const developmentMetrics = calculateYouthDevelopmentMetrics({    initialLevel: player.initialLevel,    initialWeeks: player.initialWeeks,    currentLevel: player.skill,    weeksRemaining: player.weeksRemaining  });  if (projectedPromotionAge !== null) {    evidence.push({      kind: "derived",      label: "Edad proyectada de ascenso",      value: projectedPromotionAge    });  }  let category: YouthAcademyCategory = "follow_up";  let severity: RealYouthAcademyPlayerPlan["severity"] = "info";  let confidence: RealYouthAcademyPlayerPlan["confidence"] = "medium";  let rationale = "Juvenil en formacion habitual dentro de la escuela juvenil.";  const isReady =    player.status === "ready_for_promotion" ||    (player.weeksRemaining !== null && player.weeksRemaining <= 0);  const isHigh = isHighLevel(player.skill);  if (isReady) {    category = "ready_for_promotion";    severity = "info";    confidence = player.weeksRemaining !== null ? "high" : "medium";    rationale =      "El juvenil ha completado su ciclo de formacion y esta listo para ser promovido al plantel principal.";    signals.push({      code: "youth_ready_for_promotion",      severity: "info",      confidence,      message: "Listo para promocion al primer equipo.",      evidence    });  } else if (    isHigh &&    (player.age <= 17 || (player.weeksRemaining !== null && player.weeksRemaining <= 4))  ) {    category = "standout_prospect";    severity = "low";    confidence = player.weeksRemaining !== null ? "high" : "medium";    rationale = "Prospecto destacado con skill elevado y proyeccion favorable de ascenso.";    signals.push({      code: "standout_youth_prospect",      severity: "low",      confidence,      message: "Prospecto destacado con alto talento estimado.",      evidence    });  } else if (weeksInAcademy !== null && weeksInAcademy >= 16 && !isHigh) {    category = "stagnation_risk";    severity = "medium";    confidence = "medium";    rationale = "Juvenil con permanencia prolongada en academia y skill no alto.";    signals.push({      code: "youth_stagnation_risk",      severity,      confidence,      message: "Riesgo de estancamiento por permanencia prolongada sin nivel alto.",      evidence    });  } else if (player.weeksRemaining === null || player.skill === null) {    if (player.weeksRemaining === null) {      warnings.push({        code: "missing_weeks_remaining",        message: "Falta semanas restantes; no se puede proyectar la fecha exacta de promocion.",        evidence      });    }    if (player.skill === null) {      warnings.push({        code: "missing_skill",        message: "Falta skill; la confianza en la evaluacion de talento es menor.",        evidence      });    }  }  return {    id: player.id,    playerId: player.playerId,    name: player.name,    age: player.age,    initialLevel: player.initialLevel,    initialWeeks: player.initialWeeks,    weeksRemaining: player.weeksRemaining,    weeksInAcademy,    projectedPromotionAge,    skill: player.skill,    skillChange: player.skillChange,    levelPops: developmentMetrics.levelPops,    talent: developmentMetrics.talent,    expectedLevel: developmentMetrics.expectedLevel,    formation: player.formation,    observations: player.observations,    status: player.status,    category,    severity,    confidence,    rationale,    signals,    warnings,    history  };}function isHighLevel(skill: number | null): boolean {  return skill !== null && skill >= 8;}export function calculateLatestCompletedYouthSkillChanges(  snapshots: readonly PersistedSnapshot[]): Map<number, number> {  const latestSnapshotByGameWeek = new Map<number, PersistedSnapshot>();  for (const snapshot of snapshots) {    if (snapshot.gameWeek === null) {      continue;    }    const currentSnapshot = latestSnapshotByGameWeek.get(snapshot.gameWeek);    if (currentSnapshot === undefined || isMoreRecentSnapshot(snapshot, currentSnapshot)) {      latestSnapshotByGameWeek.set(snapshot.gameWeek, snapshot);    }  }const gameWeeks = Array.from(latestSnapshotByGameWeek.keys()).sort((a, b) => b - a);  if (gameWeeks.length < 2) {    return new Map();  }  const latestWeek = gameWeeks[0] as number;  const previousWeek = latestWeek - 1;  const latestCompletedTraining = latestSnapshotByGameWeek.get(latestWeek) ?? null;  const previousCompletedTraining = latestSnapshotByGameWeek.get(previousWeek) ?? null;  if (!latestCompletedTraining || !previousCompletedTraining) {    return new Map();  }  const previousSkillByJuniorId = new Map(    previousCompletedTraining.juniors.map((junior) => [junior.playerId, junior.skill] as const)  );  return new Map(    latestCompletedTraining.juniors.flatMap((junior) => {      const previousSkill = previousSkillByJuniorId.get(junior.playerId);      if (junior.skill === null || previousSkill === null || previousSkill === undefined) {        return [];      }      return [[junior.playerId, junior.skill - previousSkill] as const];    })  );}function isMoreRecentSnapshot(candidate: PersistedSnapshot, current: PersistedSnapshot): boolean {  if (candidate.importedAt.getTime() !== current.importedAt.getTime()) {    return candidate.importedAt.getTime() > current.importedAt.getTime();  }  return candidate.snapshotDate.getTime() >= current.snapshotDate.getTime();}export function calculateYouthDevelopmentMetrics(input: {  initialLevel: number | null;  initialWeeks: number | null;  currentLevel: number | null;  weeksRemaining: number | null;}): {  levelPops: number | null;  talent: number | null;  expectedLevel: number | null;} {  if (input.initialLevel === null || input.currentLevel === null) {    return { levelPops: null, talent: null, expectedLevel: null };  }  const levelPops = input.currentLevel - input.initialLevel;  if (    levelPops <= 0 ||    input.initialWeeks === null ||    input.weeksRemaining === null ||    input.initialWeeks <= input.weeksRemaining  ) {    return { levelPops: Math.max(levelPops, 0), talent: null, expectedLevel: null };  }  const talent = (input.initialWeeks - input.weeksRemaining) / levelPops;  return {    levelPops,    talent,    expectedLevel: input.currentLevel + Math.floor(input.weeksRemaining / talent)  };}export function calculateProjectedPromotionAge(input: {  age: number;  currentSeasonWeek: number | null;  weeksRemaining: number | null;}): number | null {  if (    input.weeksRemaining === null ||    input.currentSeasonWeek === null ||    input.currentSeasonWeek < 1 ||    input.currentSeasonWeek > WEEKS_PER_SOKKER_SEASON  ) {    return null;  }  const seasonChanges = Math.floor(    (input.currentSeasonWeek - 1 + input.weeksRemaining) / WEEKS_PER_SOKKER_SEASON  );  return input.age + seasonChanges;}export * from "./types.js";export * from "./youthMatchPerformancesTypes.js";export * from "./getYouthPerformances.js";export * from "./updateObservations.js";
+﻿import {
+  MongoClubRepository,
+  MongoJuniorRepository,
+  MongoSnapshotRepository
+} from "@atlas/database";
+import type { PersistedSnapshot } from "@atlas/database";
+import { getSokkerSeason, normalizeSeasonWeek, WEEKS_PER_SOKKER_SEASON } from "@atlas/domain";
+import type {
+  RealYouthAcademyPlayerPlan,
+  RealYouthAcademyPlanning,
+  YouthAcademyCategory,
+  YouthAcademyEvidence,
+  YouthAcademyObservedPlayer,
+  YouthAcademySignal,
+  YouthAcademyWarning
+} from "./types.js";
+import { ClubId, buildClubOperatingSettings } from "@atlas/application";
+
+const clubRepository = new MongoClubRepository();
+const juniorRepository = new MongoJuniorRepository();
+const snapshotRepository = new MongoSnapshotRepository();
+
+export const getRealYouthAcademyPlanning = async (
+  clubId: ClubId
+): Promise<RealYouthAcademyPlanning> => {
+  const club = await clubRepository.findById(clubId.toString());
+
+  if (!club) {
+    throw new Error(`Club not found: ${clubId}`);
+  }
+
+  const settings = buildClubOperatingSettings(club);
+  const academyInvestment = settings.effective.preferences["academy.investment"] ?? "balanced";
+
+  const snapshots = await snapshotRepository.listByClub(clubId);
+  const snapshotsWithJuniors = snapshots.filter((snapshot) => snapshot.juniors.length > 0);
+  const latest = snapshotsWithJuniors.at(-1) ?? null;
+
+  if (!latest) {
+    return buildEmptyPlanning(clubId, academyInvestment);
+  }
+
+  const currentJuniors = await juniorRepository.listByClub(club.clubId);
+  const currentJuniorById = new Map(currentJuniors.map((junior) => [junior.juniorId, junior]));
+  const latestCompletedTrainingSkillChanges =
+    calculateLatestCompletedYouthSkillChanges(snapshotsWithJuniors);
+    
+  const historyByJuniorId = new Map<number, import("./types.js").YouthSkillHistoryEntry[]>();
+  const snapshotsSorted = [...snapshotsWithJuniors].sort(
+    (a, b) => (a.gameWeek ?? 0) - (b.gameWeek ?? 0)
+  );
+
+  for (const snapshot of snapshotsSorted) {
+    if (snapshot.gameWeek === null) continue;
+    const season = getSokkerSeason(snapshot.gameWeek);
+    const seasonWeek = normalizeSeasonWeek(snapshot.gameWeek);
+
+    for (const junior of snapshot.juniors) {
+      if (junior.skill === null) continue;
+
+      const history = historyByJuniorId.get(junior.playerId) ?? [];
+      if (!history.some((h) => h.gameWeek === snapshot.gameWeek)) {
+        history.push({
+          gameWeek: snapshot.gameWeek,
+          season,
+          seasonWeek,
+          skill: junior.skill
+        });
+      }
+      historyByJuniorId.set(junior.playerId, history);
+    }
+  }
+    
+  const warnings: YouthAcademyWarning[] = [];
+  const observedPlayers: YouthAcademyObservedPlayer[] = latest.juniors.map((p) => {
+    return {
+      id: p.id,
+      playerId: p.playerId,
+      name: p.name,
+      age: p.age,
+      initialLevel: currentJuniorById.get(p.playerId)?.initialLevel ?? p.initialLevel,
+      initialWeeks: currentJuniorById.get(p.playerId)?.initialWeeks ?? null,
+      weeksRemaining: p.weeksRemaining,
+      skill: p.skill,
+      skillChange: latestCompletedTrainingSkillChanges.get(p.playerId) ?? null,
+      formation: currentJuniorById.get(p.playerId)?.formation ?? null,
+      observations: currentJuniorById.get(p.playerId)?.observations ?? "",
+      status: p.status
+    };
+  });
+
+  const playerPlans = observedPlayers.map((player) => classifyYouthPlayer(player, latest.week, historyByJuniorId.get(player.playerId) ?? []));
+
+  const categoryCounts: Record<YouthAcademyCategory, number> = {
+    standout_prospect: 0,
+    ready_for_promotion: 0,
+    follow_up: 0,
+    stagnation_risk: 0,
+    insufficient_data: 0
+  };
+
+  for (const plan of playerPlans) {
+    categoryCounts[plan.category]++;
+  }
+
+  if (snapshotsWithJuniors.length < 2) {
+    warnings.push({
+      code: "insufficient_youth_snapshots",
+      message:
+        "Hay pocos snapshots de cantera; las proyecciones de promocion dependen de los datos observados actuales.",
+      evidence: [
+        { kind: "observed", label: "Snapshots de cantera", value: snapshotsWithJuniors.length }
+      ]
+    });
+  }
+
+  return {
+    clubId,
+    snapshotId: latest.id,
+    snapshotDate: latest.snapshotDate.toISOString().slice(0, 10),
+    observed: {
+      players: observedPlayers,
+      coverage: {
+        totalYouthCount: observedPlayers.length,
+        youthsWithWeeksRemaining: observedPlayers.filter((p) => p.weeksRemaining !== null).length,
+        youthsWithSkill: observedPlayers.length
+      },
+      source: "snapshot.juniors"
+    },
+    manual: {
+      academyInvestment
+    },
+    derived: {
+      categoryCounts,
+      players: playerPlans
+    },
+    warnings
+  };
+};
+
+function buildEmptyPlanning(clubId: ClubId, academyInvestment: string): RealYouthAcademyPlanning {
+  return {
+    clubId,
+    snapshotId: null,
+    snapshotDate: null,
+    observed: {
+      players: [],
+      coverage: {
+        totalYouthCount: 0,
+        youthsWithWeeksRemaining: 0,
+        youthsWithSkill: 0
+      },
+      source: "snapshot.juniors"
+    },
+    manual: {
+      academyInvestment
+    },
+    derived: {
+      categoryCounts: {
+        standout_prospect: 0,
+        ready_for_promotion: 0,
+        follow_up: 0,
+        stagnation_risk: 0,
+        insufficient_data: 0
+      },
+      players: []
+    },
+    warnings: [
+      {
+        code: "no_youth_snapshots",
+        message:
+          "Sin snapshots de cantera importados para este club; importa un snapshot de escuela juvenil para analizar prospectos.",
+        evidence: [{ kind: "observed", label: "Snapshots de cantera", value: 0 }]
+      }
+    ]
+  };
+}
+
+function classifyYouthPlayer(
+  player: YouthAcademyObservedPlayer,
+  currentSeasonWeek: number | null,
+  history: import("./types.js").YouthSkillHistoryEntry[]
+): RealYouthAcademyPlayerPlan {
+  const signals: YouthAcademySignal[] = [];
+  const warnings: YouthAcademyWarning[] = [];
+  const evidence: YouthAcademyEvidence[] = [
+    { kind: "observed", label: "Nombre", value: player.name },
+    { kind: "observed", label: "Edad", value: player.age }
+  ];
+
+  if (player.weeksRemaining !== null) {
+    evidence.push({ kind: "observed", label: "Semanas restantes", value: player.weeksRemaining });
+  }
+
+  const weeksInAcademy =
+    player.initialWeeks !== null && player.weeksRemaining !== null
+      ? player.initialWeeks - player.weeksRemaining + 1
+      : null;
+
+  if (weeksInAcademy !== null) {
+    evidence.push({ kind: "derived", label: "Semanas en academia", value: weeksInAcademy });
+  }
+
+  if (player.skill !== null) {
+    evidence.push({ kind: "observed", label: "Skill", value: player.skill });
+  }
+
+  const projectedPromotionAge = calculateProjectedPromotionAge({
+    age: player.age,
+    currentSeasonWeek,
+    weeksRemaining: player.weeksRemaining
+  });
+  const developmentMetrics = calculateYouthDevelopmentMetrics({
+    initialLevel: player.initialLevel,
+    initialWeeks: player.initialWeeks,
+    currentLevel: player.skill,
+    weeksRemaining: player.weeksRemaining
+  });
+
+  if (projectedPromotionAge !== null) {
+    evidence.push({
+      kind: "derived",
+      label: "Edad proyectada de ascenso",
+      value: projectedPromotionAge
+    });
+  }
+
+  let category: YouthAcademyCategory = "follow_up";
+  let severity: RealYouthAcademyPlayerPlan["severity"] = "info";
+  let confidence: RealYouthAcademyPlayerPlan["confidence"] = "medium";
+  let rationale = "Juvenil en formacion habitual dentro de la escuela juvenil.";
+
+  const isReady =
+    player.status === "ready_for_promotion" ||
+    (player.weeksRemaining !== null && player.weeksRemaining <= 0);
+
+  const isHigh = isHighLevel(player.skill);
+
+  if (isReady) {
+    category = "ready_for_promotion";
+    severity = "info";
+    confidence = player.weeksRemaining !== null ? "high" : "medium";
+    rationale =
+      "El juvenil ha completado su ciclo de formacion y esta listo para ser promovido al plantel principal.";
+    signals.push({
+      code: "youth_ready_for_promotion",
+      severity: "info",
+      confidence,
+      message: "Listo para promocion al primer equipo.",
+      evidence
+    });
+  } else if (
+    isHigh &&
+    (player.age <= 17 || (player.weeksRemaining !== null && player.weeksRemaining <= 4))
+  ) {
+    category = "standout_prospect";
+    severity = "low";
+    confidence = player.weeksRemaining !== null ? "high" : "medium";
+    rationale = "Prospecto destacado con skill elevado y proyeccion favorable de ascenso.";
+    signals.push({
+      code: "standout_youth_prospect",
+      severity: "low",
+      confidence,
+      message: "Prospecto destacado con alto talento estimado.",
+      evidence
+    });
+  } else if (weeksInAcademy !== null && weeksInAcademy >= 16 && !isHigh) {
+    category = "stagnation_risk";
+    severity = "medium";
+    confidence = "medium";
+    rationale = "Juvenil con permanencia prolongada en academia y skill no alto.";
+    signals.push({
+      code: "youth_stagnation_risk",
+      severity,
+      confidence,
+      message: "Riesgo de estancamiento por permanencia prolongada sin nivel alto.",
+      evidence
+    });
+  } else if (player.weeksRemaining === null || player.skill === null) {
+    if (player.weeksRemaining === null) {
+      warnings.push({
+        code: "missing_weeks_remaining",
+        message: "Falta semanas restantes; no se puede proyectar la fecha exacta de promocion.",
+        evidence
+      });
+    }
+    if (player.skill === null) {
+      warnings.push({
+        code: "missing_skill",
+        message: "Falta skill; la confianza en la evaluacion de talento es menor.",
+        evidence
+      });
+    }
+  }
+
+  return {
+    id: player.id,
+    playerId: player.playerId,
+    name: player.name,
+    age: player.age,
+    initialLevel: player.initialLevel,
+    initialWeeks: player.initialWeeks,
+    weeksRemaining: player.weeksRemaining,
+    weeksInAcademy,
+    projectedPromotionAge,
+    skill: player.skill,
+    skillChange: player.skillChange,
+    levelPops: developmentMetrics.levelPops,
+    talent: developmentMetrics.talent,
+    expectedLevel: developmentMetrics.expectedLevel,
+    formation: player.formation,
+    observations: player.observations,
+    status: player.status,
+    category,
+    severity,
+    confidence,
+    rationale,
+    signals,
+    warnings,
+    history
+  };
+}
+
+function isHighLevel(skill: number | null): boolean {
+  return skill !== null && skill >= 8;
+}
+
+export function calculateLatestCompletedYouthSkillChanges(
+  snapshots: readonly PersistedSnapshot[]
+): Map<number, number> {
+  const latestSnapshotByGameWeek = new Map<number, PersistedSnapshot>();
+
+  for (const snapshot of snapshots) {
+    if (snapshot.gameWeek === null) {
+      continue;
+    }
+
+    const currentSnapshot = latestSnapshotByGameWeek.get(snapshot.gameWeek);
+    if (currentSnapshot === undefined || isMoreRecentSnapshot(snapshot, currentSnapshot)) {
+      latestSnapshotByGameWeek.set(snapshot.gameWeek, snapshot);
+    }
+  }
+
+  const gameWeeks = Array.from(latestSnapshotByGameWeek.keys()).sort((a, b) => b - a);
+  
+  if (gameWeeks.length < 2) {
+    return new Map();
+  }
+
+  const latestWeek = gameWeeks[0] as number;
+  const previousWeek = latestWeek - 1;
+
+  const latestCompletedTraining = latestSnapshotByGameWeek.get(latestWeek) ?? null;
+  const previousCompletedTraining = latestSnapshotByGameWeek.get(previousWeek) ?? null;
+
+  if (!latestCompletedTraining || !previousCompletedTraining) {
+    return new Map();
+  }
+
+  const previousSkillByJuniorId = new Map(
+    previousCompletedTraining.juniors.map((junior) => [junior.playerId, junior.skill] as const)
+  );
+
+  return new Map(
+    latestCompletedTraining.juniors.flatMap((junior) => {
+      const previousSkill = previousSkillByJuniorId.get(junior.playerId);
+
+      if (junior.skill === null || previousSkill === null || previousSkill === undefined) {
+        return [];
+      }
+
+      return [[junior.playerId, junior.skill - previousSkill] as const];
+    })
+  );
+}
+
+function isMoreRecentSnapshot(candidate: PersistedSnapshot, current: PersistedSnapshot): boolean {
+  if (candidate.importedAt.getTime() !== current.importedAt.getTime()) {
+    return candidate.importedAt.getTime() > current.importedAt.getTime();
+  }
+
+  return candidate.snapshotDate.getTime() >= current.snapshotDate.getTime();
+}
+
+export function calculateYouthDevelopmentMetrics(input: {
+  initialLevel: number | null;
+  initialWeeks: number | null;
+  currentLevel: number | null;
+  weeksRemaining: number | null;
+}): {
+  levelPops: number | null;
+  talent: number | null;
+  expectedLevel: number | null;
+} {
+  if (input.initialLevel === null || input.currentLevel === null) {
+    return { levelPops: null, talent: null, expectedLevel: null };
+  }
+
+  const levelPops = input.currentLevel - input.initialLevel;
+
+  if (
+    levelPops <= 0 ||
+    input.initialWeeks === null ||
+    input.weeksRemaining === null ||
+    input.initialWeeks <= input.weeksRemaining
+  ) {
+    return { levelPops: Math.max(levelPops, 0), talent: null, expectedLevel: null };
+  }
+
+  const talent = (input.initialWeeks - input.weeksRemaining) / levelPops;
+
+  return {
+    levelPops,
+    talent,
+    expectedLevel: input.currentLevel + Math.floor(input.weeksRemaining / talent)
+  };
+}
+
+export function calculateProjectedPromotionAge(input: {
+  age: number;
+  currentSeasonWeek: number | null;
+  weeksRemaining: number | null;
+}): number | null {
+  if (
+    input.weeksRemaining === null ||
+    input.currentSeasonWeek === null ||
+    input.currentSeasonWeek < 1 ||
+    input.currentSeasonWeek > WEEKS_PER_SOKKER_SEASON
+  ) {
+    return null;
+  }
+
+  const seasonChanges = Math.floor(
+    (input.currentSeasonWeek - 1 + input.weeksRemaining) / WEEKS_PER_SOKKER_SEASON
+  );
+
+  return input.age + seasonChanges;
+}
+export * from "./types.js";
+export * from "./youthMatchPerformancesTypes.js";
+export * from "./getYouthPerformances.js";
+export * from "./updateObservations.js";
+
