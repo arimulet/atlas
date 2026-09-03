@@ -44,7 +44,7 @@ const playerRepository = new MongoPlayerRepository();
 function resolvePlayerPosition(
   player: { position?: string | null } | null | undefined,
   snapshotPlayer?: { observedPosition?: string | null } | null
-): SkillTrainingCostSkill | "goalkeeper" | "defender" | "midfielder" | "winger" | "striker" | null {
+): AdvancedTrainingCandidateContext["player"]["position"] {
   const rawPosition = player?.position ?? snapshotPlayer?.observedPosition ?? null;
   if (!rawPosition) {
     return null;
