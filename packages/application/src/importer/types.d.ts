@@ -162,6 +162,7 @@ export interface JuniorDto {
   age: number;
   currentLevel: number;
   weeksLeft: number;
+  formation: number | null; // 0 = GK, 1 = Field player (from XML)
 }
 
 export interface TrainingSummaryWeekDto {
@@ -184,6 +185,32 @@ export interface TrainingSummaryDto {
   weeks: TrainingSummaryWeekDto[];
 }
 
+export interface JuniorMatchPlayerStatsDto {
+  playerId: number;
+  position: number | null;
+  minutesPlayed: number;
+  rating: number;
+  goals: number;
+  assists: number;
+  shoots: number;
+  fouls: number;
+  yellowCards: number;
+  redCards: number;
+  isInjured: boolean;
+  timeDefending: number;
+}
+
+export interface JuniorMatchDto {
+  matchId: number;
+  clubId: number;
+  season: number;
+  gameWeek: number;
+  seasonWeek: number;
+  dateExpected: string;
+  isFinished: boolean;
+  playerStats: JuniorMatchPlayerStatsDto[];
+}
+
 export interface SokkerSyncPayload {
   current: CurrentClubContextDto;
   players: PlayerDto[];
@@ -191,6 +218,7 @@ export interface SokkerSyncPayload {
   trainers: TrainerDto[];
   juniors: JuniorDto[];
   trainingSummary: TrainingSummaryDto;
+  juniorMatches: JuniorMatchDto[];
 }
 
 export interface SokkerSyncValidationIssue {
@@ -233,6 +261,7 @@ export interface SokkerSyncPersistenceResult {
     trainers: number;
     juniors: number;
     trainingSummaryWeeks: number;
+    juniorMatches: number;
   };
 }
 
@@ -268,4 +297,24 @@ export interface SnapshotJuniorDto {
   weeksRemaining: number;
   skill: number;
   status: "in_academy";
+}
+export interface ActiveTransferDto {
+  playerId: number;
+  deadline: string;
+  player: {
+    name: string;
+    countryId: number;
+    age: number;
+    skills: Record<string, number | null>;
+  };
+}
+
+export interface FinalTransferDto {
+  transferKey: string;
+  playerId: number;
+  name: string;
+  transferDate: string;
+  salePrice: number;
+  currency: string;
+  age: number;
 }

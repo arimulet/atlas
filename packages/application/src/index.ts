@@ -17,3 +17,4 @@ export * from "./training/index.js";
 export * from "./types.js";
 export { calculateGameWeek, normalizeSeasonWeek } from "@atlas/domain";
 export * from "./importer/index.js";
+export * from "./jobs/market-transfer-sync.js";

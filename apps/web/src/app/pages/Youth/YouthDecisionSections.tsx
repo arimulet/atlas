@@ -1,11 +1,11 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { Fragment, useMemo, useState, type ReactNode } from "react";
 
 import { YouthDecisionCard } from "./YouthDecisionCard";
 import {
   filterYouthDecisionViewModels,
+  orderYouthDecisionComparisonModels,
   type YouthDecisionFilter,
-  type YouthDecisionViewModel,
-  type YouthSummaryViewModel
+  type YouthDecisionViewModel
 } from "./youth-decision-view-model";
 
 interface YouthDecisionSectionsProps {
@@ -27,6 +27,7 @@ export function YouthDecisionSections({
 
   return (
     <>
+      {status === "ready" && models.length > 1 ? <YouthDecisionComparison models={models} /> : null}
       <section
         className="atlas-youth-panel atlas-youth-panel--decisions"
         aria-labelledby="youth-decisions-title"
@@ -70,41 +71,23 @@ export function YouthDecisionSections({
           </div>
         ) : null}
       </section>
-      {status === "ready" && models.length > 1 ? <YouthDecisionComparison models={models} /> : null}
     </>
   );
 }
 
-export function YouthSummary({ summary }: { summary: YouthSummaryViewModel }) {
+export function YouthSummary({ summary }: { summary: { academyPlayers: number } }) {
   return (
     <section className="atlas-youth-summary" aria-labelledby="youth-summary-title">
       <div>
         <p className="atlas-youth-summary__eyebrow">Youth Academy</p>
         <h2 id="youth-summary-title">{summary.academyPlayers} players in school</h2>
       </div>
-      <div className="atlas-youth-summary__metrics">
-        <SummaryMetric label="Decision candidates" value={String(summary.decisionCandidates)} />
-        <SummaryMetric label="Train" value={String(summary.counts.train)} />
-        <SummaryMetric label="Keep" value={String(summary.counts.keep)} />
-        <SummaryMetric label="Release" value={String(summary.counts.release)} />
-        <SummaryMetric label="Hold" value={String(summary.counts.hold)} />
-        <SummaryMetric
-          label="High-priority decisions"
-          value={String(summary.highPriorityDecisions)}
-        />
-      </div>
+
     </section>
   );
 }
 
-function SummaryMetric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="atlas-youth-summary__metric">
-      <span>{label}</span>
-      <strong>{value}</strong>
-    </div>
-  );
-}
+
 
 function DecisionFilters({
   filter,
@@ -120,6 +103,7 @@ function DecisionFilters({
     { value: "sell", label: "Sell" },
     { value: "release", label: "Release" },
     { value: "hold", label: "Hold" },
+    { value: "unknown", label: "Unknown" },
     { value: "high", label: "High priority" }
   ];
   return (
@@ -139,6 +123,9 @@ function DecisionFilters({
 }
 
 function YouthDecisionComparison({ models }: { models: YouthDecisionViewModel[] }) {
+  const comparisonModels = orderYouthDecisionComparisonModels(models);
+  const firstExcludedIndex = comparisonModels.findIndex((model) => !isCurrentlyAdvanced(model));
+
   return (
     <section
       className="atlas-youth-panel atlas-youth-panel--comparison"
@@ -146,17 +133,35 @@ function YouthDecisionComparison({ models }: { models: YouthDecisionViewModel[] 
     >
       <div className="atlas-youth-section-heading">
         <div>
-          <p className="atlas-youth-panel__eyebrow">Promoted players</p>
+          <p className="atlas-youth-panel__eyebrow">Player Decisions</p>
           <h2 id="youth-comparison-title" className="atlas-youth-panel__title atlas-section-title">
-            Decision Comparison
+            Candidate Comparison
           </h2>
         </div>
       </div>
+      {comparisonModels.some((model) => model.advancedTraining.isTrial) ? (
+        <p className="atlas-youth-comparison-table__trial-note">
+          ◌ Trial advanced is provisional and requires validation with real senior training weeks.
+        </p>
+      ) : null}
       <div className="atlas-youth-table-wrap">
         <table className="atlas-youth-table atlas-youth-comparison-table">
+          <colgroup>
+            <col className="atlas-youth-comparison-table__player-column" />
+            <col className="atlas-youth-comparison-table__advanced-column" />
+            <col className="atlas-youth-comparison-table__rank-column" />
+            <col className="atlas-youth-comparison-table__age-column" />
+            <col className="atlas-youth-comparison-table__profile-column" />
+            <col className="atlas-youth-comparison-table__prospect-column" />
+            <col className="atlas-youth-comparison-table__club-fit-column" />
+            <col className="atlas-youth-comparison-table__market-column" />
+            <col className="atlas-youth-comparison-table__decision-column" />
+          </colgroup>
           <thead>
             <tr>
               <th scope="col">Player</th>
+              <th scope="col">Current slot</th>
+              <th scope="col">Advanced rank</th>
               <th scope="col">Age</th>
               <th scope="col">Profile</th>
               <th scope="col">Prospect</th>
@@ -166,25 +171,70 @@ function YouthDecisionComparison({ models }: { models: YouthDecisionViewModel[] 
             </tr>
           </thead>
           <tbody>
-            {models.map((model) => (
-              <tr key={model.playerId}>
-                <th scope="row">{model.playerName}</th>
-                <td>{model.age ?? "—"}</td>
-                <td>{model.profileLabel}</td>
-                <td>{model.prospectQualityLabel}</td>
-                <td>{model.clubFitLabel}</td>
-                <td>{model.market?.currentValueLabel ?? "—"}</td>
-                <td>
-                  <span className={`atlas-youth-decision-badge is-${model.decision}`}>
-                    {model.decisionLabel}
-                  </span>
-                </td>
-              </tr>
+            {comparisonModels.map((model, index) => (
+              <Fragment key={model.playerId}>
+                {index === firstExcludedIndex && firstExcludedIndex > 0 ? (
+                  <tr className="atlas-youth-comparison-table__slot-divider">
+                    <th colSpan={9} scope="rowgroup">
+                      Outside the current advanced-training slots
+                    </th>
+                  </tr>
+                ) : null}
+                <tr className={model.advancedTraining.isTrial ? "is-trial" : undefined}>
+                  <th scope="row">{model.playerName}</th>
+                  <td className="atlas-youth-table__center">
+                    <AdvancedTrainingSlotIcon model={model} />
+                  </td>
+                  <td className="atlas-youth-table__center">{formatAdvancedRank(model)}</td>
+                  <td>{model.age ?? "—"}</td>
+                  <td>{model.profileLabel}</td>
+                  <td>{model.prospectQualityLabel}</td>
+                  <td>{model.clubFitLabel}</td>
+                  <td>{model.market?.currentValueLabel ?? "—"}</td>
+                  <td>
+                    <span className={`atlas-youth-decision-badge is-${model.decision}`}>
+                      {model.decisionLabel}
+                    </span>
+                  </td>
+                </tr>
+              </Fragment>
             ))}
           </tbody>
         </table>
       </div>
     </section>
+  );
+}
+
+function isCurrentlyAdvanced(model: YouthDecisionViewModel): boolean {
+  return model.advancedTraining.currentlyAdvanced;
+}
+
+function formatAdvancedRank(model: YouthDecisionViewModel): string {
+  return model.advancedTraining.comparisonRank === null
+    ? "—"
+    : `#${model.advancedTraining.comparisonRank}`;
+}
+
+function AdvancedTrainingSlotIcon({ model }: { model: YouthDecisionViewModel }) {
+  const isCurrent = isCurrentlyAdvanced(model);
+  const hasInsufficientTrialProfile = model.advancedTraining.profileViability === "below_minimum";
+  const label = model.advancedTraining.isTrial
+    ? "Trial advanced training: provisional recommendation pending real senior training weeks"
+    : isCurrent
+      ? "Currently assigned to an advanced-training slot"
+      : hasInsufficientTrialProfile
+        ? "Outside the advanced-training slots: the profile does not meet the minimum quality for a trial"
+        : "Outside the current advanced-training slots";
+
+  return (
+    <span
+      aria-label={label}
+      className={`atlas-youth-comparison-table__advanced-slot-icon ${model.advancedTraining.isTrial ? "is-trial" : isCurrent ? "is-current" : "is-excluded"}`}
+      role="img"
+    >
+      {model.advancedTraining.isTrial ? "◌" : isCurrent ? "✓" : "×"}
+    </span>
   );
 }
 

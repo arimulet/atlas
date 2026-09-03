@@ -1,3 +1,4 @@
+import React from "react";
 import type { DashboardStatus, RealYouthAcademyPlanning } from "@atlas/web/app/types";
 import {
   createYouthPlayerRows,
@@ -8,19 +9,18 @@ import { AttentionIcon } from "../../components/AttentionIcon";
 import { formatTalent } from "../../formatters";
 import { skillLevelLabel } from "../../view-models/skill-level-label";
 import { YouthSummary } from "./YouthDecisionSections";
-import { useYouthDecisionEngine } from "./useYouthDecisionEngine";
+import { YouthPlayerSkillChart } from "./YouthPlayerSkillChart";
 
-export function Youth({ clubId, currency, youthAcademy, youthStatus }: YouthProps) {
+export function Youth({ youthAcademy, youthStatus }: YouthProps) {
   const rows = createYouthPlayerRows(youthAcademy);
   const schoolRows = rows.filter((row) => row.status !== "Promoted");
-  const decisionEngine = useYouthDecisionEngine({ clubId, currency, youthAcademy });
 
   return (
     <div className="atlas-youth">
       <header className="atlas-youth__header">
         <h1>Youth</h1>
       </header>
-      <YouthSummary summary={decisionEngine.summary} />
+      <YouthSummary summary={{ academyPlayers: schoolRows.length }} />
       <YouthPlayers rows={schoolRows} status={youthStatus} planning={youthAcademy} />
     </div>
   );
@@ -33,6 +33,8 @@ interface YouthPlayersProps {
 }
 
 function YouthPlayers({ planning, rows, status }: YouthPlayersProps) {
+  const [expandedPlayerId, setExpandedPlayerId] = React.useState<string | null>(null);
+
   return (
     <section
       className="atlas-youth-panel atlas-youth-panel--players"
@@ -86,7 +88,14 @@ function YouthPlayers({ planning, rows, status }: YouthPlayersProps) {
               <YouthTableMessage message="No youth players available." />
             ) : null}
             {status === "ready" && planning?.snapshotId !== null
-              ? rows.map((row) => <YouthPlayerTableRow key={row.id} row={row} />)
+              ? rows.map((row) => (
+                  <YouthPlayerRows 
+                    key={row.id} 
+                    row={row} 
+                    isExpanded={expandedPlayerId === row.id}
+                    onToggle={() => setExpandedPlayerId(current => current === row.id ? null : row.id)}
+                  />
+                ))
               : null}
           </tbody>
         </table>
@@ -105,50 +114,80 @@ function YouthTableMessage({ message }: { message: string }) {
   );
 }
 
-function YouthPlayerTableRow({ row }: { row: YouthPlayerRow }) {
+function YouthPlayerRows({ 
+  row, 
+  isExpanded, 
+  onToggle 
+}: { 
+  row: YouthPlayerRow; 
+  isExpanded: boolean; 
+  onToggle: () => void; 
+}) {
   const skillChangeClass = changeClass(row.level?.change ?? null);
 
   return (
-    <tr>
-      <th scope="row">
-        <span className="atlas-youth-table__player-name">
-          <span className={`atlas-youth-table__player-name-value${skillChangeClass}`}>
-            {row.name}
-          </span>
-          {row.attentions.map((attention) => (
-            <span
-              aria-label={attention.message}
-              className="atlas-youth-player-attention"
-              key={attention.id}
-              role="img"
-              title={attention.message}
+    <>
+      <tr>
+        <th scope="row">
+          <span className="atlas-youth-table__player-name">
+            <button
+              aria-expanded={isExpanded}
+              aria-label={`${isExpanded ? "Hide" : "View"} details for ${row.name}`}
+              className="atlas-training-player-detail__toggle"
+              onClick={onToggle}
+              type="button"
+              style={{ marginRight: '8px', cursor: 'pointer', background: 'none', border: 'none', color: 'inherit', fontWeight: 'bold' }}
             >
-              <AttentionIcon severity={attention.severity} />
+              {isExpanded ? "−" : "+"}
+            </button>
+            <span className={`atlas-youth-table__player-name-value${skillChangeClass}`}>
+              {row.name}
             </span>
-          ))}
-          {row.status !== null && row.status !== "In academy" && row.status !== "Attention" ? (
-            <span className={`atlas-youth-player-indicator is-${statusClass(row.status)}`}>
-              {row.status}
-            </span>
-          ) : null}
-        </span>
-      </th>
-      <td className="atlas-youth-table__center">{row.age}</td>
-      <td>
-        <span className="atlas-youth-skill-level">
-          <span className={`atlas-youth-skill-level__value${skillChangeClass}`}>
-            {formatLevel(row.level)}
+            {row.attentions.map((attention) => (
+              <span
+                aria-label={attention.message}
+                className="atlas-youth-player-attention"
+                key={attention.id}
+                role="img"
+                title={attention.message}
+              >
+                <AttentionIcon severity={attention.severity} />
+              </span>
+            ))}
+            {row.status !== null && row.status !== "In academy" && row.status !== "Attention" ? (
+              <span className={`atlas-youth-player-indicator is-${statusClass(row.status)}`}>
+                {row.status}
+              </span>
+            ) : null}
           </span>
-          <SkillChangeIndicator change={row.level?.change ?? null} />
-        </span>
-      </td>
-      <td className="atlas-youth-table__center">{row.weeksLeft ?? "—"}</td>
-      <td>{formatLevelValue(row.expectedLevel)}</td>
-      <td className="atlas-youth-table__center">{row.expectedAge ?? "—"}</td>
-      <td className="atlas-youth-table__center">{row.initialWeeks ?? "—"}</td>
-      <td className="atlas-youth-table__center">{formatLevelPops(row.levelPops)}</td>
-      <td className="atlas-youth-table__center">{formatYouthTalent(row.talent)}</td>
-    </tr>
+        </th>
+        <td className="atlas-youth-table__center">{row.age}</td>
+        <td>
+          <span className="atlas-youth-skill-level">
+            <span className={`atlas-youth-skill-level__value${skillChangeClass}`}>
+              {formatLevel(row.level)}
+            </span>
+            <SkillChangeIndicator change={row.level?.change ?? null} />
+          </span>
+        </td>
+        <td className="atlas-youth-table__center">{row.weeksLeft ?? "—"}</td>
+        <td>{formatLevelValue(row.expectedLevel)}</td>
+        <td className="atlas-youth-table__center">{row.expectedAge ?? "—"}</td>
+        <td className="atlas-youth-table__center">{row.initialWeeks ?? "—"}</td>
+        <td className="atlas-youth-table__center">{formatLevelPops(row.levelPops)}</td>
+        <td className="atlas-youth-table__center">{formatYouthTalent(row.talent)}</td>
+      </tr>
+      {isExpanded ? (
+        <tr className="atlas-youth-player-detail-row">
+          <td colSpan={9}>
+            <div className="atlas-youth-player-detail__content" style={{ padding: "16px", backgroundColor: "rgba(0,0,0,0.15)" }}>
+              <h3 style={{ fontSize: "14px", margin: "0 0 8px 0", color: "#ccc" }}>Gráfico de nivel de habilidad</h3>
+              <YouthPlayerSkillChart history={row.history} />
+            </div>
+          </td>
+        </tr>
+      ) : null}
+    </>
   );
 }
 

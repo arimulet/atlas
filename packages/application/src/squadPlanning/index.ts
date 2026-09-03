@@ -1,15 +1,15 @@
 import {
   MongoClubRepository,
   MongoSnapshotRepository,
-  MongoPlayerDevelopmentTargetRepository,
-  MongoSquadRoleAssignmentRepository,
+  MongoPlayerRepository,
   MongoTrainingWeekRepository,
-  MongoPlayerTransferRepository,
   type PersistedPlayerSnapshot,
   type PersistedPlayerDevelopmentOverride,
   type PersistedPlayerTrainingWeek,
   type PersistedSquadRoleAssignment,
-  type SaveSquadRoleAssignmentInput
+  type SaveSquadRoleAssignmentInput,
+  findFinalMarketTransfersUpToDate,
+  MongoCountryRepository
 } from "@atlas/database";
 import {
   assessSquad,
@@ -18,7 +18,9 @@ import {
   generatePlayerTrainingPath,
   PlayerDevelopmentPlanner,
   projectDevelopment,
+  buildWeeklyTrainingReport,
   estimateTalentFromTrainingHistory,
+  type DevelopmentCurrentSkillProgress,
   type DevelopmentPlayer,
   type PlayerDevelopmentTargetOverride,
   type SquadPlayerContext,
@@ -33,8 +35,7 @@ import {
   compareAdvancedAndFormationMarketValue,
   PLAYER_MARKET_VALUE_COMPARISON_HORIZON_WEEKS,
   projectPlayerMarketValue,
-  type PlayerMarketValuePlayerInput,
-  type PlayerTransferRecord
+  type PlayerMarketValuePlayerInput
 } from "@atlas/domain";
 import { createTrainingWeek, type PlayerSkills, type PlayerSkillsChange } from "@atlas/domain";
 import type { ClubId } from "../types.js";
@@ -80,19 +81,16 @@ export type { SquadPlanningRecommendations } from "@atlas/domain";
 const clubRepository = new MongoClubRepository();
 const snapshotRepository = new MongoSnapshotRepository();
 const trainingWeekRepository = new MongoTrainingWeekRepository();
-const roleAssignmentRepository = new MongoSquadRoleAssignmentRepository();
-const developmentTargetRepository = new MongoPlayerDevelopmentTargetRepository();
-const playerTransferRepository = new MongoPlayerTransferRepository();
+const playerRepository = new MongoPlayerRepository();
 
 export async function getSquadAssessment(clubId: ClubId): Promise<SquadAssessmentData> {
   const club = await clubRepository.findById(clubId.toString());
   if (!club) throw new Error(`Club not found: ${clubId}`);
 
-  const [snapshots, trainingWeeks, assignments, persistedTransfers] = await Promise.all([
+  const [snapshots, trainingWeeks, assignments] = await Promise.all([
     snapshotRepository.listByClub(clubId),
     trainingWeekRepository.listByClub(club.clubId),
-    roleAssignmentRepository.listByClub(club.clubId),
-    playerTransferRepository.findTransfersForCalibration().catch(() => [])
+    playerRepository.listSquadRoles(club.clubId)
   ]);
   const latest = snapshots.at(-1);
   if (!latest) {
@@ -115,7 +113,7 @@ export async function getSquadAssessment(clubId: ClubId): Promise<SquadAssessmen
         async (player) =>
           [
             player.playerId,
-            await developmentTargetRepository.findByPlayerId({
+            await playerRepository.findDevelopmentOverride({
               playerId: player.playerId,
               clubId: club.clubId
             })
@@ -133,10 +131,19 @@ export async function getSquadAssessment(clubId: ClubId): Promise<SquadAssessmen
       latest.snapshotDate
     )
   );
-  const transfers = persistedTransfers.map(mapTransferRecord);
+
+  const countryRepo = new MongoCountryRepository();
+  const allCountries = await countryRepo.getAll();
+  const clubCountry = allCountries.find(c => c.currencyName === club.currency || c.countryId === club.country);
+  const currencyRate = clubCountry?.currencyRate ?? 1;
+  const currencyName = clubCountry?.currencyName ?? club.currency;
+
+  const rawTransfers = await findFinalMarketTransfersUpToDate(new Date());
+  const mappedTransfers = rawTransfers.map(t => mapMarketTransferToRecord(t, currencyName, currencyRate));
+
   const assessment = assessSquad(contexts);
   const contextByPlayer = new Map(contexts.map((context) => [context.playerId, context]));
-  const marketValues = createMarketValues(contexts, transfers);
+  const marketValues = createMarketValues(contexts, mappedTransfers);
   const depthPlayers: SquadDepthPlayer[] = assessment.players.map((playerAssessment) => {
     const context = contextByPlayer.get(playerAssessment.playerId);
     const marketValue = marketValues.get(playerAssessment.playerId);
@@ -153,7 +160,9 @@ export async function getSquadAssessment(clubId: ClubId): Promise<SquadAssessmen
       formation: context?.formation ?? null,
       marketValue: marketValue?.current ?? null,
       marketProjection: marketValue?.projection ?? null,
-      marketTrainingComparison: marketValue?.trainingComparison ?? null
+      marketTrainingComparison: marketValue?.trainingComparison ?? null,
+      training: context?.training ?? null,
+      trainingHistory: context?.trainingHistory ?? null
     };
   });
 
@@ -189,7 +198,7 @@ export async function getSquadRoleAssignment(input: {
   playerId: number;
   clubId: ClubId;
 }): Promise<PersistedSquadRoleAssignment | null> {
-  return roleAssignmentRepository.findByPlayerId({
+  return playerRepository.findSquadRole({
     ...input,
     clubId: await resolveNumericClubId(input.clubId)
   });
@@ -198,7 +207,7 @@ export async function getSquadRoleAssignment(input: {
 export async function saveSquadRoleAssignment(
   input: Omit<SaveSquadRoleAssignmentInput, "clubId"> & { clubId: ClubId }
 ): Promise<PersistedSquadRoleAssignment> {
-  return roleAssignmentRepository.saveManualOverride({
+  return playerRepository.saveSquadRole({
     ...input,
     clubId: await resolveNumericClubId(input.clubId)
   });
@@ -208,7 +217,7 @@ export async function resetSquadRoleAssignment(input: {
   playerId: number;
   clubId: ClubId;
 }): Promise<void> {
-  await roleAssignmentRepository.deleteManualOverride({
+  await playerRepository.deleteSquadRole({
     ...input,
     clubId: await resolveNumericClubId(input.clubId)
   });
@@ -245,12 +254,12 @@ function buildPlayerContext(
   };
   const override: PlayerDevelopmentTargetOverride = {
     profile: developmentOverride?.profile,
-    targetLevels: developmentOverride?.targetLevels,
-    targetAge: developmentOverride?.targetAge
+    targetLevels: developmentOverride?.targetLevels
   };
   const plan = buildPlan(developmentPlayer, override);
   const talent = history ? estimateTalentFromTrainingHistory(history) : null;
   const latestTraining = history?.weeks.at(-1);
+  const currentTrainingProgress = estimateCurrentTrainingProgress(history, talent, currentGameWeek);
   const trainingPath = generatePlayerTrainingPath({
     player: { ...developmentPlayer, age: player.age ?? 16 },
     target: plan.target,
@@ -265,6 +274,7 @@ function buildPlayerContext(
     trainingPath,
     talent,
     latestTraining,
+    currentTrainingProgress,
     currentGameWeek,
     currentDate
   });
@@ -282,6 +292,7 @@ function buildPlayerContext(
     projection,
     hasDevelopmentPlan: developmentOverride !== null,
     talent,
+    trainingHistory: history,
     training: {
       kind: player.training.advanced ? "advanced" : (latestTraining?.kind ?? "formation"),
       intensity: latestTraining?.intensity ?? null,
@@ -294,7 +305,7 @@ function buildPlayerContext(
 
 function createMarketValues(
   contexts: readonly SquadPlayerContext[],
-  transfers: readonly PlayerTransferRecord[]
+  transfers: import("@atlas/domain").PlayerTransferRecord[]
 ): Map<number, MarketValueEntry> {
   const values = new Map<number, MarketValueEntry>();
 
@@ -343,7 +354,7 @@ function createMarketTrainingComparison(
   context: SquadPlayerContext,
   player: PlayerMarketValuePlayerInput,
   current: ReturnType<typeof calibratePlayerMarketValue>,
-  transfers: readonly PlayerTransferRecord[]
+  transfers: import("@atlas/domain").PlayerTransferRecord[]
 ): ReturnType<typeof compareAdvancedAndFormationMarketValue> | null {
   if (!context.developmentPlan || !context.trainingPath || !context.projection) return null;
 
@@ -427,30 +438,37 @@ function toMarketValuePlayer(context: SquadPlayerContext): PlayerMarketValuePlay
   };
 }
 
-function mapTransferRecord(
-  transfer: Awaited<
-    ReturnType<MongoPlayerTransferRepository["findTransfersForCalibration"]>
-  >[number]
-): PlayerTransferRecord {
-  return {
-    ...(transfer.transferId ? { transferId: transfer.transferId } : {}),
-    ...(transfer.playerId === undefined ? {} : { playerId: transfer.playerId }),
-    transferDate: transfer.transferDate,
-    gameWeek: transfer.gameWeek,
-    salePrice: transfer.salePrice,
-    currency: transfer.currency,
-    normalizedSalePrice: transfer.normalizedSalePrice,
-    age: transfer.age,
-    skills: transfer.skills,
-    formation: transfer.formation,
-    developmentProfile: transfer.developmentProfile,
-    sokkerValue: transfer.sokkerValue,
-    source: transfer.source,
-    dataQuality: transfer.dataQuality,
-    salePriceType: transfer.salePriceType
-  };
-}
+function estimateCurrentTrainingProgress(
+  history: TrainingHistory | null,
+  talent: ReturnType<typeof estimateTalentFromTrainingHistory> | null,
+  currentGameWeek: number | null
+): DevelopmentCurrentSkillProgress | undefined {
+  if (!history || !talent?.value || currentGameWeek === null) return undefined;
 
+  try {
+    const report = buildWeeklyTrainingReport({
+      players: [{ history, talent: talent.value }],
+      gameWeek: currentGameWeek
+    }).players[0];
+    if (
+      !report ||
+      report.trainingPoints.estimatedProgress === null ||
+      report.trainingPoints.remainingToNextLevel === null
+    ) {
+      return undefined;
+    }
+
+    return {
+      skill: report.training.skill,
+      estimatedProgress: report.trainingPoints.estimatedProgress,
+      remainingToNextLevel: report.trainingPoints.remainingToNextLevel,
+      confidence:
+        talent.confidence === "high" ? "high" : talent.confidence === "medium" ? "medium" : "low"
+    };
+  } catch {
+    return undefined;
+  }
+}
 function buildProjection(input: {
   player: PersistedPlayerSnapshot;
   developmentPlayer: DevelopmentPlayer;
@@ -458,6 +476,7 @@ function buildProjection(input: {
   trainingPath: ReturnType<typeof generatePlayerTrainingPath>;
   talent: ReturnType<typeof estimateTalentFromTrainingHistory> | null;
   latestTraining: TrainingHistory["weeks"][number] | undefined;
+  currentTrainingProgress: DevelopmentCurrentSkillProgress | undefined;
   currentGameWeek: number | null;
   currentDate: Date;
 }) {
@@ -473,6 +492,7 @@ function buildProjection(input: {
       currentGameWeek: input.currentGameWeek,
       currentDate: input.currentDate,
       talent: input.talent,
+      currentTrainingProgress: input.currentTrainingProgress,
       trainingAssumptions: {
         trainingKind: input.latestTraining?.kind === "advanced" ? "advanced" : "formation",
         expectedIntensity: input.latestTraining?.intensity ?? 100,
@@ -584,5 +604,32 @@ function mapAssignment(assignment: PersistedSquadRoleAssignment): SquadRoleAssig
     playerId: assignment.playerId,
     role: assignment.role,
     source: "manual"
+  };
+}
+function mapMarketTransferToRecord(
+  transfer: import("@atlas/database").PersistedMarketTransfer,
+  currencyName: string,
+  currencyRate: number
+): import("@atlas/domain").PlayerTransferRecord {
+  return {
+    transferId: transfer.transferKey,
+    playerId: transfer.playerId,
+    transferDate: transfer.transferDate,
+    gameWeek: transfer.gameWeek,
+    salePrice: Math.round(transfer.salePrice / currencyRate),
+    currency: currencyName,
+    age: transfer.age,
+    skills: {
+      stamina: transfer.skills.stamina ?? null,
+      pace: transfer.skills.pace ?? null,
+      technique: transfer.skills.technique ?? null,
+      passing: transfer.skills.passing ?? null,
+      keeper: transfer.skills.keeper ?? null,
+      defender: transfer.skills.defending ?? transfer.skills.defender ?? null,
+      playmaker: transfer.skills.playmaking ?? transfer.skills.playmaker ?? null,
+      striker: transfer.skills.striker ?? null
+    },
+    source: "imported",
+    salePriceType: "final_sale"
   };
 }

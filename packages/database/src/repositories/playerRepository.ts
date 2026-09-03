@@ -1,6 +1,14 @@
 import { Types, type ClientSession } from "mongoose";
 import { PlayerModel } from "../models/player.js";
-import type { PersistedPlayer } from "./types.js";
+import type {
+  PersistedDevelopmentProfile,
+  PersistedPlayer,
+  PersistedPlayerDevelopmentOverride,
+  SavePlayerDevelopmentOverrideInput,
+  PersistedSquadRole,
+  PersistedSquadRoleAssignment,
+  SaveSquadRoleAssignmentInput
+} from "./types.js";
 
 export type PlayerPosition = "GK" | "DEF" | "MID" | "ATT" | null;
 
@@ -62,6 +70,103 @@ export class MongoPlayerRepository {
     const player = await PlayerModel.findById(id);
     return player ? mapPlayer(player.toObject()) : null;
   }
+
+  async findDevelopmentOverride(input: {
+    playerId: number;
+    clubId: number;
+  }): Promise<PersistedPlayerDevelopmentOverride | null> {
+    const player = await this.findByPlayerId(input);
+    if (!player?.development) return null;
+
+    return {
+      id: player.id,
+      playerId: player.playerId,
+      clubId: player.clubId,
+      profile: player.development.profile,
+      targetLevels: player.development.targetLevels
+    };
+  }
+
+  async saveDevelopmentOverride(
+    input: SavePlayerDevelopmentOverrideInput
+  ): Promise<PersistedPlayerDevelopmentOverride> {
+    const player = await PlayerModel.findOneAndUpdate(
+      { playerId: input.playerId, clubId: input.clubId },
+      {
+        $set: {
+          development: {
+            profile: input.profile ?? null,
+            targetLevels: input.targetLevels ?? {}
+          }
+        }
+      },
+      { new: true, runValidators: true }
+    );
+
+    if (!player) {
+      throw new Error(`Player not found: ${input.clubId}/${input.playerId}`);
+    }
+
+    const mapped = mapPlayer(player.toObject());
+    if (!mapped.development) {
+      throw new Error(`Development override was not saved: ${input.clubId}/${input.playerId}`);
+    }
+
+    return {
+      id: mapped.id,
+      playerId: mapped.playerId,
+      clubId: mapped.clubId,
+      profile: mapped.development.profile,
+      targetLevels: mapped.development.targetLevels
+    };
+  }
+
+  async deleteDevelopmentOverride(input: { playerId: number; clubId: number }): Promise<void> {
+    await PlayerModel.updateOne(
+      { playerId: input.playerId, clubId: input.clubId },
+      { $unset: { development: 1 } }
+    );
+  }
+
+  async listSquadRoles(clubId: number): Promise<PersistedSquadRoleAssignment[]> {
+    const players = await PlayerModel.find({
+      clubId,
+      role: { $exists: true, $ne: null }
+    }).sort({ playerId: 1 });
+
+    return players.map((player) => mapSquadRole(player.toObject()));
+  }
+
+  async findSquadRole(input: {
+    playerId: number;
+    clubId: number;
+  }): Promise<PersistedSquadRoleAssignment | null> {
+    const player = await this.findByPlayerId(input);
+    return player?.role ? mapSquadRole(player) : null;
+  }
+
+  async saveSquadRole(
+    input: SaveSquadRoleAssignmentInput
+  ): Promise<PersistedSquadRoleAssignment> {
+    const player = await PlayerModel.findOneAndUpdate(
+      { playerId: input.playerId, clubId: input.clubId },
+      { $set: { role: input.role } },
+      { new: true, runValidators: true }
+    );
+
+    if (!player) {
+      throw new Error(`Player not found: ${input.clubId}/${input.playerId}`);
+    }
+
+    return mapSquadRole(player.toObject());
+  }
+
+  async deleteSquadRole(input: { playerId: number; clubId: number }): Promise<void> {
+    await PlayerModel.updateOne(
+      { playerId: input.playerId, clubId: input.clubId },
+      { $unset: { role: 1 } }
+    );
+  }
 }
 
 function mapPlayer(player: {
@@ -79,7 +184,26 @@ function mapPlayer(player: {
   cards?: { yellow?: number; red?: number } | null;
   injury?: { days?: number | null; severe?: boolean | null } | null;
   currentGameWeek?: number | null;
+  role?: PersistedSquadRole | null;
+  development?: {
+    profile?: PersistedDevelopmentProfile | null;
+    targetLevels?: Map<string, number> | Record<string, number> | null;
+  } | null;
 }): PersistedPlayer {
+  const development = player.development
+    ? {
+        profile: player.development.profile ?? null,
+        targetLevels: player.development.targetLevels
+          ? player.development.targetLevels instanceof Map
+            ? Object.fromEntries(player.development.targetLevels.entries())
+            : player.development.targetLevels
+          : {}
+      }
+    : null;
+  const hasDevelopmentOverride =
+    development !== null &&
+    (development.profile !== null || Object.keys(development.targetLevels).length > 0);
+
   return {
     id: player._id.toString(),
     playerId: player.playerId,
@@ -100,6 +224,33 @@ function mapPlayer(player: {
       days: player.injury?.days ?? null,
       severe: player.injury?.severe ?? null
     },
-    currentGameWeek: player.currentGameWeek ?? null
+    currentGameWeek: player.currentGameWeek ?? null,
+    role: player.role ?? null,
+    development: hasDevelopmentOverride ? development : null
+  };
+}
+
+function mapSquadRole(player: {
+  _id?: Types.ObjectId;
+  id?: string;
+  playerId: number;
+  clubId: number;
+  role?: PersistedSquadRole | null;
+}): PersistedSquadRoleAssignment {
+  if (!player.role) {
+    throw new Error(`Player has no squad role: ${player.clubId}/${player.playerId}`);
+  }
+
+  const id = player.id ?? player._id?.toString();
+  if (!id) {
+    throw new Error(`Player has no identifier: ${player.clubId}/${player.playerId}`);
+  }
+
+  return {
+    id,
+    playerId: player.playerId,
+    clubId: player.clubId,
+    role: player.role,
+    source: "manual"
   };
 }

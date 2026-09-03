@@ -298,6 +298,7 @@ function IntelligencePanelMessage({ children, tone }: IntelligencePanelMessagePr
 
 function statusIcon(status: string): string {
   if (status === "Promote") return "↑";
+  if (status === "Trial advanced") return "◌";
   if (status === "Remove") return "↓";
   if (status === "Hold") return "!";
   return "•";

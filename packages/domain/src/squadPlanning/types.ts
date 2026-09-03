@@ -1,5 +1,5 @@
 import type { Confidence, SkillKey } from "../types.js";
-import type { TalentEstimate, TrainingKind } from "../training/types.js";
+import type { TalentEstimate, TrainingHistory, TrainingKind } from "../training/types.js";
 import type {
   DevelopmentProfile,
   DevelopmentPlayer,
@@ -53,6 +53,7 @@ export interface SquadPlayerContext extends DevelopmentPlayer {
   ageFactor?: number | null;
   training?: SquadTrainingContext | null;
   trainingStatus?: TrainingKind | null;
+  trainingHistory?: TrainingHistory | null;
   historyWeeks?: number;
   manualRole?: SquadRoleAssignment | null;
   sokkerValue?: number | null;
@@ -82,6 +83,11 @@ export interface SquadPlanningConfig {
   coreContributionThreshold: number;
   usefulContributionThreshold: number;
   highFutureContributionThreshold: number;
+  corePrimarySkillMinimum: number;
+  rotationPrimarySkillMinimum: number;
+  coreStaminaMinimum: number;
+  rotationStaminaMinimum: number;
+  prospectMaximumAge: number;
   prospectPotentialThreshold: number;
   developmentGapThreshold: number;
   transitionDevelopmentThreshold: number;

@@ -29,7 +29,11 @@ function prospect(
   playerInput = player(),
   overrides: Partial<YouthProspectAssessment> = {}
 ): YouthProspectAssessment {
-  return { ...assessYouthProspect({ player: playerInput }), ...overrides };
+  return {
+    ...assessYouthProspect({ player: playerInput }),
+    reasons: [{ type: "training_evidence", observationCount: 3 }],
+    ...overrides
+  };
 }
 
 function opportunity(
@@ -221,7 +225,7 @@ describe("Youth Decision Recommendations", () => {
     expect(recommendation.decision).toBe("release");
   });
 
-  it("returns hold when essential evidence is missing", () => {
+  it("returns unknown when essential evidence is missing", () => {
     const recommendation = recommendYouthDecision(
       context({
         prospect: prospect(player(), { prospectScore: null, confidence: "low" }),
@@ -229,8 +233,23 @@ describe("Youth Decision Recommendations", () => {
       })
     );
 
-    expect(recommendation.decision).toBe("hold");
+    expect(recommendation.decision).toBe("unknown");
     expect(recommendation.reasons).toContainEqual({ type: "insufficient_evidence" });
+  });
+
+  it("returns hold when training snapshots are insufficient", () => {
+    const recommendation = recommendYouthDecision(
+      context({
+        prospect: prospect(player(), {
+          prospectScore: 0.8,
+          confidence: "high",
+          reasons: [{ type: "training_evidence", observationCount: 2 }]
+        })
+      })
+    );
+
+    expect(recommendation.decision).toBe("hold");
+    expect(recommendation.reasons).toContainEqual({ type: "insufficient_training_snapshots" });
   });
 
   it("does not release an excellent but congested prospect automatically", () => {
@@ -427,7 +446,7 @@ describe("Youth Decision Recommendations", () => {
     expect(congested.scores.prospectQuality).toBe(open.scores.prospectQuality);
   });
 
-  it("reduces confidence for uncertain market evidence and missing market data", () => {
+  it("keeps sporting confidence independent from uncertain or missing market evidence", () => {
     const uncertain = recommendYouthDecision(
       context({
         prospect: prospect(player(), { prospectScore: 0.8, confidence: "high" }),
@@ -441,9 +460,20 @@ describe("Youth Decision Recommendations", () => {
         opportunity: opportunity({ clubFitScore: 0.8 })
       })
     );
+    const supportedMarket = recommendYouthDecision(
+      context({
+        prospect: prospect(player(), { prospectScore: 0.8, confidence: "high" }),
+        opportunity: opportunity({ clubFitScore: 0.8 }),
+        marketValue: marketValue(1_000_000, "medium")
+      })
+    );
 
-    expect(uncertain.confidence).toBe("low");
-    expect(missing.confidence).toBe("low");
+    expect(uncertain.sportingConfidence).toBe("high");
+    expect(uncertain.economicConfidence).toBe("low");
+    expect(missing.sportingConfidence).toBe("high");
+    expect(missing.economicConfidence).toBe("low");
+    expect(supportedMarket.sportingConfidence).toBe("high");
+    expect(supportedMarket.economicConfidence).toBe("medium");
   });
 
   it("applies decision stability when a borderline recommendation changes without material evidence", () => {

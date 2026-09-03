@@ -3,6 +3,24 @@ import { ensureMongooseModels } from "./mongoose-model-registry.js";
 
 ensureMongooseModels();
 
+const playerDevelopmentSchema = new Schema(
+  {
+    profile: {
+      type: String,
+      enum: [
+        "goalkeeper",
+        "defender",
+        "wing_defender",
+        "midfielder",
+        "winger",
+        "forward"
+      ]
+    },
+    targetLevels: { type: Map, of: Number }
+  },
+  { _id: false }
+);
+
 const playerSchema = new Schema(
   {
     playerId: { type: Number, required: true, min: 1 },
@@ -23,7 +41,13 @@ const playerSchema = new Schema(
       days: { type: Number, default: null, min: 0 },
       severe: { type: Boolean, default: null }
     },
-    currentGameWeek: { type: Number, default: null, min: 1 }
+    currentGameWeek: { type: Number, default: null, min: 1 },
+    role: {
+      type: String,
+      enum: ["core", "developing", "prospect", "rotation", "depth", "transition"],
+      default: undefined
+    },
+    development: { type: playerDevelopmentSchema, default: undefined }
   },
   { timestamps: true }
 );

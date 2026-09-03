@@ -209,6 +209,7 @@ export function assessMonetizationCandidates(
         monetizationScore,
         strategicProtection,
         timing,
+        isTheoretical: estimate?.reasons.some(r => r.type === "no_comparable_market_evidence") ?? true,
         confidence: combineConfidence(
           estimate?.confidence ?? "low",
           projection?.confidence ?? "low",
@@ -848,15 +849,15 @@ function classifyStrategicProtection(
   config: FinancialStrategyConfig
 ): StrategicAssetProtection {
   const missingSuccessor = profile?.succession.coverageStatus === "missing";
-  const dependency = profile?.dependencyRisk !== null && profile?.dependencyRisk !== undefined;
-  if ((player.role === "core" && missingSuccessor) || dependency) return "critical";
+  const isDominantPlayer = profile?.dependencyRisk?.dominantPlayerId === player.playerId;
+  if ((player.role === "core" && missingSuccessor) || isDominantPlayer) return "critical";
+  if (player.role === "transition" || player.role === "depth") return "low";
   if (
     config.criticalProtectionRoles.includes(player.role) ||
     (player.futureContributionScore !== null &&
       player.futureContributionScore >= config.highFutureContributionThreshold)
   )
     return "high";
-  if (player.role === "transition" || player.role === "depth") return "low";
   return "normal";
 }
 

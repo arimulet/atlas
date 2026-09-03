@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { createTrainingPlayerRows } from "./training-view-model";
+import { createTrainingPlayerRows, trainingStatusForPlayer } from "./training-view-model";
 
 describe("createTrainingPlayerRows", () => {
   it("maps the prepared Player Detail projection summary without deriving values", () => {
@@ -29,5 +29,32 @@ describe("createTrainingPlayerRows", () => {
       expect.objectContaining({ progress: 82, talent: 3.4, nextSkillUp: 14, etaWeeks: 2 }),
       expect.objectContaining({ talent: null, nextSkillUp: null, etaWeeks: null })
     ]);
+  });
+
+  it("labels a training-potential finding as a positive training prospect", () => {
+    const player = {
+      id: "player-1",
+      playerId: 42,
+      name: "Player One",
+      age: 18,
+      training: { position: 2, advanced: true }
+    };
+
+    const status = trainingStatusForPlayer(player, {
+      findings: [
+        {
+          code: "training-potential.young-role-fit",
+          category: "training-potential",
+          severity: "low",
+          affectedPlayerIds: ["42"],
+          evidence: [],
+          assumptions: [],
+          confidence: "high",
+          recommendations: []
+        }
+      ]
+    });
+
+    expect(status).toBe("Training prospect");
   });
 });

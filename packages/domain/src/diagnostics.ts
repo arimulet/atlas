@@ -66,9 +66,11 @@ export interface BasicDiagnosticPlayerSnapshot {
   age: number;
   wage: Money;
   value: Money;
+  calibratedValue?: Money | null;
   form: number | null;
   availabilityStatus: AvailabilityStatus | null;
   observedPosition: ObservedPosition | null;
+  position?: string | null;
   skills: Required<SkillSet>;
 }
 
@@ -100,15 +102,18 @@ const roleAliases: Record<string, PlayerRole> = {
   defender: "defender",
   defensa: "defender",
   df: "defender",
+  def: "defender",
   midfielder: "midfielder",
   medio: "midfielder",
   volante: "midfielder",
+  mid: "midfielder",
   winger: "winger",
   extremo: "winger",
   wing: "winger",
   striker: "striker",
   forward: "striker",
-  delantero: "striker"
+  delantero: "striker",
+  att: "striker"
 };
 
 export function generateBasicDiagnostic(
@@ -131,7 +136,7 @@ export function generateBasicDiagnostic(
 }
 
 function classifyPlayer(player: BasicDiagnosticPlayerSnapshot): ClassifiedPlayer {
-  const observedRole = roleFromObservedPosition(player.observedPosition);
+  const observedRole = roleFromObservedPosition(player.position ?? player.observedPosition);
 
   if (observedRole) {
     return {
@@ -139,7 +144,7 @@ function classifyPlayer(player: BasicDiagnosticPlayerSnapshot): ClassifiedPlayer
       role: observedRole,
       roleScore: roleScore(observedRole, player.skills),
       roleEvidence: [
-        trace("observed", "player.observed-position", player.observedPosition, {
+        trace("observed", "player.observed-position", player.position ?? player.observedPosition, {
           playerName: player.name
         }),
         trace("derived", "player.role-score", roleScore(observedRole, player.skills), {
@@ -288,7 +293,14 @@ function createEconomicRiskFindings(players: ClassifiedPlayer[]): BasicDiagnosti
 
 function createAssetRiskFindings(players: ClassifiedPlayer[]): BasicDiagnosticFinding[] {
   return players.flatMap(({ player }) => {
-    const isRisk = player.age >= 30 && player.value.amount >= ORIGINAL_ASSET_VALUE_THRESHOLD;
+    const valueToCheck = player.calibratedValue?.amount ?? null;
+    
+    // If we don't have a calibrated value, we skip the alert
+    if (valueToCheck === null) {
+      return [];
+    }
+
+    const isRisk = player.age >= 30 && valueToCheck >= ORIGINAL_ASSET_VALUE_THRESHOLD;
 
     if (!isRisk) {
       return [];
@@ -299,7 +311,7 @@ function createAssetRiskFindings(players: ClassifiedPlayer[]): BasicDiagnosticFi
         code: "asset-risk.senior-high-value",
         category: "asset-risk",
         severity:
-          player.age >= 33 || player.value.amount >= ORIGINAL_HIGH_ASSET_VALUE_THRESHOLD
+          player.age >= 33 || valueToCheck >= ORIGINAL_HIGH_ASSET_VALUE_THRESHOLD
             ? "high"
             : "medium",
         parameters: { playerName: player.name, age: player.age, value: player.value.amount },
@@ -373,7 +385,7 @@ function createFollowUpFindings(players: ClassifiedPlayer[]): BasicDiagnosticFin
         severity: missingFields.includes("playerId") ? "medium" : "low",
         parameters: { playerName: player.name, missingFields: missingFields.join(", ") },
         evidence: missingFields.map((field) =>
-          trace("observed", "player.missing-field", null, { playerName: player.name, field })
+          trace("observed", "player.missing-field", field, { playerName: player.name, field })
         ),
 
         assumptions: [
@@ -393,7 +405,7 @@ function createFollowUpFindings(players: ClassifiedPlayer[]): BasicDiagnosticFin
   });
 }
 
-function roleFromObservedPosition(position: ObservedPosition | null): ObservedPosition | null {
+function roleFromObservedPosition(position: string | null): ObservedPosition | null {
   if (!position) {
     return null;
   }
@@ -427,7 +439,7 @@ function missingFollowUpFields(player: BasicDiagnosticPlayerSnapshot): string[] 
     player.playerId ? null : "playerId",
     player.form === null ? "form" : null,
     player.availabilityStatus === null ? "availabilityStatus" : null,
-    player.observedPosition ? null : "observedPosition",
+    player.position ? null : "position",
     ...SUPPORTED_SKILLS.map((skillKey) =>
       player.skills[skillKey] === null ? `skills.${skillKey}` : null
     )

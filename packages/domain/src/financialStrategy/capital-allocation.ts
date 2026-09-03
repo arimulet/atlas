@@ -579,13 +579,12 @@ function assessMonetizableAssets(
   return players
     .map((player) => {
       const estimate = estimates.get(player.playerId);
+      const isOverstocked = overstockedProfiles.has(player.profile ?? ("" as DevelopmentProfile));
       const liquidityPotential: MonetizableAssetAssessment["liquidityPotential"] =
-        overstockedProfiles.has(player.profile ?? ("" as DevelopmentProfile)) ||
-        player.role === "transition" ||
-        player.role === "depth"
-          ? "high"
-          : player.role === "core" || player.role === "developing"
-            ? "low"
+        player.role === "core" || player.role === "developing"
+          ? "low"
+          : player.role === "transition" || player.role === "depth" || isOverstocked
+            ? "high"
             : "medium";
       return {
         playerId: player.playerId,
@@ -593,7 +592,8 @@ function assessMonetizableAssets(
         squadRole: player.role,
         strategicImportance: strategicImportance(player.role, config),
         liquidityPotential,
-        confidence: estimate?.confidence ?? "low"
+        confidence: estimate?.confidence ?? "low",
+        isTheoretical: estimate?.reasons.some(r => r.type === "no_comparable_market_evidence") ?? true
       };
     })
     .sort((left, right) => left.playerId - right.playerId);

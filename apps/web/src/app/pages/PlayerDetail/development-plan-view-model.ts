@@ -25,6 +25,7 @@ export interface DevelopmentPlanTargetRow {
   remaining: number;
   priority: "primary" | "secondary" | "supporting";
   status: "complete" | "in_progress" | "pending";
+  reasons: string[];
 }
 
 export interface DevelopmentPlanPathRow {
@@ -78,6 +79,7 @@ export interface DevelopmentPlanViewModel {
   };
   assumptions: DevelopmentTrainingAssumptions;
   warnings: Array<{ code: DevelopmentProjectionWarning; label: string }>;
+  idealTargets: DevelopmentPlanTargetRow[];
   targets: DevelopmentPlanTargetRow[];
   path: DevelopmentPlanPathRow[];
   milestones: DevelopmentPlanMilestoneRow[];
@@ -175,18 +177,35 @@ function mapPlan(input: {
   latestReport: NonNullable<TrainingPagePlayer["latestReport"]> | null;
 }): DevelopmentPlanViewModel {
   const projectionByOrder = new Map(input.projection.steps.map((step) => [step.order, step]));
-  const targets = input.plan.gap.skills.map((skill) => ({
+  const idealTargets = input.plan.idealTarget.targetSkills.map((skill) => ({
     skill: skill.skill,
-    currentLevel: skill.currentLevel,
+    currentLevel: input.plan.gap.skills.find(s => s.skill === skill.skill)?.currentLevel ?? 0,
     targetLevel: skill.targetLevel,
-    remaining: skill.levelsRemaining,
+    remaining: Math.max(0, skill.targetLevel - (input.plan.gap.skills.find(s => s.skill === skill.skill)?.currentLevel ?? 0)),
     priority: skill.priority,
-    status: skill.completed
+    status: (input.plan.gap.skills.find(s => s.skill === skill.skill)?.currentLevel ?? 0) >= skill.targetLevel
       ? ("complete" as const)
-      : skill.currentLevel > 0
+      : (input.plan.gap.skills.find(s => s.skill === skill.skill)?.currentLevel ?? 0) > 0
         ? ("in_progress" as const)
-        : ("pending" as const)
+        : ("pending" as const),
+    reasons: skill.reasons?.map(targetReasonLabel) ?? []
   }));
+  const targets = input.plan.gap.skills.map((skill) => {
+    const targetSkill = input.plan.target.targetSkills.find(s => s.skill === skill.skill);
+    return {
+      skill: skill.skill,
+      currentLevel: skill.currentLevel,
+      targetLevel: skill.targetLevel,
+      remaining: skill.levelsRemaining,
+      priority: skill.priority,
+      status: skill.completed
+        ? ("complete" as const)
+        : skill.currentLevel > 0
+          ? ("in_progress" as const)
+          : ("pending" as const),
+      reasons: targetSkill?.reasons?.map(targetReasonLabel) ?? []
+    };
+  });
   const path = input.path.steps.map((step) => {
     const projectionStep = projectionByOrder.get(step.order);
 
@@ -245,6 +264,7 @@ function mapPlan(input: {
     },
     assumptions: input.projection.assumptions,
     warnings: input.projection.warnings.map((code) => ({ code, label: warningLabel(code) })),
+    idealTargets,
     targets,
     path,
     milestones,
@@ -361,6 +381,21 @@ function reasonLabel(reason: PlayerTrainingPath["steps"][number]["reason"][numbe
       return `Balances ${skillLabel(reason.skill)} in the profile`;
     case "completes_target_skill":
       return `Completes the ${skillLabel(reason.skill)} target`;
+  }
+}
+
+function targetReasonLabel(reason: import("@atlas/domain").DevelopmentTargetReason): string {
+  switch (reason.type) {
+    case "primary_skill":
+      return "Primary profile skill";
+    case "within_development_horizon":
+      return `Positive development potential at age ${reason.age.toFixed(1)}`;
+    case "positive_marginal_return":
+      return `Positive marginal return (score: ${reason.score.toFixed(1)})`;
+    case "manual_override":
+      return "Manually configured target";
+    default:
+      return "Target skill";
   }
 }
 

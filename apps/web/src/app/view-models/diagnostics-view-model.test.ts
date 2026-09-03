@@ -272,6 +272,7 @@ function createYouthAcademy(): RealYouthAcademyPlanning {
           levelPops: 2,
           talent: 6,
           expectedLevel: 7,
+          formation: null, observations: "",
           status: "ready_for_promotion",
           category: "ready_for_promotion",
           severity: "info",
@@ -285,8 +286,9 @@ function createYouthAcademy(): RealYouthAcademyPlanning {
               message: "Ready for promotion.",
               evidence: [{ kind: "observed", label: "Weeks remaining", value: 2 }]
             }
-          ],
-          warnings: []
+          ] as import("@atlas/web/app/types").RealYouthAcademySignal[],
+          warnings: [] as import("@atlas/web/app/types").RealYouthAcademyWarning[],
+          history: [] as import("@atlas/web/app/types").YouthSkillHistoryEntry[]
         }
       ]
     },

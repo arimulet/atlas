@@ -147,6 +147,46 @@ describe("Development Projection & Timeline", () => {
     expect(projection.warnings).not.toContain("unknown_current_sublevel");
   });
 
+  it("uses observed progress when its skill appears later in the path", () => {
+    const projection = projectDevelopment({
+      ...projectionContext([
+        { skill: "technique", targetLevel: 10, priority: "secondary" },
+        { skill: "defender", targetLevel: 13, priority: "primary" }
+      ]),
+      path: oneStepPath({
+        steps: [
+          {
+            order: 1,
+            skill: "technique",
+            fromLevel: 9,
+            toLevel: 10,
+            estimatedTrainingPoints: 80,
+            developmentValue: 0.2,
+            priority: "secondary",
+            reason: []
+          },
+          {
+            order: 2,
+            skill: "defender",
+            fromLevel: 12,
+            toLevel: 13,
+            estimatedTrainingPoints: 80,
+            developmentValue: 0.3,
+            priority: "primary",
+            reason: []
+          }
+        ]
+      }),
+      currentTrainingProgress: {
+        skill: "defender",
+        remainingToNextLevel: 10,
+        estimatedProgress: 0.8,
+        confidence: "high"
+      }
+    });
+
+    expect(projection.steps[1]?.estimatedTrainingPoints).toBe(10);
+  });
   it("marks the first step low confidence when sublevel progress is unknown", () => {
     const projection = projectDevelopment(
       projectionContext([{ skill: "defender", targetLevel: 13, priority: "primary" }])
@@ -166,26 +206,39 @@ describe("Development Projection & Timeline", () => {
     expect(projection.steps[1]?.estimatedAge).toBeGreaterThan(projection.steps[0]!.estimatedAge!);
   });
 
-  it("uses an available birth date without inventing one", () => {
+  it("advances player age by one Sokker season after thirteen game weeks", () => {
     const projection = projectDevelopment(
       projectionContext([{ skill: "defender", targetLevel: 13, priority: "primary" }], {
-        birthDate: new Date("2008-08-05T00:00:00.000Z")
+        currentTrainingProgress: { skill: "defender", remainingToNextLevel: 1300 }
       })
     );
 
-    expect(projection.steps[0]?.estimatedAge).toBeGreaterThan(18);
+    expect(projection.steps[0]?.estimatedWeeks).toBe(13);
+    expect(projection.steps[0]?.estimatedAge).toBe(19);
   });
 
-  it("reapplies the age factor to future training costs", () => {
+  it("keeps the target completion age aligned with its cumulative training time", () => {
+    const projection = projectDevelopment(
+      projectionContext([{ skill: "defender", targetLevel: 14, priority: "primary" }], {
+        currentTrainingProgress: { skill: "defender", remainingToNextLevel: 1 }
+      })
+    );
+    const completionWeeks = projection.completion.estimatedWeeks;
+    const completionAge = projection.completion.estimatedAge;
+
+    expect(completionWeeks).not.toBeNull();
+    expect(completionAge).toBe(18 + completionWeeks! / 13);
+    expect(completionAge).toBe(projection.steps.at(-1)?.estimatedAge);
+  });
+
+  it("keeps the Sokker age progression in later projection steps", () => {
     const projection = projectDevelopment(
       projectionContext([{ skill: "defender", targetLevel: 14, priority: "primary" }], {
         currentTrainingProgress: { skill: "defender", remainingToNextLevel: 1 }
       })
     );
 
-    expect(projection.steps[1]?.estimatedTrainingPoints).toBeGreaterThan(
-      projection.steps[0]!.estimatedTrainingPoints
-    );
+    expect(projection.steps[1]?.estimatedAge).toBeGreaterThan(projection.steps[0]!.estimatedAge!);
   });
 
   it("crosses a season boundary using game week arithmetic", () => {
@@ -344,7 +397,10 @@ describe("Development Projection & Timeline", () => {
 
   it("marks invalid training points unavailable without Infinity or NaN", () => {
     const projection = projectDevelopment({
-      ...projectionContext([{ skill: "defender", targetLevel: 13, priority: "primary" }]),
+      ...projectionContext([
+        { skill: "technique", targetLevel: 10, priority: "secondary" },
+        { skill: "defender", targetLevel: 13, priority: "primary" }
+      ]),
       path: oneStepPath({
         steps: [
           {

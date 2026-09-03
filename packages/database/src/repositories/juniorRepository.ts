@@ -9,6 +9,7 @@ export interface ResolveJuniorIdentityInput {
   age: number;
   currentLevel: number;
   weeksLeft: number;
+  formation: number | null;
 }
 
 export type JuniorStatus = "in_academy" | "promoted" | "rejected";
@@ -26,7 +27,8 @@ export class MongoJuniorRepository {
           age: input.age,
           currentLevel: input.currentLevel,
           weeksLeft: input.weeksLeft,
-          status: "in_academy"
+          status: "in_academy",
+          ...(input.formation !== null ? { formation: input.formation } : {})
         },
         $setOnInsert: {
           clubId: input.clubId,
@@ -86,6 +88,10 @@ export class MongoJuniorRepository {
     const junior = await JuniorModel.findById(id);
     return junior ? mapJunior(junior.toObject()) : null;
   }
+
+  async updateObservations(clubId: number, juniorId: number, observations: string): Promise<void> {
+    await JuniorModel.updateOne({ clubId, juniorId }, { $set: { observations } });
+  }
 }
 
 function mapJunior(junior: {
@@ -99,6 +105,8 @@ function mapJunior(junior: {
   currentLevel: number;
   initialWeeks: number;
   weeksLeft: number;
+  formation?: number | null;
+  observations?: string;
   status: JuniorStatus;
 }): PersistedJunior {
   return {
@@ -112,6 +120,18 @@ function mapJunior(junior: {
     currentLevel: junior.currentLevel,
     initialWeeks: junior.initialWeeks,
     weeksLeft: junior.weeksLeft,
+    formation: junior.formation ?? null,
+    observations: junior.observations ?? "",
+    skills: {
+      stamina: null,
+      pace: null,
+      technique: null,
+      passing: null,
+      keeper: null,
+      defender: null,
+      playmaker: null,
+      striker: null
+    },
     status: junior.status
   };
 }

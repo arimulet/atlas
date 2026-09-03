@@ -52,6 +52,16 @@ describe("squad planning presentation", () => {
     expect(viewModel.priorityActions[0]?.title).toBe("External solution needed");
     expect(viewModel.priorityActions[0]?.description).not.toContain("buy");
     expect(viewModel.priorityActions[0]?.description).not.toContain("sell");
+    expect(
+      viewModel.profiles.find((profile) => profile.profile === "defender")?.recommendations
+    ).toEqual([
+      expect.objectContaining({
+        type: "find_external",
+        title: "External solution needed",
+        priority: "critical",
+        horizonLabel: "Current"
+      })
+    ]);
   });
 
   it("keeps current, next season and medium-term snapshots distinct", () => {
@@ -261,8 +271,7 @@ function createProfile(
     },
     status,
     confidence,
-    dependencyRisk:
-      profile === "defender" ? { dominantPlayerId: 1, contributionGap: 0.4 } : null,
+    dependencyRisk: profile === "defender" ? { dominantPlayerId: 1, contributionGap: 0.4 } : null,
     reasons:
       profile === "defender"
         ? [

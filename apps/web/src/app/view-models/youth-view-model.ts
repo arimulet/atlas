@@ -26,6 +26,7 @@ export interface YouthPlayerRow {
   attentions: YouthPlayerAttention[];
   promotion: YouthPromotionLabel | null;
   status: YouthStatusLabel | null;
+  history: import("@atlas/web/app/types").YouthSkillHistoryEntry[];
 }
 
 export interface YouthPlayerAttention {
@@ -56,7 +57,8 @@ export function createYouthPlayerRows(planning: RealYouthAcademyPlanning | null)
     progress: null,
     attentions: youthAttentionForPlayer(player),
     promotion: youthPromotionForPlayer(player),
-    status: youthStatusForPlayer(player)
+    status: youthStatusForPlayer(player),
+    history: player.history ?? []
   }));
 }
 

@@ -18,54 +18,54 @@ export const DEVELOPMENT_PROFILES: Readonly<
   goalkeeper: {
     id: "goalkeeper",
     relevantSkills: [
-      { skill: "keeper", priority: "primary", defaultTargetLevel: 12 },
-      { skill: "pace", priority: "secondary", defaultTargetLevel: 9 },
-      { skill: "passing", priority: "supporting", defaultTargetLevel: 8 }
+      { skill: "keeper", priority: "primary", defaultTargetLevel: 17 },
+      { skill: "pace", priority: "primary", defaultTargetLevel: 16 },
+      { skill: "passing", priority: "supporting", defaultTargetLevel: 13 }
     ]
   },
   defender: {
     id: "defender",
     relevantSkills: [
-      { skill: "defender", priority: "primary", defaultTargetLevel: 12 },
-      { skill: "pace", priority: "primary", defaultTargetLevel: 10 },
-      { skill: "technique", priority: "secondary", defaultTargetLevel: 9 },
-      { skill: "playmaker", priority: "supporting", defaultTargetLevel: 7 }
+      { skill: "defender", priority: "primary", defaultTargetLevel: 17 },
+      { skill: "pace", priority: "primary", defaultTargetLevel: 17 },
+      { skill: "technique", priority: "secondary", defaultTargetLevel: 14 },
+      { skill: "playmaker", priority: "supporting", defaultTargetLevel: 13 }
     ]
   },
   wing_defender: {
     id: "wing_defender",
     relevantSkills: [
-      { skill: "pace", priority: "primary", defaultTargetLevel: 12 },
-      { skill: "defender", priority: "primary", defaultTargetLevel: 10 },
-      { skill: "technique", priority: "secondary", defaultTargetLevel: 10 },
-      { skill: "passing", priority: "supporting", defaultTargetLevel: 8 }
+      { skill: "pace", priority: "primary", defaultTargetLevel: 17 },
+      { skill: "defender", priority: "primary", defaultTargetLevel: 16 },
+      { skill: "technique", priority: "secondary", defaultTargetLevel: 15 },
+      { skill: "passing", priority: "supporting", defaultTargetLevel: 15 }
     ]
   },
   midfielder: {
     id: "midfielder",
     relevantSkills: [
-      { skill: "playmaker", priority: "primary", defaultTargetLevel: 12 },
-      { skill: "passing", priority: "primary", defaultTargetLevel: 11 },
-      { skill: "technique", priority: "secondary", defaultTargetLevel: 10 },
-      { skill: "pace", priority: "supporting", defaultTargetLevel: 9 }
+      { skill: "playmaker", priority: "primary", defaultTargetLevel: 17 },
+      { skill: "passing", priority: "primary", defaultTargetLevel: 17 },
+      { skill: "technique", priority: "secondary", defaultTargetLevel: 16 },
+      { skill: "pace", priority: "supporting", defaultTargetLevel: 15 }
     ]
   },
   winger: {
     id: "winger",
     relevantSkills: [
-      { skill: "pace", priority: "primary", defaultTargetLevel: 12 },
-      { skill: "technique", priority: "primary", defaultTargetLevel: 11 },
-      { skill: "passing", priority: "secondary", defaultTargetLevel: 10 },
-      { skill: "playmaker", priority: "supporting", defaultTargetLevel: 9 }
+      { skill: "pace", priority: "primary", defaultTargetLevel: 17 },
+      { skill: "technique", priority: "primary", defaultTargetLevel: 17 },
+      { skill: "passing", priority: "secondary", defaultTargetLevel: 16 },
+      { skill: "playmaker", priority: "supporting", defaultTargetLevel: 14 }
     ]
   },
   forward: {
     id: "forward",
     relevantSkills: [
-      { skill: "striker", priority: "primary", defaultTargetLevel: 13 },
-      { skill: "pace", priority: "primary", defaultTargetLevel: 12 },
-      { skill: "technique", priority: "secondary", defaultTargetLevel: 10 },
-      { skill: "passing", priority: "supporting", defaultTargetLevel: 7 }
+      { skill: "striker", priority: "primary", defaultTargetLevel: 17 },
+      { skill: "pace", priority: "primary", defaultTargetLevel: 17 },
+      { skill: "technique", priority: "secondary", defaultTargetLevel: 16 },
+      { skill: "passing", priority: "supporting", defaultTargetLevel: 13 }
     ]
   }
 };

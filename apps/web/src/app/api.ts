@@ -33,7 +33,6 @@ export interface PlayerDevelopmentTargetOverrideResponse {
   clubId: number;
   profile: PlayerDevelopmentTargetOverride["profile"];
   targetLevels: NonNullable<PlayerDevelopmentTargetOverride["targetLevels"]>;
-  targetAge: number | null;
 }
 
 export async function fetchClubDashboard(clubId: string): Promise<ClubDashboard> {
@@ -349,4 +348,35 @@ function createEndpointError(message: string): ImportResponse {
     summary: null,
     diagnostic: null
   };
+}
+
+export async function fetchYouthPerformances(
+  clubId: string
+): Promise<import("@atlas/application").YouthMatchPerformancesDto> {
+  const response = await fetch(`/api/clubs/${clubId}/youth/performances`);
+  const body = await response.json();
+
+  if (!response.ok || !body) {
+    throw new Error("Youth performances API returned an unexpected response.");
+  }
+
+  return body;
+}
+
+export async function patchYouthObservations(
+  clubId: string,
+  playerId: number,
+  observations: string
+): Promise<void> {
+  const response = await fetch(`/api/clubs/${clubId}/youth/players/${playerId}/observations`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ observations })
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to update youth observations");
+  }
 }

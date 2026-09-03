@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import type { AdvancedTrainingOptimization, PlayerTrainingRecommendation } from "@atlas/domain";
+import type {
+  AdvancedTrainingOptimization,
+  AdvancedTrainingPlayerRecommendation,
+  PlayerTrainingRecommendation
+} from "@atlas/domain";
 import type { TrainingPageData, WeeklyTrainingIntelligence } from "../../types";
 import {
   createTrainingIntelligenceViewModel,
@@ -135,6 +139,7 @@ const intelligence: WeeklyTrainingIntelligence = {
         rank: 1,
         score: 0.94,
         currentlyAdvanced: true,
+        isTrial: false,
         recommendedAdvanced: true,
         confidence: "high"
       },
@@ -143,6 +148,7 @@ const intelligence: WeeklyTrainingIntelligence = {
         rank: 9,
         score: 0.84,
         currentlyAdvanced: false,
+        isTrial: false,
         recommendedAdvanced: true,
         confidence: "high"
       },
@@ -151,6 +157,7 @@ const intelligence: WeeklyTrainingIntelligence = {
         rank: 12,
         score: 0.58,
         currentlyAdvanced: true,
+        isTrial: false,
         recommendedAdvanced: false,
         confidence: "high"
       }
@@ -176,7 +183,7 @@ const intelligence: WeeklyTrainingIntelligence = {
 
 function advancedRecommendation(
   playerId: number,
-  status: "keep_advanced" | "promote_to_advanced" | "remove_from_advanced",
+  status: AdvancedTrainingPlayerRecommendation["status"],
   currentlyAdvanced: boolean,
   recommendedAdvanced: boolean
 ) {
@@ -225,6 +232,31 @@ describe("createTrainingIntelligenceViewModel", () => {
     expect(
       viewModel.attention.some((item) => item.playerId === 2 && item.type === "switch_skill")
     ).toBe(false);
+  });
+
+  it("distinguishes a trial advanced recommendation and explains its validation period", () => {
+    const trialIntelligence: WeeklyTrainingIntelligence = {
+      ...intelligence,
+      advancedOptimization: {
+        ...intelligence.advancedOptimization,
+        ranking: intelligence.advancedOptimization.ranking.map((entry) =>
+          entry.playerId === 3 ? { ...entry, isTrial: true } : entry
+        ),
+        recommendations: intelligence.advancedOptimization.recommendations.map((entry) =>
+          entry.playerId === 3 ? advancedRecommendation(3, "trial_advanced", false, true) : entry
+        )
+      }
+    };
+
+    const viewModel = createTrainingIntelligenceViewModel({
+      training,
+      intelligence: trialIntelligence
+    });
+    const attention = viewModel.attention.find((item) => item.playerId === 3);
+
+    expect(viewModel.advancedRows.find((row) => row.playerId === 3)?.status).toBe("Trial advanced");
+    expect(attention).toMatchObject({ title: "Trial advanced training" });
+    expect(attention?.description).toContain("provisional advanced-training trial");
   });
 
   it("preserves skill-up, progress and insufficient next-level states", () => {

@@ -8,3 +8,4 @@ export type PatchClubOperatingSettingsParams = ClubParams;
 export type GetClubHistoricalTrendsParams = ClubParams;
 export type GetClubHistoricalFindingsParams = ClubParams;
 export type GetClubSnapshotsParams = ClubParams;
+export type PatchYouthObservationsParams = ClubParams & { playerId: string };

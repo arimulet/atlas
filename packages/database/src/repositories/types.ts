@@ -85,6 +85,13 @@ export interface PersistedPlayer {
   cards: { yellow: number; red: number };
   injury: { days: number | null; severe: boolean | null };
   currentGameWeek: number | null;
+  role?: PersistedSquadRole | null;
+  development?: PersistedPlayerDevelopment | null;
+}
+
+export interface PersistedPlayerDevelopment {
+  profile: PersistedDevelopmentProfile | null;
+  targetLevels: Partial<Record<PersistedDevelopmentSkill, number>>;
 }
 
 export interface PersistedJunior {
@@ -98,51 +105,18 @@ export interface PersistedJunior {
   currentLevel: number;
   initialWeeks: number;
   weeksLeft: number;
+  formation: number | null;
+  observations: string;
+  skills: SnapshotSkillSet;
   status: "in_academy" | "promoted" | "rejected";
 }
-
-export type PersistedPlayerTransferSource = string;
-export type PersistedTransferDataQuality = "complete" | "partial" | "weak";
-export type PersistedSalePriceType = "final_sale" | "unknown";
-export type PersistedTransferFormation = "GK" | "DEF" | "MID" | "ATT";
-export type PersistedTransferProfile =
-  "goalkeeper" | "defender" | "wing_defender" | "midfielder" | "winger" | "forward";
-export type PersistedTransferSkills = Partial<
-  Record<
-    "stamina" | "pace" | "technique" | "passing" | "keeper" | "defender" | "playmaker" | "striker",
-    number | null
-  >
->;
-
-export interface PersistedPlayerTransfer {
-  id: string;
-  transferKey: string;
-  transferId?: string;
-  playerId?: number;
-  transferDate: Date;
-  gameWeek?: number | null;
-  salePrice: number;
-  currency?: string | null;
-  normalizedSalePrice?: number | null;
-  age: number;
-  skills: PersistedTransferSkills;
-  formation?: PersistedTransferFormation | null;
-  developmentProfile?: PersistedTransferProfile | null;
-  sokkerValue?: number | null;
-  source: PersistedPlayerTransferSource;
-  dataQuality?: PersistedTransferDataQuality;
-  salePriceType?: PersistedSalePriceType;
-}
-
-export type SavePlayerTransferInput = Omit<PersistedPlayerTransfer, "id" | "transferKey">;
 
 export interface PersistedPlayerDevelopmentOverride {
   id: string;
   playerId: number;
   clubId: number;
-  profile: PersistedDevelopmentProfile | null;
-  targetLevels: Partial<Record<PersistedDevelopmentSkill, number>>;
-  targetAge: number | null;
+  profile: PersistedPlayerDevelopment["profile"];
+  targetLevels: PersistedPlayerDevelopment["targetLevels"];
 }
 
 export type PersistedSquadRole =
@@ -167,7 +141,6 @@ export interface SavePlayerDevelopmentOverrideInput {
   clubId: number;
   profile?: PersistedDevelopmentProfile | null;
   targetLevels?: Partial<Record<PersistedDevelopmentSkill, number>>;
-  targetAge?: number | null;
 }
 
 export interface SnapshotMoney {
@@ -279,4 +252,78 @@ export interface SaveCountryInput {
   name: string;
   currencyName: string;
   currencyRate: number;
+}
+
+export interface PersistedJuniorMatchPlayerStats {
+  playerId: number;
+  position: number | null;
+  minutesPlayed: number;
+  rating: number;
+  goals: number;
+  assists: number;
+  shoots: number;
+  fouls: number;
+  yellowCards: number;
+  redCards: number;
+  isInjured: boolean;
+  timeDefending: number;
+}
+
+export interface PersistedJuniorMatch {
+  id: string;
+  matchId: number;
+  clubId: number;
+  season: number;
+  gameWeek: number;
+  seasonWeek: number;
+  dateExpected: Date;
+  isFinished: boolean;
+  playerStats: PersistedJuniorMatchPlayerStats[];
+}
+
+export interface PersistedMarketTransferCurrent {
+  playerId: number;
+  firstSeenAt: Date;
+  lastSeenAt: Date;
+  deadline: Date;
+  status: "active" | "missing";
+  lastSyncRunId: string;
+  player: {
+    name: string;
+    countryId: number;
+    age: number;
+    skills: Record<string, number>;
+  };
+}
+
+export interface PersistedMarketTransferSyncRun {
+  status: "running" | "completed" | "failed";
+  startedAt: Date;
+  finishedAt: Date | null;
+  leaseExpiresAt: Date;
+  historyWindow: {
+    from: Date;
+    to: Date;
+  };
+  counts: {
+    pagesRead: number;
+    currentUpserted: number;
+    currentMissing: number;
+    finalCreatedOrUpdated: number;
+    currentDeleted: number;
+  };
+  error: string | null;
+}
+
+export interface PersistedMarketTransfer {
+  transferKey: string;
+  playerId: number;
+  name: string;
+  transferDate: Date;
+  gameWeek: number;
+  season: number;
+  week: number;
+  salePrice: number;
+  age: number;
+  skills: Record<string, number>;
 }

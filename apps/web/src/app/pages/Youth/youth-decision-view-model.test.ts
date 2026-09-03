@@ -9,8 +9,9 @@ import {
 import type { YouthDecisionCandidate, YouthDecisionPlanning } from "@atlas/application";
 import {
   createYouthDecisionViewModels,
-  createYouthSummaryViewModel,
   filterYouthDecisionViewModels,
+  orderYouthDecisionComparisonModels,
+  mapDevelopmentProjectionWarning,
   mapYouthDecisionReason,
   mapYouthDecisionRisk
 } from "./youth-decision-view-model";
@@ -29,6 +30,12 @@ describe("youth decision presentation model", () => {
     });
   });
 
+  it("explains projection warnings in the presentation model", () => {
+    expect(mapDevelopmentProjectionWarning("projection_horizon_exceeded")).toEqual({
+      title: "Target exceeds projection horizon",
+      description: "The complete target is not viable within the modeled career horizon."
+    });
+  });
   it("keeps prospect quality and club fit as separate presentation labels", () => {
     const planning = createPlanning([
       createCandidate(1, 0.86, { clubFitScore: 0.2, opportunity: "poor" })
@@ -38,12 +45,77 @@ describe("youth decision presentation model", () => {
 
     expect(model).toMatchObject({
       decision: "keep",
+      sportingConfidence: "high",
+      sportingConfidenceLabel: "High confidence",
+      economicConfidence: "low",
+      economicConfidenceLabel: "Low confidence",
       prospectQualityLabel: "Very High",
       clubFitLabel: "Poor",
       profileLabel: "Defender"
     });
   });
 
+  it("exposes a trial advanced recommendation as provisional", () => {
+    const candidate = createCandidate(1, 0.85, { clubFitScore: 0.85, opportunity: "excellent" });
+    candidate.advancedTrainingRecommendation = {
+      playerId: 1,
+      status: "trial_advanced",
+      currentlyAdvanced: false,
+      recommendedAdvanced: true,
+      evaluation: {
+        playerId: 1,
+        currentSkill: "defending",
+        advancedScore: 0.7,
+        expectedAdvancedTrainingPoints: 100,
+        expectedFormationTrainingPoints: 50,
+        marginalTrainingPoints: 50,
+        developmentPotentialScore: 0.8,
+        confidence: "low"
+      },
+      reasons: [
+        { type: "new_player_trial_candidate" },
+        { type: "insufficient_senior_training_evidence" },
+        { type: "projected_advanced_return", value: 0.7 }
+      ]
+    };
+
+    const [model] = createYouthDecisionViewModels(createPlanning([candidate]), null);
+
+    expect(model?.advancedTraining).toEqual({
+      status: "trial_advanced",
+      recommended: true,
+      currentlyAdvanced: false,
+      comparisonRank: null,
+      slotCount: null,
+      isTrial: true,
+      profileQuality: null,
+      profileViability: null
+    });
+  });
+
+  it("exposes the configured advanced-training slot capacity", () => {
+    const planning = createPlanning([
+      createCandidate(1, 0.85, { clubFitScore: 0.85, opportunity: "excellent" })
+    ]);
+    planning.advancedTraining = {
+      gameWeek: 1,
+      slotCount: 10,
+      ranking: [],
+      recommendedAdvancedPlayerIds: [],
+      recommendations: [],
+      replacements: [],
+      summary: {
+        currentlyAdvanced: 9,
+        recommendedChanges: 0,
+        promotions: 0,
+        removals: 0
+      }
+    };
+
+    const [model] = createYouthDecisionViewModels(planning, null);
+
+    expect(model?.advancedTraining.slotCount).toBe(10);
+  });
   it("sorts by priority and action, then supports decision and priority filters", () => {
     const planning = createPlanning([
       createCandidate(2, 0.7, { clubFitScore: 0.7, opportunity: "good" }),
@@ -60,19 +132,40 @@ describe("youth decision presentation model", () => {
     ).toBe(true);
   });
 
-  it("summarizes academy and promoted decision candidates compactly", () => {
-    const planning = createPlanning([
-      createCandidate(1, 0.85, { clubFitScore: 0.85, opportunity: "excellent" })
+  it("places current advanced-training slots before excluded candidates", () => {
+    const models = createYouthDecisionViewModels(
+      createPlanning([
+        createCandidate(1, 0.8, { clubFitScore: 0.8, opportunity: "good" }),
+        createCandidate(2, 0.8, { clubFitScore: 0.8, opportunity: "good" }),
+        createCandidate(3, 0.8, { clubFitScore: 0.8, opportunity: "good" })
+      ]),
+      null
+    );
+    const [first, second, third] = models;
+
+    if (!first || !second || !third) {
+      throw new Error("Expected three decision comparison models.");
+    }
+
+    const ordered = orderYouthDecisionComparisonModels([
+      {
+        ...first,
+        development: { ...first.development, advancedRank: 7 },
+        advancedTraining: { ...first.advancedTraining, comparisonRank: 7 }
+      },
+      {
+        ...second,
+        development: { ...second.development, advancedRank: 8 },
+        advancedTraining: { ...second.advancedTraining, currentlyAdvanced: true, comparisonRank: 8 }
+      },
+      {
+        ...third,
+        development: { ...third.development, advancedRank: 2 },
+        advancedTraining: { ...third.advancedTraining, currentlyAdvanced: true, comparisonRank: 2 }
+      }
     ]);
 
-    const summary = createYouthSummaryViewModel(planning, 8);
-
-    expect(summary).toMatchObject({
-      academyPlayers: 8,
-      decisionCandidates: 1,
-      highPriorityDecisions: 1
-    });
-    expect(summary.counts.train).toBe(1);
+    expect(ordered.map((model) => model.playerId)).toEqual(["3", "2", "1"]);
   });
 });
 
@@ -88,7 +181,8 @@ function createPlanning(candidates: YouthDecisionCandidate[]): YouthDecisionPlan
         keep: recommendations.filter((item) => item.decision === "keep").length,
         sell: recommendations.filter((item) => item.decision === "sell").length,
         release: recommendations.filter((item) => item.decision === "release").length,
-        hold: recommendations.filter((item) => item.decision === "hold").length
+        hold: recommendations.filter((item) => item.decision === "hold").length,
+        unknown: recommendations.filter((item) => item.decision === "unknown").length
       },
       highPriorityDecisions: recommendations.filter((item) => item.priority === "high").length,
       advancedCandidates: 0
@@ -111,7 +205,8 @@ function createCandidate(
   const prospect: YouthProspectAssessment = {
     ...assessYouthProspect({ player }),
     prospectScore,
-    confidence: "high"
+    confidence: "high",
+    reasons: [{ type: "training_evidence", observationCount: 3 }]
   };
   const opportunity: YouthDevelopmentOpportunity = {
     playerId,
@@ -146,6 +241,7 @@ function createCandidate(
     trainingPath: null,
     developmentProjection: null,
     marketValue: null,
-    marketProjection: null
+    marketProjection: null,
+    currentlyAdvanced: false
   };
 }

@@ -51,6 +51,20 @@
   border-color: color-mix(in srgb, var(--semantic-warning-border) 55%, var(--atlas-border));
 }
 
+.atlas .atlas-player-detail__training-signal {
+  font-size: 0.74rem;
+  font-weight: 650;
+  margin: 0;
+}
+
+.atlas .atlas-player-detail__training-signal.is-prospect {
+  color: var(--semantic-success-text);
+}
+
+.atlas .atlas-player-detail__training-signal.is-warning {
+  color: var(--semantic-warning-text);
+}
+
 .atlas .atlas-player-detail-panel__title {
   color: var(--atlas-text);
   font-size: 0.82rem;
@@ -552,27 +566,17 @@
 
 .atlas .atlas-market-value__chart {
   display: block;
-  height: 150px;
+  height: 190px;
   width: 100%;
 }
 
-.atlas .atlas-market-value__chart line {
-  stroke: var(--atlas-border);
-  stroke-width: 1;
+.atlas .atlas-market-value__chart .recharts-cartesian-axis-tick-value {
+  fill: var(--atlas-text-muted);
+  font-size: 0.68rem;
 }
 
-.atlas .atlas-market-value__chart polyline {
-  fill: none;
-  stroke: var(--atlas-accent);
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 3;
-}
-
-.atlas .atlas-market-value__chart circle {
-  fill: var(--atlas-surface);
-  stroke: var(--atlas-accent);
-  stroke-width: 3;
+.atlas .atlas-market-value__chart .recharts-tooltip-item {
+  color: var(--atlas-text-secondary);
 }
 
 .atlas .atlas-market-value__projection-list {
@@ -582,13 +586,25 @@
 
 .atlas .atlas-market-value__projection-row {
   border-bottom: 1px solid color-mix(in srgb, var(--atlas-border) 72%, transparent);
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   padding: 9px 0;
 }
 
-.atlas .atlas-market-value__projection-row > div {
+.atlas .atlas-market-value__projection-timeline,
+.atlas .atlas-market-value__projection-metric {
   display: grid;
   gap: 3px;
   min-width: 0;
+}
+
+.atlas .atlas-market-value__projection-metric {
+  justify-items: end;
+}
+
+.atlas .atlas-market-value__projection-metric small {
+  color: var(--atlas-text-muted);
 }
 
 .atlas .atlas-market-value__projection-row strong {
@@ -599,7 +615,6 @@
 .atlas .atlas-market-value__projection-row span {
   color: var(--atlas-text-secondary);
   font-size: 0.76rem;
-  min-width: 90px;
   text-align: right;
 }
 
@@ -629,6 +644,14 @@
   .atlas .atlas-market-value__timeline-summary,
   .atlas .atlas-market-value__training-summary {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .atlas .atlas-market-value__projection-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .atlas .atlas-market-value__projection-timeline {
+    grid-column: 1 / -1;
   }
 }
 

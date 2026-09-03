@@ -88,18 +88,9 @@ export interface SquadAssetViewModel {
     role: string;
     liquidity: string;
     recommended: boolean;
+    isTheoretical: boolean;
   }>;
-  protectedAssets: Array<{ playerId: number; name: string; value: string; reasons: string[] }>;
-}
-
-export interface PayrollSafetyViewModel {
-  playerPayroll: string;
-  trainerPayroll: string;
-  totalPayroll: string;
-  playerShare: string;
-  trainerShare: string;
-  coverage: string;
-  explanation: string;
+  protectedAssets: Array<{ playerId: number; name: string; value: string; reasons: string[]; isTheoretical: boolean }>;
 }
 
 export interface DevelopmentCapitalViewModel {
@@ -116,7 +107,6 @@ export interface FinancialStrategyViewModel {
   funding: StrategicFundingViewModel;
   recommendations: FinancialRecommendationViewModel[];
   assets: SquadAssetViewModel;
-  payroll: PayrollSafetyViewModel;
   developmentCapital: DevelopmentCapitalViewModel | null;
   conflicts: Array<{ playerId: number | null; playerName: string | null; description: string }>;
   criticalRecommendations: FinancialRecommendationViewModel[];
@@ -139,7 +129,6 @@ export function createFinancialStrategyViewModel(
     funding: createFundingViewModel(data.capitalAllocation, currency),
     recommendations,
     assets: createAssetViewModel(data, currency, playerNames),
-    payroll: createPayrollViewModel(data.financialAssessment),
     developmentCapital: createDevelopmentCapitalViewModel(data.financialAssessment, currency),
     conflicts: data.strategyPlan.conflicts.map((conflict) => ({
       playerId: conflict.playerId ?? null,
@@ -279,6 +268,14 @@ function createAssetViewModel(
       .filter((recommendation) => recommendation.type === "monetize_surplus_asset")
       .flatMap((recommendation) => recommendation.playerIds ?? [])
   );
+  const protectedPlayerIds = new Set(
+    data.strategyPlan.monetizationCandidates
+      .filter(
+        (c) => c.strategicProtection === "critical" || c.strategicProtection === "high"
+      )
+      .map((c) => c.playerId)
+  );
+
   return {
     estimatedValue: money(assessment.squadAssets.expected, currency),
     coverage: `${assessment.squadAssets.valuedPlayers}/${assessment.squadAssets.totalPlayers} players valued`,
@@ -296,7 +293,7 @@ function createAssetViewModel(
       : [],
     potentialLiquidity: money(allocation.potentialAssetLiquidity, currency),
     monetizable: allocation.monetizableAssets
-      .filter((asset) => asset.liquidityPotential !== "low" && asset.estimatedMarketValue !== null)
+      .filter((asset) => asset.liquidityPotential !== "low" && asset.estimatedMarketValue !== null && !protectedPlayerIds.has(asset.playerId))
       .sort((left, right) => (right.estimatedMarketValue ?? 0) - (left.estimatedMarketValue ?? 0))
       .map((asset) => ({
         playerId: asset.playerId,
@@ -304,7 +301,8 @@ function createAssetViewModel(
         value: money(asset.estimatedMarketValue, currency),
         role: roleLabel(asset.squadRole),
         liquidity: titleCase(asset.liquidityPotential),
-        recommended: recommendationPlayerIds.has(asset.playerId)
+        recommended: recommendationPlayerIds.has(asset.playerId),
+        isTheoretical: asset.isTheoretical
       })),
     protectedAssets: data.strategyPlan.monetizationCandidates
       .filter(
@@ -315,21 +313,9 @@ function createAssetViewModel(
         playerId: candidate.playerId,
         name: playerNames.get(candidate.playerId) ?? `Player ${candidate.playerId}`,
         value: money(candidate.marketValue, currency),
-        reasons: candidate.reasons.map((reason) => monetizationReasonLabel(reason))
+        reasons: candidate.reasons.map((reason) => monetizationReasonLabel(reason)),
+        isTheoretical: candidate.isTheoretical
       }))
-  };
-}
-
-function createPayrollViewModel(assessment: ClubFinancialAssessment): PayrollSafetyViewModel {
-  return {
-    playerPayroll: money(assessment.payroll.playersWeekly, null),
-    trainerPayroll: money(assessment.payroll.trainersWeekly, null),
-    totalPayroll: money(assessment.payroll.totalWeekly, null),
-    playerShare: percentage(assessment.payroll.composition.playerShare),
-    trainerShare: percentage(assessment.payroll.composition.trainerShare),
-    coverage: weeks(assessment.position.metrics.payrollCoverageWeeks),
-    explanation:
-      "Known payroll coverage measures how many weeks of currently known salaries the club's cash could cover. It is not a full cash-flow runway."
   };
 }
 

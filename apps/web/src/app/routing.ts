@@ -1,12 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 export type MainViewId =
-  | "dashboard"
-  | "squad"
-  | "training"
-  | "youth"
-  | "finances"
-  | "diagnostics";
+  "dashboard" | "squad" | "player-decisions" | "training" | "youth" | "youth-performances" | "finances" | "diagnostics";
 
 export type Route =
   | { kind: "main"; view: MainViewId; path: string }
@@ -27,8 +22,10 @@ interface HistoryState {
 const mainPaths: Record<MainViewId, string> = {
   dashboard: "/",
   squad: "/squad",
+  "player-decisions": "/player-decisions",
   training: "/training",
   youth: "/youth",
+  "youth-performances": "/youth/performances",
   finances: "/finances",
   diagnostics: "/diagnostics"
 };

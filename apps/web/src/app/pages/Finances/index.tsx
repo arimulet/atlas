@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { useState } from "react";
+import { Info } from "lucide-react";
 import { formatMoney } from "../../formatters";
 import { PlayerLink } from "../../components/PlayerLink";
 import { StatusBadge } from "../../components/StatusBadge";
@@ -39,8 +40,7 @@ export function Finances({
       />
       <FundingPlanSection financialStrategy={financialStrategy} />
       <SquadAssetsSection financialStrategy={financialStrategy} onSelectPlayer={onSelectPlayer} />
-      <PayrollSafetySection financialStrategy={financialStrategy} />
-      <DevelopmentCapitalSection financialStrategy={financialStrategy} />
+
       <ConflictsSection financialStrategy={financialStrategy} onSelectPlayer={onSelectPlayer} />
       {squadPlanning === null && status === "ready" ? (
         <PanelMessage>
@@ -302,6 +302,7 @@ function SquadAssetsSection({
   onSelectPlayer: (playerId: string) => void;
 }) {
   const assets = financialStrategy.viewModel?.assets;
+  const development = financialStrategy.viewModel?.developmentCapital;
   if (!assets)
     return (
       <Section title="Squad Assets">
@@ -323,6 +324,7 @@ function SquadAssetsSection({
           ["Potential Liquidity", assets.potentialLiquidity, "Not cash until a transfer occurs"]
         ]}
       />
+      <DevelopmentUpside development={development} />
       {assets.distribution.length > 0 ? (
         <CompactList
           title="Asset distribution"
@@ -345,7 +347,14 @@ function SquadAssetsSection({
                 <PlayerLink playerId={String(asset.playerId)} onSelectPlayer={onSelectPlayer}>
                   {asset.name}
                 </PlayerLink>
-                <strong>{asset.value}</strong>
+                <strong>
+                  {asset.value}
+                  {asset.isTheoretical ? (
+                    <span title="Tasación teórica" className="atlas-finances-theoretical-icon" style={{ cursor: "help", marginLeft: "6px", opacity: 0.6, display: "inline-flex", verticalAlign: "text-bottom" }}>
+                      <Info size={16} />
+                    </span>
+                  ) : null}
+                </strong>
                 <small>{asset.reasons.join(" · ")}</small>
               </li>
             ))}
@@ -353,6 +362,29 @@ function SquadAssetsSection({
         </div>
       ) : null}
     </Section>
+  );
+}
+
+interface DevelopmentUpsideProps {
+  development: NonNullable<FinancialStrategyState["viewModel"]>["developmentCapital"] | undefined;
+}
+
+function DevelopmentUpside({ development }: DevelopmentUpsideProps) {
+  if (!development) return null;
+
+  return (
+    <aside className="atlas-finances-development-upside" aria-label="Development upside">
+      <div>
+        <span>Development upside</span>
+        <small>
+          {development.coveredPlayers} · {development.confidence} confidence
+        </small>
+      </div>
+      <strong>{development.valueCreation}</strong>
+      <p>
+        Projected covered value: {development.currentValue} → {development.projectedValue}
+      </p>
+    </aside>
   );
 }
 
@@ -374,7 +406,14 @@ function AssetList({
             <PlayerLink playerId={String(asset.playerId)} onSelectPlayer={onSelectPlayer}>
               {asset.name}
             </PlayerLink>
-            <strong>{asset.value}</strong>
+            <strong>
+              {asset.value}
+              {asset.isTheoretical ? (
+                <span title="Tasación teórica" className="atlas-finances-theoretical-icon" style={{ cursor: "help", marginLeft: "6px", opacity: 0.6, display: "inline-flex", verticalAlign: "text-bottom" }}>
+                  <Info size={16} />
+                </span>
+              ) : null}
+            </strong>
             <small>
               {asset.role} · Liquidity potential: {asset.liquidity}
               {asset.recommended ? " · Recommended monetization" : ""}
@@ -384,65 +423,6 @@ function AssetList({
       </ul>
     </div>
   );
-}
-
-function PayrollSafetySection({
-  financialStrategy
-}: {
-  financialStrategy: FinancialStrategyState;
-}) {
-  const payroll = financialStrategy.viewModel?.payroll;
-  return (
-    <Section title="Payroll & Safety">
-      {payroll ? (
-        <>
-          <MetricGrid
-            metrics={[
-              ["Player Payroll", payroll.playerPayroll, `${payroll.playerShare} of known payroll`],
-              [
-                "Trainer Payroll",
-                payroll.trainerPayroll,
-                `${payroll.trainerShare} of known payroll`
-              ],
-              ["Known Payroll", payroll.totalPayroll, "Derived from active known wages"],
-              ["Known Payroll Coverage", payroll.coverage, "Cash divided by known weekly payroll"]
-            ]}
-          />
-          <p className="atlas-finances-panel__note">{payroll.explanation}</p>
-        </>
-      ) : (
-        <PanelMessage>Known payroll data is incomplete. Safety metrics are limited.</PanelMessage>
-      )}
-    </Section>
-  );
-}
-
-function DevelopmentCapitalSection({
-  financialStrategy
-}: {
-  financialStrategy: FinancialStrategyState;
-}) {
-  const development = financialStrategy.viewModel?.developmentCapital;
-  return development ? (
-    <Section title="Development Capital">
-      <MetricGrid
-        metrics={[
-          [
-            "Projection Coverage",
-            development.coveredPlayers,
-            "Only valid projections are included"
-          ],
-          ["Current Covered Value", development.currentValue, "Derived market value"],
-          ["Projected Target Value", development.projectedValue, "Projected"],
-          [
-            "Potential Value Creation",
-            development.valueCreation,
-            `${development.confidence} confidence`
-          ]
-        ]}
-      />
-    </Section>
-  ) : null;
 }
 
 function ConflictsSection({

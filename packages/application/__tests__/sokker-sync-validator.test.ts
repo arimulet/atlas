@@ -59,7 +59,8 @@ function createPayload(): SokkerSyncPayload {
           juniors: { count: 0, skillsUp: 0 }
         }
       ]
-    }
+    },
+    juniorMatches: []
   };
 }
 

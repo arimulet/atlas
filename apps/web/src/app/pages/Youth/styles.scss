@@ -190,10 +190,22 @@
     color: var(--semantic-warning-text);
   }
   .atlas-youth-decision-badge.is-release {
+    color: #000;
+    background-color: #e0e0e0;
+    border-color: #000;
+  }
+  .atlas-youth-decision-badge.is-hold,
+  .atlas-youth-decision-badge.is-none {
+    color: var(--atlas-text-muted);
+  }
+  .atlas-youth-decision-badge.is-def {
+    color: var(--semantic-info-text);
+  }
+  .atlas-youth-decision-badge.is-mid {
     color: var(--semantic-error-text);
   }
-  .atlas-youth-decision-badge.is-hold {
-    color: var(--atlas-text-muted);
+  .atlas-youth-decision-badge.is-att {
+    color: var(--semantic-success-text);
   }
 
   .atlas-youth-decision-card__meta {
@@ -248,7 +260,7 @@
 
   .atlas-youth-decision-message-list li::before {
     color: var(--semantic-success-text);
-    content: "✓";
+    content: "\2713";
     font-weight: 800;
   }
 
@@ -343,7 +355,91 @@
   }
 
   .atlas-youth-comparison-table {
-    min-width: 760px;
+    min-width: 860px;
+  }
+
+  .atlas-youth-comparison-table__player-column {
+    width: 22%;
+  }
+
+  .atlas-youth-comparison-table__advanced-column {
+    width: 7%;
+  }
+
+  .atlas-youth-comparison-table__rank-column,
+  .atlas-youth-comparison-table__age-column {
+    width: 8%;
+  }
+
+  .atlas-youth-comparison-table__profile-column,
+  .atlas-youth-comparison-table__prospect-column,
+  .atlas-youth-comparison-table__club-fit-column {
+    width: 11%;
+  }
+
+  .atlas-youth-comparison-table__market-column {
+    width: 12%;
+  }
+
+  .atlas-youth-comparison-table__decision-column {
+    width: 10%;
+  }
+
+  .atlas-youth-comparison-table__advanced-slot-icon {
+    align-items: center;
+    border: 1px solid currentColor;
+    border-radius: 999px;
+    display: inline-flex;
+    font-size: 0.78rem;
+    font-weight: 900;
+    height: 20px;
+    justify-content: center;
+    line-height: 1;
+    width: 20px;
+  }
+
+  .atlas-youth-comparison-table__advanced-slot-icon.is-current {
+    color: var(--semantic-success-text);
+  }
+
+  .atlas-youth-comparison-table__advanced-slot-icon.is-excluded {
+    color: var(--atlas-text-muted);
+  }
+
+  .atlas-youth-comparison-table__advanced-slot-icon.is-trial {
+    color: var(--semantic-warning-text);
+  }
+
+  .atlas-youth-comparison-table tbody tr.is-trial th,
+  .atlas-youth-comparison-table tbody tr.is-trial td {
+    background: color-mix(in srgb, var(--semantic-warning-text) 6%, transparent);
+  }
+
+  .atlas-youth-comparison-table__slot-summary {
+    color: var(--atlas-text-muted);
+    font-size: 0.8rem;
+    margin: 10px 0 0;
+  }
+  .atlas-youth-comparison-table__trial-note,
+  .atlas-youth-decision-card__trial-advanced {
+    background: color-mix(in srgb, var(--semantic-warning-text) 9%, transparent);
+    border-left: 2px solid var(--semantic-warning-text);
+    color: var(--semantic-warning-text);
+    font-size: 0.72rem;
+    line-height: 1.4;
+    margin: 10px 0;
+    padding: 7px 9px;
+  }
+
+  .atlas-youth-comparison-table__slot-divider th {
+    background: color-mix(in srgb, var(--atlas-accent) 10%, var(--atlas-surface));
+    border-bottom: 1px solid var(--atlas-accent);
+    border-top: 2px solid var(--atlas-accent);
+    color: var(--atlas-text);
+    font-size: 0.68rem;
+    letter-spacing: 0.06em;
+    padding: 9px 10px;
+    text-transform: uppercase;
   }
 
   @media (max-width: 900px) {
@@ -565,3 +661,117 @@
     color: var(--atlas-text-muted);
   }
 }
+
+// Youth Tabs
+.atlas-youth-tabs {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+
+  .atlas-youth-tab {
+    background: none;
+    border: none;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+
+    &.is-active {
+      color: var(--color-text-primary);
+      border-bottom-color: var(--color-primary);
+      font-weight: 600;
+    }
+
+    &:hover:not(.is-active) {
+      color: var(--color-text-primary);
+    }
+  }
+}
+
+
+
+// Youth Performances
+.atlas-youth-performances {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.atlas-youth-performances-table {
+  table-layout: auto !important; min-width: 0 !important;
+  
+  th, td {
+    white-space: nowrap;
+  }
+  
+  .atlas-youth-header-def {
+    color: var(--semantic-info-text) !important;
+  }
+  .atlas-youth-header-mid {
+    color: var(--semantic-error-text) !important;
+  }
+  .atlas-youth-header-att {
+    color: var(--semantic-success-text) !important;
+  }
+
+  .atlas-youth-skill-tragic-weak {
+    color: var(--atlas-text-muted) !important;
+  }
+
+  .atlas-youth-skill-regular-vgood {
+    color: var(--semantic-warning-text) !important;
+    font-weight: 600;
+  }
+
+  .atlas-youth-skill-excellent-incredible {
+    color: var(--semantic-success-text) !important;
+    font-weight: 600;
+  }
+
+  .atlas-youth-skill-brilliant-divine {
+    color: #43a047 !important; // Darker green that remains legible on dark themes
+    font-weight: 800;
+  }
+
+  .performance-cell-wrapper {
+    padding: 2px !important; // create the small margin between cells
+  }
+
+  .performance-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    min-height: 28px;
+    font-weight: 900;
+    font-size: 1.1rem;
+    color: rgba(0, 0, 0, 0.75) !important;
+    border: 1px solid #000;
+    border-radius: 4px;
+    padding: 0.2rem 0.5rem;
+    box-sizing: border-box;
+    
+    &.full-match {
+      background-color: #81c784; // Light Green
+    }
+    
+    &.half-match {
+      background-color: #e0e0e0; // Grey
+    }
+    
+    &.no-data {
+      background-color: #e57373; // Light Red
+      color: rgba(0, 0, 0, 0) !important; // Hide the 0
+    }
+
+    &.empty-slot {
+      background-color: transparent;
+      border-color: transparent; // No border for completely empty slots
+    }
+  }
+}
+.atlas-youth-observations-input { width: 100%; min-width: 60px; box-sizing: border-box; border: 1px solid transparent; background: transparent; padding: 4px; border-radius: 4px; color: var(--atlas-text); font-size: 0.8rem; outline: none; } .atlas-youth-observations-input:hover, .atlas-youth-observations-input:focus { border-color: var(--atlas-border); background: rgba(0,0,0,0.1); }
+.atlas-youth-gk-table { table-layout: fixed !important; min-width: 0 !important; width: 100% !important; }
+.atlas-youth-gk-table .performance-cell { font-size: 0.75rem !important; padding: 1px !important; min-height: 22px !important; }

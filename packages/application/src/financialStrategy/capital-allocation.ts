@@ -60,6 +60,8 @@ function buildPlayerMarketValues(assessment: SquadAssessmentData): PlayerMarketV
     .map((value) => ({
       ...value.fundamental,
       estimatedValue: value.calibratedValue,
-      estimatedMarketValue: value.calibratedValue
+      estimatedMarketValue: value.calibratedValue,
+      confidence: value.confidence,
+      reasons: value.reasons
     }));
 }

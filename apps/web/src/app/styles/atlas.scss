@@ -11,6 +11,7 @@
 @use "../pages/Squad/styles.scss" as *;
 @use "../pages/Training/styles.scss" as *;
 @use "../pages/PlayerDetail/styles.scss" as *;
+@use "../pages/PlayerDecisions/styles.scss" as *;
 @use "../pages/Youth/styles.scss" as *;
 @use "../pages/Diagnostics/styles.scss" as *;
 
@@ -26,7 +27,7 @@
     .atlas-diagnostics,
     .atlas-player-detail
   ) {
-    display: grid;
+    display: grid; grid-template-columns: minmax(0, 1fr);
     gap: var(--atlas-page-gap);
     max-width: var(--atlas-page-max-width);
   }
@@ -189,7 +190,7 @@
     .atlas-finances-attention-list,
     .atlas-player-detail__attention-list
   ) {
-    display: grid;
+    display: grid; grid-template-columns: minmax(0, 1fr);
     gap: var(--atlas-space-2);
     list-style: none;
     margin: 0;
@@ -316,6 +317,10 @@
   :is(.atlas-dashboard-priority, .atlas-status-badge, .atlas-training-status).is-attention,
   .atlas-dashboard-priority.is-medium {
     color: var(--semantic-warning-text);
+  }
+
+  :is(.atlas-dashboard-priority, .atlas-status-badge, .atlas-training-status).is-training-prospect {
+    color: var(--semantic-success-text);
   }
 
   :is(.atlas-dashboard-priority, .atlas-status-badge, .atlas-training-status).is-info,

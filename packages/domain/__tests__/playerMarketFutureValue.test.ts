@@ -32,21 +32,24 @@ const player: PlayerMarketValuePlayer = {
 };
 
 function plan(): PlayerDevelopmentPlan {
+  const target: PlayerDevelopmentPlan["target"] = {
+    playerId: player.playerId,
+    profile: "defender",
+    targetSkills: [
+      { skill: "defender", targetLevel: 14, priority: "primary" },
+      { skill: "pace", targetLevel: 12, priority: "secondary" }
+    ],
+    source: "manual"
+  };
+
   return {
     suggestion: {
       profile: "defender",
       confidence: "high",
       reasons: []
     },
-    target: {
-      playerId: player.playerId,
-      profile: "defender",
-      targetSkills: [
-        { skill: "defender", targetLevel: 14, priority: "primary" },
-        { skill: "pace", targetLevel: 12, priority: "secondary" }
-      ],
-      source: "manual"
-    },
+    idealTarget: target,
+    target,
     gap: {
       playerId: player.playerId,
       profile: "defender",

@@ -4,8 +4,6 @@ import type { SquadRole } from "@atlas/domain";
 import { AttentionIcon } from "../../components/AttentionIcon";
 import { CountryNameFlag } from "../../components/CountryNameFlag";
 import { PlayerLink } from "../../components/PlayerLink";
-import { YouthDecisionSections } from "../Youth/YouthDecisionSections";
-import { useYouthDecisionEngine } from "../Youth/useYouthDecisionEngine";
 import type { SquadAttentionProps, SquadTableProps, SquadProps } from "./types";
 import {
   SquadPlanningSections,
@@ -43,7 +41,6 @@ const TRAINING_POSITION_TITLES: Record<TrainingPositionCode, string> = {
 };
 
 export function Squad({
-  clubId,
   development,
   onSelectPlayer,
   onSaveSquadRole,
@@ -55,7 +52,6 @@ export function Squad({
   trainingStatus,
   currency
 }: SquadProps) {
-  const youthDecisionEngine = useYouthDecisionEngine({ clubId, currency, youthAcademy: null });
   const rows = createSquadPlayerRows({
     development,
     projectionSummaries,
@@ -123,11 +119,6 @@ export function Squad({
         rows={sortedRows}
         status={trainingStatus}
       />{" "}
-      <YouthDecisionSections
-        models={youthDecisionEngine.decisionCandidates}
-        onSelectPlayer={onSelectPlayer}
-        status={youthDecisionEngine.status}
-      />
     </div>
   );
 }
@@ -401,24 +392,6 @@ function SquadPositionTable({
           <col className="is-planning" />
         </colgroup>
         <thead>
-          <tr className="atlas-squad-table__group-row">
-            <th colSpan={3} scope="colgroup">
-              Player
-            </th>
-            <th
-              className="is-skills-group"
-              colSpan={SQUAD_SKILL_DEFINITIONS.length + 1}
-              scope="colgroup"
-            >
-              Skills
-            </th>
-            <th className="is-market-group" scope="colgroup">
-              Market Value
-            </th>
-            <th className="is-planning-group" scope="colgroup">
-              Planning
-            </th>
-          </tr>
           <tr>
             <th scope="col">Player</th>
             <th scope="col">Age</th>
@@ -444,7 +417,7 @@ function SquadPositionTable({
                 {skill.shortLabel}
               </th>
             ))}
-            <th scope="col">Current</th>
+            <th scope="col">Market Value</th>
             <th scope="col">Planning</th>
           </tr>
         </thead>

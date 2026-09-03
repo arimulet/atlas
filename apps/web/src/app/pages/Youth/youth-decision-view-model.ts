@@ -1,5 +1,7 @@
 import type {
+  AdvancedTrainingRecommendation,
   Confidence,
+  DevelopmentProjectionWarning,
   DevelopmentProfile,
   YouthDecision,
   YouthDecisionReason,
@@ -29,8 +31,10 @@ export interface YouthDecisionViewModel {
   decisionLabel: string;
   priority: "high" | "medium" | "low";
   priorityLabel: string;
-  confidence: Confidence;
-  confidenceLabel: string;
+  sportingConfidence: Confidence;
+  sportingConfidenceLabel: string;
+  economicConfidence: Confidence;
+  economicConfidenceLabel: string;
   prospectQualityLabel: string;
   developmentPotentialLabel: string;
   profileCoherenceLabel: string;
@@ -45,6 +49,7 @@ export interface YouthDecisionViewModel {
   weaknesses: YouthDecisionMessage[];
   market: YouthMarketSummary | null;
   development: YouthDevelopmentSummary;
+  advancedTraining: YouthAdvancedTrainingSummary;
   succession: YouthSuccessionSummary | null;
   resourceCompetition: YouthResourceSummary | null;
   candidate: YouthDecisionCandidate;
@@ -65,11 +70,26 @@ export interface YouthDevelopmentSummary {
   recommendedProfile: DevelopmentProfile | null;
   recommendedProfileLabel: string;
   targetCompletionWeeks: number | null;
+  forecastConfidenceLabel: string;
+  forecastStatusLabel: string;
+  nextSkillUpLabel: string;
+  forecastWarnings: YouthDecisionMessage[];
   advancedOpportunity: string;
   advancedRank: number | null;
   opportunityLabel: string;
   formationViable: boolean;
   changedProfile: boolean;
+}
+
+export interface YouthAdvancedTrainingSummary {
+  status: AdvancedTrainingRecommendation | null;
+  recommended: boolean;
+  currentlyAdvanced: boolean;
+  comparisonRank: number | null;
+  slotCount: number | null;
+  isTrial: boolean;
+  profileQuality: number | null;
+  profileViability: "viable" | "below_minimum" | null;
 }
 
 export interface YouthSuccessionSummary {
@@ -87,19 +107,13 @@ export interface YouthResourceSummary {
   competitionLabel: string;
 }
 
-export interface YouthSummaryViewModel {
-  academyPlayers: number;
-  decisionCandidates: number;
-  counts: Record<YouthDecision, number>;
-  highPriorityDecisions: number;
-}
-
 const decisionLabels: Record<YouthDecision, string> = {
   train: "Train",
   keep: "Keep",
   sell: "Sell",
   release: "Release",
-  hold: "Hold"
+  hold: "Hold",
+  unknown: "Unknown"
 };
 
 const confidenceLabels: Record<Confidence, string> = {
@@ -112,21 +126,29 @@ export function createYouthDecisionViewModels(
   planning: YouthDecisionPlanning | null,
   currency: string | null
 ): YouthDecisionViewModel[] {
-  return (planning?.candidates ?? [])
-    .map((candidate) => createYouthDecisionViewModel(candidate, currency))
-    .sort(compareYouthDecisionViewModels);
-}
+  const models = (planning?.candidates ?? []).map((candidate) =>
+    createYouthDecisionViewModel(candidate, currency, planning?.advancedTraining?.slotCount ?? null)
+  );
+  const comparisonRanks = new Map(
+    models
+      .filter((model) => model.development.advancedRank !== null)
+      .sort((left, right) => {
+        const leftRank = left.development.advancedRank ?? Number.POSITIVE_INFINITY;
+        const rightRank = right.development.advancedRank ?? Number.POSITIVE_INFINITY;
+        return leftRank - rightRank || left.playerName.localeCompare(right.playerName);
+      })
+      .map((model, index) => [model.playerId, index + 1] as const)
+  );
 
-export function createYouthSummaryViewModel(
-  planning: YouthDecisionPlanning | null,
-  academyPlayers: number
-): YouthSummaryViewModel {
-  return {
-    academyPlayers,
-    decisionCandidates: planning?.summary.recommendations.length ?? 0,
-    counts: planning?.summary.counts ?? { train: 0, keep: 0, sell: 0, release: 0, hold: 0 },
-    highPriorityDecisions: planning?.summary.highPriorityDecisions ?? 0
-  };
+  return models
+    .map((model) => ({
+      ...model,
+      advancedTraining: {
+        ...model.advancedTraining,
+        comparisonRank: comparisonRanks.get(model.playerId) ?? null
+      }
+    }))
+    .sort(compareYouthDecisionViewModels);
 }
 
 export function filterYouthDecisionViewModels(
@@ -136,6 +158,20 @@ export function filterYouthDecisionViewModels(
   if (filter === "all") return [...models];
   if (filter === "high") return models.filter((model) => model.priority === "high");
   return models.filter((model) => model.decision === filter);
+}
+
+export function orderYouthDecisionComparisonModels(
+  models: readonly YouthDecisionViewModel[]
+): YouthDecisionViewModel[] {
+  return [...models].sort((left, right) => {
+    if (left.advancedTraining.currentlyAdvanced !== right.advancedTraining.currentlyAdvanced) {
+      return left.advancedTraining.currentlyAdvanced ? -1 : 1;
+    }
+
+    const leftRank = left.advancedTraining.comparisonRank ?? Number.POSITIVE_INFINITY;
+    const rightRank = right.advancedTraining.comparisonRank ?? Number.POSITIVE_INFINITY;
+    return leftRank - rightRank || left.playerName.localeCompare(right.playerName);
+  });
 }
 
 export function profileLabel(profile: DevelopmentProfile | null): string {
@@ -235,8 +271,14 @@ export function mapYouthDecisionReason(reason: YouthDecisionReason): YouthDecisi
       };
     case "insufficient_evidence":
       return {
-        title: "More evidence required",
-        description: "ATLAS needs more evidence before making a firm recommendation."
+        title: "Evaluation incomplete",
+        description: "ATLAS cannot evaluate this player because essential information is missing."
+      };
+    case "insufficient_training_snapshots":
+      return {
+        title: "More training snapshots required",
+        description:
+          "ATLAS needs at least three training observations before recommending a decision."
       };
   }
 }
@@ -411,12 +453,87 @@ export function mapYouthFitReason(reason: YouthFitReason): YouthDecisionMessage 
   }
 }
 
+function projectionStatusLabel(
+  status: "projected" | "partial" | "unavailable" | undefined
+): string {
+  if (status === "projected") return "Complete";
+  if (status === "partial") return "Partial";
+  if (status === "unavailable") return "Unavailable";
+  return "Unknown";
+}
+
+function projectionNextSkillUpLabel(
+  projection: YouthDecisionCandidate["developmentProjection"]
+): string {
+  const step = projection?.steps[0];
+  if (!step || step.estimatedWeeks === null) return "Unknown";
+  return `${capitalize(step.skill)} ${step.toLevel} · ~${Math.round(step.estimatedWeeks)} weeks`;
+}
+
+export function mapDevelopmentProjectionWarning(
+  warning: DevelopmentProjectionWarning
+): YouthDecisionMessage {
+  switch (warning) {
+    case "unknown_current_sublevel":
+      return {
+        title: "Current sublevel unknown",
+        description: "The next skill-up starts from an unobserved partial level."
+      };
+    case "low_talent_confidence":
+      return {
+        title: "Talent estimate uncertain",
+        description: "Training speed has limited supporting evidence."
+      };
+    case "long_term_projection":
+      return {
+        title: "Long-term target",
+        description: "Part of the plan extends beyond two Sokker seasons."
+      };
+    case "advanced_training_assumed":
+      return {
+        title: "Advanced training assumed",
+        description: "The forecast assumes the player keeps advanced training."
+      };
+    case "formation_training_assumed":
+      return {
+        title: "Formation training assumed",
+        description: "The forecast assumes the player keeps formation training."
+      };
+    case "intensity_assumed":
+      return {
+        title: "Training intensity assumed",
+        description: "Future weeks use the latest observed intensity."
+      };
+    case "projection_horizon_exceeded":
+      return {
+        title: "Target exceeds projection horizon",
+        description: "The complete target is not viable within the modeled career horizon."
+      };
+    case "invalid_training_points":
+      return {
+        title: "Training points unavailable",
+        description: "The forecast cannot calculate valid weekly training points."
+      };
+    case "path_incomplete":
+      return {
+        title: "Development path incomplete",
+        description: "The complete target could not be scheduled."
+      };
+    case "continuous_training_not_assumed":
+      return {
+        title: "Continuous training not assumed",
+        description: "The forecast includes possible training interruptions."
+      };
+  }
+}
 export function createYouthDecisionViewModel(
   candidate: YouthDecisionCandidate,
-  currency: string | null
+  currency: string | null,
+  advancedTrainingSlotCount: number | null = null
 ): YouthDecisionViewModel {
   const recommendation = candidate.recommendation;
   const advanced = candidate.opportunity.advancedTraining;
+  const advancedTrainingRecommendation = candidate.advancedTrainingRecommendation ?? null;
   const succession = candidate.opportunity.succession;
   const capacity = candidate.opportunity.developmentCapacity;
   const completionWeeks =
@@ -436,8 +553,10 @@ export function createYouthDecisionViewModel(
     decisionLabel: decisionLabels[recommendation.decision],
     priority: recommendation.priority,
     priorityLabel: `${capitalize(recommendation.priority)} priority`,
-    confidence: recommendation.confidence,
-    confidenceLabel: confidenceLabels[recommendation.confidence],
+    sportingConfidence: recommendation.sportingConfidence,
+    sportingConfidenceLabel: confidenceLabels[recommendation.sportingConfidence],
+    economicConfidence: recommendation.economicConfidence,
+    economicConfidenceLabel: confidenceLabels[recommendation.economicConfidence],
     prospectQualityLabel: qualityLabel(recommendation.scores.prospectQuality),
     developmentPotentialLabel: qualityLabel(candidate.prospect.developmentPotentialScore),
     profileCoherenceLabel: qualityLabel(candidate.prospect.profileCoherenceScore),
@@ -458,6 +577,14 @@ export function createYouthDecisionViewModel(
       recommendedProfile: developmentProfile,
       recommendedProfileLabel: profileLabel(developmentProfile),
       targetCompletionWeeks: completionWeeks,
+      forecastConfidenceLabel: candidate.developmentProjection
+        ? confidenceLabels[candidate.developmentProjection.confidence]
+        : "Unknown",
+      forecastStatusLabel: projectionStatusLabel(candidate.developmentProjection?.projectionStatus),
+      nextSkillUpLabel: projectionNextSkillUpLabel(candidate.developmentProjection),
+      forecastWarnings: (candidate.developmentProjection?.warnings ?? []).map(
+        mapDevelopmentProjectionWarning
+      ),
       advancedOpportunity: advanced?.opportunity ?? "unknown",
       advancedRank: advanced?.projectedRank ?? null,
       opportunityLabel: fitLabel(recommendation.scores.developmentOpportunity),
@@ -467,6 +594,28 @@ export function createYouthDecisionViewModel(
       changedProfile:
         recommendation.recommendedProfile !== null &&
         recommendation.recommendedProfile !== candidate.initialProfile
+    },
+    advancedTraining: {
+      status: advancedTrainingRecommendation?.status ?? null,
+      recommended:
+        advancedTrainingRecommendation?.recommendedAdvanced ??
+        (advanced?.projectedRank !== null &&
+          advanced?.projectedRank !== undefined &&
+          advanced.projectedRank <= (advancedTrainingSlotCount ?? 10)),
+      currentlyAdvanced: candidate.currentlyAdvanced,
+      comparisonRank: null,
+      slotCount: advancedTrainingSlotCount,
+      isTrial: advancedTrainingRecommendation?.status === "trial_advanced",
+      profileQuality: advancedTrainingRecommendation?.evaluation.trialProfileQuality ?? null,
+      profileViability: advancedTrainingRecommendation?.reasons.some(
+        (reason) => reason.type === "trial_profile_not_viable"
+      )
+        ? "below_minimum"
+        : advancedTrainingRecommendation?.reasons.some(
+              (reason) => reason.type === "trial_profile_viable"
+            )
+          ? "viable"
+          : null
     },
     succession: succession
       ? {
@@ -532,12 +681,12 @@ function compareYouthDecisionViewModels(
   right: YouthDecisionViewModel
 ): number {
   const priority = { high: 3, medium: 2, low: 1 };
-  const action = { train: 5, sell: 4, release: 3, keep: 2, hold: 1 };
+  const action = { hold: 6, unknown: 5, train: 4, sell: 3, release: 2, keep: 1 };
   const confidence = { high: 3, medium: 2, low: 1 };
   return (
     priority[right.priority] - priority[left.priority] ||
     action[right.decision] - action[left.decision] ||
-    confidence[right.confidence] - confidence[left.confidence] ||
+    confidence[right.sportingConfidence] - confidence[left.sportingConfidence] ||
     left.playerName.localeCompare(right.playerName) ||
     left.playerId.localeCompare(right.playerId)
   );

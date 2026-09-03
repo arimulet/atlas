@@ -308,6 +308,46 @@
     margin-top: 16px;
   }
 
+  .atlas-finances-development-upside {
+    align-items: center;
+    background: color-mix(in srgb, var(--atlas-accent) 10%, transparent);
+    border-left: 3px solid var(--atlas-accent);
+    display: grid;
+    gap: 4px 12px;
+    grid-template-columns: 1fr auto;
+    margin-top: 16px;
+    padding: 10px 12px;
+  }
+
+  .atlas-finances-development-upside div {
+    display: grid;
+    gap: 2px;
+  }
+
+  .atlas-finances-development-upside span {
+    color: var(--atlas-text-muted);
+    font-size: 0.65rem;
+    font-weight: 750;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .atlas-finances-development-upside small,
+  .atlas-finances-development-upside p {
+    color: var(--atlas-text-secondary);
+    font-size: 0.72rem;
+  }
+
+  .atlas-finances-development-upside strong {
+    color: var(--atlas-text);
+    font-size: 0.95rem;
+  }
+
+  .atlas-finances-development-upside p {
+    grid-column: 1 / -1;
+    margin: 0;
+  }
+
   .atlas-finances-compact-list li {
     color: var(--atlas-text-secondary);
     font-size: 0.78rem;

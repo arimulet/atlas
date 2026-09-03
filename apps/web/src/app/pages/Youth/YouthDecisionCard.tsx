@@ -13,7 +13,8 @@ interface YouthDecisionCardProps {
 
 export function YouthDecisionCard({ model, onSelectPlayer }: YouthDecisionCardProps) {
   const supportingReasons = model.candidate.opportunity.reasons.map(mapYouthFitReason);
-  const showLowConfidenceWarning = model.confidence === "low" && model.decision !== "hold";
+  const showLowSportingConfidenceWarning =
+    model.sportingConfidence === "low" && model.decision !== "hold" && model.decision !== "unknown";
   const profileChanged = model.development.changedProfile;
 
   return (
@@ -33,14 +34,21 @@ export function YouthDecisionCard({ model, onSelectPlayer }: YouthDecisionCardPr
             {model.decisionLabel}
           </span>
           <span className="atlas-youth-decision-card__meta">
-            {model.priorityLabel} · {model.confidenceLabel}
+            {model.priorityLabel} · Sporting: {model.sportingConfidenceLabel}
           </span>
         </div>
       </header>
 
-      {showLowConfidenceWarning ? (
+      {model.advancedTraining.isTrial ? (
+        <p className="atlas-youth-decision-card__trial-advanced">
+          ◌ Trial advanced training: this provisional slot requires validation with real senior
+          training weeks.
+        </p>
+      ) : null}
+
+      {showLowSportingConfidenceWarning ? (
         <p className="atlas-youth-decision-card__confidence-warning">
-          Recommendation may change as more evidence becomes available.
+          Sporting recommendation may change as more evidence becomes available.
         </p>
       ) : null}
 
@@ -91,13 +99,28 @@ export function YouthDecisionCard({ model, onSelectPlayer }: YouthDecisionCardPr
               />
             ) : null}
             <MetricRow
+              label="Projection status"
+              value={`${model.development.forecastStatusLabel} · ${model.development.forecastConfidenceLabel}`}
+            />
+            <MetricRow label="Next planned skill-up" value={model.development.nextSkillUpLabel} />
+            <MetricRow
               label="Target completion"
               value={formatWeeks(model.development.targetCompletionWeeks)}
             />
+            <MessageGroup title="Projection notes" messages={model.development.forecastWarnings} />
             <MetricRow
               label="Advanced training"
               value={`${capitalize(model.development.advancedOpportunity)}${model.development.advancedRank ? ` · #${model.development.advancedRank}` : ""}`}
             />
+            {model.advancedTraining.isTrial ? (
+              <MetricRow label="Advanced slot status" value="Trial advanced" />
+            ) : null}
+            {model.advancedTraining.profileViability === "below_minimum" ? (
+              <MetricRow
+                label="Trial profile"
+                value="Below the minimum quality for an advanced-training trial"
+              />
+            ) : null}
             {model.decision === "train" ? (
               <MetricRow label="Training priority" value={model.priorityLabel} />
             ) : null}
@@ -137,8 +160,9 @@ export function YouthDecisionCard({ model, onSelectPlayer }: YouthDecisionCardPr
                   value.
                 </p>
               ) : null}
+              <MetricRow label="Economic confidence" value={model.economicConfidenceLabel} />
               <MetricRow
-                label="Market confidence"
+                label="Current market estimate confidence"
                 value={model.market.confidence ? capitalize(model.market.confidence) : "Unknown"}
               />
               {model.market.comparableSales !== null ? (

@@ -1,4 +1,4 @@
-import { normalizeSeasonWeek } from "../sokker/calendar.js";
+import { normalizeSeasonWeek, WEEKS_PER_SOKKER_SEASON } from "../sokker/calendar.js";
 import {
   calculateRequiredTrainingPoints,
   calculateWeeklyTrainingPointsByKind
@@ -22,7 +22,7 @@ import type {
 export const MAX_DEVELOPMENT_PROJECTION_WEEKS = 520;
 export const DEVELOPMENT_PROJECTION_LONG_TERM_WEEKS = 26;
 export const DEVELOPMENT_PROJECTION_MEDIUM_TERM_WEEKS = 8;
-export const DEVELOPMENT_PROJECTION_WEEKS_PER_YEAR = 52;
+export const DEVELOPMENT_PROJECTION_WEEKS_PER_YEAR = WEEKS_PER_SOKKER_SEASON;
 export const DEVELOPMENT_PROJECTION_DAYS_PER_WEEK = 7;
 export const DEVELOPMENT_PROJECTION_DAYS_PER_YEAR = 365.25;
 
@@ -86,7 +86,7 @@ export function projectDevelopment(
         state,
         skill: pathStep.skill,
         toLevel: pathStep.toLevel,
-        usePartialProgress: firstStep
+        usePartialProgress: progressForSkill(context.currentTrainingProgress, pathStep.skill) !== null
       });
 
       if (requiredTrainingPoints === null) {
@@ -469,15 +469,9 @@ function usableTalent(context: DevelopmentProjectionContext): number | null {
 
 function projectAge(
   context: DevelopmentProjectionContext,
-  date: Date,
+  _date: Date,
   elapsedWeeks: number
 ): number {
-  if (context.birthDate instanceof Date && !Number.isNaN(context.birthDate.getTime())) {
-    return (
-      (date.getTime() - context.birthDate.getTime()) /
-      (DEVELOPMENT_PROJECTION_DAYS_PER_YEAR * 24 * 60 * 60 * 1000)
-    );
-  }
   return context.player.age + elapsedWeeks / DEVELOPMENT_PROJECTION_WEEKS_PER_YEAR;
 }
 

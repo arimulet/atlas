@@ -10,7 +10,8 @@ interface TrainingDetailsProps {
 }
 
 export function TrainingDetails({ history, player }: TrainingDetailsProps) {
-  const seasons = groupReportsBySeason(history);
+  const sortedHistory = [...history].sort((left, right) => right.gameWeek - left.gameWeek);
+  const seasons = groupReportsBySeason(sortedHistory);
 
   if (seasons.length === 0) {
     return <p className="atlas-training-player-detail__message">No training history available.</p>;
@@ -45,6 +46,7 @@ export function TrainingDetails({ history, player }: TrainingDetailsProps) {
                   key={skill.key}
                   player={player}
                   reports={season.reports}
+                  allReports={sortedHistory}
                   skill={skill.key}
                 />
               ))}
@@ -60,16 +62,17 @@ interface SeasonSkillCellProps {
   isLatestSeason: boolean;
   player: TrainingDetailsProps["player"];
   reports: TrainingReport[];
+  allReports: TrainingReport[];
   skill: PlayerSkillKey;
 }
 
-function SeasonSkillCell({ isLatestSeason, player, reports, skill }: SeasonSkillCellProps) {
+function SeasonSkillCell({ isLatestSeason, player, reports, allReports, skill }: SeasonSkillCellProps) {
   const isActiveSkill = trainingSkillKey(player.trainingType) === skill;
 
   return (
     <td className={isActiveSkill && isLatestSeason ? "is-active-skill" : undefined}>
       <div className="atlas-training-details__level-groups">
-        {groupReportsBySkillLevel(reports, skill).map((group) => (
+        {groupReportsBySkillLevel(reports, allReports, skill).map((group) => (
           <div className="atlas-training-details__level-group" key={group.key}>
             <span className="atlas-training-details__level">L{group.level ?? "—"}</span>
             <div className="atlas-training-details__sessions">
@@ -142,7 +145,7 @@ function groupReportsBySeason(history: TrainingReport[]): Array<{
 }> {
   const seasons = new Map<string, TrainingReport[]>();
 
-  for (const report of [...history].sort((left, right) => right.gameWeek - left.gameWeek)) {
+  for (const report of history) {
     const key =
       report.season === null || report.season === undefined ? "unknown" : String(report.season);
     const reports = seasons.get(key) ?? [];
@@ -159,22 +162,43 @@ function groupReportsBySeason(history: TrainingReport[]): Array<{
 
 function groupReportsBySkillLevel(
   reports: TrainingReport[],
+  allReports: TrainingReport[],
   skill: PlayerSkillKey
 ): Array<{ key: string; level: number | undefined; reports: TrainingReport[] }> {
-  return reports.reduce<
-    Array<{ key: string; level: number | undefined; reports: TrainingReport[] }>
-  >((groups, report) => {
-    const level = skillLevel(report, skill);
+  const groups: Array<{ key: string; level: number | undefined; reports: TrainingReport[] }> = [];
+
+  for (const report of reports) {
+    const olderReport = allReports.find((r) => r.gameWeek < report.gameWeek);
+    const levelBeforeTraining = olderReport ? skillLevel(olderReport, skill) : skillLevel(report, skill);
     const current = groups.at(-1);
 
-    if (current && current.level === level) {
+    if (current && current.level === levelBeforeTraining) {
       current.reports.push(report);
-      return groups;
+    } else {
+      groups.push({
+        key: `${report.gameWeek}-${levelBeforeTraining ?? "unknown"}`,
+        level: levelBeforeTraining,
+        reports: [report]
+      });
     }
+  }
 
-    groups.push({ key: `${report.gameWeek}-${level ?? "unknown"}`, level, reports: [report] });
-    return groups;
-  }, []);
+  if (reports.length > 0) {
+    const newestReport = reports[0];
+    if (newestReport) {
+      const levelAfterTraining = skillLevel(newestReport, skill);
+
+      if (levelAfterTraining !== undefined && levelAfterTraining !== groups[0]?.level) {
+        groups.unshift({
+          key: `ending-${newestReport.gameWeek}-${levelAfterTraining}`,
+          level: levelAfterTraining,
+          reports: []
+        });
+      }
+    }
+  }
+
+  return groups;
 }
 function formatEffectiveness(report: TrainingReport): string {
   return formatNumber(effectivePoints(report));

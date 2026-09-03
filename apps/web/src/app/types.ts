@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { MainViewId } from "./routing";
 import type {
   AdvancedTrainingOptimization,
@@ -9,7 +10,12 @@ import type {
   SquadRoleAssignment,
   WeeklyTrainingReport
 } from "@atlas/domain";
-export type { YouthDecisionPlanning } from "@atlas/application";
+export type { 
+  YouthDecisionPlanning,
+  YouthMatchPerformancesDto,
+  YouthPlayerMatchPerformanceDto,
+  YouthPlayerMatchRating
+} from "@atlas/application";
 
 export type { SquadRole } from "@atlas/domain";
 
@@ -18,8 +24,14 @@ export type ViewId = MainViewId | "player-detail";
 export interface NavigationItem {
   id: MainViewId;
   label: string;
-  icon: string;
+  icon: ReactNode;
   path: string;
+}
+
+export interface NavigationGroup {
+  id: string;
+  label: string;
+  items: NavigationItem[];
 }
 
 export type DashboardStatus = "idle" | "loading" | "ready" | "error";
@@ -624,6 +636,7 @@ export interface RealYouthAcademyPlanning {
 
 export interface RealYouthAcademyObservedPlayer {
   id: string;
+  playerId?: number;
   externalId: string | null;
   name: string;
   age: number;
@@ -637,6 +650,7 @@ export interface RealYouthAcademyObservedPlayer {
 
 export interface RealYouthAcademyPlayerPlan {
   id: string;
+  playerId?: number;
   externalId: string | null;
   name: string;
   age: number;
@@ -650,6 +664,8 @@ export interface RealYouthAcademyPlayerPlan {
   levelPops: number | null;
   talent: number | null;
   expectedLevel: number | null;
+  formation: number | null;
+  observations: string;
   status: "in_academy" | "ready_for_promotion" | "promoted";
   category: RealYouthAcademyCategory;
   severity: Severity;
@@ -657,6 +673,14 @@ export interface RealYouthAcademyPlayerPlan {
   rationale: string;
   signals: RealYouthAcademySignal[];
   warnings: RealYouthAcademyWarning[];
+  history: YouthSkillHistoryEntry[];
+}
+
+export interface YouthSkillHistoryEntry {
+  gameWeek: number;
+  season: number;
+  seasonWeek: number;
+  skill: number;
 }
 
 export interface RealYouthAcademySignal {

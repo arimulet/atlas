@@ -874,8 +874,8 @@
 }
 
 .atlas .atlas-training-table__skill-marker {
-  left: calc(50% + 1.1em);
   position: absolute;
+  right: calc(50% + 0.7em);
   top: 50%;
   transform: translateY(-50%);
 }
@@ -886,10 +886,6 @@
 
 .atlas .atlas-training-table__skill.is-skill-down {
   background: color-mix(in srgb, var(--semantic-error-text) 13%, transparent);
-}
-
-.atlas .atlas-training-table__skill-marker {
-  left: calc(50% + 0.8em);
 }
 
 .atlas .atlas-training-table__recommendation {
@@ -918,6 +914,11 @@
 .atlas .atlas-training-status-indicator.is-attention {
   background: color-mix(in srgb, var(--semantic-warning-text) 18%, transparent);
   color: var(--semantic-warning-text);
+}
+
+.atlas .atlas-training-status-indicator.is-training-prospect {
+  background: color-mix(in srgb, var(--semantic-success-text) 18%, transparent);
+  color: var(--semantic-success-text);
 }
 
 .atlas .atlas-training-status-indicator.is-info {

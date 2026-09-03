@@ -68,7 +68,14 @@ export function calculatePlayerLifecycle(
   const hasLowCurrentContribution =
     metrics.currentContributionScore === null ||
     metrics.currentContributionScore < config.usefulContributionThreshold;
-
+  const isBelowRotationStandard =
+    metrics.profile !== null &&
+    !hasPrimarySkillsAtLeast(
+      context,
+      metrics.profile,
+      config.rotationPrimarySkillMinimum,
+      config.rotationStaminaMinimum
+    );
   if (
     age !== null &&
     (age >= config.declineLifecycleAge || ageFactor >= config.declineLifecycleAgeFactor) &&
@@ -84,6 +91,10 @@ export function calculatePlayerLifecycle(
     !hasMaterialGap
   ) {
     return "late_prime";
+  }
+
+  if (age !== null && age <= config.prospectMaximumAge && isBelowRotationStandard) {
+    return "prospect";
   }
 
   if (
@@ -132,7 +143,6 @@ export function assessSquadRole(
     context,
     metrics,
     lifecycle,
-    percentile,
     config
   });
   const stableRole = stabilizeRole(automaticRole, context, metrics, lifecycle, config);
@@ -427,16 +437,29 @@ function classifyAutomaticRole(input: {
   context: SquadPlayerContext;
   metrics: SquadContributionMetrics;
   lifecycle: PlayerLifecycleStage;
-  percentile: number | null;
   config: SquadPlanningConfig;
 }): SquadRole {
-  const { metrics, lifecycle, percentile, config } = input;
+  const { metrics, lifecycle, config } = input;
   const current = metrics.currentContributionScore ?? 0;
   const future = metrics.futureContributionScore ?? current;
   const potential = metrics.developmentPotentialScore ?? 0;
   const gap = metrics.developmentGap ?? 0;
-  const isRelativeCore = percentile !== null && percentile >= 0.75;
-
+  const isCoreStandard =
+    metrics.profile !== null &&
+    hasPrimarySkillsAtLeast(
+      input.context,
+      metrics.profile,
+      config.corePrimarySkillMinimum,
+      config.coreStaminaMinimum
+    );
+  const isRotationStandard =
+    metrics.profile !== null &&
+    hasPrimarySkillsAtLeast(
+      input.context,
+      metrics.profile,
+      config.rotationPrimarySkillMinimum,
+      config.rotationStaminaMinimum
+    );
   if (
     (lifecycle === "decline" || lifecycle === "late_prime") &&
     potential <= config.transitionDevelopmentThreshold &&
@@ -444,11 +467,7 @@ function classifyAutomaticRole(input: {
   ) {
     return "transition";
   }
-  if (
-    lifecycle === "prospect" &&
-    potential >= config.prospectPotentialThreshold &&
-    future >= config.highFutureContributionThreshold
-  ) {
+  if (lifecycle === "prospect") {
     return "prospect";
   }
   if (
@@ -459,13 +478,10 @@ function classifyAutomaticRole(input: {
   ) {
     return "developing";
   }
-  if (current >= config.coreContributionThreshold || isRelativeCore) {
+  if (isCoreStandard && current >= config.usefulContributionThreshold) {
     return "core";
   }
-  if (
-    current >= config.usefulContributionThreshold ||
-    (percentile !== null && percentile >= 0.45)
-  ) {
+  if (isRotationStandard && current >= config.usefulContributionThreshold) {
     return "rotation";
   }
   return "depth";
@@ -607,6 +623,23 @@ function agePotentialFactor(context: SquadPlayerContext): number {
 function talentFactorFor(talent: TalentEstimate | null | undefined): number {
   if (!talent?.value || !Number.isFinite(talent.value)) return 0.7;
   return clamp(talent.value / 1.2, 0.55, 1.15);
+}
+
+function hasPrimarySkillsAtLeast(
+  context: SquadPlayerContext,
+  profile: DevelopmentProfile,
+  primarySkillMinimum: number,
+  staminaMinimum: number
+): boolean {
+  const primarySkills = DEVELOPMENT_PROFILES[profile].relevantSkills.filter(
+    (skill) => skill.priority === "primary"
+  );
+
+  return (
+    primarySkills.length > 0 &&
+    readSkill(context, "stamina") >= staminaMinimum &&
+    primarySkills.every((skill) => readSkill(context, skill.skill) >= primarySkillMinimum)
+  );
 }
 
 function readSkill(context: SquadPlayerContext, skill: DevelopmentSkill): number {

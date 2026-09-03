@@ -101,6 +101,7 @@ export interface MonetizableAssetAssessment {
   strategicImportance: number | null;
   liquidityPotential: "high" | "medium" | "low";
   confidence: Confidence;
+  isTheoretical: boolean;
 }
 
 export interface CapitalOpportunityCost {
