@@ -62,8 +62,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, pass: string) => {
     try {
       await signInWithEmailAndPassword(auth, email, pass);
-    } catch (err: any) {
-      const code = err?.code || "";
+    } catch (err) {
+      const code = (err as { code?: string })?.code || "";
       throw new Error(translateFirebaseError(code));
     }
   };
@@ -71,8 +71,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signUp = async (email: string, pass: string) => {
     try {
       await createUserWithEmailAndPassword(auth, email, pass);
-    } catch (err: any) {
-      const code = err?.code || "";
+    } catch (err) {
+      const code = (err as { code?: string })?.code || "";
       throw new Error(translateFirebaseError(code));
     }
   };
@@ -80,8 +80,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     try {
       await signOut(auth);
-    } catch (err: any) {
-      const code = err?.code || "";
+    } catch (err) {
+      const code = (err as { code?: string })?.code || "";
       throw new Error(translateFirebaseError(code));
     }
   };
@@ -89,8 +89,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const resetPassword = async (email: string) => {
     try {
       await sendPasswordResetEmail(auth, email);
-    } catch (err: any) {
-      const code = err?.code || "";
+    } catch (err) {
+      const code = (err as { code?: string })?.code || "";
       throw new Error(translateFirebaseError(code));
     }
   };

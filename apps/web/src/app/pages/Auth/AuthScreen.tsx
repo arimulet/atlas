@@ -44,8 +44,9 @@ export function AuthScreen() {
       try {
         await resetPassword(email.trim());
         setSuccessMessage("Se ha enviado un correo con instrucciones para restablecer su contraseña.");
-      } catch (err: any) {
-        setErrorMessage(err.message || "No se pudo enviar el correo de recuperación.");
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "No se pudo enviar el correo de recuperación.";
+        setErrorMessage(message);
       } finally {
         setIsSubmitting(false);
       }
@@ -75,8 +76,9 @@ export function AuthScreen() {
       } else {
         await signUp(email.trim(), password);
       }
-    } catch (err: any) {
-      setErrorMessage(err.message || "Ocurrió un error al procesar su solicitud.");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Ocurrió un error al procesar su solicitud.";
+      setErrorMessage(message);
     } finally {
       setIsSubmitting(false);
     }
