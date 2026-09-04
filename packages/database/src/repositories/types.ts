@@ -1,4 +1,4 @@
-﻿export type PersistedDevelopmentProfile =
+export type PersistedDevelopmentProfile =
   "goalkeeper" | "defender" | "wing_defender" | "midfielder" | "winger" | "forward";
 
 export type PersistedDevelopmentSkill =
@@ -37,9 +37,32 @@ export interface PersistedClubStaffMember {
   active: boolean;
 }
 
+export interface SaveClubInput {
+  clubId: number;
+  ownerUserId?: string | null;
+  sokkerUsername?: string | null;
+  country: number;
+  training: {
+    GK: number;
+    DEF: number;
+    MID: number;
+    ATT: number;
+  };
+  name: string;
+  gameWeek?: number | null;
+  week?: number | null;
+  lastSnapshotDate?: Date | null;
+  observedAt?: Date | null;
+  currency: string;
+  budget?: number | null;
+  staff?: PersistedClubStaffMember[];
+}
+
 export interface PersistedClub {
   id: string;
   clubId: number;
+  ownerUserId: string | null;
+  sokkerUsername: string | null;
   country: number;
   currency: string;
   training: {

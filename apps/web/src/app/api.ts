@@ -297,13 +297,35 @@ export async function fetchRealYouthAcademyPlanning(
   return body;
 }
 
-export async function syncSokker(payload: unknown): Promise<{
+export async function fetchUserClubs(
+  token?: string
+): Promise<{ clubs: Array<{ id: string; clubId: number; name: string }> }> {
+  const headers: Record<string, string> = {};
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+  const response = await fetch("/api/user/clubs", { headers });
+  if (!response.ok) {
+    return { clubs: [] };
+  }
+  return response.json();
+}
+
+export async function syncSokker(
+  payload: unknown,
+  token?: string
+): Promise<{
   response: Response;
   body: ImportResponse;
 }> {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
   const response = await fetch("/api/imports/sokker-sync", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify(payload)
   });
 

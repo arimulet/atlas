@@ -118,6 +118,10 @@ export const getClubProfile = async (clubId: ClubId): Promise<PersistedClub> => 
   return club;
 };
 
+export const getUserClubs = async (ownerUserId: string): Promise<PersistedClub[]> => {
+  return clubRepository.findClubsByOwnerUserId(ownerUserId);
+};
+
 export const updateClubProfile = async (input: UpdateClubProfileInput): Promise<PersistedClub> => {
   return clubRepository.updateManualProfile({
     clubId: input.clubId,

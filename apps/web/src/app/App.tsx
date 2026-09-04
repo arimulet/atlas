@@ -10,6 +10,7 @@ import {
   fetchSquadPlanningRecommendations,
   fetchYouthPipelinePlanning,
   fetchTrainingPageData,
+  fetchUserClubs,
   resetSquadRoleAssignment,
   saveSquadRoleAssignment,
   syncSokker
@@ -209,9 +210,31 @@ function AuthenticatedApp() {
     loadSquadPlanning
   ]);
 
+  useEffect(() => {
+    if (!user || activeClubId) {
+      return;
+    }
+
+    void (async () => {
+      try {
+        const token = await user.getIdToken();
+        const data = await fetchUserClubs(token);
+        const firstClub = data.clubs?.[0];
+        if (firstClub) {
+          const firstClubId = String(firstClub.clubId);
+          window.localStorage.setItem(lastClubStorageKey, firstClubId);
+          setActiveClubId(firstClubId);
+        }
+      } catch {
+        // Fallback si no hay clubes vinculados aún
+      }
+    })();
+  }, [user, activeClubId]);
+
   const handleSokkerImport = useCallback(
     async (credentials: SokkerImportCredentials) => {
-      const { response, body } = await syncSokker(credentials);
+      const token = user ? await user.getIdToken() : undefined;
+      const { response, body } = await syncSokker(credentials, token);
 
       if (!response.ok || body.importResult.status === "rejected") {
         const message = body.importResult.errors
@@ -255,6 +278,7 @@ function AuthenticatedApp() {
       return body;
     },
     [
+      user,
       loadDashboard,
       loadPlayerDevelopment,
       loadSquadPlanning,
