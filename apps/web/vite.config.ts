@@ -4,6 +4,9 @@ import path from 'path'
 
 export default defineConfig({
   plugins: [react()],
+  define: {
+    "process.env": {}
+  },
   resolve: {
     alias: {
       '@atlas/web': path.resolve(__dirname, './src') // Ajusta según la estructura de tu proyecto
