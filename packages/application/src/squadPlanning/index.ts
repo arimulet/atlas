@@ -1,4 +1,4 @@
-﻿import {
+import {
   MongoClubRepository,
   MongoSnapshotRepository,
   MongoPlayerRepository,
@@ -87,10 +87,15 @@ export async function getSquadAssessment(clubId: ClubId): Promise<SquadAssessmen
   const club = await clubRepository.findById(clubId.toString());
   if (!club) throw new Error(`Club not found: ${clubId}`);
 
-  const [snapshots, trainingWeeks, assignments] = await Promise.all([
+  const countryRepo = new MongoCountryRepository();
+
+  const [snapshots, trainingWeeks, assignments, rawOverrides, allCountries, rawTransfers] = await Promise.all([
     snapshotRepository.listByClub(clubId),
     trainingWeekRepository.listByClub(club.clubId),
-    playerRepository.listSquadRoles(club.clubId)
+    playerRepository.listSquadRoles(club.clubId),
+    playerRepository.listDevelopmentOverrides(club.clubId),
+    countryRepo.getAll(),
+    findFinalMarketTransfersUpToDate(new Date())
   ]);
   const latest = snapshots.at(-1);
   if (!latest) {
@@ -108,18 +113,7 @@ export async function getSquadAssessment(clubId: ClubId): Promise<SquadAssessmen
     assignments.map((assignment) => [assignment.playerId, assignment])
   );
   const overrides = new Map(
-    await Promise.all(
-      latest.players.map(
-        async (player) =>
-          [
-            player.playerId,
-            await playerRepository.findDevelopmentOverride({
-              playerId: player.playerId,
-              clubId: club.clubId
-            })
-          ] as const
-      )
-    )
+    rawOverrides.map((override) => [override.playerId, override])
   );
   const contexts = latest.players.map((player) =>
     buildPlayerContext(
@@ -132,13 +126,10 @@ export async function getSquadAssessment(clubId: ClubId): Promise<SquadAssessmen
     )
   );
 
-  const countryRepo = new MongoCountryRepository();
-  const allCountries = await countryRepo.getAll();
   const clubCountry = allCountries.find(c => c.currencyName === club.currency || c.countryId === club.country);
   const currencyRate = clubCountry?.currencyRate ?? 1;
   const currencyName = clubCountry?.currencyName ?? club.currency;
 
-  const rawTransfers = await findFinalMarketTransfersUpToDate(new Date());
   const mappedTransfers = rawTransfers.map(t => mapMarketTransferToRecord(t, currencyName, currencyRate));
 
   const assessment = assessSquad(contexts);

@@ -132,6 +132,24 @@ export class MongoPlayerRepository {
       { $unset: { development: 1 } }
     );
   }
+
+  async listDevelopmentOverrides(clubId: number): Promise<PersistedPlayerDevelopmentOverride[]> {
+    const players = await PlayerModel.find({
+      clubId,
+      development: { $exists: true, $ne: null }
+    }).sort({ playerId: 1 });
+
+    return players
+      .map((player) => mapPlayer(player.toObject()))
+      .filter((player): player is PersistedPlayer & { development: NonNullable<PersistedPlayer["development"]> } => Boolean(player.development))
+      .map((player) => ({
+        id: player.id,
+        playerId: player.playerId,
+        clubId: player.clubId,
+        profile: player.development.profile,
+        targetLevels: player.development.targetLevels
+      }));
+  }
   async listSquadRoles(clubId: number): Promise<PersistedSquadRoleAssignment[]> {
     const players = await PlayerModel.find({
       clubId,
