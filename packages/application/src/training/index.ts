@@ -5,9 +5,12 @@ import {
   MongoSnapshotRepository,
   MongoTrainingWeekRepository,
   type PersistedJunior,
+  type PersistedPlayer,
   type PersistedPlayerSkills,
   type PersistedPlayerSkillsChange,
-  type PersistedPlayerSnapshot
+  type PersistedPlayerSnapshot,
+  type PersistedSnapshot,
+  type PersistedPlayerTrainingWeek
 } from "@atlas/database";
 import {
   buildTrainingRecommendations,
@@ -130,17 +133,10 @@ export async function getTrainingPageData(clubId: ClubId): Promise<TrainingPageD
   };
 }
 
-export async function getWeeklyTrainingReport(
-  clubId: ClubId,
+export function buildWeeklyTrainingReportFromLoadedData(
+  reports: PersistedPlayerTrainingWeek[],
   gameWeek?: number
-): Promise<WeeklyTrainingReport> {
-  const club = await clubRepository.findById(clubId.toString());
-
-  if (!club) {
-    throw new Error(`Club not found: ${clubId}`);
-  }
-
-  const reports = await trainingWeekRepository.listByClub(club.clubId);
+): WeeklyTrainingReport {
   const histories = buildTrainingHistories(reports);
   const talents = new Map<number, number | null>();
 
@@ -155,21 +151,26 @@ export async function getWeeklyTrainingReport(
   });
 }
 
-export async function getTrainingRecommendations(
+export async function getWeeklyTrainingReport(
   clubId: ClubId,
   gameWeek?: number
-): Promise<PlayerTrainingRecommendation[]> {
+): Promise<WeeklyTrainingReport> {
   const club = await clubRepository.findById(clubId.toString());
 
   if (!club) {
     throw new Error(`Club not found: ${clubId}`);
   }
 
-  const [reports, snapshots, persistedPlayers] = await Promise.all([
-    trainingWeekRepository.listByClub(club.clubId),
-    snapshotRepository.listByClub(clubId),
-    playerRepository.listByClub(club.clubId)
-  ]);
+  const reports = await trainingWeekRepository.listByClub(club.clubId);
+  return buildWeeklyTrainingReportFromLoadedData(reports, gameWeek);
+}
+
+export function buildTrainingRecommendationsFromLoadedData(
+  reports: PersistedPlayerTrainingWeek[],
+  snapshots: PersistedSnapshot[],
+  persistedPlayers: PersistedPlayer[],
+  gameWeek?: number
+): PlayerTrainingRecommendation[] {
   const persistedPlayerMap = new Map(persistedPlayers.map((p) => [p.playerId, p]));
   const histories = buildTrainingHistories(reports);
   const talentByPlayer = new Map<number, ReturnType<typeof estimateTalentFromTrainingHistory>>();
@@ -219,22 +220,31 @@ export async function getTrainingRecommendations(
   );
 }
 
-export async function getAdvancedTrainingOptimization(
+export async function getTrainingRecommendations(
   clubId: ClubId,
   gameWeek?: number
-): Promise<AdvancedTrainingOptimization> {
+): Promise<PlayerTrainingRecommendation[]> {
   const club = await clubRepository.findById(clubId.toString());
 
   if (!club) {
     throw new Error(`Club not found: ${clubId}`);
   }
 
-  const [reports, snapshots, juniors, persistedPlayers] = await Promise.all([
+  const [reports, snapshots, persistedPlayers] = await Promise.all([
     trainingWeekRepository.listByClub(club.clubId),
     snapshotRepository.listByClub(clubId),
-    juniorRepository.listByClub(club.clubId),
     playerRepository.listByClub(club.clubId)
   ]);
+  return buildTrainingRecommendationsFromLoadedData(reports, snapshots, persistedPlayers, gameWeek);
+}
+
+export function buildAdvancedTrainingOptimizationFromLoadedData(
+  reports: PersistedPlayerTrainingWeek[],
+  snapshots: PersistedSnapshot[],
+  juniors: PersistedJunior[],
+  persistedPlayers: PersistedPlayer[],
+  gameWeek?: number
+): AdvancedTrainingOptimization {
   const persistedPlayerMap = new Map(persistedPlayers.map((p) => [p.playerId, p]));
   const histories = buildTrainingHistories(reports);
   const talentByPlayer = new Map<number, ReturnType<typeof estimateTalentFromTrainingHistory>>();
@@ -360,7 +370,7 @@ export async function getAdvancedTrainingOptimization(
           ? {
               trial: {
                 projectedIntensity,
-                ...(academyTalent !== undefined ? { academyTalent } : {})
+                ...(academyTalent !== undefined ? { academyTalent: academyTalent ?? null } : {})
               }
             }
           : {})
@@ -389,17 +399,52 @@ export async function getAdvancedTrainingOptimization(
     );
   const contexts = [...historicalContexts, ...trialContexts];
 
-  return optimizeAdvancedTrainingSlots(contexts, weeklyReport.gameWeek);
+  return optimizeAdvancedTrainingSlots(contexts, weeklyReport.gameWeek ?? undefined);
+}
+
+export async function getAdvancedTrainingOptimization(
+  clubId: ClubId,
+  gameWeek?: number
+): Promise<AdvancedTrainingOptimization> {
+  const club = await clubRepository.findById(clubId.toString());
+
+  if (!club) {
+    throw new Error(`Club not found: ${clubId}`);
+  }
+
+  const [reports, snapshots, juniors, persistedPlayers] = await Promise.all([
+    trainingWeekRepository.listByClub(club.clubId),
+    snapshotRepository.listByClub(clubId),
+    juniorRepository.listByClub(club.clubId),
+    playerRepository.listByClub(club.clubId)
+  ]);
+  return buildAdvancedTrainingOptimizationFromLoadedData(reports, snapshots, juniors, persistedPlayers, gameWeek);
 }
 
 export async function getWeeklyTrainingIntelligence(
   clubId: ClubId
 ): Promise<WeeklyTrainingIntelligence> {
-  const [report, recommendations, advancedOptimization] = await Promise.all([
-    getWeeklyTrainingReport(clubId),
-    getTrainingRecommendations(clubId),
-    getAdvancedTrainingOptimization(clubId)
+  const club = await clubRepository.findById(clubId.toString());
+
+  if (!club) {
+    throw new Error(`Club not found: ${clubId}`);
+  }
+
+  const [reports, snapshots, juniors, persistedPlayers] = await Promise.all([
+    trainingWeekRepository.listByClub(club.clubId),
+    snapshotRepository.listByClub(clubId),
+    juniorRepository.listByClub(club.clubId),
+    playerRepository.listByClub(club.clubId)
   ]);
+
+  const report = buildWeeklyTrainingReportFromLoadedData(reports);
+  const recommendations = buildTrainingRecommendationsFromLoadedData(reports, snapshots, persistedPlayers);
+  const advancedOptimization = buildAdvancedTrainingOptimizationFromLoadedData(
+    reports,
+    snapshots,
+    juniors,
+    persistedPlayers
+  );
 
   return { report, recommendations, advancedOptimization };
 }
