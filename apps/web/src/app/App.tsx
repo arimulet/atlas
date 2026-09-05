@@ -19,6 +19,7 @@ import type {
   ClubDashboard,
   DashboardStatus,
   ImportResponse,
+  InitialStateBundle,
   PlayerDevelopment,
   RealYouthAcademyPlanning,
   SquadPlanningBundle,
@@ -46,36 +47,53 @@ import { AuthScreen } from "./pages/Auth/AuthScreen";
 
 const lastClubStorageKey = "atlas.lastClubId";
 
-function AuthenticatedApp() {
+export interface AppProps {
+  initialData?: InitialStateBundle | null;
+  initialUrl?: string;
+}
+
+function AuthenticatedApp({ initialData, initialUrl }: AppProps) {
   const { user, loading } = useAuth();
-  const { goBack, navigate, route } = useRouter();
+  const { goBack, navigate, route } = useRouter(initialUrl);
   const activeView: ViewId = route.kind === "player-detail" ? "player-detail" : route.view;
   const [isSokkerImportOpen, setIsSokkerImportOpen] = useState(false);
-  const [activeClubId, setActiveClubId] = useState<string | null>(() =>
-    window.localStorage.getItem(lastClubStorageKey)
+  const [activeClubId, setActiveClubId] = useState<string | null>(
+    () =>
+      initialData?.clubId ??
+      (typeof window !== "undefined" ? window.localStorage.getItem(lastClubStorageKey) : null)
   );
   const [dashboardStatus, setDashboardStatus] = useState<DashboardStatus>(
-    activeClubId ? "loading" : "idle"
+    initialData?.dashboard ? "ready" : activeClubId ? "loading" : "idle"
   );
-  const [dashboard, setDashboard] = useState<ClubDashboard | null>(null);
+  const [dashboard, setDashboard] = useState<ClubDashboard | null>(initialData?.dashboard ?? null);
   const [youthStatus, setYouthStatus] = useState<DashboardStatus>(
-    activeClubId ? "loading" : "idle"
+    initialData?.youthAcademy ? "ready" : activeClubId ? "loading" : "idle"
   );
-  const [youthAcademy, setYouthAcademy] = useState<RealYouthAcademyPlanning | null>(null);
+  const [youthAcademy, setYouthAcademy] = useState<RealYouthAcademyPlanning | null>(
+    initialData?.youthAcademy ?? null
+  );
   const [youthPipelineStatus, setYouthPipelineStatus] = useState<DashboardStatus>(
-    activeClubId ? "loading" : "idle"
+    initialData?.youthPipeline ? "ready" : activeClubId ? "loading" : "idle"
   );
-  const [youthPipeline, setYouthPipeline] = useState<YouthPipelinePlanning | null>(null);
+  const [youthPipeline, setYouthPipeline] = useState<YouthPipelinePlanning | null>(
+    initialData?.youthPipeline ?? null
+  );
   const [trainingStatus, setTrainingStatus] = useState<DashboardStatus>(
-    activeClubId ? "loading" : "idle"
+    initialData?.training ? "ready" : activeClubId ? "loading" : "idle"
   );
-  const [training, setTraining] = useState<TrainingPageData | null>(null);
-  const [trainingDiagnostic, setTrainingDiagnostic] = useState<ImportResponse["diagnostic"]>(null);
-  const [playerDevelopment, setPlayerDevelopment] = useState<PlayerDevelopment | null>(null);
+  const [training, setTraining] = useState<TrainingPageData | null>(initialData?.training ?? null);
+  const [trainingDiagnostic, setTrainingDiagnostic] = useState<ImportResponse["diagnostic"]>(
+    initialData?.trainingDiagnostic ?? null
+  );
+  const [playerDevelopment, setPlayerDevelopment] = useState<PlayerDevelopment | null>(
+    initialData?.playerDevelopment ?? null
+  );
   const [squadPlanningStatus, setSquadPlanningStatus] = useState<DashboardStatus>(
-    activeClubId ? "loading" : "idle"
+    initialData?.squadPlanning ? "ready" : activeClubId ? "loading" : "idle"
   );
-  const [squadPlanning, setSquadPlanning] = useState<SquadPlanningBundle | null>(null);
+  const [squadPlanning, setSquadPlanning] = useState<SquadPlanningBundle | null>(
+    initialData?.squadPlanning ?? null
+  );
   const projectionSummaries = useMemo(
     () =>
       trainingStatus === "ready"
@@ -455,10 +473,10 @@ function AuthenticatedApp() {
   );
 }
 
-export function App() {
+export function App({ initialData, initialUrl }: AppProps) {
   return (
     <AuthProvider>
-      <AuthenticatedApp />
+      <AuthenticatedApp initialData={initialData} initialUrl={initialUrl} />
     </AuthProvider>
   );
 }

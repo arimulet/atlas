@@ -3,14 +3,24 @@ import tseslint from "typescript-eslint";
 
 export default tseslint.config(
   {
-    ignores: ["**/dist/**", "**/coverage/**", "artifacts/**", "node_modules/**", "test-results/**"]
+    ignores: [
+      "**/.next/**",
+      "**/dist/**",
+      "**/coverage/**",
+      "artifacts/**",
+      "node_modules/**",
+      "test-results/**"
+    ]
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
     rules: {
       "no-unused-vars": "off", // Apagas la regla base de JavaScript
-      "@typescript-eslint/no-unused-vars": "warn" // Cambias la regla de TS a warning
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        { argsIgnorePattern: "^_" }
+      ] // Cambias la regla de TS a warning
     }
   },
   {
