@@ -13,22 +13,30 @@ declare module "fastify" {
   }
 }
 
-/**
- * Extrae y desglosa el usuario autenticado desde el encabezado Authorization: Bearer <token>
- */
-export function parseAuthUser(request: FastifyRequest): AuthUser | null {
-  const authHeader = request.headers.authorization;
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return null;
-  }
+export function parseCookies(cookieHeader?: string): Record<string, string> {
+  if (!cookieHeader) return {};
+  const list: Record<string, string> = {};
+  cookieHeader.split(";").forEach((cookie) => {
+    const parts = cookie.split("=");
+    const name = parts.shift()?.trim();
+    const value = parts.join("=").trim();
+    if (name) {
+      try {
+        list[name] = decodeURIComponent(value);
+      } catch {
+        list[name] = value;
+      }
+    }
+  });
+  return list;
+}
 
-  const token = authHeader.substring(7).trim();
-  if (!token) {
-    return null;
-  }
+export function parseTokenString(token: string): AuthUser | null {
+  const trimmed = token.trim();
+  if (!trimmed) return null;
 
   try {
-    const parts = token.split(".");
+    const parts = trimmed.split(".");
     if (parts.length === 3 && parts[1]) {
       const payloadBase64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
       const jsonPayload = Buffer.from(payloadBase64, "base64").toString("utf-8");
@@ -42,10 +50,34 @@ export function parseAuthUser(request: FastifyRequest): AuthUser | null {
       }
     }
 
-    return { uid: token };
+    return { uid: trimmed };
   } catch {
-    return null;
+    return { uid: trimmed };
   }
+}
+
+/**
+ * Extrae y desglosa el usuario autenticado desde el encabezado Authorization: Bearer <token>
+ * o desde la cookie transitoria de sesión __session
+ */
+export function parseAuthUser(request: FastifyRequest): AuthUser | null {
+  const authHeader = request.headers.authorization;
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    const token = authHeader.substring(7).trim();
+    if (token) {
+      const user = parseTokenString(token);
+      if (user) return user;
+    }
+  }
+
+  const cookies = parseCookies(request.headers.cookie);
+  const sessionToken = cookies.__session;
+  if (sessionToken) {
+    const user = parseTokenString(sessionToken);
+    if (user) return user;
+  }
+
+  return null;
 }
 
 /**

@@ -54,6 +54,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       setLoading(false);
+
+      if (currentUser) {
+        void (async () => {
+          try {
+            const token = await currentUser.getIdToken();
+            await fetch("/api/user/session", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${token}` }
+            });
+          } catch {
+            // Ignore background session sync failure
+          }
+        })();
+      }
     });
 
     return () => unsubscribe();
@@ -80,6 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     try {
       await signOut(auth);
+      await fetch("/api/user/session", { method: "DELETE" }).catch(() => null);
     } catch (err) {
       const code = (err as { code?: string })?.code || "";
       throw new Error(translateFirebaseError(code));
