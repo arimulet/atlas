@@ -33,6 +33,14 @@ export default tseslint.config(
     }
   },
   {
+    files: ["apps/web/next.config.js"],
+    languageOptions: {
+      globals: {
+        process: "readonly"
+      }
+    }
+  },
+  {
     files: ["**/*.ts", "**/*.tsx"],
     languageOptions: {
       parserOptions: {

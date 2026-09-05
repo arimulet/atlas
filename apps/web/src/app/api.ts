@@ -43,18 +43,50 @@ async function fetchAuthenticated(
   const headers = new Headers(init.headers);
 
   if (!headers.has("Authorization")) {
-    if (typeof auth?.authStateReady === "function") {
-      await auth.authStateReady();
-    }
-    const user = auth.currentUser;
+    try {
+      if (typeof auth?.authStateReady === "function") {
+        await auth.authStateReady();
+      }
+      const user = auth?.currentUser;
 
-    if (user) {
-      const token = await user.getIdToken();
-      headers.set("Authorization", `Bearer ${token}`);
+      if (user) {
+        const token = await user.getIdToken();
+        headers.set("Authorization", `Bearer ${token}`);
+      }
+    } catch {
+      // Ignore client auth resolution errors
     }
   }
 
-  return fetch(input, { ...init, headers });
+  let url = input;
+  if (typeof window === "undefined") {
+    if (!headers.has("Authorization")) {
+      try {
+        const { cookies, headers: nextHeaders } = await import("next/headers");
+        const cookieStore = await cookies();
+        const sessionCookie = cookieStore.get("__session")?.value;
+        if (sessionCookie) {
+          headers.set("Authorization", `Bearer ${sessionCookie}`);
+          headers.set("Cookie", `__session=${sessionCookie}`);
+        } else {
+          const reqHeaders = await nextHeaders();
+          const authHeader = reqHeaders.get("authorization");
+          if (authHeader) {
+            headers.set("Authorization", authHeader);
+          }
+        }
+      } catch {
+        // Ignore when invoked outside Next.js server environment context
+      }
+    }
+
+    if (typeof input === "string" && input.startsWith("/") && process.env.NODE_ENV !== "test") {
+      const apiUrl = process.env.ATLAS_API_URL || "http://127.0.0.1:3001";
+      url = `${apiUrl}${input}`;
+    }
+  }
+
+  return fetch(url, { ...init, headers });
 }
 
 export async function fetchClubDashboard(_clubId?: string): Promise<ClubDashboard> {
