@@ -1,9 +1,10 @@
+import { cache } from "react";
 import { NextResponse } from "next/server";
 import { connectMongoDb } from "@atlas/database";
 import { getUserClubs } from "@atlas/application";
 import { getAuthenticatedUserServer } from "./session";
 
-export async function getEffectiveClubId(): Promise<string> {
+export const getEffectiveClubId = cache(async (): Promise<string> => {
   if (process.env.MONGODB_URI) {
     await connectMongoDb(process.env.MONGODB_URI).catch(() => null);
   }
@@ -21,7 +22,7 @@ export async function getEffectiveClubId(): Promise<string> {
   }
 
   return "1";
-}
+});
 
 export function jsonResponse<T>(data: T, status = 200) {
   return NextResponse.json(data, { status });
