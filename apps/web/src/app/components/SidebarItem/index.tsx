@@ -1,8 +1,9 @@
+import Link from "next/link";
 import { SidebarItemProps } from "./types";
 
 export function SidebarItem({ badgeCount, item, isActive, onSelect }: SidebarItemProps) {
   return (
-    <a
+    <Link
       href={item.path}
       className={`atlas-sidebar-item${isActive ? " is-active" : ""}`}
       aria-current={isActive ? "page" : undefined}
@@ -31,6 +32,6 @@ export function SidebarItem({ badgeCount, item, isActive, onSelect }: SidebarIte
           {badgeCount}
         </span>
       ) : null}
-    </a>
+    </Link>
   );
 }

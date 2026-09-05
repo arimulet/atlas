@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { pathForPlayerDetail } from "../../routing";
 
 interface PlayerLinkProps {
@@ -8,7 +9,7 @@ interface PlayerLinkProps {
 
 export function PlayerLink({ children, onSelectPlayer, playerId }: PlayerLinkProps) {
   return (
-    <a
+    <Link
       className="atlas-player-link"
       href={pathForPlayerDetail(playerId)}
       onClick={(event) => {
@@ -27,6 +28,6 @@ export function PlayerLink({ children, onSelectPlayer, playerId }: PlayerLinkPro
       }}
     >
       {children}
-    </a>
+    </Link>
   );
 }
