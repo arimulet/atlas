@@ -42,13 +42,15 @@ const snapshotRepository = new MongoSnapshotRepository();
 const countryRepository = new MongoCountryRepository();
 
 export const getClubDashboard = async (clubId: ClubId): Promise<ClubDashboard> => {
-  const club = await clubRepository.findById(clubId.toString());
+  const [club, snapshots] = await Promise.all([
+    clubRepository.findById(clubId.toString()),
+    snapshotRepository.listByClub(clubId)
+  ]);
 
   if (!club) {
     throw new Error(`Club not found: ${clubId}`);
   }
 
-  const snapshots = await snapshotRepository.listByClub(clubId);
   const latest = snapshots.at(-1) ?? null;
   const previous = snapshots.at(-2) ?? null;
   const [development, marketPlanning, youthPipeline, countryDetails] = await Promise.all([
