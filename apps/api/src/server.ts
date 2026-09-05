@@ -7,7 +7,6 @@ import clubRoutes from "@atlas/api//routes/club";
 import playerRoutes from "@atlas/api//routes/players";
 import economyRoutes from "@atlas/api//routes/economy";
 import userRoutes from "@atlas/api//routes/user";
-import { clubParamsSchema } from "@atlas/api/schemas";
 import { internalJobsRoutes } from "./routes/internal/jobs.js";
 
 export function buildServer() {

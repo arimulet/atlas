@@ -1,4 +1,4 @@
-﻿import type { ReactNode } from "react";
+import type { ReactNode } from "react";
 import type { MainViewId } from "./routing";
 import type {
   AdvancedTrainingOptimization,
@@ -48,6 +48,17 @@ export interface SquadPlanningBundle {
   assessment: SquadPlanningData;
   depth: SquadDepthAnalysis;
   recommendations: SquadPlanningRecommendations;
+}
+
+export interface InitialStateBundle {
+  clubId?: string | null;
+  dashboard?: ClubDashboard | null;
+  youthAcademy?: RealYouthAcademyPlanning | null;
+  youthPipeline?: YouthPipelinePlanning | null;
+  training?: TrainingPageData | null;
+  trainingDiagnostic?: ImportResponse["diagnostic"] | null;
+  playerDevelopment?: PlayerDevelopment | null;
+  squadPlanning?: SquadPlanningBundle | null;
 }
 export type SourceKind = "observed" | "manual" | "effective";
 export type SquadEconomyEvidenceKind = "observed" | "manual" | "derived" | "inferred";
