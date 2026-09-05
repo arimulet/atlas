@@ -2,7 +2,7 @@ import { revalidatePath, revalidateTag } from "next/cache";
 
 export async function revalidateSokkerData(clubId?: string) {
   try {
-    revalidateTag("sokker-data");
+    revalidateTag("sokker-data", "max");
     revalidatePath("/", "layout");
     if (clubId) {
       revalidatePath("/squad", "page");
