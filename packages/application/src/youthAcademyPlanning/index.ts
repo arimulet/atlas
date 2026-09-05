@@ -1,4 +1,4 @@
-﻿import {
+import {
   MongoClubRepository,
   MongoJuniorRepository,
   MongoSnapshotRepository
@@ -23,7 +23,10 @@ const snapshotRepository = new MongoSnapshotRepository();
 export const getRealYouthAcademyPlanning = async (
   clubId: ClubId
 ): Promise<RealYouthAcademyPlanning> => {
-  const club = await clubRepository.findById(clubId.toString());
+  const [club, snapshots] = await Promise.all([
+    clubRepository.findById(clubId.toString()),
+    snapshotRepository.listByClub(clubId)
+  ]);
 
   if (!club) {
     throw new Error(`Club not found: ${clubId}`);
@@ -32,7 +35,6 @@ export const getRealYouthAcademyPlanning = async (
   const settings = buildClubOperatingSettings(club);
   const academyInvestment = settings.effective.preferences["academy.investment"] ?? "balanced";
 
-  const snapshots = await snapshotRepository.listByClub(clubId);
   const snapshotsWithJuniors = snapshots.filter((snapshot) => snapshot.juniors.length > 0);
   const latest = snapshotsWithJuniors.at(-1) ?? null;
 
