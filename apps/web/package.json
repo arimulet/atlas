@@ -4,8 +4,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "tsc -p tsconfig.json --noEmit && vite build",
-    "dev": "vite",
+    "build": "next build --webpack",
+    "dev": "next dev --webpack",
+    "start": "next start",
+    "dev:vite": "vite",
+    "build:vite": "tsc -p tsconfig.json --noEmit && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
