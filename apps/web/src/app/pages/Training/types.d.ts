@@ -8,11 +8,11 @@ export type { TrainingPlayerRow, TrainingStatusLabel } from "../../view-models/t
 import type { PlayerTrainingProjectionSummary } from "../../view-models/player-detail-view-model";
 
 export interface TrainingProps {
-  clubId: string | null;
+  clubId?: string | null;
   development: PlayerDevelopment | null;
   training: TrainingPageData | null;
   trainingDiagnostic: { findings: DiagnosticFinding[] } | null;
   trainingStatus: DashboardStatus;
-  onSelectPlayer: (playerId: string) => void;
+  onSelectPlayer?: (playerId: string) => void;
   projectionSummaries?: ReadonlyMap<string, PlayerTrainingProjectionSummary>;
 }

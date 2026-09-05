@@ -1,3 +1,5 @@
+"use client";
+
 import { useMemo, useState } from "react";
 
 import type { Severity } from "@atlas/web/app/types";
@@ -188,7 +190,7 @@ function FilterButton({ isActive, label, onClick }: FilterButtonProps) {
 
 interface DiagnosticsTableProps {
   diagnostics: DiagnosticViewModel[];
-  onSelectPlayer: (playerId: string) => void;
+  onSelectPlayer?: (playerId: string) => void;
 }
 
 function DiagnosticsTable({ diagnostics, onSelectPlayer }: DiagnosticsTableProps) {
@@ -223,7 +225,7 @@ function DiagnosticsTable({ diagnostics, onSelectPlayer }: DiagnosticsTableProps
 
 interface DiagnosticRowProps {
   diagnostic: DiagnosticViewModel;
-  onSelectPlayer: (playerId: string) => void;
+  onSelectPlayer?: (playerId: string) => void;
   showContext: boolean;
 }
 

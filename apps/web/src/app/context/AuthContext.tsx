@@ -1,3 +1,5 @@
+"use client";
+
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import {
   createUserWithEmailAndPassword,
@@ -7,7 +9,7 @@ import {
   signOut,
   type User
 } from "firebase/auth";
-import { auth } from "../services/firebase";
+import { auth, isFirebaseConfigured } from "../services/firebase";
 
 export interface AuthContextType {
   user: User | null;
@@ -51,12 +53,54 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
+    if (!isFirebaseConfigured) {
       setLoading(false);
-    });
+      return;
+    }
 
-    return () => unsubscribe();
+    let isSubscribed = true;
+
+    const timeoutId = setTimeout(() => {
+      if (isSubscribed) {
+        setLoading((currentLoading) => {
+          if (currentLoading) {
+            console.warn("Auth state listener timed out. Setting loading to false.");
+            return false;
+          }
+          return currentLoading;
+        });
+      }
+    }, 2500);
+
+    try {
+      const unsubscribe = onAuthStateChanged(
+        auth,
+        (currentUser) => {
+          if (isSubscribed) {
+            setUser(currentUser);
+            setLoading(false);
+            clearTimeout(timeoutId);
+          }
+        },
+        (error) => {
+          console.error("Firebase auth error:", error);
+          if (isSubscribed) {
+            setLoading(false);
+            clearTimeout(timeoutId);
+          }
+        }
+      );
+
+      return () => {
+        isSubscribed = false;
+        clearTimeout(timeoutId);
+        unsubscribe();
+      };
+    } catch (err) {
+      console.error("Failed to initialize firebase auth listener:", err);
+      setLoading(false);
+      clearTimeout(timeoutId);
+    }
   }, []);
 
   const login = async (email: string, pass: string) => {

@@ -10,7 +10,7 @@ export interface WeeklyTrainingIntelligenceState {
 }
 
 export function useWeeklyTrainingIntelligence(
-  clubId: string | null
+  clubId?: string | null
 ): WeeklyTrainingIntelligenceState {
   const [state, setState] = useState<WeeklyTrainingIntelligenceState>({
     data: null,

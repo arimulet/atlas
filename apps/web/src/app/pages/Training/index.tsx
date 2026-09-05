@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import type { TrainingPageData } from "@atlas/web/app/types";
 import { formatTrainingPriority } from "../../formatters";

@@ -1,3 +1,5 @@
+"use client";
+
 import { useMemo, useState, type ReactNode } from "react";
 import type { DiagnosticFinding, DiagnosticParameterValue } from "@atlas/web/app/types";
 import type { SquadRole } from "@atlas/domain";
@@ -59,7 +61,7 @@ export function Squad({
     trainingDiagnostic,
     trainingStatus,
     squadPlanning,
-    currency
+    currency: currency ?? null
   });
   const { filteredRows, filters, setProfileFilter, setRoleFilter, viewModel } = useSquadPlanning({
     planning: squadPlanning,
@@ -72,7 +74,7 @@ export function Squad({
   );
   const marketSummary = createSquadMarketValueSummary(
     squadPlanning?.assessment.depthPlayers ?? [],
-    currency
+    currency ?? null
   );
 
   return (
@@ -361,7 +363,7 @@ function SquadTable({ onSaveSquadRole, onSelectPlayer, planning, rows, status }:
 
 interface SquadPositionTableProps {
   onSaveSquadRole: SquadTableProps["onSaveSquadRole"];
-  onSelectPlayer: (playerId: string) => void;
+  onSelectPlayer?: (playerId: string) => void;
   planning: SquadTableProps["planning"];
   position: TrainingPositionCode;
   rows: SquadPlayerRow[];
@@ -448,7 +450,7 @@ function SquadPositionTable({
 
 interface SquadPlayerRowViewProps {
   onSaveSquadRole: SquadTableProps["onSaveSquadRole"];
-  onSelectPlayer: (playerId: string) => void;
+  onSelectPlayer?: (playerId: string) => void;
   planningPlayer:
     NonNullable<SquadTableProps["planning"]>["assessment"]["depthPlayers"][number] | null;
   position: TrainingPositionCode;
@@ -541,7 +543,7 @@ function SquadPlanningRoleControl({
     setSaveMessage(null);
 
     try {
-      await onSaveSquadRole(playerId, selectedRole === "automatic" ? null : selectedRole);
+      await onSaveSquadRole?.(playerId, selectedRole === "automatic" ? null : selectedRole);
       setIsEditorOpen(false);
       setSaveMessage("Saved");
     } catch (error) {

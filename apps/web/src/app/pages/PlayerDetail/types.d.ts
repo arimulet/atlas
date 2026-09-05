@@ -9,7 +9,7 @@ export interface PlayerDetailProps {
   trainingDiagnostic: TrainingDiagnostic | null;
   trainingStatus: DashboardStatus;
   squadPlanning: SquadPlanningBundle | null;
-  currency: string | null;
-  onBack: () => void;
-  onBackToSquad: () => void;
+  currency?: string | null;
+  onBack?: () => void;
+  onBackToSquad?: () => void;
 }

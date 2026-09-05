@@ -10,7 +10,7 @@ import type { TrainingDiagnostic } from "../../view-models/training-view-model";
 export interface DiagnosticsProps {
   dashboardStatus: DashboardStatus;
   development: PlayerDevelopment | null;
-  onSelectPlayer: (playerId: string) => void;
+  onSelectPlayer?: (playerId: string) => void;
   training: TrainingPageData | null;
   trainingDiagnostic: TrainingDiagnostic | null;
   trainingStatus: DashboardStatus;

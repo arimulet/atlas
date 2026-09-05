@@ -10,7 +10,7 @@ import {
 
 interface YouthDecisionSectionsProps {
   models: YouthDecisionViewModel[];
-  onSelectPlayer: (playerId: string) => void;
+  onSelectPlayer?: (playerId: string) => void;
   status: "idle" | "loading" | "ready" | "error";
 }
 

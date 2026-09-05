@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import type { DashboardStatus, RealYouthAcademyPlanning } from "@atlas/web/app/types";
 import {

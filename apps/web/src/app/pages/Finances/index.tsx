@@ -1,4 +1,6 @@
-﻿import type { ReactNode } from "react";
+"use client";
+
+import type { ReactNode } from "react";
 import { useState } from "react";
 import { Info } from "lucide-react";
 import { formatMoney } from "../../formatters";
@@ -19,10 +21,10 @@ export function Finances({
       <header className="atlas-finances__header">
         <h1>Finances</h1>
       </header>
-      {financialStrategy.status === "loading" ? (
+      {financialStrategy?.status === "loading" ? (
         <PanelMessage>Loading financial strategy...</PanelMessage>
       ) : null}
-      {financialStrategy.status === "error" ? (
+      {financialStrategy?.status === "error" ? (
         <PanelMessage tone="error">
           Financial Strategy is temporarily unavailable. Basic cash data remains available.
         </PanelMessage>
@@ -57,10 +59,10 @@ function FinancialPositionSection({
   status
 }: {
   dashboard: FinancesProps["dashboard"];
-  financialStrategy: FinancialStrategyState;
+  financialStrategy?: FinancialStrategyState | null;
   status: FinancesProps["status"];
 }) {
-  const position = financialStrategy.viewModel?.position;
+  const position = financialStrategy?.viewModel?.position;
   const fallbackCash = dashboard?.club.budget ?? null;
   return (
     <Section title="Financial Position" className="atlas-finances-position">
@@ -102,16 +104,16 @@ function FinancialPositionSection({
 function CapitalCapacitySection({
   financialStrategy
 }: {
-  financialStrategy: FinancialStrategyState;
+  financialStrategy?: FinancialStrategyState | null;
 }) {
-  const capacity = financialStrategy.viewModel?.capacity;
+  const capacity = financialStrategy?.viewModel?.capacity;
   return (
     <Section title="Capital Capacity">
       {capacity ? (
         <>
           <MetricGrid
             metrics={[
-              ["Cash", financialStrategy.viewModel?.position.cash ?? "—", "Observed"],
+              ["Cash", financialStrategy?.viewModel?.position.cash ?? "—", "Observed"],
               ["Safety Reserve", capacity.reserve, `${capacity.reserveWeeks} · ATLAS policy`],
               ["Spendable Cash", capacity.spendableCash, "Cash after protected reserve"],
               ["Conservative Capacity", capacity.conservative, "Prudent commitment"],
@@ -129,12 +131,12 @@ function CapitalCapacitySection({
   );
 }
 
-function InvestmentSimulator({ financialStrategy }: { financialStrategy: FinancialStrategyState }) {
+function InvestmentSimulator({ financialStrategy }: { financialStrategy?: FinancialStrategyState | null }) {
   const [amount, setAmount] = useState("");
-  const safety = financialStrategy.investmentSafetyView;
+  const safety = financialStrategy?.investmentSafetyView;
   const handleSimulate = () => {
     const numericAmount = Number(amount);
-    if (Number.isFinite(numericAmount) && numericAmount >= 0)
+    if (Number.isFinite(numericAmount) && numericAmount >= 0 && financialStrategy)
       void financialStrategy.simulateInvestment(numericAmount);
   };
   return (
@@ -153,9 +155,9 @@ function InvestmentSimulator({ financialStrategy }: { financialStrategy: Financi
         <button
           type="button"
           onClick={handleSimulate}
-          disabled={financialStrategy.isSimulating || amount === ""}
+          disabled={Boolean(financialStrategy?.isSimulating) || amount === ""}
         >
-          {financialStrategy.isSimulating ? "Simulating..." : "Simulate"}
+          {financialStrategy?.isSimulating ? "Simulating..." : "Simulate"}
         </button>
       </div>
       {safety ? (
@@ -180,13 +182,13 @@ function StrategicRecommendationsSection({
   financialStrategy,
   onSelectPlayer
 }: {
-  financialStrategy: FinancialStrategyState;
-  onSelectPlayer: (playerId: string) => void;
+  financialStrategy?: FinancialStrategyState | null;
+  onSelectPlayer?: (playerId: string) => void;
 }) {
-  const recommendations = financialStrategy.viewModel?.recommendations ?? [];
+  const recommendations = financialStrategy?.viewModel?.recommendations ?? [];
   return (
     <Section title="Strategic Recommendations" className="atlas-finances-recommendations">
-      {financialStrategy.status === "ready" && recommendations.length === 0 ? (
+      {financialStrategy?.status === "ready" && recommendations.length === 0 ? (
         <PanelMessage>
           Financial strategy is currently stable. No high-priority action required.
         </PanelMessage>
@@ -196,7 +198,7 @@ function StrategicRecommendationsSection({
           <article
             className={`atlas-finances-recommendation is-${recommendation.priority.toLowerCase()}`}
             key={recommendation.id}
-          >
+            >
             <div className="atlas-finances-recommendation__header">
               <div>
                 <span className="atlas-finances-eyebrow">
@@ -247,13 +249,13 @@ function StrategicRecommendationsSection({
   );
 }
 
-function FundingPlanSection({ financialStrategy }: { financialStrategy: FinancialStrategyState }) {
-  const funding = financialStrategy.viewModel?.funding;
+function FundingPlanSection({ financialStrategy }: { financialStrategy?: FinancialStrategyState | null }) {
+  const funding = financialStrategy?.viewModel?.funding;
   return (
     <Section title="Strategic Funding">
       {!funding || funding.needs.length === 0 ? (
         <PanelMessage>
-          {financialStrategy.status === "ready"
+          {financialStrategy?.status === "ready"
             ? "Strategic funding needs are not available from current Squad Planning data."
             : "Funding plan is not available yet."}
         </PanelMessage>
@@ -298,11 +300,11 @@ function SquadAssetsSection({
   financialStrategy,
   onSelectPlayer
 }: {
-  financialStrategy: FinancialStrategyState;
-  onSelectPlayer: (playerId: string) => void;
+  financialStrategy?: FinancialStrategyState | null;
+  onSelectPlayer?: (playerId: string) => void;
 }) {
-  const assets = financialStrategy.viewModel?.assets;
-  const development = financialStrategy.viewModel?.developmentCapital;
+  const assets = financialStrategy?.viewModel?.assets;
+  const development = financialStrategy?.viewModel?.developmentCapital;
   if (!assets)
     return (
       <Section title="Squad Assets">
@@ -314,7 +316,7 @@ function SquadAssetsSection({
       <MetricGrid
         metrics={[
           ["Estimated Squad Value", assets.estimatedValue, `Estimated · ${assets.coverage}`],
-          ["Current Cash", financialStrategy.viewModel?.position.cash ?? "—", "Observed"],
+          ["Current Cash", financialStrategy?.viewModel?.position.cash ?? "—", "Observed"],
           ["Known Capital", assets.knownCapital, "Observed cash + estimated sporting assets"],
           [
             "Top 3 Concentration",
@@ -395,7 +397,7 @@ function AssetList({
 }: {
   title: string;
   assets: NonNullable<FinancialStrategyState["viewModel"]>["assets"]["monetizable"];
-  onSelectPlayer: (playerId: string) => void;
+  onSelectPlayer?: (playerId: string) => void;
 }) {
   return (
     <div className="atlas-finances-subsection">
@@ -429,10 +431,10 @@ function ConflictsSection({
   financialStrategy,
   onSelectPlayer
 }: {
-  financialStrategy: FinancialStrategyState;
-  onSelectPlayer: (playerId: string) => void;
+  financialStrategy?: FinancialStrategyState | null;
+  onSelectPlayer?: (playerId: string) => void;
 }) {
-  const conflicts = financialStrategy.viewModel?.conflicts ?? [];
+  const conflicts = financialStrategy?.viewModel?.conflicts ?? [];
   if (conflicts.length === 0) return null;
   return (
     <Section title="Strategic Conflicts">

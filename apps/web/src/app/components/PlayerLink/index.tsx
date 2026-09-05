@@ -3,7 +3,7 @@ import { pathForPlayerDetail } from "../../routing";
 interface PlayerLinkProps {
   children: string;
   playerId: string;
-  onSelectPlayer: (playerId: string) => void;
+  onSelectPlayer?: (playerId: string) => void;
 }
 
 export function PlayerLink({ children, onSelectPlayer, playerId }: PlayerLinkProps) {
@@ -22,8 +22,10 @@ export function PlayerLink({ children, onSelectPlayer, playerId }: PlayerLinkPro
           return;
         }
 
-        event.preventDefault();
-        onSelectPlayer(playerId);
+        if (onSelectPlayer) {
+          event.preventDefault();
+          onSelectPlayer(playerId);
+        }
       }}
     >
       {children}

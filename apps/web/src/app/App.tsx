@@ -1,3 +1,5 @@
+"use client";
+
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
@@ -51,9 +53,16 @@ function AuthenticatedApp() {
   const { goBack, navigate, route } = useRouter();
   const activeView: ViewId = route.kind === "player-detail" ? "player-detail" : route.view;
   const [isSokkerImportOpen, setIsSokkerImportOpen] = useState(false);
-  const [activeClubId, setActiveClubId] = useState<string | null>(() =>
-    window.localStorage.getItem(lastClubStorageKey)
-  );
+  const [activeClubId, setActiveClubId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedClubId = window.localStorage.getItem(lastClubStorageKey);
+      if (storedClubId) {
+        setActiveClubId(storedClubId);
+      }
+    }
+  }, []);
   const [dashboardStatus, setDashboardStatus] = useState<DashboardStatus>(
     activeClubId ? "loading" : "idle"
   );
@@ -222,7 +231,9 @@ function AuthenticatedApp() {
         const firstClub = data.clubs?.[0];
         if (firstClub) {
           const firstClubId = String(firstClub.clubId);
-          window.localStorage.setItem(lastClubStorageKey, firstClubId);
+          if (typeof window !== "undefined") {
+            window.localStorage.setItem(lastClubStorageKey, firstClubId);
+          }
           setActiveClubId(firstClubId);
         }
       } catch {
@@ -245,7 +256,9 @@ function AuthenticatedApp() {
       }
 
       if (body.importResult.clubId) {
-        window.localStorage.setItem(lastClubStorageKey, body.importResult.clubId);
+        if (typeof window !== "undefined") {
+          window.localStorage.setItem(lastClubStorageKey, body.importResult.clubId);
+        }
         setActiveClubId(body.importResult.clubId);
         const [
           dashboardLoaded,

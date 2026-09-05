@@ -3,7 +3,7 @@ import type { SquadPriorityActionViewModel } from "../Squad/squad-planning-view-
 
 interface PlanningFocusProps {
   actions: readonly SquadPriorityActionViewModel[];
-  onSelectPlayer: (playerId: string) => void;
+  onSelectPlayer?: (playerId: string) => void;
 }
 
 export function PlanningFocus({ actions, onSelectPlayer }: PlanningFocusProps) {

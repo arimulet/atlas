@@ -52,7 +52,7 @@ export function buildServer() {
 const server = buildServer();
 
 if (process.env.NODE_ENV !== "test" && process.env.ATLAS_API_AUTOSTART !== "false") {
-  const port = Number(process.env.PORT ?? 3000);
+  const port = Number(process.env.PORT ?? 3002);
   const host = process.env.HOST ?? "127.0.0.1";
 
   if (process.env.MONGODB_URI) {

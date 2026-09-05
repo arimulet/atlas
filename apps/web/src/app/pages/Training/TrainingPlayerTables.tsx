@@ -31,7 +31,7 @@ interface TrainingPlayerTablesProps {
   configuration: TrainingPageData["configuration"];
   diagnostic: TrainingProps["trainingDiagnostic"];
   history: TrainingReport[];
-  onSelectPlayer: (playerId: string) => void;
+  onSelectPlayer?: (playerId: string) => void;
   players: TrainingPageData["players"];
   projectionSummaries: TrainingProps["projectionSummaries"];
   recommendations: ReadonlyMap<string, string>;
@@ -86,7 +86,7 @@ export function TrainingPlayerTables({
 
 interface TrainingPositionTableProps {
   history: TrainingReport[];
-  onSelectPlayer: (playerId: string) => void;
+  onSelectPlayer?: (playerId: string) => void;
   playerById: Map<string, TrainingPageData["players"][number]>;
   players: TrainingPlayerRow[];
   position: TrainingPositionCode;
@@ -172,7 +172,7 @@ function TrainingPositionTable({
 interface TrainingPlayerRowsProps {
   history: TrainingReport[];
   isDetailsOpen: boolean;
-  onSelectPlayer: (playerId: string) => void;
+  onSelectPlayer?: (playerId: string) => void;
   onToggleDetails: () => void;
   recommendation: string;
   player: TrainingPlayerRow;

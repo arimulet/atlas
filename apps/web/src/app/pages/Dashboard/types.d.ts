@@ -9,10 +9,10 @@ import type { FinancialStrategyState } from "../../features/financialStrategy/us
 export interface DashboardProps {
   dashboard: ClubDashboard | null;
   dashboardStatus: DashboardStatus;
-  onSelectPlayer: (playerId: string) => void;
+  onSelectPlayer?: (playerId: string) => void;
   youthAcademy: RealYouthAcademyPlanning | null;
   squadPlanning: SquadPlanningBundle | null;
   squadPlanningStatus: DashboardStatus;
   youthStatus: DashboardStatus;
-  financialStrategy: FinancialStrategyState;
+  financialStrategy?: FinancialStrategyState | null;
 }

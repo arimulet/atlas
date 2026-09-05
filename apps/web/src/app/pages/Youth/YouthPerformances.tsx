@@ -1,10 +1,12 @@
-﻿import { useEffect, useState } from "react";
+"use client";
+
+import { useEffect, useState } from "react";
 import { fetchYouthPerformances, patchYouthObservations } from "../../api";
 import { skillLevelLabel } from "../../view-models/skill-level-label";
 import type { YouthMatchPerformancesDto, RealYouthAcademyPlanning } from "../../types";
 
 interface YouthPerformancesProps {
-  clubId: string | null;
+  clubId?: string | null;
   youthAcademy: RealYouthAcademyPlanning | null;
 }
 
@@ -13,7 +15,7 @@ const EditableObservationCell = ({
   playerId, 
   initialValue 
 }: { 
-  clubId: string; 
+  clubId?: string | null; 
   playerId: number; 
   initialValue: string; 
 }) => {
@@ -21,7 +23,7 @@ const EditableObservationCell = ({
   const [isSaving, setIsSaving] = useState(false);
 
   const handleBlur = async () => {
-    if (value === initialValue) return;
+    if (!clubId || value === initialValue) return;
     setIsSaving(true);
     try {
       await patchYouthObservations(clubId, playerId, value);

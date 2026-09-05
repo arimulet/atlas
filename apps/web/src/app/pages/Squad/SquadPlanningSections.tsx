@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import type { SquadRole } from "@atlas/domain";
 import { PlayerLink } from "../../components/PlayerLink";
 import {
@@ -10,7 +10,7 @@ import {
 
 interface SquadPlanningSectionsProps {
   viewModel: SquadPlanningViewModel;
-  onSelectPlayer: (playerId: string) => void;
+  onSelectPlayer?: (playerId: string) => void;
 }
 
 export function SquadPlanningSections({ onSelectPlayer, viewModel }: SquadPlanningSectionsProps) {
@@ -63,7 +63,7 @@ function SquadPlanningSummary({ viewModel }: SquadPlanningSummaryProps) {
 
 interface SquadProfileDepthTableProps {
   profiles: readonly SquadProfileViewModel[];
-  onSelectPlayer: (playerId: string) => void;
+  onSelectPlayer?: (playerId: string) => void;
 }
 
 function SquadProfileDepthTable({ profiles, onSelectPlayer }: SquadProfileDepthTableProps) {
@@ -115,7 +115,7 @@ function SquadProfileDepthTable({ profiles, onSelectPlayer }: SquadProfileDepthT
 interface ProfileDepthRowProps {
   isDetailsOpen: boolean;
   profile: SquadProfileViewModel;
-  onSelectPlayer: (playerId: string) => void;
+  onSelectPlayer?: (playerId: string) => void;
   onToggleDetails: () => void;
 }
 
@@ -199,7 +199,7 @@ function DepthCell({ snapshot }: DepthCellProps) {
 
 interface SquadProfileDetailProps {
   profile: SquadProfileViewModel;
-  onSelectPlayer: (playerId: string) => void;
+  onSelectPlayer?: (playerId: string) => void;
 }
 
 function SquadProfileDetail({ onSelectPlayer, profile }: SquadProfileDetailProps) {
@@ -314,7 +314,7 @@ function financialImpactLabel(type: SquadProfileViewModel["recommendations"][num
 }
 interface SquadSuccessionProps {
   profile: SquadProfileViewModel;
-  onSelectPlayer: (playerId: string) => void;
+  onSelectPlayer?: (playerId: string) => void;
 }
 
 function SquadSuccession({ profile, onSelectPlayer }: SquadSuccessionProps) {

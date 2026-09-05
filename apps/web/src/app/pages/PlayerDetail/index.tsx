@@ -1,3 +1,5 @@
+"use client";
+
 import { Component, type ReactNode } from "react";
 import type { PlayerDetailProps } from "./types";
 import { ProjectionPanel } from "./ProjectionPanel";
@@ -43,7 +45,11 @@ export function PlayerDetail({
         <button
           className="atlas-player-detail__back"
           type="button"
-          onClick={isLoading ? onBack : onBackToSquad}
+          onClick={
+            isLoading
+              ? (onBack ?? (() => window.history.back()))
+              : (onBackToSquad ?? (() => (window.location.href = "/squad")))
+          }
         >
           {isLoading ? "← Back" : "Back to Squad"}
         </button>
@@ -167,14 +173,18 @@ class DevelopmentPlanBoundary extends Component<
 interface PlayerHeaderProps {
   diagnostics: PlayerDetailViewModel["diagnostics"];
   player: PlayerDetailViewModel["player"];
-  onBack: () => void;
+  onBack?: () => void;
 }
 
 function PlayerHeader({ diagnostics, onBack, player }: PlayerHeaderProps) {
   return (
     <header className="atlas-player-detail__header">
       <div className="atlas-player-detail__header-actions">
-        <button className="atlas-player-detail__back" type="button" onClick={onBack}>
+        <button
+          className="atlas-player-detail__back"
+          type="button"
+          onClick={onBack ?? (() => window.history.back())}
+        >
           ← Back
         </button>
         <DiagnosticNotifications diagnostics={diagnostics} showAll />

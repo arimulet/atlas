@@ -1,3 +1,5 @@
+"use client";
+
 import { useMemo } from "react";
 import type {
   ClubDashboardDevelopmentPlayer,
@@ -98,8 +100,11 @@ function FinancialStrategyAlerts({
   onSelectPlayer
 }: {
   financialStrategy: DashboardProps["financialStrategy"];
-  onSelectPlayer: (playerId: string) => void;
+  onSelectPlayer?: (playerId: string) => void;
 }) {
+  if (!financialStrategy) {
+    return null;
+  }
   const alerts = financialStrategy.viewModel?.criticalRecommendations ?? [];
   const hasMaterialPositionRisk = ["strained", "watch"].includes(
     financialStrategy.viewModel?.position.status ?? "unknown"
@@ -197,7 +202,7 @@ function FinancialStrategyAlerts({
 }
 interface AttentionPanelProps {
   items: AttentionItem[];
-  onSelectPlayer: (playerId: string) => void;
+  onSelectPlayer?: (playerId: string) => void;
   status: DashboardStatus;
 }
 
@@ -248,7 +253,7 @@ function AttentionPanel({ items, onSelectPlayer, status }: AttentionPanelProps) 
 }
 
 interface PlayersToWatchPanelProps {
-  onSelectPlayer: (playerId: string) => void;
+  onSelectPlayer?: (playerId: string) => void;
   players: WatchPlayer[];
   status: DashboardStatus;
 }

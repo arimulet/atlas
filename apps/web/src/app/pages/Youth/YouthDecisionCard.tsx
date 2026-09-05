@@ -8,7 +8,7 @@ import {
 
 interface YouthDecisionCardProps {
   model: YouthDecisionViewModel;
-  onSelectPlayer: (playerId: string) => void;
+  onSelectPlayer?: (playerId: string) => void;
 }
 
 export function YouthDecisionCard({ model, onSelectPlayer }: YouthDecisionCardProps) {

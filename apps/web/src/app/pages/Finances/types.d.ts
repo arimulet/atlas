@@ -5,6 +5,6 @@ export interface FinancesProps {
   status: DashboardStatus;
   dashboard: ClubDashboard | null;
   squadPlanning: SquadPlanningBundle | null;
-  onSelectPlayer: (playerId: string) => void;
-  financialStrategy: FinancialStrategyState;
+  onSelectPlayer?: (playerId: string) => void;
+  financialStrategy?: FinancialStrategyState | null;
 }

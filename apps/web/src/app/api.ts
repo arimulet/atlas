@@ -36,17 +36,24 @@ export interface PlayerDevelopmentTargetOverrideResponse {
   targetLevels: NonNullable<PlayerDevelopmentTargetOverride["targetLevels"]>;
 }
 
+function getBaseUrl(): string {
+  if (typeof window !== "undefined") {
+    return "";
+  }
+  return process.env.ATLAS_API_URL || "http://127.0.0.1:3002";
+}
+
 async function fetchAuthenticated(
   input: RequestInfo | URL,
   init: RequestInit = {}
 ): Promise<Response> {
   const headers = new Headers(init.headers);
 
-  if (!headers.has("Authorization")) {
+  if (typeof window !== "undefined" && !headers.has("Authorization")) {
     if (typeof auth?.authStateReady === "function") {
       await auth.authStateReady();
     }
-    const user = auth.currentUser;
+    const user = auth?.currentUser;
 
     if (user) {
       const token = await user.getIdToken();
@@ -54,7 +61,16 @@ async function fetchAuthenticated(
     }
   }
 
-  return fetch(input, { ...init, headers });
+  let url = input;
+  if (typeof input === "string" && input.startsWith("/")) {
+    const baseUrl = getBaseUrl();
+    if (baseUrl) {
+      url = `${baseUrl.replace(/\/$/, "")}${input}`;
+    }
+  }
+
+  const signal = init.signal ?? AbortSignal.timeout(5000);
+  return fetch(url, { ...init, headers, signal });
 }
 
 export async function fetchClubDashboard(_clubId?: string): Promise<ClubDashboard> {
