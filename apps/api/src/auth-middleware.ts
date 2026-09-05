@@ -1,4 +1,6 @@
-import type { FastifyRequest } from "fastify";
+import type { FastifyRequest, FastifyReply } from "fastify";
+import { getUserClubs } from "@atlas/application";
+import type { PersistedClub } from "@atlas/database";
 
 export interface AuthUser {
   uid: string;
@@ -45,3 +47,33 @@ export function parseAuthUser(request: FastifyRequest): AuthUser | null {
     return null;
   }
 }
+
+/**
+ * Obtiene el club del usuario autenticado a través del token de sesión.
+ * Si el usuario no está autenticado o no tiene club, envía la respuesta de error correspondiente y retorna null.
+ */
+export async function requireUserClub(
+  request: FastifyRequest,
+  reply: FastifyReply
+): Promise<PersistedClub | null> {
+  const authUser = parseAuthUser(request);
+  if (!authUser?.uid) {
+    reply.code(401).send({
+      error: "Unauthorized",
+      message: "No se proporcionó un token de autenticación válido."
+    });
+    return null;
+  }
+
+  const clubs = await getUserClubs(authUser.uid);
+  if (!clubs || clubs.length === 0) {
+    reply.code(404).send({
+      error: "NotFound",
+      message: "No se encontró ningún club asociado al usuario autenticado."
+    });
+    return null;
+  }
+
+  return clubs[0] ?? null;
+}
+

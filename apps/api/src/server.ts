@@ -17,15 +17,9 @@ export function buildServer() {
 
   server.register(importsRoutes, { prefix: "/api/imports" });
   server.register(userRoutes, { prefix: "/api/user" });
-  server.register(clubRoutes, { prefix: "/api/clubs/:clubId", schema: { params: clubParamsSchema } });
-  server.register(playerRoutes, {
-    prefix: "/api/clubs/:clubId/players",
-    schema: { params: clubParamsSchema }
-  });
-  server.register(economyRoutes, {
-    prefix: "/api/clubs/:clubId/economy",
-    schema: { params: clubParamsSchema }
-  });
+  server.register(clubRoutes, { prefix: "/api/club" });
+  server.register(playerRoutes, { prefix: "/api/players" });
+  server.register(economyRoutes, { prefix: "/api/economy" });
   
   server.register(internalJobsRoutes, { prefix: "/internal/jobs" });
 

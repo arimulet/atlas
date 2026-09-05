@@ -15,121 +15,118 @@ import {
 } from "@atlas/application";
 import { FastifyInstance } from "fastify";
 import {
-  clubParamsSchema,
   playerDevelopmentTargetBodySchema,
   playerDevelopmentTargetParamsSchema,
   squadRoleAssignmentBodySchema
 } from "@atlas/api/schemas";
-import { GetDevelopmentParams, GetYouthPipelinePlanningParams } from "./types";
+import { requireUserClub } from "../../auth-middleware.js";
 
 async function playerRoutes(server: FastifyInstance) {
-  server.get<{ Params: GetDevelopmentParams & { playerId: number } }>(
-    "/:playerId/development-target",
-    async (request) => {
-      const { clubId, playerId } = playerDevelopmentTargetParamsSchema.parse(request.params);
+  server.get("/:playerId/development-target", async (request, reply) => {
+    const userClub = await requireUserClub(request, reply);
+    if (!userClub) return;
 
-      return getPlayerDevelopmentTarget({ clubId, playerId });
-    }
-  );
-
-  server.put<{ Params: GetDevelopmentParams & { playerId: number } }>(
-    "/:playerId/development-target",
-    async (request) => {
-      const { clubId, playerId } = playerDevelopmentTargetParamsSchema.parse(request.params);
-      const body = playerDevelopmentTargetBodySchema.parse(request.body);
-
-      return savePlayerDevelopmentTarget({
-        clubId,
-        playerId,
-        ...body
-      });
-    }
-  );
-
-  server.delete<{ Params: GetDevelopmentParams & { playerId: number } }>(
-    "/:playerId/development-target",
-    async (request, reply) => {
-      const { clubId, playerId } = playerDevelopmentTargetParamsSchema.parse(request.params);
-
-      await resetPlayerDevelopmentTarget({ clubId, playerId });
-      return reply.code(204).send();
-    }
-  );
-
-  server.get<{ Params: GetDevelopmentParams & { playerId: number } }>(
-    "/:playerId/squad-role",
-    async (request) => {
-      const { clubId, playerId } = playerDevelopmentTargetParamsSchema.parse(request.params);
-      return getSquadRoleAssignment({ clubId, playerId });
-    }
-  );
-
-  server.put<{ Params: GetDevelopmentParams & { playerId: number } }>(
-    "/:playerId/squad-role",
-    async (request) => {
-      const { clubId, playerId } = playerDevelopmentTargetParamsSchema.parse(request.params);
-      const body = squadRoleAssignmentBodySchema.parse(request.body);
-      return saveSquadRoleAssignment({ clubId, playerId, role: body.role });
-    }
-  );
-
-  server.delete<{ Params: GetDevelopmentParams & { playerId: number } }>(
-    "/:playerId/squad-role",
-    async (request, reply) => {
-      const { clubId, playerId } = playerDevelopmentTargetParamsSchema.parse(request.params);
-      await resetSquadRoleAssignment({ clubId, playerId });
-      return reply.code(204).send();
-    }
-  );
-
-  server.get<{ Params: GetDevelopmentParams }>("/squad-planning", async (request) => {
-    const { clubId } = clubParamsSchema.parse(request.params);
-    return getSquadAssessment(clubId);
+    const { playerId } = playerDevelopmentTargetParamsSchema.parse(request.params);
+    return getPlayerDevelopmentTarget({ clubId: userClub.id, playerId });
   });
 
-  server.get<{ Params: GetDevelopmentParams }>("/squad-depth", async (request) => {
-    const { clubId } = clubParamsSchema.parse(request.params);
-    return getSquadDepthAnalysis(clubId);
+  server.put("/:playerId/development-target", async (request, reply) => {
+    const userClub = await requireUserClub(request, reply);
+    if (!userClub) return;
+
+    const { playerId } = playerDevelopmentTargetParamsSchema.parse(request.params);
+    const body = playerDevelopmentTargetBodySchema.parse(request.body);
+
+    return savePlayerDevelopmentTarget({
+      clubId: userClub.id,
+      playerId,
+      ...body
+    });
   });
 
-  server.get<{ Params: GetDevelopmentParams }>(
-    "/squad-planning-recommendations",
-    async (request) => {
-      const { clubId } = clubParamsSchema.parse(request.params);
-      return getSquadPlanningRecommendations(clubId);
-    }
-  );
+  server.delete("/:playerId/development-target", async (request, reply) => {
+    const userClub = await requireUserClub(request, reply);
+    if (!userClub) return;
 
-  server.get<{ Params: GetDevelopmentParams }>("/youth-decision-planning", async (request) => {
-    const { clubId } = clubParamsSchema.parse(request.params);
-    return getYouthDecisionPlanning(clubId);
+    const { playerId } = playerDevelopmentTargetParamsSchema.parse(request.params);
+
+    await resetPlayerDevelopmentTarget({ clubId: userClub.id, playerId });
+    return reply.code(204).send();
   });
 
-  server.get<{ Params: GetDevelopmentParams }>("/development", async (request) => {
-    const { clubId } = clubParamsSchema.parse(request.params);
+  server.get("/:playerId/squad-role", async (request, reply) => {
+    const userClub = await requireUserClub(request, reply);
+    if (!userClub) return;
 
-    const playerDevelopment = await getPlayerDevelopment(clubId);
-
-    return playerDevelopment;
+    const { playerId } = playerDevelopmentTargetParamsSchema.parse(request.params);
+    return getSquadRoleAssignment({ clubId: userClub.id, playerId });
   });
 
-  server.get<{ Params: GetYouthPipelinePlanningParams }>(
-    "/youth-pipeline-planning",
-    async (request) => {
-      const { clubId } = clubParamsSchema.parse(request.params);
+  server.put("/:playerId/squad-role", async (request, reply) => {
+    const userClub = await requireUserClub(request, reply);
+    if (!userClub) return;
 
-      const youthPlanning = await getYouthPipelinePlanning(clubId);
+    const { playerId } = playerDevelopmentTargetParamsSchema.parse(request.params);
+    const body = squadRoleAssignmentBodySchema.parse(request.body);
+    return saveSquadRoleAssignment({ clubId: userClub.id, playerId, role: body.role });
+  });
 
-      return youthPlanning;
-    }
-  );
+  server.delete("/:playerId/squad-role", async (request, reply) => {
+    const userClub = await requireUserClub(request, reply);
+    if (!userClub) return;
 
-  server.get<{ Params: GetYouthPipelinePlanningParams }>("/youth-academy", async (request) => {
-    const { clubId } = clubParamsSchema.parse(request.params);
+    const { playerId } = playerDevelopmentTargetParamsSchema.parse(request.params);
+    await resetSquadRoleAssignment({ clubId: userClub.id, playerId });
+    return reply.code(204).send();
+  });
 
-    const realYouthPlanning = await getRealYouthAcademyPlanning(clubId);
+  server.get("/squad-planning", async (request, reply) => {
+    const userClub = await requireUserClub(request, reply);
+    if (!userClub) return;
 
-    return realYouthPlanning;
+    return getSquadAssessment(userClub.id);
+  });
+
+  server.get("/squad-depth", async (request, reply) => {
+    const userClub = await requireUserClub(request, reply);
+    if (!userClub) return;
+
+    return getSquadDepthAnalysis(userClub.id);
+  });
+
+  server.get("/squad-planning-recommendations", async (request, reply) => {
+    const userClub = await requireUserClub(request, reply);
+    if (!userClub) return;
+
+    return getSquadPlanningRecommendations(userClub.id);
+  });
+
+  server.get("/youth-decision-planning", async (request, reply) => {
+    const userClub = await requireUserClub(request, reply);
+    if (!userClub) return;
+
+    return getYouthDecisionPlanning(userClub.id);
+  });
+
+  server.get("/development", async (request, reply) => {
+    const userClub = await requireUserClub(request, reply);
+    if (!userClub) return;
+
+    return getPlayerDevelopment(userClub.id);
+  });
+
+  server.get("/youth-pipeline-planning", async (request, reply) => {
+    const userClub = await requireUserClub(request, reply);
+    if (!userClub) return;
+
+    return getYouthPipelinePlanning(userClub.id);
+  });
+
+  server.get("/youth-academy", async (request, reply) => {
+    const userClub = await requireUserClub(request, reply);
+    if (!userClub) return;
+
+    return getRealYouthAcademyPlanning(userClub.id);
   });
 }
 

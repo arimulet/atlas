@@ -20,6 +20,7 @@ import type {
   SquadPlanningRecommendations,
   SquadRole
 } from "@atlas/domain";
+import { auth } from "./services/firebase";
 
 export interface FinancialStrategyData {
   financialAssessment: ClubFinancialAssessment;
@@ -35,8 +36,29 @@ export interface PlayerDevelopmentTargetOverrideResponse {
   targetLevels: NonNullable<PlayerDevelopmentTargetOverride["targetLevels"]>;
 }
 
-export async function fetchClubDashboard(clubId: string): Promise<ClubDashboard> {
-  const response = await fetch(`/api/clubs/${clubId}/dashboard`);
+async function fetchAuthenticated(
+  input: RequestInfo | URL,
+  init: RequestInit = {}
+): Promise<Response> {
+  const headers = new Headers(init.headers);
+
+  if (!headers.has("Authorization")) {
+    if (typeof auth?.authStateReady === "function") {
+      await auth.authStateReady();
+    }
+    const user = auth.currentUser;
+
+    if (user) {
+      const token = await user.getIdToken();
+      headers.set("Authorization", `Bearer ${token}`);
+    }
+  }
+
+  return fetch(input, { ...init, headers });
+}
+
+export async function fetchClubDashboard(_clubId?: string): Promise<ClubDashboard> {
+  const response = await fetchAuthenticated("/api/club/dashboard");
   const body = (await response.json()) as ClubDashboard;
 
   if (!response.ok || !body) {
@@ -46,8 +68,8 @@ export async function fetchClubDashboard(clubId: string): Promise<ClubDashboard>
   return body;
 }
 
-export async function fetchFinancialStrategy(clubId: string): Promise<FinancialStrategyData> {
-  const response = await fetch(`/api/clubs/${clubId}/financial-strategy`);
+export async function fetchFinancialStrategy(_clubId?: string): Promise<FinancialStrategyData> {
+  const response = await fetchAuthenticated("/api/club/financial-strategy");
   const body = (await response.json()) as FinancialStrategyData;
 
   if (!response.ok || !body) {
@@ -58,10 +80,16 @@ export async function fetchFinancialStrategy(clubId: string): Promise<FinancialS
 }
 
 export async function fetchInvestmentSafety(
-  clubId: string,
+  _clubId: string | number | null | undefined,
   amount: number
+): Promise<InvestmentSafetyAssessment>;
+export async function fetchInvestmentSafety(amount: number): Promise<InvestmentSafetyAssessment>;
+export async function fetchInvestmentSafety(
+  firstArg: unknown,
+  secondArg?: number
 ): Promise<InvestmentSafetyAssessment> {
-  const response = await fetch(`/api/clubs/${clubId}/financial-strategy/investment-safety`, {
+  const amount = typeof firstArg === "number" ? firstArg : secondArg!;
+  const response = await fetchAuthenticated("/api/club/financial-strategy/investment-safety", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ amount })
@@ -75,8 +103,8 @@ export async function fetchInvestmentSafety(
   return body;
 }
 
-export async function fetchTrainingPageData(clubId: string): Promise<TrainingPageData> {
-  const response = await fetch(`/api/clubs/${clubId}/training`);
+export async function fetchTrainingPageData(_clubId?: string): Promise<TrainingPageData> {
+  const response = await fetchAuthenticated("/api/club/training");
   const body = (await response.json()) as TrainingPageData;
 
   if (!response.ok || !body) {
@@ -87,9 +115,9 @@ export async function fetchTrainingPageData(clubId: string): Promise<TrainingPag
 }
 
 export async function fetchClubDiagnostic(
-  clubId: string
+  _clubId?: string
 ): Promise<{ findings: DiagnosticFinding[] } | null> {
-  const response = await fetch("/api/clubs/" + clubId + "/diagnostics");
+  const response = await fetchAuthenticated("/api/club/diagnostics");
   const body = (await response.json()) as { findings: DiagnosticFinding[] } | null;
 
   if (!response.ok) {
@@ -99,9 +127,9 @@ export async function fetchClubDiagnostic(
   return body;
 }
 export async function fetchWeeklyTrainingIntelligence(
-  clubId: string
+  _clubId?: string
 ): Promise<WeeklyTrainingIntelligence> {
-  const response = await fetch(`/api/clubs/${clubId}/training/intelligence`);
+  const response = await fetchAuthenticated("/api/club/training/intelligence");
   const body = (await response.json()) as WeeklyTrainingIntelligence;
 
   if (!response.ok || !body) {
@@ -111,8 +139,8 @@ export async function fetchWeeklyTrainingIntelligence(
   return body;
 }
 
-export async function fetchPlayerDevelopment(clubId: string): Promise<PlayerDevelopment> {
-  const response = await fetch(`/api/clubs/${clubId}/players/development`);
+export async function fetchPlayerDevelopment(_clubId?: string): Promise<PlayerDevelopment> {
+  const response = await fetchAuthenticated("/api/players/development");
   const body = (await response.json()) as PlayerDevelopment;
 
   if (!response.ok || !body) {
@@ -122,8 +150,8 @@ export async function fetchPlayerDevelopment(clubId: string): Promise<PlayerDeve
   return body;
 }
 
-export async function fetchSquadPlanning(clubId: string): Promise<SquadPlanningData> {
-  const response = await fetch(`/api/clubs/${clubId}/players/squad-planning`);
+export async function fetchSquadPlanning(_clubId?: string): Promise<SquadPlanningData> {
+  const response = await fetchAuthenticated("/api/players/squad-planning");
   const body = (await response.json()) as SquadPlanningData;
 
   if (!response.ok || !body) {
@@ -133,8 +161,8 @@ export async function fetchSquadPlanning(clubId: string): Promise<SquadPlanningD
   return body;
 }
 
-export async function fetchSquadDepthAnalysis(clubId: string): Promise<SquadDepthAnalysis> {
-  const response = await fetch(`/api/clubs/${clubId}/players/squad-depth`);
+export async function fetchSquadDepthAnalysis(_clubId?: string): Promise<SquadDepthAnalysis> {
+  const response = await fetchAuthenticated("/api/players/squad-depth");
   const body = (await response.json()) as SquadDepthAnalysis;
 
   if (!response.ok || !body) {
@@ -145,9 +173,9 @@ export async function fetchSquadDepthAnalysis(clubId: string): Promise<SquadDept
 }
 
 export async function fetchSquadPlanningRecommendations(
-  clubId: string
+  _clubId?: string
 ): Promise<SquadPlanningRecommendations> {
-  const response = await fetch(`/api/clubs/${clubId}/players/squad-planning-recommendations`);
+  const response = await fetchAuthenticated("/api/players/squad-planning-recommendations");
   const body = (await response.json()) as SquadPlanningRecommendations;
 
   if (!response.ok || !body) {
@@ -158,11 +186,13 @@ export async function fetchSquadPlanningRecommendations(
 }
 
 export async function saveSquadRoleAssignment(
-  clubId: string,
-  playerId: string,
-  role: SquadRole
+  firstArg: string,
+  secondArg: string | SquadRole,
+  thirdArg?: SquadRole
 ): Promise<void> {
-  const response = await fetch(`/api/clubs/${clubId}/players/${playerId}/squad-role`, {
+  const playerId = typeof secondArg === "string" && thirdArg ? secondArg : firstArg;
+  const role = typeof secondArg === "string" && thirdArg ? thirdArg : (secondArg as SquadRole);
+  const response = await fetchAuthenticated(`/api/players/${playerId}/squad-role`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ role })
@@ -173,8 +203,12 @@ export async function saveSquadRoleAssignment(
   }
 }
 
-export async function resetSquadRoleAssignment(clubId: string, playerId: string): Promise<void> {
-  const response = await fetch(`/api/clubs/${clubId}/players/${playerId}/squad-role`, {
+export async function resetSquadRoleAssignment(
+  firstArg: string,
+  secondArg?: string
+): Promise<void> {
+  const playerId = secondArg ?? firstArg;
+  const response = await fetchAuthenticated(`/api/players/${playerId}/squad-role`, {
     method: "DELETE"
   });
 
@@ -212,10 +246,11 @@ function errorMessageFromBody(body: unknown): string | null {
 }
 
 export async function fetchPlayerDevelopmentTarget(
-  clubId: string,
-  playerId: string
+  firstArg: string,
+  secondArg?: string
 ): Promise<PlayerDevelopmentTargetOverrideResponse | null> {
-  const response = await fetch(`/api/clubs/${clubId}/players/${playerId}/development-target`);
+  const playerId = secondArg ?? firstArg;
+  const response = await fetchAuthenticated(`/api/players/${playerId}/development-target`);
 
   if (response.status === 404) {
     return null;
@@ -231,11 +266,17 @@ export async function fetchPlayerDevelopmentTarget(
 }
 
 export async function savePlayerDevelopmentTarget(
-  clubId: string,
-  playerId: string,
-  override: PlayerDevelopmentTargetOverride
+  firstArg: string,
+  secondArg: string | PlayerDevelopmentTargetOverride,
+  thirdArg?: PlayerDevelopmentTargetOverride
 ): Promise<PlayerDevelopmentTargetOverrideResponse> {
-  const response = await fetch(`/api/clubs/${clubId}/players/${playerId}/development-target`, {
+  const playerId = typeof secondArg === "string" && thirdArg ? secondArg : firstArg;
+  const override =
+    typeof secondArg === "string" && thirdArg
+      ? thirdArg
+      : (secondArg as PlayerDevelopmentTargetOverride);
+
+  const response = await fetchAuthenticated(`/api/players/${playerId}/development-target`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(override)
@@ -250,10 +291,11 @@ export async function savePlayerDevelopmentTarget(
 }
 
 export async function resetPlayerDevelopmentTarget(
-  clubId: string,
-  playerId: string
+  firstArg: string,
+  secondArg?: string
 ): Promise<void> {
-  const response = await fetch(`/api/clubs/${clubId}/players/${playerId}/development-target`, {
+  const playerId = secondArg ?? firstArg;
+  const response = await fetchAuthenticated(`/api/players/${playerId}/development-target`, {
     method: "DELETE"
   });
 
@@ -262,8 +304,8 @@ export async function resetPlayerDevelopmentTarget(
   }
 }
 
-export async function fetchYouthPipelinePlanning(clubId: string): Promise<YouthPipelinePlanning> {
-  const response = await fetch(`/api/clubs/${clubId}/players/youth-pipeline-planning`);
+export async function fetchYouthPipelinePlanning(_clubId?: string): Promise<YouthPipelinePlanning> {
+  const response = await fetchAuthenticated("/api/players/youth-pipeline-planning");
   const body = (await response.json()) as YouthPipelinePlanning;
 
   if (!response.ok || !body) {
@@ -273,8 +315,8 @@ export async function fetchYouthPipelinePlanning(clubId: string): Promise<YouthP
   return body;
 }
 
-export async function fetchYouthDecisionPlanning(clubId: string): Promise<YouthDecisionPlanning> {
-  const response = await fetch(`/api/clubs/${clubId}/players/youth-decision-planning`);
+export async function fetchYouthDecisionPlanning(_clubId?: string): Promise<YouthDecisionPlanning> {
+  const response = await fetchAuthenticated("/api/players/youth-decision-planning");
   const body = (await response.json()) as YouthDecisionPlanning;
 
   if (!response.ok || !body) {
@@ -285,9 +327,9 @@ export async function fetchYouthDecisionPlanning(clubId: string): Promise<YouthD
 }
 
 export async function fetchRealYouthAcademyPlanning(
-  clubId: string
+  _clubId?: string
 ): Promise<RealYouthAcademyPlanning> {
-  const response = await fetch(`/api/clubs/${clubId}/players/youth-academy`);
+  const response = await fetchAuthenticated("/api/players/youth-academy");
   const body = (await response.json()) as RealYouthAcademyPlanning;
 
   if (!response.ok || !body) {
@@ -304,7 +346,7 @@ export async function fetchUserClubs(
   if (token) {
     headers.Authorization = `Bearer ${token}`;
   }
-  const response = await fetch("/api/user/clubs", { headers });
+  const response = await fetchAuthenticated("/api/user/clubs", { headers });
   if (!response.ok) {
     return { clubs: [] };
   }
@@ -323,7 +365,7 @@ export async function syncSokker(
     headers.Authorization = `Bearer ${token}`;
   }
 
-  const response = await fetch("/api/imports/sokker-sync", {
+  const response = await fetchAuthenticated("/api/imports/sokker-sync", {
     method: "POST",
     headers,
     body: JSON.stringify(payload)
@@ -373,9 +415,9 @@ function createEndpointError(message: string): ImportResponse {
 }
 
 export async function fetchYouthPerformances(
-  clubId: string
+  _clubId?: string
 ): Promise<import("@atlas/application").YouthMatchPerformancesDto> {
-  const response = await fetch(`/api/clubs/${clubId}/youth/performances`);
+  const response = await fetchAuthenticated("/api/club/youth/performances");
   const body = await response.json();
 
   if (!response.ok || !body) {
@@ -386,11 +428,14 @@ export async function fetchYouthPerformances(
 }
 
 export async function patchYouthObservations(
-  clubId: string,
-  playerId: number,
-  observations: string
+  firstArg: string | number,
+  secondArg: number | string,
+  thirdArg?: string
 ): Promise<void> {
-  const response = await fetch(`/api/clubs/${clubId}/youth/players/${playerId}/observations`, {
+  const playerId = typeof secondArg === "number" ? secondArg : Number(firstArg);
+  const observations = typeof thirdArg === "string" ? thirdArg : String(secondArg);
+
+  const response = await fetchAuthenticated(`/api/club/youth/players/${playerId}/observations`, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json"

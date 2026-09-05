@@ -24,149 +24,131 @@ import {
   updateClubProfileBodySchema,
   patchYouthObservationsBodySchema
 } from "@atlas/api/schemas";
-
-import {
-  GetClubDashboardParams,
-  GetClubHistoricalFindingsParams,
-  GetClubHistoricalTrendsParams,
-  GetClubOperatingSettingsParams,
-  GetClubProfileParams,
-  GetClubSnapshotsParams,
-  PatchClubOperatingSettingsParams,
-  PatchClubProfileParams,
-  PatchYouthObservationsParams
-} from "./types";
+import { requireUserClub } from "../../auth-middleware.js";
 
 async function clubRoutes(server: FastifyInstance) {
-  server.get<{ Params: GetClubProfileParams }>("/profile", async (request) => {
-    const { clubId } = request.params;
+  server.get("/profile", async (request, reply) => {
+    const userClub = await requireUserClub(request, reply);
+    if (!userClub) return;
 
-    const club = await getClubProfile(clubId);
-
-    return club;
+    return getClubProfile(userClub.id);
   });
 
-  server.get<{ Params: GetClubDashboardParams }>("/dashboard", async (request) => {
-    const { clubId } = request.params;
+  server.get("/dashboard", async (request, reply) => {
+    const userClub = await requireUserClub(request, reply);
+    if (!userClub) return;
 
-    const dashboard = await getClubDashboard(clubId);
-
-    return dashboard;
+    return getClubDashboard(userClub.id);
   });
 
-  server.get<{ Params: GetClubDashboardParams }>("/financial-strategy", async (request) => {
-    const { clubId } = request.params;
+  server.get("/financial-strategy", async (request, reply) => {
+    const userClub = await requireUserClub(request, reply);
+    if (!userClub) return;
 
-    return getFinancialStrategyAssessment(clubId);
+    return getFinancialStrategyAssessment(userClub.id);
   });
 
-  server.post<{ Params: GetClubDashboardParams }>(
-    "/financial-strategy/investment-safety",
-    async (request) => {
-      const { clubId } = request.params;
-      const { amount } = investmentSafetyBodySchema.parse(request.body);
+  server.post("/financial-strategy/investment-safety", async (request, reply) => {
+    const userClub = await requireUserClub(request, reply);
+    if (!userClub) return;
 
-      return getInvestmentSafety(clubId, amount);
-    }
-  );
-
-  server.get<{ Params: GetClubDashboardParams }>("/training", async (request) => {
-    const { clubId } = request.params;
-
-    return getTrainingPageData(clubId);
+    const { amount } = investmentSafetyBodySchema.parse(request.body);
+    return getInvestmentSafety(userClub.id, amount);
   });
 
-  server.get<{ Params: GetClubDashboardParams }>("/diagnostics", async (request) => {
-    const { clubId } = request.params;
+  server.get("/training", async (request, reply) => {
+    const userClub = await requireUserClub(request, reply);
+    if (!userClub) return;
 
-    return getClubDiagnostic(clubId);
-  });
-  server.get<{ Params: GetClubDashboardParams }>("/training/intelligence", async (request) => {
-    const { clubId } = request.params;
-
-    return getWeeklyTrainingIntelligence(clubId);
+    return getTrainingPageData(userClub.id);
   });
 
-  server.patch<{ Params: PatchClubProfileParams }>("/profile", async (request) => {
-    const { clubId } = request.params;
+  server.get("/diagnostics", async (request, reply) => {
+    const userClub = await requireUserClub(request, reply);
+    if (!userClub) return;
+
+    return getClubDiagnostic(userClub.id);
+  });
+
+  server.get("/training/intelligence", async (request, reply) => {
+    const userClub = await requireUserClub(request, reply);
+    if (!userClub) return;
+
+    return getWeeklyTrainingIntelligence(userClub.id);
+  });
+
+  server.patch("/profile", async (request, reply) => {
+    const userClub = await requireUserClub(request, reply);
+    if (!userClub) return;
+
     const body = updateClubProfileBodySchema.parse(request.body);
-
-    const profile = await updateClubProfile({ clubId, settings: body.settings ?? {} });
-
-    return profile;
+    return updateClubProfile({ clubId: userClub.id, settings: body.settings ?? {} });
   });
 
-  server.get<{ Params: GetClubOperatingSettingsParams }>("/operating-settings", async (request) => {
-    const { clubId } = request.params;
+  server.get("/operating-settings", async (request, reply) => {
+    const userClub = await requireUserClub(request, reply);
+    if (!userClub) return;
 
-    const operatingSettings = await getClubOperatingSettings(clubId);
-    return operatingSettings;
+    return getClubOperatingSettings(userClub.id);
   });
 
-  server.patch<{ Params: PatchClubOperatingSettingsParams }>(
-    "/operating-settings",
-    async (request) => {
-      const { clubId } = request.params;
-      const body = updateClubOperatingSettingsBodySchema.parse(request.body);
+  server.patch("/operating-settings", async (request, reply) => {
+    const userClub = await requireUserClub(request, reply);
+    if (!userClub) return;
 
-      const operatingSettings = await updateClubOperatingSettings({
-        clubId,
-        settings: body.settings ?? {}
-      });
-
-      return operatingSettings;
-    }
-  );
-
-  server.get<{ Params: GetClubHistoricalTrendsParams }>("/historical-trends", async (request) => {
-    const { clubId } = request.params;
-
-    const historicalTrends = await calculateClubHistoricalTrends(clubId);
-
-    return historicalTrends;
+    const body = updateClubOperatingSettingsBodySchema.parse(request.body);
+    return updateClubOperatingSettings({
+      clubId: userClub.id,
+      settings: body.settings ?? {}
+    });
   });
 
-  server.get<{ Params: GetClubHistoricalFindingsParams }>(
-    "/historical-findings",
-    async (request) => {
-      const { clubId } = request.params;
+  server.get("/historical-trends", async (request, reply) => {
+    const userClub = await requireUserClub(request, reply);
+    if (!userClub) return;
 
-      const historicalFindings = await generateClubHistoricalFindings(clubId);
-
-      return historicalFindings;
-    }
-  );
-
-  server.get<{ Params: GetClubSnapshotsParams }>("/snapshots", async (request) => {
-    const { clubId } = request.params;
-
-    const snapshots = await getClubSnapshots(clubId);
-
-    return snapshots;
+    return calculateClubHistoricalTrends(userClub.id);
   });
 
-  server.post<{ Params: GetClubSnapshotsParams }>("/snapshot-comparisons", async (request) => {
-    const { clubId } = request.params;
+  server.get("/historical-findings", async (request, reply) => {
+    const userClub = await requireUserClub(request, reply);
+    if (!userClub) return;
+
+    return generateClubHistoricalFindings(userClub.id);
+  });
+
+  server.get("/snapshots", async (request, reply) => {
+    const userClub = await requireUserClub(request, reply);
+    if (!userClub) return;
+
+    return getClubSnapshots(userClub.id);
+  });
+
+  server.post("/snapshot-comparisons", async (request, reply) => {
+    const userClub = await requireUserClub(request, reply);
+    if (!userClub) return;
+
     const body = compareClubSnapshotsBodySchema.parse(request.body);
-
-    const snapshotsCompare = await compareClubSnapshots({ clubId, ...body });
-
-    return snapshotsCompare;
+    return compareClubSnapshots({ clubId: userClub.id, ...body });
   });
 
-  server.get<{ Params: GetClubDashboardParams }>("/youth/performances", async (request) => {
-    const { clubId } = request.params;
-    return getYouthPerformances(clubId);
+  server.get("/youth/performances", async (request, reply) => {
+    const userClub = await requireUserClub(request, reply);
+    if (!userClub) return;
+
+    return getYouthPerformances(userClub.id);
   });
 
-  server.patch<{ Params: PatchYouthObservationsParams }>(
+  server.patch<{ Params: { playerId: string } }>(
     "/youth/players/:playerId/observations",
     async (request, reply) => {
-      const { clubId, playerId } = request.params;
+      const userClub = await requireUserClub(request, reply);
+      if (!userClub) return;
+
+      const { playerId } = request.params;
       const { observations } = patchYouthObservationsBodySchema.parse(request.body);
 
-      await updateYouthObservations(clubId, Number(playerId), observations);
-
+      await updateYouthObservations(userClub.id, Number(playerId), observations);
       return reply.status(204).send();
     }
   );
