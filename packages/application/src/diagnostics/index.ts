@@ -1,4 +1,4 @@
-﻿import {
+import {
   MongoClubRepository,
   MongoSnapshotRepository,
   MongoCountryRepository,
@@ -26,15 +26,20 @@ export async function getClubDiagnostic(clubId: ClubId): Promise<BasicDiagnostic
     throw new Error("Club not found: " + clubId);
   }
 
-  const latestSnapshot = (await snapshotRepository.listByClub(clubId)).at(-1);
+  const [snapshots, clubCountry, rawTransfers] = await Promise.all([
+    snapshotRepository.listByClub(clubId),
+    countryRepository.getById(club.country),
+    findFinalMarketTransfersUpToDate(new Date())
+  ]);
+
+  const latestSnapshot = snapshots.at(-1);
   if (!latestSnapshot) return null;
 
-  const clubCountry = await countryRepository.getById(club.country);
   const currencyRate = clubCountry?.currencyRate ?? 1;
   const currencyName = clubCountry?.currencyName ?? club.currency;
-
-  const rawTransfers = await findFinalMarketTransfersUpToDate(new Date());
-  const mappedTransfers = rawTransfers.map(t => mapMarketTransferToRecord(t, currencyName, currencyRate));
+  const mappedTransfers = rawTransfers.map((t) =>
+    mapMarketTransferToRecord(t, currencyName, currencyRate)
+  );
 
   return createSnapshotDiagnostic(latestSnapshot, club.currency, mappedTransfers);
 }
