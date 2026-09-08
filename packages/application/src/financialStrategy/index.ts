@@ -16,9 +16,37 @@ import type { ClubId } from "../types.js";
 const clubRepository = new MongoClubRepository();
 const snapshotRepository = new MongoSnapshotRepository();
 
+const inFlightFinancialAssessments = new Map<string, Promise<ClubFinancialAssessment>>();
+const financialAssessmentCache = new Map<string, { data: ClubFinancialAssessment; timestamp: number }>();
+const FINANCIAL_ASSESSMENT_CACHE_TTL_MS = 60 * 1000;
+
 export async function getClubFinancialAssessment(clubId: ClubId): Promise<ClubFinancialAssessment> {
-  const context = await getClubFinancialContext(clubId);
-  return assessClubFinancialPosition(context);
+  const cacheKey = String(clubId);
+  const now = Date.now();
+
+  const cached = financialAssessmentCache.get(cacheKey);
+  if (cached && now - cached.timestamp < FINANCIAL_ASSESSMENT_CACHE_TTL_MS) {
+    return cached.data;
+  }
+
+  const inFlight = inFlightFinancialAssessments.get(cacheKey);
+  if (inFlight) {
+    return inFlight;
+  }
+
+  const promise = (async () => {
+    try {
+      const context = await getClubFinancialContext(clubId);
+      const assessment = assessClubFinancialPosition(context);
+      financialAssessmentCache.set(cacheKey, { data: assessment, timestamp: Date.now() });
+      return assessment;
+    } finally {
+      inFlightFinancialAssessments.delete(cacheKey);
+    }
+  })();
+
+  inFlightFinancialAssessments.set(cacheKey, promise);
+  return promise;
 }
 
 export async function getClubFinancialPosition(clubId: ClubId): Promise<ClubFinancialPosition> {
@@ -30,11 +58,10 @@ export async function getClubFinancialContext(clubId: ClubId): Promise<Financial
   const club = await clubRepository.findById(clubId.toString());
   if (!club) throw new Error(`Club not found: ${clubId}`);
 
-  const [snapshots, squadAssessment] = await Promise.all([
-    snapshotRepository.listByClub(clubId),
+  const [latest, squadAssessment] = await Promise.all([
+    snapshotRepository.findLatestByClub(club.clubId),
     getSquadAssessment(clubId)
   ]);
-  const latest = snapshots.at(-1);
   const roleByPlayer = new Map(
     squadAssessment.players.map((player) => [player.playerId, player.role] as const)
   );

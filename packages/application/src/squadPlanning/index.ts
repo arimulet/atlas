@@ -91,7 +91,60 @@ export interface SquadAssessmentOptions {
   trainingWeeks?: PersistedPlayerTrainingWeek[];
 }
 
+const inFlightSquadAssessments = new Map<string, Promise<SquadAssessmentData>>();
+const squadAssessmentCache = new Map<string, { data: SquadAssessmentData; timestamp: number }>();
+const SQUAD_ASSESSMENT_CACHE_TTL_MS = 60 * 1000;
+
+export function invalidateSquadAssessmentCache(clubId?: ClubId): void {
+  if (clubId !== undefined) {
+    squadAssessmentCache.delete(String(clubId));
+  } else {
+    squadAssessmentCache.clear();
+  }
+}
+
 export async function getSquadAssessment(
+  clubId: ClubId,
+  options?: SquadAssessmentOptions
+): Promise<SquadAssessmentData> {
+  const cacheKey = String(clubId);
+  const now = Date.now();
+  const hasCustomOptions = Boolean(options?.snapshots || options?.trainingWeeks);
+
+  if (!hasCustomOptions) {
+    const cached = squadAssessmentCache.get(cacheKey);
+    if (cached && now - cached.timestamp < SQUAD_ASSESSMENT_CACHE_TTL_MS) {
+      return cached.data;
+    }
+
+    const inFlight = inFlightSquadAssessments.get(cacheKey);
+    if (inFlight) {
+      return inFlight;
+    }
+  }
+
+  const computePromise = (async () => {
+    try {
+      const result = await computeSquadAssessment(clubId, options);
+      if (!hasCustomOptions) {
+        squadAssessmentCache.set(cacheKey, { data: result, timestamp: Date.now() });
+      }
+      return result;
+    } finally {
+      if (!hasCustomOptions) {
+        inFlightSquadAssessments.delete(cacheKey);
+      }
+    }
+  })();
+
+  if (!hasCustomOptions) {
+    inFlightSquadAssessments.set(cacheKey, computePromise);
+  }
+
+  return computePromise;
+}
+
+async function computeSquadAssessment(
   clubId: ClubId,
   options?: SquadAssessmentOptions
 ): Promise<SquadAssessmentData> {
@@ -209,6 +262,7 @@ export async function getSquadRoleAssignment(input: {
 export async function saveSquadRoleAssignment(
   input: Omit<SaveSquadRoleAssignmentInput, "clubId"> & { clubId: ClubId }
 ): Promise<PersistedSquadRoleAssignment> {
+  invalidateSquadAssessmentCache(input.clubId);
   return playerRepository.saveSquadRole({
     ...input,
     clubId: await resolveNumericClubId(input.clubId)
@@ -219,6 +273,7 @@ export async function resetSquadRoleAssignment(input: {
   playerId: number;
   clubId: ClubId;
 }): Promise<void> {
+  invalidateSquadAssessmentCache(input.clubId);
   await playerRepository.deleteSquadRole({
     ...input,
     clubId: await resolveNumericClubId(input.clubId)
