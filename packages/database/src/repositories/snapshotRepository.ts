@@ -102,6 +102,14 @@ export class MongoSnapshotRepository {
     return snapshot ? this.hydrateSnapshot(snapshot as unknown as SnapshotDocumentShape) : null;
   }
 
+  async findLatestByClub(clubId: ClubId): Promise<PersistedSnapshot | null> {
+    const numericClubId = await this.resolveNumericClubId(clubId);
+    const snapshot = await SnapshotModel.findOne({ clubId: numericClubId })
+      .sort({ snapshotDate: -1 })
+      .lean();
+    return snapshot ? this.hydrateSnapshot(snapshot as unknown as SnapshotDocumentShape) : null;
+  }
+
   async listByClub(clubId: ClubId): Promise<PersistedSnapshot[]> {
     const numericClubId = await this.resolveNumericClubId(clubId);
     const snapshots = await SnapshotModel.find({ clubId: numericClubId })
