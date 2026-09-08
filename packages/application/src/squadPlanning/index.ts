@@ -3,6 +3,8 @@ import {
   MongoSnapshotRepository,
   MongoPlayerRepository,
   MongoTrainingWeekRepository,
+  type PersistedClub,
+  type PersistedSnapshot,
   type PersistedPlayerSnapshot,
   type PersistedPlayerDevelopmentOverride,
   type PersistedPlayerTrainingWeek,
@@ -83,15 +85,24 @@ const snapshotRepository = new MongoSnapshotRepository();
 const trainingWeekRepository = new MongoTrainingWeekRepository();
 const playerRepository = new MongoPlayerRepository();
 
-export async function getSquadAssessment(clubId: ClubId): Promise<SquadAssessmentData> {
-  const club = await clubRepository.findById(clubId.toString());
+export interface SquadAssessmentOptions {
+  club?: PersistedClub;
+  snapshots?: PersistedSnapshot[];
+  trainingWeeks?: PersistedPlayerTrainingWeek[];
+}
+
+export async function getSquadAssessment(
+  clubId: ClubId,
+  options?: SquadAssessmentOptions
+): Promise<SquadAssessmentData> {
+  const club = options?.club ?? (await clubRepository.findById(clubId.toString()));
   if (!club) throw new Error(`Club not found: ${clubId}`);
 
   const countryRepo = new MongoCountryRepository();
 
   const [snapshots, trainingWeeks, assignments, rawOverrides, allCountries, rawTransfers] = await Promise.all([
-    snapshotRepository.listByClub(clubId),
-    trainingWeekRepository.listByClub(club.clubId),
+    options?.snapshots ?? snapshotRepository.listByClub(club.clubId),
+    options?.trainingWeeks ?? trainingWeekRepository.listByClub(club.clubId),
     playerRepository.listSquadRoles(club.clubId),
     playerRepository.listDevelopmentOverrides(club.clubId),
     countryRepo.getAll(),
@@ -511,7 +522,12 @@ function buildTrainingHistories(
 ): Map<number, TrainingHistory> {
   const byPlayer = new Map<number, PersistedPlayerTrainingWeek[]>();
   for (const report of reports) {
-    byPlayer.set(report.playerId, [...(byPlayer.get(report.playerId) ?? []), report]);
+    let list = byPlayer.get(report.playerId);
+    if (!list) {
+      list = [];
+      byPlayer.set(report.playerId, list);
+    }
+    list.push(report);
   }
   return new Map(
     [...byPlayer.entries()].map(([playerId, playerReports]) => [

@@ -5,15 +5,30 @@ import {
   evaluateYouthDecisions,
   generateSquadPlanningRecommendations,
   summarizeYouthDecisions,
+  type AdvancedTrainingOptimization,
+  type AdvancedTrainingPlayerRecommendation,
   type DevelopmentPlayer,
   type SquadDepthPlayer,
   type YouthDecisionContext
 } from "@atlas/domain";
+import {
+  MongoClubRepository,
+  MongoJuniorRepository,
+  MongoPlayerRepository,
+  MongoSnapshotRepository,
+  MongoTrainingWeekRepository
+} from "@atlas/database";
 import { getSquadAssessment } from "../squadPlanning/index.js";
-import { getAdvancedTrainingOptimization } from "../training/index.js";
+import { buildAdvancedTrainingOptimizationFromLoadedData } from "../training/index.js";
 import type { ClubId } from "../types.js";
 import { YOUTH_PIPELINE_AGE_THRESHOLD } from "../playerDevelopment/index.js";
 import type { YouthDecisionCandidate, YouthDecisionPlanning } from "./types.js";
+
+const clubRepository = new MongoClubRepository();
+const snapshotRepository = new MongoSnapshotRepository();
+const trainingWeekRepository = new MongoTrainingWeekRepository();
+const juniorRepository = new MongoJuniorRepository();
+const playerRepository = new MongoPlayerRepository();
 
 export {
   assessYouthProspect,
@@ -60,9 +75,28 @@ export type {
 export type { YouthDecisionCandidate, YouthDecisionPlanning } from "./types.js";
 
 export async function getYouthDecisionPlanning(clubId: ClubId): Promise<YouthDecisionPlanning> {
+  const club = await clubRepository.findById(clubId.toString());
+  if (!club) throw new Error(`Club not found: ${clubId}`);
+
+  const [snapshots, trainingWeeks, juniors, persistedPlayers] = await Promise.all([
+    snapshotRepository.listByClub(club.clubId),
+    trainingWeekRepository.listByClub(club.clubId),
+    juniorRepository.listByClub(club.clubId),
+    playerRepository.listByClub(club.clubId)
+  ]);
+
   const [squadAssessment, advancedTraining] = await Promise.all([
-    getSquadAssessment(clubId),
-    getAdvancedTrainingOptimization(clubId).catch(() => null)
+    getSquadAssessment(clubId, { club, snapshots, trainingWeeks }),
+    Promise.resolve()
+      .then(() =>
+        buildAdvancedTrainingOptimizationFromLoadedData(
+          trainingWeeks,
+          snapshots,
+          juniors,
+          persistedPlayers
+        )
+      )
+      .catch(() => null)
   ]);
   const depthAnalysis = analyzeSquadDepth(squadAssessment.depthPlayers, {
     currentGameWeek: squadAssessment.currentGameWeek
@@ -84,12 +118,19 @@ export async function getYouthDecisionPlanning(clubId: ClubId): Promise<YouthDec
         advancedTraining
       )
     );
+  const contextEntriesByPlayerId = new Map(
+    contextEntries.map((entry) => [entry.context.player.playerId, entry])
+  );
+  const advancedTrainingRecommendationsByPlayerId = new Map(
+    (advancedTraining?.recommendations ?? []).map((r) => [r.playerId, r])
+  );
+
   const recommendations = evaluateYouthDecisions(contextEntries.map(({ context }) => context));
   const candidates = recommendations.flatMap((recommendation) => {
-    const entry = contextEntries.find(
-      ({ context }) => context.player.playerId === recommendation.playerId
-    );
-    return entry ? [toCandidate(entry, recommendation)] : [];
+    const entry = contextEntriesByPlayerId.get(recommendation.playerId);
+    return entry
+      ? [toCandidate(entry, recommendation, advancedTrainingRecommendationsByPlayerId)]
+      : [];
   });
 
   return {
@@ -105,7 +146,7 @@ function createYouthDecisionContext(
   squadAssessment: Awaited<ReturnType<typeof getSquadAssessment>>,
   depthAnalysis: ReturnType<typeof analyzeSquadDepth>,
   squadRecommendations: ReturnType<typeof generateSquadPlanningRecommendations>,
-  advancedTraining: Awaited<ReturnType<typeof getAdvancedTrainingOptimization>> | null
+  advancedTraining: AdvancedTrainingOptimization | null
 ): { context: YouthDecisionContext; player: SquadDepthPlayer } {
   const developmentPlayer: DevelopmentPlayer = {
     playerId: player.playerId,
@@ -149,7 +190,8 @@ function createYouthDecisionContext(
 
 function toCandidate(
   entry: ReturnType<typeof createYouthDecisionContext>,
-  recommendation: YouthDecisionCandidate["recommendation"]
+  recommendation: YouthDecisionCandidate["recommendation"],
+  advancedRecsByPlayerId?: Map<number, AdvancedTrainingPlayerRecommendation>
 ): YouthDecisionCandidate {
   return {
     playerId: entry.player.playerId,
@@ -168,8 +210,10 @@ function toCandidate(
     marketProjection: entry.player.marketProjection ?? null,
     currentlyAdvanced: entry.player.training?.kind === "advanced",
     advancedTrainingRecommendation:
+      advancedRecsByPlayerId?.get(entry.player.playerId) ??
       entry.context.advancedTraining?.recommendations.find(
         (candidate) => candidate.playerId === entry.player.playerId
-      ) ?? null
+      ) ??
+      null
   };
 }
