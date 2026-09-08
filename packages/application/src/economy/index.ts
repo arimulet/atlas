@@ -3,6 +3,7 @@ import {
   MongoClubRepository,
   MongoCountryRepository,
   MongoSnapshotRepository,
+  type PersistedClub,
   type PersistedPlayerSnapshot,
   type PersistedSnapshot,
   type PersistedCountry
@@ -23,48 +24,106 @@ const clubRepository = new MongoClubRepository();
 const snapshotRepository = new MongoSnapshotRepository();
 const countryRepository = new MongoCountryRepository();
 
-export const getSquadEconomy = async (clubId: ClubId): Promise<SquadEconomy> => {
-  const club = await clubRepository.findById(clubId.toString());
+export interface SquadEconomyOptions {
+  club?: PersistedClub;
+  snapshots?: PersistedSnapshot[];
+  countryDetails?: PersistedCountry | null;
+}
 
-  if (!club) {
-    throw new Error(`Club not found: ${clubId}`);
+const inFlightSquadEconomy = new Map<string, Promise<SquadEconomy>>();
+const squadEconomyCache = new Map<string, { data: SquadEconomy; timestamp: number }>();
+const SQUAD_ECONOMY_CACHE_TTL_MS = 60_000;
+
+export function invalidateSquadEconomyCache(clubId?: ClubId): void {
+  if (clubId) {
+    squadEconomyCache.delete(String(clubId));
+  } else {
+    squadEconomyCache.clear();
+  }
+}
+
+export const getSquadEconomy = async (
+  clubId: ClubId,
+  options?: SquadEconomyOptions
+): Promise<SquadEconomy> => {
+  const hasCustomOptions = Boolean(options?.club || options?.snapshots || options?.countryDetails !== undefined);
+  const cacheKey = String(clubId);
+
+  if (!hasCustomOptions) {
+    const cached = squadEconomyCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < SQUAD_ECONOMY_CACHE_TTL_MS) {
+      return cached.data;
+    }
+
+    const existingInFlight = inFlightSquadEconomy.get(cacheKey);
+    if (existingInFlight) {
+      return existingInFlight;
+    }
   }
 
-  const settings = buildClubOperatingSettings(club);
-  const currency = { name: club.currency, rate: 1 };
-  const riskTolerance = settings.effective.preferences[
-    "economy.riskTolerance"
-  ] as EconomyRiskTolerance;
-  const snapshots = await snapshotRepository.listByClub(clubId);
-  const latest = snapshots.at(-1) ?? null;
+  const compute = async (): Promise<SquadEconomy> => {
+    const club = options?.club ?? (await clubRepository.findById(clubId.toString()));
 
-  const countryDetails = await countryRepository.getById(club.country);
+    if (!club) {
+      throw new Error(`Club not found: ${clubId}`);
+    }
 
-  if (!latest) {
-    return buildEmptySquadEconomy(clubId, currency, riskTolerance, countryDetails);
-  }
+    const settings = buildClubOperatingSettings(club);
+    const currency = { name: club.currency, rate: 1 };
+    const riskTolerance = settings.effective.preferences[
+      "economy.riskTolerance"
+    ] as EconomyRiskTolerance;
+    const snapshots = options?.snapshots ?? (await snapshotRepository.listByClub(clubId));
+    const latest = snapshots.at(-1) ?? null;
 
-  const observed = buildObserved(latest, currency);
-  const derived = buildDerived(latest, observed, currency);
-  const warnings = buildWarnings(latest, observed, derived);
-  const historical = buildHistorical(snapshots, currency, warnings);
-  const findings = buildFindings(derived, historical, riskTolerance, warnings);
+    const countryDetails =
+      options?.countryDetails !== undefined
+        ? options.countryDetails
+        : (await countryRepository.getById(club.country));
 
-  return {
-    clubId,
-    countryDetails,
-    snapshotId: latest.id,
-    snapshotDate: formatDate(latest.snapshotDate),
-    observed,
-    manual: {
-      currency,
-      riskTolerance
-    },
-    derived,
-    historical,
-    findings,
-    warnings
+    if (!latest) {
+      return buildEmptySquadEconomy(clubId, currency, riskTolerance, countryDetails);
+    }
+
+    const observed = buildObserved(latest, currency);
+    const derived = buildDerived(latest, observed, currency);
+    const warnings = buildWarnings(latest, observed, derived);
+    const historical = buildHistorical(snapshots, currency, warnings);
+    const findings = buildFindings(derived, historical, riskTolerance, warnings);
+
+    const result: SquadEconomy = {
+      clubId,
+      countryDetails,
+      snapshotId: latest.id,
+      snapshotDate: formatDate(latest.snapshotDate),
+      observed,
+      manual: {
+        currency,
+        riskTolerance
+      },
+      derived,
+      historical,
+      findings,
+      warnings
+    };
+
+    if (!hasCustomOptions) {
+      squadEconomyCache.set(cacheKey, { data: result, timestamp: Date.now() });
+    }
+
+    return result;
   };
+
+  if (hasCustomOptions) {
+    return compute();
+  }
+
+  const executionPromise = compute().finally(() => {
+    inFlightSquadEconomy.delete(cacheKey);
+  });
+
+  inFlightSquadEconomy.set(cacheKey, executionPromise);
+  return executionPromise;
 };
 
 function buildEmptySquadEconomy(

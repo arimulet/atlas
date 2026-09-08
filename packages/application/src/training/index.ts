@@ -72,53 +72,93 @@ const DOMAIN_PLAYER_SKILLS: readonly PlayerSkill[] = [
 ];
 const DEFAULT_TRIAL_ADVANCED_PROJECTED_INTENSITY = 100;
 
+const inFlightTrainingPageData = new Map<string, Promise<TrainingPageData>>();
+const trainingPageDataCache = new Map<string, { data: TrainingPageData; timestamp: number }>();
+const inFlightTrainingIntelligence = new Map<string, Promise<WeeklyTrainingIntelligence>>();
+const trainingIntelligenceCache = new Map<string, { data: WeeklyTrainingIntelligence; timestamp: number }>();
+const TRAINING_CACHE_TTL_MS = 60_000;
+
+export function invalidateTrainingCache(clubId?: ClubId): void {
+  if (clubId) {
+    const key = String(clubId);
+    trainingPageDataCache.delete(key);
+    trainingIntelligenceCache.delete(key);
+  } else {
+    trainingPageDataCache.clear();
+    trainingIntelligenceCache.clear();
+  }
+}
+
 export async function getTrainingPageData(clubId: ClubId): Promise<TrainingPageData> {
-  const club = await clubRepository.findById(clubId.toString());
-
-  if (!club) {
-    throw new Error(`Club not found: ${clubId}`);
+  const cacheKey = String(clubId);
+  const cached = trainingPageDataCache.get(cacheKey);
+  if (cached && Date.now() - cached.timestamp < TRAINING_CACHE_TTL_MS) {
+    return cached.data;
   }
 
-  const [snapshots, history] = await Promise.all([
-    snapshotRepository.listByClub(club.clubId),
-    trainingWeekRepository.listByClub(club.clubId)
-  ]);
-  const latestSnapshot = snapshots.at(-1) ?? null;
-  const previousSnapshot = snapshots.at(-2) ?? null;
-  const latestByPlayer = new Map<number, (typeof history)[number]>();
-
-  for (const report of history) {
-    latestByPlayer.set(report.playerId, report);
+  const existingInFlight = inFlightTrainingPageData.get(cacheKey);
+  if (existingInFlight) {
+    return existingInFlight;
   }
 
-  const histories = buildTrainingHistories(history);
-  const talentByPlayer = new Map<number, ReturnType<typeof estimateTalentFromTrainingHistory>>();
-  for (const h of histories) {
-    talentByPlayer.set(h.playerId, estimateTalentFromTrainingHistory(h));
-  }
+  const compute = async (): Promise<TrainingPageData> => {
+    const club = await clubRepository.findById(clubId.toString());
 
-  const previousPlayerValues = new Map(
-    previousSnapshot?.players.map((previousPlayer) => [
-      previousPlayer.playerId,
-      previousPlayer.value
-    ]) ?? []
-  );
+    if (!club) {
+      throw new Error(`Club not found: ${clubId}`);
+    }
 
-  return {
-    snapshotId: latestSnapshot?.id ?? null,
-    snapshotDate: latestSnapshot?.snapshotDate.toISOString().slice(0, 10) ?? null,
-    configuration: club.training,
-    players:
-      latestSnapshot?.players.map((player) =>
-        mapPlayer(
-          player,
-          previousPlayerValues.get(player.playerId) ?? null,
-          latestByPlayer,
-          talentByPlayer.get(player.playerId) ?? null
-        )
-      ) ?? [],
-    history
+    const [snapshots, history] = await Promise.all([
+      snapshotRepository.findLatestNByClub(club.clubId, 2),
+      trainingWeekRepository.listByClub(club.clubId)
+    ]);
+    const latestSnapshot = snapshots.at(-1) ?? null;
+    const previousSnapshot = snapshots.at(-2) ?? null;
+    const latestByPlayer = new Map<number, (typeof history)[number]>();
+
+    for (const report of history) {
+      latestByPlayer.set(report.playerId, report);
+    }
+
+    const histories = buildTrainingHistories(history);
+    const talentByPlayer = new Map<number, ReturnType<typeof estimateTalentFromTrainingHistory>>();
+    for (const h of histories) {
+      talentByPlayer.set(h.playerId, estimateTalentFromTrainingHistory(h));
+    }
+
+    const previousPlayerValues = new Map(
+      previousSnapshot?.players.map((previousPlayer) => [
+        previousPlayer.playerId,
+        previousPlayer.value
+      ]) ?? []
+    );
+
+    const result: TrainingPageData = {
+      snapshotId: latestSnapshot?.id ?? null,
+      snapshotDate: latestSnapshot?.snapshotDate.toISOString().slice(0, 10) ?? null,
+      configuration: club.training,
+      players:
+        latestSnapshot?.players.map((player) =>
+          mapPlayer(
+            player,
+            previousPlayerValues.get(player.playerId) ?? null,
+            latestByPlayer,
+            talentByPlayer.get(player.playerId) ?? null
+          )
+        ) ?? [],
+      history
+    };
+
+    trainingPageDataCache.set(cacheKey, { data: result, timestamp: Date.now() });
+    return result;
   };
+
+  const executionPromise = compute().finally(() => {
+    inFlightTrainingPageData.delete(cacheKey);
+  });
+
+  inFlightTrainingPageData.set(cacheKey, executionPromise);
+  return executionPromise;
 }
 
 export function buildWeeklyTrainingReportFromLoadedData(
@@ -507,25 +547,48 @@ export function buildWeeklyTrainingIntelligenceFromLoadedData(
 export async function getWeeklyTrainingIntelligence(
   clubId: ClubId
 ): Promise<WeeklyTrainingIntelligence> {
-  const club = await clubRepository.findById(clubId.toString());
-
-  if (!club) {
-    throw new Error(`Club not found: ${clubId}`);
+  const cacheKey = String(clubId);
+  const cached = trainingIntelligenceCache.get(cacheKey);
+  if (cached && Date.now() - cached.timestamp < TRAINING_CACHE_TTL_MS) {
+    return cached.data;
   }
 
-  const [reports, snapshots, juniors, persistedPlayers] = await Promise.all([
-    trainingWeekRepository.listByClub(club.clubId),
-    snapshotRepository.listByClub(club.clubId),
-    juniorRepository.listByClub(club.clubId),
-    playerRepository.listByClub(club.clubId)
-  ]);
+  const existingInFlight = inFlightTrainingIntelligence.get(cacheKey);
+  if (existingInFlight) {
+    return existingInFlight;
+  }
 
-  return buildWeeklyTrainingIntelligenceFromLoadedData(
-    reports,
-    snapshots,
-    juniors,
-    persistedPlayers
-  );
+  const compute = async (): Promise<WeeklyTrainingIntelligence> => {
+    const club = await clubRepository.findById(clubId.toString());
+
+    if (!club) {
+      throw new Error(`Club not found: ${clubId}`);
+    }
+
+    const [reports, snapshots, juniors, persistedPlayers] = await Promise.all([
+      trainingWeekRepository.listByClub(club.clubId),
+      snapshotRepository.listByClub(club.clubId),
+      juniorRepository.listByClub(club.clubId),
+      playerRepository.listByClub(club.clubId)
+    ]);
+
+    const result = buildWeeklyTrainingIntelligenceFromLoadedData(
+      reports,
+      snapshots,
+      juniors,
+      persistedPlayers
+    );
+
+    trainingIntelligenceCache.set(cacheKey, { data: result, timestamp: Date.now() });
+    return result;
+  };
+
+  const executionPromise = compute().finally(() => {
+    inFlightTrainingIntelligence.delete(cacheKey);
+  });
+
+  inFlightTrainingIntelligence.set(cacheKey, executionPromise);
+  return executionPromise;
 }
 
 export async function getWeeklyTrainingCalibration(

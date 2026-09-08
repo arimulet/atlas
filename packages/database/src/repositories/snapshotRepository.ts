@@ -110,6 +110,16 @@ export class MongoSnapshotRepository {
     return snapshot ? this.hydrateSnapshot(snapshot as unknown as SnapshotDocumentShape) : null;
   }
 
+  async findLatestNByClub(clubId: ClubId, count: number): Promise<PersistedSnapshot[]> {
+    const numericClubId = await this.resolveNumericClubId(clubId);
+    const snapshots = await SnapshotModel.find({ clubId: numericClubId })
+      .sort({ snapshotDate: -1 })
+      .limit(count)
+      .lean();
+    const hydrated = await this.hydrateSnapshots(snapshots as unknown as SnapshotDocumentShape[]);
+    return hydrated.reverse();
+  }
+
   async listByClub(clubId: ClubId): Promise<PersistedSnapshot[]> {
     const numericClubId = await this.resolveNumericClubId(clubId);
     const snapshots = await SnapshotModel.find({ clubId: numericClubId })

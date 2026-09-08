@@ -19,28 +19,62 @@ const clubRepository = new MongoClubRepository();
 const snapshotRepository = new MongoSnapshotRepository();
 const countryRepository = new MongoCountryRepository();
 
-export async function getClubDiagnostic(clubId: ClubId): Promise<BasicDiagnostic | null> {
-  const club = await clubRepository.findById(clubId.toString());
+const inFlightDiagnostics = new Map<string, Promise<BasicDiagnostic | null>>();
+const diagnosticsCache = new Map<string, { data: BasicDiagnostic | null; timestamp: number }>();
+const DIAGNOSTICS_CACHE_TTL_MS = 60_000;
 
-  if (!club) {
-    throw new Error("Club not found: " + clubId);
+export function invalidateDiagnosticsCache(clubId?: ClubId): void {
+  if (clubId) {
+    diagnosticsCache.delete(String(clubId));
+  } else {
+    diagnosticsCache.clear();
+  }
+}
+
+export async function getClubDiagnostic(clubId: ClubId): Promise<BasicDiagnostic | null> {
+  const cacheKey = String(clubId);
+  const cached = diagnosticsCache.get(cacheKey);
+  if (cached && Date.now() - cached.timestamp < DIAGNOSTICS_CACHE_TTL_MS) {
+    return cached.data;
   }
 
-  const [latestSnapshot, clubCountry, rawTransfers] = await Promise.all([
-    snapshotRepository.findLatestByClub(club.clubId),
-    countryRepository.getById(club.country),
-    findFinalMarketTransfersUpToDate(new Date())
-  ]);
+  const existingInFlight = inFlightDiagnostics.get(cacheKey);
+  if (existingInFlight) {
+    return existingInFlight;
+  }
 
-  if (!latestSnapshot) return null;
+  const compute = async (): Promise<BasicDiagnostic | null> => {
+    const club = await clubRepository.findById(clubId.toString());
 
-  const currencyRate = clubCountry?.currencyRate ?? 1;
-  const currencyName = clubCountry?.currencyName ?? club.currency;
-  const mappedTransfers = rawTransfers.map((t) =>
-    mapMarketTransferToRecord(t, currencyName, currencyRate)
-  );
+    if (!club) {
+      throw new Error("Club not found: " + clubId);
+    }
 
-  return createSnapshotDiagnostic(latestSnapshot, club.currency, mappedTransfers);
+    const [latestSnapshot, clubCountry, rawTransfers] = await Promise.all([
+      snapshotRepository.findLatestByClub(club.clubId),
+      countryRepository.getById(club.country),
+      findFinalMarketTransfersUpToDate(new Date())
+    ]);
+
+    if (!latestSnapshot) return null;
+
+    const currencyRate = clubCountry?.currencyRate ?? 1;
+    const currencyName = clubCountry?.currencyName ?? club.currency;
+    const mappedTransfers = rawTransfers.map((t) =>
+      mapMarketTransferToRecord(t, currencyName, currencyRate)
+    );
+
+    const result = createSnapshotDiagnostic(latestSnapshot, club.currency, mappedTransfers);
+    diagnosticsCache.set(cacheKey, { data: result, timestamp: Date.now() });
+    return result;
+  };
+
+  const executionPromise = compute().finally(() => {
+    inFlightDiagnostics.delete(cacheKey);
+  });
+
+  inFlightDiagnostics.set(cacheKey, executionPromise);
+  return executionPromise;
 }
 
 export function createSnapshotDiagnostic(

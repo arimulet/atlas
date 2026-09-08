@@ -37,69 +37,115 @@ export interface SquadMarketPlanningOptions {
   development?: PlayerDevelopment;
 }
 
+const inFlightSquadMarketPlanning = new Map<string, Promise<SquadMarketPlanning>>();
+const squadMarketPlanningCache = new Map<string, { data: SquadMarketPlanning; timestamp: number }>();
+const SQUAD_MARKET_PLANNING_CACHE_TTL_MS = 60_000;
+
+export function invalidateSquadMarketPlanningCache(clubId?: ClubId): void {
+  if (clubId) {
+    squadMarketPlanningCache.delete(String(clubId));
+  } else {
+    squadMarketPlanningCache.clear();
+  }
+}
+
 export const getSquadMarketPlanning = async (
   clubId: ClubId,
   options?: SquadMarketPlanningOptions
 ): Promise<SquadMarketPlanning> => {
-  const club = options?.club ?? (await clubRepository.findById(clubId.toString()));
+  const hasCustomOptions = Boolean(options?.club || options?.snapshots || options?.development);
+  const cacheKey = String(clubId);
 
-  if (!club) {
-    throw new Error(`Club not found: ${clubId}`);
+  if (!hasCustomOptions) {
+    const cached = squadMarketPlanningCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < SQUAD_MARKET_PLANNING_CACHE_TTL_MS) {
+      return cached.data;
+    }
+
+    const existingInFlight = inFlightSquadMarketPlanning.get(cacheKey);
+    if (existingInFlight) {
+      return existingInFlight;
+    }
   }
 
-  const settings = buildClubOperatingSettings(club);
-  const marketStrategy = settings.effective.preferences["market.strategy"] as MarketStrategy;
-  const snapshots = options?.snapshots ?? (await snapshotRepository.listByClub(club.clubId));
-  const latest = snapshots.at(-1) ?? null;
+  const compute = async (): Promise<SquadMarketPlanning> => {
+    const club = options?.club ?? (await clubRepository.findById(clubId.toString()));
 
-  if (!latest) {
-    return buildEmptyPlanning(clubId, marketStrategy);
-  }
+    if (!club) {
+      throw new Error(`Club not found: ${clubId}`);
+    }
 
-  const [economy, development] = await Promise.all([
-    getSquadEconomy(clubId),
-    options?.development ?? getPlayerDevelopment(clubId)
-  ]);
-  const economyBySnapshotPlayerId = new Map(
-    economy.derived.playerDetails.map((player) => [player.snapshotPlayerId, player])
-  );
-  const developmentByIdentity = buildDevelopmentIndex(development.derived.players);
-  const observedPlayers = latest.players.map((player) => mapObservedPlayer(player, club.currency));
-  const players = latest.players
-    .map((player) =>
-      buildPlayerPlan({
-        player,
-        snapshots,
-        marketStrategy,
-        economyDetail: economyBySnapshotPlayerId.get(player.id) ?? null,
-        developmentSummary: findDevelopmentSummary(player, developmentByIdentity)
-      })
-    )
-    .sort(comparePlayerPlans);
+    const settings = buildClubOperatingSettings(club);
+    const marketStrategy = settings.effective.preferences["market.strategy"] as MarketStrategy;
+    const snapshots = options?.snapshots ?? (await snapshotRepository.listByClub(club.clubId));
+    const latest = snapshots.at(-1) ?? null;
 
-  return {
-    clubId,
-    snapshotId: latest.id,
-    snapshotDate: formatDate(latest.snapshotDate),
-    observed: {
-      players: observedPlayers,
-      coverage: {
-        playerCount: latest.players.length,
-        playersWithWage: latest.players.filter((player) => player.wage > 0).length,
-        playersWithValue: latest.players.filter(
-          (player) => player.value > 0
-        ).length,
-        playersWithStableIdentity: latest.players.filter((player) => Boolean(player.playerId))
-          .length
-      }
-    },
-    manual: { marketStrategy },
-    derived: {
-      categoryCounts: countCategories(players),
-      players
-    },
-    warnings: buildGlobalWarnings(latest, snapshots)
+    if (!latest) {
+      return buildEmptyPlanning(clubId, marketStrategy);
+    }
+
+    const [economy, development] = await Promise.all([
+      getSquadEconomy(clubId, { club, snapshots }),
+      options?.development ?? getPlayerDevelopment(clubId)
+    ]);
+    const economyBySnapshotPlayerId = new Map(
+      economy.derived.playerDetails.map((player) => [player.snapshotPlayerId, player])
+    );
+    const developmentByIdentity = buildDevelopmentIndex(development.derived.players);
+    const observedPlayers = latest.players.map((player) => mapObservedPlayer(player, club.currency));
+    const players = latest.players
+      .map((player) =>
+        buildPlayerPlan({
+          player,
+          snapshots,
+          marketStrategy,
+          economyDetail: economyBySnapshotPlayerId.get(player.id) ?? null,
+          developmentSummary: findDevelopmentSummary(player, developmentByIdentity)
+        })
+      )
+      .sort(comparePlayerPlans);
+
+    const result: SquadMarketPlanning = {
+      clubId,
+      snapshotId: latest.id,
+      snapshotDate: formatDate(latest.snapshotDate),
+      observed: {
+        players: observedPlayers,
+        coverage: {
+          playerCount: latest.players.length,
+          playersWithWage: latest.players.filter((player) => player.wage > 0).length,
+          playersWithValue: latest.players.filter(
+            (player) => player.value > 0
+          ).length,
+          playersWithStableIdentity: latest.players.filter((player) => Boolean(player.playerId))
+            .length
+        }
+      },
+      manual: { marketStrategy },
+      derived: {
+        categoryCounts: countCategories(players),
+        players
+      },
+      warnings: buildGlobalWarnings(latest, snapshots)
+    };
+
+    if (!hasCustomOptions) {
+      squadMarketPlanningCache.set(cacheKey, { data: result, timestamp: Date.now() });
+    }
+
+    return result;
   };
+
+  if (hasCustomOptions) {
+    return compute();
+  }
+
+  const executionPromise = compute().finally(() => {
+    inFlightSquadMarketPlanning.delete(cacheKey);
+  });
+
+  inFlightSquadMarketPlanning.set(cacheKey, executionPromise);
+  return executionPromise;
 };
 
 function buildEmptyPlanning(clubId: ClubId, marketStrategy: MarketStrategy): SquadMarketPlanning {
