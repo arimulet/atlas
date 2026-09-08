@@ -347,7 +347,14 @@ function createMarketTrainingComparison(
   current: ReturnType<typeof calibratePlayerMarketValue>,
   transfers: import("@atlas/domain").PlayerTransferRecord[]
 ): ReturnType<typeof compareAdvancedAndFormationMarketValue> | null {
-  if (!context.developmentPlan || !context.trainingPath || !context.projection) return null;
+  if (
+    !context.developmentPlan ||
+    !context.trainingPath ||
+    !context.projection ||
+    context.projection.steps.length === 0
+  ) {
+    return null;
+  }
 
   const advancedProjection = createScenarioProjection(context, "advanced");
   const formationProjection = createScenarioProjection(context, "formation");
