@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  reactStrictMode: false,
   transpilePackages: ["@atlas/domain", "@atlas/application", "@atlas/database"],
   sassOptions: {
     includePaths: ["./src/app/styles"]
