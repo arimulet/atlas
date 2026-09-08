@@ -5,8 +5,9 @@ import {
   evaluateYouthDecisions,
   generateSquadPlanningRecommendations,
   summarizeYouthDecisions,
+  type AdvancedTrainingOptimization,
+  type AdvancedTrainingPlayerRecommendation,
   type DevelopmentPlayer,
-  type PlayerTrainingRecommendation,
   type SquadDepthPlayer,
   type YouthDecisionContext
 } from "@atlas/domain";
@@ -145,7 +146,7 @@ function createYouthDecisionContext(
   squadAssessment: Awaited<ReturnType<typeof getSquadAssessment>>,
   depthAnalysis: ReturnType<typeof analyzeSquadDepth>,
   squadRecommendations: ReturnType<typeof generateSquadPlanningRecommendations>,
-  advancedTraining: Awaited<ReturnType<typeof getAdvancedTrainingOptimization>> | null
+  advancedTraining: AdvancedTrainingOptimization | null
 ): { context: YouthDecisionContext; player: SquadDepthPlayer } {
   const developmentPlayer: DevelopmentPlayer = {
     playerId: player.playerId,
@@ -190,7 +191,7 @@ function createYouthDecisionContext(
 function toCandidate(
   entry: ReturnType<typeof createYouthDecisionContext>,
   recommendation: YouthDecisionCandidate["recommendation"],
-  advancedRecsByPlayerId?: Map<number, PlayerTrainingRecommendation>
+  advancedRecsByPlayerId?: Map<number, AdvancedTrainingPlayerRecommendation>
 ): YouthDecisionCandidate {
   return {
     playerId: entry.player.playerId,
