@@ -28,6 +28,9 @@ import { invalidateSquadAssessmentCache } from "../squadPlanning/index.js";
 import { invalidateYouthDecisionPlanningCache } from "../youthDecisionEngine/index.js";
 import { invalidateSquadEconomyCache } from "../economy/index.js";
 import { invalidateSquadMarketPlanningCache } from "../marketPlanning/index.js";
+import { invalidateYouthAcademyCache } from "../youthAcademyPlanning/index.js";
+import { invalidateYouthPerformancesCache } from "../youthAcademyPlanning/getYouthPerformances.js";
+import { invalidateHistoricalTrendsCache, invalidateHistoricalFindingsCache } from "../clubHistorical/index.js";
 
 const SYNC_SNAPSHOT_NATURAL_KEY = "sokker-json-api-sync";
 
@@ -281,6 +284,10 @@ export class SokkerSyncPersistence {
     invalidateYouthDecisionPlanningCache(club.id);
     invalidateSquadEconomyCache(club.id);
     invalidateSquadMarketPlanningCache(club.id);
+    invalidateYouthAcademyCache(club.id);
+    invalidateYouthPerformancesCache(club.id);
+    invalidateHistoricalTrendsCache(club.id);
+    invalidateHistoricalFindingsCache(club.id);
 
     return {
       clubId: club.id,
