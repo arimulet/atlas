@@ -18,7 +18,7 @@ import {
   MongoSnapshotRepository,
   MongoTrainingWeekRepository
 } from "@atlas/database";
-import { getSquadAssessment } from "../squadPlanning/index.js";
+import { getSquadAssessment, buildTrainingHistories } from "../squadPlanning/index.js";
 import { buildAdvancedTrainingOptimizationFromLoadedData } from "../training/index.js";
 import type { ClubId } from "../types.js";
 import { YOUTH_PIPELINE_AGE_THRESHOLD } from "../playerDevelopment/index.js";
@@ -98,6 +98,7 @@ export async function getYouthDecisionPlanning(clubId: ClubId): Promise<YouthDec
       )
       .catch(() => null)
   ]);
+  const trainingHistories = buildTrainingHistories(trainingWeeks);
   const depthAnalysis = analyzeSquadDepth(squadAssessment.depthPlayers, {
     currentGameWeek: squadAssessment.currentGameWeek
   });
@@ -112,6 +113,7 @@ export async function getYouthDecisionPlanning(clubId: ClubId): Promise<YouthDec
     .map((player) =>
       createYouthDecisionContext(
         player,
+        trainingHistories,
         squadAssessment,
         depthAnalysis,
         squadRecommendations,
@@ -143,6 +145,7 @@ export async function getYouthDecisionPlanning(clubId: ClubId): Promise<YouthDec
 
 function createYouthDecisionContext(
   player: SquadDepthPlayer,
+  trainingHistories: Map<number, import("@atlas/domain").TrainingHistory>,
   squadAssessment: Awaited<ReturnType<typeof getSquadAssessment>>,
   depthAnalysis: ReturnType<typeof analyzeSquadDepth>,
   squadRecommendations: ReturnType<typeof generateSquadPlanningRecommendations>,
@@ -156,9 +159,10 @@ function createYouthDecisionContext(
     observedPosition: null
   };
   const youthPlayer = { ...developmentPlayer, name: player.playerName };
+  const history = trainingHistories.get(player.playerId) ?? player.trainingHistory ?? null;
   const prospect = assessYouthProspect({
     player: developmentPlayer,
-    trainingHistory: player.trainingHistory ? [player.trainingHistory] : undefined
+    trainingHistory: history ? [history] : undefined
   });
 
   return {

@@ -215,9 +215,11 @@ async function computeSquadAssessment(
       formation: context?.formation ?? null,
       marketValue: marketValue?.current ?? null,
       marketProjection: marketValue?.projection ?? null,
-      marketTrainingComparison: marketValue?.trainingComparison ?? null,
+      marketTrainingComparison: marketValue?.trainingComparison
+        ? { difference: marketValue.trainingComparison.difference }
+        : null,
       training: context?.training ?? null,
-      trainingHistory: context?.trainingHistory ?? null
+      trainingHistory: null
     };
   });
 
@@ -390,7 +392,7 @@ function createMarketValues(
           : null;
       const trainingComparison =
         context.developmentPlan && context.trainingPath
-          ? createMarketTrainingComparison(context, player, current, transfers)
+          ? createMarketTrainingComparison(context, player, current, projection, transfers)
           : null;
       values.set(context.playerId, { current, projection, trainingComparison });
     } catch {
@@ -411,6 +413,7 @@ function createMarketTrainingComparison(
   context: SquadPlayerContext,
   player: PlayerMarketValuePlayerInput,
   current: ReturnType<typeof calibratePlayerMarketValue>,
+  baseMarketProjection: ReturnType<typeof projectPlayerMarketValue> | null,
   transfers: import("@atlas/domain").PlayerTransferRecord[]
 ): ReturnType<typeof compareAdvancedAndFormationMarketValue> | null {
   if (
@@ -422,30 +425,69 @@ function createMarketTrainingComparison(
     return null;
   }
 
-  const advancedProjection = createScenarioProjection(context, "advanced");
-  const formationProjection = createScenarioProjection(context, "formation");
-  if (!advancedProjection || !formationProjection) return null;
+  const currentKind = context.projection.assumptions.trainingKind;
+
+  let advancedInput:
+    | ReturnType<typeof projectPlayerMarketValue>
+    | Parameters<typeof compareAdvancedAndFormationMarketValue>[0]["advanced"];
+  let formationInput:
+    | ReturnType<typeof projectPlayerMarketValue>
+    | Parameters<typeof compareAdvancedAndFormationMarketValue>[0]["formation"];
+
+  if (currentKind === "advanced" && baseMarketProjection) {
+    advancedInput = baseMarketProjection;
+    const formationProjection = createScenarioProjection(context, "formation");
+    if (!formationProjection) return null;
+    formationInput = {
+      player,
+      developmentPlan: context.developmentPlan,
+      path: context.trainingPath,
+      projection: formationProjection,
+      currentMarketValue: current,
+      talent: context.talent ?? null,
+      transfers
+    };
+  } else if (currentKind === "formation" && baseMarketProjection) {
+    formationInput = baseMarketProjection;
+    const advancedProjection = createScenarioProjection(context, "advanced");
+    if (!advancedProjection) return null;
+    advancedInput = {
+      player,
+      developmentPlan: context.developmentPlan,
+      path: context.trainingPath,
+      projection: advancedProjection,
+      currentMarketValue: current,
+      talent: context.talent ?? null,
+      transfers
+    };
+  } else {
+    const advancedProjection = createScenarioProjection(context, "advanced");
+    const formationProjection = createScenarioProjection(context, "formation");
+    if (!advancedProjection || !formationProjection) return null;
+    advancedInput = {
+      player,
+      developmentPlan: context.developmentPlan,
+      path: context.trainingPath,
+      projection: advancedProjection,
+      currentMarketValue: current,
+      talent: context.talent ?? null,
+      transfers
+    };
+    formationInput = {
+      player,
+      developmentPlan: context.developmentPlan,
+      path: context.trainingPath,
+      projection: formationProjection,
+      currentMarketValue: current,
+      talent: context.talent ?? null,
+      transfers
+    };
+  }
 
   try {
     return compareAdvancedAndFormationMarketValue({
-      advanced: {
-        player,
-        developmentPlan: context.developmentPlan,
-        path: context.trainingPath,
-        projection: advancedProjection,
-        currentMarketValue: current,
-        talent: context.talent ?? null,
-        transfers
-      },
-      formation: {
-        player,
-        developmentPlan: context.developmentPlan,
-        path: context.trainingPath,
-        projection: formationProjection,
-        currentMarketValue: current,
-        talent: context.talent ?? null,
-        transfers
-      },
+      advanced: advancedInput,
+      formation: formationInput,
       fixedHorizonWeeks: PLAYER_MARKET_VALUE_COMPARISON_HORIZON_WEEKS
     });
   } catch {
@@ -572,7 +614,7 @@ function buildPlan(player: DevelopmentPlayer, override: PlayerDevelopmentTargetO
   return new PlayerDevelopmentPlanner().createPlan(player, override);
 }
 
-function buildTrainingHistories(
+export function buildTrainingHistories(
   reports: readonly PersistedPlayerTrainingWeek[]
 ): Map<number, TrainingHistory> {
   const byPlayer = new Map<number, PersistedPlayerTrainingWeek[]>();

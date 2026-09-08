@@ -143,13 +143,23 @@ export function projectMarketValueAtHorizon(
   return extractMarketValueAtHorizon(projection, horizonWeeks);
 }
 
+function isPlayerMarketValueProjection(
+  val: unknown
+): val is PlayerMarketValueProjection {
+  return typeof val === "object" && val !== null && "points" in val && "current" in val;
+}
+
 export function compareAdvancedAndFormationMarketValue(input: {
-  advanced: FutureMarketValueContext;
-  formation: FutureMarketValueContext;
+  advanced: FutureMarketValueContext | PlayerMarketValueProjection;
+  formation: FutureMarketValueContext | PlayerMarketValueProjection;
   fixedHorizonWeeks?: number | null;
 }): TrainingKindMarketValueComparison {
-  const advanced = projectPlayerMarketValue(input.advanced);
-  const formation = projectPlayerMarketValue(input.formation);
+  const advanced = isPlayerMarketValueProjection(input.advanced)
+    ? input.advanced
+    : projectPlayerMarketValue(input.advanced);
+  const formation = isPlayerMarketValueProjection(input.formation)
+    ? input.formation
+    : projectPlayerMarketValue(input.formation);
   const fixedHorizonWeeks =
     input.fixedHorizonWeeks === undefined || input.fixedHorizonWeeks === null
       ? null
