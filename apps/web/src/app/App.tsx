@@ -42,7 +42,7 @@ import type { SokkerImportCredentials } from "./components/SokkerImporterForm/ty
 import type { ViewId } from "./types";
 import { pathForMainView, pathForPlayerDetail, useRouter } from "./routing";
 import { useFinancialStrategy } from "./features/financialStrategy/useFinancialStrategy";
-import { AuthProvider, useAuth } from "./context/AuthContext";
+import { useAuth } from "./context/AuthContext";
 import { AuthScreen } from "./pages/Auth/AuthScreen";
 
 const lastClubStorageKey = "atlas.lastClubId";
@@ -474,10 +474,6 @@ function AuthenticatedApp({ initialData, initialUrl }: AppProps) {
 }
 
 export function App({ initialData, initialUrl }: AppProps) {
-  return (
-    <AuthProvider>
-      <AuthenticatedApp initialData={initialData} initialUrl={initialUrl} />
-    </AuthProvider>
-  );
+  return <AuthenticatedApp initialData={initialData} initialUrl={initialUrl} />;
 }
 

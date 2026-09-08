@@ -8,16 +8,18 @@ const { mockAuth, mockFetch, mockGetIdToken } = vi.hoisted(() => ({
 
 vi.mock("./services/firebase", () => ({ auth: mockAuth }));
 
-import { fetchClubDashboard, saveSquadRoleAssignment } from "./api";
+import { fetchClubDashboard, invalidateClientApiCache, saveSquadRoleAssignment } from "./api";
 
 describe("API client authentication", () => {
   beforeEach(() => {
+    invalidateClientApiCache();
     mockGetIdToken.mockResolvedValue("session-token");
     mockAuth.currentUser = { getIdToken: mockGetIdToken };
     vi.stubGlobal("fetch", mockFetch);
   });
 
   afterEach(() => {
+    invalidateClientApiCache();
     vi.clearAllMocks();
     vi.unstubAllGlobals();
   });
@@ -47,5 +49,50 @@ describe("API client authentication", () => {
     expect(options?.method).toBe("PUT");
     expect(headers.get("Content-Type")).toBe("application/json");
     expect(headers.get("Authorization")).toBe("Bearer session-token");
+  });
+
+  it("deduplicates concurrent in-flight GET requests to the same endpoint", async () => {
+    mockFetch.mockImplementation(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      return new Response(JSON.stringify({ club: { id: "club-1" } }));
+    });
+
+    // Launch two requests simultaneously
+    const [res1, res2] = await Promise.all([fetchClubDashboard(), fetchClubDashboard()]);
+
+    expect(mockFetch).toHaveBeenCalledOnce();
+    expect(res1).toEqual({ club: { id: "club-1" } });
+    expect(res2).toEqual({ club: { id: "club-1" } });
+  });
+
+  it("serves consecutive GET requests from client memory cache within TTL", async () => {
+    mockFetch.mockResolvedValue(new Response(JSON.stringify({ club: { id: "cached-club" } })));
+
+    const first = await fetchClubDashboard();
+    const second = await fetchClubDashboard();
+
+    expect(mockFetch).toHaveBeenCalledOnce();
+    expect(first).toEqual({ club: { id: "cached-club" } });
+    expect(second).toEqual({ club: { id: "cached-club" } });
+  });
+
+  it("invalidates cache when a mutation is executed", async () => {
+    mockFetch
+      .mockResolvedValueOnce(new Response(JSON.stringify({ club: { id: "initial" } })))
+      .mockResolvedValueOnce(new Response(null, { status: 204 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ club: { id: "updated" } })));
+
+    const initial = await fetchClubDashboard();
+    expect(initial).toEqual({ club: { id: "initial" } });
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+
+    // Mutation invalidates cache
+    await saveSquadRoleAssignment("player-1", "core");
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+
+    // Next fetch must hit the network again
+    const updated = await fetchClubDashboard();
+    expect(updated).toEqual({ club: { id: "updated" } });
+    expect(mockFetch).toHaveBeenCalledTimes(3);
   });
 });

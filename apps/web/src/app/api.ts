@@ -36,10 +36,50 @@ export interface PlayerDevelopmentTargetOverrideResponse {
   targetLevels: NonNullable<PlayerDevelopmentTargetOverride["targetLevels"]>;
 }
 
+interface ClientCacheEntry {
+  bodyText: string;
+  status: number;
+  statusText: string;
+  headers: [string, string][];
+  timestamp: number;
+}
+
+const clientInFlight = new Map<string, Promise<ClientCacheEntry>>();
+const clientCache = new Map<string, ClientCacheEntry>();
+const CLIENT_CACHE_TTL_MS = 20_000; // 20 seconds TTL for idempotent GET queries
+
+export function invalidateClientApiCache(): void {
+  clientCache.clear();
+  clientInFlight.clear();
+}
+
+function createResponseFromEntry(entry: ClientCacheEntry): Response {
+  return new Response(entry.bodyText, {
+    status: entry.status,
+    statusText: entry.statusText,
+    headers: new Headers(entry.headers)
+  });
+}
+
 async function fetchAuthenticated(
   input: RequestInfo | URL,
   init: RequestInit = {}
 ): Promise<Response> {
+  const method = (init.method || "GET").toUpperCase();
+  const isGet = method === "GET";
+  const cacheKey = typeof input === "string" ? input : input.toString();
+
+  // If this is a mutation (POST, PUT, DELETE, PATCH), invalidate cached GET responses
+  if (!isGet) {
+    invalidateClientApiCache();
+  } else {
+    // Check in-memory cache for GET requests
+    const cached = clientCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < CLIENT_CACHE_TTL_MS) {
+      return createResponseFromEntry(cached);
+    }
+  }
+
   const headers = new Headers(init.headers);
 
   if (!headers.has("Authorization")) {
@@ -86,7 +126,38 @@ async function fetchAuthenticated(
     }
   }
 
-  return fetch(url, { ...init, headers });
+  // Non-GET requests run directly
+  if (!isGet) {
+    return fetch(url, { ...init, headers });
+  }
+
+  // In-flight request deduplication for concurrent GET calls
+  let inFlightPromise = clientInFlight.get(cacheKey);
+  if (!inFlightPromise) {
+    inFlightPromise = (async () => {
+      const response = await fetch(url, { ...init, headers });
+      const bodyText = await response.text();
+      const entry: ClientCacheEntry = {
+        bodyText,
+        status: response.status,
+        statusText: response.statusText,
+        headers: Array.from(response.headers.entries()),
+        timestamp: Date.now()
+      };
+
+      if (response.ok) {
+        clientCache.set(cacheKey, entry);
+      }
+      return entry;
+    })().finally(() => {
+      clientInFlight.delete(cacheKey);
+    });
+
+    clientInFlight.set(cacheKey, inFlightPromise);
+  }
+
+  const entry = await inFlightPromise;
+  return createResponseFromEntry(entry);
 }
 
 export async function fetchClubDashboard(_clubId?: string): Promise<ClubDashboard> {
