@@ -20,14 +20,38 @@ const clubRepository = new MongoClubRepository();
 const juniorRepository = new MongoJuniorRepository();
 const snapshotRepository = new MongoSnapshotRepository();
 
+const inFlightYouthAcademy = new Map<string, Promise<RealYouthAcademyPlanning>>();
+const youthAcademyCache = new Map<string, { data: RealYouthAcademyPlanning; timestamp: number }>();
+const YOUTH_ACADEMY_CACHE_TTL_MS = 60_000;
+
+export function invalidateYouthAcademyCache(clubId?: ClubId): void {
+  if (clubId) {
+    youthAcademyCache.delete(String(clubId));
+  } else {
+    youthAcademyCache.clear();
+  }
+}
+
 export const getRealYouthAcademyPlanning = async (
   clubId: ClubId
 ): Promise<RealYouthAcademyPlanning> => {
-  const club = await clubRepository.findById(clubId.toString());
-
-  if (!club) {
-    throw new Error(`Club not found: ${clubId}`);
+  const cacheKey = String(clubId);
+  const cached = youthAcademyCache.get(cacheKey);
+  if (cached && Date.now() - cached.timestamp < YOUTH_ACADEMY_CACHE_TTL_MS) {
+    return cached.data;
   }
+
+  const existingInFlight = inFlightYouthAcademy.get(cacheKey);
+  if (existingInFlight) {
+    return existingInFlight;
+  }
+
+  const compute = async (): Promise<RealYouthAcademyPlanning> => {
+    const club = await clubRepository.findById(clubId.toString());
+
+    if (!club) {
+      throw new Error(`Club not found: ${clubId}`);
+    }
 
   const [snapshots, currentJuniors] = await Promise.all([
     snapshotRepository.listByClub(club.clubId),
@@ -117,28 +141,39 @@ export const getRealYouthAcademyPlanning = async (
     });
   }
 
-  return {
-    clubId,
-    snapshotId: latest.id,
-    snapshotDate: latest.snapshotDate.toISOString().slice(0, 10),
-    observed: {
-      players: observedPlayers,
-      coverage: {
-        totalYouthCount: observedPlayers.length,
-        youthsWithWeeksRemaining: observedPlayers.filter((p) => p.weeksRemaining !== null).length,
-        youthsWithSkill: observedPlayers.length
+    const result: RealYouthAcademyPlanning = {
+      clubId,
+      snapshotId: latest.id,
+      snapshotDate: latest.snapshotDate.toISOString().slice(0, 10),
+      observed: {
+        players: observedPlayers,
+        coverage: {
+          totalYouthCount: observedPlayers.length,
+          youthsWithWeeksRemaining: observedPlayers.filter((p) => p.weeksRemaining !== null).length,
+          youthsWithSkill: observedPlayers.length
+        },
+        source: "snapshot.juniors"
       },
-      source: "snapshot.juniors"
-    },
-    manual: {
-      academyInvestment
-    },
-    derived: {
-      categoryCounts,
-      players: playerPlans
-    },
-    warnings
+      manual: {
+        academyInvestment
+      },
+      derived: {
+        categoryCounts,
+        players: playerPlans
+      },
+      warnings
+    };
+
+    youthAcademyCache.set(cacheKey, { data: result, timestamp: Date.now() });
+    return result;
   };
+
+  const executionPromise = compute().finally(() => {
+    inFlightYouthAcademy.delete(cacheKey);
+  });
+
+  inFlightYouthAcademy.set(cacheKey, executionPromise);
+  return executionPromise;
 };
 
 function buildEmptyPlanning(clubId: ClubId, academyInvestment: string): RealYouthAcademyPlanning {

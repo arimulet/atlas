@@ -18,6 +18,7 @@ import { invalidateSquadMarketPlanningCache } from "../marketPlanning/index.js";
 import { invalidateSquadEconomyCache } from "../economy/index.js";
 import { invalidateSquadAssessmentCache } from "../squadPlanning/index.js";
 import { invalidateYouthDecisionPlanningCache } from "../youthDecisionEngine/index.js";
+import { invalidateYouthAcademyCache } from "../youthAcademyPlanning/index.js";
 
 const operatingPreferenceDefaults: Record<OperatingPreferenceKey, OperatingPreferenceValue> = {
   "economy.riskTolerance": "balanced",
@@ -73,6 +74,7 @@ export const updateClubOperatingSettings = async (
   invalidateSquadEconomyCache(input.clubId);
   invalidateSquadAssessmentCache(input.clubId);
   invalidateYouthDecisionPlanningCache(input.clubId);
+  invalidateYouthAcademyCache(input.clubId);
 
   return buildClubOperatingSettings(updated);
 };
