@@ -22,18 +22,33 @@ export class MongoCountryRepository {
     return persisted;
   }
 
+  private static allCountriesCache: PersistedCountry[] | null = null;
+
   async getAll(): Promise<PersistedCountry[]> {
+    if (MongoCountryRepository.allCountriesCache) {
+      return MongoCountryRepository.allCountriesCache;
+    }
+
     const countries = await CountryModel.find({}).lean();
-    return countries.map((country) => ({
+    const mapped = countries.map((country) => ({
       id: country._id.toString(),
       countryId: country.countryId,
       name: country.name,
       currencyName: country.currencyName,
       currencyRate: country.currencyRate
     }));
+
+    MongoCountryRepository.allCountriesCache = mapped;
+    for (const c of mapped) {
+      MongoCountryRepository.countryCache.set(c.countryId, c);
+    }
+
+    return mapped;
   }
 
   async save(input: SaveCountryInput): Promise<PersistedCountry> {
+    MongoCountryRepository.allCountriesCache = null;
+
     const updated = await CountryModel.findOneAndUpdate(
       { countryId: input.countryId },
       {

@@ -26,13 +26,12 @@ export async function getClubDiagnostic(clubId: ClubId): Promise<BasicDiagnostic
     throw new Error("Club not found: " + clubId);
   }
 
-  const [snapshots, clubCountry, rawTransfers] = await Promise.all([
-    snapshotRepository.listByClub(clubId),
+  const [latestSnapshot, clubCountry, rawTransfers] = await Promise.all([
+    snapshotRepository.findLatestByClub(club.clubId),
     countryRepository.getById(club.country),
     findFinalMarketTransfersUpToDate(new Date())
   ]);
 
-  const latestSnapshot = snapshots.at(-1);
   if (!latestSnapshot) return null;
 
   const currencyRate = clubCountry?.currencyRate ?? 1;
