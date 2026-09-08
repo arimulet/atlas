@@ -79,40 +79,30 @@ export async function getTrainingPageData(clubId: ClubId): Promise<TrainingPageD
     throw new Error(`Club not found: ${clubId}`);
   }
 
-  const snapshots = await snapshotRepository.listByClub(clubId);
+  const [snapshots, history] = await Promise.all([
+    snapshotRepository.listByClub(club.clubId),
+    trainingWeekRepository.listByClub(club.clubId)
+  ]);
   const latestSnapshot = snapshots.at(-1) ?? null;
   const previousSnapshot = snapshots.at(-2) ?? null;
-  const history = await trainingWeekRepository.listByClub(club.clubId);
   const latestByPlayer = new Map<number, (typeof history)[number]>();
 
   for (const report of history) {
     latestByPlayer.set(report.playerId, report);
   }
 
+  const histories = buildTrainingHistories(history);
   const talentByPlayer = new Map<number, ReturnType<typeof estimateTalentFromTrainingHistory>>();
-  for (const playerId of new Set(history.map((report) => report.playerId))) {
-    const playerWeeks = history
-      .filter((report) => report.playerId === playerId)
-      .map((report) =>
-        createTrainingWeek({
-          playerId: report.playerId,
-          gameWeek: report.gameWeek,
-          season: report.season ?? undefined,
-          seasonWeek: report.seasonWeek,
-          date: new Date(report.date),
-          type: report.type,
-          kind: report.kind,
-          intensity: report.intensity,
-          age: report.age,
-          skills: toDomainSkills(report.skills),
-          skillsChange: toDomainSkillsChange(report.skillsChange)
-        })
-      );
-    talentByPlayer.set(
-      playerId,
-      estimateTalentFromTrainingHistory({ playerId, weeks: playerWeeks })
-    );
+  for (const h of histories) {
+    talentByPlayer.set(h.playerId, estimateTalentFromTrainingHistory(h));
   }
+
+  const previousPlayerValues = new Map(
+    previousSnapshot?.players.map((previousPlayer) => [
+      previousPlayer.playerId,
+      previousPlayer.value
+    ]) ?? []
+  );
 
   return {
     snapshotId: latestSnapshot?.id ?? null,
@@ -122,9 +112,7 @@ export async function getTrainingPageData(clubId: ClubId): Promise<TrainingPageD
       latestSnapshot?.players.map((player) =>
         mapPlayer(
           player,
-          previousSnapshot?.players.find(
-            (previousPlayer) => previousPlayer.playerId === player.playerId
-          )?.value ?? null,
+          previousPlayerValues.get(player.playerId) ?? null,
           latestByPlayer,
           talentByPlayer.get(player.playerId) ?? null
         )
@@ -190,17 +178,20 @@ export function buildTrainingRecommendationsFromLoadedData(
     talents
   });
   const latestSnapshot = snapshots.at(-1);
+  const historyByPlayer = new Map(histories.map((h) => [h.playerId, h]));
+  const latestSnapshotPlayerMap = new Map(
+    (latestSnapshot?.players ?? []).map((p) => [p.playerId, p])
+  );
+
   return buildTrainingRecommendations(
     weeklyReport.players.flatMap((playerReport) => {
-      const history = histories.find((candidate) => candidate.playerId === playerReport.playerId);
+      const history = historyByPlayer.get(playerReport.playerId);
       const currentWeek = history?.weeks.find((week) => week.week === playerReport.gameWeek);
       if (!history || !currentWeek) {
         return [];
       }
 
-      const snapshotPlayer = latestSnapshot?.players.find(
-        (player) => player.playerId === playerReport.playerId
-      );
+      const snapshotPlayer = latestSnapshotPlayerMap.get(playerReport.playerId);
       const persistedPlayer = persistedPlayerMap.get(playerReport.playerId);
 
       return [
@@ -232,10 +223,17 @@ export async function getTrainingRecommendations(
 
   const [reports, snapshots, persistedPlayers] = await Promise.all([
     trainingWeekRepository.listByClub(club.clubId),
-    snapshotRepository.listByClub(clubId),
+    snapshotRepository.listByClub(club.clubId),
     playerRepository.listByClub(club.clubId)
   ]);
   return buildTrainingRecommendationsFromLoadedData(reports, snapshots, persistedPlayers, gameWeek);
+}
+
+export interface PrecomputedTrainingData {
+  histories?: TrainingHistory[];
+  talentByPlayer?: Map<number, ReturnType<typeof estimateTalentFromTrainingHistory>>;
+  weeklyReport?: WeeklyTrainingReport;
+  recommendations?: PlayerTrainingRecommendation[];
 }
 
 export function buildAdvancedTrainingOptimizationFromLoadedData(
@@ -243,27 +241,38 @@ export function buildAdvancedTrainingOptimizationFromLoadedData(
   snapshots: PersistedSnapshot[],
   juniors: PersistedJunior[],
   persistedPlayers: PersistedPlayer[],
-  gameWeek?: number
+  gameWeek?: number,
+  precomputed?: PrecomputedTrainingData
 ): AdvancedTrainingOptimization {
   const persistedPlayerMap = new Map(persistedPlayers.map((p) => [p.playerId, p]));
-  const histories = buildTrainingHistories(reports);
-  const talentByPlayer = new Map<number, ReturnType<typeof estimateTalentFromTrainingHistory>>();
-
-  for (const history of histories) {
-    talentByPlayer.set(history.playerId, estimateTalentFromTrainingHistory(history));
-  }
+  const histories = precomputed?.histories ?? buildTrainingHistories(reports);
+  const talentByPlayer =
+    precomputed?.talentByPlayer ??
+    new Map(
+      histories.map((history) => [
+        history.playerId,
+        estimateTalentFromTrainingHistory(history)
+      ])
+    );
 
   const talents = new Map<number, number | null>();
   for (const [playerId, estimate] of talentByPlayer) {
     talents.set(playerId, estimate.value);
   }
 
-  const weeklyReport = buildWeeklyTrainingReport({
-    players: histories.map((history) => ({ history })),
-    gameWeek,
-    talents
-  });
+  const weeklyReport =
+    precomputed?.weeklyReport ??
+    buildWeeklyTrainingReport({
+      players: histories.map((history) => ({ history })),
+      gameWeek,
+      talents
+    });
   const latestSnapshot = snapshots.at(-1);
+  const latestSnapshotPlayerMap = new Map(
+    (latestSnapshot?.players ?? []).map((player) => [player.playerId, player])
+  );
+  const historyByPlayer = new Map(histories.map((h) => [h.playerId, h]));
+
   const academyTalentByJuniorId = new Map(
     juniors.flatMap((junior) => {
       const talent = academyTalentForPromotedJunior(junior);
@@ -289,34 +298,36 @@ export function buildAdvancedTrainingOptimizationFromLoadedData(
   );
   const recommendationByPlayer = new Map<number, PlayerTrainingRecommendation>();
 
-  buildTrainingRecommendations(
-    weeklyReport.players.flatMap((playerReport) => {
-      const history = histories.find((candidate) => candidate.playerId === playerReport.playerId);
-      const currentWeek = history?.weeks.find((week) => week.week === playerReport.gameWeek);
-      if (!history || !currentWeek) {
-        return [];
-      }
-
-      const snapshotPlayer = latestSnapshot?.players.find(
-        (player) => player.playerId === playerReport.playerId
-      );
-      const persistedPlayer = persistedPlayerMap.get(playerReport.playerId);
-
-      return [
-        {
-          player: {
-            playerId: playerReport.playerId,
-            age: currentWeek.playerAge,
-            position: resolvePlayerPosition(persistedPlayer, snapshotPlayer),
-            skills: currentWeek.skills
-          },
-          weeklyReport: playerReport,
-          trainingHistory: history,
-          talent: talentByPlayer.get(playerReport.playerId) ?? null
+  const recommendations =
+    precomputed?.recommendations ??
+    buildTrainingRecommendations(
+      weeklyReport.players.flatMap((playerReport) => {
+        const history = historyByPlayer.get(playerReport.playerId);
+        const currentWeek = history?.weeks.find((week) => week.week === playerReport.gameWeek);
+        if (!history || !currentWeek) {
+          return [];
         }
-      ];
-    })
-  ).forEach((recommendation) => {
+
+        const snapshotPlayer = latestSnapshotPlayerMap.get(playerReport.playerId);
+        const persistedPlayer = persistedPlayerMap.get(playerReport.playerId);
+
+        return [
+          {
+            player: {
+              playerId: playerReport.playerId,
+              age: currentWeek.playerAge,
+              position: resolvePlayerPosition(persistedPlayer, snapshotPlayer),
+              skills: currentWeek.skills
+            },
+            weeklyReport: playerReport,
+            trainingHistory: history,
+            talent: talentByPlayer.get(playerReport.playerId) ?? null
+          }
+        ];
+      })
+    );
+
+  recommendations.forEach((recommendation) => {
     recommendationByPlayer.set(recommendation.playerId, recommendation);
   });
 
@@ -326,9 +337,7 @@ export function buildAdvancedTrainingOptimizationFromLoadedData(
       return [];
     }
 
-    const snapshotPlayer = latestSnapshot?.players.find(
-      (player) => player.playerId === history.playerId
-    );
+    const snapshotPlayer = latestSnapshotPlayerMap.get(history.playerId);
     const persistedPlayer = persistedPlayerMap.get(history.playerId);
     const academyTalent = academyTalentByPlayer.get(history.playerId);
     const seniorTalent = talentByPlayer.get(history.playerId);
@@ -378,7 +387,6 @@ export function buildAdvancedTrainingOptimizationFromLoadedData(
     ];
   });
   const historicalPlayerIds = new Set(historicalContexts.map((context) => context.player.playerId));
-  const historyByPlayer = new Map(histories.map((history) => [history.playerId, history]));
   const trialContexts: AdvancedTrainingCandidateContext[] = (latestSnapshot?.players ?? [])
     .filter((player) => {
       const history = historyByPlayer.get(player.playerId);
@@ -414,11 +422,86 @@ export async function getAdvancedTrainingOptimization(
 
   const [reports, snapshots, juniors, persistedPlayers] = await Promise.all([
     trainingWeekRepository.listByClub(club.clubId),
-    snapshotRepository.listByClub(clubId),
+    snapshotRepository.listByClub(club.clubId),
     juniorRepository.listByClub(club.clubId),
     playerRepository.listByClub(club.clubId)
   ]);
   return buildAdvancedTrainingOptimizationFromLoadedData(reports, snapshots, juniors, persistedPlayers, gameWeek);
+}
+
+export function buildWeeklyTrainingIntelligenceFromLoadedData(
+  reports: PersistedPlayerTrainingWeek[],
+  snapshots: PersistedSnapshot[],
+  juniors: PersistedJunior[],
+  persistedPlayers: PersistedPlayer[],
+  gameWeek?: number
+): WeeklyTrainingIntelligence {
+  const persistedPlayerMap = new Map(persistedPlayers.map((p) => [p.playerId, p]));
+  const histories = buildTrainingHistories(reports);
+  const talentByPlayer = new Map<number, ReturnType<typeof estimateTalentFromTrainingHistory>>();
+  for (const history of histories) {
+    talentByPlayer.set(history.playerId, estimateTalentFromTrainingHistory(history));
+  }
+
+  const talents = new Map<number, number | null>();
+  for (const [playerId, estimate] of talentByPlayer) {
+    talents.set(playerId, estimate.value);
+  }
+
+  const weeklyReport = buildWeeklyTrainingReport({
+    players: histories.map((history) => ({ history })),
+    gameWeek,
+    talents
+  });
+
+  const latestSnapshot = snapshots.at(-1);
+  const historyByPlayer = new Map(histories.map((h) => [h.playerId, h]));
+  const latestSnapshotPlayerMap = new Map(
+    (latestSnapshot?.players ?? []).map((p) => [p.playerId, p])
+  );
+
+  const recommendations = buildTrainingRecommendations(
+    weeklyReport.players.flatMap((playerReport) => {
+      const history = historyByPlayer.get(playerReport.playerId);
+      const currentWeek = history?.weeks.find((week) => week.week === playerReport.gameWeek);
+      if (!history || !currentWeek) {
+        return [];
+      }
+
+      const snapshotPlayer = latestSnapshotPlayerMap.get(playerReport.playerId);
+      const persistedPlayer = persistedPlayerMap.get(playerReport.playerId);
+
+      return [
+        {
+          player: {
+            playerId: playerReport.playerId,
+            age: currentWeek.playerAge,
+            position: resolvePlayerPosition(persistedPlayer, snapshotPlayer),
+            skills: currentWeek.skills
+          },
+          weeklyReport: playerReport,
+          trainingHistory: history,
+          talent: talentByPlayer.get(playerReport.playerId) ?? null
+        }
+      ];
+    })
+  );
+
+  const advancedOptimization = buildAdvancedTrainingOptimizationFromLoadedData(
+    reports,
+    snapshots,
+    juniors,
+    persistedPlayers,
+    gameWeek,
+    {
+      histories,
+      talentByPlayer,
+      weeklyReport,
+      recommendations
+    }
+  );
+
+  return { report: weeklyReport, recommendations, advancedOptimization };
 }
 
 export async function getWeeklyTrainingIntelligence(
@@ -432,21 +515,17 @@ export async function getWeeklyTrainingIntelligence(
 
   const [reports, snapshots, juniors, persistedPlayers] = await Promise.all([
     trainingWeekRepository.listByClub(club.clubId),
-    snapshotRepository.listByClub(clubId),
+    snapshotRepository.listByClub(club.clubId),
     juniorRepository.listByClub(club.clubId),
     playerRepository.listByClub(club.clubId)
   ]);
 
-  const report = buildWeeklyTrainingReportFromLoadedData(reports);
-  const recommendations = buildTrainingRecommendationsFromLoadedData(reports, snapshots, persistedPlayers);
-  const advancedOptimization = buildAdvancedTrainingOptimizationFromLoadedData(
+  return buildWeeklyTrainingIntelligenceFromLoadedData(
     reports,
     snapshots,
     juniors,
     persistedPlayers
   );
-
-  return { report, recommendations, advancedOptimization };
 }
 
 export async function getWeeklyTrainingCalibration(
@@ -460,7 +539,7 @@ export async function getWeeklyTrainingCalibration(
 
   const [reports, snapshots, persistedPlayers] = await Promise.all([
     trainingWeekRepository.listByClub(club.clubId),
-    snapshotRepository.listByClub(clubId),
+    snapshotRepository.listByClub(club.clubId),
     playerRepository.listByClub(club.clubId)
   ]);
   const persistedPlayerMap = new Map(persistedPlayers.map((p) => [p.playerId, p]));
@@ -480,6 +559,9 @@ export async function getWeeklyTrainingCalibration(
     talents
   });
   const latestSnapshot = snapshots.at(-1);
+  const latestSnapshotPlayerMap = new Map(
+    (latestSnapshot?.players ?? []).map((p) => [p.playerId, p])
+  );
   const reportByPlayer = new Map(
     weeklyReport.players.map((playerReport) => [playerReport.playerId, playerReport])
   );
@@ -489,9 +571,7 @@ export async function getWeeklyTrainingCalibration(
     if (!currentWeek || !report) {
       return [];
     }
-    const snapshotPlayer = latestSnapshot?.players.find(
-      (player) => player.playerId === history.playerId
-    );
+    const snapshotPlayer = latestSnapshotPlayerMap.get(history.playerId);
     const persistedPlayer = persistedPlayerMap.get(history.playerId);
     return [
       {
@@ -512,9 +592,7 @@ export async function getWeeklyTrainingCalibration(
     recommendations.map((recommendation) => [recommendation.playerId, recommendation])
   );
   const advancedContexts = recommendationContexts.flatMap((context) => {
-    const snapshotPlayer = latestSnapshot?.players.find(
-      (player) => player.playerId === context.player.playerId
-    );
+    const snapshotPlayer = latestSnapshotPlayerMap.get(context.player.playerId);
     const currentWeek = context.trainingHistory.weeks.find(
       (week) => week.week === weeklyReport.gameWeek
     );
@@ -566,12 +644,15 @@ export async function getWeeklyTrainingCalibration(
 function buildTrainingHistories(
   reports: readonly TrainingPageData["history"][number][]
 ): TrainingHistory[] {
-  const weeksByPlayer = new Map<number, TrainingHistory["weeks"]>();
+  const weeksByPlayer = new Map<number, Array<ReturnType<typeof createTrainingWeek>>>();
 
   for (const report of reports) {
-    const playerWeeks = weeksByPlayer.get(report.playerId) ?? [];
-    weeksByPlayer.set(report.playerId, [
-      ...playerWeeks,
+    let playerWeeks = weeksByPlayer.get(report.playerId);
+    if (!playerWeeks) {
+      playerWeeks = [];
+      weeksByPlayer.set(report.playerId, playerWeeks);
+    }
+    playerWeeks.push(
       createTrainingWeek({
         playerId: report.playerId,
         gameWeek: report.gameWeek,
@@ -585,7 +666,7 @@ function buildTrainingHistories(
         skills: toDomainSkills(report.skills),
         skillsChange: toDomainSkillsChange(report.skillsChange)
       })
-    ]);
+    );
   }
 
   return [...weeksByPlayer.entries()].map(([playerId, weeks]) => ({ playerId, weeks }));
