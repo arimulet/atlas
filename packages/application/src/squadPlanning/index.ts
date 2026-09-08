@@ -154,15 +154,17 @@ async function computeSquadAssessment(
 
   const countryRepo = new MongoCountryRepository();
 
-  const [snapshots, trainingWeeks, assignments, rawOverrides, allCountries, rawTransfers] = await Promise.all([
-    options?.snapshots ?? snapshotRepository.listByClub(club.clubId),
+  const [latestSnapshot, trainingWeeks, assignments, rawOverrides, allCountries, rawTransfers] = await Promise.all([
+    options?.snapshots
+      ? Promise.resolve(options.snapshots.at(-1) ?? null)
+      : snapshotRepository.findLatestByClub(club.clubId),
     options?.trainingWeeks ?? trainingWeekRepository.listByClub(club.clubId),
     playerRepository.listSquadRoles(club.clubId),
     playerRepository.listDevelopmentOverrides(club.clubId),
     countryRepo.getAll(),
     findFinalMarketTransfersUpToDate(new Date())
   ]);
-  const latest = snapshots.at(-1);
+  const latest = latestSnapshot;
   if (!latest) {
     return {
       players: [],
