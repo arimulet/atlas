@@ -114,7 +114,7 @@ export class SokkerJsonApiProvider implements SokkerDataProvider {
   }
 
   async getJuniors(): Promise<JuniorDto[]> {
-    const response = await this.get<SokkerJuniorsApiDto>("junior");
+    const response = await this.get<SokkerJuniorsApiDto>("junior?filter[limit]=30");
 
     return mapResource("junior", () => mapJuniorsApiToJuniors(response.juniors));
   }
