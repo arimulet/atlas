@@ -14,7 +14,8 @@ const marketTransferSchema = new Schema(
     week: { type: Number, required: true },
     salePrice: { type: Number, required: true },
     age: { type: Number, required: true },
-    skills: { type: Schema.Types.Mixed, default: {} }
+    skills: { type: Schema.Types.Mixed, default: {} },
+    profile: { type: String, required: false }
   },
   { timestamps: true }
 );
@@ -22,6 +23,7 @@ const marketTransferSchema = new Schema(
 marketTransferSchema.index({ transferKey: 1 }, { unique: true });
 marketTransferSchema.index({ transferDate: -1 });
 marketTransferSchema.index({ playerId: 1 });
+marketTransferSchema.index({ profile: 1, transferDate: -1 });
 
 type MarketTransferDocument = InferSchemaType<typeof marketTransferSchema>;
 

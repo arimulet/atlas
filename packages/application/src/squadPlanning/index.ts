@@ -746,7 +746,8 @@ function mapMarketTransferToRecord(
       striker: transfer.skills.striker ?? null
     },
     source: "imported",
-    salePriceType: "final_sale"
+    salePriceType: "final_sale",
+    developmentProfile: (transfer.profile as import("@atlas/domain").DevelopmentProfile) ?? null
   };
 }
 
