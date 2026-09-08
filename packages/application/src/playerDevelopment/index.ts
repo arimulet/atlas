@@ -1,6 +1,7 @@
-﻿import {
+import {
   MongoClubRepository,
   MongoSnapshotRepository,
+  type PersistedClub,
   type PersistedPlayerSnapshot,
   type PersistedSnapshot
 } from "@atlas/database";
@@ -54,14 +55,11 @@ const roleRelevantSkills: Record<string, SkillKey[]> = {
 const clubRepository = new MongoClubRepository();
 const snapshotRepository = new MongoSnapshotRepository();
 
-export const getPlayerDevelopment = async (clubId: ClubId): Promise<PlayerDevelopment> => {
-  const club = await clubRepository.findById(clubId.toString());
-
-  if (!club) {
-    throw new Error(`Club not found: ${clubId}`);
-  }
-
-  const snapshots = await snapshotRepository.listByClub(clubId);
+export const getPlayerDevelopmentFromLoadedData = (
+  clubId: ClubId,
+  club: PersistedClub,
+  snapshots: PersistedSnapshot[]
+): PlayerDevelopment => {
   const latest = snapshots.at(-1) ?? null;
   const trainingPriority =
     buildClubOperatingSettings(club).effective.preferences["training.priority"];
@@ -100,6 +98,17 @@ export const getPlayerDevelopment = async (clubId: ClubId): Promise<PlayerDevelo
   };
 };
 
+export const getPlayerDevelopment = async (clubId: ClubId): Promise<PlayerDevelopment> => {
+  const club = await clubRepository.findById(clubId.toString());
+
+  if (!club) {
+    throw new Error(`Club not found: ${clubId}`);
+  }
+
+  const snapshots = await snapshotRepository.listByClub(club.clubId);
+  return getPlayerDevelopmentFromLoadedData(clubId, club, snapshots);
+};
+
 export const getYouthPipelinePlanning = async (
   clubId: ClubId
 ): Promise<YouthPipelinePlanning> => {
@@ -112,17 +121,19 @@ export const getYouthPipelinePlanning = async (
   const operatingSettings = buildClubOperatingSettings(club);
   const academyInvestment = operatingSettings.effective.preferences["academy.investment"];
   const effectiveCurrency = club.currency;
-  const snapshots = await snapshotRepository.listByClub(clubId);
+  const snapshots = await snapshotRepository.listByClub(club.clubId);
   const latest = snapshots.at(-1) ?? null;
 
   if (!latest) {
     return buildEmptyPlanning(clubId, academyInvestment);
   }
 
-  const [development, marketPlanning] = await Promise.all([
-    getPlayerDevelopment(clubId),
-    getSquadMarketPlanning(clubId)
-  ]);
+  const development = getPlayerDevelopmentFromLoadedData(clubId, club, snapshots);
+  const marketPlanning = await getSquadMarketPlanning(clubId, {
+    club,
+    snapshots,
+    development
+  });
   const developmentIndex = buildDevelopmentIndex(development.derived.players);
   const marketIndex = buildMarketIndex(marketPlanning.derived.players);
   const youngPlayers = latest.players.filter(

@@ -23,14 +23,16 @@ const snapshotRepository = new MongoSnapshotRepository();
 export const getRealYouthAcademyPlanning = async (
   clubId: ClubId
 ): Promise<RealYouthAcademyPlanning> => {
-  const [club, snapshots] = await Promise.all([
-    clubRepository.findById(clubId.toString()),
-    snapshotRepository.listByClub(clubId)
-  ]);
+  const club = await clubRepository.findById(clubId.toString());
 
   if (!club) {
     throw new Error(`Club not found: ${clubId}`);
   }
+
+  const [snapshots, currentJuniors] = await Promise.all([
+    snapshotRepository.listByClub(club.clubId),
+    juniorRepository.listByClub(club.clubId)
+  ]);
 
   const settings = buildClubOperatingSettings(club);
   const academyInvestment = settings.effective.preferences["academy.investment"] ?? "balanced";
@@ -42,7 +44,6 @@ export const getRealYouthAcademyPlanning = async (
     return buildEmptyPlanning(clubId, academyInvestment);
   }
 
-  const currentJuniors = await juniorRepository.listByClub(club.clubId);
   const currentJuniorById = new Map(currentJuniors.map((junior) => [junior.juniorId, junior]));
   const latestCompletedTrainingSkillChanges =
     calculateLatestCompletedYouthSkillChanges(snapshotsWithJuniors);

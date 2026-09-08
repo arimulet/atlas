@@ -1,6 +1,7 @@
 import {
   MongoClubRepository,
   MongoSnapshotRepository,
+  type PersistedClub,
   type PersistedPlayerSnapshot,
   type PersistedSnapshot
 } from "@atlas/database";
@@ -8,6 +9,7 @@ import { formatDate } from "@atlas/utils";
 import {
   buildClubOperatingSettings,
   getPlayerDevelopment,
+  type PlayerDevelopment,
   Severity,
   getSquadEconomy,
   Confidence,
@@ -29,8 +31,17 @@ import {
 const clubRepository = new MongoClubRepository();
 const snapshotRepository = new MongoSnapshotRepository();
 
-export const getSquadMarketPlanning = async (clubId: ClubId): Promise<SquadMarketPlanning> => {
-  const club = await clubRepository.findById(clubId.toString());
+export interface SquadMarketPlanningOptions {
+  club?: PersistedClub;
+  snapshots?: PersistedSnapshot[];
+  development?: PlayerDevelopment;
+}
+
+export const getSquadMarketPlanning = async (
+  clubId: ClubId,
+  options?: SquadMarketPlanningOptions
+): Promise<SquadMarketPlanning> => {
+  const club = options?.club ?? (await clubRepository.findById(clubId.toString()));
 
   if (!club) {
     throw new Error(`Club not found: ${clubId}`);
@@ -38,7 +49,7 @@ export const getSquadMarketPlanning = async (clubId: ClubId): Promise<SquadMarke
 
   const settings = buildClubOperatingSettings(club);
   const marketStrategy = settings.effective.preferences["market.strategy"] as MarketStrategy;
-  const snapshots = await snapshotRepository.listByClub(clubId);
+  const snapshots = options?.snapshots ?? (await snapshotRepository.listByClub(club.clubId));
   const latest = snapshots.at(-1) ?? null;
 
   if (!latest) {
@@ -47,7 +58,7 @@ export const getSquadMarketPlanning = async (clubId: ClubId): Promise<SquadMarke
 
   const [economy, development] = await Promise.all([
     getSquadEconomy(clubId),
-    getPlayerDevelopment(clubId)
+    options?.development ?? getPlayerDevelopment(clubId)
   ]);
   const economyBySnapshotPlayerId = new Map(
     economy.derived.playerDetails.map((player) => [player.snapshotPlayerId, player])
