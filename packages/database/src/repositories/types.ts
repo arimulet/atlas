@@ -223,6 +223,16 @@ export interface PersistedSnapshot {
   juniors: PersistedJuniorSnapshot[];
 }
 
+export interface PersistedSnapshotSummary {
+  id: string;
+  clubId: number;
+  snapshotDate: Date;
+  gameWeek: number | null;
+  week: number | null;
+  importedAt: Date;
+  playerCount: number;
+}
+
 export interface PersistedYouthPlayerSnapshot {
   id: string;
   playerId: number;

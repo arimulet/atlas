@@ -33,6 +33,7 @@ import {
   KeyValue,
   buildClubOperatingSettings,
   getPlayerDevelopment,
+  getPlayerDevelopmentFromLoadedData,
   getSquadMarketPlanning,
   getYouthPipelinePlanning
 } from "@atlas/application";
@@ -53,12 +54,17 @@ export const getClubDashboard = async (clubId: ClubId): Promise<ClubDashboard> =
 
   const latest = snapshots.at(-1) ?? null;
   const previous = snapshots.at(-2) ?? null;
-  const [development, marketPlanning, youthPipeline, countryDetails] = await Promise.all([
-    getPlayerDevelopment(clubId),
-    getSquadMarketPlanning(clubId),
-    getYouthPipelinePlanning(clubId),
+  const development = getPlayerDevelopmentFromLoadedData(clubId, club, snapshots);
+  const [marketPlanning, countryDetails] = await Promise.all([
+    getSquadMarketPlanning(clubId, { club, snapshots, development }),
     countryRepository.getById(club.country)
   ]);
+  const youthPipeline = await getYouthPipelinePlanning(clubId, {
+    club,
+    snapshots,
+    development,
+    marketPlanning
+  });
 
   return {
     club,
@@ -132,9 +138,17 @@ export const updateClubProfile = async (input: UpdateClubProfileInput): Promise<
 };
 
 export const getClubSnapshots = async (clubId: ClubId): Promise<ClubDashboardSnapshotSummary[]> => {
-  const snapshots = await snapshotRepository.listByClub(clubId);
+  const summaries = await snapshotRepository.listSummariesByClub(clubId);
 
-  return snapshots.map(mapSnapshotSummary);
+  return summaries.map((s) => ({
+    id: s.id,
+    clubId: String(s.clubId),
+    snapshotDate: s.snapshotDate.toISOString().slice(0, 10),
+    importedAt: s.importedAt.toISOString(),
+    gameWeek: s.gameWeek,
+    week: s.week,
+    playerCount: s.playerCount
+  }));
 };
 
 export const compareClubSnapshots = async (

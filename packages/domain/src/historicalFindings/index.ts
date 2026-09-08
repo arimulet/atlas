@@ -320,10 +320,12 @@ function buildPlayerSeries(
     const matchable = matchablePlayers(snapshot.players);
 
     for (const [playerId, player] of matchable) {
-      series.set(playerId, [
-        ...(series.get(playerId) ?? []),
-        { value: player.value.amount, skills: player.skills }
-      ]);
+      let list = series.get(playerId);
+      if (!list) {
+        list = [];
+        series.set(playerId, list);
+      }
+      list.push({ value: player.value.amount, skills: player.skills });
     }
   }
 
@@ -337,7 +339,12 @@ function matchablePlayers(
 
   for (const player of players) {
     if (player.playerId) {
-      byPlayerId.set(player.playerId, [...(byPlayerId.get(player.playerId) ?? []), player]);
+      let list = byPlayerId.get(player.playerId);
+      if (!list) {
+        list = [];
+        byPlayerId.set(player.playerId, list);
+      }
+      list.push(player);
     }
   }
 
