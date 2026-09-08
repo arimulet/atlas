@@ -20,6 +20,14 @@ import type {
   ValidatedSokkerSyncPayload
 } from "./types.js";
 import { mapJuniorsToSnapshotJuniors, mapPlayersToSnapshotPlayers } from "./snapshot-mappers.js";
+import { invalidateClubDashboardCache } from "../club/index.js";
+import { invalidateTrainingCache } from "../training/index.js";
+import { invalidateDiagnosticsCache } from "../diagnostics/index.js";
+import { invalidateYouthPipelineCache, invalidatePlayerDevelopmentCache } from "../playerDevelopment/index.js";
+import { invalidateSquadAssessmentCache } from "../squadPlanning/index.js";
+import { invalidateYouthDecisionPlanningCache } from "../youthDecisionEngine/index.js";
+import { invalidateSquadEconomyCache } from "../economy/index.js";
+import { invalidateSquadMarketPlanningCache } from "../marketPlanning/index.js";
 
 const SYNC_SNAPSHOT_NATURAL_KEY = "sokker-json-api-sync";
 
@@ -263,6 +271,16 @@ export class SokkerSyncPersistence {
         );
       }
     }
+
+    invalidateClubDashboardCache(club.id);
+    invalidateTrainingCache(club.id);
+    invalidateDiagnosticsCache(club.id);
+    invalidateYouthPipelineCache(club.id);
+    invalidateSquadAssessmentCache(club.id);
+    invalidatePlayerDevelopmentCache(club.id);
+    invalidateYouthDecisionPlanningCache(club.id);
+    invalidateSquadEconomyCache(club.id);
+    invalidateSquadMarketPlanningCache(club.id);
 
     return {
       clubId: club.id,

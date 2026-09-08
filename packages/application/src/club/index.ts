@@ -42,47 +42,82 @@ const clubRepository = new MongoClubRepository();
 const snapshotRepository = new MongoSnapshotRepository();
 const countryRepository = new MongoCountryRepository();
 
-export const getClubDashboard = async (clubId: ClubId): Promise<ClubDashboard> => {
-  const [club, snapshots] = await Promise.all([
-    clubRepository.findById(clubId.toString()),
-    snapshotRepository.listByClub(clubId)
-  ]);
+const inFlightDashboard = new Map<string, Promise<ClubDashboard>>();
+const dashboardCache = new Map<string, { data: ClubDashboard; timestamp: number }>();
+const DASHBOARD_CACHE_TTL_MS = 60_000;
 
-  if (!club) {
-    throw new Error(`Club not found: ${clubId}`);
+export function invalidateClubDashboardCache(clubId?: ClubId): void {
+  if (clubId) {
+    dashboardCache.delete(String(clubId));
+  } else {
+    dashboardCache.clear();
+  }
+}
+
+export const getClubDashboard = async (clubId: ClubId): Promise<ClubDashboard> => {
+  const cacheKey = String(clubId);
+  const cached = dashboardCache.get(cacheKey);
+  if (cached && Date.now() - cached.timestamp < DASHBOARD_CACHE_TTL_MS) {
+    return cached.data;
   }
 
-  const latest = snapshots.at(-1) ?? null;
-  const previous = snapshots.at(-2) ?? null;
-  const development = getPlayerDevelopmentFromLoadedData(clubId, club, snapshots);
-  const [marketPlanning, countryDetails] = await Promise.all([
-    getSquadMarketPlanning(clubId, { club, snapshots, development }),
-    countryRepository.getById(club.country)
-  ]);
-  const youthPipeline = await getYouthPipelinePlanning(clubId, {
-    club,
-    snapshots,
-    development,
-    marketPlanning
+  const existingInFlight = inFlightDashboard.get(cacheKey);
+  if (existingInFlight) {
+    return existingInFlight;
+  }
+
+  const compute = async (): Promise<ClubDashboard> => {
+    const [club, snapshots] = await Promise.all([
+      clubRepository.findById(clubId.toString()),
+      snapshotRepository.listByClub(clubId)
+    ]);
+
+    if (!club) {
+      throw new Error(`Club not found: ${clubId}`);
+    }
+
+    const latest = snapshots.at(-1) ?? null;
+    const previous = snapshots.at(-2) ?? null;
+    const development = getPlayerDevelopmentFromLoadedData(clubId, club, snapshots);
+    const [marketPlanning, countryDetails] = await Promise.all([
+      getSquadMarketPlanning(clubId, { club, snapshots, development }),
+      countryRepository.getById(club.country)
+    ]);
+    const youthPipeline = await getYouthPipelinePlanning(clubId, {
+      club,
+      snapshots,
+      development,
+      marketPlanning
+    });
+
+    const result: ClubDashboard = {
+      club,
+      countryDetails,
+      settings: buildClubOperatingSettings(club),
+      snapshots: {
+        available: snapshots.length > 0,
+        count: snapshots.length,
+        latest: latest ? mapSnapshotSummary(latest) : null,
+        previous: previous ? mapSnapshotSummary(previous) : null,
+        canCompare: snapshots.length >= 2
+      },
+      trainingSummary: buildTrainingSummary(latest),
+      developmentSummary: buildDevelopmentSummary(clubId, development),
+      marketSummary: buildMarketSummary(clubId, snapshots.length, marketPlanning),
+      youthPipelineSummary: buildYouthPipelineSummary(clubId, snapshots.length, youthPipeline),
+      operationalAreas: buildOperationalAreas(snapshots.length)
+    };
+
+    dashboardCache.set(cacheKey, { data: result, timestamp: Date.now() });
+    return result;
+  };
+
+  const executionPromise = compute().finally(() => {
+    inFlightDashboard.delete(cacheKey);
   });
 
-  return {
-    club,
-    countryDetails,
-    settings: buildClubOperatingSettings(club),
-    snapshots: {
-      available: snapshots.length > 0,
-      count: snapshots.length,
-      latest: latest ? mapSnapshotSummary(latest) : null,
-      previous: previous ? mapSnapshotSummary(previous) : null,
-      canCompare: snapshots.length >= 2
-    },
-    trainingSummary: buildTrainingSummary(latest),
-    developmentSummary: buildDevelopmentSummary(clubId, development),
-    marketSummary: buildMarketSummary(clubId, snapshots.length, marketPlanning),
-    youthPipelineSummary: buildYouthPipelineSummary(clubId, snapshots.length, youthPipeline),
-    operationalAreas: buildOperationalAreas(snapshots.length)
-  };
+  inFlightDashboard.set(cacheKey, executionPromise);
+  return executionPromise;
 };
 
 function buildTrainingSummary(
@@ -131,10 +166,12 @@ export const getUserClubs = async (ownerUserId: string): Promise<PersistedClub[]
 };
 
 export const updateClubProfile = async (input: UpdateClubProfileInput): Promise<PersistedClub> => {
-  return clubRepository.updateManualProfile({
+  const result = await clubRepository.updateManualProfile({
     clubId: input.clubId,
     ...validateManualProfileUpdate(input.settings)
   });
+  invalidateClubDashboardCache(input.clubId);
+  return result;
 };
 
 export const getClubSnapshots = async (clubId: ClubId): Promise<ClubDashboardSnapshotSummary[]> => {
