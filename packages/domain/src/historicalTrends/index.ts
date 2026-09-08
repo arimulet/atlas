@@ -65,7 +65,12 @@ function buildPlayerTrends(snapshots: SnapshotComparisonSnapshot[]): PlayerHisto
     const index = indexSnapshotPlayers(snapshot.players);
 
     for (const [playerId, player] of index.matchable) {
-      byPlayerId.set(playerId, [...(byPlayerId.get(playerId) ?? []), { snapshot, player }]);
+      let list = byPlayerId.get(playerId);
+      if (!list) {
+        list = [];
+        byPlayerId.set(playerId, list);
+      }
+      list.push({ snapshot, player });
     }
   }
 
@@ -295,7 +300,12 @@ function indexSnapshotPlayers(players: SnapshotComparisonPlayer[]): {
       continue;
     }
 
-    byPlayerId.set(player.playerId, [...(byPlayerId.get(player.playerId) ?? []), player]);
+    let list = byPlayerId.get(player.playerId);
+    if (!list) {
+      list = [];
+      byPlayerId.set(player.playerId, list);
+    }
+    list.push(player);
   }
 
   const matchable = new Map<number, SnapshotComparisonPlayer>();

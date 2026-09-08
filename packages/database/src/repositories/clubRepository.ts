@@ -59,18 +59,18 @@ export class MongoClubRepository {
   }
 
   async findById(id: string): Promise<PersistedClub | null> {
-    const club = await ClubModel.findById(id);
-    return club ? mapClub(club.toObject()) : null;
+    const club = await ClubModel.findById(id).lean();
+    return club ? mapClub(club) : null;
   }
 
   async findByClubId(clubId: number): Promise<PersistedClub | null> {
-    const club = await ClubModel.findOne({ clubId });
-    return club ? mapClub(club.toObject()) : null;
+    const club = await ClubModel.findOne({ clubId }).lean();
+    return club ? mapClub(club) : null;
   }
 
   async findClubsByOwnerUserId(ownerUserId: string): Promise<PersistedClub[]> {
-    const clubs = await ClubModel.find({ ownerUserId });
-    return clubs.map((c) => mapClub(c.toObject()));
+    const clubs = await ClubModel.find({ ownerUserId }).lean();
+    return clubs.map((c) => mapClub(c));
   }
 
   async updateManualProfile(input: UpdateClubManualProfileInput): Promise<PersistedClub> {

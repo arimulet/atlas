@@ -5,7 +5,7 @@ import {
   type PersistedPlayerSnapshot,
   type PersistedSnapshot
 } from "@atlas/database";
-import { buildClubOperatingSettings, Category, ClubId, Confidence, DeltaDirection, getSquadMarketPlanning, SquadMarketPlayerPlan, Severity, SkillKey } from "@atlas/application";
+import { buildClubOperatingSettings, Category, ClubId, Confidence, DeltaDirection, getSquadMarketPlanning, SquadMarketPlanning, SquadMarketPlayerPlan, Severity, SkillKey } from "@atlas/application";
 import { formatDate } from "@atlas/utils";
 
 import type {
@@ -109,10 +109,18 @@ export const getPlayerDevelopment = async (clubId: ClubId): Promise<PlayerDevelo
   return getPlayerDevelopmentFromLoadedData(clubId, club, snapshots);
 };
 
+export interface YouthPipelinePlanningOptions {
+  club?: PersistedClub;
+  snapshots?: PersistedSnapshot[];
+  development?: PlayerDevelopment;
+  marketPlanning?: SquadMarketPlanning;
+}
+
 export const getYouthPipelinePlanning = async (
-  clubId: ClubId
+  clubId: ClubId,
+  options?: YouthPipelinePlanningOptions
 ): Promise<YouthPipelinePlanning> => {
-  const club = await clubRepository.findById(clubId.toString());
+  const club = options?.club ?? (await clubRepository.findById(clubId.toString()));
 
   if (!club) {
     throw new Error(`Club not found: ${clubId}`);
@@ -121,19 +129,22 @@ export const getYouthPipelinePlanning = async (
   const operatingSettings = buildClubOperatingSettings(club);
   const academyInvestment = operatingSettings.effective.preferences["academy.investment"];
   const effectiveCurrency = club.currency;
-  const snapshots = await snapshotRepository.listByClub(club.clubId);
+  const snapshots = options?.snapshots ?? (await snapshotRepository.listByClub(club.clubId));
   const latest = snapshots.at(-1) ?? null;
 
   if (!latest) {
     return buildEmptyPlanning(clubId, academyInvestment);
   }
 
-  const development = getPlayerDevelopmentFromLoadedData(clubId, club, snapshots);
-  const marketPlanning = await getSquadMarketPlanning(clubId, {
-    club,
-    snapshots,
-    development
-  });
+  const development =
+    options?.development ?? getPlayerDevelopmentFromLoadedData(clubId, club, snapshots);
+  const marketPlanning =
+    options?.marketPlanning ??
+    (await getSquadMarketPlanning(clubId, {
+      club,
+      snapshots,
+      development
+    }));
   const developmentIndex = buildDevelopmentIndex(development.derived.players);
   const marketIndex = buildMarketIndex(marketPlanning.derived.players);
   const youngPlayers = latest.players.filter(
