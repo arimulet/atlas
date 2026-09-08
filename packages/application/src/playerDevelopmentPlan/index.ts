@@ -12,6 +12,7 @@ import {
   type PlayerDevelopmentPlan,
   type PlayerDevelopmentTargetOverride
 } from "@atlas/domain";
+import { invalidateSquadAssessmentCache } from "../squadPlanning/index.js";
 
 export {
   createDevelopmentSimulationState,
@@ -77,6 +78,7 @@ export async function getPlayerDevelopmentTarget(input: {
 export async function savePlayerDevelopmentTarget(
   input: Omit<SavePlayerDevelopmentOverrideInput, "clubId"> & { clubId: ClubId }
 ): Promise<PersistedPlayerDevelopmentOverride> {
+  invalidateSquadAssessmentCache(input.clubId);
   return playerRepository.saveDevelopmentOverride({
     ...input,
     clubId: await resolveNumericClubId(input.clubId)
@@ -87,6 +89,7 @@ export async function resetPlayerDevelopmentTarget(input: {
   playerId: number;
   clubId: ClubId;
 }): Promise<void> {
+  invalidateSquadAssessmentCache(input.clubId);
   await playerRepository.deleteDevelopmentOverride({
     ...input,
     clubId: await resolveNumericClubId(input.clubId)

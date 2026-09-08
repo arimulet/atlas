@@ -98,15 +98,50 @@ export const getPlayerDevelopmentFromLoadedData = (
   };
 };
 
-export const getPlayerDevelopment = async (clubId: ClubId): Promise<PlayerDevelopment> => {
-  const club = await clubRepository.findById(clubId.toString());
+const inFlightPlayerDevelopments = new Map<string, Promise<PlayerDevelopment>>();
+const playerDevelopmentCache = new Map<string, { data: PlayerDevelopment; timestamp: number }>();
+const PLAYER_DEVELOPMENT_CACHE_TTL_MS = 60 * 1000;
 
-  if (!club) {
-    throw new Error(`Club not found: ${clubId}`);
+export function invalidatePlayerDevelopmentCache(clubId?: ClubId): void {
+  if (clubId !== undefined) {
+    playerDevelopmentCache.delete(String(clubId));
+  } else {
+    playerDevelopmentCache.clear();
+  }
+}
+
+export const getPlayerDevelopment = async (clubId: ClubId): Promise<PlayerDevelopment> => {
+  const cacheKey = String(clubId);
+  const now = Date.now();
+
+  const cached = playerDevelopmentCache.get(cacheKey);
+  if (cached && now - cached.timestamp < PLAYER_DEVELOPMENT_CACHE_TTL_MS) {
+    return cached.data;
   }
 
-  const snapshots = await snapshotRepository.listByClub(club.clubId);
-  return getPlayerDevelopmentFromLoadedData(clubId, club, snapshots);
+  const inFlight = inFlightPlayerDevelopments.get(cacheKey);
+  if (inFlight) {
+    return inFlight;
+  }
+
+  const promise = (async () => {
+    try {
+      const club = await clubRepository.findById(clubId.toString());
+      if (!club) {
+        throw new Error(`Club not found: ${clubId}`);
+      }
+
+      const snapshots = await snapshotRepository.listByClub(club.clubId);
+      const data = getPlayerDevelopmentFromLoadedData(clubId, club, snapshots);
+      playerDevelopmentCache.set(cacheKey, { data, timestamp: Date.now() });
+      return data;
+    } finally {
+      inFlightPlayerDevelopments.delete(cacheKey);
+    }
+  })();
+
+  inFlightPlayerDevelopments.set(cacheKey, promise);
+  return promise;
 };
 
 export interface YouthPipelinePlanningOptions {
