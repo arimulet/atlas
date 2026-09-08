@@ -39,11 +39,15 @@ const VALID_MAXIMUM_SKILL = 20;
 export function calculatePlayerMarketSimilarity(
   target: MarketComparableTarget,
   comparable: PlayerTransferRecord,
-  config: MarketCalibrationConfig = MARKET_CALIBRATION_CONFIG
+  config: MarketCalibrationConfig = MARKET_CALIBRATION_CONFIG,
+  precomputedTargetProfile?: DevelopmentProfile | null
 ): number {
   void config;
   const targetPlayer = readPlayer(target);
-  const targetProfile = resolveProfile(targetPlayer, readContextProfile(target));
+  const targetProfile =
+    precomputedTargetProfile !== undefined
+      ? precomputedTargetProfile
+      : resolveProfile(targetPlayer, readContextProfile(target));
   const comparableProfile = resolveTransferProfile(comparable);
   const skillSimilarity = calculateSkillSimilarity(
     targetPlayer.skills,
@@ -91,6 +95,7 @@ export function findMarketComparables(
 ): MarketComparable[] {
   const config = resolveCalibrationConfig(options);
   const targetPlayer = readPlayer(target);
+  const targetProfile = resolveProfile(targetPlayer, readContextProfile(target));
   const asOfDate =
     options.asOfDate ?? options.beforeDateExclusive ?? latestTransferDate(transfers) ?? new Date(0);
   const beforeDate = options.beforeDateExclusive;
@@ -115,7 +120,7 @@ export function findMarketComparables(
     .map((transfer): MarketComparable | null => {
       const normalizedSalePrice = normalizeSalePrice(transfer, options, config);
       if (normalizedSalePrice === null || normalizedSalePrice <= 0) return null;
-      const similarityScore = calculatePlayerMarketSimilarity(target, transfer, config);
+      const similarityScore = calculatePlayerMarketSimilarity(target, transfer, config, targetProfile);
       if (similarityScore < config.minimumSimilarity) return null;
       const recencyWeight = calculateTransferRecencyWeight(transfer.transferDate, asOfDate, config);
       const dataQualityWeight = calculateTransferDataQualityWeight(
@@ -247,9 +252,16 @@ export function assessTransferDataQuality(
   return "weak";
 }
 
+const deduplicatedTransfersCache = new WeakMap<
+  readonly PlayerTransferRecord[],
+  PlayerTransferRecord[]
+>();
+
 export function deduplicateTransferRecords(
   transfers: readonly PlayerTransferRecord[]
 ): PlayerTransferRecord[] {
+  const cached = deduplicatedTransfersCache.get(transfers);
+  if (cached) return cached;
   const byKey = new Map<string, PlayerTransferRecord>();
   for (const transfer of transfers) {
     const key = transferKey(transfer);
@@ -263,7 +275,9 @@ export function deduplicateTransferRecords(
       byKey.set(key, transfer);
     }
   }
-  return [...byKey.values()].sort(compareTransfers);
+  const result = [...byKey.values()].sort(compareTransfers);
+  deduplicatedTransfersCache.set(transfers, result);
+  return result;
 }
 
 export function transferKey(transfer: PlayerTransferRecord): string {
@@ -379,10 +393,16 @@ function resolveProfile(
   return suggestDevelopmentProfile(developmentPlayer).profile;
 }
 
+const transferProfileCache = new WeakMap<PlayerTransferRecord, DevelopmentProfile | null>();
+
 function resolveTransferProfile(transfer: PlayerTransferRecord): DevelopmentProfile | null {
   if (transfer.developmentProfile) return transfer.developmentProfile;
+  const cached = transferProfileCache.get(transfer);
+  if (cached !== undefined) return cached;
   const player = playerFromTransferRecord(transfer);
-  return resolveProfile(player, null);
+  const profile = resolveProfile(player, null);
+  transferProfileCache.set(transfer, profile);
+  return profile;
 }
 
 function readContextProfile(target: MarketComparableTarget): DevelopmentProfile | null {

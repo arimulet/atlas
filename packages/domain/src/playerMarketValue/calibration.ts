@@ -368,10 +368,25 @@ function createCalibratedRange(
   };
 }
 
+const transferFundamentalCache = new WeakMap<
+  PlayerTransferRecord,
+  PlayerMarketValueEstimate
+>();
+
 function estimateTransferFundamental(
   transfer: PlayerTransferRecord,
   fundamentalConfig?: PlayerMarketValueConfig
 ): PlayerMarketValueEstimate {
+  if (!fundamentalConfig) {
+    const cached = transferFundamentalCache.get(transfer);
+    if (cached) return cached;
+    const estimated = estimatePlayerMarketValue(
+      { player: playerFromTransferRecord(transfer) },
+      fundamentalConfig
+    );
+    transferFundamentalCache.set(transfer, estimated);
+    return estimated;
+  }
   return estimatePlayerMarketValue(
     { player: playerFromTransferRecord(transfer) },
     fundamentalConfig

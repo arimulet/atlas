@@ -118,15 +118,14 @@ export function evaluateTrainingPathEconomics(
   return projectPlayerMarketValue(context);
 }
 
-export function projectMarketValueAtHorizon(
-  context: FutureMarketValueContext,
+export function extractMarketValueAtHorizon(
+  projection: PlayerMarketValueProjection,
   horizonWeeks: number
 ): MarketValueRange {
   if (!Number.isFinite(horizonWeeks) || horizonWeeks < 0) {
     throw new RangeError("Market value horizon must be a finite non-negative number.");
   }
 
-  const projection = projectPlayerMarketValue(context);
   const eligible = projection.points.filter(
     (point) =>
       point.cumulativeTrainingWeeks !== null && point.cumulativeTrainingWeeks <= horizonWeeks
@@ -134,6 +133,14 @@ export function projectMarketValueAtHorizon(
   return (
     cloneRange(eligible.at(-1)?.marketValue) ?? cloneRange(projection.current.calibratedValue)!
   );
+}
+
+export function projectMarketValueAtHorizon(
+  context: FutureMarketValueContext,
+  horizonWeeks: number
+): MarketValueRange {
+  const projection = projectPlayerMarketValue(context);
+  return extractMarketValueAtHorizon(projection, horizonWeeks);
 }
 
 export function compareAdvancedAndFormationMarketValue(input: {
@@ -150,11 +157,11 @@ export function compareAdvancedAndFormationMarketValue(input: {
   const advancedAtHorizon =
     fixedHorizonWeeks === null
       ? null
-      : projectMarketValueAtHorizon(input.advanced, fixedHorizonWeeks).expected;
+      : extractMarketValueAtHorizon(advanced, fixedHorizonWeeks).expected;
   const formationAtHorizon =
     fixedHorizonWeeks === null
       ? null
-      : projectMarketValueAtHorizon(input.formation, fixedHorizonWeeks).expected;
+      : extractMarketValueAtHorizon(formation, fixedHorizonWeeks).expected;
 
   return {
     advanced,
