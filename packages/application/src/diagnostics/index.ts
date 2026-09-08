@@ -142,12 +142,13 @@ function mapMarketTransferToRecord(
       technique: transfer.skills.technique ?? null,
       passing: transfer.skills.passing ?? null,
       keeper: transfer.skills.keeper ?? null,
-      defender: transfer.skills.defender ?? null,
-      playmaker: transfer.skills.playmaker ?? null,
+      defender: transfer.skills.defending ?? transfer.skills.defender ?? null,
+      playmaker: transfer.skills.playmaking ?? transfer.skills.playmaker ?? null,
       striker: transfer.skills.striker ?? null
     },
     source: "imported",
-    salePriceType: "final_sale"
+    salePriceType: "final_sale",
+    developmentProfile: (transfer.profile as import("@atlas/domain").DevelopmentProfile) ?? null
   };
 }
 

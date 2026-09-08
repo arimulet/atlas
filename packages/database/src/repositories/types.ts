@@ -359,5 +359,6 @@ export interface PersistedMarketTransfer {
   salePrice: number;
   age: number;
   skills: Record<string, number>;
+  profile?: string | null;
 }
 
