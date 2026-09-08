@@ -13,6 +13,7 @@ import {
   findFinalMarketTransfersUpToDate,
   MongoCountryRepository
 } from "@atlas/database";
+import { invalidateYouthDecisionPlanningCache } from "../youthDecisionEngine/index.js";
 import {
   assessSquad,
   analyzeSquadDepth,
@@ -265,6 +266,7 @@ export async function saveSquadRoleAssignment(
   input: Omit<SaveSquadRoleAssignmentInput, "clubId"> & { clubId: ClubId }
 ): Promise<PersistedSquadRoleAssignment> {
   invalidateSquadAssessmentCache(input.clubId);
+  invalidateYouthDecisionPlanningCache(input.clubId);
   return playerRepository.saveSquadRole({
     ...input,
     clubId: await resolveNumericClubId(input.clubId)
@@ -276,6 +278,7 @@ export async function resetSquadRoleAssignment(input: {
   clubId: ClubId;
 }): Promise<void> {
   invalidateSquadAssessmentCache(input.clubId);
+  invalidateYouthDecisionPlanningCache(input.clubId);
   await playerRepository.deleteSquadRole({
     ...input,
     clubId: await resolveNumericClubId(input.clubId)
