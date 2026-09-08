@@ -74,30 +74,69 @@ export type {
 } from "@atlas/domain";
 export type { YouthDecisionCandidate, YouthDecisionPlanning } from "./types.js";
 
+const YOUTH_DECISION_CACHE_TTL_MS = 60_000;
+const youthDecisionCache = new Map<string, { data: YouthDecisionPlanning; timestamp: number }>();
+const inFlightYouthDecisions = new Map<string, Promise<YouthDecisionPlanning>>();
+
+export function invalidateYouthDecisionPlanningCache(clubId?: ClubId): void {
+  if (clubId) {
+    youthDecisionCache.delete(String(clubId));
+  } else {
+    youthDecisionCache.clear();
+  }
+}
+
 export async function getYouthDecisionPlanning(clubId: ClubId): Promise<YouthDecisionPlanning> {
+  const cacheKey = String(clubId);
+  const cached = youthDecisionCache.get(cacheKey);
+  if (cached && Date.now() - cached.timestamp < YOUTH_DECISION_CACHE_TTL_MS) {
+    return cached.data;
+  }
+
+  const inFlight = inFlightYouthDecisions.get(cacheKey);
+  if (inFlight) {
+    return inFlight;
+  }
+
+  const computePromise = computeYouthDecisionPlanning(clubId).then(
+    (data) => {
+      youthDecisionCache.set(cacheKey, { data, timestamp: Date.now() });
+      inFlightYouthDecisions.delete(cacheKey);
+      return data;
+    },
+    (err) => {
+      inFlightYouthDecisions.delete(cacheKey);
+      throw err;
+    }
+  );
+
+  inFlightYouthDecisions.set(cacheKey, computePromise);
+  return computePromise;
+}
+
+async function computeYouthDecisionPlanning(clubId: ClubId): Promise<YouthDecisionPlanning> {
   const club = await clubRepository.findById(clubId.toString());
   if (!club) throw new Error(`Club not found: ${clubId}`);
 
-  const [snapshots, trainingWeeks, juniors, persistedPlayers] = await Promise.all([
-    snapshotRepository.listByClub(club.clubId),
-    trainingWeekRepository.listByClub(club.clubId),
+  const [squadAssessment, latestSnapshot, juniors, persistedPlayers, trainingWeeks] = await Promise.all([
+    getSquadAssessment(clubId),
+    snapshotRepository.findLatestByClub(club.clubId),
     juniorRepository.listByClub(club.clubId),
-    playerRepository.listByClub(club.clubId)
+    playerRepository.listByClub(club.clubId),
+    trainingWeekRepository.listByClub(club.clubId)
   ]);
 
-  const [squadAssessment, advancedTraining] = await Promise.all([
-    getSquadAssessment(clubId, { club, snapshots, trainingWeeks }),
-    Promise.resolve()
-      .then(() =>
-        buildAdvancedTrainingOptimizationFromLoadedData(
-          trainingWeeks,
-          snapshots,
-          juniors,
-          persistedPlayers
-        )
+  const advancedTraining = await Promise.resolve()
+    .then(() =>
+      buildAdvancedTrainingOptimizationFromLoadedData(
+        trainingWeeks,
+        latestSnapshot ? [latestSnapshot] : [],
+        juniors,
+        persistedPlayers
       )
-      .catch(() => null)
-  ]);
+    )
+    .catch(() => null);
+
   const trainingHistories = buildTrainingHistories(trainingWeeks);
   const depthAnalysis = analyzeSquadDepth(squadAssessment.depthPlayers, {
     currentGameWeek: squadAssessment.currentGameWeek
@@ -197,6 +236,23 @@ function toCandidate(
   recommendation: YouthDecisionCandidate["recommendation"],
   advancedRecsByPlayerId?: Map<number, AdvancedTrainingPlayerRecommendation>
 ): YouthDecisionCandidate {
+  const devProj = entry.player.projection;
+  const lightDevProjection = devProj
+    ? {
+        ...devProj,
+        steps: devProj.steps.slice(0, 1),
+        milestones: []
+      }
+    : null;
+
+  const marketProj = entry.player.marketProjection;
+  const lightMarketProjection = marketProj
+    ? {
+        ...marketProj,
+        points: []
+      }
+    : null;
+
   return {
     playerId: entry.player.playerId,
     playerName: entry.player.playerName ?? `Player ${entry.player.playerId}`,
@@ -207,11 +263,11 @@ function toCandidate(
     prospect: entry.context.prospect,
     opportunity: entry.context.opportunity,
     recommendation,
-    developmentPlan: entry.player.developmentPlan ?? null,
-    trainingPath: entry.player.trainingPath ?? null,
-    developmentProjection: entry.player.projection ?? null,
+    developmentPlan: null,
+    trainingPath: null,
+    developmentProjection: lightDevProjection,
     marketValue: entry.player.marketValue ?? null,
-    marketProjection: entry.player.marketProjection ?? null,
+    marketProjection: lightMarketProjection,
     currentlyAdvanced: entry.player.training?.kind === "advanced",
     advancedTrainingRecommendation:
       advancedRecsByPlayerId?.get(entry.player.playerId) ??
