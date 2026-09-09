@@ -42,7 +42,7 @@ export function translateFirebaseError(code: string): string {
       return "Error de conexión. Verifique su acceso a internet.";
     case "auth/api-key-not-valid.-please-pass-a-valid-api-key.":
     case "auth/invalid-api-key":
-      return "La clave de API de Firebase no es válida. Configure VITE_FIREBASE_API_KEY en su archivo .env.";
+      return "La clave de API de Firebase no es válida. Configure NEXT_PUBLIC_FIREBASE_API_KEY en su archivo .env.";
     default:
       return "Ocurrió un error al autenticar. Por favor intente nuevamente.";
   }
