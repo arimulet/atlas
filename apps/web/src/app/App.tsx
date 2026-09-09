@@ -10,7 +10,6 @@ import {
   fetchSquadPlanningRecommendations,
   fetchYouthPipelinePlanning,
   fetchTrainingPageData,
-  fetchUserClubs,
   resetSquadRoleAssignment,
   saveSquadRoleAssignment,
   syncSokker
@@ -45,8 +44,6 @@ import { useFinancialStrategy } from "./features/financialStrategy/useFinancialS
 import { useAuth } from "./context/AuthContext";
 import { AuthScreen } from "./pages/Auth/AuthScreen";
 
-const lastClubStorageKey = "atlas.lastClubId";
-
 export interface AppProps {
   initialData?: InitialStateBundle | null;
   initialUrl?: string;
@@ -57,29 +54,24 @@ function AuthenticatedApp({ initialData, initialUrl }: AppProps) {
   const { goBack, navigate, route } = useRouter(initialUrl);
   const activeView: ViewId = route.kind === "player-detail" ? "player-detail" : route.view;
   const [isSokkerImportOpen, setIsSokkerImportOpen] = useState(false);
-  const [activeClubId, setActiveClubId] = useState<string | null>(
-    () =>
-      initialData?.clubId ??
-      (typeof window !== "undefined" ? window.localStorage.getItem(lastClubStorageKey) : null)
-  );
   const [dashboardStatus, setDashboardStatus] = useState<DashboardStatus>(
-    initialData?.dashboard ? "ready" : activeClubId ? "loading" : "idle"
+    initialData?.dashboard ? "ready" : "idle"
   );
   const [dashboard, setDashboard] = useState<ClubDashboard | null>(initialData?.dashboard ?? null);
   const [youthStatus, setYouthStatus] = useState<DashboardStatus>(
-    initialData?.youthAcademy ? "ready" : activeClubId ? "loading" : "idle"
+    initialData?.youthAcademy ? "ready" : "idle"
   );
   const [youthAcademy, setYouthAcademy] = useState<RealYouthAcademyPlanning | null>(
     initialData?.youthAcademy ?? null
   );
   const [youthPipelineStatus, setYouthPipelineStatus] = useState<DashboardStatus>(
-    initialData?.youthPipeline ? "ready" : activeClubId ? "loading" : "idle"
+    initialData?.youthPipeline ? "ready" : "idle"
   );
   const [youthPipeline, setYouthPipeline] = useState<YouthPipelinePlanning | null>(
     initialData?.youthPipeline ?? null
   );
   const [trainingStatus, setTrainingStatus] = useState<DashboardStatus>(
-    initialData?.training ? "ready" : activeClubId ? "loading" : "idle"
+    initialData?.training ? "ready" : "idle"
   );
   const [training, setTraining] = useState<TrainingPageData | null>(initialData?.training ?? null);
   const [trainingDiagnostic, setTrainingDiagnostic] = useState<ImportResponse["diagnostic"]>(
@@ -89,11 +81,16 @@ function AuthenticatedApp({ initialData, initialUrl }: AppProps) {
     initialData?.playerDevelopment ?? null
   );
   const [squadPlanningStatus, setSquadPlanningStatus] = useState<DashboardStatus>(
-    initialData?.squadPlanning ? "ready" : activeClubId ? "loading" : "idle"
+    initialData?.squadPlanning ? "ready" : "idle"
   );
   const [squadPlanning, setSquadPlanning] = useState<SquadPlanningBundle | null>(
     initialData?.squadPlanning ?? null
   );
+
+  const clubId =
+    initialData?.clubId ??
+    dashboard?.club?.id ??
+    (dashboard?.club?.clubId ? String(dashboard.club.clubId) : null);
   const projectionSummaries = useMemo(
     () =>
       trainingStatus === "ready"
@@ -115,11 +112,11 @@ function AuthenticatedApp({ initialData, initialUrl }: AppProps) {
     [trainingDiagnostic]
   );
 
-  const loadDashboard = useCallback(async (clubId: string): Promise<boolean> => {
+  const loadDashboard = useCallback(async (_clubId?: string): Promise<boolean> => {
     setDashboardStatus("loading");
 
     try {
-      setDashboard(await fetchClubDashboard(clubId));
+      setDashboard(await fetchClubDashboard());
       setDashboardStatus("ready");
       return true;
     } catch {
@@ -129,11 +126,11 @@ function AuthenticatedApp({ initialData, initialUrl }: AppProps) {
     }
   }, []);
 
-  const loadYouthAcademy = useCallback(async (clubId: string): Promise<boolean> => {
+  const loadYouthAcademy = useCallback(async (_clubId?: string): Promise<boolean> => {
     setYouthStatus("loading");
 
     try {
-      setYouthAcademy(await fetchRealYouthAcademyPlanning(clubId));
+      setYouthAcademy(await fetchRealYouthAcademyPlanning());
       setYouthStatus("ready");
       return true;
     } catch {
@@ -143,13 +140,13 @@ function AuthenticatedApp({ initialData, initialUrl }: AppProps) {
     }
   }, []);
 
-  const loadTraining = useCallback(async (clubId: string): Promise<boolean> => {
+  const loadTraining = useCallback(async (_clubId?: string): Promise<boolean> => {
     setTrainingStatus("loading");
 
     try {
       const [trainingData, diagnostic] = await Promise.all([
-        fetchTrainingPageData(clubId),
-        fetchClubDiagnostic(clubId)
+        fetchTrainingPageData(),
+        fetchClubDiagnostic()
       ]);
 
       setTraining(trainingData);
@@ -163,9 +160,10 @@ function AuthenticatedApp({ initialData, initialUrl }: AppProps) {
       return false;
     }
   }, []);
-  const loadPlayerDevelopment = useCallback(async (clubId: string): Promise<boolean> => {
+
+  const loadPlayerDevelopment = useCallback(async (_clubId?: string): Promise<boolean> => {
     try {
-      setPlayerDevelopment(await fetchPlayerDevelopment(clubId));
+      setPlayerDevelopment(await fetchPlayerDevelopment());
       return true;
     } catch {
       setPlayerDevelopment(null);
@@ -173,14 +171,14 @@ function AuthenticatedApp({ initialData, initialUrl }: AppProps) {
     }
   }, []);
 
-  const loadSquadPlanning = useCallback(async (clubId: string): Promise<boolean> => {
+  const loadSquadPlanning = useCallback(async (_clubId?: string): Promise<boolean> => {
     setSquadPlanningStatus("loading");
 
     try {
       const [assessment, depth, recommendations] = await Promise.all([
-        fetchSquadPlanning(clubId),
-        fetchSquadDepthAnalysis(clubId),
-        fetchSquadPlanningRecommendations(clubId)
+        fetchSquadPlanning(),
+        fetchSquadDepthAnalysis(),
+        fetchSquadPlanningRecommendations()
       ]);
 
       setSquadPlanning({ assessment, depth, recommendations });
@@ -193,11 +191,11 @@ function AuthenticatedApp({ initialData, initialUrl }: AppProps) {
     }
   }, []);
 
-  const loadYouthPipeline = useCallback(async (clubId: string): Promise<boolean> => {
+  const loadYouthPipeline = useCallback(async (_clubId?: string): Promise<boolean> => {
     setYouthPipelineStatus("loading");
 
     try {
-      setYouthPipeline(await fetchYouthPipelinePlanning(clubId));
+      setYouthPipeline(await fetchYouthPipelinePlanning());
       setYouthPipelineStatus("ready");
       return true;
     } catch {
@@ -208,18 +206,30 @@ function AuthenticatedApp({ initialData, initialUrl }: AppProps) {
   }, []);
 
   useEffect(() => {
-    if (!activeClubId) {
+    if (!user) {
+      setDashboard(null);
+      setDashboardStatus("idle");
+      setYouthAcademy(null);
+      setYouthStatus("idle");
+      setTraining(null);
+      setTrainingDiagnostic(null);
+      setTrainingStatus("idle");
+      setPlayerDevelopment(null);
+      setYouthPipeline(null);
+      setYouthPipelineStatus("idle");
+      setSquadPlanning(null);
+      setSquadPlanningStatus("idle");
       return;
     }
 
-    void loadDashboard(activeClubId);
-    void loadYouthAcademy(activeClubId);
-    void loadTraining(activeClubId);
-    void loadPlayerDevelopment(activeClubId);
-    void loadYouthPipeline(activeClubId);
-    void loadSquadPlanning(activeClubId);
+    void loadDashboard();
+    void loadYouthAcademy();
+    void loadTraining();
+    void loadPlayerDevelopment();
+    void loadYouthPipeline();
+    void loadSquadPlanning();
   }, [
-    activeClubId,
+    user,
     loadDashboard,
     loadPlayerDevelopment,
     loadTraining,
@@ -227,27 +237,6 @@ function AuthenticatedApp({ initialData, initialUrl }: AppProps) {
     loadYouthPipeline,
     loadSquadPlanning
   ]);
-
-  useEffect(() => {
-    if (!user || activeClubId) {
-      return;
-    }
-
-    void (async () => {
-      try {
-        const token = await user.getIdToken();
-        const data = await fetchUserClubs(token);
-        const firstClub = data.clubs?.[0];
-        if (firstClub) {
-          const firstClubId = String(firstClub.clubId);
-          window.localStorage.setItem(lastClubStorageKey, firstClubId);
-          setActiveClubId(firstClubId);
-        }
-      } catch {
-        // Fallback si no hay clubes vinculados aún
-      }
-    })();
-  }, [user, activeClubId]);
 
   const handleSokkerImport = useCallback(
     async (credentials: SokkerImportCredentials) => {
@@ -263,8 +252,6 @@ function AuthenticatedApp({ initialData, initialUrl }: AppProps) {
       }
 
       if (body.importResult.clubId) {
-        window.localStorage.setItem(lastClubStorageKey, body.importResult.clubId);
-        setActiveClubId(body.importResult.clubId);
         const [
           dashboardLoaded,
           youthLoaded,
@@ -272,11 +259,11 @@ function AuthenticatedApp({ initialData, initialUrl }: AppProps) {
           developmentLoaded,
           youthPipelineLoaded
         ] = await Promise.all([
-          loadDashboard(body.importResult.clubId),
-          loadYouthAcademy(body.importResult.clubId),
-          loadTraining(body.importResult.clubId),
-          loadPlayerDevelopment(body.importResult.clubId),
-          loadYouthPipeline(body.importResult.clubId)
+          loadDashboard(),
+          loadYouthAcademy(),
+          loadTraining(),
+          loadPlayerDevelopment(),
+          loadYouthPipeline()
         ]);
 
         if (
@@ -289,7 +276,7 @@ function AuthenticatedApp({ initialData, initialUrl }: AppProps) {
           throw new Error("Datos actualizados, pero no se pudo recargar el Dashboard.");
         }
 
-        void loadSquadPlanning(body.importResult.clubId);
+        void loadSquadPlanning();
         setIsSokkerImportOpen(false);
       }
 
@@ -308,24 +295,20 @@ function AuthenticatedApp({ initialData, initialUrl }: AppProps) {
 
   const handleSaveSquadRole = useCallback(
     async (playerId: string, role: SquadRole | null): Promise<void> => {
-      if (!activeClubId) {
-        throw new Error("No active club is available to save the squad role.");
-      }
-
       if (role === null) {
-        await resetSquadRoleAssignment(activeClubId, playerId);
+        await resetSquadRoleAssignment(playerId);
       } else {
-        await saveSquadRoleAssignment(activeClubId, playerId, role);
+        await saveSquadRoleAssignment(playerId, role);
       }
 
-      const reloaded = await loadSquadPlanning(activeClubId);
+      const reloaded = await loadSquadPlanning();
       if (!reloaded) {
         throw new Error(
           "Squad role was saved, but the updated squad planning could not be loaded."
         );
       }
     },
-    [activeClubId, loadSquadPlanning]
+    [loadSquadPlanning]
   );
 
   const handleSelectPlayer = useCallback(
@@ -340,7 +323,7 @@ function AuthenticatedApp({ initialData, initialUrl }: AppProps) {
   }, [goBack]);
 
   const financialStrategy = useFinancialStrategy({
-    clubId: activeClubId,
+    clubId,
     currency: dashboard?.club.currency ?? null,
     squadPlanning
   });
@@ -403,13 +386,13 @@ function AuthenticatedApp({ initialData, initialUrl }: AppProps) {
         />
       ) : activeView === "player-decisions" ? (
         <PlayerDecisions
-          clubId={activeClubId}
+          clubId={clubId}
           currency={dashboard?.club.currency ?? null}
           onSelectPlayer={handleSelectPlayer}
         />
       ) : activeView === "training" ? (
         <Training
-          clubId={activeClubId}
+          clubId={clubId}
           development={playerDevelopment}
           onSelectPlayer={handleSelectPlayer}
           projectionSummaries={projectionSummaries}
@@ -419,14 +402,14 @@ function AuthenticatedApp({ initialData, initialUrl }: AppProps) {
         />
       ) : activeView === "youth" ? (
         <Youth
-          clubId={activeClubId}
+          clubId={clubId}
           currency={dashboard?.club.currency ?? null}
           youthAcademy={youthAcademy}
           youthStatus={youthStatus}
         />
       ) : activeView === "youth-performances" ? (
         <YouthPerformances
-          clubId={activeClubId}
+          clubId={clubId}
           youthAcademy={youthAcademy}
         />
       ) : activeView === "diagnostics" ? (
@@ -444,7 +427,7 @@ function AuthenticatedApp({ initialData, initialUrl }: AppProps) {
         />
       ) : activeView === "player-detail" ? (
         <PlayerDetail
-          clubId={activeClubId}
+          clubId={clubId}
           currency={dashboard?.club.currency ?? null}
           development={playerDevelopment}
           onBack={handleBackFromPlayerDetail}
