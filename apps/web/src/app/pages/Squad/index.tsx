@@ -1,6 +1,7 @@
 import { useMemo, useState, type ReactNode } from "react";
 import type { DiagnosticFinding, DiagnosticParameterValue } from "@atlas/web/app/types";
 import type { SquadRole } from "@atlas/domain";
+import { formatDiagnosticNumber } from "../../formatters";
 import { AttentionIcon } from "../../components/AttentionIcon";
 import { CountryNameFlag } from "../../components/CountryNameFlag";
 import { PlayerLink } from "../../components/PlayerLink";
@@ -743,8 +744,4 @@ function diagnosticRoleLabel(value: DiagnosticParameterValue | undefined): strin
 
 function diagnosticStringValue(value: DiagnosticParameterValue | undefined): string {
   return value === null || value === undefined ? "dato no disponible" : String(value);
-}
-
-function formatDiagnosticNumber(value: DiagnosticParameterValue | undefined): string {
-  return typeof value === "number" ? value.toLocaleString("es-AR") : diagnosticStringValue(value);
 }

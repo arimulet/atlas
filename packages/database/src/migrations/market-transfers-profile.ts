@@ -63,8 +63,11 @@ const isMain =
     process.argv[1].endsWith("market-transfers-profile.js"));
 
 if (isMain) {
-  const mongoUri =
-    process.env.MONGODB_URI || "mongodb+srv://admin:adminpwd@atlas.1uc1qds.mongodb.net/test";
+  const mongoUri = process.env.MONGODB_URI;
+  if (!mongoUri) {
+    console.error("Missing MONGODB_URI environment variable.");
+    process.exit(1);
+  }
   void (async () => {
     console.log("Connecting to MongoDB...");
     await mongoose.connect(mongoUri);

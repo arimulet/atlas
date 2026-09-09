@@ -442,19 +442,6 @@ export async function fetchRealYouthAcademyPlanning(
   return body;
 }
 
-export async function fetchUserClubs(
-  token?: string
-): Promise<{ clubs: Array<{ id: string; clubId: number; name: string }> }> {
-  const headers: Record<string, string> = {};
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-  }
-  const response = await fetchAuthenticated("/api/user/clubs", { headers });
-  if (!response.ok) {
-    return { clubs: [] };
-  }
-  return response.json();
-}
 
 export async function syncSokker(
   payload: unknown,
