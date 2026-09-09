@@ -1,4 +1,4 @@
-import type {
+﻿import type {
   CapitalAllocationItem,
   ClubFinancialAssessment,
   FinancialPositionStatus,
@@ -610,3 +610,4 @@ function titleCase(value: string): string {
 export function profileDepthStatusLabel(status: ProfileDepthStatus): string {
   return titleCase(status);
 }
+

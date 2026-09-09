@@ -89,6 +89,61 @@
       transform: translateY(1px);
     }
   }
+
+  .atlas-user-menu {
+    align-items: center;
+    border-left: 1px solid var(--atlas-border);
+    display: flex;
+    gap: 10px;
+    margin-left: 6px;
+    padding-left: 12px;
+  }
+
+  .atlas-user-email {
+    color: var(--atlas-text-secondary);
+    font-size: 0.76rem;
+    font-weight: 600;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .atlas-logout-button {
+    align-items: center;
+    background: rgba(220, 38, 38, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: var(--atlas-radius-sm);
+    color: #fca5a5;
+    cursor: pointer;
+    display: inline-flex;
+    font-size: 0.74rem;
+    font-weight: 650;
+    gap: 5px;
+    height: 30px;
+    padding: 0 10px;
+    transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+
+    svg {
+      fill: none;
+      height: 14px;
+      stroke: currentColor;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-width: 2;
+      width: 14px;
+    }
+
+    &:hover {
+      background: rgba(220, 38, 38, 0.25);
+      border-color: rgba(239, 68, 68, 0.6);
+      color: #ffffff;
+    }
+
+    &:active {
+      transform: translateY(1px);
+    }
+  }
 }
 
 .atlas-diagnostic-notifications {

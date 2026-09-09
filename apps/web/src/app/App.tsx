@@ -10,6 +10,7 @@ import {
   fetchSquadPlanningRecommendations,
   fetchYouthPipelinePlanning,
   fetchTrainingPageData,
+  fetchUserClubs,
   resetSquadRoleAssignment,
   saveSquadRoleAssignment,
   syncSokker
@@ -18,6 +19,7 @@ import type {
   ClubDashboard,
   DashboardStatus,
   ImportResponse,
+  InitialStateBundle,
   PlayerDevelopment,
   RealYouthAcademyPlanning,
   SquadPlanningBundle,
@@ -40,38 +42,58 @@ import type { SokkerImportCredentials } from "./components/SokkerImporterForm/ty
 import type { ViewId } from "./types";
 import { pathForMainView, pathForPlayerDetail, useRouter } from "./routing";
 import { useFinancialStrategy } from "./features/financialStrategy/useFinancialStrategy";
+import { useAuth } from "./context/AuthContext";
+import { AuthScreen } from "./pages/Auth/AuthScreen";
 
 const lastClubStorageKey = "atlas.lastClubId";
 
-export function App() {
-  const { goBack, navigate, route } = useRouter();
+export interface AppProps {
+  initialData?: InitialStateBundle | null;
+  initialUrl?: string;
+}
+
+function AuthenticatedApp({ initialData, initialUrl }: AppProps) {
+  const { user, loading } = useAuth();
+  const { goBack, navigate, route } = useRouter(initialUrl);
   const activeView: ViewId = route.kind === "player-detail" ? "player-detail" : route.view;
   const [isSokkerImportOpen, setIsSokkerImportOpen] = useState(false);
-  const [activeClubId, setActiveClubId] = useState<string | null>(() =>
-    window.localStorage.getItem(lastClubStorageKey)
+  const [activeClubId, setActiveClubId] = useState<string | null>(
+    () =>
+      initialData?.clubId ??
+      (typeof window !== "undefined" ? window.localStorage.getItem(lastClubStorageKey) : null)
   );
   const [dashboardStatus, setDashboardStatus] = useState<DashboardStatus>(
-    activeClubId ? "loading" : "idle"
+    initialData?.dashboard ? "ready" : activeClubId ? "loading" : "idle"
   );
-  const [dashboard, setDashboard] = useState<ClubDashboard | null>(null);
+  const [dashboard, setDashboard] = useState<ClubDashboard | null>(initialData?.dashboard ?? null);
   const [youthStatus, setYouthStatus] = useState<DashboardStatus>(
-    activeClubId ? "loading" : "idle"
+    initialData?.youthAcademy ? "ready" : activeClubId ? "loading" : "idle"
   );
-  const [youthAcademy, setYouthAcademy] = useState<RealYouthAcademyPlanning | null>(null);
+  const [youthAcademy, setYouthAcademy] = useState<RealYouthAcademyPlanning | null>(
+    initialData?.youthAcademy ?? null
+  );
   const [youthPipelineStatus, setYouthPipelineStatus] = useState<DashboardStatus>(
-    activeClubId ? "loading" : "idle"
+    initialData?.youthPipeline ? "ready" : activeClubId ? "loading" : "idle"
   );
-  const [youthPipeline, setYouthPipeline] = useState<YouthPipelinePlanning | null>(null);
+  const [youthPipeline, setYouthPipeline] = useState<YouthPipelinePlanning | null>(
+    initialData?.youthPipeline ?? null
+  );
   const [trainingStatus, setTrainingStatus] = useState<DashboardStatus>(
-    activeClubId ? "loading" : "idle"
+    initialData?.training ? "ready" : activeClubId ? "loading" : "idle"
   );
-  const [training, setTraining] = useState<TrainingPageData | null>(null);
-  const [trainingDiagnostic, setTrainingDiagnostic] = useState<ImportResponse["diagnostic"]>(null);
-  const [playerDevelopment, setPlayerDevelopment] = useState<PlayerDevelopment | null>(null);
+  const [training, setTraining] = useState<TrainingPageData | null>(initialData?.training ?? null);
+  const [trainingDiagnostic, setTrainingDiagnostic] = useState<ImportResponse["diagnostic"]>(
+    initialData?.trainingDiagnostic ?? null
+  );
+  const [playerDevelopment, setPlayerDevelopment] = useState<PlayerDevelopment | null>(
+    initialData?.playerDevelopment ?? null
+  );
   const [squadPlanningStatus, setSquadPlanningStatus] = useState<DashboardStatus>(
-    activeClubId ? "loading" : "idle"
+    initialData?.squadPlanning ? "ready" : activeClubId ? "loading" : "idle"
   );
-  const [squadPlanning, setSquadPlanning] = useState<SquadPlanningBundle | null>(null);
+  const [squadPlanning, setSquadPlanning] = useState<SquadPlanningBundle | null>(
+    initialData?.squadPlanning ?? null
+  );
   const projectionSummaries = useMemo(
     () =>
       trainingStatus === "ready"
@@ -206,9 +228,31 @@ export function App() {
     loadSquadPlanning
   ]);
 
+  useEffect(() => {
+    if (!user || activeClubId) {
+      return;
+    }
+
+    void (async () => {
+      try {
+        const token = await user.getIdToken();
+        const data = await fetchUserClubs(token);
+        const firstClub = data.clubs?.[0];
+        if (firstClub) {
+          const firstClubId = String(firstClub.clubId);
+          window.localStorage.setItem(lastClubStorageKey, firstClubId);
+          setActiveClubId(firstClubId);
+        }
+      } catch {
+        // Fallback si no hay clubes vinculados aún
+      }
+    })();
+  }, [user, activeClubId]);
+
   const handleSokkerImport = useCallback(
     async (credentials: SokkerImportCredentials) => {
-      const { response, body } = await syncSokker(credentials);
+      const token = user ? await user.getIdToken() : undefined;
+      const { response, body } = await syncSokker(credentials, token);
 
       if (!response.ok || body.importResult.status === "rejected") {
         const message = body.importResult.errors
@@ -252,6 +296,7 @@ export function App() {
       return body;
     },
     [
+      user,
       loadDashboard,
       loadPlayerDevelopment,
       loadSquadPlanning,
@@ -299,6 +344,19 @@ export function App() {
     currency: dashboard?.club.currency ?? null,
     squadPlanning
   });
+
+  if (loading) {
+    return (
+      <div className="atlas-auth-loading-screen">
+        <span className="atlas-auth-spinner" aria-hidden="true" />
+        <span>Cargando ATLAS...</span>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <AuthScreen />;
+  }
 
   return (
     <AppShell
@@ -414,3 +472,8 @@ export function App() {
     </AppShell>
   );
 }
+
+export function App({ initialData, initialUrl }: AppProps) {
+  return <AuthenticatedApp initialData={initialData} initialUrl={initialUrl} />;
+}
+

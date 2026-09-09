@@ -12,6 +12,13 @@ import {
 } from "./types";
 import { ClubId } from "@atlas/application";
 import { validateWeek } from "@atlas/utils";
+import { invalidateClubDashboardCache } from "../club/index.js";
+import { invalidateYouthPipelineCache } from "../playerDevelopment/index.js";
+import { invalidateSquadMarketPlanningCache } from "../marketPlanning/index.js";
+import { invalidateSquadEconomyCache } from "../economy/index.js";
+import { invalidateSquadAssessmentCache } from "../squadPlanning/index.js";
+import { invalidateYouthDecisionPlanningCache } from "../youthDecisionEngine/index.js";
+import { invalidateYouthAcademyCache } from "../youthAcademyPlanning/index.js";
 
 const operatingPreferenceDefaults: Record<OperatingPreferenceKey, OperatingPreferenceValue> = {
   "economy.riskTolerance": "balanced",
@@ -60,6 +67,14 @@ export const updateClubOperatingSettings = async (
   };
 
   const updated = await clubRepository.updateManualProfile(update);
+
+  invalidateClubDashboardCache(input.clubId);
+  invalidateYouthPipelineCache(input.clubId);
+  invalidateSquadMarketPlanningCache(input.clubId);
+  invalidateSquadEconomyCache(input.clubId);
+  invalidateSquadAssessmentCache(input.clubId);
+  invalidateYouthDecisionPlanningCache(input.clubId);
+  invalidateYouthAcademyCache(input.clubId);
 
   return buildClubOperatingSettings(updated);
 };

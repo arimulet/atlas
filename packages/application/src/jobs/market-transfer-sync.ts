@@ -1,4 +1,4 @@
-import {
+﻿import {
   acquireMarketTransferSyncRun,
   finishMarketTransferSyncRun,
   upsertMarketTransferCurrent,
@@ -156,3 +156,4 @@ export async function runMarketTransferSyncJob(
     return { runId, success: false, reason: parsedReason };
   }
 }
+

@@ -1,4 +1,4 @@
-import type { SokkerSyncPayload } from "./types.js";
+﻿import type { SokkerSyncPayload } from "./types.js";
 import type { SokkerDataProvider } from "./providers/SokkerDataProvider.js";
 
 export class SokkerSyncLoader {
@@ -75,3 +75,4 @@ export async function loadSokkerSyncPayload(
 ): Promise<SokkerSyncPayload> {
   return new SokkerSyncLoader(provider).load();
 }
+

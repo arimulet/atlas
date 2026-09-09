@@ -3,6 +3,8 @@ import {
   MongoSnapshotRepository,
   MongoPlayerRepository,
   MongoTrainingWeekRepository,
+  type PersistedClub,
+  type PersistedSnapshot,
   type PersistedPlayerSnapshot,
   type PersistedPlayerDevelopmentOverride,
   type PersistedPlayerTrainingWeek,
@@ -11,6 +13,7 @@ import {
   findFinalMarketTransfersUpToDate,
   MongoCountryRepository
 } from "@atlas/database";
+import { invalidateYouthDecisionPlanningCache } from "../youthDecisionEngine/index.js";
 import {
   assessSquad,
   analyzeSquadDepth,
@@ -83,16 +86,85 @@ const snapshotRepository = new MongoSnapshotRepository();
 const trainingWeekRepository = new MongoTrainingWeekRepository();
 const playerRepository = new MongoPlayerRepository();
 
-export async function getSquadAssessment(clubId: ClubId): Promise<SquadAssessmentData> {
-  const club = await clubRepository.findById(clubId.toString());
+export interface SquadAssessmentOptions {
+  club?: PersistedClub;
+  snapshots?: PersistedSnapshot[];
+  trainingWeeks?: PersistedPlayerTrainingWeek[];
+}
+
+const inFlightSquadAssessments = new Map<string, Promise<SquadAssessmentData>>();
+const squadAssessmentCache = new Map<string, { data: SquadAssessmentData; timestamp: number }>();
+const SQUAD_ASSESSMENT_CACHE_TTL_MS = 60 * 1000;
+
+export function invalidateSquadAssessmentCache(clubId?: ClubId): void {
+  if (clubId !== undefined) {
+    squadAssessmentCache.delete(String(clubId));
+  } else {
+    squadAssessmentCache.clear();
+  }
+}
+
+export async function getSquadAssessment(
+  clubId: ClubId,
+  options?: SquadAssessmentOptions
+): Promise<SquadAssessmentData> {
+  const cacheKey = String(clubId);
+  const now = Date.now();
+  const hasCustomOptions = Boolean(options?.snapshots || options?.trainingWeeks);
+
+  if (!hasCustomOptions) {
+    const cached = squadAssessmentCache.get(cacheKey);
+    if (cached && now - cached.timestamp < SQUAD_ASSESSMENT_CACHE_TTL_MS) {
+      return cached.data;
+    }
+
+    const inFlight = inFlightSquadAssessments.get(cacheKey);
+    if (inFlight) {
+      return inFlight;
+    }
+  }
+
+  const computePromise = (async () => {
+    try {
+      const result = await computeSquadAssessment(clubId, options);
+      if (!hasCustomOptions) {
+        squadAssessmentCache.set(cacheKey, { data: result, timestamp: Date.now() });
+      }
+      return result;
+    } finally {
+      if (!hasCustomOptions) {
+        inFlightSquadAssessments.delete(cacheKey);
+      }
+    }
+  })();
+
+  if (!hasCustomOptions) {
+    inFlightSquadAssessments.set(cacheKey, computePromise);
+  }
+
+  return computePromise;
+}
+
+async function computeSquadAssessment(
+  clubId: ClubId,
+  options?: SquadAssessmentOptions
+): Promise<SquadAssessmentData> {
+  const club = options?.club ?? (await clubRepository.findById(clubId.toString()));
   if (!club) throw new Error(`Club not found: ${clubId}`);
 
-  const [snapshots, trainingWeeks, assignments] = await Promise.all([
-    snapshotRepository.listByClub(clubId),
-    trainingWeekRepository.listByClub(club.clubId),
-    playerRepository.listSquadRoles(club.clubId)
+  const countryRepo = new MongoCountryRepository();
+
+  const [latestSnapshot, trainingWeeks, assignments, rawOverrides, allCountries, rawTransfers] = await Promise.all([
+    options?.snapshots
+      ? Promise.resolve(options.snapshots.at(-1) ?? null)
+      : snapshotRepository.findLatestByClub(club.clubId),
+    options?.trainingWeeks ?? trainingWeekRepository.listByClub(club.clubId),
+    playerRepository.listSquadRoles(club.clubId),
+    playerRepository.listDevelopmentOverrides(club.clubId),
+    countryRepo.getAll(),
+    findFinalMarketTransfersUpToDate(new Date())
   ]);
-  const latest = snapshots.at(-1);
+  const latest = latestSnapshot;
   if (!latest) {
     return {
       players: [],
@@ -108,18 +180,7 @@ export async function getSquadAssessment(clubId: ClubId): Promise<SquadAssessmen
     assignments.map((assignment) => [assignment.playerId, assignment])
   );
   const overrides = new Map(
-    await Promise.all(
-      latest.players.map(
-        async (player) =>
-          [
-            player.playerId,
-            await playerRepository.findDevelopmentOverride({
-              playerId: player.playerId,
-              clubId: club.clubId
-            })
-          ] as const
-      )
-    )
+    rawOverrides.map((override) => [override.playerId, override])
   );
   const contexts = latest.players.map((player) =>
     buildPlayerContext(
@@ -132,13 +193,10 @@ export async function getSquadAssessment(clubId: ClubId): Promise<SquadAssessmen
     )
   );
 
-  const countryRepo = new MongoCountryRepository();
-  const allCountries = await countryRepo.getAll();
   const clubCountry = allCountries.find(c => c.currencyName === club.currency || c.countryId === club.country);
   const currencyRate = clubCountry?.currencyRate ?? 1;
   const currencyName = clubCountry?.currencyName ?? club.currency;
 
-  const rawTransfers = await findFinalMarketTransfersUpToDate(new Date());
   const mappedTransfers = rawTransfers.map(t => mapMarketTransferToRecord(t, currencyName, currencyRate));
 
   const assessment = assessSquad(contexts);
@@ -160,9 +218,11 @@ export async function getSquadAssessment(clubId: ClubId): Promise<SquadAssessmen
       formation: context?.formation ?? null,
       marketValue: marketValue?.current ?? null,
       marketProjection: marketValue?.projection ?? null,
-      marketTrainingComparison: marketValue?.trainingComparison ?? null,
+      marketTrainingComparison: marketValue?.trainingComparison
+        ? { difference: marketValue.trainingComparison.difference }
+        : null,
       training: context?.training ?? null,
-      trainingHistory: context?.trainingHistory ?? null
+      trainingHistory: null
     };
   });
 
@@ -207,6 +267,8 @@ export async function getSquadRoleAssignment(input: {
 export async function saveSquadRoleAssignment(
   input: Omit<SaveSquadRoleAssignmentInput, "clubId"> & { clubId: ClubId }
 ): Promise<PersistedSquadRoleAssignment> {
+  invalidateSquadAssessmentCache(input.clubId);
+  invalidateYouthDecisionPlanningCache(input.clubId);
   return playerRepository.saveSquadRole({
     ...input,
     clubId: await resolveNumericClubId(input.clubId)
@@ -217,6 +279,8 @@ export async function resetSquadRoleAssignment(input: {
   playerId: number;
   clubId: ClubId;
 }): Promise<void> {
+  invalidateSquadAssessmentCache(input.clubId);
+  invalidateYouthDecisionPlanningCache(input.clubId);
   await playerRepository.deleteSquadRole({
     ...input,
     clubId: await resolveNumericClubId(input.clubId)
@@ -333,7 +397,7 @@ function createMarketValues(
           : null;
       const trainingComparison =
         context.developmentPlan && context.trainingPath
-          ? createMarketTrainingComparison(context, player, current, transfers)
+          ? createMarketTrainingComparison(context, player, current, projection, transfers)
           : null;
       values.set(context.playerId, { current, projection, trainingComparison });
     } catch {
@@ -354,34 +418,81 @@ function createMarketTrainingComparison(
   context: SquadPlayerContext,
   player: PlayerMarketValuePlayerInput,
   current: ReturnType<typeof calibratePlayerMarketValue>,
+  baseMarketProjection: ReturnType<typeof projectPlayerMarketValue> | null,
   transfers: import("@atlas/domain").PlayerTransferRecord[]
 ): ReturnType<typeof compareAdvancedAndFormationMarketValue> | null {
-  if (!context.developmentPlan || !context.trainingPath || !context.projection) return null;
+  if (
+    !context.developmentPlan ||
+    !context.trainingPath ||
+    !context.projection ||
+    context.projection.steps.length === 0
+  ) {
+    return null;
+  }
 
-  const advancedProjection = createScenarioProjection(context, "advanced");
-  const formationProjection = createScenarioProjection(context, "formation");
-  if (!advancedProjection || !formationProjection) return null;
+  const currentKind = context.projection.assumptions.trainingKind;
+
+  let advancedInput:
+    | ReturnType<typeof projectPlayerMarketValue>
+    | Parameters<typeof compareAdvancedAndFormationMarketValue>[0]["advanced"];
+  let formationInput:
+    | ReturnType<typeof projectPlayerMarketValue>
+    | Parameters<typeof compareAdvancedAndFormationMarketValue>[0]["formation"];
+
+  if (currentKind === "advanced" && baseMarketProjection) {
+    advancedInput = baseMarketProjection;
+    const formationProjection = createScenarioProjection(context, "formation");
+    if (!formationProjection) return null;
+    formationInput = {
+      player,
+      developmentPlan: context.developmentPlan,
+      path: context.trainingPath,
+      projection: formationProjection,
+      currentMarketValue: current,
+      talent: context.talent ?? null,
+      transfers
+    };
+  } else if (currentKind === "formation" && baseMarketProjection) {
+    formationInput = baseMarketProjection;
+    const advancedProjection = createScenarioProjection(context, "advanced");
+    if (!advancedProjection) return null;
+    advancedInput = {
+      player,
+      developmentPlan: context.developmentPlan,
+      path: context.trainingPath,
+      projection: advancedProjection,
+      currentMarketValue: current,
+      talent: context.talent ?? null,
+      transfers
+    };
+  } else {
+    const advancedProjection = createScenarioProjection(context, "advanced");
+    const formationProjection = createScenarioProjection(context, "formation");
+    if (!advancedProjection || !formationProjection) return null;
+    advancedInput = {
+      player,
+      developmentPlan: context.developmentPlan,
+      path: context.trainingPath,
+      projection: advancedProjection,
+      currentMarketValue: current,
+      talent: context.talent ?? null,
+      transfers
+    };
+    formationInput = {
+      player,
+      developmentPlan: context.developmentPlan,
+      path: context.trainingPath,
+      projection: formationProjection,
+      currentMarketValue: current,
+      talent: context.talent ?? null,
+      transfers
+    };
+  }
 
   try {
     return compareAdvancedAndFormationMarketValue({
-      advanced: {
-        player,
-        developmentPlan: context.developmentPlan,
-        path: context.trainingPath,
-        projection: advancedProjection,
-        currentMarketValue: current,
-        talent: context.talent ?? null,
-        transfers
-      },
-      formation: {
-        player,
-        developmentPlan: context.developmentPlan,
-        path: context.trainingPath,
-        projection: formationProjection,
-        currentMarketValue: current,
-        talent: context.talent ?? null,
-        transfers
-      },
+      advanced: advancedInput,
+      formation: formationInput,
       fixedHorizonWeeks: PLAYER_MARKET_VALUE_COMPARISON_HORIZON_WEEKS
     });
   } catch {
@@ -508,12 +619,17 @@ function buildPlan(player: DevelopmentPlayer, override: PlayerDevelopmentTargetO
   return new PlayerDevelopmentPlanner().createPlan(player, override);
 }
 
-function buildTrainingHistories(
+export function buildTrainingHistories(
   reports: readonly PersistedPlayerTrainingWeek[]
 ): Map<number, TrainingHistory> {
   const byPlayer = new Map<number, PersistedPlayerTrainingWeek[]>();
   for (const report of reports) {
-    byPlayer.set(report.playerId, [...(byPlayer.get(report.playerId) ?? []), report]);
+    let list = byPlayer.get(report.playerId);
+    if (!list) {
+      list = [];
+      byPlayer.set(report.playerId, list);
+    }
+    list.push(report);
   }
   return new Map(
     [...byPlayer.entries()].map(([playerId, playerReports]) => [
@@ -630,6 +746,8 @@ function mapMarketTransferToRecord(
       striker: transfer.skills.striker ?? null
     },
     source: "imported",
-    salePriceType: "final_sale"
+    salePriceType: "final_sale",
+    developmentProfile: (transfer.profile as import("@atlas/domain").DevelopmentProfile) ?? null
   };
 }
+

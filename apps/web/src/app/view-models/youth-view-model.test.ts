@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+﻿import { describe, expect, it } from "vitest";
 
 import type { RealYouthAcademyPlanning } from "@atlas/web/app/types";
 import { createYouthPlayerRows } from "./youth-view-model";
@@ -179,3 +179,5 @@ function createPlanning(): RealYouthAcademyPlanning {
     warnings: []
   };
 }
+
+

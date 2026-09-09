@@ -66,6 +66,11 @@ export class MongoPlayerRepository {
     return player ? mapPlayer(player.toObject()) : null;
   }
 
+  async listByClub(clubId: number): Promise<PersistedPlayer[]> {
+    const players = await PlayerModel.find({ clubId }).sort({ playerId: 1 });
+    return players.map((player) => mapPlayer(player.toObject()));
+  }
+
   async findById(id: string): Promise<PersistedPlayer | null> {
     const player = await PlayerModel.findById(id);
     return player ? mapPlayer(player.toObject()) : null;
@@ -128,6 +133,23 @@ export class MongoPlayerRepository {
     );
   }
 
+  async listDevelopmentOverrides(clubId: number): Promise<PersistedPlayerDevelopmentOverride[]> {
+    const players = await PlayerModel.find({
+      clubId,
+      development: { $exists: true, $ne: null }
+    }).sort({ playerId: 1 });
+
+    return players
+      .map((player) => mapPlayer(player.toObject()))
+      .filter((player): player is PersistedPlayer & { development: NonNullable<PersistedPlayer["development"]> } => Boolean(player.development))
+      .map((player) => ({
+        id: player.id,
+        playerId: player.playerId,
+        clubId: player.clubId,
+        profile: player.development.profile,
+        targetLevels: player.development.targetLevels
+      }));
+  }
   async listSquadRoles(clubId: number): Promise<PersistedSquadRoleAssignment[]> {
     const players = await PlayerModel.find({
       clubId,

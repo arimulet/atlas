@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import type { SquadRole } from "@atlas/domain";
 import { PlayerLink } from "../../components/PlayerLink";
 import {
@@ -362,3 +362,4 @@ export function roleOptions(): readonly SquadRole[] {
 export function roleOptionLabel(role: SquadRole): string {
   return roleLabel(role);
 }
+

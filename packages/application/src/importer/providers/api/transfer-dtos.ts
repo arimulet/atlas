@@ -1,4 +1,4 @@
-import { z } from "zod";
+﻿import { z } from "zod";
 
 export const sokkerTransferPlayerSchema = z.object({
   id: z.number(),
@@ -70,3 +70,4 @@ export const sokkerPlayerTransferHistoryResponseSchema = z.object({
 
 export type SokkerActiveTransferDto = z.infer<typeof sokkerActiveTransferSchema>;
 export type SokkerHistoryTransferDto = z.infer<typeof sokkerHistoryTransferSchema>;
+

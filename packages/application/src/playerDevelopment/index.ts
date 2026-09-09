@@ -1,10 +1,11 @@
 import {
   MongoClubRepository,
   MongoSnapshotRepository,
+  type PersistedClub,
   type PersistedPlayerSnapshot,
   type PersistedSnapshot
 } from "@atlas/database";
-import { buildClubOperatingSettings, Category, ClubId, Confidence, DeltaDirection, getSquadMarketPlanning, SquadMarketPlayerPlan, Severity, SkillKey } from "@atlas/application";
+import { buildClubOperatingSettings, Category, ClubId, Confidence, DeltaDirection, getSquadMarketPlanning, SquadMarketPlanning, SquadMarketPlayerPlan, Severity, SkillKey } from "@atlas/application";
 import { formatDate } from "@atlas/utils";
 
 import type {
@@ -54,14 +55,11 @@ const roleRelevantSkills: Record<string, SkillKey[]> = {
 const clubRepository = new MongoClubRepository();
 const snapshotRepository = new MongoSnapshotRepository();
 
-export const getPlayerDevelopment = async (clubId: ClubId): Promise<PlayerDevelopment> => {
-  const club = await clubRepository.findById(clubId.toString());
-
-  if (!club) {
-    throw new Error(`Club not found: ${clubId}`);
-  }
-
-  const snapshots = await snapshotRepository.listByClub(clubId);
+export const getPlayerDevelopmentFromLoadedData = (
+  clubId: ClubId,
+  club: PersistedClub,
+  snapshots: PersistedSnapshot[]
+): PlayerDevelopment => {
   const latest = snapshots.at(-1) ?? null;
   const trainingPriority =
     buildClubOperatingSettings(club).effective.preferences["training.priority"];
@@ -100,69 +98,176 @@ export const getPlayerDevelopment = async (clubId: ClubId): Promise<PlayerDevelo
   };
 };
 
-export const getYouthPipelinePlanning = async (
-  clubId: ClubId
-): Promise<YouthPipelinePlanning> => {
-  const club = await clubRepository.findById(clubId.toString());
+const inFlightPlayerDevelopments = new Map<string, Promise<PlayerDevelopment>>();
+const playerDevelopmentCache = new Map<string, { data: PlayerDevelopment; timestamp: number }>();
+const PLAYER_DEVELOPMENT_CACHE_TTL_MS = 60 * 1000;
 
-  if (!club) {
-    throw new Error(`Club not found: ${clubId}`);
+export function invalidatePlayerDevelopmentCache(clubId?: ClubId): void {
+  if (clubId !== undefined) {
+    playerDevelopmentCache.delete(String(clubId));
+  } else {
+    playerDevelopmentCache.clear();
+  }
+}
+
+export const getPlayerDevelopment = async (clubId: ClubId): Promise<PlayerDevelopment> => {
+  const cacheKey = String(clubId);
+  const now = Date.now();
+
+  const cached = playerDevelopmentCache.get(cacheKey);
+  if (cached && now - cached.timestamp < PLAYER_DEVELOPMENT_CACHE_TTL_MS) {
+    return cached.data;
   }
 
-  const operatingSettings = buildClubOperatingSettings(club);
-  const academyInvestment = operatingSettings.effective.preferences["academy.investment"];
-  const effectiveCurrency = club.currency;
-  const snapshots = await snapshotRepository.listByClub(clubId);
-  const latest = snapshots.at(-1) ?? null;
-
-  if (!latest) {
-    return buildEmptyPlanning(clubId, academyInvestment);
+  const inFlight = inFlightPlayerDevelopments.get(cacheKey);
+  if (inFlight) {
+    return inFlight;
   }
 
-  const [development, marketPlanning] = await Promise.all([
-    getPlayerDevelopment(clubId),
-    getSquadMarketPlanning(clubId)
-  ]);
-  const developmentIndex = buildDevelopmentIndex(development.derived.players);
-  const marketIndex = buildMarketIndex(marketPlanning.derived.players);
-  const youngPlayers = latest.players.filter(
-    (player) => player.age <= YOUTH_PIPELINE_AGE_THRESHOLD
-  );
-  const plans = youngPlayers
-    .map((player) =>
-      buildPlayerPlan({
-        player,
-        snapshots,
-        academyInvestment,
-        currency: effectiveCurrency,
-        developmentSummary: findDevelopmentSummary(player, developmentIndex),
-        marketPlan: marketIndex.get(player.id) ?? null
-      })
-    )
-    .sort(comparePlayerPlans);
-
-  return {
-    clubId,
-    snapshotId: latest.id,
-    snapshotDate: formatDate(latest.snapshotDate),
-    observed: {
-      youthAgeThreshold: YOUTH_PIPELINE_AGE_THRESHOLD,
-      players: youngPlayers.map((player) => mapObservedYouth(player, effectiveCurrency)),
-      coverage: {
-        seniorPlayerCount: latest.players.length,
-        youngSeniorPlayerCount: youngPlayers.length,
-        playersWithStableIdentity: youngPlayers.filter((player) => Boolean(player.playerId))
-          .length,
-        playersWithCompleteSkills: youngPlayers.filter(hasCompleteSkills).length
+  const promise = (async () => {
+    try {
+      const club = await clubRepository.findById(clubId.toString());
+      if (!club) {
+        throw new Error(`Club not found: ${clubId}`);
       }
-    },
-    manual: { academyInvestment },
-    derived: {
-      categoryCounts: countCategories(plans),
-      players: plans
-    },
-    warnings: buildGlobalYouthWarnings(latest, snapshots, youngPlayers)
+
+      const snapshots = await snapshotRepository.listByClub(club.clubId);
+      const data = getPlayerDevelopmentFromLoadedData(clubId, club, snapshots);
+      playerDevelopmentCache.set(cacheKey, { data, timestamp: Date.now() });
+      return data;
+    } finally {
+      inFlightPlayerDevelopments.delete(cacheKey);
+    }
+  })();
+
+  inFlightPlayerDevelopments.set(cacheKey, promise);
+  return promise;
+};
+
+export interface YouthPipelinePlanningOptions {
+  club?: PersistedClub;
+  snapshots?: PersistedSnapshot[];
+  development?: PlayerDevelopment;
+  marketPlanning?: SquadMarketPlanning;
+}
+
+const inFlightYouthPipeline = new Map<string, Promise<YouthPipelinePlanning>>();
+const youthPipelineCache = new Map<string, { data: YouthPipelinePlanning; timestamp: number }>();
+const YOUTH_PIPELINE_CACHE_TTL_MS = 60 * 1000;
+
+export function invalidateYouthPipelineCache(clubId?: ClubId): void {
+  if (clubId !== undefined) {
+    youthPipelineCache.delete(String(clubId));
+  } else {
+    youthPipelineCache.clear();
+  }
+}
+
+export const getYouthPipelinePlanning = async (
+  clubId: ClubId,
+  options?: YouthPipelinePlanningOptions
+): Promise<YouthPipelinePlanning> => {
+  const hasCustomOptions = Boolean(
+    options?.club || options?.snapshots || options?.development || options?.marketPlanning
+  );
+  const cacheKey = String(clubId);
+
+  if (!hasCustomOptions) {
+    const cached = youthPipelineCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < YOUTH_PIPELINE_CACHE_TTL_MS) {
+      return cached.data;
+    }
+
+    const existingInFlight = inFlightYouthPipeline.get(cacheKey);
+    if (existingInFlight) {
+      return existingInFlight;
+    }
+  }
+
+  const compute = async (): Promise<YouthPipelinePlanning> => {
+    const club = options?.club ?? (await clubRepository.findById(clubId.toString()));
+
+    if (!club) {
+      throw new Error(`Club not found: ${clubId}`);
+    }
+
+    const operatingSettings = buildClubOperatingSettings(club);
+    const academyInvestment = operatingSettings.effective.preferences["academy.investment"];
+    const effectiveCurrency = club.currency;
+    const snapshots = options?.snapshots ?? (await snapshotRepository.listByClub(club.clubId));
+    const latest = snapshots.at(-1) ?? null;
+
+    if (!latest) {
+      return buildEmptyPlanning(clubId, academyInvestment);
+    }
+
+    const development =
+      options?.development ?? getPlayerDevelopmentFromLoadedData(clubId, club, snapshots);
+    const marketPlanning =
+      options?.marketPlanning ??
+      (await getSquadMarketPlanning(clubId, {
+        club,
+        snapshots,
+        development
+      }));
+    const developmentIndex = buildDevelopmentIndex(development.derived.players);
+    const marketIndex = buildMarketIndex(marketPlanning.derived.players);
+    const youngPlayers = latest.players.filter(
+      (player) => player.age <= YOUTH_PIPELINE_AGE_THRESHOLD
+    );
+    const plans = youngPlayers
+      .map((player) =>
+        buildPlayerPlan({
+          player,
+          snapshots,
+          academyInvestment,
+          currency: effectiveCurrency,
+          developmentSummary: findDevelopmentSummary(player, developmentIndex),
+          marketPlan: marketIndex.get(player.id) ?? null
+        })
+      )
+      .sort(comparePlayerPlans);
+
+    const result: YouthPipelinePlanning = {
+      clubId,
+      snapshotId: latest.id,
+      snapshotDate: formatDate(latest.snapshotDate),
+      observed: {
+        youthAgeThreshold: YOUTH_PIPELINE_AGE_THRESHOLD,
+        players: youngPlayers.map((player) => mapObservedYouth(player, effectiveCurrency)),
+        coverage: {
+          seniorPlayerCount: latest.players.length,
+          youngSeniorPlayerCount: youngPlayers.length,
+          playersWithStableIdentity: youngPlayers.filter((player) => Boolean(player.playerId))
+            .length,
+          playersWithCompleteSkills: youngPlayers.filter(hasCompleteSkills).length
+        }
+      },
+      manual: { academyInvestment },
+      derived: {
+        categoryCounts: countCategories(plans),
+        players: plans
+      },
+      warnings: buildGlobalYouthWarnings(latest, snapshots, youngPlayers)
+    };
+
+    if (!hasCustomOptions) {
+      youthPipelineCache.set(cacheKey, { data: result, timestamp: Date.now() });
+    }
+
+    return result;
   };
+
+  if (hasCustomOptions) {
+    return compute();
+  }
+
+  const executionPromise = compute().finally(() => {
+    inFlightYouthPipeline.delete(cacheKey);
+  });
+
+  inFlightYouthPipeline.set(cacheKey, executionPromise);
+  return executionPromise;
 };
 
 function buildPlayerSummaries(
@@ -1273,3 +1378,4 @@ function buildGlobalYouthWarnings(
 }
 
 export * from './types.js'
+

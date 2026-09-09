@@ -4,14 +4,12 @@ import {
   type CapitalAllocationContext,
   type CapitalAllocationPlan,
   type InvestmentSafetyAssessment,
-  type PlayerMarketValueEstimate
+  type PlayerMarketValueEstimate,
+  analyzeSquadDepth,
+  generateSquadPlanningRecommendations
 } from "@atlas/domain";
 import { getClubFinancialAssessment } from "./index.js";
-import {
-  getSquadAssessment,
-  getSquadDepthAnalysis,
-  getSquadPlanningRecommendations
-} from "../squadPlanning/index.js";
+import { getSquadAssessment } from "../squadPlanning/index.js";
 import type { SquadAssessmentData } from "../squadPlanning/types.js";
 import type { ClubId } from "../types.js";
 
@@ -31,12 +29,17 @@ export async function getInvestmentSafety(
 export async function getCapitalAllocationContext(
   clubId: ClubId
 ): Promise<CapitalAllocationContext> {
-  const [financialAssessment, squadPlanning, depthAnalysis, squadAssessment] = await Promise.all([
+  const [financialAssessment, squadAssessment] = await Promise.all([
     getClubFinancialAssessment(clubId),
-    getSquadPlanningRecommendations(clubId),
-    getSquadDepthAnalysis(clubId),
     getSquadAssessment(clubId)
   ]);
+  const depthAnalysis = analyzeSquadDepth(squadAssessment.depthPlayers, {
+    currentGameWeek: squadAssessment.currentGameWeek
+  });
+  const squadPlanning = generateSquadPlanningRecommendations({
+    depthAnalysis,
+    players: squadAssessment.depthPlayers
+  });
   return {
     financialAssessment,
     squadPlanning,

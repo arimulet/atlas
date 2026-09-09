@@ -4,7 +4,7 @@ export const clubParamsSchema = z.object({
   clubId: z.string().min(1)
 });
 
-export const playerDevelopmentTargetParamsSchema = clubParamsSchema.extend({
+export const playerDevelopmentTargetParamsSchema = z.object({
   playerId: z.coerce.number().int().positive()
 });
 

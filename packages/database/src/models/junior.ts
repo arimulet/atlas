@@ -1,4 +1,4 @@
-import mongoose, { Schema, model, type InferSchemaType, type Model } from "mongoose";
+﻿import mongoose, { Schema, model, type InferSchemaType, type Model } from "mongoose";
 import { ensureMongooseModels } from "./mongoose-model-registry.js";
 
 ensureMongooseModels();
@@ -33,3 +33,4 @@ type JuniorDocument = InferSchemaType<typeof juniorSchema>;
 export const JuniorModel =
   (mongoose.models?.Junior as Model<JuniorDocument> | undefined) ??
   model<JuniorDocument>("Junior", juniorSchema);
+

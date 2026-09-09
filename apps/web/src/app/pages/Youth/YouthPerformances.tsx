@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { fetchYouthPerformances, patchYouthObservations } from "../../api";
 import { skillLevelLabel } from "../../view-models/skill-level-label";
 import type { YouthMatchPerformancesDto, RealYouthAcademyPlanning } from "../../types";
@@ -256,3 +256,4 @@ export function YouthPerformances({ clubId, youthAcademy }: YouthPerformancesPro
     </div>
   );
 }
+

@@ -48,65 +48,101 @@ function calculatePosition(p: YouthPlayerMatchPerformanceDto): "GK" | "DEF" | "M
   return null;
 }
 
+const inFlightYouthPerformances = new Map<string, Promise<YouthMatchPerformancesDto>>();
+const youthPerformancesCache = new Map<string, { data: YouthMatchPerformancesDto; timestamp: number }>();
+const YOUTH_PERFORMANCES_CACHE_TTL_MS = 60_000;
+
+export function invalidateYouthPerformancesCache(clubId?: string): void {
+  if (clubId) {
+    youthPerformancesCache.delete(String(clubId));
+  } else {
+    youthPerformancesCache.clear();
+  }
+}
+
 export async function getYouthPerformances(
   clubId: string,
   juniorMatchesRepo = new MongoJuniorMatchRepository(),
   clubRepo = new MongoClubRepository()
 ): Promise<YouthMatchPerformancesDto> {
-  const club = await clubRepo.findById(clubId);
-  if (!club) throw new Error("Club not found");
-  const clubNumericId = club.clubId;
+  const cacheKey = String(clubId);
+  const cached = youthPerformancesCache.get(cacheKey);
+  if (cached && Date.now() - cached.timestamp < YOUTH_PERFORMANCES_CACHE_TTL_MS) {
+    return cached.data;
+  }
 
-  const matches = await juniorMatchesRepo.findByClubId(clubNumericId);
-  
-  const players: Record<string, YouthPlayerMatchPerformanceDto> = {};
+  const existingInFlight = inFlightYouthPerformances.get(cacheKey);
+  if (existingInFlight) {
+    return existingInFlight;
+  }
 
-  for (const match of matches) {
-    if (!match.playerStats) continue;
-    for (const stats of match.playerStats) {
-      if (stats.rating === 0) continue; // Ignore players that played but got 0 rating
+  const compute = async (): Promise<YouthMatchPerformancesDto> => {
+    const club = await clubRepo.findById(clubId);
+    if (!club) throw new Error("Club not found");
+    const clubNumericId = club.clubId;
 
-      const jid = String(stats.playerId);
-      if (!players[jid]) {
-        players[jid] = {
-          juniorId: stats.playerId,
-          calculatedPosition: null,
-          gk: [],
-          def: null,
-          mid: null,
-          att: null
-        };
-      }
-      
-      const p = players[jid];
-      const pos = stats.position;
-      
-      if (pos === 0) {
-        if (stats.minutesPlayed > 0) {
-          p.gk.push({ rating: stats.rating, minutes: stats.minutesPlayed });
+    const matches = await juniorMatchesRepo.findByClubId(clubNumericId);
+    
+    const players: Record<string, YouthPlayerMatchPerformanceDto> = {};
+
+    for (const match of matches) {
+      if (!match.playerStats) continue;
+      for (const stats of match.playerStats) {
+        if (stats.rating === 0) continue; // Ignore players that played but got 0 rating
+
+        const jid = String(stats.playerId);
+        if (!players[jid]) {
+          players[jid] = {
+            juniorId: stats.playerId,
+            calculatedPosition: null,
+            gk: [],
+            def: null,
+            mid: null,
+            att: null
+          };
         }
-      } else if (pos === 1) {
-        if (isBetterPerformance(p.def, stats.rating, stats.minutesPlayed)) {
-          p.def = { rating: stats.rating, minutes: stats.minutesPlayed };
-        }
-      } else if (pos === 2) {
-        if (isBetterPerformance(p.mid, stats.rating, stats.minutesPlayed)) {
-          p.mid = { rating: stats.rating, minutes: stats.minutesPlayed };
-        }
-      } else if (pos === 3) {
-        if (isBetterPerformance(p.att, stats.rating, stats.minutesPlayed)) {
-          p.att = { rating: stats.rating, minutes: stats.minutesPlayed };
+        
+        const p = players[jid];
+        const pos = stats.position;
+        
+        if (pos === 0) {
+          if (stats.minutesPlayed > 0) {
+            p.gk.push({ rating: stats.rating, minutes: stats.minutesPlayed });
+          }
+        } else if (pos === 1) {
+          if (isBetterPerformance(p.def, stats.rating, stats.minutesPlayed)) {
+            p.def = { rating: stats.rating, minutes: stats.minutesPlayed };
+          }
+        } else if (pos === 2) {
+          if (isBetterPerformance(p.mid, stats.rating, stats.minutesPlayed)) {
+            p.mid = { rating: stats.rating, minutes: stats.minutesPlayed };
+          }
+        } else if (pos === 3) {
+          if (isBetterPerformance(p.att, stats.rating, stats.minutesPlayed)) {
+            p.att = { rating: stats.rating, minutes: stats.minutesPlayed };
+          }
         }
       }
     }
-  }
 
-  for (const p of Object.values(players)) {
-    p.calculatedPosition = calculatePosition(p);
-  }
+    for (const p of Object.values(players)) {
+      p.calculatedPosition = calculatePosition(p);
+    }
 
-  return {
-    clubId,
-    players
+    const result: YouthMatchPerformancesDto = {
+      clubId,
+      players
+    };
+
+    youthPerformancesCache.set(cacheKey, { data: result, timestamp: Date.now() });
+    return result;
   };
+
+  const executionPromise = compute().finally(() => {
+    inFlightYouthPerformances.delete(cacheKey);
+  });
+
+  inFlightYouthPerformances.set(cacheKey, executionPromise);
+  return executionPromise;
 }
+

@@ -1,4 +1,4 @@
-import { Types, type ClientSession } from "mongoose";
+﻿import { Types, type ClientSession } from "mongoose";
 import { JuniorModel } from "../models/junior.js";
 import type { PersistedJunior } from "./types.js";
 
@@ -135,3 +135,4 @@ function mapJunior(junior: {
     status: junior.status
   };
 }
+

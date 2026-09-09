@@ -107,7 +107,7 @@ describe("SokkerJsonApiProvider", () => {
       "https://sokker.org/api/training/formations",
       "https://sokker.org/api/training",
       "https://sokker.org/api/trainer",
-      "https://sokker.org/api/junior",
+      "https://sokker.org/api/junior?filter[limit]=30",
       "https://sokker.org/api/training/summary"
     ]);
   });

@@ -6,7 +6,7 @@ import importsRoutes from "@atlas/api//routes/imports";
 import clubRoutes from "@atlas/api//routes/club";
 import playerRoutes from "@atlas/api//routes/players";
 import economyRoutes from "@atlas/api//routes/economy";
-import { clubParamsSchema } from "@atlas/api/schemas";
+import userRoutes from "@atlas/api//routes/user";
 import { internalJobsRoutes } from "./routes/internal/jobs.js";
 
 export function buildServer() {
@@ -15,15 +15,10 @@ export function buildServer() {
   server.get("/health", async () => ({ status: "ok", service: "atlas-api" }));
 
   server.register(importsRoutes, { prefix: "/api/imports" });
-  server.register(clubRoutes, { prefix: "/api/clubs/:clubId", schema: { params: clubParamsSchema } });
-  server.register(playerRoutes, {
-    prefix: "/api/clubs/:clubId/players",
-    schema: { params: clubParamsSchema }
-  });
-  server.register(economyRoutes, {
-    prefix: "/api/clubs/:clubId/economy",
-    schema: { params: clubParamsSchema }
-  });
+  server.register(userRoutes, { prefix: "/api/user" });
+  server.register(clubRoutes, { prefix: "/api/club" });
+  server.register(playerRoutes, { prefix: "/api/players" });
+  server.register(economyRoutes, { prefix: "/api/economy" });
   
   server.register(internalJobsRoutes, { prefix: "/internal/jobs" });
 

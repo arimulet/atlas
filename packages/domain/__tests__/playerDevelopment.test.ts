@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+﻿import { describe, expect, it } from "vitest";
 
 import {
   buildIdealDevelopmentTarget,
@@ -254,3 +254,4 @@ describe("Player Development Plan", () => {
     expect(plan.target.source).toBe("automatic");
   });
 });
+

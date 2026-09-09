@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+﻿import { describe, expect, it } from "vitest";
 
 import {
   generatePlayerTrainingPath,
@@ -507,3 +507,4 @@ describe("Development Projection & Timeline", () => {
 function isFiniteValue(value: unknown): boolean {
   return value instanceof Date || typeof value !== "number" || Number.isFinite(value);
 }
+

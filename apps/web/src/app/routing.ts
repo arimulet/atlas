@@ -64,10 +64,16 @@ export function getRoute(pathname: string): Route {
   return dashboardRoute();
 }
 
-export function useRouter(): Router {
-  const [pathname, setPathname] = useState(() => window.location.pathname);
+export function useRouter(initialUrl?: string): Router {
+  const [pathname, setPathname] = useState(() =>
+    typeof window !== "undefined" ? window.location.pathname : (initialUrl ?? "/")
+  );
 
   useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
     const handlePopState = () => setPathname(window.location.pathname);
 
     window.addEventListener("popstate", handlePopState);
@@ -80,6 +86,11 @@ export function useRouter(): Router {
   }, []);
 
   const replace = useCallback((path: string) => {
+    if (typeof window === "undefined") {
+      setPathname(path);
+      return;
+    }
+
     const depth = historyDepth(window.history.state);
     window.history.replaceState(createHistoryState(depth), "", path);
     setPathname(path);
@@ -87,7 +98,7 @@ export function useRouter(): Router {
 
   const navigate = useCallback(
     (path: string, options?: { replace?: boolean }) => {
-      if (window.location.pathname === path) {
+      if (typeof window !== "undefined" && window.location.pathname === path) {
         return;
       }
 
@@ -96,8 +107,10 @@ export function useRouter(): Router {
         return;
       }
 
-      const depth = historyDepth(window.history.state);
-      window.history.pushState(createHistoryState(depth + 1), "", path);
+      if (typeof window !== "undefined") {
+        const depth = historyDepth(window.history.state);
+        window.history.pushState(createHistoryState(depth + 1), "", path);
+      }
       setPathname(path);
     },
     [replace]
@@ -105,7 +118,7 @@ export function useRouter(): Router {
 
   const goBack = useCallback(
     (fallbackPath: string) => {
-      if (historyDepth(window.history.state) > 0) {
+      if (typeof window !== "undefined" && historyDepth(window.history.state) > 0) {
         window.history.back();
         return;
       }
@@ -151,7 +164,7 @@ function historyDepth(value: unknown): number {
 }
 
 function createHistoryState(depth: number): HistoryState {
-  const currentState = window.history.state;
+  const currentState = typeof window !== "undefined" ? window.history.state : null;
   const state = isRecord(currentState) ? currentState : {};
 
   return {

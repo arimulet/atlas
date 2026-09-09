@@ -1,4 +1,4 @@
-import {
+﻿import {
   CartesianGrid,
   Line,
   LineChart,
@@ -448,3 +448,4 @@ function DataMetric({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+

@@ -37,9 +37,32 @@ export interface PersistedClubStaffMember {
   active: boolean;
 }
 
+export interface SaveClubInput {
+  clubId: number;
+  ownerUserId?: string | null;
+  sokkerUsername?: string | null;
+  country: number;
+  training: {
+    GK: number;
+    DEF: number;
+    MID: number;
+    ATT: number;
+  };
+  name: string;
+  gameWeek?: number | null;
+  week?: number | null;
+  lastSnapshotDate?: Date | null;
+  observedAt?: Date | null;
+  currency: string;
+  budget?: number | null;
+  staff?: PersistedClubStaffMember[];
+}
+
 export interface PersistedClub {
   id: string;
   clubId: number;
+  ownerUserId: string | null;
+  sokkerUsername: string | null;
   country: number;
   currency: string;
   training: {
@@ -200,6 +223,16 @@ export interface PersistedSnapshot {
   juniors: PersistedJuniorSnapshot[];
 }
 
+export interface PersistedSnapshotSummary {
+  id: string;
+  clubId: number;
+  snapshotDate: Date;
+  gameWeek: number | null;
+  week: number | null;
+  importedAt: Date;
+  playerCount: number;
+}
+
 export interface PersistedYouthPlayerSnapshot {
   id: string;
   playerId: number;
@@ -326,4 +359,6 @@ export interface PersistedMarketTransfer {
   salePrice: number;
   age: number;
   skills: Record<string, number>;
+  profile?: string | null;
 }
+

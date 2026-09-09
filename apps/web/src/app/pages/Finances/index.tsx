@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+﻿import type { ReactNode } from "react";
 import { useState } from "react";
 import { Info } from "lucide-react";
 import { formatMoney } from "../../formatters";
@@ -534,3 +534,4 @@ function Section({
 function PanelMessage({ children, tone }: { children: string; tone?: "error" }) {
   return <p className={`atlas-finances-panel__message${tone ? ` is-${tone}` : ""}`}>{children}</p>;
 }
+

@@ -6,7 +6,8 @@ import { SnapshotModel } from "../models/snapshot.js";
 import type {
   PersistedJuniorSnapshot,
   PersistedPlayerSnapshot,
-  PersistedSnapshot
+  PersistedSnapshot,
+  PersistedSnapshotSummary
 } from "./types.js";
 import { ClubId } from "./clubRepository.js";
 
@@ -93,17 +94,56 @@ export class MongoSnapshotRepository {
     return this.hydrateSnapshot(snapshot.toObject());
   }
 
+  private static countryNamesCache = new Map<number, string>();
+  private static resolvedClubIds = new Map<string, number>();
+
   async findById(id: string): Promise<PersistedSnapshot | null> {
-    const snapshot = await SnapshotModel.findById(id);
-    return snapshot ? this.hydrateSnapshot(snapshot.toObject()) : null;
+    const snapshot = await SnapshotModel.findById(id).lean();
+    return snapshot ? this.hydrateSnapshot(snapshot as unknown as SnapshotDocumentShape) : null;
+  }
+
+  async findLatestByClub(clubId: ClubId): Promise<PersistedSnapshot | null> {
+    const numericClubId = await this.resolveNumericClubId(clubId);
+    const snapshot = await SnapshotModel.findOne({ clubId: numericClubId })
+      .sort({ snapshotDate: -1 })
+      .lean();
+    return snapshot ? this.hydrateSnapshot(snapshot as unknown as SnapshotDocumentShape) : null;
+  }
+
+  async findLatestNByClub(clubId: ClubId, count: number): Promise<PersistedSnapshot[]> {
+    const numericClubId = await this.resolveNumericClubId(clubId);
+    const snapshots = await SnapshotModel.find({ clubId: numericClubId })
+      .sort({ snapshotDate: -1 })
+      .limit(count)
+      .lean();
+    const hydrated = await this.hydrateSnapshots(snapshots as unknown as SnapshotDocumentShape[]);
+    return hydrated.reverse();
   }
 
   async listByClub(clubId: ClubId): Promise<PersistedSnapshot[]> {
     const numericClubId = await this.resolveNumericClubId(clubId);
-    const snapshots = await SnapshotModel.find({ clubId: numericClubId }).sort({
-      snapshotDate: 1
-    });
-    return this.hydrateSnapshots(snapshots.map((snapshot) => snapshot.toObject()));
+    const snapshots = await SnapshotModel.find({ clubId: numericClubId })
+      .sort({ snapshotDate: 1 })
+      .lean();
+    return this.hydrateSnapshots(snapshots as unknown as SnapshotDocumentShape[]);
+  }
+
+  async listSummariesByClub(clubId: ClubId): Promise<PersistedSnapshotSummary[]> {
+    const numericClubId = await this.resolveNumericClubId(clubId);
+    const snapshots = await SnapshotModel.find({ clubId: numericClubId })
+      .select({ snapshotDate: 1, importedAt: 1, gameWeek: 1, week: 1, "players._id": 1, clubId: 1 })
+      .sort({ snapshotDate: 1 })
+      .lean();
+
+    return snapshots.map((s) => ({
+      id: String(s._id),
+      clubId: s.clubId,
+      snapshotDate: s.snapshotDate,
+      gameWeek: s.gameWeek ?? null,
+      week: s.week ?? null,
+      importedAt: s.importedAt,
+      playerCount: s.players?.length ?? 0
+    }));
   }
 
   async findByClubAndDate(clubId: ClubId, snapshotDate: Date): Promise<PersistedSnapshot[]> {
@@ -111,9 +151,11 @@ export class MongoSnapshotRepository {
     const snapshots = await SnapshotModel.find({
       clubId: numericClubId,
       snapshotDate
-    }).sort({ importedAt: 1 });
+    })
+      .sort({ importedAt: 1 })
+      .lean();
 
-    return this.hydrateSnapshots(snapshots.map((snapshot) => snapshot.toObject()));
+    return this.hydrateSnapshots(snapshots as unknown as SnapshotDocumentShape[]);
   }
 
   private async hydrateSnapshots(snapshots: SnapshotDocumentShape[]): Promise<PersistedSnapshot[]> {
@@ -124,17 +166,23 @@ export class MongoSnapshotRepository {
     const players = await PlayerModel.find({ clubId: snapshots[0]!.clubId })
       .select({ playerId: 1, name: 1, countryId: 1 })
       .lean();
-    const countryIds = [
+    const missingCountryIds = [
       ...new Set(
         players.flatMap((player) =>
-          typeof player.countryId === "number" ? [player.countryId] : []
+          typeof player.countryId === "number" && !MongoSnapshotRepository.countryNamesCache.has(player.countryId)
+            ? [player.countryId]
+            : []
         )
       )
     ];
-    const countries = await CountryModel.find({ countryId: { $in: countryIds } })
-      .select({ countryId: 1, name: 1 })
-      .lean();
-    const countryNames = new Map(countries.map((country) => [country.countryId, country.name]));
+    if (missingCountryIds.length > 0) {
+      const countries = await CountryModel.find({ countryId: { $in: missingCountryIds } })
+        .select({ countryId: 1, name: 1 })
+        .lean();
+      for (const country of countries) {
+        MongoSnapshotRepository.countryNamesCache.set(country.countryId, country.name);
+      }
+    }
     const playerDetails = new Map(
       players.map((player) => [
         player.playerId,
@@ -142,7 +190,7 @@ export class MongoSnapshotRepository {
           name: player.name,
           countryName:
             typeof player.countryId === "number"
-              ? (countryNames.get(player.countryId) ?? null)
+              ? (MongoSnapshotRepository.countryNamesCache.get(player.countryId) ?? null)
               : null
         }
       ])
@@ -166,11 +214,18 @@ export class MongoSnapshotRepository {
       return numericClubId;
     }
 
+    const strId = String(clubId);
+    const cached = MongoSnapshotRepository.resolvedClubIds.get(strId);
+    if (cached !== undefined) {
+      return cached;
+    }
+
     const club = await ClubModel.findById(clubId).select({ clubId: 1 }).lean();
     if (!club || typeof club.clubId !== "number") {
       throw new Error(`Club not found: ${clubId}`);
     }
 
+    MongoSnapshotRepository.resolvedClubIds.set(strId, club.clubId);
     return club.clubId;
   }
 }
@@ -230,7 +285,7 @@ function mapSnapshot(
     week: snapshot.week ?? null,
     importedAt: snapshot.importedAt,
     players: snapshot.players.map((player) => ({
-      id: player._id.toString(),
+      id: player._id ? player._id.toString() : String(player.playerId),
       playerId: player.playerId,
       name: playerDetails.get(player.playerId)?.name ?? player.name ?? `Player ${player.playerId}`,
       countryName: playerDetails.get(player.playerId)?.countryName ?? null,
@@ -256,7 +311,7 @@ function mapSnapshot(
       }
     })),
     juniors: (snapshot.juniors ?? []).map((junior) => ({
-      id: junior._id.toString(),
+      id: junior._id ? junior._id.toString() : String(junior.playerId),
       playerId: junior.playerId,
       name: junior.name,
       age: junior.age,

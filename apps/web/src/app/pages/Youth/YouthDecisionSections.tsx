@@ -82,7 +82,6 @@ export function YouthSummary({ summary }: { summary: { academyPlayers: number } 
         <p className="atlas-youth-summary__eyebrow">Youth Academy</p>
         <h2 id="youth-summary-title">{summary.academyPlayers} players in school</h2>
       </div>
-
     </section>
   );
 }

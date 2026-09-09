@@ -8,18 +8,36 @@ import { migrateSquadRoleAssignments } from "./migrations/squad-role-assignments
 
 export type MongoSession = ClientSession;
 
-export async function connectMongoDb(uri: string): Promise<typeof mongoose> {
-  const connection = await mongoose.connect(uri);
+let connectionPromise: Promise<typeof mongoose> | null = null;
+
+export async function runMongoMigrations(): Promise<void> {
   await migrateClubProfileDocuments();
   await migratePlayerDevelopmentTargets();
   await migrateSquadRoleAssignments();
   await removePlayerTransfersCollection();
   await migrateDevelopmentProfileKeys();
   await migrateSnapshotClubIds();
-  return connection;
+}
+
+export async function connectMongoDb(uri: string): Promise<typeof mongoose> {
+  if (mongoose.connection.readyState === 1) {
+    return mongoose;
+  }
+
+  if (!connectionPromise) {
+    connectionPromise = mongoose.connect(uri);
+  }
+
+  try {
+    return await connectionPromise;
+  } catch (error) {
+    connectionPromise = null;
+    throw error;
+  }
 }
 
 export async function disconnectMongoDb(): Promise<void> {
+  connectionPromise = null;
   await mongoose.disconnect();
 }
 

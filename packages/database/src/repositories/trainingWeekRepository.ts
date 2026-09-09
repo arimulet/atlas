@@ -26,7 +26,7 @@ export class MongoTrainingWeekRepository {
     }
 
     const snapshots = await loadTrainingSnapshots(input.clubId);
-    return mapTrainingWeek(week.toObject(), snapshots);
+    return mapTrainingWeek(week.toObject(), buildTrainingSnapshotIndex(snapshots));
   }
 
   async listByClub(clubId: number): Promise<PersistedPlayerTrainingWeek[]> {
@@ -34,7 +34,8 @@ export class MongoTrainingWeekRepository {
       TrainingWeekModel.find({ clubId }).sort({ gameWeek: 1, playerId: 1 }),
       loadTrainingSnapshots(clubId)
     ]);
-    return weeks.map((week) => mapTrainingWeek(week.toObject(), snapshots));
+    const snapshotIndex = buildTrainingSnapshotIndex(snapshots);
+    return weeks.map((week) => mapTrainingWeek(week.toObject(), snapshotIndex));
   }
 
   async listByPlayer(clubId: number, playerId: number): Promise<PersistedPlayerTrainingWeek[]> {
@@ -42,7 +43,8 @@ export class MongoTrainingWeekRepository {
       TrainingWeekModel.find({ clubId, playerId }).sort({ gameWeek: 1 }),
       loadTrainingSnapshots(clubId)
     ]);
-    return weeks.map((week) => mapTrainingWeek(week.toObject(), snapshots));
+    const snapshotIndex = buildTrainingSnapshotIndex(snapshots);
+    return weeks.map((week) => mapTrainingWeek(week.toObject(), snapshotIndex));
   }
 }
 
@@ -70,6 +72,25 @@ type TrainingSnapshot = {
   }>;
 };
 
+type TrainingSnapshotPlayer = TrainingSnapshot["players"][number];
+type TrainingSnapshotIndex = Map<number, Map<number, TrainingSnapshotPlayer>>;
+
+function buildTrainingSnapshotIndex(snapshots: readonly TrainingSnapshot[]): TrainingSnapshotIndex {
+  const index: TrainingSnapshotIndex = new Map();
+  for (const snapshot of snapshots) {
+    if (snapshot.gameWeek == null) continue;
+    let playerMap = index.get(snapshot.gameWeek);
+    if (!playerMap) {
+      playerMap = new Map();
+      index.set(snapshot.gameWeek, playerMap);
+    }
+    for (const player of snapshot.players) {
+      playerMap.set(player.playerId, player);
+    }
+  }
+  return index;
+}
+
 async function loadTrainingSnapshots(clubId: number): Promise<TrainingSnapshot[]> {
   const snapshots = await SnapshotModel.find({ clubId })
     .select({ gameWeek: 1, players: 1 })
@@ -81,7 +102,7 @@ async function loadTrainingSnapshots(clubId: number): Promise<TrainingSnapshot[]
 
 function mapTrainingWeek(
   week: TrainingWeekShape,
-  snapshots: readonly TrainingSnapshot[]
+  snapshots: readonly TrainingSnapshot[] | TrainingSnapshotIndex
 ): PersistedPlayerTrainingWeek {
   const snapshotPlayer = findSnapshotPlayer(week, snapshots);
   const storedSkills = readSkills(week.skills);
@@ -113,8 +134,14 @@ function mapTrainingWeek(
 
 function findSnapshotPlayer(
   week: TrainingWeekShape,
-  snapshots: readonly TrainingSnapshot[]
-): TrainingSnapshot["players"][number] | null {
+  snapshots: readonly TrainingSnapshot[] | TrainingSnapshotIndex
+): TrainingSnapshotPlayer | null {
+  if (snapshots instanceof Map) {
+    const sameWeekMap = snapshots.get(week.gameWeek);
+    const afterWeekMap = snapshots.get(week.gameWeek + 1);
+    return sameWeekMap?.get(week.playerId) ?? afterWeekMap?.get(week.playerId) ?? null;
+  }
+
   const sameWeek = snapshots.find((snapshot) => snapshot.gameWeek === week.gameWeek);
   const afterTraining = snapshots.find((snapshot) => snapshot.gameWeek === week.gameWeek + 1);
   const snapshot = sameWeek ?? afterTraining;

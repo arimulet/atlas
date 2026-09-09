@@ -1,4 +1,4 @@
-import {
+﻿import {
   DEVELOPMENT_PRIORITY_WEIGHTS,
   DEVELOPMENT_PROFILE_ORDER,
   DEVELOPMENT_PROFILES,
@@ -415,3 +415,4 @@ function hasManualOverride(override: PlayerDevelopmentTargetOverride): boolean {
 function clamp(value: number, minimum: number, maximum: number): number {
   return Math.min(Math.max(value, minimum), maximum);
 }
+

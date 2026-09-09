@@ -130,8 +130,8 @@ export interface PlayerMarketValueProjection {
 }
 
 export interface TrainingKindMarketValueComparison {
-  advanced: PlayerMarketValueProjection;
-  formation: PlayerMarketValueProjection;
+  advanced?: PlayerMarketValueProjection;
+  formation?: PlayerMarketValueProjection;
   difference: {
     completionWeeks: number | null;
     completionValue: number | null;

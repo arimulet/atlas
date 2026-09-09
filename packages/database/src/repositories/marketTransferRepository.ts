@@ -1,3 +1,4 @@
+import { suggestDevelopmentProfile } from "@atlas/domain";
 import { MarketTransferModel } from "../models/marketTransfer.js";
 import { MarketTransferCurrentModel } from "../models/marketTransferCurrent.js";
 import { MarketTransferSyncRunModel } from "../models/marketTransferSyncRun.js";
@@ -134,6 +135,27 @@ export async function deleteMarketTransferCurrent(playerId: number): Promise<voi
   await MarketTransferCurrentModel.deleteOne({ playerId });
 }
 
+let finalTransfersCache: {
+  maxTransferDateTime: number;
+  timestamp: number;
+  data: PersistedMarketTransfer[];
+} | null = null;
+
+const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
+
+export function invalidateFinalMarketTransfersCache(): void {
+  finalTransfersCache = null;
+}
+
+const MARKET_TRANSFER_PROFILES: readonly string[] = [
+  "goalkeeper",
+  "defender",
+  "wing_defender",
+  "midfielder",
+  "winger",
+  "forward"
+];
+
 export async function promoteToFinalMarketTransfer(
   transfer: PersistedMarketTransfer
 ): Promise<void> {
@@ -141,6 +163,14 @@ export async function promoteToFinalMarketTransfer(
   if (!current) {
     throw new Error(`Cannot promote transfer for player ${transfer.playerId}: no current record found`);
   }
+
+  const profile =
+    transfer.profile ??
+    suggestDevelopmentProfile({
+      playerId: transfer.playerId,
+      age: transfer.age,
+      skills: current.player.skills
+    }).profile;
 
   // 1. Upsert final transfer
   await MarketTransferModel.updateOne(
@@ -155,21 +185,65 @@ export async function promoteToFinalMarketTransfer(
         week: transfer.week,
         salePrice: transfer.salePrice,
         age: transfer.age,
-        skills: current.player.skills
+        skills: current.player.skills,
+        profile
       }
     },
     { upsert: true }
   );
+
+  // Invalidate in-memory cache
+  invalidateFinalMarketTransfersCache();
 
   // 2. Delete current
   await MarketTransferCurrentModel.deleteOne({ playerId: transfer.playerId });
 }
 
 export async function findFinalMarketTransfersUpToDate(
-  maxTransferDate: Date
+  maxTransferDate: Date,
+  limitPerProfile: number = 5
 ): Promise<PersistedMarketTransfer[]> {
-  const docs = await MarketTransferModel.find({ transferDate: { $lte: maxTransferDate } })
-    .sort({ transferDate: -1 })
-    .lean();
-  return docs as unknown as PersistedMarketTransfer[];
+  const now = Date.now();
+  const maxTime = maxTransferDate.getTime();
+
+  if (
+    finalTransfersCache &&
+    Math.abs(finalTransfersCache.maxTransferDateTime - maxTime) < 60000 &&
+    now - finalTransfersCache.timestamp < CACHE_TTL_MS
+  ) {
+    return finalTransfersCache.data;
+  }
+
+  // Query top N most recent transfers for each development profile in parallel using index { profile: 1, transferDate: -1 }
+  const profileResults = await Promise.all(
+    MARKET_TRANSFER_PROFILES.map((profile) =>
+      MarketTransferModel.find({
+        profile,
+        transferDate: { $lte: maxTransferDate }
+      })
+        .sort({ transferDate: -1 })
+        .limit(limitPerProfile)
+        .lean()
+    )
+  );
+
+  let data = profileResults.flat() as unknown as PersistedMarketTransfer[];
+
+  // Fallback for tests or legacy environments where transfers lack profile
+  if (data.length === 0) {
+    const docs = await MarketTransferModel.find({ transferDate: { $lte: maxTransferDate } })
+      .sort({ transferDate: -1 })
+      .limit(limitPerProfile * MARKET_TRANSFER_PROFILES.length)
+      .lean();
+    data = docs as unknown as PersistedMarketTransfer[];
+  }
+
+  finalTransfersCache = {
+    maxTransferDateTime: maxTime,
+    timestamp: now,
+    data
+  };
+
+  return data;
 }
+

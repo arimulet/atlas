@@ -41,6 +41,8 @@ const clubTrainingSchema = new Schema(
 const clubSchema = new Schema(
   {
     clubId: { type: Number, required: true },
+    ownerUserId: { type: String, default: null, index: true },
+    sokkerUsername: { type: String, default: null, trim: true },
     country: { type: Number, required: true },
     training: { type: clubTrainingSchema, required: true },
     name: { type: String, required: true, trim: true },

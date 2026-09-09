@@ -19,24 +19,62 @@ const clubRepository = new MongoClubRepository();
 const snapshotRepository = new MongoSnapshotRepository();
 const countryRepository = new MongoCountryRepository();
 
-export async function getClubDiagnostic(clubId: ClubId): Promise<BasicDiagnostic | null> {
-  const club = await clubRepository.findById(clubId.toString());
+const inFlightDiagnostics = new Map<string, Promise<BasicDiagnostic | null>>();
+const diagnosticsCache = new Map<string, { data: BasicDiagnostic | null; timestamp: number }>();
+const DIAGNOSTICS_CACHE_TTL_MS = 60_000;
 
-  if (!club) {
-    throw new Error("Club not found: " + clubId);
+export function invalidateDiagnosticsCache(clubId?: ClubId): void {
+  if (clubId) {
+    diagnosticsCache.delete(String(clubId));
+  } else {
+    diagnosticsCache.clear();
+  }
+}
+
+export async function getClubDiagnostic(clubId: ClubId): Promise<BasicDiagnostic | null> {
+  const cacheKey = String(clubId);
+  const cached = diagnosticsCache.get(cacheKey);
+  if (cached && Date.now() - cached.timestamp < DIAGNOSTICS_CACHE_TTL_MS) {
+    return cached.data;
   }
 
-  const latestSnapshot = (await snapshotRepository.listByClub(clubId)).at(-1);
-  if (!latestSnapshot) return null;
+  const existingInFlight = inFlightDiagnostics.get(cacheKey);
+  if (existingInFlight) {
+    return existingInFlight;
+  }
 
-  const clubCountry = await countryRepository.getById(club.country);
-  const currencyRate = clubCountry?.currencyRate ?? 1;
-  const currencyName = clubCountry?.currencyName ?? club.currency;
+  const compute = async (): Promise<BasicDiagnostic | null> => {
+    const club = await clubRepository.findById(clubId.toString());
 
-  const rawTransfers = await findFinalMarketTransfersUpToDate(new Date());
-  const mappedTransfers = rawTransfers.map(t => mapMarketTransferToRecord(t, currencyName, currencyRate));
+    if (!club) {
+      throw new Error("Club not found: " + clubId);
+    }
 
-  return createSnapshotDiagnostic(latestSnapshot, club.currency, mappedTransfers);
+    const [latestSnapshot, clubCountry, rawTransfers] = await Promise.all([
+      snapshotRepository.findLatestByClub(club.clubId),
+      countryRepository.getById(club.country),
+      findFinalMarketTransfersUpToDate(new Date())
+    ]);
+
+    if (!latestSnapshot) return null;
+
+    const currencyRate = clubCountry?.currencyRate ?? 1;
+    const currencyName = clubCountry?.currencyName ?? club.currency;
+    const mappedTransfers = rawTransfers.map((t) =>
+      mapMarketTransferToRecord(t, currencyName, currencyRate)
+    );
+
+    const result = createSnapshotDiagnostic(latestSnapshot, club.currency, mappedTransfers);
+    diagnosticsCache.set(cacheKey, { data: result, timestamp: Date.now() });
+    return result;
+  };
+
+  const executionPromise = compute().finally(() => {
+    inFlightDiagnostics.delete(cacheKey);
+  });
+
+  inFlightDiagnostics.set(cacheKey, executionPromise);
+  return executionPromise;
 }
 
 export function createSnapshotDiagnostic(
@@ -104,12 +142,13 @@ function mapMarketTransferToRecord(
       technique: transfer.skills.technique ?? null,
       passing: transfer.skills.passing ?? null,
       keeper: transfer.skills.keeper ?? null,
-      defender: transfer.skills.defender ?? null,
-      playmaker: transfer.skills.playmaker ?? null,
+      defender: transfer.skills.defending ?? transfer.skills.defender ?? null,
+      playmaker: transfer.skills.playmaking ?? transfer.skills.playmaker ?? null,
       striker: transfer.skills.striker ?? null
     },
     source: "imported",
-    salePriceType: "final_sale"
+    salePriceType: "final_sale",
+    developmentProfile: (transfer.profile as import("@atlas/domain").DevelopmentProfile) ?? null
   };
 }
 
@@ -122,3 +161,4 @@ function positionFromTraining(positionNum: number): string | null {
     default: return null;
   }
 }
+
