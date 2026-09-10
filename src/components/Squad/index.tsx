@@ -4,9 +4,7 @@ import { CountryNameFlag } from "@/components/CountryNameFlag";
 import { PlayerLink } from "@/components/PlayerLink";
 import type { SquadTableProps, SquadProps } from "./types";
 import {
-  SquadPlanningSections,
   describeManualRoleConflict,
-  planningConfidenceWarning,
   roleOptionLabel,
   roleOptions
 } from "./SquadPlanningSections";
@@ -58,7 +56,7 @@ export function Squad({
     squadPlanning,
     currency
   });
-  const { filteredRows, filters, setProfileFilter, setRoleFilter, viewModel } = useSquadPlanning({
+  const { filteredRows, filters, setProfileFilter, setRoleFilter } = useSquadPlanning({
     planning: squadPlanning,
     rows
   });
@@ -78,25 +76,6 @@ export function Squad({
         <h1>Squad</h1>
       </header>
       <SquadMarketSummary summary={marketSummary} />
-      {squadPlanningStatus === "loading" ? (
-        <SquadMessage>Loading squad planning...</SquadMessage>
-      ) : null}
-      {squadPlanningStatus === "error" ? (
-        <SquadMessage tone="error">
-          Squad Planning is unavailable. Basic squad data remains available.
-        </SquadMessage>
-      ) : null}
-      {squadPlanningStatus === "idle" ? (
-        <SquadMessage>Squad planning data is not available yet.</SquadMessage>
-      ) : null}
-      {squadPlanningStatus === "ready" && viewModel ? (
-        <>
-          <SquadPlanningSections onSelectPlayer={onSelectPlayer} viewModel={viewModel} />
-          {planningConfidenceWarning(viewModel) ? (
-            <SquadMessage tone="quiet">{planningConfidenceWarning(viewModel)}</SquadMessage>
-          ) : null}
-        </>
-      ) : null}
       <h2 id="squad-players-title" className="atlas-squad__section-title">
         Players
       </h2>

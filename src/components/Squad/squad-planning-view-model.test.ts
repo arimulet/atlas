@@ -161,6 +161,15 @@ describe("squad planning presentation", () => {
     expect(first.priorityActions).toEqual(second.priorityActions);
     expect(first.profiles).toEqual(second.profiles);
   });
+
+  it("creates a valid view model when rows are omitted", () => {
+    const bundle = createBundle();
+    const viewModel = createSquadPlanningViewModel(bundle);
+
+    expect(viewModel.summary.playerCount).toBe(bundle.assessment.depthPlayers.length);
+    expect(viewModel.profiles.length).toBeGreaterThan(0);
+    expect(viewModel.priorityActions).toBeDefined();
+  });
 });
 
 function createBundle(

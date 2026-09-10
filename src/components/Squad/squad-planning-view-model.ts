@@ -216,9 +216,16 @@ const READINESS_LABELS: Record<SuccessionCandidate["readiness"], string> = {
 
 export function createSquadPlanningViewModel(
   planning: SquadPlanningBundle,
-  rows: readonly SquadPlayerRow[]
+  rows?: readonly SquadPlayerRow[]
 ): SquadPlanningViewModel {
-  const playerNames = createPlayerNames(rows);
+  const playerNames = rows
+    ? createPlayerNames(rows)
+    : new Map(
+        planning.assessment.depthPlayers.map((player) => [
+          String(player.playerId),
+          player.playerName || `Player ${player.playerId}`
+        ])
+      );
   const players = planning.assessment.depthPlayers;
   const recommendations = planning.recommendations.recommendations
     .map((recommendation) => mapRecommendation(recommendation, playerNames))
@@ -226,7 +233,7 @@ export function createSquadPlanningViewModel(
   const profiles = planning.depth.profiles
     .filter((assessment) => SQUAD_PROFILE_ORDER.includes(assessment.profile))
     .map((assessment) => mapProfile(assessment, players, playerNames, recommendations));
-  const summary = mapSummary(planning, rows.length);
+  const summary = mapSummary(planning, rows ? rows.length : planning.assessment.depthPlayers.length);
   const attentionPlayerIds = new Set<string>(
     recommendations.flatMap((recommendation) => recommendation.playerIds)
   );
