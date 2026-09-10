@@ -1,4 +1,5 @@
 import React from "react";
+import { ChevronDown, ChevronRight, ArrowUp, ArrowDown } from "lucide-react";
 import type { DashboardStatus, RealYouthAcademyPlanning } from "@atlas/web/app/types";
 import {
   createYouthPlayerRows,
@@ -138,7 +139,7 @@ function YouthPlayerRows({
               type="button"
               style={{ marginRight: '8px', cursor: 'pointer', background: 'none', border: 'none', color: 'inherit', fontWeight: 'bold' }}
             >
-              {isExpanded ? "−" : "+"}
+              {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
             </button>
             <span className={`atlas-youth-table__player-name-value${skillChangeClass}`}>
               {row.name}
@@ -224,7 +225,8 @@ function SkillChangeIndicator({ change }: { change: number | null }) {
 
   return (
     <span className={`atlas-youth-skill-change is-${isIncrease ? "up" : "down"}`}>
-      {isIncrease ? "↑" : "↓"} {isIncrease ? "+" : ""}
+      {isIncrease ? <ArrowUp size={12} className="inline-block align-middle" /> : <ArrowDown size={12} className="inline-block align-middle" />}{" "}
+      {isIncrease ? "+" : ""}
       {change}
     </span>
   );

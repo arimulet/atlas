@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from "react";
+import { ArrowRight } from "lucide-react";
 import type { PlayerDevelopmentTargetOverride } from "@atlas/domain";
 import { formatEta, formatPercentage } from "@/app/formatters";
 import {
@@ -158,7 +159,7 @@ function NextStep({ plan }: { plan: DevelopmentPlanViewModel }) {
         <>
           <strong>{skillLabel(step.skill)}</strong>
           <span>
-            {step.fromLevel} → {step.toLevel}
+            {step.fromLevel} <ArrowRight size={13} className="inline-block align-middle" /> {step.toLevel}
           </span>
           <small>{formatEta(step.estimatedWeeks)}</small>
           <p>{step.reasons[0] ?? "Next best step in the generated path."}</p>
@@ -299,7 +300,7 @@ function TrainingPath({ path, completed }: { path: DevelopmentPlanPathRow[]; com
               <b>{step.order}</b>
               <strong>{skillLabel(step.skill)}</strong>
               <span>
-                {step.fromLevel} → {step.toLevel}
+                {step.fromLevel} <ArrowRight size={13} className="inline-block align-middle" /> {step.toLevel}
               </span>
               <span>{formatEta(step.estimatedWeeks)}</span>
               <small>

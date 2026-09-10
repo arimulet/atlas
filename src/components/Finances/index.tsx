@@ -1,6 +1,6 @@
-﻿import type { ReactNode } from "react";
+import type { ReactNode } from "react";
 import { useState } from "react";
-import { Info } from "lucide-react";
+import { ArrowRight, Info } from "lucide-react";
 import { formatMoney } from "@/app/formatters";
 import { PlayerLink } from "@/components/PlayerLink";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -382,7 +382,7 @@ function DevelopmentUpside({ development }: DevelopmentUpsideProps) {
       </div>
       <strong>{development.valueCreation}</strong>
       <p>
-        Projected covered value: {development.currentValue} → {development.projectedValue}
+        Projected covered value: {development.currentValue} <ArrowRight size={13} className="inline-block align-middle" /> {development.projectedValue}
       </p>
     </aside>
   );
