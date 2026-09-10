@@ -255,7 +255,7 @@ function contextFromEvidence(
     .filter((item) => item.value !== null && item.value !== undefined && item.value !== "")
     .map((item) => {
       const label = item.label ?? item.code ?? "Evidence";
-      const displayLabel = label === "player.missing-field" ? "Dato faltante" : label;
+      const displayLabel = label === "player.missing-field" ? "Missing field" : label;
       return `${displayLabel}: ${String(item.value)}`;
     })
     .join(" · ");
@@ -277,11 +277,11 @@ function appendDiagnostic(
 }
 
 const roleLabels: Record<string, string> = {
-  goalkeeper: "arquero",
-  defender: "defensor",
-  midfielder: "mediocampista",
-  winger: "extremo",
-  striker: "delantero"
+  goalkeeper: "goalkeeper",
+  defender: "defender",
+  midfielder: "midfielder",
+  winger: "winger",
+  striker: "striker"
 };
 
 export function describeDiagnosticsFinding(finding: DiagnosticFinding): string {
@@ -289,11 +289,11 @@ export function describeDiagnosticsFinding(finding: DiagnosticFinding): string {
 
   if (finding.code.startsWith("squad-balance.") && finding.code.endsWith(".deficit")) {
     return (
-      "La plantilla tiene " +
+      "Squad has " +
       formatDiagnosticNumber(parameters.currentCount) +
-      " jugador(es) en " +
+      " player(s) in " +
       diagnosticRoleLabel(parameters.role) +
-      "; el mínimo de referencia es " +
+      "; benchmark minimum is " +
       formatDiagnosticNumber(parameters.minimum) +
       "."
     );
@@ -303,25 +303,25 @@ export function describeDiagnosticsFinding(finding: DiagnosticFinding): string {
     case "economic-risk.high-wage-low-value-ratio":
       return (
         diagnosticStringValue(parameters.playerName) +
-        " tiene un salario alto (" +
+        " has a high wage (" +
         formatDiagnosticNumber(parameters.wage) +
-        ") en relación con su valor estimado (" +
+        ") relative to estimated value (" +
         formatDiagnosticNumber(parameters.value) +
         ")."
       );
     case "asset-risk.senior-high-value":
       return (
         diagnosticStringValue(parameters.playerName) +
-        " combina una edad senior con un valor estimado relevante (" +
+        " combines senior age with significant estimated value (" +
         formatDiagnosticNumber(parameters.value) +
         ")."
       );
     case "training-potential.young-role-fit":
-      return diagnosticStringValue(parameters.playerName) + " es joven y muestra un buen ajuste para su rol.";
+      return diagnosticStringValue(parameters.playerName) + " is young and shows a good fit for their role.";
     case "follow-up.incomplete-player-data":
       return (
         diagnosticStringValue(parameters.playerName) +
-        " requiere seguimiento porque sus datos importados están incompletos."
+        " requires follow-up due to incomplete imported data."
       );
     default:
       return finding.code;
@@ -333,5 +333,5 @@ function diagnosticRoleLabel(value: DiagnosticParameterValue | undefined): strin
 }
 
 function diagnosticStringValue(value: DiagnosticParameterValue | undefined): string {
-  return value === null || value === undefined ? "dato no disponible" : String(value);
+  return value === null || value === undefined ? "n/a" : String(value);
 }

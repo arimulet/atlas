@@ -1,11 +1,8 @@
 import { useMemo, useState, type ReactNode } from "react";
-import type { DiagnosticFinding, DiagnosticParameterValue } from "@atlas/web/app/types";
 import type { SquadRole } from "@atlas/domain";
-import { formatDiagnosticNumber } from "@/app/formatters";
-import { AttentionIcon } from "@/components/AttentionIcon";
 import { CountryNameFlag } from "@/components/CountryNameFlag";
 import { PlayerLink } from "@/components/PlayerLink";
-import type { SquadAttentionProps, SquadTableProps, SquadProps } from "./types";
+import type { SquadTableProps, SquadProps } from "./types";
 import {
   SquadPlanningSections,
   describeManualRoleConflict,
@@ -22,7 +19,6 @@ import {
   type SquadPlanningFilters
 } from "./squad-planning-view-model";
 import {
-  createSquadAttentionFindings,
   createSquadPlayerRows,
   isSquadSkillRequiredForPosition,
   SQUAD_SKILL_DEFINITIONS,
@@ -101,7 +97,6 @@ export function Squad({
           ) : null}
         </>
       ) : null}
-      <SquadAttention diagnostic={trainingDiagnostic} status={trainingStatus} />
       <h2 id="squad-players-title" className="atlas-squad__section-title">
         Players
       </h2>
@@ -257,59 +252,6 @@ function marketSortValue(row: SquadPlayerRow, sort: Exclude<MarketSort, "default
   if (!row.marketValue) return null;
   if (sort === "current") return row.marketValue.current.expected.value;
   return row.marketValue.training?.averageValueGainPerWeek?.value ?? null;
-}
-
-function SquadAttention({ diagnostic, status }: SquadAttentionProps) {
-  const findings = createSquadAttentionFindings(diagnostic);
-
-  return (
-    <section
-      className={`atlas-squad-panel atlas-squad-panel--attention${findings.length === 0 ? " is-quiet" : ""}`}
-      aria-labelledby="squad-attention-title"
-    >
-      <h2 id="squad-attention-title" className="atlas-squad-panel__title atlas-section-title">
-        Squad Attention
-      </h2>
-      {status === "loading" ? <SquadMessage>Loading diagnostics...</SquadMessage> : null}
-      {status === "error" ? (
-        <SquadMessage tone="error">Squad diagnostics are unavailable.</SquadMessage>
-      ) : null}
-      {status === "idle" ? (
-        <SquadMessage>Import a club snapshot to inspect squad diagnostics.</SquadMessage>
-      ) : null}
-      {status === "ready" && diagnostic === null ? (
-        <SquadMessage>
-          Squad diagnostics are not available in the current snapshot model.
-        </SquadMessage>
-      ) : null}
-      {status === "ready" && diagnostic !== null && findings.length === 0 ? (
-        <SquadMessage tone="quiet">✓ No squad issues requiring attention</SquadMessage>
-      ) : null}
-      {status === "ready" && findings.length > 0 ? (
-        <ul className="atlas-squad-attention-list">
-          {findings.map((finding) => (
-            <SquadAttentionItem
-              finding={finding}
-              key={`${finding.code}-${finding.affectedPlayerIds.join("-")}`}
-            />
-          ))}
-        </ul>
-      ) : null}
-    </section>
-  );
-}
-
-interface SquadAttentionItemProps {
-  finding: DiagnosticFinding;
-}
-
-function SquadAttentionItem({ finding }: SquadAttentionItemProps) {
-  return (
-    <li className={`atlas-squad-attention-item is-${finding.severity}`}>
-      <AttentionIcon severity={finding.severity} />
-      <span>{describeSquadFinding(finding)}</span>
-    </li>
-  );
 }
 
 function SquadTable({ onSaveSquadRole, onSelectPlayer, planning, rows, status }: SquadTableProps) {
@@ -683,65 +625,3 @@ function SquadMessage({ children, tone }: SquadMessageProps) {
   return <p className={`atlas-squad-panel__message${tone ? ` is-${tone}` : ""}`}>{children}</p>;
 }
 
-const roleLabels: Record<string, string> = {
-  goalkeeper: "arquero",
-  defender: "defensor",
-  midfielder: "mediocampista",
-  winger: "extremo",
-  striker: "delantero"
-};
-
-function describeSquadFinding(finding: DiagnosticFinding): string {
-  const parameters = finding.parameters ?? {};
-
-  if (finding.code.startsWith("squad-balance.") && finding.code.endsWith(".deficit")) {
-    return (
-      "La plantilla tiene " +
-      formatDiagnosticNumber(parameters.currentCount) +
-      " jugador(es) en " +
-      diagnosticRoleLabel(parameters.role) +
-      "; el mínimo de referencia es " +
-      formatDiagnosticNumber(parameters.minimum) +
-      "."
-    );
-  }
-
-  switch (finding.code) {
-    case "economic-risk.high-wage-low-value-ratio":
-      return (
-        diagnosticStringValue(parameters.playerName) +
-        " tiene un salario alto (" +
-        formatDiagnosticNumber(parameters.wage) +
-        ") en relación con su valor estimado (" +
-        formatDiagnosticNumber(parameters.value) +
-        ")."
-      );
-    case "asset-risk.senior-high-value":
-      return (
-        diagnosticStringValue(parameters.playerName) +
-        " combina una edad senior con un valor estimado relevante (" +
-        formatDiagnosticNumber(parameters.value) +
-        ")."
-      );
-    case "training-potential.young-role-fit":
-      return (
-        diagnosticStringValue(parameters.playerName) +
-        " es joven y muestra un buen ajuste para su rol."
-      );
-    case "follow-up.incomplete-player-data":
-      return (
-        diagnosticStringValue(parameters.playerName) +
-        " requiere seguimiento porque sus datos importados están incompletos."
-      );
-    default:
-      return finding.code;
-  }
-}
-
-function diagnosticRoleLabel(value: DiagnosticParameterValue | undefined): string {
-  return roleLabels[diagnosticStringValue(value)] ?? diagnosticStringValue(value);
-}
-
-function diagnosticStringValue(value: DiagnosticParameterValue | undefined): string {
-  return value === null || value === undefined ? "dato no disponible" : String(value);
-}
