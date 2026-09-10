@@ -90,7 +90,7 @@ export function DiagnosticNotifications({
               })}
             </ul>
           ) : (
-            <p className="atlas-diagnostic-notifications__empty">No hay notificaciones.</p>
+            <p className="atlas-diagnostic-notifications__empty">No notifications.</p>
           )}
         </section>
       ) : null}

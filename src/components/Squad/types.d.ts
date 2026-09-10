@@ -1,6 +1,5 @@
 import type {
   DashboardStatus,
-  DiagnosticFinding,
   PlayerDevelopment,
   SquadPlanningBundle,
   SquadRole,
@@ -23,11 +22,6 @@ export interface SquadProps {
   currency: string | null;
 }
 
-export interface SquadAttentionProps {
-  diagnostic: TrainingDiagnostic | null;
-  status: DashboardStatus;
-}
-
 export interface SquadTableProps {
   onSaveSquadRole: (playerId: string, role: SquadRole | null) => Promise<void>;
   onSelectPlayer: (playerId: string) => void;
@@ -36,4 +30,3 @@ export interface SquadTableProps {
   status: DashboardStatus;
 }
 
-export type SquadAttentionFinding = DiagnosticFinding;
