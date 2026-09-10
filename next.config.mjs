@@ -3,7 +3,7 @@ const nextConfig = {
   output: "standalone",
   reactStrictMode: false,
   sassOptions: {
-    includePaths: ["./src/app/styles"]
+    includePaths: ["./src/styles"]
   },
   webpack: (config) => {
     config.resolve.extensionAlias = {

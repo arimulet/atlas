@@ -5,8 +5,8 @@ import {
   validateSokkerSyncPayload,
   persistSokkerSync
 } from "@atlas/application";
-import { jsonResponse } from "../../../lib/api-helper";
-import { getAuthenticatedUserServer } from "../../../lib/session";
+import { jsonResponse } from "@/lib/api-helper";
+import { getAuthenticatedUserServer } from "@/lib/session";
 
 export async function POST(request: NextRequest) {
   try {

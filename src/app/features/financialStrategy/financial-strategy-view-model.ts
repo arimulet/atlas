@@ -7,8 +7,8 @@
   InvestmentSafetyAssessment,
   ProfileDepthStatus
 } from "@atlas/domain";
-import type { FinancialStrategyData } from "../../api";
-import type { SquadPlanningBundle } from "../../types";
+import type { FinancialStrategyData } from "@/api";
+import type { SquadPlanningBundle } from "@/app/types";
 import { formatMoney } from "../../formatters";
 
 export interface FinancialPositionViewModel {

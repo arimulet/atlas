@@ -1,5 +1,5 @@
 import { getClubDashboard } from "@atlas/application";
-import { getEffectiveClubId, handleApiError, jsonResponse } from "../../../lib/api-helper";
+import { getEffectiveClubId, handleApiError, jsonResponse } from "@/lib/api-helper";
 
 export async function GET() {
   try {
