@@ -11,6 +11,7 @@ import { recommendationLabel } from "@/components/Training/training-intelligence
 import { useWeeklyTrainingIntelligence } from "@/components/Training/useWeeklyTrainingIntelligence";
 import { RecentTrainingProgressModal } from "@/components/Training/RecentTrainingProgressModal";
 import { TrainingPlayerTables } from "@/components/Training/TrainingPlayerTables";
+import { registerPlayerCountries } from "@/context/PlayerCountryContext";
 export { SquadPlanningRoleControl } from "./SquadPlanningRoleControl";
 
 export function Squad({
@@ -26,6 +27,12 @@ export function Squad({
   trainingDiagnostic,
   trainingStatus
 }: SquadProps) {
+  if (training?.players) {
+    registerPlayerCountries(training.players);
+  }
+  if (squadPlanning?.assessment?.depthPlayers) {
+    registerPlayerCountries(squadPlanning.assessment.depthPlayers);
+  }
   const [isRecentProgressOpen, setIsRecentProgressOpen] = useState(false);
   const weeklyTrainingIntelligence = useWeeklyTrainingIntelligence(
     clubId ?? development?.clubId ?? null

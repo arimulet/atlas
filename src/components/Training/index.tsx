@@ -7,6 +7,7 @@ import { recommendationLabel } from "./training-intelligence-view-model";
 import { useWeeklyTrainingIntelligence } from "./useWeeklyTrainingIntelligence";
 import { RecentTrainingProgressModal } from "./RecentTrainingProgressModal";
 import { TrainingPlayerTables } from "./TrainingPlayerTables";
+import { registerPlayerCountries } from "@/context/PlayerCountryContext";
 
 export function Training({
   clubId,
@@ -17,6 +18,9 @@ export function Training({
   trainingDiagnostic,
   trainingStatus
 }: TrainingProps) {
+  if (training?.players) {
+    registerPlayerCountries(training.players);
+  }
   const [isRecentProgressOpen, setIsRecentProgressOpen] = useState(false);
   const weeklyTrainingIntelligence = useWeeklyTrainingIntelligence(clubId);
   const recommendations = new Map(

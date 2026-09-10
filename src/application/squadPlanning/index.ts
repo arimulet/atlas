@@ -209,6 +209,7 @@ async function computeSquadAssessment(
       ...playerAssessment,
       skills: context?.skills ?? {},
       playerName: context?.playerName ?? `Player ${playerAssessment.playerId}`,
+      countryName: context?.countryName ?? null,
       age: context?.age ?? null,
       sokkerValue: context?.sokkerValue ?? null,
       developmentPlan: context?.developmentPlan ?? null,
@@ -346,6 +347,7 @@ function buildPlayerContext(
   return {
     ...developmentPlayer,
     playerName: player.name,
+    countryName: player.countryName ?? null,
     age: player.age,
     sokkerValue: player.value,
     profile: plan.target.profile,

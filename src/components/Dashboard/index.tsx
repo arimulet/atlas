@@ -17,6 +17,7 @@ import { createSquadPlanningViewModel } from "../Squad/squad-planning-view-model
 
 import { AttentionIcon } from "@/components/AttentionIcon";
 import { PlayerLink } from "@/components/PlayerLink";
+import { registerPlayerCountries } from "@/context/PlayerCountryContext";
 
 type Priority = "High" | "Medium" | "Low";
 
@@ -53,6 +54,9 @@ export function Dashboard({
   financialStrategy,
   diagnostic
 }: DashboardProps) {
+  if (squadPlanning?.assessment?.depthPlayers) {
+    registerPlayerCountries(squadPlanning.assessment.depthPlayers);
+  }
   const attentionItems =
     dashboard || diagnostic ? buildAttentionItems(dashboard, youthAcademy, diagnostic) : [];
   const watchPlayers = dashboard ? buildWatchPlayers(dashboard, youthAcademy) : [];

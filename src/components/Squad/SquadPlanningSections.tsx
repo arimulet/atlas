@@ -222,7 +222,7 @@ function SquadProfileDetail({ onSelectPlayer, profile }: SquadProfileDetailProps
               <ul>
                 {players.map((player) => (
                   <li key={player.playerId}>
-                    <PlayerLink playerId={player.playerId} onSelectPlayer={onSelectPlayer}>
+                    <PlayerLink countryName={player.countryName} playerId={player.playerId} onSelectPlayer={onSelectPlayer}>
                       {player.name}
                     </PlayerLink>
                     <span>
@@ -327,7 +327,7 @@ function SquadSuccession({ profile, onSelectPlayer }: SquadSuccessionProps) {
       ) : (
         profile.successorCandidates.map((candidate) => (
           <span key={candidate.playerId}>
-            <PlayerLink playerId={candidate.playerId} onSelectPlayer={onSelectPlayer}>
+            <PlayerLink countryName={candidate.countryName} playerId={candidate.playerId} onSelectPlayer={onSelectPlayer}>
               {candidate.playerName}
             </PlayerLink>
             <span>
