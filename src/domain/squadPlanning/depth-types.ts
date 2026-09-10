@@ -106,6 +106,7 @@ export interface SquadDepthAnalysis {
 export interface SquadDepthPlayer extends SquadPlayerAssessment {
   skills?: SkillSet;
   playerName?: string;
+  countryName?: string | null;
   age?: number | null;
   developmentPlan?: PlayerDevelopmentPlan | null;
   trainingPath?: PlayerTrainingPath | null;

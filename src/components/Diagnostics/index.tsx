@@ -9,6 +9,7 @@ import {
 } from "@/app/view-models/diagnostics-view-model";
 import type { DiagnosticsProps } from "./types";
 import { PlayerLink } from "@/components/PlayerLink";
+import { registerPlayerCountries } from "@/context/PlayerCountryContext";
 
 type SeverityFilter = "all" | Severity;
 type AreaFilter = "all" | DiagnosticArea;
@@ -28,6 +29,9 @@ export function Diagnostics({
   youthPipelineStatus,
   youthStatus
 }: DiagnosticsProps) {
+  if (training?.players) {
+    registerPlayerCountries(training.players);
+  }
   const [severityFilter, setSeverityFilter] = useState<SeverityFilter>("all");
   const [areaFilter, setAreaFilter] = useState<AreaFilter>("all");
   const viewModel = useMemo(

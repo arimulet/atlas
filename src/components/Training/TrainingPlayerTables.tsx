@@ -20,7 +20,6 @@ import {
   formatTalent,
   formatTrainingPriority
 } from "@/app/formatters";
-import { CountryNameFlag } from "@/components/CountryNameFlag";
 import { PlayerLink } from "@/components/PlayerLink";
 import { isSquadSkillRequiredForPosition } from "@/app/view-models/squad-view-model";
 import { createPlayerMarketValueViewModel, formatMarketMoney } from "@/app/view-models/market-value-view-model";
@@ -272,10 +271,11 @@ function TrainingPlayerRows({
           >
             {isDetailsOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
           </button>
-          {sourcePlayer?.countryName ? (
-            <CountryNameFlag countryName={sourcePlayer.countryName} />
-          ) : null}
-          <PlayerLink playerId={player.playerId} onSelectPlayer={onSelectPlayer}>
+          <PlayerLink
+            countryName={sourcePlayer?.countryName}
+            playerId={player.playerId}
+            onSelectPlayer={onSelectPlayer}
+          >
             {player.playerName}
           </PlayerLink>
           <TrainingKind kind={player.trainingKind} />

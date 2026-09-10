@@ -40,6 +40,7 @@ export interface SquadTrainingContext {
 
 export interface SquadPlayerContext extends DevelopmentPlayer {
   playerName?: string;
+  countryName?: string | null;
   age: number | null;
   profile?: DevelopmentProfile | null;
   developmentPlan?: PlayerDevelopmentPlan | null;
