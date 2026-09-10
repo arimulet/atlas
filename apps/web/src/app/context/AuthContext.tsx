@@ -7,6 +7,7 @@ import {
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signOut,
+  type Auth,
   type User
 } from "firebase/auth";
 import { auth } from "../services/firebase";
@@ -21,6 +22,16 @@ export interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const FIREBASE_CONFIGURATION_ERROR =
+  "La autenticación no está configurada. Configure las variables NEXT_PUBLIC_FIREBASE_* e intente nuevamente.";
+
+function getFirebaseAuth(): Auth {
+  if (!auth) {
+    throw new Error(FIREBASE_CONFIGURATION_ERROR);
+  }
+
+  return auth;
+}
 
 export function translateFirebaseError(code: string): string {
   switch (code) {
@@ -53,6 +64,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
+    if (!auth) {
+      setLoading(false);
+      return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       setLoading(false);
@@ -76,8 +92,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (email: string, pass: string) => {
+    const firebaseAuth = getFirebaseAuth();
+
     try {
-      await signInWithEmailAndPassword(auth, email, pass);
+      await signInWithEmailAndPassword(firebaseAuth, email, pass);
     } catch (err) {
       const code = (err as { code?: string })?.code || "";
       throw new Error(translateFirebaseError(code));
@@ -85,8 +103,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signUp = async (email: string, pass: string) => {
+    const firebaseAuth = getFirebaseAuth();
+
     try {
-      await createUserWithEmailAndPassword(auth, email, pass);
+      await createUserWithEmailAndPassword(firebaseAuth, email, pass);
     } catch (err) {
       const code = (err as { code?: string })?.code || "";
       throw new Error(translateFirebaseError(code));
@@ -94,8 +114,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
+    const firebaseAuth = getFirebaseAuth();
+
     try {
-      await signOut(auth);
+      await signOut(firebaseAuth);
       await fetch("/api/user/session", { method: "DELETE" }).catch(() => null);
     } catch (err) {
       const code = (err as { code?: string })?.code || "";
@@ -104,8 +126,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const resetPassword = async (email: string) => {
+    const firebaseAuth = getFirebaseAuth();
+
     try {
-      await sendPasswordResetEmail(auth, email);
+      await sendPasswordResetEmail(firebaseAuth, email);
     } catch (err) {
       const code = (err as { code?: string })?.code || "";
       throw new Error(translateFirebaseError(code));

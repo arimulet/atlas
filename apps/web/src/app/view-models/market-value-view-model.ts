@@ -13,7 +13,7 @@ import type {
   TrainingKindMarketValueComparison
 } from "@atlas/domain";
 import type { MoneyTotal } from "@atlas/web/app/types";
-import { formatMoney } from "../formatters";
+import { formatAge, formatDate, formatMoney, formatSignedWeeks, formatWeeks } from "../formatters";
 
 const MAX_VISIBLE_COMPARABLES = 5;
 
@@ -289,7 +289,7 @@ function createComparableViewModel(
     keySkills: keySkillsLabel(comparable),
     similarity: `${Math.round(comparable.similarityScore * 100)}%`,
     salePrice: amount(comparable.normalizedSalePrice, currency),
-    date: comparableDateLabel(comparable.transfer.transferDate),
+    date: formatDate(comparable.transfer.transferDate),
     differences: comparable.differences.map(comparableDifferenceLabel).slice(0, 4),
     isOutlier: comparable.outlier !== undefined
   };
@@ -548,21 +548,3 @@ function milestoneLabel(value: string): string {
   return "Skill target complete";
 }
 
-function formatAge(value: number | null): string {
-  return value === null ? "—" : `~${value.toLocaleString("en-US", { maximumFractionDigits: 1 })}`;
-}
-
-function comparableDateLabel(value: Date): string {
-  const date = value instanceof Date ? value : new Date(value);
-  return Number.isFinite(date.getTime()) ? date.toLocaleDateString("en-US") : "—";
-}
-
-function formatWeeks(value: number | null): string {
-  return value === null ? "—" : `~${value.toLocaleString("en-US", { maximumFractionDigits: 1 })}w`;
-}
-
-function formatSignedWeeks(value: number | null): string {
-  return value === null
-    ? "—"
-    : `${value >= 0 ? "+" : ""}${value.toLocaleString("en-US", { maximumFractionDigits: 1 })}w`;
-}

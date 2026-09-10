@@ -5,6 +5,7 @@ import {
   type YouthDecisionMessage,
   type YouthDecisionViewModel
 } from "./youth-decision-view-model";
+import { capitalize, formatGameWeek, formatRank, formatWeeks } from "../../formatters";
 
 interface YouthDecisionCardProps {
   model: YouthDecisionViewModel;
@@ -105,7 +106,7 @@ export function YouthDecisionCard({ model, onSelectPlayer }: YouthDecisionCardPr
             <MetricRow label="Next planned skill-up" value={model.development.nextSkillUpLabel} />
             <MetricRow
               label="Target completion"
-              value={formatWeeks(model.development.targetCompletionWeeks)}
+              value={formatWeeks(model.development.targetCompletionWeeks, { fallback: "Unknown", unit: "long" })}
             />
             <MessageGroup title="Projection notes" messages={model.development.forecastWarnings} />
             <MetricRow
@@ -244,20 +245,4 @@ function MessageList({
       ))}
     </ul>
   );
-}
-
-function formatWeeks(value: number | null): string {
-  return value === null ? "Unknown" : `~${Math.round(value)} weeks`;
-}
-
-function formatGameWeek(value: number | null): string {
-  return value === null ? "Unknown" : `~GW ${value}`;
-}
-
-function formatRank(value: number | null): string {
-  return value === null ? "Unknown" : `#${value}`;
-}
-
-function capitalize(value: string): string {
-  return value.charAt(0).toUpperCase() + value.slice(1);
 }

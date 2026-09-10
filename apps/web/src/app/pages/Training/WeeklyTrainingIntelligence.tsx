@@ -1,5 +1,5 @@
 import { PlayerLink } from "../../components/PlayerLink";
-import { formatPercentage } from "../../formatters";
+import { formatDate, formatPercentage } from "../../formatters";
 import type { TrainingPageData } from "../../types";
 import {
   createTrainingIntelligenceViewModel,
@@ -67,7 +67,7 @@ function WeeklyTrainingIntelligenceContent({
           <h2 id="weekly-intelligence-title">Weekly Training Intelligence</h2>
         </div>
         <span className="atlas-training-intelligence__week">
-          Week {data.summary.gameWeek} · {formatWeekDate(data.summary.date)}
+          Week {data.summary.gameWeek} · {formatDate(data.summary.date, { month: "short", day: "numeric" }, "date unavailable")}
         </span>
       </div>
 
@@ -302,11 +302,4 @@ function statusIcon(status: string): string {
   if (status === "Remove") return "↓";
   if (status === "Hold") return "!";
   return "•";
-}
-
-function formatWeekDate(date: string): string {
-  const parsed = new Date(date);
-  return Number.isNaN(parsed.getTime())
-    ? "date unavailable"
-    : parsed.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }

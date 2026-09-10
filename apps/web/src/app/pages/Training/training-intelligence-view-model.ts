@@ -11,6 +11,7 @@ import type {
   WeeklyTrainingIntelligence,
   WeeklyTrainingReportResponse
 } from "../../types";
+import { capitalize, formatWeeks } from "../../formatters";
 
 export type TrainingAttentionPriority = "high" | "medium" | "low";
 export type TrainingAttentionType =
@@ -494,10 +495,3 @@ function rankFor(
   return ranking.find((entry) => entry.playerId === playerId)?.rank ?? null;
 }
 
-function formatWeeks(weeks: number): string {
-  return weeks < 1 ? "less than one week" : `${weeks.toFixed(1)} weeks`;
-}
-
-function capitalize(value: string): string {
-  return value.charAt(0).toUpperCase() + value.slice(1);
-}

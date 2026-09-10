@@ -8,6 +8,7 @@ import type {
   YouthPipelinePlanning
 } from "@atlas/web/app/types";
 import type { TrainingDiagnostic } from "./training-view-model";
+import { formatDiagnosticNumber } from "../formatters";
 
 export type DiagnosticArea = "Training" | "Squad" | "Youth" | "Player";
 export type DiagnosticSubjectType = "player" | "youth";
@@ -333,10 +334,4 @@ function diagnosticRoleLabel(value: DiagnosticParameterValue | undefined): strin
 
 function diagnosticStringValue(value: DiagnosticParameterValue | undefined): string {
   return value === null || value === undefined ? "dato no disponible" : String(value);
-}
-
-function formatDiagnosticNumber(value: DiagnosticParameterValue | undefined): string {
-  return typeof value === "number"
-    ? value.toLocaleString("es-AR")
-    : diagnosticStringValue(value);
 }
