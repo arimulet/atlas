@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import {
   AlertCircle,
   AlertTriangle,
+  ArrowRightLeft,
   ChevronDown,
   ChevronRight,
   Info,
@@ -11,7 +12,7 @@ import {
   TrendingDown,
   TrendingUp
 } from "lucide-react";
-import type { TrainingPageData, TrainingReport } from "@atlas/web/app/types";
+import type { SquadPlanningBundle, SquadRole, TrainingPageData, TrainingReport } from "@atlas/web/app/types";
 import {
   formatEta,
   formatNumber,
@@ -22,7 +23,8 @@ import {
 import { CountryNameFlag } from "@/components/CountryNameFlag";
 import { PlayerLink } from "@/components/PlayerLink";
 import { isSquadSkillRequiredForPosition } from "@/app/view-models/squad-view-model";
-import { formatMarketMoney } from "@/app/view-models/market-value-view-model";
+import { createPlayerMarketValueViewModel, formatMarketMoney } from "@/app/view-models/market-value-view-model";
+import { SquadPlanningRoleControl } from "@/components/Squad/SquadPlanningRoleControl";
 import { TrainingDetails } from "./TrainingDetails";
 import { PLAYER_SKILL_DEFINITIONS, type PlayerSkillKey } from "@/app/view-models/player-skills";
 import {
@@ -49,6 +51,8 @@ interface TrainingPlayerTablesProps {
   players: TrainingPageData["players"];
   projectionSummaries: TrainingProps["projectionSummaries"];
   recommendations: ReadonlyMap<string, string>;
+  squadPlanning?: SquadPlanningBundle | null;
+  onSaveSquadRole?: (playerId: string, role: SquadRole | null) => Promise<void>;
 }
 
 export function TrainingPlayerTables({
@@ -59,7 +63,9 @@ export function TrainingPlayerTables({
   onSelectPlayer,
   players,
   projectionSummaries,
-  recommendations
+  recommendations,
+  squadPlanning,
+  onSaveSquadRole
 }: TrainingPlayerTablesProps) {
   const rows = createTrainingPlayerRows(players, diagnostic, projectionSummaries);
   const playerById = new Map(players.map((player) => [String(player.playerId), player]));
@@ -94,11 +100,13 @@ export function TrainingPlayerTables({
             <TrainingPositionTable
               currency={currency}
               history={history}
+              onSaveSquadRole={onSaveSquadRole}
               onSelectPlayer={onSelectPlayer}
               playerById={playerById}
               players={positionRows}
               position={position.code}
               recommendations={recommendations}
+              squadPlanning={squadPlanning}
             />
           </section>
         );
@@ -110,21 +118,25 @@ export function TrainingPlayerTables({
 interface TrainingPositionTableProps {
   currency?: string | null;
   history: TrainingReport[];
+  onSaveSquadRole?: (playerId: string, role: SquadRole | null) => Promise<void>;
   onSelectPlayer: (playerId: string) => void;
   playerById: Map<string, TrainingPageData["players"][number]>;
   players: TrainingPlayerRow[];
   position: TrainingPositionCode;
   recommendations: ReadonlyMap<string, string>;
+  squadPlanning?: SquadPlanningBundle | null;
 }
 
 function TrainingPositionTable({
   currency,
   history,
+  onSaveSquadRole,
   onSelectPlayer,
   playerById,
   players,
   position,
-  recommendations
+  recommendations,
+  squadPlanning
 }: TrainingPositionTableProps) {
   const [expandedPlayerId, setExpandedPlayerId] = useState<string | null>(null);
 
@@ -139,7 +151,8 @@ function TrainingPositionTable({
           {PLAYER_SKILL_DEFINITIONS.map((skill) => (
             <col className="is-skill" key={skill.key} />
           ))}
-          <col className="is-recommendation" />
+          <col className="is-market-value" />
+          <col className="is-planning" />
         </colgroup>
         <thead>
           <tr className="atlas-training-table__columns-row">
@@ -161,7 +174,12 @@ function TrainingPositionTable({
                 {skill.shortLabel}
               </th>
             ))}
-            <th scope="col">Recommendation</th>
+            <th className="atlas-training-table__col-market-value" scope="col">
+              Market Value
+            </th>
+            <th className="atlas-training-table__col-planning" scope="col">
+              Planning
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -172,6 +190,7 @@ function TrainingPositionTable({
                 history={history.filter((report) => String(report.playerId) === player.playerId)}
                 isDetailsOpen={expandedPlayerId === player.playerId}
                 key={player.playerId}
+                onSaveSquadRole={onSaveSquadRole}
                 onSelectPlayer={onSelectPlayer}
                 onToggleDetails={() =>
                   setExpandedPlayerId((current) =>
@@ -182,11 +201,12 @@ function TrainingPositionTable({
                 position={position}
                 recommendation={recommendations.get(player.playerId) ?? ""}
                 sourcePlayer={playerById.get(player.playerId) ?? null}
+                squadPlanning={squadPlanning}
               />
             ))
           ) : (
             <tr>
-              <td className="atlas-training-table__empty" colSpan={14}>
+              <td className="atlas-training-table__empty" colSpan={15}>
                 No players assigned.
               </td>
             </tr>
@@ -201,28 +221,43 @@ interface TrainingPlayerRowsProps {
   currency?: string | null;
   history: TrainingReport[];
   isDetailsOpen: boolean;
+  onSaveSquadRole?: (playerId: string, role: SquadRole | null) => Promise<void>;
   onSelectPlayer: (playerId: string) => void;
   onToggleDetails: () => void;
   recommendation: string;
   player: TrainingPlayerRow;
   position: TrainingPositionCode;
   sourcePlayer: TrainingPageData["players"][number] | null;
+  squadPlanning?: SquadPlanningBundle | null;
 }
 
 function TrainingPlayerRows({
   currency,
   history,
   isDetailsOpen,
+  onSaveSquadRole,
   onSelectPlayer,
   onToggleDetails,
   recommendation,
   player,
   position,
-  sourcePlayer
+  sourcePlayer,
+  squadPlanning
 }: TrainingPlayerRowsProps) {
   const changes = new Map(
     player.skillChanges.map((change) => [trainingSkillKey(change.skill), change.delta])
   );
+  const depthPlayers = squadPlanning?.assessment.depthPlayers ?? [];
+  const depthPlayer =
+    depthPlayers.find(
+      (candidate) =>
+        identifiersMatch(candidate.playerId, player.playerId) ||
+        identifiersMatch(candidate.playerId, sourcePlayer?.id)
+    ) ?? null;
+
+  const marketValueViewModel = depthPlayer
+    ? createPlayerMarketValueViewModel(depthPlayer, currency ?? null)
+    : null;
 
   return (
     <>
@@ -245,6 +280,7 @@ function TrainingPlayerRows({
           </PlayerLink>
           <TrainingKind kind={player.trainingKind} />
           <TrainingStatusIndicator status={player.status} />
+          <TrainingRecommendationIndicator recommendation={recommendation} />
         </th>
         <td className="atlas-training-table__numeric">{formatTalent(player.talent)}</td>
         <td className="atlas-training-table__numeric">{player.age}</td>
@@ -270,12 +306,29 @@ function TrainingPlayerRows({
             value={skillValue(sourcePlayer, sourcePlayer?.latestReport?.skills, skill.key)}
           />
         ))}
-
-        <td className="atlas-training-table__recommendation">{recommendation}</td>
+        <td className="atlas-training-table__numeric atlas-training-table__market-value">
+          {marketValueViewModel?.current.expected.label ?? "—"}
+        </td>
+        <td className="atlas-training-table__planning">
+          {onSaveSquadRole ? (
+            <SquadPlanningRoleControl
+              onSaveSquadRole={onSaveSquadRole}
+              playerId={player.playerId}
+              playerName={player.playerName}
+              planningPlayer={depthPlayer}
+            />
+          ) : depthPlayer ? (
+            <span className={`atlas-squad-planning-badge is-${depthPlayer.role}`}>
+              {depthPlayer.role}
+            </span>
+          ) : (
+            "—"
+          )}
+        </td>
       </tr>
       {isDetailsOpen ? (
         <tr className="atlas-training-player-detail-row">
-          <td colSpan={14}>
+          <td colSpan={15}>
             <div className="atlas-training-player-detail__content">
               <dl>
                 <div>
@@ -300,6 +353,15 @@ function TrainingPlayerRows({
       ) : null}
     </>
   );
+}
+
+function identifiersMatch(
+  left: string | number | null | undefined,
+  right: string | number | null | undefined
+): boolean {
+  return left !== null && left !== undefined && right !== null && right !== undefined
+    ? String(left) === String(right)
+    : false;
 }
 
 function SkillCell({
@@ -376,6 +438,27 @@ function trainingStatusPresentation(status: NonNullable<TrainingPlayerRow["statu
   }
 
   return { icon: <Info size={13} />, label: "Training information" };
+}
+
+function TrainingRecommendationIndicator({
+  recommendation
+}: {
+  recommendation: string | undefined;
+}) {
+  if (!recommendation) return null;
+  const isActionRequired = recommendation.toLowerCase().startsWith("switch");
+  if (!isActionRequired) return null;
+
+  return (
+    <span
+      aria-label={`Recommended action: ${recommendation}`}
+      className="atlas-training-recommendation-indicator"
+      role="img"
+      title={`Recommended action: ${recommendation}`}
+    >
+      <ArrowRightLeft size={10} />
+    </span>
+  );
 }
 function skillValue(
   sourcePlayer: TrainingPageData["players"][number] | null,

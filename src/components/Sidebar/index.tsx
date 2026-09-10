@@ -1,7 +1,6 @@
 import {
   LayoutDashboard,
   Users,
-  Dumbbell,
   UserCog,
   GraduationCap,
   CircleDollarSign,
@@ -36,12 +35,6 @@ const navigationGroups: NavigationGroup[] = [
         label: "Squad",
         icon: <Users size={ICON_SIZE} />,
         path: pathForMainView("squad")
-      },
-      {
-        id: "training",
-        label: "Training",
-        icon: <Dumbbell size={ICON_SIZE} />,
-        path: pathForMainView("training")
       },
       {
         id: "player-decisions",
