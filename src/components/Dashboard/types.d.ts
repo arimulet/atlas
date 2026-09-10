@@ -1,6 +1,7 @@
 import type {
   DashboardStatus,
   ClubDashboard,
+  ImportResponse,
   RealYouthAcademyPlanning,
   SquadPlanningBundle
 } from "@atlas/web/app/types";
@@ -15,4 +16,6 @@ export interface DashboardProps {
   squadPlanningStatus: DashboardStatus;
   youthStatus: DashboardStatus;
   financialStrategy: FinancialStrategyState;
+  diagnostic?: ImportResponse["diagnostic"] | null;
 }
+

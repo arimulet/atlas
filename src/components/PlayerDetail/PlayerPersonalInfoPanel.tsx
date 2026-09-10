@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { CircleDashed, Sparkles } from "lucide-react";
 import type { PlayerDetailViewModel } from "@/app/view-models/player-detail-view-model";
 import { CountryNameFlag } from "@/components/CountryNameFlag";
 
@@ -81,9 +82,9 @@ function InfoFact({ label, value }: InfoFactProps) {
   );
 }
 
-function trainingKindIcon(kind: PlayerDetailViewModel["training"]["trainingKind"]): string {
-  if (kind === "advanced") return "⚡";
-  if (kind === "formation") return "◌";
+function trainingKindIcon(kind: PlayerDetailViewModel["training"]["trainingKind"]): ReactNode {
+  if (kind === "advanced") return <Sparkles size={12} />;
+  if (kind === "formation") return <CircleDashed size={12} />;
   return "—";
 }
 

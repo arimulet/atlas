@@ -168,12 +168,6 @@ function identifiersMatch(
     : false;
 }
 
-export function createSquadAttentionFindings(
-  diagnostic: TrainingDiagnostic | null
-): TrainingDiagnostic["findings"] {
-  return [...(diagnostic?.findings ?? [])].sort(compareDiagnosticSeverity).slice(0, 5);
-}
-
 function createSkillValues(
   skills: PlayerDevelopment["observed"]["players"][number]["skills"] | null
 ): Record<SquadSkillKey, number | null> {
@@ -193,18 +187,4 @@ function createSkillValues(
       striker: null
     }
   );
-}
-
-function compareDiagnosticSeverity(
-  first: TrainingDiagnostic["findings"][number],
-  second: TrainingDiagnostic["findings"][number]
-): number {
-  const severityOrder: Record<TrainingDiagnostic["findings"][number]["severity"], number> = {
-    high: 0,
-    medium: 1,
-    low: 2,
-    info: 3
-  };
-
-  return severityOrder[first.severity] - severityOrder[second.severity];
 }

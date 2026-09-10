@@ -15,4 +15,5 @@ export interface TrainingProps {
   trainingStatus: DashboardStatus;
   onSelectPlayer: (playerId: string) => void;
   projectionSummaries?: ReadonlyMap<string, PlayerTrainingProjectionSummary>;
+  currency?: string | null;
 }

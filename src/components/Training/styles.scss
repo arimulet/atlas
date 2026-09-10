@@ -143,7 +143,7 @@
 
 .atlas .atlas-training-table {
   border-collapse: collapse;
-  min-width: 1040px;
+  min-width: 1200px;
   table-layout: fixed;
   width: 100%;
 }
@@ -692,6 +692,16 @@
   font-weight: 800;
 }
 
+.atlas .atlas-training-table__value.is-value-up {
+  color: var(--semantic-success-text) !important;
+  font-weight: 700;
+}
+
+.atlas .atlas-training-table__value.is-value-down {
+  color: var(--semantic-error-text) !important;
+  font-weight: 700;
+}
+
 .atlas .atlas-training-kind {
   font-size: 0.82rem;
 }
@@ -833,31 +843,33 @@
   border-left: 1px solid var(--atlas-border);
 }
 
-.atlas .atlas-training-table--skills thead .atlas-training-table__columns-row th:nth-child(11),
-.atlas .atlas-training-table--skills tbody td:nth-child(11) {
-  border-left: 1px solid var(--atlas-border);
-}
-
 .atlas .atlas-training-table--skills .is-position-skill {
   color: var(--atlas-text);
   font-weight: 800;
 }
 
 .atlas .atlas-training-kind {
+  align-items: center;
+  display: inline-flex;
   margin-left: 6px;
+  vertical-align: middle;
 }
 
 .atlas .atlas-training-player-detail__toggle {
+  align-items: center;
   background: var(--atlas-surface-raised, var(--atlas-surface));
   border: 1px solid var(--atlas-border);
   border-radius: var(--atlas-radius-sm);
   color: var(--atlas-text-secondary);
   cursor: pointer;
+  display: inline-flex;
   font: inherit;
   font-size: 0.78rem;
+  justify-content: center;
   line-height: 1;
   margin-right: 7px;
-  padding: 3px 6px;
+  padding: 2px 4px;
+  vertical-align: middle;
 }
 
 .atlas .atlas-training-player-detail__toggle + img {
@@ -874,6 +886,8 @@
 }
 
 .atlas .atlas-training-table__skill-marker {
+  align-items: center;
+  display: inline-flex;
   position: absolute;
   right: calc(50% + 0.7em);
   top: 50%;
@@ -900,10 +914,11 @@
   display: inline-flex;
   font-size: 0.65rem;
   font-weight: 800;
-  height: 15px;
+  height: 16px;
   justify-content: center;
   margin-left: 5px;
-  width: 15px;
+  vertical-align: middle;
+  width: 16px;
 }
 
 .atlas .atlas-training-status-indicator.is-critical {
@@ -926,9 +941,23 @@
   color: var(--atlas-accent);
 }
 
-.atlas .atlas-training-table--skills thead .atlas-training-table__columns-row th:nth-child(11),
-.atlas .atlas-training-table--skills tbody td:nth-child(11) {
-  border-left: 1px solid var(--atlas-border);
+.atlas .atlas-training-recommendation-indicator {
+  align-items: center;
+  background: color-mix(in srgb, var(--atlas-accent) 18%, transparent);
+  border-radius: 50%;
+  color: var(--atlas-accent);
+  cursor: help;
+  display: inline-flex;
+  font-size: 0.65rem;
+  height: 16px;
+  justify-content: center;
+  margin-left: 5px;
+  vertical-align: middle;
+  width: 16px;
+}
+
+.atlas .atlas-training-recommendation-indicator:hover {
+  background: color-mix(in srgb, var(--atlas-accent) 32%, transparent);
 }
 
 .atlas .atlas-training-table-wrap {
@@ -988,29 +1017,40 @@
 }
 
 .atlas .atlas-training-table--skills col.is-player {
-  width: 25%;
+  width: 19%;
+}
+
+.atlas .atlas-training-table--skills col.is-talent {
+  width: 4.5%;
 }
 
 .atlas .atlas-training-table--skills col.is-age {
-  width: 5%;
+  width: 3.5%;
+}
+
+.atlas .atlas-training-table--skills col.is-value {
+  width: 10%;
 }
 
 .atlas .atlas-training-table--skills col.is-skill {
-  width: 5.25%;
+  width: 4%;
 }
 
-.atlas .atlas-training-table--skills col.is-recommendation {
-  width: 28%;
+.atlas .atlas-training-table--skills col.is-market-value {
+  width: 11%;
+}
+
+.atlas .atlas-training-table--skills col.is-planning {
+  width: 16%;
 }
 
 .atlas .atlas-training-table--skills th:first-child,
 .atlas .atlas-training-table--skills td:first-child,
 .atlas .atlas-training-table--skills th:nth-child(2),
 .atlas .atlas-training-table--skills td:nth-child(2),
-.atlas .atlas-training-table--skills th:nth-child(n + 3):nth-child(-n + 10),
-.atlas .atlas-training-table--skills td:nth-child(n + 3):nth-child(-n + 10),
-.atlas .atlas-training-table--skills th:last-child,
-.atlas .atlas-training-table__recommendation {
+.atlas .atlas-training-table--skills th:nth-child(n + 3):nth-child(-n + 15),
+.atlas .atlas-training-table--skills td:nth-child(n + 3):nth-child(-n + 15),
+.atlas .atlas-training-table--skills th:last-child {
   width: auto;
 }
 
@@ -1343,46 +1383,68 @@
 }
 
 .atlas .atlas-training-table--skills col.is-player {
-  width: 25%;
+  width: 19%;
 }
 
 .atlas .atlas-training-table--skills col.is-talent {
-  width: 6%;
+  width: 4.5%;
 }
 
 .atlas .atlas-training-table--skills col.is-age {
-  width: 4%;
+  width: 3.5%;
+}
+
+.atlas .atlas-training-table--skills col.is-value {
+  width: 10%;
 }
 
 .atlas .atlas-training-table--skills col.is-skill {
-  width: 5.25%;
+  width: 4%;
 }
 
-.atlas .atlas-training-table--skills col.is-recommendation {
-  width: 23%;
+.atlas .atlas-training-table--skills col.is-market-value {
+  width: 11%;
+}
+
+.atlas .atlas-training-table--skills col.is-planning {
+  width: 16%;
+}
+
+.atlas .atlas-training-table__market-value {
+  padding-left: 4px;
+  padding-right: 8px;
+}
+
+.atlas .atlas-training-table__planning {
+  padding-left: 8px;
+  padding-right: 8px;
 }
 
 .atlas .atlas-training-player-detail__content dl {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-/* Age remains independent; Skills starts at STA and ends at SCO. */
+/* Age & Value group together (col 3); Skills starts at FOR (col 5) and ends at SCO (col 13). Market Value is col 14. Planning is col 15. */
 .atlas .atlas-training-table--skills thead .atlas-training-table__columns-row th:nth-child(3),
 .atlas .atlas-training-table--skills tbody td:nth-child(3) {
   border-left: 1px solid var(--atlas-border);
 }
 
-.atlas .atlas-training-table--skills thead .atlas-training-table__columns-row th:nth-child(4),
-.atlas .atlas-training-table--skills tbody td:nth-child(4) {
+.atlas .atlas-training-table--skills thead .atlas-training-table__columns-row th:nth-child(5),
+.atlas .atlas-training-table--skills tbody td:nth-child(5) {
   border-left: 1px solid var(--atlas-border);
 }
 
-.atlas .atlas-training-table--skills thead .atlas-training-table__columns-row th:nth-child(11),
-.atlas .atlas-training-table--skills tbody td:nth-child(11) {
-  border-left: 0;
+.atlas .atlas-training-table--skills thead .atlas-training-table__columns-row th:nth-child(14),
+.atlas .atlas-training-table--skills tbody td:nth-child(14),
+.atlas .atlas-training-table--skills .atlas-training-table__col-market-value,
+.atlas .atlas-training-table--skills .atlas-training-table__market-value {
+  border-left: 1px solid var(--atlas-border);
 }
 
-.atlas .atlas-training-table--skills thead .atlas-training-table__columns-row th:nth-child(12),
-.atlas .atlas-training-table--skills tbody td:nth-child(12) {
+.atlas .atlas-training-table--skills thead .atlas-training-table__columns-row th:nth-child(15),
+.atlas .atlas-training-table--skills tbody td:nth-child(15),
+.atlas .atlas-training-table--skills .atlas-training-table__col-planning,
+.atlas .atlas-training-table--skills .atlas-training-table__planning {
   border-left: 1px solid var(--atlas-border);
 }

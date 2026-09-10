@@ -23,7 +23,7 @@ const mainPaths: Record<MainViewId, string> = {
   dashboard: "/",
   squad: "/squad",
   "player-decisions": "/player-decisions",
-  training: "/training",
+  training: "/squad",
   youth: "/youth",
   "youth-performances": "/youth/performances",
   finances: "/finances",

@@ -1,14 +1,18 @@
-import { useMemo } from "react";
+import { useMemo, type ReactNode } from "react";
 import type {
   ClubDashboardDevelopmentPlayer,
   ClubDashboardYouthPipelinePlayer,
   DashboardStatus,
+  DiagnosticFinding,
   RealYouthAcademyPlayerPlan,
   Severity
 } from "@atlas/web/app/types";
 import type { DashboardProps } from "./types";
-import { PlanningFocus } from "./PlanningFocus";
-import { createSquadPriorityActionsViewModel } from "../Squad/squad-planning-view-model";
+import {
+  SquadPlanningSections,
+  planningConfidenceWarning
+} from "../Squad/SquadPlanningSections";
+import { createSquadPlanningViewModel } from "../Squad/squad-planning-view-model";
 
 import { AttentionIcon } from "@/components/AttentionIcon";
 import { PlayerLink } from "@/components/PlayerLink";
@@ -23,7 +27,7 @@ interface WatchPlayer {
   severity: Severity;
 }
 
-interface AttentionItem {
+export interface AttentionItem {
   id: string;
   playerId: string | null;
   name: string | null;
@@ -45,12 +49,14 @@ export function Dashboard({
   youthAcademy,
   squadPlanning,
   squadPlanningStatus,
-  financialStrategy
+  financialStrategy,
+  diagnostic
 }: DashboardProps) {
-  const attentionItems = dashboard ? buildAttentionItems(dashboard, youthAcademy) : [];
+  const attentionItems =
+    dashboard || diagnostic ? buildAttentionItems(dashboard, youthAcademy, diagnostic) : [];
   const watchPlayers = dashboard ? buildWatchPlayers(dashboard, youthAcademy) : [];
-  const planningActions = useMemo(
-    () => (squadPlanning ? createSquadPriorityActionsViewModel(squadPlanning) : []),
+  const planningViewModel = useMemo(
+    () => (squadPlanning ? createSquadPlanningViewModel(squadPlanning) : null),
     [squadPlanning]
   );
 
@@ -75,8 +81,13 @@ export function Dashboard({
       {squadPlanningStatus === "idle" ? (
         <PanelMessage>Squad planning data is not available yet.</PanelMessage>
       ) : null}
-      {squadPlanningStatus === "ready" && squadPlanning ? (
-        <PlanningFocus actions={planningActions} onSelectPlayer={onSelectPlayer} />
+      {squadPlanningStatus === "ready" && planningViewModel ? (
+        <>
+          <SquadPlanningSections onSelectPlayer={onSelectPlayer} viewModel={planningViewModel} />
+          {planningConfidenceWarning(planningViewModel) ? (
+            <PanelMessage tone="quiet">{planningConfidenceWarning(planningViewModel)}</PanelMessage>
+          ) : null}
+        </>
       ) : null}
 
       <FinancialStrategyAlerts
@@ -311,8 +322,8 @@ function PanelHeading({ id, title }: PanelHeadingProps) {
 }
 
 interface PanelMessageProps {
-  children: string;
-  tone?: "error" | "success";
+  children: ReactNode;
+  tone?: "error" | "success" | "quiet";
 }
 
 function PanelMessage({ children, tone }: PanelMessageProps) {
@@ -331,38 +342,41 @@ function PriorityBadge({ severity }: PriorityBadgeProps) {
   );
 }
 
-function buildAttentionItems(
-  dashboard: NonNullable<DashboardProps["dashboard"]>,
-  youthAcademy: DashboardProps["youthAcademy"]
+export function buildAttentionItems(
+  dashboard: DashboardProps["dashboard"],
+  youthAcademy: DashboardProps["youthAcademy"],
+  diagnostic?: DashboardProps["diagnostic"]
 ): AttentionItem[] {
   const items: AttentionItem[] = [];
 
-  for (const player of dashboard.developmentSummary.inferred.highlightedPlayers) {
-    if (player.signal === "improvement") {
-      continue;
+  if (dashboard) {
+    for (const player of dashboard.developmentSummary.inferred.highlightedPlayers) {
+      if (player.signal === "improvement") {
+        continue;
+      }
+
+      items.push({
+        id: `development-${player.playerId ?? player.name}`,
+        playerId: player.playerId,
+        name: player.name,
+        message: developmentReason(player),
+        severity: player.severity
+      });
     }
 
-    items.push({
-      id: `development-${player.playerId ?? player.name}`,
-      playerId: player.playerId,
-      name: player.name,
-      message: developmentReason(player),
-      severity: player.severity
-    });
-  }
+    for (const player of dashboard.youthPipelineSummary.inferred.highlightedPlayers) {
+      if (player.signal === "standout_prospect") {
+        continue;
+      }
 
-  for (const player of dashboard.youthPipelineSummary.inferred.highlightedPlayers) {
-    if (player.signal === "standout_prospect") {
-      continue;
+      items.push({
+        id: `youth-pipeline-${player.playerId ?? player.name}`,
+        playerId: player.playerId,
+        name: player.name,
+        message: youthPipelineReason(player),
+        severity: player.severity
+      });
     }
-
-    items.push({
-      id: `youth-pipeline-${player.playerId ?? player.name}`,
-      playerId: player.playerId,
-      name: player.name,
-      message: youthPipelineReason(player),
-      severity: player.severity
-    });
   }
 
   for (const player of youthAcademy?.derived.players ?? []) {
@@ -379,7 +393,94 @@ function buildAttentionItems(
     });
   }
 
+  for (const finding of diagnostic?.findings ?? []) {
+    items.push(diagnosticAttentionItem(finding));
+  }
+
   return items.sort(compareAttentionItems).slice(0, 5);
+}
+
+function diagnosticAttentionItem(finding: DiagnosticFinding): AttentionItem {
+  const parameters = finding.parameters ?? {};
+  const affectedPlayerId = finding.affectedPlayerIds[0] ?? null;
+
+  if (finding.code.startsWith("squad-balance.") && finding.code.endsWith(".deficit")) {
+    const currentCount = parameters.currentCount ?? 0;
+    const role = parameters.role ? String(parameters.role) : "position";
+    const minimum = parameters.minimum ?? 0;
+    return {
+      id: `diagnostic-${finding.code}`,
+      playerId: null,
+      name: "Squad",
+      message: `Only ${currentCount} ${role}(s); benchmark minimum is ${minimum}.`,
+      severity: finding.severity
+    };
+  }
+
+  if (finding.code === "economic-risk.high-wage-low-value-ratio") {
+    const playerName = parameters.playerName ? String(parameters.playerName) : "Player";
+    const wage =
+      typeof parameters.wage === "number"
+        ? parameters.wage.toLocaleString("en-US")
+        : String(parameters.wage ?? "—");
+    const value =
+      typeof parameters.value === "number"
+        ? parameters.value.toLocaleString("en-US")
+        : String(parameters.value ?? "—");
+    return {
+      id: `diagnostic-${finding.code}-${affectedPlayerId ?? playerName}`,
+      playerId: affectedPlayerId,
+      name: playerName,
+      message: `High wage (${wage}) relative to estimated value (${value}).`,
+      severity: finding.severity
+    };
+  }
+
+  if (finding.code === "asset-risk.senior-high-value") {
+    const playerName = parameters.playerName ? String(parameters.playerName) : "Player";
+    const value =
+      typeof parameters.value === "number"
+        ? parameters.value.toLocaleString("en-US")
+        : String(parameters.value ?? "—");
+    return {
+      id: `diagnostic-${finding.code}-${affectedPlayerId ?? playerName}`,
+      playerId: affectedPlayerId,
+      name: playerName,
+      message: `Senior age with high estimated value (${value}).`,
+      severity: finding.severity
+    };
+  }
+
+  if (finding.code === "training-potential.young-role-fit") {
+    const playerName = parameters.playerName ? String(parameters.playerName) : "Player";
+    return {
+      id: `diagnostic-${finding.code}-${affectedPlayerId ?? playerName}`,
+      playerId: affectedPlayerId,
+      name: playerName,
+      message: "Young player with good role fit.",
+      severity: finding.severity
+    };
+  }
+
+  if (finding.code === "follow-up.incomplete-player-data") {
+    const playerName = parameters.playerName ? String(parameters.playerName) : "Player";
+    return {
+      id: `diagnostic-${finding.code}-${affectedPlayerId ?? playerName}`,
+      playerId: affectedPlayerId,
+      name: playerName,
+      message: "Requires follow-up due to incomplete imported data.",
+      severity: finding.severity
+    };
+  }
+
+  const playerName = parameters.playerName ? String(parameters.playerName) : null;
+  return {
+    id: `diagnostic-${finding.code}-${affectedPlayerId ?? playerName ?? finding.category}`,
+    playerId: affectedPlayerId,
+    name: playerName ?? "Squad",
+    message: finding.code.replace(/[-_.]/g, " "),
+    severity: finding.severity
+  };
 }
 
 function buildWatchPlayers(

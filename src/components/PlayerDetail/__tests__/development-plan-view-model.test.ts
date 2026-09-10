@@ -20,6 +20,8 @@ function createPlayer(): PlayerDetailViewModel {
       playerName: "Test Player",
       trainingPosition: 1,
       age: 18,
+      value: null,
+      valueChange: null,
       trainingType: "defending",
       trainingKind: "advanced",
       intensity: 100,

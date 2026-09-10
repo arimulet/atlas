@@ -180,6 +180,7 @@ export default function HomePage() {
         squadPlanning={squadPlanning}
         squadPlanningStatus={squadPlanningStatus}
         financialStrategy={financialStrategy}
+        diagnostic={diagnostic}
       />
     </AppShell>
   );

@@ -48,7 +48,7 @@ export default function DiagnosticsPage() {
     setTrainingStatus("loading");
 
     try {
-      const [dash, youth, pipeline, train, diag, dev] = await Promise.all([
+      const [, youth, pipeline, train, diag, dev] = await Promise.all([
         fetchClubDashboard(),
         fetchRealYouthAcademyPlanning(),
         fetchYouthPipelinePlanning(),

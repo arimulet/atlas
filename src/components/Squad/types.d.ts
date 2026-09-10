@@ -1,6 +1,5 @@
 import type {
   DashboardStatus,
-  DiagnosticFinding,
   PlayerDevelopment,
   SquadPlanningBundle,
   SquadRole,
@@ -11,6 +10,7 @@ import type { PlayerTrainingProjectionSummary } from "@/app/view-models/player-d
 import type { SquadPlayerRow } from "@/app/view-models/squad-view-model";
 
 export interface SquadProps {
+  clubId?: string | null;
   development: PlayerDevelopment | null;
   onSelectPlayer: (playerId: string) => void;
   onSaveSquadRole: (playerId: string, role: SquadRole | null) => Promise<void>;
@@ -23,11 +23,6 @@ export interface SquadProps {
   currency: string | null;
 }
 
-export interface SquadAttentionProps {
-  diagnostic: TrainingDiagnostic | null;
-  status: DashboardStatus;
-}
-
 export interface SquadTableProps {
   onSaveSquadRole: (playerId: string, role: SquadRole | null) => Promise<void>;
   onSelectPlayer: (playerId: string) => void;
@@ -36,4 +31,3 @@ export interface SquadTableProps {
   status: DashboardStatus;
 }
 
-export type SquadAttentionFinding = DiagnosticFinding;
