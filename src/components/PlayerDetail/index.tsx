@@ -1,4 +1,5 @@
 import { Component, type ReactNode } from "react";
+import { Ban, CircleDashed, Sparkles } from "lucide-react";
 import type { PlayerDetailProps } from "./types";
 import { ProjectionPanel } from "./ProjectionPanel";
 import { formatNumber } from "@/app/formatters";
@@ -320,10 +321,10 @@ function TrainingHistoryKind({
 }) {
   const presentation =
     kind === "advanced"
-      ? { icon: "⚡", label: "Advanced training" }
+      ? { icon: <Sparkles size={12} />, label: "Advanced training" }
       : kind === "formation"
-        ? { icon: "◌", label: "Formation training" }
-        : { icon: "⊘", label: "No training recorded" };
+        ? { icon: <CircleDashed size={12} />, label: "Formation training" }
+        : { icon: <Ban size={12} />, label: "No training recorded" };
 
   return (
     <span
