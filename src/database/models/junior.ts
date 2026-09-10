@@ -1,4 +1,4 @@
-﻿import mongoose, { Schema, model, type InferSchemaType, type Model } from "mongoose";
+import mongoose, { Schema, model, type InferSchemaType, type Model } from "mongoose";
 import { ensureMongooseModels } from "./mongoose-model-registry.js";
 
 ensureMongooseModels();
@@ -8,6 +8,7 @@ const juniorSchema = new Schema(
     juniorId: { type: Number, required: true, min: 1 },
     clubId: { type: Number, required: true, min: 1 },
     name: { type: String, required: true, trim: true },
+    countryId: { type: Number, default: null },
     initialAge: { type: Number, required: true, min: 1 },
     age: { type: Number, required: true, min: 1 },
     initialLevel: { type: Number, required: true, min: 0 },

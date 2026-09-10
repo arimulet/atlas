@@ -1,4 +1,4 @@
-﻿import { Types, type ClientSession } from "mongoose";
+import { Types, type ClientSession } from "mongoose";
 import { JuniorModel } from "../models/junior.js";
 import type { PersistedJunior } from "./types.js";
 
@@ -6,6 +6,7 @@ export interface ResolveJuniorIdentityInput {
   juniorId: number;
   clubId: number;
   name: string;
+  countryId?: number | null;
   age: number;
   currentLevel: number;
   weeksLeft: number;
@@ -28,7 +29,8 @@ export class MongoJuniorRepository {
           currentLevel: input.currentLevel,
           weeksLeft: input.weeksLeft,
           status: "in_academy",
-          ...(input.formation !== null ? { formation: input.formation } : {})
+          ...(input.formation !== null ? { formation: input.formation } : {}),
+          ...(input.countryId !== undefined ? { countryId: input.countryId } : {})
         },
         $setOnInsert: {
           clubId: input.clubId,
@@ -99,6 +101,7 @@ function mapJunior(junior: {
   juniorId: number;
   clubId: number;
   name: string;
+  countryId?: number | null;
   initialAge: number;
   age: number;
   initialLevel: number;
@@ -114,6 +117,7 @@ function mapJunior(junior: {
     juniorId: junior.juniorId,
     clubId: junior.clubId,
     name: junior.name,
+    countryId: junior.countryId ?? null,
     initialAge: junior.initialAge,
     age: junior.age,
     initialLevel: junior.initialLevel,
