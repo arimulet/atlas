@@ -18,8 +18,7 @@
       "@atlas/contracts": ["packages/contracts/src/index.ts"],
       "@atlas/database": ["packages/database/src/index.ts"],
       "@atlas/domain": ["packages/domain/src/index.ts"],    
-      "@atlas/api/*": ["apps/api/src/*"],      
-      "@atlas/web/*": ["apps/web/src/*"],      
+      "@atlas/web/*": ["apps/web/src/*"]
     }
   }
 }

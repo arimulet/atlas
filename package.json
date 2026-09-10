@@ -10,8 +10,7 @@
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",
-    "dev": "concurrently \"npm run dev:api\" \"npm run dev:web\"",
-    "dev:api": "npm run dev -w @atlas/api",
+    "dev": "npm run dev:web",
     "dev:web": "npm run dev -w @atlas/web",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
