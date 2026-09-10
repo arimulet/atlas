@@ -1,3 +1,4 @@
+import { X } from "lucide-react";
 import type { TrainingPageData, TrainingReport } from "@atlas/web/app/types";
 
 interface RecentTrainingProgressModalProps {
@@ -49,7 +50,7 @@ export function RecentTrainingProgressModal({
             <h2 id="recent-progress-title">Recent Progress</h2>
           </div>
           <button aria-label="Close recent progress" onClick={onClose} type="button">
-            ×
+            <X size={16} />
           </button>
         </div>
         {changes.length === 0 ? (

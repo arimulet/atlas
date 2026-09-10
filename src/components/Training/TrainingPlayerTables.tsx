@@ -1,4 +1,16 @@
 import { useState } from "react";
+import type { ReactNode } from "react";
+import {
+  AlertCircle,
+  AlertTriangle,
+  ChevronDown,
+  ChevronRight,
+  Info,
+  Sparkles,
+  Star,
+  TrendingDown,
+  TrendingUp
+} from "lucide-react";
 import type { TrainingPageData, TrainingReport } from "@atlas/web/app/types";
 import {
   formatEta,
@@ -223,7 +235,7 @@ function TrainingPlayerRows({
             onClick={onToggleDetails}
             type="button"
           >
-            {isDetailsOpen ? "−" : "+"}
+            {isDetailsOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
           </button>
           {sourcePlayer?.countryName ? (
             <CountryNameFlag countryName={sourcePlayer.countryName} />
@@ -303,16 +315,19 @@ function SkillCell({
 }) {
   const changeClass = change === null ? "" : change > 0 ? " is-skill-up" : " is-skill-down";
   const importantClass = isImportant ? " is-position-skill" : "";
-  const marker = change === null ? null : change > 0 ? "↑" : "↓";
   return (
     <td
       className={`atlas-training-table__numeric atlas-training-table__skill${importantClass}${changeClass}`}
       title={change === null ? skill : `${skill} ${change > 0 ? "+" : ""}${change}`}
     >
       <span className="atlas-training-table__skill-value">{value ?? "—"}</span>
-      {marker ? (
+      {change !== null && change > 0 ? (
         <span aria-hidden="true" className="atlas-training-table__skill-marker">
-          {marker}
+          <TrendingUp size={12} />
+        </span>
+      ) : change !== null && change < 0 ? (
+        <span aria-hidden="true" className="atlas-training-table__skill-marker">
+          <TrendingDown size={12} />
         </span>
       ) : null}
     </td>
@@ -327,7 +342,7 @@ function TrainingKind({ kind }: { kind: TrainingPlayerRow["trainingKind"] }) {
       className="atlas-training-kind is-advanced"
       title="Advanced training"
     >
-      ◆
+      <Sparkles size={12} />
     </span>
   );
 }
@@ -348,19 +363,19 @@ function TrainingStatusIndicator({ status }: { status: TrainingPlayerRow["status
 }
 
 function trainingStatusPresentation(status: NonNullable<TrainingPlayerRow["status"]>): {
-  icon: string;
+  icon: ReactNode;
   label: string;
 } {
-  if (status === "Critical") return { icon: "⚠", label: "Critical training warning" };
-  if (status === "Attention") return { icon: "!", label: "Training warning" };
+  if (status === "Critical") return { icon: <AlertTriangle size={13} />, label: "Critical training warning" };
+  if (status === "Attention") return { icon: <AlertCircle size={13} />, label: "Training warning" };
   if (status === "Training prospect") {
     return {
-      icon: "✦",
+      icon: <Star size={13} />,
       label: "Training prospect: young player with a strong role fit"
     };
   }
 
-  return { icon: "i", label: "Training information" };
+  return { icon: <Info size={13} />, label: "Training information" };
 }
 function skillValue(
   sourcePlayer: TrainingPageData["players"][number] | null,

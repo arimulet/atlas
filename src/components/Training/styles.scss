@@ -849,20 +849,27 @@
 }
 
 .atlas .atlas-training-kind {
+  align-items: center;
+  display: inline-flex;
   margin-left: 6px;
+  vertical-align: middle;
 }
 
 .atlas .atlas-training-player-detail__toggle {
+  align-items: center;
   background: var(--atlas-surface-raised, var(--atlas-surface));
   border: 1px solid var(--atlas-border);
   border-radius: var(--atlas-radius-sm);
   color: var(--atlas-text-secondary);
   cursor: pointer;
+  display: inline-flex;
   font: inherit;
   font-size: 0.78rem;
+  justify-content: center;
   line-height: 1;
   margin-right: 7px;
-  padding: 3px 6px;
+  padding: 2px 4px;
+  vertical-align: middle;
 }
 
 .atlas .atlas-training-player-detail__toggle + img {
@@ -879,6 +886,8 @@
 }
 
 .atlas .atlas-training-table__skill-marker {
+  align-items: center;
+  display: inline-flex;
   position: absolute;
   right: calc(50% + 0.7em);
   top: 50%;
@@ -905,10 +914,11 @@
   display: inline-flex;
   font-size: 0.65rem;
   font-weight: 800;
-  height: 15px;
+  height: 16px;
   justify-content: center;
   margin-left: 5px;
-  width: 15px;
+  vertical-align: middle;
+  width: 16px;
 }
 
 .atlas .atlas-training-status-indicator.is-critical {

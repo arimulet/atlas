@@ -1,3 +1,13 @@
+import type { ReactNode } from "react";
+import {
+  AlertCircle,
+  ArrowRight,
+  ArrowUpDown,
+  Circle,
+  CircleDashed,
+  TrendingDown,
+  TrendingUp
+} from "lucide-react";
 import { PlayerLink } from "@/components/PlayerLink";
 import { formatDate, formatPercentage } from "@/app/formatters";
 import type { TrainingPageData } from "@/app/types";
@@ -140,10 +150,19 @@ interface AttentionCardProps {
 }
 
 function AttentionCard({ item, onSelectPlayer }: AttentionCardProps) {
+  const icon =
+    item.type === "slot_replacement" ? (
+      <ArrowUpDown size={14} />
+    ) : item.type === "recent_skill_up" ? (
+      <TrendingUp size={14} />
+    ) : (
+      <AlertCircle size={14} />
+    );
+
   return (
     <article className={`atlas-training-intelligence__attention-card is-${item.priority}`}>
       <span className="atlas-training-intelligence__attention-icon" aria-hidden="true">
-        {item.type === "slot_replacement" ? "↕" : item.type === "recent_skill_up" ? "↑" : "!"}
+        {icon}
       </span>
       <div className="atlas-training-intelligence__attention-copy">
         <strong>{item.title}</strong>
@@ -229,11 +248,17 @@ function AdvancedSlotReplacement({ onSelectPlayer, replacement }: AdvancedSlotRe
       <span className="atlas-training-intelligence__replacement-label">Suggested change</span>
       <div className="atlas-training-intelligence__replacement-players">
         <PlayerLink playerId={String(replacement.promotePlayerId)} onSelectPlayer={onSelectPlayer}>
-          {`↑ ${replacement.promotePlayerName}`}
+          <span className="atlas-training-replacement-player-name">
+            <TrendingUp size={13} /> {replacement.promotePlayerName}
+          </span>
         </PlayerLink>
-        <span aria-hidden="true">→</span>
+        <span aria-hidden="true" className="atlas-training-replacement-arrow">
+          <ArrowRight size={13} />
+        </span>
         <PlayerLink playerId={String(replacement.removePlayerId)} onSelectPlayer={onSelectPlayer}>
-          {`↓ ${replacement.removePlayerName}`}
+          <span className="atlas-training-replacement-player-name">
+            <TrendingDown size={13} /> {replacement.removePlayerName}
+          </span>
         </PlayerLink>
       </div>
       <p>{replacement.description}</p>
@@ -258,7 +283,13 @@ function AdvancedSlotRow({ onSelectPlayer, row }: AdvancedSlotRowProps) {
       <td className="atlas-training-intelligence__numeric">{row.age ?? "—"}</td>
       <td>{row.position}</td>
       <td>
-        {row.recommendedSkill ? `${row.currentSkill} → ${row.recommendedSkill}` : row.currentSkill}
+        {row.recommendedSkill ? (
+          <span className="atlas-training-intelligence__skill-transition">
+            {row.currentSkill} <ArrowRight size={12} /> {row.recommendedSkill}
+          </span>
+        ) : (
+          row.currentSkill
+        )}
       </td>
       <td>
         <span className="atlas-training-intelligence__status">
@@ -296,10 +327,10 @@ function IntelligencePanelMessage({ children, tone }: IntelligencePanelMessagePr
   );
 }
 
-function statusIcon(status: string): string {
-  if (status === "Promote") return "↑";
-  if (status === "Trial advanced") return "◌";
-  if (status === "Remove") return "↓";
-  if (status === "Hold") return "!";
-  return "•";
+function statusIcon(status: string): ReactNode {
+  if (status === "Promote") return <TrendingUp size={13} />;
+  if (status === "Trial advanced") return <CircleDashed size={13} />;
+  if (status === "Remove") return <TrendingDown size={13} />;
+  if (status === "Hold") return <AlertCircle size={13} />;
+  return <Circle size={10} />;
 }
