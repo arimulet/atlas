@@ -10,6 +10,7 @@ import { TrainingPlayerTables } from "./TrainingPlayerTables";
 
 export function Training({
   clubId,
+  currency,
   onSelectPlayer,
   projectionSummaries,
   training,
@@ -42,6 +43,7 @@ export function Training({
       {trainingStatus === "ready" ? (
         <TrainingPlayerTables
           configuration={training?.configuration ?? null}
+          currency={currency}
           diagnostic={trainingDiagnostic}
           history={training?.history ?? []}
           onSelectPlayer={onSelectPlayer}

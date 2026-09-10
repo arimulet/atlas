@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
+  fetchClubDashboard,
   fetchClubDiagnostic,
   fetchPlayerDevelopment,
   fetchTrainingPageData,
@@ -26,6 +27,7 @@ export default function TrainingPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
 
+  const [currency, setCurrency] = useState<string | null>(null);
   const [isSokkerImportOpen, setIsSokkerImportOpen] = useState(false);
   const [trainingStatus, setTrainingStatus] = useState<DashboardStatus>("idle");
   const [training, setTraining] = useState<TrainingPageData | null>(null);
@@ -35,18 +37,21 @@ export default function TrainingPage() {
   const loadTrainingData = useCallback(async () => {
     setTrainingStatus("loading");
     try {
-      const [trainingData, diagnostic, development] = await Promise.all([
+      const [dash, trainingData, diagnostic, development] = await Promise.all([
+        fetchClubDashboard(),
         fetchTrainingPageData(),
         fetchClubDiagnostic(),
         fetchPlayerDevelopment()
       ]);
 
+      setCurrency(dash.club?.currency ?? null);
       setTraining(trainingData);
       setTrainingDiagnostic(diagnostic);
       setPlayerDevelopment(development);
       setTrainingStatus("ready");
       return true;
     } catch {
+      setCurrency(null);
       setTraining(null);
       setTrainingDiagnostic(null);
       setPlayerDevelopment(null);
@@ -57,6 +62,7 @@ export default function TrainingPage() {
 
   useEffect(() => {
     if (!user) {
+      setCurrency(null);
       setTraining(null);
       setTrainingDiagnostic(null);
       setPlayerDevelopment(null);
@@ -156,6 +162,7 @@ export default function TrainingPage() {
     >
       <Training
         clubId={clubId}
+        currency={currency}
         development={playerDevelopment}
         onSelectPlayer={handleSelectPlayer}
         projectionSummaries={projectionSummaries}

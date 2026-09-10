@@ -1,4 +1,5 @@
 export const PLAYER_SKILL_DEFINITIONS = [
+  { key: "form", shortLabel: "FOR", trainingPriority: 0 },
   { key: "stamina", shortLabel: "STA", trainingPriority: 1 },
   { key: "pace", shortLabel: "PAC", trainingPriority: 8 },
   { key: "technique", shortLabel: "TEC", trainingPriority: 5 },

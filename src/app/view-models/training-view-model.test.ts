@@ -26,9 +26,31 @@ describe("createTrainingPlayerRows", () => {
     );
 
     expect(rows).toEqual([
-      expect.objectContaining({ progress: 82, talent: 3.4, nextSkillUp: 14, etaWeeks: 2 }),
-      expect.objectContaining({ talent: null, nextSkillUp: null, etaWeeks: null })
+      expect.objectContaining({ progress: 82, talent: 3.4, nextSkillUp: 14, etaWeeks: 2, value: null, valueChange: null }),
+      expect.objectContaining({ talent: null, nextSkillUp: null, etaWeeks: null, value: null, valueChange: null })
     ]);
+  });
+
+  it("maps value and valueChange from TrainingPagePlayer", () => {
+    const rows = createTrainingPlayerRows(
+      [
+        {
+          id: "player-1",
+          playerId: 42,
+          name: "Player One",
+          age: 18,
+          value: 500000,
+          valueChange: 25000,
+          training: { position: 2, advanced: true }
+        }
+      ],
+      null
+    );
+
+    expect(rows[0]).toMatchObject({
+      value: 500000,
+      valueChange: 25000
+    });
   });
 
   it("labels a training-potential finding as a positive training prospect", () => {

@@ -8,6 +8,8 @@ export interface TrainingPlayerRow {
   playerName: string;
   trainingPosition: number;
   age: number;
+  value: number | null;
+  valueChange: number | null;
   trainingType: string | null;
   trainingKind: "advanced" | "formation" | "missing" | null;
   intensity: number | null;
@@ -46,6 +48,8 @@ export function createTrainingPlayerRows(
       playerName: player.name,
       trainingPosition: player.training.position,
       age: player.age,
+      value: player.value ?? null,
+      valueChange: player.valueChange ?? null,
       trainingType: player.latestReport?.type ?? null,
       trainingKind: player.latestReport?.kind ?? null,
       intensity: player.latestReport?.intensity ?? null,

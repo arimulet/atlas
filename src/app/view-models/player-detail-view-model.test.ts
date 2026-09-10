@@ -161,6 +161,7 @@ describe("createPlayerDetailViewModel", () => {
       intensity: 100
     });
     expect(history[0]!.skills.map((skill) => skill.key)).toEqual([
+      "form",
       "stamina",
       "pace",
       "technique",

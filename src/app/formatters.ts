@@ -151,6 +151,7 @@ export function formatDiagnosticNumber(
 
 export function formatTrainingPriority(value: number): string {
   const mapping: Record<number, string> = {
+    0: "Forma",
     1: "Condicion",
     2: "Porteria",
     3: "Creacion",
