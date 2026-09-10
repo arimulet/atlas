@@ -1,4 +1,21 @@
 {
   "extends": "./tsconfig.base.json",
-  "include": ["playwright.config.ts", "vitest.config.ts", "e2e/**/*.ts", "scripts/**/*.ts"]
+  "compilerOptions": {
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
+  },
+  "include": [
+    "next-env.d.ts",
+    ".next/types/**/*.ts",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "playwright.config.ts",
+    "vitest.config.ts",
+    "e2e/**/*.ts",
+    "scripts/**/*.ts"
+  ],
+  "exclude": ["node_modules"]
 }
