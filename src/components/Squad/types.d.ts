@@ -10,6 +10,7 @@ import type { PlayerTrainingProjectionSummary } from "@/app/view-models/player-d
 import type { SquadPlayerRow } from "@/app/view-models/squad-view-model";
 
 export interface SquadProps {
+  clubId?: string | null;
   development: PlayerDevelopment | null;
   onSelectPlayer: (playerId: string) => void;
   onSaveSquadRole: (playerId: string, role: SquadRole | null) => Promise<void>;

@@ -203,6 +203,7 @@ export default function SquadPage() {
       onSokkerImport={handleSokkerImport}
     >
       <Squad
+        clubId={playerDevelopment?.clubId ?? null}
         currency={currency}
         development={playerDevelopment}
         onSelectPlayer={handleSelectPlayer}

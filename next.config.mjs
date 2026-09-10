@@ -17,6 +17,15 @@ const nextConfig = {
     resolveAlias: {
       "*.js": ["*.ts", "*.tsx", "*.js"]
     }
+  },
+  async redirects() {
+    return [
+      {
+        source: "/training",
+        destination: "/squad",
+        permanent: true
+      }
+    ];
   }
 };
 

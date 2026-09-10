@@ -1,10 +1,14 @@
-﻿.atlas .atlas-squad {
+.atlas .atlas-squad {
   display: grid;
   gap: 14px;
   max-width: 1600px;
 }
 
 .atlas .atlas-squad__header {
+  align-items: baseline;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
   padding: 2px 0 4px;
 }
 
@@ -13,6 +17,20 @@
   font-size: 1.35rem;
   line-height: 1.2;
   margin: 0;
+}
+.atlas .atlas-squad__overview {
+  align-items: stretch;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: minmax(0, 1.6fr) minmax(320px, 1fr);
+}
+
+.atlas .atlas-squad__overview .atlas-training-panel {
+  margin: 0;
+}
+
+.atlas .atlas-squad__overview .atlas-training-configuration {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .atlas .atlas-squad__section-title {
@@ -326,6 +344,15 @@
   margin: 0 auto;
 }
 
+@media (max-width: 980px) {
+  .atlas .atlas-squad__overview {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .atlas .atlas-squad__overview .atlas-training-configuration {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
 @media (max-width: 700px) {
   .atlas .atlas-squad-panel {
     padding-left: 12px;
@@ -333,6 +360,10 @@
   }
 
   .atlas .atlas-squad-market-summary__metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .atlas .atlas-squad__overview .atlas-training-configuration {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -509,18 +540,25 @@
   display: flex;
 }
 .atlas .atlas-squad-planning-cell__overview {
+  align-items: center;
+  display: flex;
   gap: 6px;
   justify-content: space-between;
+  min-width: 0;
 }
 .atlas .atlas-squad-planning-cell__summary {
   align-items: center;
   display: flex;
+  flex-wrap: nowrap;
   gap: 5px;
+  min-width: 0;
+  white-space: nowrap;
 }
 .atlas .atlas-squad-planning-cell__lifecycle,
 .atlas .atlas-squad-planning-cell small {
   color: var(--atlas-text-muted);
   font-size: 0.62rem;
+  white-space: nowrap;
 }
 .atlas .atlas-squad-planning-cell small.is-success {
   color: var(--semantic-success-text);
@@ -546,6 +584,7 @@
   color: var(--atlas-text-muted);
   cursor: pointer;
   display: inline-flex;
+  flex-shrink: 0;
   height: 22px;
   justify-content: center;
   padding: 3px;
@@ -711,4 +750,3 @@
     grid-template-columns: 1fr;
   }
 }
-
