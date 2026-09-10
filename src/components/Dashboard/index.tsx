@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, type ReactNode } from "react";
 import type {
   ClubDashboardDevelopmentPlayer,
   ClubDashboardYouthPipelinePlayer,
@@ -8,8 +8,11 @@ import type {
   Severity
 } from "@atlas/web/app/types";
 import type { DashboardProps } from "./types";
-import { PlanningFocus } from "./PlanningFocus";
-import { createSquadPriorityActionsViewModel } from "../Squad/squad-planning-view-model";
+import {
+  SquadPlanningSections,
+  planningConfidenceWarning
+} from "../Squad/SquadPlanningSections";
+import { createSquadPlanningViewModel } from "../Squad/squad-planning-view-model";
 
 import { AttentionIcon } from "@/components/AttentionIcon";
 import { PlayerLink } from "@/components/PlayerLink";
@@ -52,8 +55,8 @@ export function Dashboard({
   const attentionItems =
     dashboard || diagnostic ? buildAttentionItems(dashboard, youthAcademy, diagnostic) : [];
   const watchPlayers = dashboard ? buildWatchPlayers(dashboard, youthAcademy) : [];
-  const planningActions = useMemo(
-    () => (squadPlanning ? createSquadPriorityActionsViewModel(squadPlanning) : []),
+  const planningViewModel = useMemo(
+    () => (squadPlanning ? createSquadPlanningViewModel(squadPlanning) : null),
     [squadPlanning]
   );
 
@@ -78,8 +81,13 @@ export function Dashboard({
       {squadPlanningStatus === "idle" ? (
         <PanelMessage>Squad planning data is not available yet.</PanelMessage>
       ) : null}
-      {squadPlanningStatus === "ready" && squadPlanning ? (
-        <PlanningFocus actions={planningActions} onSelectPlayer={onSelectPlayer} />
+      {squadPlanningStatus === "ready" && planningViewModel ? (
+        <>
+          <SquadPlanningSections onSelectPlayer={onSelectPlayer} viewModel={planningViewModel} />
+          {planningConfidenceWarning(planningViewModel) ? (
+            <PanelMessage tone="quiet">{planningConfidenceWarning(planningViewModel)}</PanelMessage>
+          ) : null}
+        </>
       ) : null}
 
       <FinancialStrategyAlerts
@@ -314,8 +322,8 @@ function PanelHeading({ id, title }: PanelHeadingProps) {
 }
 
 interface PanelMessageProps {
-  children: string;
-  tone?: "error" | "success";
+  children: ReactNode;
+  tone?: "error" | "success" | "quiet";
 }
 
 function PanelMessage({ children, tone }: PanelMessageProps) {
