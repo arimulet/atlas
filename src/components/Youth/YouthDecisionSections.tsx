@@ -1,4 +1,5 @@
 import { Fragment, useMemo, useState, type ReactNode } from "react";
+import { Check, CircleDashed, X } from "lucide-react";
 
 import { YouthDecisionCard } from "./YouthDecisionCard";
 import {
@@ -140,7 +141,7 @@ function YouthDecisionComparison({ models }: { models: YouthDecisionViewModel[] 
       </div>
       {comparisonModels.some((model) => model.advancedTraining.isTrial) ? (
         <p className="atlas-youth-comparison-table__trial-note">
-          ◌ Trial advanced is provisional and requires validation with real senior training weeks.
+          <CircleDashed size={14} className="inline-block align-middle" /> Trial advanced is provisional and requires validation with real senior training weeks.
         </p>
       ) : null}
       <div className="atlas-youth-table-wrap">
@@ -232,7 +233,13 @@ function AdvancedTrainingSlotIcon({ model }: { model: YouthDecisionViewModel }) 
       className={`atlas-youth-comparison-table__advanced-slot-icon ${model.advancedTraining.isTrial ? "is-trial" : isCurrent ? "is-current" : "is-excluded"}`}
       role="img"
     >
-      {model.advancedTraining.isTrial ? "◌" : isCurrent ? "✓" : "×"}
+      {model.advancedTraining.isTrial ? (
+        <CircleDashed size={12} />
+      ) : isCurrent ? (
+        <Check size={12} />
+      ) : (
+        <X size={12} />
+      )}
     </span>
   );
 }

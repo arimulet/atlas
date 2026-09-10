@@ -1,4 +1,5 @@
-﻿import { useState } from "react";
+import { useState } from "react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import type { SquadRole } from "@atlas/domain";
 import { PlayerLink } from "@/components/PlayerLink";
 import {
@@ -139,7 +140,7 @@ function ProfileDepthRow({
             onClick={onToggleDetails}
             type="button"
           >
-            {isDetailsOpen ? "−" : "+"}
+            {isDetailsOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
           </button>
           {profile.profileLabel}
         </th>

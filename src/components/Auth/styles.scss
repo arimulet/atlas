@@ -189,11 +189,14 @@
 }
 
 .atlas-auth-toggle-pwd {
+  align-items: center;
   background: transparent;
   border: none;
   color: var(--atlas-text-secondary);
   cursor: pointer;
+  display: flex;
   font-size: 0.9rem;
+  justify-content: center;
   padding: 4px 8px;
   position: absolute;
   right: 6px;
@@ -247,11 +250,14 @@
 }
 
 .atlas-auth-back-btn {
+  align-items: center;
   background: transparent;
   border: none;
   color: var(--atlas-text-secondary);
   cursor: pointer;
+  display: inline-flex;
   font-size: 0.78rem;
+  gap: 6px;
 
   &:hover {
     color: var(--atlas-text);

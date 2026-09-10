@@ -1,4 +1,5 @@
 import { FormEvent, useState } from "react";
+import { AlertTriangle, CheckCircle2 } from "lucide-react";
 
 import type { ImportResponse } from "@atlas/web/app/types";
 import type { SokkerImporterFormProps } from "./types";
@@ -92,7 +93,9 @@ export function SokkerImporterForm({
           role={feedback.kind === "error" ? "alert" : "status"}
           aria-live="polite"
         >
-          <span aria-hidden="true">{feedback.kind === "error" ? "⚠" : "✓"}</span>
+          <span aria-hidden="true">
+            {feedback.kind === "error" ? <AlertTriangle size={16} /> : <CheckCircle2 size={16} />}
+          </span>
           <div>
             <p>{feedback.message}</p>
             {feedback.details?.length ? (

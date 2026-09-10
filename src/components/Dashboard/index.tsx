@@ -1,4 +1,5 @@
 import { useMemo, type ReactNode } from "react";
+import { Check } from "lucide-react";
 import type {
   ClubDashboardDevelopmentPlayer,
   ClubDashboardYouthPipelinePlayer,
@@ -227,7 +228,9 @@ function AttentionPanel({ items, onSelectPlayer, status }: AttentionPanelProps) 
         <PanelMessage>Import a club snapshot to populate the dashboard.</PanelMessage>
       ) : null}
       {status === "ready" && items.length === 0 ? (
-        <PanelMessage tone="success">✓ No critical issues detected</PanelMessage>
+        <PanelMessage tone="success">
+          <Check size={14} className="inline-block align-middle" /> No critical issues detected
+        </PanelMessage>
       ) : null}
       {status === "ready" && items.length > 0 ? (
         <ul className="atlas-dashboard-attention-list">
@@ -276,7 +279,9 @@ function PlayersToWatchPanel({ onSelectPlayer, players, status }: PlayersToWatch
         <PanelMessage>Import a club snapshot to identify player signals.</PanelMessage>
       ) : null}
       {status === "ready" && players.length === 0 ? (
-        <PanelMessage tone="success">✓ No players currently require attention</PanelMessage>
+        <PanelMessage tone="success">
+          <Check size={14} className="inline-block align-middle" /> No players currently require attention
+        </PanelMessage>
       ) : null}
       {status === "ready" && players.length > 0 ? (
         <div className="atlas-dashboard-watch-table" role="table" aria-label="Players to watch">

@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { X } from "lucide-react";
 import type {
   DevelopmentProfile,
   DevelopmentSkill,
@@ -89,7 +90,7 @@ export function EditDevelopmentTargetModal({
         <div className="atlas-player-development-plan__modal-header">
           <h3 id="edit-development-target-title">Edit development target</h3>
           <button type="button" aria-label="Close" onClick={onClose}>
-            ×
+            <X size={16} />
           </button>
         </div>
         <label>

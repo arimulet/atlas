@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
+import { Check } from "lucide-react";
 
 import type { Severity } from "@atlas/web/app/types";
 import {
@@ -123,7 +124,9 @@ export function Diagnostics({
           <DiagnosticsMessage>Import a club snapshot to inspect diagnostics.</DiagnosticsMessage>
         ) : null}
         {!isLoading && hasSources && viewModel.summary.total === 0 ? (
-          <DiagnosticsMessage tone="clear">✓ No issues requiring attention</DiagnosticsMessage>
+          <DiagnosticsMessage tone="clear">
+            <Check size={14} className="inline-block align-middle" /> No issues requiring attention
+          </DiagnosticsMessage>
         ) : null}
         {!isLoading && viewModel.summary.total > 0 && filteredDiagnostics.length === 0 ? (
           <DiagnosticsMessage>No diagnostics match the selected filters.</DiagnosticsMessage>
@@ -257,7 +260,7 @@ function DiagnosticRow({ diagnostic, onSelectPlayer, showContext }: DiagnosticRo
 }
 
 interface DiagnosticsMessageProps {
-  children: string;
+  children: ReactNode;
   tone?: "clear";
 }
 
