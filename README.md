@@ -4,16 +4,16 @@ ATLAS is a long-term football management intelligence platform for Sokker. It he
 
 ATLAS does not automate actions in Sokker, does not play the game and does not replace the user decision.
 
-## Repository
+## Repository Structure
 
-This repository contains only the software implementation:
+This repository contains the full Next.js application structured with clean architecture layers:
 
-- `apps/web`: React + Vite web application.
-- `apps/api`: Node.js + Fastify API.
-- `packages/domain`: minimal domain types.
-- `packages/application`: use-case boundary for application logic.
-- `packages/database`: MongoDB + Mongoose models.
-- `packages/test-fixtures`: Sokker JSON API fixtures for importer tests.
+- `src/app`: Next.js App Router (UI pages, layouts, and `/api` route handlers).
+- `src/domain`: Pure domain logic, calculations, and entities.
+- `src/application`: Application use cases, orchestrators, and Sokker sync loaders.
+- `src/database`: MongoDB connection, Mongoose models, and repositories.
+- `src/utils`: Shared utilities and helpers.
+- `src/test-fixtures`: Deterministic fixtures for importer tests.
 
 Project strategy, product decisions and architecture knowledge live in `atlas-workspace`.
 
@@ -21,10 +21,10 @@ Project strategy, product decisions and architecture knowledge live in `atlas-wo
 
 ```bash
 npm install
-npm test
-npm run build
-npm run dev:web
-npm run dev:api
+npm run dev      # Start Next.js development server
+npm run build    # Build Next.js application for production
+npm test         # Run unit and integration tests with Vitest
+npm run lint     # Lint source code with ESLint
 ```
 
 ## Data Import
@@ -33,11 +33,9 @@ The official data import flow uses the Sokker JSON API through the ATLAS web app
 
 ## Technical Baseline
 
-- npm workspaces
+- Next.js (App Router)
 - TypeScript
-- React + Vite
-- Fastify
 - MongoDB + Mongoose
 - Zod
 - Vitest
-- Playwright reserved for future critical UI flows only
+- Playwright reserved for critical UI flows

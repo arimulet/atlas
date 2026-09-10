@@ -12,14 +12,19 @@
     "skipLibCheck": true,
     "noUncheckedIndexedAccess": true,
     "noEmit": true,
+    "jsx": "preserve",
     "baseUrl": ".",
     "paths": {
-      "@atlas/application": ["packages/application/src/index.ts"],
-      "@atlas/contracts": ["packages/contracts/src/index.ts"],
-      "@atlas/database": ["packages/database/src/index.ts"],
-      "@atlas/domain": ["packages/domain/src/index.ts"],    
-      "@atlas/api/*": ["apps/api/src/*"],      
-      "@atlas/web/*": ["apps/web/src/*"],      
+      "@atlas/domain": ["src/domain/index.ts"],
+      "@atlas/domain/*": ["src/domain/*"],
+      "@atlas/application": ["src/application/index.ts"],
+      "@atlas/application/*": ["src/application/*"],
+      "@atlas/database": ["src/database/index.ts"],
+      "@atlas/database/*": ["src/database/*"],
+      "@atlas/utils": ["src/utils/index.ts"],
+      "@atlas/utils/*": ["src/utils/*"],
+      "@atlas/web/*": ["src/*"],
+      "@/*": ["src/*"]
     }
   }
 }
