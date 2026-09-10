@@ -10,6 +10,7 @@ import {
 import { CountryNameFlag } from "@/components/CountryNameFlag";
 import { PlayerLink } from "@/components/PlayerLink";
 import { isSquadSkillRequiredForPosition } from "@/app/view-models/squad-view-model";
+import { formatMarketMoney } from "@/app/view-models/market-value-view-model";
 import { TrainingDetails } from "./TrainingDetails";
 import { PLAYER_SKILL_DEFINITIONS, type PlayerSkillKey } from "@/app/view-models/player-skills";
 import {
@@ -29,6 +30,7 @@ const TRAINING_POSITION_TITLES: Record<TrainingPositionCode, string> = {
 
 interface TrainingPlayerTablesProps {
   configuration: TrainingPageData["configuration"];
+  currency?: string | null;
   diagnostic: TrainingProps["trainingDiagnostic"];
   history: TrainingReport[];
   onSelectPlayer: (playerId: string) => void;
@@ -39,6 +41,7 @@ interface TrainingPlayerTablesProps {
 
 export function TrainingPlayerTables({
   configuration,
+  currency,
   diagnostic,
   history,
   onSelectPlayer,
@@ -52,9 +55,16 @@ export function TrainingPlayerTables({
   return (
     <div className="atlas-training-position-sections">
       {TRAINING_POSITIONS.map((position) => {
-        const positionRows = rows.filter(
-          (player) => player.trainingPosition === position.trainingPosition
-        );
+        const positionRows = rows
+          .filter((player) => player.trainingPosition === position.trainingPosition)
+          .sort((a, b) => {
+            const valA = a.value ?? -1;
+            const valB = b.value ?? -1;
+            if (valB !== valA) {
+              return valB - valA;
+            }
+            return a.playerName.localeCompare(b.playerName);
+          });
 
         return (
           <section
@@ -70,6 +80,7 @@ export function TrainingPlayerTables({
               <span>{positionRows.length} players</span>
             </div>
             <TrainingPositionTable
+              currency={currency}
               history={history}
               onSelectPlayer={onSelectPlayer}
               playerById={playerById}
@@ -85,6 +96,7 @@ export function TrainingPlayerTables({
 }
 
 interface TrainingPositionTableProps {
+  currency?: string | null;
   history: TrainingReport[];
   onSelectPlayer: (playerId: string) => void;
   playerById: Map<string, TrainingPageData["players"][number]>;
@@ -94,6 +106,7 @@ interface TrainingPositionTableProps {
 }
 
 function TrainingPositionTable({
+  currency,
   history,
   onSelectPlayer,
   playerById,
@@ -110,6 +123,7 @@ function TrainingPositionTable({
           <col className="is-player" />
           <col className="is-talent" />
           <col className="is-age" />
+          <col className="is-value" />
           {PLAYER_SKILL_DEFINITIONS.map((skill) => (
             <col className="is-skill" key={skill.key} />
           ))}
@@ -120,10 +134,11 @@ function TrainingPositionTable({
             <th scope="col">Player</th>
             <th scope="col">Talent</th>
             <th scope="col">Age</th>
+            <th scope="col">Value</th>
             {PLAYER_SKILL_DEFINITIONS.map((skill) => (
               <th
                 className={
-                  isSquadSkillRequiredForPosition(position, skill.key)
+                  isSquadSkillRequiredForPosition(position, skill.key as any)
                     ? "is-position-skill"
                     : undefined
                 }
@@ -141,6 +156,7 @@ function TrainingPositionTable({
           {players.length > 0 ? (
             players.map((player) => (
               <TrainingPlayerRows
+                currency={currency}
                 history={history.filter((report) => String(report.playerId) === player.playerId)}
                 isDetailsOpen={expandedPlayerId === player.playerId}
                 key={player.playerId}
@@ -158,7 +174,7 @@ function TrainingPositionTable({
             ))
           ) : (
             <tr>
-              <td className="atlas-training-table__empty" colSpan={12}>
+              <td className="atlas-training-table__empty" colSpan={14}>
                 No players assigned.
               </td>
             </tr>
@@ -170,6 +186,7 @@ function TrainingPositionTable({
 }
 
 interface TrainingPlayerRowsProps {
+  currency?: string | null;
   history: TrainingReport[];
   isDetailsOpen: boolean;
   onSelectPlayer: (playerId: string) => void;
@@ -181,6 +198,7 @@ interface TrainingPlayerRowsProps {
 }
 
 function TrainingPlayerRows({
+  currency,
   history,
   isDetailsOpen,
   onSelectPlayer,
@@ -218,13 +236,24 @@ function TrainingPlayerRows({
         </th>
         <td className="atlas-training-table__numeric">{formatTalent(player.talent)}</td>
         <td className="atlas-training-table__numeric">{player.age}</td>
+        <td
+          className={`atlas-training-table__numeric atlas-training-table__value${
+            (sourcePlayer?.valueChange ?? player.valueChange ?? 0) > 0
+              ? " is-value-up"
+              : (sourcePlayer?.valueChange ?? player.valueChange ?? 0) < 0
+              ? " is-value-down"
+              : ""
+          }`}
+        >
+          {formatMarketMoney(sourcePlayer?.value ?? player.value, currency ?? null)}
+        </td>
         {PLAYER_SKILL_DEFINITIONS.map((skill) => (
           <SkillCell
             change={changes.get(trainingSkillKey(skill.key)) ?? null}
-            isImportant={isSquadSkillRequiredForPosition(position, skill.key)}
+            isImportant={isSquadSkillRequiredForPosition(position, skill.key as any)}
             key={skill.key}
             skill={skill.key}
-            value={skillValue(sourcePlayer?.latestReport?.skills, skill.key)}
+            value={skillValue(sourcePlayer, sourcePlayer?.latestReport?.skills, skill.key)}
           />
         ))}
 
@@ -232,7 +261,7 @@ function TrainingPlayerRows({
       </tr>
       {isDetailsOpen ? (
         <tr className="atlas-training-player-detail-row">
-          <td colSpan={12}>
+          <td colSpan={14}>
             <div className="atlas-training-player-detail__content">
               <dl>
                 <div>
@@ -332,9 +361,13 @@ function trainingStatusPresentation(status: NonNullable<TrainingPlayerRow["statu
   return { icon: "i", label: "Training information" };
 }
 function skillValue(
+  sourcePlayer: TrainingPageData["players"][number] | null,
   skills: TrainingReport["skills"] | undefined,
   skill: PlayerSkillKey
-): number | undefined {
+): number | undefined | null {
+  if (skill === "form") {
+    return sourcePlayer?.form ?? (skills as Record<string, number | null | undefined> | undefined)?.form;
+  }
   const key = trainingSkillKey(skill);
   return skills?.[key] ?? skills?.[skill];
 }

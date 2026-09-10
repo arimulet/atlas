@@ -692,6 +692,16 @@
   font-weight: 800;
 }
 
+.atlas .atlas-training-table__value.is-value-up {
+  color: var(--semantic-success-text) !important;
+  font-weight: 700;
+}
+
+.atlas .atlas-training-table__value.is-value-down {
+  color: var(--semantic-error-text) !important;
+  font-weight: 700;
+}
+
 .atlas .atlas-training-kind {
   font-size: 0.82rem;
 }
@@ -833,11 +843,6 @@
   border-left: 1px solid var(--atlas-border);
 }
 
-.atlas .atlas-training-table--skills thead .atlas-training-table__columns-row th:nth-child(11),
-.atlas .atlas-training-table--skills tbody td:nth-child(11) {
-  border-left: 1px solid var(--atlas-border);
-}
-
 .atlas .atlas-training-table--skills .is-position-skill {
   color: var(--atlas-text);
   font-weight: 800;
@@ -926,11 +931,6 @@
   color: var(--atlas-accent);
 }
 
-.atlas .atlas-training-table--skills thead .atlas-training-table__columns-row th:nth-child(11),
-.atlas .atlas-training-table--skills tbody td:nth-child(11) {
-  border-left: 1px solid var(--atlas-border);
-}
-
 .atlas .atlas-training-table-wrap {
   overflow-x: hidden;
 }
@@ -988,27 +988,35 @@
 }
 
 .atlas .atlas-training-table--skills col.is-player {
-  width: 25%;
+  width: 22%;
 }
 
-.atlas .atlas-training-table--skills col.is-age {
+.atlas .atlas-training-table--skills col.is-talent {
   width: 5%;
 }
 
+.atlas .atlas-training-table--skills col.is-age {
+  width: 4%;
+}
+
+.atlas .atlas-training-table--skills col.is-value {
+  width: 8%;
+}
+
 .atlas .atlas-training-table--skills col.is-skill {
-  width: 5.25%;
+  width: 4.5%;
 }
 
 .atlas .atlas-training-table--skills col.is-recommendation {
-  width: 28%;
+  width: 20.5%;
 }
 
 .atlas .atlas-training-table--skills th:first-child,
 .atlas .atlas-training-table--skills td:first-child,
 .atlas .atlas-training-table--skills th:nth-child(2),
 .atlas .atlas-training-table--skills td:nth-child(2),
-.atlas .atlas-training-table--skills th:nth-child(n + 3):nth-child(-n + 10),
-.atlas .atlas-training-table--skills td:nth-child(n + 3):nth-child(-n + 10),
+.atlas .atlas-training-table--skills th:nth-child(n + 3):nth-child(-n + 13),
+.atlas .atlas-training-table--skills td:nth-child(n + 3):nth-child(-n + 13),
 .atlas .atlas-training-table--skills th:last-child,
 .atlas .atlas-training-table__recommendation {
   width: auto;
@@ -1343,46 +1351,50 @@
 }
 
 .atlas .atlas-training-table--skills col.is-player {
-  width: 25%;
+  width: 22%;
 }
 
 .atlas .atlas-training-table--skills col.is-talent {
-  width: 6%;
+  width: 5%;
 }
 
 .atlas .atlas-training-table--skills col.is-age {
   width: 4%;
 }
 
+.atlas .atlas-training-table--skills col.is-value {
+  width: 8%;
+}
+
 .atlas .atlas-training-table--skills col.is-skill {
-  width: 5.25%;
+  width: 4.5%;
 }
 
 .atlas .atlas-training-table--skills col.is-recommendation {
-  width: 23%;
+  width: 20.5%;
 }
 
 .atlas .atlas-training-player-detail__content dl {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-/* Age remains independent; Skills starts at STA and ends at SCO. */
+/* Age & Value group together; Skills starts at FOR (column 5) and ends at SCO (column 13). */
 .atlas .atlas-training-table--skills thead .atlas-training-table__columns-row th:nth-child(3),
 .atlas .atlas-training-table--skills tbody td:nth-child(3) {
   border-left: 1px solid var(--atlas-border);
 }
 
-.atlas .atlas-training-table--skills thead .atlas-training-table__columns-row th:nth-child(4),
-.atlas .atlas-training-table--skills tbody td:nth-child(4) {
+.atlas .atlas-training-table--skills thead .atlas-training-table__columns-row th:nth-child(5),
+.atlas .atlas-training-table--skills tbody td:nth-child(5) {
   border-left: 1px solid var(--atlas-border);
 }
 
-.atlas .atlas-training-table--skills thead .atlas-training-table__columns-row th:nth-child(11),
-.atlas .atlas-training-table--skills tbody td:nth-child(11) {
+.atlas .atlas-training-table--skills thead .atlas-training-table__columns-row th:nth-child(13),
+.atlas .atlas-training-table--skills tbody td:nth-child(13) {
   border-left: 0;
 }
 
-.atlas .atlas-training-table--skills thead .atlas-training-table__columns-row th:nth-child(12),
-.atlas .atlas-training-table--skills tbody td:nth-child(12) {
+.atlas .atlas-training-table--skills thead .atlas-training-table__columns-row th:nth-child(14),
+.atlas .atlas-training-table--skills tbody td:nth-child(14) {
   border-left: 1px solid var(--atlas-border);
 }
