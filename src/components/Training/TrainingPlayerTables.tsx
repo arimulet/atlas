@@ -138,7 +138,7 @@ function TrainingPositionTable({
             {PLAYER_SKILL_DEFINITIONS.map((skill) => (
               <th
                 className={
-                  isSquadSkillRequiredForPosition(position, skill.key as any)
+                  skill.key !== "form" && isSquadSkillRequiredForPosition(position, skill.key)
                     ? "is-position-skill"
                     : undefined
                 }
@@ -250,7 +250,9 @@ function TrainingPlayerRows({
         {PLAYER_SKILL_DEFINITIONS.map((skill) => (
           <SkillCell
             change={changes.get(trainingSkillKey(skill.key)) ?? null}
-            isImportant={isSquadSkillRequiredForPosition(position, skill.key as any)}
+            isImportant={
+              skill.key !== "form" && isSquadSkillRequiredForPosition(position, skill.key)
+            }
             key={skill.key}
             skill={skill.key}
             value={skillValue(sourcePlayer, sourcePlayer?.latestReport?.skills, skill.key)}

@@ -555,6 +555,8 @@ function createTrainingRow(
     playerName: player.name,
     trainingPosition: player.training.position,
     age: player.age,
+    value: player.value ?? null,
+    valueChange: player.valueChange ?? null,
     trainingType: player.latestReport?.type ?? null,
     trainingKind: player.latestReport?.kind ?? null,
     intensity: player.latestReport?.intensity ?? null,
