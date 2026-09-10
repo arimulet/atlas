@@ -16,7 +16,7 @@ import {
 } from "@atlas/domain";
 import { DEVELOPMENT_PROFILES } from "@atlas/domain";
 import type { TrainingPageData, TrainingPagePlayer } from "@atlas/web/app/types";
-import type { PlayerDetailViewModel } from "../../view-models/player-detail-view-model";
+import type { PlayerDetailViewModel } from "@/app/view-models/player-detail-view-model";
 
 export interface DevelopmentPlanTargetRow {
   skill: DevelopmentSkill;

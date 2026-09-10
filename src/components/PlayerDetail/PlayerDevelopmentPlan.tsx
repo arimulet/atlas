@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from "react";
 import type { PlayerDevelopmentTargetOverride } from "@atlas/domain";
-import { formatEta, formatPercentage } from "../../formatters";
+import { formatEta, formatPercentage } from "@/app/formatters";
 import {
   type DevelopmentPlanPathRow,
   type DevelopmentPlanTargetRow,

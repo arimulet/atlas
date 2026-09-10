@@ -6,8 +6,8 @@ import {
 } from "@atlas/web/app/view-models/youth-view-model";
 import type { YouthProps } from "./types";
 import { AttentionIcon } from "@/components/AttentionIcon";
-import { formatTalent } from "../../formatters";
-import { skillLevelLabel } from "../../view-models/skill-level-label";
+import { formatTalent } from "@/app/formatters";
+import { skillLevelLabel } from "@/app/view-models/skill-level-label";
 import { YouthSummary } from "./YouthDecisionSections";
 import { YouthPlayerSkillChart } from "./YouthPlayerSkillChart";
 

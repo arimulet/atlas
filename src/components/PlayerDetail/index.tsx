@@ -1,13 +1,13 @@
 import { Component, type ReactNode } from "react";
 import type { PlayerDetailProps } from "./types";
 import { ProjectionPanel } from "./ProjectionPanel";
-import { formatNumber } from "../../formatters";
+import { formatNumber } from "@/app/formatters";
 import { CountryNameFlag } from "@/components/CountryNameFlag";
 import { DiagnosticNotifications } from "@/components/Header/DiagnosticNotifications";
 import {
   createPlayerDetailViewModel,
   type PlayerDetailViewModel
-} from "../../view-models/player-detail-view-model";
+} from "@/app/view-models/player-detail-view-model";
 import { PlayerDevelopmentPlan } from "./PlayerDevelopmentPlan";
 import { usePlayerDevelopmentPlan } from "./usePlayerDevelopmentPlan";
 import { PlayerMarketValueSection } from "./MarketValuePanel";

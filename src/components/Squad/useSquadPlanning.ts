@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 
 import type { DevelopmentProfile } from "@atlas/domain";
 import type { SquadPlanningBundle } from "@atlas/web/app/types";
-import type { SquadPlayerRow } from "../../view-models/squad-view-model";
+import type { SquadPlayerRow } from "@/app/view-models/squad-view-model";
 import {
   createSquadPlanningViewModel,
   filterSquadRows,

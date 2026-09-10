@@ -14,7 +14,7 @@ import type {
   PlayerMarketValueViewModel,
   ProjectionPointViewModel,
   TrainingValueViewModel
-} from "../../view-models/market-value-view-model";
+} from "@/app/view-models/market-value-view-model";
 
 interface PlayerMarketValueSectionProps {
   marketValue: PlayerMarketValueViewModel | null;

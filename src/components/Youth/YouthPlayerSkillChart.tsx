@@ -7,7 +7,7 @@
   Tooltip,
   ResponsiveContainer
 } from "recharts";
-import { skillLevelLabel } from "../../view-models/skill-level-label";
+import { skillLevelLabel } from "@/app/view-models/skill-level-label";
 import type { YouthSkillHistoryEntry } from "@atlas/web/app/types";
 
 interface YouthPlayerSkillChartProps {

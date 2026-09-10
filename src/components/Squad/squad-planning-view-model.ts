@@ -14,7 +14,7 @@ import type {
   SuccessionCoverageStatus
 } from "@atlas/domain";
 import type { SquadPlanningBundle } from "@atlas/web/app/types";
-import type { SquadPlayerRow } from "../../view-models/squad-view-model";
+import type { SquadPlayerRow } from "@/app/view-models/squad-view-model";
 
 export type SquadRoleFilter = SquadRole | "all" | "attention";
 

@@ -7,7 +7,7 @@ import {
   type PlayerDevelopmentTargetOverrideResponse
 } from "@/api";
 import type { TrainingPageData } from "@/app/types";
-import type { PlayerDetailViewModel } from "../../view-models/player-detail-view-model";
+import type { PlayerDetailViewModel } from "@/app/view-models/player-detail-view-model";
 import {
   createDevelopmentPlanViewModel,
   type DevelopmentPlanViewModel

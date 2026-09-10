@@ -6,14 +6,14 @@
 @use "../components/SidebarItem/styles.scss" as *;
 @use "../components/SokkerImportModal/styles.scss" as *;
 @use "../components/SokkerImporterForm/styles.scss" as *;
-@use "../app/pages/Dashboard/styles.scss" as *;
-@use "../app/pages/Finances/styles.scss" as *;
-@use "../app/pages/Squad/styles.scss" as *;
+@use "../components/Dashboard/styles.scss" as *;
+@use "../components/Finances/styles.scss" as *;
+@use "../components/Squad/styles.scss" as *;
 @use "../components/Training/styles.scss" as *;
-@use "../app/pages/PlayerDetail/styles.scss" as *;
-@use "../app/pages/PlayerDecisions/styles.scss" as *;
-@use "../app/pages/Youth/styles.scss" as *;
-@use "../app/pages/Diagnostics/styles.scss" as *;
+@use "../components/PlayerDetail/styles.scss" as *;
+@use "../components/PlayerDecisions/styles.scss" as *;
+@use "../components/Youth/styles.scss" as *;
+@use "../components/Diagnostics/styles.scss" as *;
 
 // Shared ATLAS presentation primitives. Page-specific styles remain above this
 // layer so the common geometry and states are defined in one place.

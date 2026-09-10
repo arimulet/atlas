@@ -1,6 +1,6 @@
 ﻿import { useEffect, useState } from "react";
 import { fetchYouthPerformances, patchYouthObservations } from "@/api";
-import { skillLevelLabel } from "../../view-models/skill-level-label";
+import { skillLevelLabel } from "@/app/view-models/skill-level-label";
 import type { YouthMatchPerformancesDto, RealYouthAcademyPlanning } from "@/app/types";
 
 interface YouthPerformancesProps {

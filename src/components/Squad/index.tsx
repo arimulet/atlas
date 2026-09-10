@@ -1,7 +1,7 @@
 import { useMemo, useState, type ReactNode } from "react";
 import type { DiagnosticFinding, DiagnosticParameterValue } from "@atlas/web/app/types";
 import type { SquadRole } from "@atlas/domain";
-import { formatDiagnosticNumber } from "../../formatters";
+import { formatDiagnosticNumber } from "@/app/formatters";
 import { AttentionIcon } from "@/components/AttentionIcon";
 import { CountryNameFlag } from "@/components/CountryNameFlag";
 import { PlayerLink } from "@/components/PlayerLink";
@@ -27,12 +27,12 @@ import {
   isSquadSkillRequiredForPosition,
   SQUAD_SKILL_DEFINITIONS,
   type SquadPlayerRow
-} from "../../view-models/squad-view-model";
-import { createSquadMarketValueSummary } from "../../view-models/market-value-view-model";
+} from "@/app/view-models/squad-view-model";
+import { createSquadMarketValueSummary } from "@/app/view-models/market-value-view-model";
 import {
   TRAINING_POSITIONS,
   type TrainingPositionCode
-} from "../../view-models/training-view-model";
+} from "@/app/view-models/training-view-model";
 
 const TRAINING_POSITION_TITLES: Record<TrainingPositionCode, string> = {
   GK: "Goalkeeper",

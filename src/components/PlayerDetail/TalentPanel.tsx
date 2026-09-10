@@ -1,5 +1,5 @@
-import type { PlayerDetailViewModel } from "../../view-models/player-detail-view-model";
-import { formatTalent } from "../../formatters";
+import type { PlayerDetailViewModel } from "@/app/view-models/player-detail-view-model";
+import { formatTalent } from "@/app/formatters";
 
 interface TalentPanelProps {
   talent: PlayerDetailViewModel["talent"];

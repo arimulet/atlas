@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import type { PlayerDetailViewModel } from "../../view-models/player-detail-view-model";
+import type { PlayerDetailViewModel } from "@/app/view-models/player-detail-view-model";
 import { CountryNameFlag } from "@/components/CountryNameFlag";
 
 interface PlayerPersonalInfoPanelProps {

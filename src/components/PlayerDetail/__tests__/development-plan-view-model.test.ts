@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { PlayerDetailViewModel } from "../../../view-models/player-detail-view-model";
+import type { PlayerDetailViewModel } from "@/app/view-models/player-detail-view-model";
 import {
   createDevelopmentPlanViewModel,
   targetDefaultsForProfile

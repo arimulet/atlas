@@ -1,5 +1,5 @@
 import type { DashboardStatus, PlayerDevelopment, SquadPlanningBundle } from "@atlas/web/app/types";
-import type { TrainingDiagnostic } from "../../view-models/training-view-model";
+import type { TrainingDiagnostic } from "@/app/view-models/training-view-model";
 
 export interface PlayerDetailProps {
   clubId?: string | null;

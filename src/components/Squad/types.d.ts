@@ -6,9 +6,9 @@ import type {
   SquadRole,
   TrainingPageData
 } from "@atlas/web/app/types";
-import type { TrainingDiagnostic } from "../../view-models/training-view-model";
-import type { PlayerTrainingProjectionSummary } from "../../view-models/player-detail-view-model";
-import type { SquadPlayerRow } from "../../view-models/squad-view-model";
+import type { TrainingDiagnostic } from "@/app/view-models/training-view-model";
+import type { PlayerTrainingProjectionSummary } from "@/app/view-models/player-detail-view-model";
+import type { SquadPlayerRow } from "@/app/view-models/squad-view-model";
 
 export interface SquadProps {
   development: PlayerDevelopment | null;

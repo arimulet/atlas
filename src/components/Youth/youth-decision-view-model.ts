@@ -11,7 +11,7 @@ import type {
   YouthProspectWeakness
 } from "@atlas/domain";
 import type { YouthDecisionCandidate, YouthDecisionPlanning } from "@atlas/application";
-import { formatMoney } from "../../formatters";
+import { formatMoney } from "@/app/formatters";
 
 export type YouthDecisionFilter = "all" | YouthDecision | "high";
 

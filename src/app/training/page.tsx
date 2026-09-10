@@ -20,7 +20,7 @@ import { createPlayerTrainingProjectionSummaries } from "@/app/view-models/playe
 import type { SokkerImportCredentials } from "@/components/SokkerImporterForm/types";
 import { pathForMainView, pathForPlayerDetail } from "@/app/routing";
 import { useAuth } from "@/context/AuthContext";
-import { AuthScreen } from "@/app/pages/Auth/AuthScreen";
+import { AuthScreen } from "@/components/Auth/AuthScreen";
 
 export default function TrainingPage() {
   const { user, loading: authLoading } = useAuth();

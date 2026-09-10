@@ -1,5 +1,5 @@
-import type { PlayerDetailViewModel } from "../../view-models/player-detail-view-model";
-import { formatEta, formatNumber, formatPercentage } from "../../formatters";
+import type { PlayerDetailViewModel } from "@/app/view-models/player-detail-view-model";
+import { formatEta, formatNumber, formatPercentage } from "@/app/formatters";
 import { TalentPanel } from "./TalentPanel";
 import { StatusBadge } from "@/components/StatusBadge";
 

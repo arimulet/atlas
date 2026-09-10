@@ -5,7 +5,7 @@ import {
   type YouthDecisionMessage,
   type YouthDecisionViewModel
 } from "./youth-decision-view-model";
-import { capitalize, formatGameWeek, formatRank, formatWeeks } from "../../formatters";
+import { capitalize, formatGameWeek, formatRank, formatWeeks } from "@/app/formatters";
 
 interface YouthDecisionCardProps {
   model: YouthDecisionViewModel;

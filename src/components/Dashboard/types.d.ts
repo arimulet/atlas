@@ -4,7 +4,7 @@ import type {
   RealYouthAcademyPlanning,
   SquadPlanningBundle
 } from "@atlas/web/app/types";
-import type { FinancialStrategyState } from "../../features/financialStrategy/useFinancialStrategy";
+import type { FinancialStrategyState } from "@/app/features/financialStrategy/useFinancialStrategy";
 
 export interface DashboardProps {
   dashboard: ClubDashboard | null;

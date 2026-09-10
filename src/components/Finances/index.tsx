@@ -1,11 +1,11 @@
 ﻿import type { ReactNode } from "react";
 import { useState } from "react";
 import { Info } from "lucide-react";
-import { formatMoney } from "../../formatters";
+import { formatMoney } from "@/app/formatters";
 import { PlayerLink } from "@/components/PlayerLink";
 import { StatusBadge } from "@/components/StatusBadge";
 import type { FinancesProps } from "./types";
-import type { FinancialStrategyState } from "../../features/financialStrategy/useFinancialStrategy";
+import type { FinancialStrategyState } from "@/app/features/financialStrategy/useFinancialStrategy";
 
 export function Finances({
   dashboard,
