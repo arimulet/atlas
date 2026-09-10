@@ -1060,8 +1060,10 @@
 }
 
 .atlas .atlas-player-detail__history-kind {
-  display: inline-block;
+  align-items: center;
+  display: inline-flex;
   font-size: 0.9rem;
+  justify-content: center;
   margin-right: 6px;
   text-align: center;
   vertical-align: middle;
