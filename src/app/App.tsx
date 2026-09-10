@@ -324,7 +324,7 @@ function AuthenticatedApp({ initialData, initialUrl }: AppProps) {
 
   const financialStrategy = useFinancialStrategy({
     clubId,
-    currency: dashboard?.club.currency ?? null,
+    currency: dashboard?.club?.currency ?? null,
     squadPlanning
   });
 
@@ -373,7 +373,7 @@ function AuthenticatedApp({ initialData, initialUrl }: AppProps) {
         />
       ) : activeView === "squad" ? (
         <Squad
-          currency={dashboard?.club.currency ?? null}
+          currency={dashboard?.club?.currency ?? null}
           development={playerDevelopment}
           onSelectPlayer={handleSelectPlayer}
           onSaveSquadRole={handleSaveSquadRole}
@@ -387,7 +387,7 @@ function AuthenticatedApp({ initialData, initialUrl }: AppProps) {
       ) : activeView === "player-decisions" ? (
         <PlayerDecisions
           clubId={clubId}
-          currency={dashboard?.club.currency ?? null}
+          currency={dashboard?.club?.currency ?? null}
           onSelectPlayer={handleSelectPlayer}
         />
       ) : activeView === "training" ? (
@@ -403,7 +403,7 @@ function AuthenticatedApp({ initialData, initialUrl }: AppProps) {
       ) : activeView === "youth" ? (
         <Youth
           clubId={clubId}
-          currency={dashboard?.club.currency ?? null}
+          currency={dashboard?.club?.currency ?? null}
           youthAcademy={youthAcademy}
           youthStatus={youthStatus}
         />
@@ -428,7 +428,7 @@ function AuthenticatedApp({ initialData, initialUrl }: AppProps) {
       ) : activeView === "player-detail" ? (
         <PlayerDetail
           clubId={clubId}
-          currency={dashboard?.club.currency ?? null}
+          currency={dashboard?.club?.currency ?? null}
           development={playerDevelopment}
           onBack={handleBackFromPlayerDetail}
           onBackToSquad={() => navigate(pathForMainView("squad"), { replace: true })}

@@ -61,7 +61,7 @@ function FinancialPositionSection({
   status: FinancesProps["status"];
 }) {
   const position = financialStrategy.viewModel?.position;
-  const fallbackCash = dashboard?.club.budget ?? null;
+  const fallbackCash = dashboard?.club?.budget ?? null;
   return (
     <Section title="Financial Position" className="atlas-finances-position">
       {position ? (
@@ -91,7 +91,7 @@ function FinancialPositionSection({
           {status === "loading"
             ? "Loading financial position..."
             : fallbackCash !== null
-              ? `Cash · ${formatMoney({ amount: fallbackCash, currency: dashboard?.club.currency ?? null, isComplete: true })} · Observed`
+              ? `Cash · ${formatMoney({ amount: fallbackCash, currency: dashboard?.club?.currency ?? null, isComplete: true })} · Observed`
               : "Financial position data is not available yet."}
         </PanelMessage>
       )}
