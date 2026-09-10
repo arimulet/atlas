@@ -1,8 +1,9 @@
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { pathForPlayerDetail } from "@/app/routing";
 
 interface PlayerLinkProps {
-  children: string;
+  children: ReactNode;
   playerId: string;
   onSelectPlayer: (playerId: string) => void;
 }
