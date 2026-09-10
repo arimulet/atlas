@@ -5,7 +5,7 @@ import type {
   FinancialStrategyPlan,
   InvestmentSafetyAssessment
 } from "@atlas/domain";
-import type { FinancialStrategyData } from "../../api";
+import type { FinancialStrategyData } from "@/api";
 import {
   createFinancialStrategyViewModel,
   createInvestmentSafetyViewModel

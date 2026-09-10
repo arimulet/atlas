@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import "./styles/index.scss";
-import { AuthProvider } from "./context/AuthContext";
+import "@/styles/index.scss";
+import { AuthProvider } from "@/context/AuthContext";
 
 export const metadata: Metadata = {
   title: "ATLAS - Football Manager",

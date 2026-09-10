@@ -3,9 +3,9 @@ import {
   fetchFinancialStrategy,
   fetchInvestmentSafety,
   type FinancialStrategyData
-} from "../../api";
+} from "@/api";
 import type { InvestmentSafetyAssessment } from "@atlas/domain";
-import type { SquadPlanningBundle } from "../../types";
+import type { SquadPlanningBundle } from "@/app/types";
 import {
   createFinancialStrategyViewModel,
   createInvestmentSafetyViewModel,

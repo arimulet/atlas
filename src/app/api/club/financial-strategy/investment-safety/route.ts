@@ -1,5 +1,5 @@
 import { getInvestmentSafety } from "@atlas/application";
-import { getEffectiveClubId, handleApiError, jsonResponse } from "../../../../lib/api-helper";
+import { getEffectiveClubId, handleApiError, jsonResponse } from "@/lib/api-helper";
 import { NextRequest } from "next/server";
 
 export async function POST(request: NextRequest) {

@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { updateYouthObservations } from "@atlas/application";
-import { getEffectiveClubId, handleApiError, jsonResponse } from "../../../../../../lib/api-helper";
+import { getEffectiveClubId, handleApiError, jsonResponse } from "@/lib/api-helper";
 
 export async function PATCH(
   request: NextRequest,
