@@ -27,6 +27,7 @@ import { createPlayerMarketValueViewModel, formatMarketMoney } from "@/app/view-
 import { SquadPlanningRoleControl } from "@/components/Squad/SquadPlanningRoleControl";
 import { TrainingDetails } from "./TrainingDetails";
 import { PLAYER_SKILL_DEFINITIONS, type PlayerSkillKey } from "@/app/view-models/player-skills";
+import { skillLevelLabel } from "@/app/view-models/skill-level-label";
 import {
   createTrainingPlayerRows,
   TRAINING_POSITIONS,
@@ -381,10 +382,18 @@ function SkillCell({
 }) {
   const changeClass = change === null ? "" : change > 0 ? " is-skill-up" : " is-skill-down";
   const importantClass = isImportant ? " is-position-skill" : "";
+  const levelLabel = skillLevelLabel(value ?? null);
+  const tooltipText =
+    levelLabel === null
+      ? undefined
+      : change === null || change === 0
+      ? levelLabel
+      : `${levelLabel} (${change > 0 ? "+" : ""}${change})`;
+
   return (
     <td
       className={`atlas-training-table__numeric atlas-training-table__skill${importantClass}${changeClass}`}
-      title={change === null ? skill : `${skill} ${change > 0 ? "+" : ""}${change}`}
+      title={tooltipText}
     >
       <span className="atlas-training-table__skill-value">{value ?? "—"}</span>
       {change !== null && change > 0 ? (
