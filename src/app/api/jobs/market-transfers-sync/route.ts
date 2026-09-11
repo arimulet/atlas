@@ -30,15 +30,21 @@ export async function POST(request: NextRequest) {
   }
 
   // 4. Ejecución del Job
+  console.log("[MarketTransferSyncRoute] HTTP POST request received. Starting market transfer sync job execution...");
+  const startTime = Date.now();
   try {
     const result = await runMarketTransferSyncJob(login, password);
+    const durationSec = ((Date.now() - startTime) / 1000).toFixed(1);
     if (result.success) {
+      console.log(`[MarketTransferSyncRoute] Job finished successfully in ${durationSec}s. Status 200 returned.`);
       return NextResponse.json(result, { status: 200 });
     } else {
+      console.warn(`[MarketTransferSyncRoute] Job returned unsuccessful (reason: ${JSON.stringify(result.reason)}). Status 409 returned.`);
       return NextResponse.json(result, { status: 409 });
     }
   } catch (err) {
     const errorMsg = err instanceof Error ? err.message : String(err);
+    console.error("[MarketTransferSyncRoute] Job thrown uncaught error:", errorMsg);
     return NextResponse.json({ error: errorMsg }, { status: 500 });
   }
 }
