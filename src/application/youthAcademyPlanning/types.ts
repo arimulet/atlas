@@ -1,4 +1,4 @@
-﻿import { ClubId, Confidence, EvidenceKind, Severity } from "@atlas/application";
+import { ClubId, Confidence, EvidenceKind, Severity } from "@atlas/application";
 
 export type YouthAcademyCategory =
   | "standout_prospect"
@@ -34,6 +34,8 @@ export interface YouthAcademyObservedPlayer {
   id: string;
   playerId: number;
   name: string;
+  countryId?: number | null;
+  countryName?: string | null;
   age: number;
   initialLevel: number | null;
   initialWeeks: number | null;
@@ -49,6 +51,8 @@ export interface RealYouthAcademyPlayerPlan {
   id: string;
   playerId: number;
   name: string;
+  countryId?: number | null;
+  countryName?: string | null;
   age: number;
   initialLevel: number | null;
   initialWeeks: number | null;

@@ -1,9 +1,10 @@
-﻿import type { ReactNode } from "react";
+import type { ReactNode } from "react";
 import { useState } from "react";
-import { Info } from "lucide-react";
+import { ArrowRight, Info } from "lucide-react";
 import { formatMoney } from "@/app/formatters";
 import { PlayerLink } from "@/components/PlayerLink";
 import { StatusBadge } from "@/components/StatusBadge";
+import { registerPlayerCountries } from "@/context/PlayerCountryContext";
 import type { FinancesProps } from "./types";
 import type { FinancialStrategyState } from "@/app/features/financialStrategy/useFinancialStrategy";
 
@@ -14,6 +15,9 @@ export function Finances({
   status,
   financialStrategy
 }: FinancesProps) {
+  if (squadPlanning?.assessment?.depthPlayers) {
+    registerPlayerCountries(squadPlanning.assessment.depthPlayers);
+  }
   return (
     <div className="atlas-finances">
       <header className="atlas-finances__header">
@@ -382,7 +386,7 @@ function DevelopmentUpside({ development }: DevelopmentUpsideProps) {
       </div>
       <strong>{development.valueCreation}</strong>
       <p>
-        Projected covered value: {development.currentValue} → {development.projectedValue}
+        Projected covered value: {development.currentValue} <ArrowRight size={13} className="inline-block align-middle" /> {development.projectedValue}
       </p>
     </aside>
   );

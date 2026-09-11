@@ -15,6 +15,7 @@ import type {
 } from "@atlas/domain";
 import type { SquadPlanningBundle } from "@atlas/web/app/types";
 import type { SquadPlayerRow } from "@/app/view-models/squad-view-model";
+import { registerPlayerCountries, getCachedPlayerCountry } from "@/context/PlayerCountryContext";
 
 export type SquadRoleFilter = SquadRole | "all" | "attention";
 
@@ -41,6 +42,7 @@ export interface SquadPlanningSummaryViewModel {
 export interface SquadPlanningCandidateViewModel {
   playerId: string;
   playerName: string;
+  countryName?: string | null;
   suitabilityScore: number | null;
   role: SquadRole;
   lifecycle: PlayerLifecycleStage;
@@ -72,6 +74,7 @@ export type SquadProfilePlayerGroup = "current" | "developing" | "prospect" | "t
 export interface SquadProfilePlayerViewModel {
   playerId: string;
   name: string;
+  countryName?: string | null;
   age: number | null;
   role: SquadRole;
   roleLabel: string;
@@ -88,6 +91,7 @@ export interface SquadProfilePlayerViewModel {
 export interface SquadSuccessionCandidateViewModel {
   playerId: string;
   playerName: string;
+  countryName?: string | null;
   readiness: SuccessionCandidate["readiness"];
   readinessLabel: string;
   estimatedReadyGameWeek: number | null;
@@ -107,7 +111,7 @@ export interface SquadProfileViewModel {
   outgoingPlayers: SquadProfilePlayerViewModel[];
   successorCandidates: SquadSuccessionCandidateViewModel[];
   players: SquadProfilePlayerViewModel[];
-  dependencyRisk: { playerId: string; playerName: string; contributionGap: string } | null;
+  dependencyRisk: { playerId: string; playerName: string; countryName?: string | null; contributionGap: string } | null;
   congestionMessage: string | null;
   missingPipeline: boolean;
   reasons: string[];
@@ -218,6 +222,12 @@ export function createSquadPlanningViewModel(
   planning: SquadPlanningBundle,
   rows?: readonly SquadPlayerRow[]
 ): SquadPlanningViewModel {
+  if (planning?.assessment?.depthPlayers) {
+    registerPlayerCountries(planning.assessment.depthPlayers);
+  }
+  if (rows) {
+    registerPlayerCountries(rows);
+  }
   const playerNames = rows
     ? createPlayerNames(rows)
     : new Map(
@@ -257,6 +267,9 @@ export function createSquadPlanningViewModel(
 export function createSquadPriorityActionsViewModel(
   planning: SquadPlanningBundle
 ): SquadPriorityActionViewModel[] {
+  if (planning?.assessment?.depthPlayers) {
+    registerPlayerCountries(planning.assessment.depthPlayers);
+  }
   const playerNames = new Map(
     planning.assessment.depthPlayers.map((player) => [
       String(player.playerId),
@@ -455,6 +468,7 @@ function mapRecommendation(
       return {
         playerId: String(candidate.playerId),
         playerName: playerName(candidate.playerId, playerNames),
+        countryName: getCachedPlayerCountry(candidate.playerId),
         suitabilityScore: candidate.suitabilityScore,
         role: candidate.currentRole,
         lifecycle: candidate.lifecycle,
@@ -484,6 +498,7 @@ function mapProfile(
     ? {
         playerId: String(assessment.dependencyRisk.dominantPlayerId),
         playerName: playerName(assessment.dependencyRisk.dominantPlayerId, playerNames),
+        countryName: getCachedPlayerCountry(assessment.dependencyRisk.dominantPlayerId),
         contributionGap: formatContributionScore(assessment.dependencyRisk.contributionGap)
       }
     : null;
@@ -550,6 +565,7 @@ function mapProfilePlayer(
   return {
     playerId: String(player.playerId),
     name: playerName(player.playerId, playerNames),
+    countryName: player.countryName ?? getCachedPlayerCountry(player.playerId),
     age: player.age ?? null,
     role: player.role,
     roleLabel: roleLabel(player.role),
@@ -571,6 +587,7 @@ function mapSuccessor(
   return {
     playerId: String(candidate.playerId),
     playerName: playerName(candidate.playerId, playerNames),
+    countryName: getCachedPlayerCountry(candidate.playerId),
     readiness: candidate.readiness,
     readinessLabel: READINESS_LABELS[candidate.readiness],
     estimatedReadyGameWeek: candidate.estimatedReadyGameWeek ?? null,

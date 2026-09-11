@@ -101,7 +101,7 @@ export default function HomePage() {
 
   const diagnosticAlertCount = useMemo(
     () =>
-      diagnostic?.findings.filter(
+      diagnostic?.findings?.filter(
         (finding) => finding.severity === "high" || finding.severity === "medium"
       ).length ?? 0,
     [diagnostic]

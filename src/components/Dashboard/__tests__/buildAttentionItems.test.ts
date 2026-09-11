@@ -93,6 +93,7 @@ describe("buildAttentionItems", () => {
           {
             id: "ya-1",
             name: "Ready Academy Player",
+            countryName: "Poland",
             category: "ready_for_promotion",
             severity: "medium",
             signals: []
@@ -139,6 +140,10 @@ describe("buildAttentionItems", () => {
     for (const item of items) {
       expect(item.message).not.toMatch(/plantilla|salario|requiere|jugador/i);
     }
+
+    const academyItem = items.find((item) => item.id === "academy-ya-1");
+    expect(academyItem).toBeDefined();
+    expect(academyItem?.countryName).toBe("Poland");
   });
 });
 

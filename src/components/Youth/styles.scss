@@ -1,4 +1,4 @@
-﻿.atlas {
+.atlas {
   .atlas-youth {
     display: grid;
     gap: 14px;
@@ -198,14 +198,17 @@
   .atlas-youth-decision-badge.is-none {
     color: var(--atlas-text-muted);
   }
+  .atlas-youth-decision-badge.is-gk {
+    color: var(--position-gk-bg);
+  }
   .atlas-youth-decision-badge.is-def {
-    color: var(--semantic-info-text);
+    color: var(--position-def-bg);
   }
   .atlas-youth-decision-badge.is-mid {
-    color: var(--semantic-error-text);
+    color: var(--position-mid-bg);
   }
   .atlas-youth-decision-badge.is-att {
-    color: var(--semantic-success-text);
+    color: var(--position-att-bg);
   }
 
   .atlas-youth-decision-card__meta {
@@ -706,13 +709,13 @@
   }
   
   .atlas-youth-header-def {
-    color: var(--semantic-info-text) !important;
+    color: var(--position-def-bg) !important;
   }
   .atlas-youth-header-mid {
-    color: var(--semantic-error-text) !important;
+    color: var(--position-mid-bg) !important;
   }
   .atlas-youth-header-att {
-    color: var(--semantic-success-text) !important;
+    color: var(--position-att-bg) !important;
   }
 
   .atlas-youth-skill-tragic-weak {

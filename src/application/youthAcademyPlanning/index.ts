@@ -1,7 +1,9 @@
 import {
   MongoClubRepository,
+  MongoCountryRepository,
   MongoJuniorRepository,
-  MongoSnapshotRepository
+  MongoSnapshotRepository,
+  PlayerModel
 } from "@atlas/database";
 import type { PersistedSnapshot } from "@atlas/database";
 import { getSokkerSeason, normalizeSeasonWeek, WEEKS_PER_SOKKER_SEASON } from "@atlas/domain";
@@ -19,6 +21,7 @@ import { ClubId, buildClubOperatingSettings } from "@atlas/application";
 const clubRepository = new MongoClubRepository();
 const juniorRepository = new MongoJuniorRepository();
 const snapshotRepository = new MongoSnapshotRepository();
+const countryRepository = new MongoCountryRepository();
 
 const inFlightYouthAcademy = new Map<string, Promise<RealYouthAcademyPlanning>>();
 const youthAcademyCache = new Map<string, { data: RealYouthAcademyPlanning; timestamp: number }>();
@@ -53,10 +56,24 @@ export const getRealYouthAcademyPlanning = async (
       throw new Error(`Club not found: ${clubId}`);
     }
 
-  const [snapshots, currentJuniors] = await Promise.all([
+  const [snapshots, currentJuniors, allCountries, clubPlayers] = await Promise.all([
     snapshotRepository.listByClub(club.clubId),
-    juniorRepository.listByClub(club.clubId)
+    juniorRepository.listByClub(club.clubId),
+    countryRepository.getAll(),
+    PlayerModel.find({ clubId: club.clubId }).select({ countryId: 1, countryName: 1 }).lean()
   ]);
+
+  const countryNameById = new Map<number, string>();
+  for (const country of allCountries) {
+    if (country.countryId && country.name) {
+      countryNameById.set(country.countryId, country.name);
+    }
+  }
+  for (const player of clubPlayers) {
+    if (player.countryId && player.countryName && !countryNameById.has(player.countryId)) {
+      countryNameById.set(player.countryId, player.countryName);
+    }
+  }
 
   const settings = buildClubOperatingSettings(club);
   const academyInvestment = settings.effective.preferences["academy.investment"] ?? "balanced";
@@ -100,18 +117,24 @@ export const getRealYouthAcademyPlanning = async (
     
   const warnings: YouthAcademyWarning[] = [];
   const observedPlayers: YouthAcademyObservedPlayer[] = latest.juniors.map((p) => {
+    const currentJunior = currentJuniorById.get(p.playerId);
+    const countryId = currentJunior?.countryId ?? club.country ?? null;
+    const countryName = countryId !== null ? (countryNameById.get(countryId) ?? null) : null;
+
     return {
       id: p.id,
       playerId: p.playerId,
       name: p.name,
+      countryId,
+      countryName,
       age: p.age,
-      initialLevel: currentJuniorById.get(p.playerId)?.initialLevel ?? p.initialLevel,
-      initialWeeks: currentJuniorById.get(p.playerId)?.initialWeeks ?? null,
+      initialLevel: currentJunior?.initialLevel ?? p.initialLevel,
+      initialWeeks: currentJunior?.initialWeeks ?? null,
       weeksRemaining: p.weeksRemaining,
       skill: p.skill,
       skillChange: latestCompletedTrainingSkillChanges.get(p.playerId) ?? null,
-      formation: currentJuniorById.get(p.playerId)?.formation ?? null,
-      observations: currentJuniorById.get(p.playerId)?.observations ?? "",
+      formation: currentJunior?.formation ?? null,
+      observations: currentJunior?.observations ?? "",
       status: p.status
     };
   });
@@ -335,6 +358,8 @@ function classifyYouthPlayer(
     id: player.id,
     playerId: player.playerId,
     name: player.name,
+    countryId: player.countryId ?? null,
+    countryName: player.countryName ?? null,
     age: player.age,
     initialLevel: player.initialLevel,
     initialWeeks: player.initialWeeks,

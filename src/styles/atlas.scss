@@ -14,6 +14,7 @@
 @use "../components/PlayerDecisions/styles.scss" as *;
 @use "../components/Youth/styles.scss" as *;
 @use "../components/Diagnostics/styles.scss" as *;
+@use "../components/PositionBadge/styles.scss" as *;
 
 // Shared ATLAS presentation primitives. Page-specific styles remain above this
 // layer so the common geometry and states are defined in one place.
@@ -158,12 +159,8 @@
 
   .atlas-attention-icon {
     align-items: center;
-    border: 1px solid currentColor;
-    border-radius: 50%;
     display: inline-flex;
     flex: 0 0 18px;
-    font-size: 0.68rem;
-    font-weight: 800;
     height: 18px;
     justify-content: center;
     width: 18px;
@@ -218,12 +215,35 @@
     margin-left: auto;
   }
 
+  .atlas-player-link {
+    align-items: center;
+    background: transparent;
+    border: 0;
+    color: var(--atlas-text);
+    cursor: pointer;
+    display: inline-flex;
+    font: inherit;
+    font-weight: 700;
+    gap: 6px;
+    padding: 0;
+    text-align: left;
+    text-decoration: none;
+    vertical-align: middle;
+
+    &:hover,
+    &:focus-visible {
+      color: var(--atlas-accent);
+      outline: 0;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+  }
+
   :is(
     .atlas-dashboard-player-link,
     .atlas-training-player-link,
     .atlas-squad-player-link,
-    .atlas-diagnostics-subject-link,
-    .atlas-player-link
+    .atlas-diagnostics-subject-link
   ) {
     background: transparent;
     border: 0;

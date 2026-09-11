@@ -1,17 +1,37 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { pathForPlayerDetail } from "@/app/routing";
+import { CountryNameFlag } from "@/components/CountryNameFlag";
+import {
+  registerPlayerCountry,
+  usePlayerCountry
+} from "@/context/PlayerCountryContext";
 
-interface PlayerLinkProps {
+export interface PlayerLinkProps {
   children: ReactNode;
+  countryName?: string | null;
   playerId: string;
   onSelectPlayer: (playerId: string) => void;
+  className?: string;
 }
 
-export function PlayerLink({ children, onSelectPlayer, playerId }: PlayerLinkProps) {
+export function PlayerLink({
+  children,
+  countryName,
+  onSelectPlayer,
+  playerId,
+  className
+}: PlayerLinkProps) {
+  if (countryName) {
+    registerPlayerCountry(playerId, countryName);
+  }
+
+  const contextCountry = usePlayerCountry(playerId);
+  const resolvedCountry = countryName ?? contextCountry;
+
   return (
     <Link
-      className="atlas-player-link"
+      className={`atlas-player-link${className ? ` ${className}` : ""}`}
       href={pathForPlayerDetail(playerId)}
       onClick={(event) => {
         if (
@@ -28,7 +48,8 @@ export function PlayerLink({ children, onSelectPlayer, playerId }: PlayerLinkPro
         onSelectPlayer(playerId);
       }}
     >
-      {children}
+      {resolvedCountry ? <CountryNameFlag countryName={resolvedCountry} /> : null}
+      <span className="atlas-player-link__name">{children}</span>
     </Link>
   );
 }

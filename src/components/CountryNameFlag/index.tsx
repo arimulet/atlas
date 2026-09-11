@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import { Globe } from "lucide-react";
 import ReactCountryFlag from "react-country-flag";
 import * as countries from "i18n-iso-countries";
 import { COUNTRY_LOCALES } from "./country-locales";
@@ -56,7 +57,7 @@ export function CountryNameFlag({ countryName }: CountryNameFlagProps) {
   if (!countryCode) {
     return (
       <span aria-label={`Bandera no disponible para ${countryName}`} title={countryName}>
-        🌐
+        <Globe size={16} className="inline-block align-middle" />
       </span>
     );
   }

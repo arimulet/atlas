@@ -1,4 +1,5 @@
-﻿import { useState } from "react";
+import { useState } from "react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import type { SquadRole } from "@atlas/domain";
 import { PlayerLink } from "@/components/PlayerLink";
 import {
@@ -139,7 +140,7 @@ function ProfileDepthRow({
             onClick={onToggleDetails}
             type="button"
           >
-            {isDetailsOpen ? "−" : "+"}
+            {isDetailsOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
           </button>
           {profile.profileLabel}
         </th>
@@ -221,7 +222,7 @@ function SquadProfileDetail({ onSelectPlayer, profile }: SquadProfileDetailProps
               <ul>
                 {players.map((player) => (
                   <li key={player.playerId}>
-                    <PlayerLink playerId={player.playerId} onSelectPlayer={onSelectPlayer}>
+                    <PlayerLink countryName={player.countryName} playerId={player.playerId} onSelectPlayer={onSelectPlayer}>
                       {player.name}
                     </PlayerLink>
                     <span>
@@ -326,7 +327,7 @@ function SquadSuccession({ profile, onSelectPlayer }: SquadSuccessionProps) {
       ) : (
         profile.successorCandidates.map((candidate) => (
           <span key={candidate.playerId}>
-            <PlayerLink playerId={candidate.playerId} onSelectPlayer={onSelectPlayer}>
+            <PlayerLink countryName={candidate.countryName} playerId={candidate.playerId} onSelectPlayer={onSelectPlayer}>
               {candidate.playerName}
             </PlayerLink>
             <span>

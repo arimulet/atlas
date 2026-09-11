@@ -1,4 +1,5 @@
 import React from "react";
+import { ChevronDown, ChevronRight, ArrowUp, ArrowDown } from "lucide-react";
 import type { DashboardStatus, RealYouthAcademyPlanning } from "@atlas/web/app/types";
 import {
   createYouthPlayerRows,
@@ -6,6 +7,7 @@ import {
 } from "@atlas/web/app/view-models/youth-view-model";
 import type { YouthProps } from "./types";
 import { AttentionIcon } from "@/components/AttentionIcon";
+import { CountryNameFlag } from "@/components/CountryNameFlag";
 import { formatTalent } from "@/app/formatters";
 import { skillLevelLabel } from "@/app/view-models/skill-level-label";
 import { YouthSummary } from "./YouthDecisionSections";
@@ -138,8 +140,9 @@ function YouthPlayerRows({
               type="button"
               style={{ marginRight: '8px', cursor: 'pointer', background: 'none', border: 'none', color: 'inherit', fontWeight: 'bold' }}
             >
-              {isExpanded ? "−" : "+"}
+              {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
             </button>
+            {row.countryName ? <CountryNameFlag countryName={row.countryName} /> : null}
             <span className={`atlas-youth-table__player-name-value${skillChangeClass}`}>
               {row.name}
             </span>
@@ -224,7 +227,8 @@ function SkillChangeIndicator({ change }: { change: number | null }) {
 
   return (
     <span className={`atlas-youth-skill-change is-${isIncrease ? "up" : "down"}`}>
-      {isIncrease ? "↑" : "↓"} {isIncrease ? "+" : ""}
+      {isIncrease ? <ArrowUp size={12} className="inline-block align-middle" /> : <ArrowDown size={12} className="inline-block align-middle" />}{" "}
+      {isIncrease ? "+" : ""}
       {change}
     </span>
   );

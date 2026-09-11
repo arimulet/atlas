@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import type {
   DiagnosticFinding,
@@ -67,7 +67,8 @@ describe("createDiagnosticsPageViewModel", () => {
     expect(viewModel.diagnostics[4]?.subject).toEqual({
       id: "youth-1",
       type: "youth",
-      label: "Luz"
+      label: "Luz",
+      countryName: "Poland"
     });
   });
 
@@ -261,6 +262,7 @@ function createYouthAcademy(): RealYouthAcademyPlanning {
           id: "youth-1",
           externalId: null,
           name: "Luz",
+          countryName: "Poland",
           age: 17,
           initialLevel: 5,
           initialWeeks: 14,

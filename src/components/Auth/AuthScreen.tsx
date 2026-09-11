@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { AlertTriangle, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { isFirebaseConfigured } from "@/services/firebase";
 import "./styles.scss";
@@ -105,7 +106,9 @@ export function AuthScreen() {
 
         {!isFirebaseConfigured && (
           <div className="atlas-auth-alert atlas-auth-alert--warning">
-            <strong>⚠️ Configuración de Firebase requerida:</strong>
+            <strong>
+              <AlertTriangle size={15} className="inline-block align-middle" /> Configuración de Firebase requerida:
+            </strong>
             <span>
               Configura tus credenciales en el archivo <code>.env</code> usando la plantilla <code>.env.example</code>.
             </span>
@@ -194,7 +197,7 @@ export function AuthScreen() {
                   tabIndex={-1}
                   aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
                 >
-                  {showPassword ? "🙈" : "👁️"}
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
             </div>
@@ -240,7 +243,7 @@ export function AuthScreen() {
               className="atlas-auth-back-btn"
               onClick={() => handleTabSwitch("login")}
             >
-              ← Volver a Iniciar Sesión
+              <ArrowLeft size={14} /> Volver a Iniciar Sesión
             </button>
           </div>
         )}

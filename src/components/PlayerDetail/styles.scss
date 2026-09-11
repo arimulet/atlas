@@ -25,6 +25,9 @@
 }
 
 .atlas .atlas-player-detail__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
   background: transparent;
   border: 0;
   color: var(--atlas-text-muted);
@@ -52,6 +55,9 @@
 }
 
 .atlas .atlas-player-detail__training-signal {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
   font-size: 0.74rem;
   font-weight: 650;
   margin: 0;
@@ -113,10 +119,11 @@
 }
 
 .atlas .atlas-player-personal-info__country,
+.atlas .atlas-player-personal-info__position,
 .atlas .atlas-player-personal-info__value {
   align-items: center;
   display: inline-flex;
-  gap: 5px;
+  gap: 6px;
 }
 
 .atlas .atlas-player-personal-info__value-change {
@@ -1105,6 +1112,9 @@
 }
 
 .atlas .atlas-player-detail__history-skill-change {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
   font-size: 0.65rem;
   font-weight: 750;
   margin-left: 3px;

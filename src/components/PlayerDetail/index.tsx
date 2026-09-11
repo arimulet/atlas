@@ -1,5 +1,5 @@
 import { Component, type ReactNode } from "react";
-import { Ban, CircleDashed, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowUp, ArrowDown, Ban, CircleDashed, Sparkles } from "lucide-react";
 import type { PlayerDetailProps } from "./types";
 import { ProjectionPanel } from "./ProjectionPanel";
 import { formatNumber } from "@/app/formatters";
@@ -46,7 +46,7 @@ export function PlayerDetail({
           type="button"
           onClick={isLoading ? onBack : onBackToSquad}
         >
-          {isLoading ? "← Back" : "Back to Squad"}
+          <ArrowLeft size={14} /> {isLoading ? "Back" : "Back to Squad"}
         </button>
         <section className="atlas-player-detail-panel">
           <p className="atlas-player-detail__message">
@@ -176,7 +176,7 @@ function PlayerHeader({ diagnostics, onBack, player }: PlayerHeaderProps) {
     <header className="atlas-player-detail__header">
       <div className="atlas-player-detail__header-actions">
         <button className="atlas-player-detail__back" type="button" onClick={onBack}>
-          ← Back
+          <ArrowLeft size={14} /> Back
         </button>
         <DiagnosticNotifications diagnostics={diagnostics} showAll />
       </div>
@@ -298,7 +298,11 @@ function TrainingHistoryPanel({ rows }: TrainingHistoryPanelProps) {
                           aria-hidden="true"
                           className="atlas-player-detail__history-skill-change"
                         >
-                          {skill.change.direction === "up" ? "↑" : "↓"}
+                          {skill.change.direction === "up" ? (
+                            <ArrowUp size={10} />
+                          ) : (
+                            <ArrowDown size={10} />
+                          )}
                           {skill.change.levelDelta}
                         </span>
                       ) : null}

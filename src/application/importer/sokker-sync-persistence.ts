@@ -172,6 +172,7 @@ export class SokkerSyncPersistence {
             juniorId: junior.id,
             clubId: teamId,
             name: junior.name.fullName,
+            countryId: payload.current.team.country.code,
             age: junior.age,
             currentLevel: junior.currentLevel,
             weeksLeft: junior.weeksLeft,

@@ -1,3 +1,4 @@
+import { AlertCircle, AlertTriangle, Sparkles } from "lucide-react";
 import type { PlayerDetailViewModel } from "@/app/view-models/player-detail-view-model";
 import { formatEta, formatNumber, formatPercentage } from "@/app/formatters";
 import { TalentPanel } from "./TalentPanel";
@@ -81,7 +82,7 @@ function TrainingSignalSummary({
   if (status === "Training prospect") {
     return (
       <p className="atlas-player-detail__training-signal is-prospect">
-        ✦ Training prospect: young player with a strong role fit.
+        <Sparkles size={14} /> Training prospect: young player with a strong role fit.
       </p>
     );
   }
@@ -89,7 +90,15 @@ function TrainingSignalSummary({
   if (status === "Attention" || status === "Critical") {
     return (
       <p className="atlas-player-detail__training-signal is-warning">
-        {status === "Critical" ? "⚠ Critical training warning." : "! Training requires review."}
+        {status === "Critical" ? (
+          <>
+            <AlertTriangle size={14} /> Critical training warning.
+          </>
+        ) : (
+          <>
+            <AlertCircle size={14} /> Training requires review.
+          </>
+        )}
       </p>
     );
   }

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { X } from "lucide-react";
 
 import { SokkerImporterForm } from "../SokkerImporterForm";
 import type { SokkerImportModalProps } from "./types";
@@ -48,7 +49,7 @@ export function SokkerImportModal({ isOpen, onClose, onImport }: SokkerImportMod
             onClick={onClose}
             disabled={isLoading}
           >
-            ×
+            <X size={16} />
           </button>
         </div>
 

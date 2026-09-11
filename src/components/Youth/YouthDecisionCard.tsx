@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { CircleDashed } from "lucide-react";
 import { PlayerLink } from "@/components/PlayerLink";
 import {
   mapYouthFitReason,
@@ -23,7 +24,7 @@ export function YouthDecisionCard({ model, onSelectPlayer }: YouthDecisionCardPr
       <header className="atlas-youth-decision-card__header">
         <div>
           <h3 className="atlas-youth-decision-card__player">
-            <PlayerLink playerId={model.playerId} onSelectPlayer={onSelectPlayer}>
+            <PlayerLink countryName={model.countryName} playerId={model.playerId} onSelectPlayer={onSelectPlayer}>
               {model.playerName}
             </PlayerLink>
             <span>{model.age === null ? "Age unknown" : `· ${model.age}`}</span>
@@ -42,7 +43,7 @@ export function YouthDecisionCard({ model, onSelectPlayer }: YouthDecisionCardPr
 
       {model.advancedTraining.isTrial ? (
         <p className="atlas-youth-decision-card__trial-advanced">
-          ◌ Trial advanced training: this provisional slot requires validation with real senior
+          <CircleDashed size={14} className="inline-block align-middle" /> Trial advanced training: this provisional slot requires validation with real senior
           training weeks.
         </p>
       ) : null}

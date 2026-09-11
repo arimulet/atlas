@@ -17,6 +17,7 @@ export interface DiagnosticSubject {
   id?: string;
   type: DiagnosticSubjectType;
   label: string;
+  countryName?: string | null;
 }
 
 export interface DiagnosticViewModel {
@@ -115,7 +116,8 @@ export function createDiagnosticsPageViewModel(
     const subject: DiagnosticSubject = {
       id: player.id,
       type: "youth",
-      label: player.name
+      label: player.name,
+      ...(player.countryName ? { countryName: player.countryName } : {})
     };
 
     for (const signal of player.signals) {
@@ -183,7 +185,10 @@ function createPlayerIndex(input: CreateDiagnosticsPageViewModelInput): PlayerIn
     const subject =
       existingSubject?.id !== undefined
         ? existingSubject
-        : playerSubject(player.name, player.playerId);
+        : playerSubject(player.name, player.playerId, player.countryName);
+    if (!subject.countryName && player.countryName) {
+      subject.countryName = player.countryName;
+    }
     byName.set(player.name, subject);
     byId.set(player.id, subject);
     byId.set(String(player.playerId), subject);
@@ -232,11 +237,16 @@ function trainingAreaForFinding(
   return "Player";
 }
 
-function playerSubject(name: string, id?: string | number | null): DiagnosticSubject {
+function playerSubject(
+  name: string,
+  id?: string | number | null,
+  countryName?: string | null
+): DiagnosticSubject {
   return {
     id: id === null || id === undefined ? undefined : String(id),
     type: "player",
-    label: name
+    label: name,
+    ...(countryName ? { countryName } : {})
   };
 }
 

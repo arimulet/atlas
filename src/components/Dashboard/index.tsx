@@ -1,4 +1,5 @@
 import { useMemo, type ReactNode } from "react";
+import { Check } from "lucide-react";
 import type {
   ClubDashboardDevelopmentPlayer,
   ClubDashboardYouthPipelinePlayer,
@@ -15,7 +16,9 @@ import {
 import { createSquadPlanningViewModel } from "../Squad/squad-planning-view-model";
 
 import { AttentionIcon } from "@/components/AttentionIcon";
+import { CountryNameFlag } from "@/components/CountryNameFlag";
 import { PlayerLink } from "@/components/PlayerLink";
+import { registerPlayerCountries } from "@/context/PlayerCountryContext";
 
 type Priority = "High" | "Medium" | "Low";
 
@@ -23,6 +26,7 @@ interface WatchPlayer {
   id: string;
   playerId: string | null;
   name: string;
+  countryName?: string | null;
   reasons: string[];
   severity: Severity;
 }
@@ -31,6 +35,7 @@ export interface AttentionItem {
   id: string;
   playerId: string | null;
   name: string | null;
+  countryName?: string | null;
   message: string;
   severity: Severity;
 }
@@ -52,6 +57,9 @@ export function Dashboard({
   financialStrategy,
   diagnostic
 }: DashboardProps) {
+  if (squadPlanning?.assessment?.depthPlayers) {
+    registerPlayerCountries(squadPlanning.assessment.depthPlayers);
+  }
   const attentionItems =
     dashboard || diagnostic ? buildAttentionItems(dashboard, youthAcademy, diagnostic) : [];
   const watchPlayers = dashboard ? buildWatchPlayers(dashboard, youthAcademy) : [];
@@ -227,7 +235,9 @@ function AttentionPanel({ items, onSelectPlayer, status }: AttentionPanelProps) 
         <PanelMessage>Import a club snapshot to populate the dashboard.</PanelMessage>
       ) : null}
       {status === "ready" && items.length === 0 ? (
-        <PanelMessage tone="success">✓ No critical issues detected</PanelMessage>
+        <PanelMessage tone="success">
+          <Check size={14} className="inline-block align-middle" /> No critical issues detected
+        </PanelMessage>
       ) : null}
       {status === "ready" && items.length > 0 ? (
         <ul className="atlas-dashboard-attention-list">
@@ -242,7 +252,10 @@ function AttentionPanel({ items, onSelectPlayer, status }: AttentionPanelProps) 
                         {item.name}
                       </PlayerLink>
                     ) : (
-                      item.name
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                        {item.countryName ? <CountryNameFlag countryName={item.countryName} /> : null}
+                        <span>{item.name}</span>
+                      </span>
                     )}
                   </strong>
                 ) : null}
@@ -276,7 +289,9 @@ function PlayersToWatchPanel({ onSelectPlayer, players, status }: PlayersToWatch
         <PanelMessage>Import a club snapshot to identify player signals.</PanelMessage>
       ) : null}
       {status === "ready" && players.length === 0 ? (
-        <PanelMessage tone="success">✓ No players currently require attention</PanelMessage>
+        <PanelMessage tone="success">
+          <Check size={14} className="inline-block align-middle" /> No players currently require attention
+        </PanelMessage>
       ) : null}
       {status === "ready" && players.length > 0 ? (
         <div className="atlas-dashboard-watch-table" role="table" aria-label="Players to watch">
@@ -293,7 +308,10 @@ function PlayersToWatchPanel({ onSelectPlayer, players, status }: PlayersToWatch
                     {player.name}
                   </PlayerLink>
                 ) : (
-                  player.name
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                    {player.countryName ? <CountryNameFlag countryName={player.countryName} /> : null}
+                    <span>{player.name}</span>
+                  </span>
                 )}
               </strong>
               <span role="cell">{player.reasons.join(" · ")}</span>
@@ -388,6 +406,7 @@ export function buildAttentionItems(
       id: `academy-${player.id}`,
       playerId: null,
       name: player.name,
+      countryName: player.countryName ?? null,
       message: academyReason(player),
       severity: player.severity
     });
@@ -518,6 +537,7 @@ function buildWatchPlayers(
       id: player.id,
       playerId: null,
       name: player.name,
+      countryName: player.countryName ?? null,
       reasons: [academyReason(player)],
       severity: player.severity
     });
@@ -536,6 +556,7 @@ function addWatchPlayer(players: Map<string, WatchPlayer>, incoming: WatchPlayer
 
   existing.reasons = [...new Set([...existing.reasons, ...incoming.reasons])];
   existing.playerId ??= incoming.playerId;
+  existing.countryName ??= incoming.countryName;
   if (severityOrder[incoming.severity] > severityOrder[existing.severity]) {
     existing.severity = incoming.severity;
   }

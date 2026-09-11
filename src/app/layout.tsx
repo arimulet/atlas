@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "@/styles/index.scss";
 import { AuthProvider } from "@/context/AuthContext";
+import { PlayerCountryProvider } from "@/context/PlayerCountryContext";
 
 export const metadata: Metadata = {
   title: "ATLAS - Football Manager",
@@ -15,7 +16,9 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body suppressHydrationWarning>
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <PlayerCountryProvider>{children}</PlayerCountryProvider>
+        </AuthProvider>
       </body>
     </html>
   );
