@@ -1,6 +1,6 @@
 import fs from "fs";
 
-// Load environment variables natively from .env (Node 20+)
+// Load environment variables natively from .env (Node 24+)
 if (fs.existsSync(".env")) {
   process.loadEnvFile(".env");
 }
