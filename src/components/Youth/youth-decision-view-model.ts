@@ -23,6 +23,7 @@ export interface YouthDecisionMessage {
 export interface YouthDecisionViewModel {
   playerId: string;
   playerName: string;
+  countryName?: string | null;
   age: number | null;
   roleLabel: string;
   initialProfile: DevelopmentProfile | null;
@@ -545,6 +546,7 @@ export function createYouthDecisionViewModel(
   return {
     playerId: String(candidate.playerId),
     playerName: candidate.playerName,
+    countryName: candidate.countryName ?? null,
     age: candidate.age,
     roleLabel: roleLabel(candidate.role),
     initialProfile: candidate.initialProfile,

@@ -8,8 +8,9 @@ import {
   type DiagnosticViewModel
 } from "@/app/view-models/diagnostics-view-model";
 import type { DiagnosticsProps } from "./types";
+import { CountryNameFlag } from "@/components/CountryNameFlag";
 import { PlayerLink } from "@/components/PlayerLink";
-import { registerPlayerCountries } from "@/context/PlayerCountryContext";
+import { registerPlayerCountries, usePlayerCountry } from "@/context/PlayerCountryContext";
 
 type SeverityFilter = "all" | Severity;
 type AreaFilter = "all" | DiagnosticArea;
@@ -31,6 +32,9 @@ export function Diagnostics({
 }: DiagnosticsProps) {
   if (training?.players) {
     registerPlayerCountries(training.players);
+  }
+  if (youthAcademy?.derived.players) {
+    registerPlayerCountries(youthAcademy.derived.players);
   }
   const [severityFilter, setSeverityFilter] = useState<SeverityFilter>("all");
   const [areaFilter, setAreaFilter] = useState<AreaFilter>("all");
@@ -237,6 +241,8 @@ interface DiagnosticRowProps {
 function DiagnosticRow({ diagnostic, onSelectPlayer, showContext }: DiagnosticRowProps) {
   const playerId = diagnostic.subject?.type === "player" ? diagnostic.subject.id : undefined;
   const canNavigateToPlayer = playerId !== undefined;
+  const contextCountry = usePlayerCountry(diagnostic.subject?.id);
+  const countryName = diagnostic.subject?.countryName ?? contextCountry;
 
   return (
     <tr>
@@ -250,11 +256,18 @@ function DiagnosticRow({ diagnostic, onSelectPlayer, showContext }: DiagnosticRo
       </td>
       <td>
         {canNavigateToPlayer ? (
-          <PlayerLink playerId={playerId} onSelectPlayer={onSelectPlayer}>
+          <PlayerLink
+            countryName={countryName}
+            playerId={playerId}
+            onSelectPlayer={onSelectPlayer}
+          >
             {diagnostic.subject?.label ?? "\u2014"}
           </PlayerLink>
         ) : (
-          <span className="atlas-diagnostics-subject">{diagnostic.subject?.label ?? "—"}</span>
+          <span className="atlas-diagnostics-subject">
+            {countryName ? <CountryNameFlag countryName={countryName} /> : null}
+            <span>{diagnostic.subject?.label ?? "—"}</span>
+          </span>
         )}
       </td>
       <td className="atlas-diagnostics-message">{diagnostic.message}</td>

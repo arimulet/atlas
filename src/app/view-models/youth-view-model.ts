@@ -13,6 +13,7 @@ export interface YouthLevelValue {
 export interface YouthPlayerRow {
   id: string;
   name: string;
+  countryName?: string | null;
   age: number;
   position: string | null;
   level: YouthLevelValue | null;
@@ -38,6 +39,7 @@ export function createYouthPlayerRows(planning: RealYouthAcademyPlanning | null)
   return (planning?.derived.players ?? []).map((player) => ({
     id: player.id,
     name: player.name,
+    countryName: player.countryName ?? null,
     age: player.age,
     position: null,
     level:

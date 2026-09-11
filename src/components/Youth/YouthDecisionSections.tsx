@@ -1,6 +1,8 @@
 import { Fragment, useMemo, useState, type ReactNode } from "react";
 import { Check, CircleDashed, X } from "lucide-react";
 
+import { PlayerLink } from "@/components/PlayerLink";
+import { registerPlayerCountries } from "@/context/PlayerCountryContext";
 import { YouthDecisionCard } from "./YouthDecisionCard";
 import {
   filterYouthDecisionViewModels,
@@ -20,6 +22,8 @@ export function YouthDecisionSections({
   onSelectPlayer,
   status
 }: YouthDecisionSectionsProps) {
+  registerPlayerCountries(models);
+
   const [filter, setFilter] = useState<YouthDecisionFilter>("all");
   const filteredModels = useMemo(
     () => filterYouthDecisionViewModels(models, filter),
@@ -28,7 +32,9 @@ export function YouthDecisionSections({
 
   return (
     <>
-      {status === "ready" && models.length > 1 ? <YouthDecisionComparison models={models} /> : null}
+      {status === "ready" && models.length > 1 ? (
+        <YouthDecisionComparison models={models} onSelectPlayer={onSelectPlayer} />
+      ) : null}
       <section
         className="atlas-youth-panel atlas-youth-panel--decisions"
         aria-labelledby="youth-decisions-title"
@@ -122,7 +128,13 @@ function DecisionFilters({
   );
 }
 
-function YouthDecisionComparison({ models }: { models: YouthDecisionViewModel[] }) {
+function YouthDecisionComparison({
+  models,
+  onSelectPlayer
+}: {
+  models: YouthDecisionViewModel[];
+  onSelectPlayer: (playerId: string) => void;
+}) {
   const comparisonModels = orderYouthDecisionComparisonModels(models);
   const firstExcludedIndex = comparisonModels.findIndex((model) => !isCurrentlyAdvanced(model));
 
@@ -181,7 +193,15 @@ function YouthDecisionComparison({ models }: { models: YouthDecisionViewModel[] 
                   </tr>
                 ) : null}
                 <tr className={model.advancedTraining.isTrial ? "is-trial" : undefined}>
-                  <th scope="row">{model.playerName}</th>
+                  <th scope="row">
+                    <PlayerLink
+                      countryName={model.countryName}
+                      playerId={model.playerId}
+                      onSelectPlayer={onSelectPlayer}
+                    >
+                      {model.playerName}
+                    </PlayerLink>
+                  </th>
                   <td className="atlas-youth-table__center">
                     <AdvancedTrainingSlotIcon model={model} />
                   </td>

@@ -16,6 +16,7 @@ import {
 import { createSquadPlanningViewModel } from "../Squad/squad-planning-view-model";
 
 import { AttentionIcon } from "@/components/AttentionIcon";
+import { CountryNameFlag } from "@/components/CountryNameFlag";
 import { PlayerLink } from "@/components/PlayerLink";
 import { registerPlayerCountries } from "@/context/PlayerCountryContext";
 
@@ -25,6 +26,7 @@ interface WatchPlayer {
   id: string;
   playerId: string | null;
   name: string;
+  countryName?: string | null;
   reasons: string[];
   severity: Severity;
 }
@@ -33,6 +35,7 @@ export interface AttentionItem {
   id: string;
   playerId: string | null;
   name: string | null;
+  countryName?: string | null;
   message: string;
   severity: Severity;
 }
@@ -249,7 +252,10 @@ function AttentionPanel({ items, onSelectPlayer, status }: AttentionPanelProps) 
                         {item.name}
                       </PlayerLink>
                     ) : (
-                      item.name
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                        {item.countryName ? <CountryNameFlag countryName={item.countryName} /> : null}
+                        <span>{item.name}</span>
+                      </span>
                     )}
                   </strong>
                 ) : null}
@@ -302,7 +308,10 @@ function PlayersToWatchPanel({ onSelectPlayer, players, status }: PlayersToWatch
                     {player.name}
                   </PlayerLink>
                 ) : (
-                  player.name
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                    {player.countryName ? <CountryNameFlag countryName={player.countryName} /> : null}
+                    <span>{player.name}</span>
+                  </span>
                 )}
               </strong>
               <span role="cell">{player.reasons.join(" · ")}</span>
@@ -397,6 +406,7 @@ export function buildAttentionItems(
       id: `academy-${player.id}`,
       playerId: null,
       name: player.name,
+      countryName: player.countryName ?? null,
       message: academyReason(player),
       severity: player.severity
     });
@@ -527,6 +537,7 @@ function buildWatchPlayers(
       id: player.id,
       playerId: null,
       name: player.name,
+      countryName: player.countryName ?? null,
       reasons: [academyReason(player)],
       severity: player.severity
     });
@@ -545,6 +556,7 @@ function addWatchPlayer(players: Map<string, WatchPlayer>, incoming: WatchPlayer
 
   existing.reasons = [...new Set([...existing.reasons, ...incoming.reasons])];
   existing.playerId ??= incoming.playerId;
+  existing.countryName ??= incoming.countryName;
   if (severityOrder[incoming.severity] > severityOrder[existing.severity]) {
     existing.severity = incoming.severity;
   }

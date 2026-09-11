@@ -650,6 +650,8 @@ export interface RealYouthAcademyObservedPlayer {
   playerId?: number;
   externalId: string | null;
   name: string;
+  countryId?: number | null;
+  countryName?: string | null;
   age: number;
   initialLevel: number | null;
   initialWeeks: number | null;
@@ -664,6 +666,8 @@ export interface RealYouthAcademyPlayerPlan {
   playerId?: number;
   externalId: string | null;
   name: string;
+  countryId?: number | null;
+  countryName?: string | null;
   age: number;
   initialLevel: number | null;
   initialWeeks: number | null;

@@ -256,6 +256,7 @@ function toCandidate(
   return {
     playerId: entry.player.playerId,
     playerName: entry.player.playerName ?? `Player ${entry.player.playerId}`,
+    countryName: entry.player.countryName ?? null,
     age: entry.player.age ?? null,
     role: entry.player.role,
     formation: entry.player.formation ?? null,

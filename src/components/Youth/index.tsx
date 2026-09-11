@@ -7,6 +7,7 @@ import {
 } from "@atlas/web/app/view-models/youth-view-model";
 import type { YouthProps } from "./types";
 import { AttentionIcon } from "@/components/AttentionIcon";
+import { CountryNameFlag } from "@/components/CountryNameFlag";
 import { formatTalent } from "@/app/formatters";
 import { skillLevelLabel } from "@/app/view-models/skill-level-label";
 import { YouthSummary } from "./YouthDecisionSections";
@@ -141,6 +142,7 @@ function YouthPlayerRows({
             >
               {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
             </button>
+            {row.countryName ? <CountryNameFlag countryName={row.countryName} /> : null}
             <span className={`atlas-youth-table__player-name-value${skillChangeClass}`}>
               {row.name}
             </span>
