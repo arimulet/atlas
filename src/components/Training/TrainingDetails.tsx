@@ -2,6 +2,7 @@ import { calculateWeeklyTrainingPointsByKind } from "@atlas/domain";
 import type { TrainingReport } from "@atlas/web/app/types";
 import { formatEta, formatNumber, formatPercentage } from "@/app/formatters";
 import { PLAYER_SKILL_DEFINITIONS, type PlayerSkillKey } from "@/app/view-models/player-skills";
+import { skillLevelLabel } from "@/app/view-models/skill-level-label";
 import type { TrainingPlayerRow } from "@/app/view-models/training-view-model";
 
 interface TrainingDetailsProps {
@@ -74,7 +75,12 @@ function SeasonSkillCell({ isLatestSeason, player, reports, allReports, skill }:
       <div className="atlas-training-details__level-groups">
         {groupReportsBySkillLevel(reports, allReports, skill).map((group) => (
           <div className="atlas-training-details__level-group" key={group.key}>
-            <span className="atlas-training-details__level">L{group.level ?? "—"}</span>
+            <span
+              className="atlas-training-details__level"
+              title={skillLevelLabel(group.level ?? null) ?? undefined}
+            >
+              L{group.level ?? "—"}
+            </span>
             <div className="atlas-training-details__sessions">
               {group.reports.map((report) => (
                 <TrainingSessionMark

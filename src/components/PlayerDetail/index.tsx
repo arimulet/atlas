@@ -206,6 +206,7 @@ function SkillsPanel({ skills }: SkillsPanelProps) {
                     ? `atlas-player-detail__skill-value is-${skill.lastWeekChange.direction}`
                     : "atlas-player-detail__skill-value"
                 }
+                title={skill.levelLabel ?? undefined}
               >
                 <span>{formatNumber(skill.value)}</span>
                 {skill.levelLabel ? (
