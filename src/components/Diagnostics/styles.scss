@@ -272,6 +272,9 @@
 
   .atlas-diagnostics-subject {
     color: var(--atlas-text-secondary);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
   }
 
   .atlas-diagnostics-subject-link {

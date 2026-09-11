@@ -45,6 +45,7 @@ describe("youth decision presentation model", () => {
 
     expect(model).toMatchObject({
       decision: "keep",
+      countryName: "Poland",
       sportingConfidence: "high",
       sportingConfidenceLabel: "High confidence",
       economicConfidence: "low",
@@ -230,6 +231,7 @@ function createCandidate(
   return {
     playerId,
     playerName: `Player ${playerId}`,
+    countryName: "Poland",
     age: 17,
     role: "prospect",
     formation: "DEF",

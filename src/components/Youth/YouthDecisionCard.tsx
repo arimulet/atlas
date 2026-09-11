@@ -24,7 +24,7 @@ export function YouthDecisionCard({ model, onSelectPlayer }: YouthDecisionCardPr
       <header className="atlas-youth-decision-card__header">
         <div>
           <h3 className="atlas-youth-decision-card__player">
-            <PlayerLink playerId={model.playerId} onSelectPlayer={onSelectPlayer}>
+            <PlayerLink countryName={model.countryName} playerId={model.playerId} onSelectPlayer={onSelectPlayer}>
               {model.playerName}
             </PlayerLink>
             <span>{model.age === null ? "Age unknown" : `· ${model.age}`}</span>

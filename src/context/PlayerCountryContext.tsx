@@ -28,9 +28,13 @@ export function registerPlayerCountries(
   }[]
 ): void {
   for (const player of players) {
-    const id = player.playerId ?? player.id;
-    if (id && player.countryName) {
-      playerCountryCache.set(String(id), player.countryName);
+    if (player.countryName) {
+      if (player.playerId) {
+        playerCountryCache.set(String(player.playerId), player.countryName);
+      }
+      if (player.id) {
+        playerCountryCache.set(String(player.id), player.countryName);
+      }
     }
   }
 }
@@ -71,10 +75,15 @@ export function PlayerCountryProvider({ children }: { children: ReactNode }) {
     ) => {
       let added = false;
       for (const player of players) {
-        const id = player.playerId ?? player.id;
-        if (id && player.countryName && !playerCountryCache.has(String(id))) {
-          playerCountryCache.set(String(id), player.countryName);
-          added = true;
+        if (player.countryName) {
+          if (player.playerId && !playerCountryCache.has(String(player.playerId))) {
+            playerCountryCache.set(String(player.playerId), player.countryName);
+            added = true;
+          }
+          if (player.id && !playerCountryCache.has(String(player.id))) {
+            playerCountryCache.set(String(player.id), player.countryName);
+            added = true;
+          }
         }
       }
       if (added) {

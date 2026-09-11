@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import type { RealYouthAcademyPlanning } from "@atlas/web/app/types";
 import { createYouthPlayerRows } from "./youth-view-model";
@@ -12,6 +12,7 @@ describe("youth view model", () => {
     expect(rows[0]).toMatchObject({
       id: "youth-1",
       name: "Ana Silva",
+      countryName: "Argentina",
       age: 16,
       position: null,
       level: { value: 8, label: "sólido", change: 1 },
@@ -106,6 +107,7 @@ function createPlanning(): RealYouthAcademyPlanning {
           id: "youth-1",
           externalId: null,
           name: "Ana Silva",
+          countryName: "Argentina",
           age: 16,
           initialLevel: 6,
           initialWeeks: 8,

@@ -17,6 +17,7 @@ import type {
 export interface YouthDecisionCandidate {
   playerId: number;
   playerName: string;
+  countryName?: string | null;
   age: number | null;
   role: SquadRole;
   formation: "GK" | "DEF" | "MID" | "ATT" | null;

@@ -1,5 +1,6 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { fetchYouthPerformances, patchYouthObservations } from "@/api";
+import { CountryNameFlag } from "@/components/CountryNameFlag";
 import { skillLevelLabel } from "@/app/view-models/skill-level-label";
 import type { YouthMatchPerformancesDto, RealYouthAcademyPlanning } from "@/app/types";
 
@@ -156,7 +157,11 @@ export function YouthPerformances({ clubId, youthAcademy }: YouthPerformancesPro
                   {gks.map(p => (
                     <tr key={p.player.id}>
                       <th scope="row" style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
-                        {p.player.name} <span style={{ fontWeight: "normal", color: "var(--color-text-secondary, #888)", fontSize: "0.9em" }}>({p.player.age}yo, {p.player.weeksRemaining ?? "-"}w)</span>
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                          {p.player.countryName ? <CountryNameFlag countryName={p.player.countryName} /> : null}
+                          <span>{p.player.name}</span>
+                        </span>{" "}
+                        <span style={{ fontWeight: "normal", color: "var(--color-text-secondary, #888)", fontSize: "0.9em" }}>({p.player.age}yo, {p.player.weeksRemaining ?? "-"}w)</span>
                       </th>
                       <td className={getSkillColorClass(p.player.skill)}>
                         {p.player.skill !== null ? skillLevelLabel(p.player.skill) : "-"}
@@ -221,7 +226,11 @@ export function YouthPerformances({ clubId, youthAcademy }: YouthPerformancesPro
                   return (
                     <tr key={p.player.id}>
                       <th scope="row">
-                        {p.player.name} <span style={{ fontWeight: "normal", color: "var(--color-text-secondary, #888)", fontSize: "0.9em" }}>({p.player.age}yo, {p.player.weeksRemaining ?? "-"}w)</span>
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                          {p.player.countryName ? <CountryNameFlag countryName={p.player.countryName} /> : null}
+                          <span>{p.player.name}</span>
+                        </span>{" "}
+                        <span style={{ fontWeight: "normal", color: "var(--color-text-secondary, #888)", fontSize: "0.9em" }}>({p.player.age}yo, {p.player.weeksRemaining ?? "-"}w)</span>
                       </th>
                       <td className="atlas-youth-table__center">
                          <span className={"atlas-youth-decision-badge " + (pos === "UNKNOWN" ? "is-none" : "is-" + pos.toLowerCase())}>
