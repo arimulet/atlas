@@ -88,6 +88,13 @@ export async function getLastSuccessfulMarketTransferSyncRun(): Promise<Persiste
   return doc as unknown as PersistedMarketTransferSyncRun | null;
 }
 
+export async function getLatestMarketTransferSyncRun(): Promise<PersistedMarketTransferSyncRun | null> {
+  const doc = await MarketTransferSyncRunModel.findOne()
+    .sort({ startedAt: -1 })
+    .lean();
+  return doc as unknown as PersistedMarketTransferSyncRun | null;
+}
+
 export async function upsertMarketTransferCurrent(
   transfer: Omit<PersistedMarketTransferCurrent, "firstSeenAt">
 ): Promise<void> {
