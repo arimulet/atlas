@@ -6,7 +6,8 @@
   "packageManager": "npm@11.12.1",
   "scripts": {
     "dev": "next dev --webpack",
-    "build": "next build --webpack",
+    "build:job": "esbuild src/jobs/run-market-transfer-sync.ts --bundle --platform=node --target=node20 --format=esm --outfile=dist/jobs/run-market-transfer-sync.js --packages=external",
+    "build": "npm run build:job && next build --webpack",
     "start": "next start",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
