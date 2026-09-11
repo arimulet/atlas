@@ -21,6 +21,7 @@ import {
   formatTrainingPriority
 } from "@/app/formatters";
 import { PlayerLink } from "@/components/PlayerLink";
+import { PositionBadge } from "@/components/PositionBadge";
 import { isSquadSkillRequiredForPosition } from "@/app/view-models/squad-view-model";
 import { createPlayerMarketValueViewModel, formatMarketMoney } from "@/app/view-models/market-value-view-model";
 import { SquadPlanningRoleControl } from "@/components/Squad/SquadPlanningRoleControl";
@@ -90,9 +91,12 @@ export function TrainingPlayerTables({
             aria-labelledby={`training-position-${position.code}`}
           >
             <div className="atlas-training-position-section__header">
-              <h2 id={`training-position-${position.code}`}>
-                {TRAINING_POSITION_TITLES[position.code]} ·{" "}
-                {skillLabel(configuration?.[position.code] ?? null)}
+              <h2 id={`training-position-${position.code}`} style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
+                <PositionBadge position={position.code} size="md" />
+                <span>
+                  {TRAINING_POSITION_TITLES[position.code]} ·{" "}
+                  {skillLabel(configuration?.[position.code] ?? null)}
+                </span>
               </h2>
               <span>{positionRows.length} players</span>
             </div>

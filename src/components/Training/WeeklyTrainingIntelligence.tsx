@@ -9,6 +9,7 @@ import {
   TrendingUp
 } from "lucide-react";
 import { PlayerLink } from "@/components/PlayerLink";
+import { PositionBadge } from "@/components/PositionBadge";
 import { formatDate, formatPercentage } from "@/app/formatters";
 import type { TrainingPageData } from "@/app/types";
 import {
@@ -281,7 +282,9 @@ function AdvancedSlotRow({ onSelectPlayer, row }: AdvancedSlotRowProps) {
         </PlayerLink>
       </th>
       <td className="atlas-training-intelligence__numeric">{row.age ?? "—"}</td>
-      <td>{row.position}</td>
+      <td>
+        <PositionBadge position={row.position} />
+      </td>
       <td>
         {row.recommendedSkill ? (
           <span className="atlas-training-intelligence__skill-transition">

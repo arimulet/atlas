@@ -8,6 +8,7 @@ import { useWeeklyTrainingIntelligence } from "./useWeeklyTrainingIntelligence";
 import { RecentTrainingProgressModal } from "./RecentTrainingProgressModal";
 import { TrainingPlayerTables } from "./TrainingPlayerTables";
 import { registerPlayerCountries } from "@/context/PlayerCountryContext";
+import { PositionBadge } from "@/components/PositionBadge";
 
 export function Training({
   clubId,
@@ -77,7 +78,7 @@ function TrainingConfiguration({ configuration }: TrainingConfigurationProps) {
         <div className="atlas-training-configuration">
           {TRAINING_POSITIONS.map((position) => (
             <div className="atlas-training-configuration__item" key={position.code}>
-              <span className="atlas-training-position-badge">{position.code}</span>
+              <PositionBadge position={position.code} />
               <strong>{skillLabel(configuration[position.code])}</strong>
             </div>
           ))}
