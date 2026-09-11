@@ -1,4 +1,4 @@
-﻿import {
+import {
   acquireMarketTransferSyncRun,
   finishMarketTransferSyncRun,
   upsertMarketTransferCurrent,
@@ -31,8 +31,11 @@ export async function runMarketTransferSyncJob(
   // 1. Acquire Lock
   const { runId, success } = await acquireMarketTransferSyncRun(from, to, 60 * 60 * 1000);
   if (!success || !runId) {
+    console.warn(`[MarketTransferSync] Cannot acquire lock. Job already running or lease active.`);
     return { success: false, reason: "Job already running or lease active" };
   }
+
+  console.log(`[MarketTransferSync] Started runId ${runId} (window: ${from.toISOString()} -> ${to.toISOString()})`);
 
   const countryRepo = new MongoCountryRepository();
   const allCountries = await countryRepo.getAll();
@@ -53,6 +56,7 @@ export async function runMarketTransferSyncJob(
 
   try {
     // 2. Auth Provider
+    console.log(`[MarketTransferSync] Authenticating with Sokker provider...`);
     const provider: SokkerDataProvider = createSokkerDataProvider({ login, password });
     const currentContext = await provider.getCurrent();
 
@@ -61,7 +65,10 @@ export async function runMarketTransferSyncJob(
     const limit = 100;
     let hasMore = true;
 
+    console.log(`[MarketTransferSync] Step 1: Fetching active transfers from Sokker market...`);
+
     while (hasMore) {
+      const pageNum = counts.pagesRead + 1;
       const actives = await provider.getTransfers(limit, offset);
       if (actives.length === 0) {
         hasMore = false;
@@ -86,62 +93,77 @@ export async function runMarketTransferSyncJob(
       }
       
       counts.pagesRead++;
+      console.log(`[MarketTransferSync] Page ${pageNum}: upserted ${actives.length} active transfers (Total upserted: ${counts.currentUpserted})`);
       offset += limit;
     }
 
     // Mark missing
     counts.currentMissing = await markMissingMarketTransferCurrent(runId);
+    console.log(`[MarketTransferSync] Step 2: Completed active transfers scan. Marked ${counts.currentMissing} transfers as missing.`);
 
-    // 4. Process Missing Currents by hitting individual transfer histories
+    // 4. Process Missing Currents by hitting individual transfer histories in parallel chunks
     const missingCurrents = await getMissingMarketTransfers();
+    const totalMissing = missingCurrents.length;
+    const concurrency = 10;
+    console.log(`[MarketTransferSync] Step 3: Resolving ${totalMissing} missing current transfers by checking individual player history (concurrency: ${concurrency})...`);
 
-    for (const current of missingCurrents) {
-      try {
-        const history = await provider.getPlayerTransferHistory(current.playerId);
-        const latest = history[0];
+    let processedCount = 0;
 
-        if (latest) {
-          const transferDate = new Date(latest.transferDate);
-          
-          // Check if this is the transfer we tracked. 
-          // If the player was just sold, the transfer date should be AFTER they were put on the market (firstSeenAt).
-          // We'll give a generous 3-day buffer for timezone inconsistencies or slow updates.
-          const bufferTime = current.firstSeenAt.getTime() - (3 * 24 * 60 * 60 * 1000);
-          
-          if (transferDate.getTime() > bufferTime) {
-            const diffMs = transferDate.getTime() - new Date().getTime();
-            const msPerWeek = 7 * 24 * 60 * 60 * 1000;
-            const weekDiff = Math.round(diffMs / msPerWeek);
-            const transferGameWeek = currentContext.calendar.gameWeek + weekDiff;
-            
-            await promoteToFinalMarketTransfer({
-              transferKey: latest.transferKey,
-              playerId: latest.playerId,
-              name: latest.name,
-              transferDate,
-              gameWeek: transferGameWeek,
-              season: getSokkerSeason(transferGameWeek),
-              week: normalizeSeasonWeek(transferGameWeek),
-              salePrice: Math.round(latest.salePrice * (currencyRates.get(latest.currency) ?? 1)),
-              age: latest.age,
-              skills: current.player.skills
-            });
-            counts.finalCreatedOrUpdated++;
+    for (let i = 0; i < totalMissing; i += concurrency) {
+      const chunk = missingCurrents.slice(i, i + concurrency);
+
+      await Promise.all(
+        chunk.map(async (current) => {
+          try {
+            const history = await provider.getPlayerTransferHistory(current.playerId);
+            const latest = history[0];
+
+            if (latest) {
+              const transferDate = new Date(latest.transferDate);
+              const bufferTime = current.firstSeenAt.getTime() - (3 * 24 * 60 * 60 * 1000);
+              
+              if (transferDate.getTime() > bufferTime) {
+                const diffMs = transferDate.getTime() - new Date().getTime();
+                const msPerWeek = 7 * 24 * 60 * 60 * 1000;
+                const weekDiff = Math.round(diffMs / msPerWeek);
+                const transferGameWeek = currentContext.calendar.gameWeek + weekDiff;
+                
+                await promoteToFinalMarketTransfer({
+                  transferKey: latest.transferKey,
+                  playerId: latest.playerId,
+                  name: latest.name,
+                  transferDate,
+                  gameWeek: transferGameWeek,
+                  season: getSokkerSeason(transferGameWeek),
+                  week: normalizeSeasonWeek(transferGameWeek),
+                  salePrice: Math.round(latest.salePrice * (currencyRates.get(latest.currency) ?? 1)),
+                  age: latest.age,
+                  skills: current.player.skills
+                });
+                counts.finalCreatedOrUpdated++;
+              }
+            }
+          } catch (playerErr) {
+            const msg = playerErr instanceof Error ? playerErr.message : String(playerErr);
+            console.warn(`[MarketTransferSync] Failed to fetch transfer history for player ${current.playerId}: ${msg}`);
           }
-        }
-      } catch {
-        // Log or ignore single player failure, we'll delete the current record anyway
-        // or wait, if the API fails randomly, we might not want to delete it yet?
-        // Usually if it's a 404, player is deleted. For safety, we just delete it.
+          
+          await deleteMarketTransferCurrent(current.playerId);
+          counts.currentDeleted++;
+          counts.pagesRead++;
+        })
+      );
+
+      processedCount += chunk.length;
+
+      if (processedCount % 50 === 0 || processedCount >= totalMissing) {
+        const pct = totalMissing > 0 ? Math.round((processedCount / totalMissing) * 100) : 100;
+        console.log(`[MarketTransferSync] Missing transfers progress: ${processedCount}/${totalMissing} (${pct}%) | Promoted: ${counts.finalCreatedOrUpdated}, Cleaned: ${counts.currentDeleted}`);
       }
-      
-      // Always delete the current record so it doesn't get scanned every single run
-      await deleteMarketTransferCurrent(current.playerId);
-      counts.currentDeleted++;
-      counts.pagesRead++; // Treat each player fetch as a page read for telemetry
     }
 
     await finishMarketTransferSyncRun(runId, counts);
+    console.log(`[MarketTransferSync] Job completed successfully for runId ${runId}. Summary:`, counts);
     return { runId, success: true };
   } catch (error) {
     const rawMsg = error instanceof Error ? error.message : String(error);
@@ -152,6 +174,7 @@ export async function runMarketTransferSyncJob(
       // Keep as string if it's not valid JSON
     }
     
+    console.error(`[MarketTransferSync] Job failed for runId ${runId}:`, rawMsg);
     await finishMarketTransferSyncRun(runId, counts, rawMsg);
     return { runId, success: false, reason: parsedReason };
   }
