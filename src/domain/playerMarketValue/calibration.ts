@@ -102,19 +102,40 @@ export function calibratePlayerMarketValue(
   const calibrationStrength = comparableEstimate
     ? calculateCalibrationStrength(comparableEstimate, config)
     : 0;
-  const rawAdjustment = calibrationFactor ? calibrationFactor.expected - 1 : 0;
-  const maximumAllowedAdjustment =
-    comparableEstimate && comparableEstimate.sampleSize < 3
-      ? config.maximumWeakEvidenceAdjustment
-      : config.maximumCalibrationAdjustment;
-  const boundedAdjustment = clamp(
-    rawAdjustment * calibrationStrength,
-    -maximumAllowedAdjustment,
-    maximumAllowedAdjustment
-  );
-  const calibratedExpected = roundNumber(
-    fundamental.estimatedValue.expected * (1 + boundedAdjustment)
-  );
+  let calibratedExpected: number;
+  if (!comparableEstimate || !comparableEstimate.estimatedValue) {
+    calibratedExpected = fundamental.estimatedValue.expected;
+  } else {
+    const fundamentalPrice = fundamental.estimatedValue.expected;
+    const marketPrice = comparableEstimate.estimatedValue.expected;
+    const sampleSize = comparableEstimate.sampleSize;
+
+    let marketWeight = 0;
+    if (sampleSize === 1) {
+      marketWeight = Math.min(0.25, config.maximumWeakEvidenceAdjustment);
+    } else if (sampleSize === 2) {
+      marketWeight = 0.5;
+    } else {
+      const avgSimilarity =
+        comparableEstimate.comparables.reduce((sum, c) => sum + c.similarityScore, 0) /
+        sampleSize;
+      const baseWeight = sampleSize >= 5 ? 0.85 : 0.75;
+      marketWeight = clamp(baseWeight + (avgSimilarity - 0.75) * 0.5, 0.75, 0.92);
+    }
+
+    calibratedExpected = roundNumber(
+      fundamentalPrice * (1 - marketWeight) + marketPrice * marketWeight
+    );
+
+    if (sampleSize < 3) {
+      const maxWeak = config.maximumWeakEvidenceAdjustment;
+      calibratedExpected = clamp(
+        calibratedExpected,
+        roundNumber(fundamentalPrice * (1 - maxWeak)),
+        roundNumber(fundamentalPrice * (1 + maxWeak))
+      );
+    }
+  }
   const confidence = calculateCalibratedConfidence(
     fundamental,
     comparableEstimate,
@@ -270,7 +291,7 @@ export function calculateCalibrationStrength(
     1 - clamp((comparableEstimate.priceDispersion.coefficient ?? 1) * 0.7, 0, 0.7);
   const evidence =
     sampleEvidence * averageSimilarity * averageRecency * averageQuality * dispersionPenalty;
-  const maxStrength = comparables.length < 3 ? config.maximumWeakEvidenceAdjustment : 0.7;
+  const maxStrength = comparables.length < 3 ? config.maximumWeakEvidenceAdjustment : 0.95;
   return clamp(evidence * maxStrength, 0, maxStrength);
 }
 

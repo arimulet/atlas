@@ -42,8 +42,17 @@ export function calculatePlayerMarketSimilarity(
   config: MarketCalibrationConfig = MARKET_CALIBRATION_CONFIG,
   precomputedTargetProfile?: DevelopmentProfile | null
 ): number {
-  void config;
   const targetPlayer = readPlayer(target);
+  const maxAgeDiff = config.maxAgeDifference ?? 0;
+  if (
+    typeof targetPlayer.age === "number" &&
+    isValidAge(targetPlayer.age) &&
+    isValidAge(comparable.age) &&
+    Math.abs(targetPlayer.age - comparable.age) > maxAgeDiff
+  ) {
+    return 0;
+  }
+
   const targetProfile =
     precomputedTargetProfile !== undefined
       ? precomputedTargetProfile
@@ -65,6 +74,7 @@ export function calculatePlayerMarketSimilarity(
     (component): component is number => component !== null
   );
   if (availableComponents.length === 0) return 0;
+  if (skillSimilarity === 0) return 0;
 
   const weightedScore =
     (skillSimilarity ?? 0) * 0.6 + ageSimilarity * 0.2 + profileSimilarity * 0.2;
@@ -115,13 +125,25 @@ export function findMarketComparables(
       ) {
         return false;
       }
+      const maxAgeDiff = options.maxAgeDifference ?? config.maxAgeDifference ?? 0;
+      if (
+        typeof targetPlayer.age === "number" &&
+        isValidAge(targetPlayer.age) &&
+        isValidAge(transfer.age) &&
+        Math.abs(transfer.age - targetPlayer.age) > maxAgeDiff
+      ) {
+        return false;
+      }
       return true;
     })
     .map((transfer): MarketComparable | null => {
       const normalizedSalePrice = normalizeSalePrice(transfer, options, config);
       if (normalizedSalePrice === null || normalizedSalePrice <= 0) return null;
+      const minPrice = options.minimumTransferPrice ?? config.minimumTransferPrice ?? 0;
+      if (normalizedSalePrice < minPrice) return null;
       const similarityScore = calculatePlayerMarketSimilarity(target, transfer, config, targetProfile);
-      if (similarityScore < config.minimumSimilarity) return null;
+      const minSimilarity = options.minimumSimilarity ?? config.minimumSimilarity;
+      if (similarityScore < minSimilarity) return null;
       const recencyWeight = calculateTransferRecencyWeight(transfer.transferDate, asOfDate, config);
       const dataQualityWeight = calculateTransferDataQualityWeight(
         assessTransferDataQuality(transfer, targetPlayer),
@@ -241,12 +263,14 @@ export function assessTransferDataQuality(
   const profile = resolveTransferProfile(transfer) ?? resolveProfile(target ?? null, null);
   const knownSkills = profile
     ? DEVELOPMENT_PROFILES[profile].relevantSkills.filter(
-        ({ skill }) => readSkill(transfer.skills, skill) !== null
+        ({ skill }) => skill !== "stamina" && readSkill(transfer.skills, skill) !== null
       ).length
-    : Object.values(transfer.skills).filter(
-        (value) => typeof value === "number" && Number.isFinite(value)
+    : Object.entries(transfer.skills).filter(
+        ([key, value]) => key !== "stamina" && typeof value === "number" && Number.isFinite(value)
       ).length;
-  const requiredSkills = profile ? DEVELOPMENT_PROFILES[profile].relevantSkills.length : 4;
+  const requiredSkills = profile
+    ? DEVELOPMENT_PROFILES[profile].relevantSkills.filter(({ skill }) => skill !== "stamina").length
+    : 4;
   if (isValidAge(transfer.age) && knownSkills >= requiredSkills) return "complete";
   if (isValidAge(transfer.age) && knownSkills >= 2) return "partial";
   return "weak";
@@ -301,6 +325,7 @@ function calculateSkillSimilarity(
         defaultTargetLevel: 0
       }));
   const known = relevantSkills
+    .filter((item) => item.skill !== "stamina")
     .map((item) => ({
       ...item,
       target: readSkill(targetSkills, item.skill),
@@ -311,6 +336,17 @@ function calculateSkillSimilarity(
         item.target !== null && item.comparable !== null
     );
   if (known.length === 0) return null;
+
+  const hasSeverePrimaryMismatch = known.some(
+    (item) => item.priority === "primary" && Math.abs(item.target - item.comparable) > 3
+  );
+  if (hasSeverePrimaryMismatch) return 0;
+
+  const hasProminentSkillMismatch = known.some(
+    (item) => item.target >= 6 && Math.abs(item.target - item.comparable) > 3
+  );
+  if (hasProminentSkillMismatch) return 0;
+
   const totalWeight = known.reduce(
     (total, item) => total + DEVELOPMENT_PRIORITY_WEIGHTS[item.priority],
     0
@@ -320,8 +356,10 @@ function calculateSkillSimilarity(
       calculateMarketSkillCurve(item.target) - calculateMarketSkillCurve(item.comparable)
     );
     const maxCurve = calculateMarketSkillCurve(VALID_MAXIMUM_SKILL);
+    const priorityWeight = DEVELOPMENT_PRIORITY_WEIGHTS[item.priority];
+    const penaltyMultiplier = item.priority === "primary" ? 1.5 : 1;
     return (
-      total + (curveDistance / Math.max(maxCurve, 1)) * DEVELOPMENT_PRIORITY_WEIGHTS[item.priority]
+      total + ((curveDistance * penaltyMultiplier) / Math.max(maxCurve, 1)) * priorityWeight
     );
   }, 0);
   return clamp(1 - distance / Math.max(totalWeight, 1), 0, 1);
@@ -335,13 +373,13 @@ function calculateProfileSimilarity(
 ): number {
   if (targetProfile && comparableProfile) {
     if (targetProfile === comparableProfile) return 1;
-    if (formationForProfile(targetProfile) === formationForProfile(comparableProfile)) return 0.78;
+    if (formationForProfile(targetProfile) === formationForProfile(comparableProfile)) return 0.92;
     return 0.35;
   }
   const targetFormation = target.formation ?? formationForProfile(targetProfile);
   const comparableFormation = comparable.formation ?? formationForProfile(comparableProfile);
   if (targetFormation && comparableFormation)
-    return targetFormation === comparableFormation ? 0.72 : 0.35;
+    return targetFormation === comparableFormation ? 0.85 : 0.35;
   return 0.5;
 }
 
@@ -358,6 +396,7 @@ function calculateComparableDifferences(
   const profile = targetProfile ?? comparableProfile;
   if (profile) {
     for (const { skill } of DEVELOPMENT_PROFILES[profile].relevantSkills) {
+      if (skill === "stamina") continue;
       const targetLevel = readSkill(targetPlayer.skills, skill);
       const comparableLevel = readSkill(comparable.skills, skill);
       if (targetLevel !== null && comparableLevel !== null && targetLevel !== comparableLevel) {
@@ -494,6 +533,9 @@ function detectPriceOutliers(
   comparables: readonly MarketComparable[],
   config: MarketCalibrationConfig
 ): { outlierKeys: Set<string>; outliers: ComparableMarketOutlier[] } {
+  if (comparables.length < 4) {
+    return { outlierKeys: new Set(), outliers: [] };
+  }
   const median = calculateMedian(comparables.map((item) => item.adjustedSalePrice));
   const deviations = comparables.map((item) => Math.abs(item.adjustedSalePrice - median));
   const mad = calculateMedian(deviations);
@@ -504,6 +546,11 @@ function detectPriceOutliers(
   const outlierComparables = comparables.filter(
     (item) => Math.abs(item.adjustedSalePrice - median) > tolerance
   );
+  // If more than 1 outlier is detected in a small sample (<= 5),
+  // the data represents broad market price dispersion, not isolated rogue sales.
+  if (comparables.length <= 5 && outlierComparables.length > 1) {
+    return { outlierKeys: new Set(), outliers: [] };
+  }
   const outliers = outlierComparables.map((item): ComparableMarketOutlier => ({
     ...(item.transfer.transferId ? { transferId: item.transfer.transferId } : {}),
     price: item.adjustedSalePrice,
@@ -598,6 +645,12 @@ function resolveCalibrationConfig(options: FindMarketComparablesOptions): Market
     ...(options.minimumSimilarity === undefined
       ? {}
       : { minimumSimilarity: options.minimumSimilarity }),
+    ...(options.maxAgeDifference === undefined
+      ? {}
+      : { maxAgeDifference: options.maxAgeDifference }),
+    ...(options.minimumTransferPrice === undefined
+      ? {}
+      : { minimumTransferPrice: options.minimumTransferPrice }),
     ...(options.baseCurrency === undefined ? {} : { baseCurrency: options.baseCurrency }),
     ...(options.currencyRates === undefined ? {} : { currencyRates: options.currencyRates })
   };
