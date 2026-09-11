@@ -97,6 +97,7 @@ describe("Mongo repositories", () => {
       juniorId: 5001,
       clubId: 1,
       name: "Matias Cantero",
+      countryId: 23,
       age: 16,
       currentLevel: 8,
       weeksLeft: 4,
@@ -106,6 +107,7 @@ describe("Mongo repositories", () => {
       juniorId: 5001,
       clubId: 1,
       name: "Matias Cantero",
+      countryId: 23,
       age: 17,
       currentLevel: 9,
       weeksLeft: 0,
@@ -117,6 +119,7 @@ describe("Mongo repositories", () => {
     expect(second.id).toBe(first.id);
     expect(await JuniorModel.countDocuments({ clubId: 1, juniorId: 5001 })).toBe(1);
     expect(await juniors.findByJuniorId({ clubId: 1, juniorId: 5001 })).toMatchObject({
+      countryId: 23,
       age: 17,
       initialAge: 16,
       initialLevel: 8,
