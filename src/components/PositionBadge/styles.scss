@@ -1,0 +1,54 @@
+.atlas-position-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: 4px;
+  color: var(--position-badge-text, #ffffff);
+  line-height: 1;
+  white-space: nowrap;
+  user-select: none;
+
+  &--sm {
+    font-size: 0.72rem;
+    padding: 3px 6px;
+    min-width: 32px;
+  }
+
+  &--md {
+    font-size: 0.8rem;
+    padding: 4px 8px;
+    min-width: 38px;
+  }
+
+  &.is-gk {
+    background-color: var(--position-gk-bg, #F16060);
+  }
+
+  &.is-def {
+    background-color: var(--position-def-bg, #6553E2);
+  }
+
+  &.is-mid {
+    background-color: var(--position-mid-bg, #397DEB);
+  }
+
+  &.is-att {
+    background-color: var(--position-att-bg, #8D32B4);
+  }
+
+  &.is-unknown,
+  &.is-none {
+    background-color: color-mix(in srgb, var(--atlas-surface) 80%, var(--atlas-text-muted));
+    color: var(--atlas-text-muted);
+    border: 1px solid color-mix(in srgb, var(--atlas-border) 80%, transparent);
+  }
+
+  &.is-release {
+    background-color: #e0e0e0;
+    color: #000000;
+    border: 1px solid #000000;
+  }
+}

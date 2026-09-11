@@ -14,6 +14,7 @@
 @use "../components/PlayerDecisions/styles.scss" as *;
 @use "../components/Youth/styles.scss" as *;
 @use "../components/Diagnostics/styles.scss" as *;
+@use "../components/PositionBadge/styles.scss" as *;
 
 // Shared ATLAS presentation primitives. Page-specific styles remain above this
 // layer so the common geometry and states are defined in one place.

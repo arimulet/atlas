@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { CircleDashed, Sparkles } from "lucide-react";
 import type { PlayerDetailViewModel } from "@/app/view-models/player-detail-view-model";
 import { CountryNameFlag } from "@/components/CountryNameFlag";
+import { PositionBadge } from "@/components/PositionBadge";
 
 interface PlayerPersonalInfoPanelProps {
   player: PlayerDetailViewModel["player"];
@@ -48,7 +49,19 @@ export function PlayerPersonalInfoPanel({ player, training }: PlayerPersonalInfo
             )
           }
         />
-        <InfoFact label="Position" value={positionLabel(training.position)} />
+        <InfoFact
+          label="Position"
+          value={
+            training.position ? (
+              <span className="atlas-player-personal-info__position">
+                <PositionBadge position={training.position} />
+                <span>{positionLabel(training.position)}</span>
+              </span>
+            ) : (
+              "—"
+            )
+          }
+        />
         <InfoFact
           label="Training"
           value={
