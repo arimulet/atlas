@@ -74,6 +74,8 @@ export interface FindMarketComparablesOptions {
   beforeDateExclusive?: Date;
   maxComparables?: number;
   minimumSimilarity?: number;
+  maxAgeDifference?: number;
+  minimumTransferPrice?: number;
   baseCurrency?: string | null;
   currencyNormalizer?: MarketCurrencyNormalizer;
   currencyRates?: Readonly<Record<string, number>>;
@@ -104,6 +106,7 @@ export interface MarketCalibrationFactor {
 export interface MarketCalibrationConfig {
   maxComparables: number;
   minimumSimilarity: number;
+  maxAgeDifference: number;
   recencyHalfLifeDays: number;
   minimumSamplesForMediumConfidence: number;
   minimumSamplesForHighConfidence: number;
@@ -118,6 +121,7 @@ export interface MarketCalibrationConfig {
   currencyRates: Readonly<Record<string, number>>;
   outlierMadMultiplier: number;
   outlierRelativeTolerance: number;
+  minimumTransferPrice?: number;
 }
 
 export interface CalibratedPlayerMarketValueEstimate {
