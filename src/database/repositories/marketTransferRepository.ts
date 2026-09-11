@@ -201,7 +201,7 @@ export async function promoteToFinalMarketTransfer(
 
 export async function findFinalMarketTransfersUpToDate(
   maxTransferDate: Date,
-  limitPerProfile: number = 5
+  limitPerProfile?: number
 ): Promise<PersistedMarketTransfer[]> {
   const now = Date.now();
   const maxTime = maxTransferDate.getTime();
@@ -214,26 +214,35 @@ export async function findFinalMarketTransfersUpToDate(
     return finalTransfersCache.data;
   }
 
-  // Query top N most recent transfers for each development profile in parallel using index { profile: 1, transferDate: -1 }
-  const profileResults = await Promise.all(
-    MARKET_TRANSFER_PROFILES.map((profile) =>
-      MarketTransferModel.find({
-        profile,
-        transferDate: { $lte: maxTransferDate }
-      })
+  let data: PersistedMarketTransfer[];
+
+  if (typeof limitPerProfile === "number" && limitPerProfile > 0) {
+    // Query top N most recent transfers for each development profile in parallel using index { profile: 1, transferDate: -1 }
+    const profileResults = await Promise.all(
+      MARKET_TRANSFER_PROFILES.map((profile) =>
+        MarketTransferModel.find({
+          profile,
+          transferDate: { $lte: maxTransferDate }
+        })
+          .sort({ transferDate: -1 })
+          .limit(limitPerProfile)
+          .lean()
+      )
+    );
+
+    data = profileResults.flat() as unknown as PersistedMarketTransfer[];
+
+    // Fallback for tests or legacy environments where transfers lack profile
+    if (data.length === 0) {
+      const docs = await MarketTransferModel.find({ transferDate: { $lte: maxTransferDate } })
         .sort({ transferDate: -1 })
-        .limit(limitPerProfile)
-        .lean()
-    )
-  );
-
-  let data = profileResults.flat() as unknown as PersistedMarketTransfer[];
-
-  // Fallback for tests or legacy environments where transfers lack profile
-  if (data.length === 0) {
+        .limit(limitPerProfile * MARKET_TRANSFER_PROFILES.length)
+        .lean();
+      data = docs as unknown as PersistedMarketTransfer[];
+    }
+  } else {
     const docs = await MarketTransferModel.find({ transferDate: { $lte: maxTransferDate } })
       .sort({ transferDate: -1 })
-      .limit(limitPerProfile * MARKET_TRANSFER_PROFILES.length)
       .lean();
     data = docs as unknown as PersistedMarketTransfer[];
   }

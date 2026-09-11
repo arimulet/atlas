@@ -172,11 +172,68 @@ describe("Player Market comparable calibration", () => {
   it("adjusts a comparable price through the fundamental target/comparable ratio", () => {
     const comparable = estimateComparableMarketValue(
       player({ age: 19, skills: { ...player().skills, defender: 12 } }),
-      [transfer({ age: 22, skills: { ...player().skills, defender: 11 }, salePrice: 2_000_000 })]
+      [transfer({ age: 22, skills: { ...player().skills, defender: 11 }, salePrice: 2_000_000 })],
+      { maxAgeDifference: 3 }
     );
 
     expect(comparable.comparables[0]?.adjustedSalePrice).toBeGreaterThan(0);
     expect(comparable.comparables[0]?.adjustedSalePrice).not.toBe(2_000_000);
+  });
+
+  it("strictly filters by exact age by default and respects maxAgeDifference option", () => {
+    const target = player({ age: 21 });
+    const comp21 = transfer({ transferId: "same-age", age: 21 });
+    const comp22 = transfer({ transferId: "diff-age", age: 22 });
+
+    const strictComparables = findMarketComparables(target, [comp21, comp22]);
+    expect(strictComparables).toHaveLength(1);
+    expect(strictComparables[0]?.transfer.transferId).toBe("same-age");
+
+    const relaxedComparables = findMarketComparables(target, [comp21, comp22], {
+      maxAgeDifference: 1
+    });
+    expect(relaxedComparables).toHaveLength(2);
+  });
+
+  it("ignores stamina (condición) in similarity and reported differences", () => {
+    const target = player({ skills: { ...player().skills, stamina: 3 } });
+    const compLowStamina = transfer({ skills: { ...player().skills, stamina: 3 } });
+    const compHighStamina = transfer({ skills: { ...player().skills, stamina: 15 } });
+
+    const simLow = calculatePlayerMarketSimilarity(target, compLowStamina);
+    const simHigh = calculatePlayerMarketSimilarity(target, compHighStamina);
+
+    expect(simLow).toBe(simHigh);
+    expect(simHigh).toBe(1);
+
+    const comparables = findMarketComparables(target, [compHighStamina]);
+    expect(comparables[0]?.differences.some((d) => "skill" in d && d.skill === "stamina")).toBe(
+      false
+    );
+  });
+
+  it("disqualifies comparables with severe primary skill gap (> 3 levels)", () => {
+    const target = player({ profile: "defender", skills: { ...player().skills, defender: 15 } });
+    const compClose = transfer({
+      transferId: "comp-close",
+      developmentProfile: "defender",
+      skills: { ...player().skills, defender: 13 }
+    });
+    const compFar = transfer({
+      transferId: "comp-far",
+      developmentProfile: "defender",
+      skills: { ...player().skills, defender: 11 }
+    });
+
+    const simClose = calculatePlayerMarketSimilarity(target, compClose);
+    const simFar = calculatePlayerMarketSimilarity(target, compFar);
+
+    expect(simClose).toBeGreaterThan(0.8);
+    expect(simFar).toBe(0);
+
+    const comparables = findMarketComparables(target, [compClose, compFar]);
+    expect(comparables).toHaveLength(1);
+    expect(comparables[0]?.transfer.transferId).toBe(compClose.transferId);
   });
 
   it("derives a market multiplier from normalized comparable sales", () => {
@@ -342,4 +399,171 @@ describe("Player Market comparable calibration", () => {
       calibrated.calibratedValue.high
     );
   });
+
+  it("drives calibrated value primarily from real market comparables when solid evidence exists", () => {
+    // Player whose fundamental valuation is ~1.1M (e.g. 30yo keeper with skill 16)
+    const veteranKeeper = player({
+      age: 30,
+      formation: "GK",
+      profile: "goalkeeper",
+      skills: {
+        pace: 11,
+        technique: 6,
+        passing: 8,
+        keeper: 16,
+        defender: 8,
+        playmaker: 7,
+        striker: 6
+      }
+    });
+
+    // 5 real market transfers with prices around 80,000 ARS
+    const transfers = [75_000, 80_000, 85_000, 90_000, 82_000].map((salePrice, index) =>
+      transfer({
+        transferId: `gk-${index}`,
+        age: 30,
+        formation: "GK",
+        developmentProfile: "goalkeeper",
+        skills: veteranKeeper.skills,
+        salePrice
+      })
+    );
+
+    const calibrated = calibratePlayerMarketValue(veteranKeeper, transfers);
+    const fundamental = calibrated.fundamental.estimatedValue.expected;
+
+    expect(fundamental).toBeGreaterThan(1_000_000);
+    // In old clamped model, max discount was 50% (~550k).
+    // In market-driven model, market weight is >= 85%, driving expected value close to real sales (~170k-220k).
+    expect(calibrated.calibratedValue.expected).toBeLessThan(250_000);
+    expect(calibrated.calibratedValue.expected).toBeGreaterThan(75_000);
+    expect(calibrated.reasons.some((r) => r.type === "market_discount")).toBe(true);
+  });
+
+  it("filters out transfers with salePrice below minimumTransferPrice", () => {
+    const lowPriceTransfer = transfer({
+      transferId: "nominal-price",
+      salePrice: 1
+    });
+    const regularTransfer = transfer({
+      transferId: "regular-price",
+      salePrice: 50_000
+    });
+
+    const comparables = findMarketComparables(player(), [lowPriceTransfer, regularTransfer], {
+      minimumTransferPrice: 2000
+    });
+
+    expect(comparables).toHaveLength(1);
+    expect(comparables[0]?.transfer.transferId).toBe("regular-price");
+  });
+
+  it("disqualifies comparables when target has a prominent skill (>= 6) with difference > 3", () => {
+    const multiSkillDefender = player({
+      profile: "defender",
+      skills: {
+        ...player().skills,
+        defender: 9,
+        playmaker: 8,
+        pace: 7,
+        technique: 7
+      }
+    });
+
+    const singleSkillDefender = transfer({
+      transferId: "single-skill",
+      developmentProfile: "defender",
+      skills: {
+        ...player().skills,
+        defender: 9,
+        playmaker: 2,
+        pace: 7,
+        technique: 7
+      }
+    });
+
+    const balancedDefender = transfer({
+      transferId: "balanced",
+      developmentProfile: "defender",
+      skills: {
+        ...player().skills,
+        defender: 9,
+        playmaker: 6,
+        pace: 7,
+        technique: 7
+      }
+    });
+
+    const simA = calculatePlayerMarketSimilarity(multiSkillDefender, singleSkillDefender);
+    const simB = calculatePlayerMarketSimilarity(multiSkillDefender, balancedDefender);
+
+    expect(simA).toBe(0);
+    expect(simB).toBeGreaterThan(0.75);
+
+    const comparables = findMarketComparables(multiSkillDefender, [
+      singleSkillDefender,
+      balancedDefender
+    ]);
+    expect(comparables).toHaveLength(1);
+    expect(comparables[0]?.transfer.transferId).toBe("balanced");
+  });
+
+  it("does not prune legitimate high sales in small dispersed samples (<= 5)", () => {
+    const multiSkillTarget = player({
+      age: 17,
+      profile: "defender",
+      skills: {
+        ...player().skills,
+        defender: 9,
+        playmaker: 8,
+        pace: 7,
+        technique: 7
+      }
+    });
+
+    const dispersedTransfers = [20_000, 50_000, 100_000, 600_000, 1_800_000].map((salePrice, index) =>
+      transfer({
+        transferId: `talent-${index}`,
+        age: 17,
+        developmentProfile: "defender",
+        skills: multiSkillTarget.skills,
+        salePrice
+      })
+    );
+
+    const estimate = estimateComparableMarketValue(multiSkillTarget, dispersedTransfers);
+    expect(estimate.comparables).toHaveLength(5);
+    expect(estimate.outliers).toHaveLength(0);
+  });
+
+  it("prunes a single extreme rogue sale even in a small sample (<= 5)", () => {
+    const multiSkillTarget = player({
+      age: 17,
+      profile: "defender",
+      skills: {
+        ...player().skills,
+        defender: 9,
+        playmaker: 8,
+        pace: 7,
+        technique: 7
+      }
+    });
+
+    const rogueTransfers = [100_000, 102_000, 98_000, 105_000, 50_000_000].map(
+      (salePrice, index) =>
+        transfer({
+          transferId: `talent-${index}`,
+          age: 17,
+          developmentProfile: "defender",
+          skills: multiSkillTarget.skills,
+          salePrice
+        })
+    );
+
+    const estimate = estimateComparableMarketValue(multiSkillTarget, rogueTransfers);
+    expect(estimate.outliers).toHaveLength(1);
+    expect(estimate.outliers[0]?.transferId).toBe("talent-4");
+    expect(estimate.estimatedValue?.expected).toBeLessThan(150_000);
+  });
 });
+

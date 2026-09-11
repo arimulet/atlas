@@ -2,12 +2,13 @@ import type { MarketCalibrationConfig } from "./calibration-types.js";
 
 export const MARKET_CALIBRATION_CONFIG: MarketCalibrationConfig = {
   maxComparables: 5,
-  minimumSimilarity: 0.55,
+  minimumSimilarity: 0.75,
+  maxAgeDifference: 0,
   recencyHalfLifeDays: 180,
   minimumSamplesForMediumConfidence: 3,
   minimumSamplesForHighConfidence: 5,
-  maximumWeakEvidenceAdjustment: 0.1,
-  maximumCalibrationAdjustment: 0.35,
+  maximumWeakEvidenceAdjustment: 0.25,
+  maximumCalibrationAdjustment: 0.5,
   maximumComparablePriceAdjustment: 0.35,
   completeDataQualityWeight: 1,
   partialDataQualityWeight: 0.72,
@@ -20,7 +21,8 @@ export const MARKET_CALIBRATION_CONFIG: MarketCalibrationConfig = {
   baseCurrency: null,
   currencyRates: {},
   outlierMadMultiplier: 3,
-  outlierRelativeTolerance: 0.35
+  outlierRelativeTolerance: 0.35,
+  minimumTransferPrice: 2000
 };
 
 export const MAX_MARKET_COMPARABLES = MARKET_CALIBRATION_CONFIG.maxComparables;
