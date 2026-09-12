@@ -1,4 +1,4 @@
-﻿import {
+import {
   CartesianGrid,
   Line,
   LineChart,
@@ -244,13 +244,15 @@ function MarketProjectionChart({ points }: { points: ProjectionPointViewModel[] 
       >
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data} margin={{ top: 12, right: 16, bottom: 4, left: 4 }}>
-            <CartesianGrid vertical={false} stroke="var(--atlas-border)" strokeDasharray="3 3" />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--atlas-border)" />
             <XAxis
               dataKey="label"
               axisLine={false}
               tickLine={false}
               tickMargin={10}
               stroke="var(--atlas-text-muted)"
+              interval="preserveStartEnd"
+              minTickGap={30}
             />
             <YAxis
               axisLine={false}
@@ -267,7 +269,14 @@ function MarketProjectionChart({ points }: { points: ProjectionPointViewModel[] 
                 borderRadius: "var(--atlas-radius-sm)"
               }}
               formatter={(value) => [formatMarketProjectionValue(value), "Estimated value"]}
-              labelStyle={{ color: "var(--atlas-text)" }}
+              labelFormatter={(label, payload) => {
+                const data = payload?.[0]?.payload;
+                if (data && data.age) {
+                  return `${label} (Age ${data.age})`;
+                }
+                return label;
+              }}
+              labelStyle={{ color: "var(--atlas-text)", fontWeight: 500, marginBottom: 4 }}
             />
             <Line
               type="monotone"
