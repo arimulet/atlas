@@ -87,11 +87,24 @@ export interface SquadAssetViewModel {
     name: string;
     value: string;
     role: string;
+    rawRole?: string;
     liquidity: string;
+    rawLiquidity?: string;
     recommended: boolean;
     isTheoretical: boolean;
+    position?: string | null;
+    countryName?: string | null;
   }>;
-  protectedAssets: Array<{ playerId: number; name: string; value: string; reasons: string[]; isTheoretical: boolean }>;
+  protectedAssets: Array<{
+    playerId: number;
+    name: string;
+    value: string;
+    reasons: string[];
+    rawReasons?: string[];
+    isTheoretical: boolean;
+    position?: string | null;
+    countryName?: string | null;
+  }>;
 }
 
 export interface DevelopmentCapitalViewModel {
@@ -129,7 +142,7 @@ export function createFinancialStrategyViewModel(
     capacity: createCapacityViewModel(data.capitalAllocation, currency),
     funding: createFundingViewModel(data.capitalAllocation, currency),
     recommendations,
-    assets: createAssetViewModel(data, currency, playerNames),
+    assets: createAssetViewModel(data, currency, playerNames, squadPlanning),
     developmentCapital: createDevelopmentCapitalViewModel(data.financialAssessment, currency),
     conflicts: data.strategyPlan.conflicts.map((conflict) => ({
       playerId: conflict.playerId ?? null,
@@ -295,7 +308,8 @@ function createRecommendationViewModel(
 function createAssetViewModel(
   data: FinancialStrategyData,
   currency: string | null,
-  playerNames: ReadonlyMap<number, string>
+  playerNames: ReadonlyMap<number, string>,
+  squadPlanning: SquadPlanningBundle | null = null
 ): SquadAssetViewModel {
   const assessment = data.financialAssessment;
   const allocation = data.capitalAllocation;
@@ -310,6 +324,12 @@ function createAssetViewModel(
         (c) => c.strategicProtection === "critical" || c.strategicProtection === "high"
       )
       .map((c) => c.playerId)
+  );
+  const playerProfileMap = new Map(
+    (squadPlanning?.assessment.depthPlayers ?? []).map((p) => [p.playerId, p.profile])
+  );
+  const playerCountryMap = new Map(
+    (squadPlanning?.assessment.depthPlayers ?? []).map((p) => [p.playerId, p.countryName ?? null])
   );
 
   return {
@@ -334,9 +354,13 @@ function createAssetViewModel(
       .map((asset) => ({
         playerId: asset.playerId,
         name: playerNames.get(asset.playerId) ?? `Player ${asset.playerId}`,
+        countryName: playerCountryMap.get(asset.playerId) ?? null,
+        position: playerProfileMap.get(asset.playerId) ?? null,
         value: money(asset.estimatedMarketValue, currency),
         role: roleLabel(asset.squadRole),
+        rawRole: asset.squadRole,
         liquidity: titleCase(asset.liquidityPotential),
+        rawLiquidity: asset.liquidityPotential,
         recommended: recommendationPlayerIds.has(asset.playerId),
         isTheoretical: asset.isTheoretical
       })),
@@ -348,8 +372,11 @@ function createAssetViewModel(
       .map((candidate) => ({
         playerId: candidate.playerId,
         name: playerNames.get(candidate.playerId) ?? `Player ${candidate.playerId}`,
+        countryName: playerCountryMap.get(candidate.playerId) ?? null,
+        position: playerProfileMap.get(candidate.playerId) ?? null,
         value: money(candidate.marketValue, currency),
         reasons: candidate.reasons.map((reason) => monetizationReasonLabel(reason)),
+        rawReasons: candidate.reasons.map((reason) => reason.type),
         isTheoretical: candidate.isTheoretical
       }))
   };
