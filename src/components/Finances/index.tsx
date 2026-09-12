@@ -286,34 +286,21 @@ function SquadAssetsSection({
           items={assets.distribution.map((item) => `${item.role} · ${item.value}`)}
         />
       ) : null}
-      {assets.monetizable.length > 0 ? (
-        <AssetList
-          title="Potential Liquidity"
-          assets={assets.monetizable}
-          onSelectPlayer={onSelectPlayer}
-        />
-      ) : null}
-      {assets.protectedAssets.length > 0 ? (
-        <div className="atlas-finances-subsection">
-          <h3>Protected Strategic Assets</h3>
-          <ul className="atlas-finances-asset-list">
-            {assets.protectedAssets.map((asset) => (
-              <li key={asset.playerId}>
-                <PlayerLink playerId={String(asset.playerId)} onSelectPlayer={onSelectPlayer}>
-                  {asset.name}
-                </PlayerLink>
-                <strong>
-                  {asset.value}
-                  {asset.isTheoretical ? (
-                    <span title="Tasación teórica" className="atlas-finances-theoretical-icon" style={{ cursor: "help", marginLeft: "6px", opacity: 0.6, display: "inline-flex", verticalAlign: "text-bottom" }}>
-                      <Info size={16} />
-                    </span>
-                  ) : null}
-                </strong>
-                <small>{asset.reasons.join(" · ")}</small>
-              </li>
-            ))}
-          </ul>
+      {assets.monetizable.length > 0 || assets.protectedAssets.length > 0 ? (
+        <div className="atlas-finances-asset-grid">
+          {assets.monetizable.length > 0 ? (
+            <AssetList
+              title="Potential Liquidity"
+              assets={assets.monetizable}
+              onSelectPlayer={onSelectPlayer}
+            />
+          ) : null}
+          {assets.protectedAssets.length > 0 ? (
+            <ProtectedAssetList
+              assets={assets.protectedAssets}
+              onSelectPlayer={onSelectPlayer}
+            />
+          ) : null}
         </div>
       ) : null}
     </Section>
@@ -373,6 +360,38 @@ function AssetList({
               {asset.role} · Liquidity potential: {asset.liquidity}
               {asset.recommended ? " · Recommended monetization" : ""}
             </small>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function ProtectedAssetList({
+  assets,
+  onSelectPlayer
+}: {
+  assets: NonNullable<FinancialStrategyState["viewModel"]>["assets"]["protectedAssets"];
+  onSelectPlayer: (playerId: string) => void;
+}) {
+  return (
+    <div className="atlas-finances-subsection">
+      <h3>Protected Strategic Assets</h3>
+      <ul className="atlas-finances-asset-list">
+        {assets.map((asset) => (
+          <li key={asset.playerId}>
+            <PlayerLink playerId={String(asset.playerId)} onSelectPlayer={onSelectPlayer}>
+              {asset.name}
+            </PlayerLink>
+            <strong>
+              {asset.value}
+              {asset.isTheoretical ? (
+                <span title="Tasación teórica" className="atlas-finances-theoretical-icon" style={{ cursor: "help", marginLeft: "6px", opacity: 0.6, display: "inline-flex", verticalAlign: "text-bottom" }}>
+                  <Info size={16} />
+                </span>
+              ) : null}
+            </strong>
+            <small>{asset.reasons.join(" · ")}</small>
           </li>
         ))}
       </ul>
