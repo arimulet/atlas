@@ -372,7 +372,7 @@ function identifiersMatch(
 function SkillCell({
   change,
   isImportant,
-  skill,
+  skill: _skill,
   value
 }: {
   change: number | null;

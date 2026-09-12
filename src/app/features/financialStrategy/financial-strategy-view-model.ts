@@ -1,10 +1,11 @@
-﻿import type {
+import type {
   CapitalAllocationItem,
   ClubFinancialAssessment,
   FinancialPositionStatus,
   FinancialStrategyPlan,
   FinancialStrategyRecommendation,
   InvestmentSafetyAssessment,
+  PlayerAcquisitionSimulationResult,
   ProfileDepthStatus
 } from "@atlas/domain";
 import type { FinancialStrategyData } from "@/api";
@@ -153,6 +154,41 @@ export function createInvestmentSafetyViewModel(
     coverage: weeks(assessment.postInvestmentPayrollCoverageWeeks),
     status: financialStatusLabel(assessment.postInvestmentStatus),
     safety: titleCase(assessment.safety)
+  };
+}
+
+export function createAcquisitionSimulationViewModel(
+  result: PlayerAcquisitionSimulationResult | null,
+  currency: string | null
+) {
+  if (!result) return null;
+  return {
+    ...result,
+    financial: {
+      ...result.financial,
+      amountFormatted: money(result.financial.amount, currency),
+      weeklyWageFormatted: money(result.financial.weeklyWage, currency),
+      postInvestmentCashFormatted: money(result.financial.postInvestmentCash, currency),
+      currentWeeklyPayrollFormatted: money(result.financial.currentWeeklyPayroll, currency),
+      projectedWeeklyPayrollFormatted: money(result.financial.projectedWeeklyPayroll, currency),
+      postInvestmentPayrollCoverageWeeksFormatted: weeks(
+        result.financial.postInvestmentPayrollCoverageWeeks
+      ),
+      currentPayrollCoverageWeeksFormatted: weeks(result.financial.currentPayrollCoverageWeeks),
+      safetyFormatted: titleCase(result.financial.safety)
+    },
+    roi: result.roi
+      ? {
+          ...result.roi,
+          currentEstimatedValueFormatted: money(result.roi.currentEstimatedValue, currency),
+          projectedValueSeason1Formatted: money(result.roi.projectedValueSeason1, currency),
+          projectedValueSeason2Formatted: money(result.roi.projectedValueSeason2, currency),
+          totalCostSeason1Formatted: money(result.roi.totalCostSeason1, currency),
+          totalCostSeason2Formatted: money(result.roi.totalCostSeason2, currency),
+          netMarginSeason1Formatted: money(result.roi.netMarginSeason1, currency),
+          netMarginSeason2Formatted: money(result.roi.netMarginSeason2, currency)
+        }
+      : null
   };
 }
 

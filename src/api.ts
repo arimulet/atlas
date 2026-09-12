@@ -15,6 +15,8 @@ import type {
   ClubFinancialAssessment,
   FinancialStrategyPlan,
   InvestmentSafetyAssessment,
+  PlayerAcquisitionSimulationInput,
+  PlayerAcquisitionSimulationResult,
   PlayerDevelopmentTargetOverride,
   SquadDepthAnalysis,
   SquadPlanningRecommendations,
@@ -201,6 +203,51 @@ export async function fetchInvestmentSafety(
 
   if (!response.ok || !body) {
     throw new Error("Investment safety API returned an unexpected response.");
+  }
+
+  return body;
+}
+
+export interface PlayerLookupResult {
+  found: boolean;
+  source?: "club_player" | "transfer_market";
+  message?: string;
+  player?: {
+    playerId: number;
+    name: string;
+    age: number | null;
+    position: string | null;
+    skills: Record<string, number>;
+    wage: number | null;
+    marketValue: number | null;
+  };
+}
+
+export async function lookupPlayer(playerId: number): Promise<PlayerLookupResult> {
+  const response = await fetchAuthenticated(
+    `/api/players/lookup?playerId=${encodeURIComponent(playerId)}`
+  );
+  const body = (await response.json()) as PlayerLookupResult;
+
+  if (!response.ok || !body) {
+    throw new Error("Player lookup API returned an unexpected response.");
+  }
+
+  return body;
+}
+
+export async function fetchAcquisitionSimulation(
+  input: PlayerAcquisitionSimulationInput
+): Promise<PlayerAcquisitionSimulationResult> {
+  const response = await fetchAuthenticated("/api/club/financial-strategy/simulate-acquisition", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input)
+  });
+  const body = (await response.json()) as PlayerAcquisitionSimulationResult;
+
+  if (!response.ok || !body) {
+    throw new Error("Acquisition simulation API returned an unexpected response.");
   }
 
   return body;

@@ -199,23 +199,29 @@ export function calculateInvestmentCapacity(
   };
 }
 
+export interface InvestmentSafetyOptions {
+  additionalWeeklyPayroll?: number | null;
+}
+
 export function simulateFinancialPositionAfterCashCommitment(
   financialAssessment: ClubFinancialAssessment,
-  amount: number,
-  config = FINANCIAL_SAFETY_CONFIG
+  cashCommitment: number,
+  config: typeof FINANCIAL_SAFETY_CONFIG = FINANCIAL_SAFETY_CONFIG,
+  additionalWeeklyPayroll?: number | null
 ): ClubFinancialPosition {
-  const normalizedAmount = finiteNonNegative(amount);
   return simulateFinancialPositionAfterCashChange(
     financialAssessment,
-    normalizedAmount === null ? 0 : -normalizedAmount,
-    config
+    -Math.abs(cashCommitment),
+    config,
+    additionalWeeklyPayroll
   );
 }
 
 export function simulateFinancialPositionAfterCashChange(
   financialAssessment: ClubFinancialAssessment,
   cashDelta: number,
-  config = FINANCIAL_SAFETY_CONFIG
+  config: typeof FINANCIAL_SAFETY_CONFIG = FINANCIAL_SAFETY_CONFIG,
+  additionalWeeklyPayroll?: number | null
 ): ClubFinancialPosition {
   const normalizedDelta =
     typeof cashDelta === "number" && Number.isFinite(cashDelta) ? cashDelta : 0;
@@ -223,13 +229,21 @@ export function simulateFinancialPositionAfterCashChange(
     financialAssessment.position.cash === null
       ? null
       : Math.max(0, financialAssessment.position.cash + normalizedDelta);
-  return rebuildPositionWithCash(financialAssessment.position, cash, config);
+  return rebuildPositionWithCash(
+    financialAssessment.position,
+    cash,
+    config,
+    additionalWeeklyPayroll
+  );
 }
+
+export const simulateFinancialPositionWithCashDelta = simulateFinancialPositionAfterCashChange;
 
 export function assessInvestmentSafety(
   financialAssessment: ClubFinancialAssessment,
   amount: number,
-  config: CapitalAllocationConfig = FINANCIAL_STRATEGY_CONFIG
+  config: CapitalAllocationConfig = FINANCIAL_STRATEGY_CONFIG,
+  options?: InvestmentSafetyOptions
 ): InvestmentSafetyAssessment {
   const normalizedAmount = finiteNonNegative(amount) ?? 0;
   const position = financialAssessment.position;
@@ -239,7 +253,8 @@ export function assessInvestmentSafety(
   const simulated = simulateFinancialPositionAfterCashCommitment(
     financialAssessment,
     normalizedAmount,
-    FINANCIAL_SAFETY_CONFIG
+    FINANCIAL_SAFETY_CONFIG,
+    options?.additionalWeeklyPayroll
   );
   const reasons: CapitalAllocationReason[] = [];
   if (position.status !== simulated.status) {
@@ -277,9 +292,14 @@ export function assessInvestmentSafety(
 function rebuildPositionWithCash(
   position: ClubFinancialPosition,
   cash: number | null,
-  config: typeof FINANCIAL_SAFETY_CONFIG
+  config: typeof FINANCIAL_SAFETY_CONFIG,
+  additionalWeeklyPayroll?: number | null
 ): ClubFinancialPosition {
-  const payroll = position.knownPayroll;
+  const normalizedAdditionalPayroll = finiteNonNegative(additionalWeeklyPayroll) ?? 0;
+  const payroll = {
+    ...position.knownPayroll,
+    totalWeekly: position.knownPayroll.totalWeekly + normalizedAdditionalPayroll
+  };
   const squadAssets = position.squadAssetValue;
   const metrics = {
     payrollCoverageWeeks:
