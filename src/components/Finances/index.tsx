@@ -1,7 +1,22 @@
 import type { ReactNode } from "react";
-import { ArrowRight, Info } from "lucide-react";
+import {
+  ArrowRight,
+  Award,
+  Coins,
+  Crown,
+  Droplets,
+  Info,
+  Layers,
+  Lock,
+  RefreshCw,
+  Shield,
+  Sparkles,
+  TrendingUp,
+  ArrowRightLeft
+} from "lucide-react";
 import { formatMoney } from "@/app/formatters";
 import { PlayerLink } from "@/components/PlayerLink";
+import { PositionBadge } from "@/components/PositionBadge";
 import { StatusBadge } from "@/components/StatusBadge";
 import { registerPlayerCountries } from "@/context/PlayerCountryContext";
 import type { FinancesProps } from "./types";
@@ -330,6 +345,165 @@ function DevelopmentUpside({ development }: DevelopmentUpsideProps) {
   );
 }
 
+function getRoleTooltip(role: string, rawRole?: string): string {
+  const normalized = (rawRole ?? role).toLowerCase();
+  if (normalized.includes("core")) {
+    return `Squad Role: Core · Key starter essential to the team's competitive structure.`;
+  }
+  if (normalized.includes("rotation")) {
+    return `Squad Role: Rotation · Regularly alternates starts and important match minutes.`;
+  }
+  if (normalized.includes("depth")) {
+    return `Squad Role: Depth · Squad backup option for tactical rotation and schedule demands.`;
+  }
+  if (normalized.includes("prospect")) {
+    return `Squad Role: Prospect · Young talent with high sporting ceiling and resale value.`;
+  }
+  if (normalized.includes("develop")) {
+    return `Squad Role: Developing · In active technical progression and market value growth phase.`;
+  }
+  if (normalized.includes("transition")) {
+    return `Squad Role: Transition · In squad role redefinition or concluding cycle phase.`;
+  }
+  return `Squad Role: ${role}`;
+}
+
+function getLiquidityTooltip(liquidity: string, rawLiquidity?: string): string {
+  const mod = (rawLiquidity ?? liquidity).toLowerCase();
+  if (mod.includes("high")) {
+    return `Liquidity Potential: High · Strong market demand; easily monetized without discount.`;
+  }
+  if (mod.includes("medium")) {
+    return `Liquidity Potential: Medium · Moderate market demand; requires active negotiation to monetize.`;
+  }
+  if (mod.includes("low")) {
+    return `Liquidity Potential: Low · Restricted or niche market; slower sale or subject to price reductions.`;
+  }
+  return `Liquidity Potential: ${liquidity}`;
+}
+
+function getProtectedReasonTooltip(reason: string, rawReason?: string): string {
+  const key = (rawReason ?? reason).toLowerCase();
+  if (key.includes("core")) {
+    return "Protection Reason: Core asset · Critical starter essential to the team's competitive structure.";
+  }
+  if (key.includes("successor")) {
+    return "Protection Reason: No ready successor · No viable replacement currently prepared in the squad.";
+  }
+  if (key.includes("future") || key.includes("contribution")) {
+    return "Protection Reason: High future contribution · Projected high sporting and financial value upside.";
+  }
+  if (key.includes("need") || key.includes("profile")) {
+    return "Protection Reason: Strong profile need · Scarce tactical role in the squad that is costly to replace externally.";
+  }
+  if (key.includes("market") || key.includes("value")) {
+    return "Protection Reason: High market value · Elite asset retained to preserve the club's financial capital.";
+  }
+  if (key.includes("coverage") || key.includes("covered")) {
+    return "Protection Reason: Successor coverage exists · Positional depth and succession are covered.";
+  }
+  if (key.includes("development") || key.includes("upside")) {
+    return "Protection Reason: Limited development upside · Player is near or at established peak performance.";
+  }
+  return `Protection Reason: ${reason}`;
+}
+
+function AssetRoleIcon({ role, rawRole }: { role: string; rawRole?: string }) {
+  const tooltip = getRoleTooltip(role, rawRole);
+  const normalized = (rawRole ?? role).toLowerCase();
+  let icon = <Crown size={12} />;
+  let modifier = "core";
+  if (normalized.includes("rotation")) {
+    icon = <RefreshCw size={11} />;
+    modifier = "rotation";
+  } else if (normalized.includes("depth")) {
+    icon = <Layers size={11} />;
+    modifier = "depth";
+  } else if (normalized.includes("prospect")) {
+    icon = <Sparkles size={11} />;
+    modifier = "prospect";
+  } else if (normalized.includes("develop")) {
+    icon = <TrendingUp size={11} />;
+    modifier = "developing";
+  } else if (normalized.includes("transition")) {
+    icon = <ArrowRightLeft size={11} />;
+    modifier = "transition";
+  }
+  return (
+    <span
+      className={`atlas-asset-icon atlas-asset-icon--${modifier}`}
+      data-tooltip={tooltip}
+      aria-label={tooltip}
+      role="img"
+    >
+      {icon}
+    </span>
+  );
+}
+
+function AssetLiquidityIcon({ liquidity, rawLiquidity }: { liquidity: string; rawLiquidity?: string }) {
+  const tooltip = getLiquidityTooltip(liquidity, rawLiquidity);
+  const mod = (rawLiquidity ?? liquidity).toLowerCase();
+  return (
+    <span
+      className={`atlas-asset-icon atlas-asset-icon--liquidity-${mod}`}
+      data-tooltip={tooltip}
+      aria-label={tooltip}
+      role="img"
+    >
+      <Droplets size={12} />
+    </span>
+  );
+}
+
+function AssetRecommendedIcon() {
+  const tooltip =
+    "Recommended Monetization · Strategic sale suggested to release liquidity for priority targets.";
+  return (
+    <span
+      className="atlas-asset-icon atlas-asset-icon--recommended"
+      data-tooltip={tooltip}
+      aria-label={tooltip}
+      role="img"
+    >
+      <Coins size={12} />
+    </span>
+  );
+}
+
+function ProtectedReasonIcon({ reason, rawReason }: { reason: string; rawReason?: string }) {
+  const tooltip = getProtectedReasonTooltip(reason, rawReason);
+  const lower = (rawReason ?? reason).toLowerCase();
+  let icon = <Info size={11} />;
+  let modifier = "info";
+  if (lower.includes("core")) {
+    icon = <Crown size={11} />;
+    modifier = "core";
+  } else if (lower.includes("successor")) {
+    icon = <Lock size={11} />;
+    modifier = "lock";
+  } else if (lower.includes("future") || lower.includes("contribution")) {
+    icon = <TrendingUp size={11} />;
+    modifier = "future";
+  } else if (lower.includes("profile") || lower.includes("need")) {
+    icon = <Layers size={11} />;
+    modifier = "need";
+  } else if (lower.includes("market") || lower.includes("value")) {
+    icon = <Award size={11} />;
+    modifier = "value";
+  }
+  return (
+    <span
+      className={`atlas-asset-icon atlas-asset-icon--${modifier}`}
+      data-tooltip={tooltip}
+      aria-label={tooltip}
+      role="img"
+    >
+      {icon}
+    </span>
+  );
+}
+
 function AssetList({
   title,
   assets,
@@ -339,27 +513,45 @@ function AssetList({
   assets: NonNullable<FinancialStrategyState["viewModel"]>["assets"]["monetizable"];
   onSelectPlayer: (playerId: string) => void;
 }) {
+  const theoreticalTooltip =
+    "Theoretical valuation · Calculated based on skills, age, and position due to lack of recent market references.";
+
   return (
     <div className="atlas-finances-subsection">
       <h3>{title}</h3>
       <ul className="atlas-finances-asset-list">
         {assets.map((asset) => (
-          <li key={asset.playerId}>
-            <PlayerLink playerId={String(asset.playerId)} onSelectPlayer={onSelectPlayer}>
-              {asset.name}
-            </PlayerLink>
-            <strong>
-              {asset.value}
+          <li key={asset.playerId} className="atlas-finances-asset-row">
+            <div className="atlas-finances-asset-row__player">
+              {asset.position ? (
+                <PositionBadge position={asset.position} size="sm" title="" />
+              ) : null}
+              <PlayerLink
+                countryName={asset.countryName}
+                playerId={String(asset.playerId)}
+                onSelectPlayer={onSelectPlayer}
+              >
+                {asset.name}
+              </PlayerLink>
+              <div className="atlas-finances-asset-row__icons">
+                <AssetRoleIcon role={asset.role} rawRole={asset.rawRole} />
+                <AssetLiquidityIcon liquidity={asset.liquidity} rawLiquidity={asset.rawLiquidity} />
+                {asset.recommended ? <AssetRecommendedIcon /> : null}
+              </div>
+            </div>
+            <div className="atlas-finances-asset-row__value">
+              <strong>{asset.value}</strong>
               {asset.isTheoretical ? (
-                <span title="Tasación teórica" className="atlas-finances-theoretical-icon" style={{ cursor: "help", marginLeft: "6px", opacity: 0.6, display: "inline-flex", verticalAlign: "text-bottom" }}>
-                  <Info size={16} />
+                <span
+                  data-tooltip={theoreticalTooltip}
+                  aria-label={theoreticalTooltip}
+                  className="atlas-finances-theoretical-icon"
+                  role="img"
+                >
+                  <Info size={14} />
                 </span>
               ) : null}
-            </strong>
-            <small>
-              {asset.role} · Liquidity potential: {asset.liquidity}
-              {asset.recommended ? " · Recommended monetization" : ""}
-            </small>
+            </div>
           </li>
         ))}
       </ul>
@@ -374,24 +566,59 @@ function ProtectedAssetList({
   assets: NonNullable<FinancialStrategyState["viewModel"]>["assets"]["protectedAssets"];
   onSelectPlayer: (playerId: string) => void;
 }) {
+  const protectedTooltip =
+    "Protected Strategic Asset · Non-transferable; priority retention to sustain squad competitiveness.";
+  const theoreticalTooltip =
+    "Theoretical valuation · Calculated based on skills, age, and position due to lack of recent market references.";
+
   return (
     <div className="atlas-finances-subsection">
       <h3>Protected Strategic Assets</h3>
       <ul className="atlas-finances-asset-list">
         {assets.map((asset) => (
-          <li key={asset.playerId}>
-            <PlayerLink playerId={String(asset.playerId)} onSelectPlayer={onSelectPlayer}>
-              {asset.name}
-            </PlayerLink>
-            <strong>
-              {asset.value}
+          <li key={asset.playerId} className="atlas-finances-asset-row">
+            <div className="atlas-finances-asset-row__player">
+              {asset.position ? (
+                <PositionBadge position={asset.position} size="sm" title="" />
+              ) : null}
+              <PlayerLink
+                countryName={asset.countryName}
+                playerId={String(asset.playerId)}
+                onSelectPlayer={onSelectPlayer}
+              >
+                {asset.name}
+              </PlayerLink>
+              <div className="atlas-finances-asset-row__icons">
+                <span
+                  className="atlas-asset-icon atlas-asset-icon--protected"
+                  data-tooltip={protectedTooltip}
+                  aria-label={protectedTooltip}
+                  role="img"
+                >
+                  <Shield size={12} />
+                </span>
+                {asset.reasons.map((reason, index) => (
+                  <ProtectedReasonIcon
+                    key={reason}
+                    reason={reason}
+                    rawReason={asset.rawReasons?.[index]}
+                  />
+                ))}
+              </div>
+            </div>
+            <div className="atlas-finances-asset-row__value">
+              <strong>{asset.value}</strong>
               {asset.isTheoretical ? (
-                <span title="Tasación teórica" className="atlas-finances-theoretical-icon" style={{ cursor: "help", marginLeft: "6px", opacity: 0.6, display: "inline-flex", verticalAlign: "text-bottom" }}>
-                  <Info size={16} />
+                <span
+                  data-tooltip={theoreticalTooltip}
+                  aria-label={theoreticalTooltip}
+                  className="atlas-finances-theoretical-icon"
+                  role="img"
+                >
+                  <Info size={14} />
                 </span>
               ) : null}
-            </strong>
-            <small>{asset.reasons.join(" · ")}</small>
+            </div>
           </li>
         ))}
       </ul>
