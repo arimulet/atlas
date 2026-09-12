@@ -1,7 +1,7 @@
 import { calculateWeeklyTrainingPointsByKind } from "@atlas/domain";
 import type { TrainingReport } from "@atlas/web/app/types";
 import { formatEta, formatNumber, formatPercentage } from "@/app/formatters";
-import { PLAYER_SKILL_DEFINITIONS, type PlayerSkillKey } from "@/app/view-models/player-skills";
+import { TRAINABLE_SKILL_DEFINITIONS, type PlayerSkillKey } from "@/app/view-models/player-skills";
 import { skillLevelLabel } from "@/app/view-models/skill-level-label";
 import type { TrainingPlayerRow } from "@/app/view-models/training-view-model";
 
@@ -23,14 +23,14 @@ export function TrainingDetails({ history, player }: TrainingDetailsProps) {
       <table className="atlas-training-details">
         <colgroup>
           <col className="is-season" />
-          {PLAYER_SKILL_DEFINITIONS.map((skill) => (
+          {TRAINABLE_SKILL_DEFINITIONS.map((skill) => (
             <col className="is-skill" key={skill.key} />
           ))}
         </colgroup>
         <thead>
           <tr>
             <th scope="col">Age</th>
-            {PLAYER_SKILL_DEFINITIONS.map((skill) => (
+            {TRAINABLE_SKILL_DEFINITIONS.map((skill) => (
               <th key={skill.key} scope="col">
                 {skill.shortLabel}
               </th>
@@ -41,7 +41,7 @@ export function TrainingDetails({ history, player }: TrainingDetailsProps) {
           {seasons.map((season, index) => (
             <tr key={season.key}>
               <th scope="row">{season.age ?? "—"}</th>
-              {PLAYER_SKILL_DEFINITIONS.map((skill) => (
+              {TRAINABLE_SKILL_DEFINITIONS.map((skill) => (
                 <SeasonSkillCell
                   isLatestSeason={index === seasons.length - 1}
                   key={skill.key}

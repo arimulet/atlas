@@ -11,3 +11,10 @@ export const PLAYER_SKILL_DEFINITIONS = [
 ] as const;
 
 export type PlayerSkillKey = (typeof PLAYER_SKILL_DEFINITIONS)[number]["key"];
+
+export type TrainableSkillKey = Exclude<PlayerSkillKey, "form">;
+
+export const TRAINABLE_SKILL_DEFINITIONS = PLAYER_SKILL_DEFINITIONS.filter(
+  (skill): skill is Extract<(typeof PLAYER_SKILL_DEFINITIONS)[number], { key: TrainableSkillKey }> =>
+    skill.key !== "form"
+);
