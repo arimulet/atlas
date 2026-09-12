@@ -170,34 +170,569 @@
     margin-bottom: 12px;
   }
 
-  .atlas-finances-simulator label {
-    color: var(--atlas-text-muted);
-    display: grid;
-    font-size: 0.72rem;
-    gap: 4px;
+  .atlas-finances-simulator-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
   }
 
-  .atlas-finances-simulator input,
-  .atlas-finances-simulator button {
+  .atlas-finances-simulator-tab {
+    align-items: center;
+    background: transparent;
+    border: 1px solid var(--atlas-border);
+    border-radius: var(--atlas-radius-sm);
+    color: var(--atlas-text-secondary);
+    cursor: pointer;
+    display: inline-flex;
+    font-size: 0.78rem;
+    font-weight: 600;
+    gap: 6px;
+    padding: 7px 14px;
+    transition: all 0.15s ease;
+  }
+
+  .atlas-finances-simulator-tab:hover {
+    background: var(--atlas-surface-hover);
+    color: var(--atlas-text);
+  }
+
+  .atlas-finances-simulator-tab.is-active {
+    background: var(--atlas-surface-hover);
+    border-color: var(--atlas-accent);
+    color: var(--atlas-accent);
+  }
+
+  .atlas-finances-simulator-card {
+    background: var(--atlas-surface-secondary, rgba(255, 255, 255, 0.02));
+    border: 1px solid var(--atlas-border);
+    border-radius: var(--atlas-radius-sm);
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+
+  .atlas-finances-simulator-id-mode,
+  .atlas-finances-simulator-manual-mode {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .atlas-finances-simulator-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+
+  .atlas-finances-simulator-row label {
+    color: var(--atlas-text-secondary);
+    display: flex;
+    flex: 1 1 180px;
+    flex-direction: column;
+    font-size: 0.74rem;
+    gap: 6px;
+  }
+
+  .atlas-finances-simulator-position-field {
+    color: var(--atlas-text-secondary);
+    display: flex;
+    flex: 1 1 180px;
+    flex-direction: column;
+    font-size: 0.74rem;
+    gap: 6px;
+  }
+
+  .atlas-finances-simulator-pos-btn-group {
+    display: flex;
+    gap: 4px;
+    height: 35px;
+  }
+
+  .atlas-finances-simulator-pos-btn {
+    align-items: center;
+    border: 1px solid var(--atlas-border);
+    border-radius: var(--atlas-radius-sm);
+    cursor: pointer;
+    display: flex;
+    flex: 1;
+    font-family: var(--atlas-font-mono, monospace);
+    font-size: 0.8rem;
+    font-weight: 700;
+    justify-content: center;
+    letter-spacing: 0.04em;
+    padding: 0;
+    transition: all 0.15s ease;
+
+    &.is-gk {
+      background: rgba(241, 96, 96, 0.08);
+      border-color: rgba(241, 96, 96, 0.25);
+      color: #fca5a5;
+
+      &:hover {
+        background: rgba(241, 96, 96, 0.18);
+        border-color: var(--position-gk-bg, #F16060);
+        color: #ffffff;
+      }
+
+      &.is-active {
+        background: var(--position-gk-bg, #F16060);
+        border-color: var(--position-gk-bg, #F16060);
+        color: #ffffff;
+        box-shadow: 0 0 10px rgba(241, 96, 96, 0.4);
+      }
+    }
+
+    &.is-def {
+      background: rgba(101, 83, 226, 0.08);
+      border-color: rgba(101, 83, 226, 0.25);
+      color: #a5b4fc;
+
+      &:hover {
+        background: rgba(101, 83, 226, 0.18);
+        border-color: var(--position-def-bg, #6553E2);
+        color: #ffffff;
+      }
+
+      &.is-active {
+        background: var(--position-def-bg, #6553E2);
+        border-color: var(--position-def-bg, #6553E2);
+        color: #ffffff;
+        box-shadow: 0 0 10px rgba(101, 83, 226, 0.4);
+      }
+    }
+
+    &.is-mid {
+      background: rgba(57, 125, 235, 0.08);
+      border-color: rgba(57, 125, 235, 0.25);
+      color: #93c5fd;
+
+      &:hover {
+        background: rgba(57, 125, 235, 0.18);
+        border-color: var(--position-mid-bg, #397DEB);
+        color: #ffffff;
+      }
+
+      &.is-active {
+        background: var(--position-mid-bg, #397DEB);
+        border-color: var(--position-mid-bg, #397DEB);
+        color: #ffffff;
+        box-shadow: 0 0 10px rgba(57, 125, 235, 0.4);
+      }
+    }
+
+    &.is-att {
+      background: rgba(141, 50, 180, 0.08);
+      border-color: rgba(141, 50, 180, 0.25);
+      color: #d8b4fe;
+
+      &:hover {
+        background: rgba(141, 50, 180, 0.18);
+        border-color: var(--position-att-bg, #8D32B4);
+        color: #ffffff;
+      }
+
+      &.is-active {
+        background: var(--position-att-bg, #8D32B4);
+        border-color: var(--position-att-bg, #8D32B4);
+        color: #ffffff;
+        box-shadow: 0 0 10px rgba(141, 50, 180, 0.4);
+      }
+    }
+  }
+
+  .atlas-finances-simulator-row input,
+  .atlas-finances-simulator-row select,
+  .atlas-finances-simulator-row button {
     background: var(--atlas-surface-hover);
     border: 1px solid var(--atlas-border);
     border-radius: var(--atlas-radius-sm);
     color: var(--atlas-text);
     font: inherit;
-    padding: 7px 9px;
+    font-size: 0.84rem;
+    padding: 7px 10px;
   }
 
-  .atlas-finances-simulator input {
-    width: 150px;
-  }
-
-  .atlas-finances-simulator button {
+  .atlas-finances-simulator-row button {
     cursor: pointer;
+    font-weight: 600;
   }
 
-  .atlas-finances-simulator button:disabled {
+  .atlas-finances-simulator-row button:disabled {
     cursor: not-allowed;
     opacity: 0.55;
+  }
+
+  .atlas-finances-simulator-lookup-msg {
+    align-items: center;
+    display: flex;
+    font-size: 0.78rem;
+    gap: 6px;
+    margin: 8px 0 0;
+  }
+
+  .atlas-finances-simulator-lookup-msg.is-success {
+    color: var(--semantic-success-text, #4ade80);
+  }
+
+  .atlas-finances-simulator-lookup-msg.is-note {
+    color: var(--atlas-text-muted);
+  }
+
+  .atlas-finances-simulator-loaded-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--atlas-border);
+    border-radius: var(--atlas-radius-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 10px;
+    padding: 12px 16px;
+  }
+
+  .atlas-finances-simulator-loaded-header {
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: space-between;
+    padding-bottom: 8px;
+  }
+
+  .atlas-finances-simulator-loaded-identity {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .atlas-finances-simulator-loaded-name {
+    color: var(--atlas-text);
+    font-size: 0.95rem;
+  }
+
+  .atlas-finances-simulator-loaded-age {
+    color: var(--atlas-text-secondary);
+    font-size: 0.8rem;
+  }
+
+  .atlas-finances-simulator-loaded-meta {
+    align-items: center;
+    color: var(--atlas-text-muted);
+    display: flex;
+    flex-wrap: wrap;
+    font-size: 0.78rem;
+    gap: 12px;
+  }
+
+  .atlas-finances-simulator-sokker-grid {
+    display: grid;
+    gap: 8px 36px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    @media (max-width: 580px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .atlas-finances-simulator-sokker-col {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .atlas-finances-simulator-sokker-row {
+    align-items: baseline;
+    display: flex;
+    font-size: 0.82rem;
+    justify-content: space-between;
+    padding: 2px 0;
+  }
+
+  .atlas-finances-simulator-sokker-label {
+    color: var(--atlas-text-muted);
+    font-family: var(--atlas-font-mono, monospace);
+    font-size: 0.8rem;
+    text-transform: lowercase;
+  }
+
+  .atlas-finances-simulator-sokker-val {
+    color: var(--atlas-text);
+    font-family: var(--atlas-font-mono, monospace);
+    font-size: 0.82rem;
+    font-weight: 600;
+  }
+
+  .atlas-finances-simulator-manual-columns {
+    align-items: start;
+    display: grid;
+    gap: 36px;
+    grid-template-columns: 140px 1fr;
+    margin-top: 4px;
+
+    @media (max-width: 768px) {
+      gap: 20px;
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .atlas-finances-simulator-manual-profile-col {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .atlas-finances-simulator-age-field {
+    color: var(--atlas-text-secondary);
+    display: flex;
+    flex-direction: column;
+    font-size: 0.74rem;
+    gap: 6px;
+
+    input {
+      background: var(--atlas-surface-hover);
+      border: 1px solid var(--atlas-border);
+      border-radius: var(--atlas-radius-sm);
+      color: var(--atlas-text);
+      font: inherit;
+      font-size: 0.84rem;
+      max-width: 120px;
+      padding: 7px 10px;
+    }
+  }
+
+  .atlas-finances-simulator-manual-skills-col {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .atlas-finances-simulator-skills-title {
+    color: var(--atlas-text-muted);
+    display: block;
+    font-size: 0.74rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+  }
+
+  .atlas-finances-simulator-skills-columns {
+    display: grid;
+    gap: 0 32px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    @media (max-width: 600px) {
+      gap: 0;
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .atlas-finances-simulator-skills-list {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+  }
+
+  .atlas-finances-simulator-skill-row {
+    align-items: center;
+    border-bottom: 1px solid color-mix(in srgb, var(--atlas-border) 72%, transparent);
+    display: flex;
+    justify-content: space-between;
+    min-height: 36px;
+    padding: 2px 0;
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+
+  .atlas-finances-simulator-skill-name {
+    color: var(--atlas-text-secondary);
+    font-size: 0.8rem;
+    font-weight: 500;
+  }
+
+  .atlas-finances-simulator-skill-control {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+    margin: 0;
+  }
+
+  .atlas-finances-simulator-skill-number-input {
+    background: var(--atlas-surface-hover);
+    border: 1px solid var(--atlas-border);
+    border-radius: var(--atlas-radius-sm);
+    color: var(--atlas-text);
+    font-family: var(--atlas-font-mono, monospace);
+    font-size: 0.84rem;
+    font-weight: 700;
+    padding: 4px 6px;
+    text-align: center;
+    width: 54px;
+
+    &:focus {
+      border-color: var(--atlas-accent);
+      outline: none;
+    }
+  }
+
+  .atlas-finances-simulator-skill-level-label {
+    color: var(--atlas-text-muted);
+    font-size: 0.78rem;
+    min-width: 95px;
+    user-select: none;
+  }
+
+  .atlas-finances-simulator-submit-row {
+    margin-top: 16px;
+    text-align: right;
+  }
+
+  .atlas-finances-simulator-submit-btn {
+    background: var(--atlas-accent, #38bdf8);
+    border: 1px solid transparent;
+    border-radius: var(--atlas-radius-sm);
+    color: #0f172a;
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.84rem;
+    font-weight: 700;
+    padding: 9px 20px;
+    transition: opacity 0.15s ease;
+  }
+
+  .atlas-finances-simulator-submit-btn:hover:not(:disabled) {
+    opacity: 0.9;
+  }
+
+  .atlas-finances-simulator-submit-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  .atlas-finances-simulator-results {
+    display: grid;
+    gap: 14px;
+    margin-top: 16px;
+  }
+
+  .atlas-finances-simulator-result-card {
+    background: var(--atlas-surface-hover);
+    border: 1px solid var(--atlas-border);
+    border-radius: var(--atlas-radius-sm);
+    padding: 14px 16px;
+  }
+
+  .atlas-finances-simulator-result-card.is-roi {
+    border-left: 3px solid var(--atlas-accent);
+  }
+
+  .atlas-finances-simulator-result-header {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .atlas-finances-simulator-result-header h3 {
+    color: var(--atlas-text);
+    font-size: 0.88rem;
+    margin: 0;
+  }
+
+  .atlas-finances-simulator-fit-body {
+    display: grid;
+    gap: 4px;
+    margin-top: 8px;
+  }
+
+  .atlas-finances-simulator-fit-title {
+    color: var(--atlas-text);
+    font-size: 0.84rem;
+  }
+
+  .atlas-finances-simulator-fit-body p {
+    color: var(--atlas-text-secondary);
+    font-size: 0.78rem;
+    line-height: 1.4;
+    margin: 0;
+  }
+
+  .atlas-finances-simulator-chip {
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .atlas-finances-simulator-chip.is-active,
+  .atlas-finances-simulator-chip.is-high_upside,
+  .atlas-finances-simulator-chip.is-moderate_upside {
+    background: rgba(74, 222, 128, 0.15);
+    color: var(--semantic-success-text, #4ade80);
+  }
+
+  .atlas-finances-simulator-chip.is-inactive,
+  .atlas-finances-simulator-chip.is-loss {
+    background: rgba(239, 68, 68, 0.15);
+    color: var(--semantic-error-text, #ef4444);
+  }
+
+  .atlas-finances-simulator-chip.is-break_even {
+    background: rgba(251, 191, 36, 0.15);
+    color: var(--semantic-warning-text, #fbbf24);
+  }
+
+  .atlas-finances-simulator-roi-grid {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    margin-top: 14px;
+  }
+
+  .atlas-finances-simulator-roi-col {
+    background: rgba(0, 0, 0, 0.15);
+    border: 1px solid var(--atlas-border);
+    border-radius: var(--atlas-radius-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 12px;
+  }
+
+  .atlas-finances-simulator-roi-col span {
+    color: var(--atlas-text-muted);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+  }
+
+  .atlas-finances-simulator-roi-col strong {
+    color: var(--atlas-text);
+    font-size: 1.05rem;
+  }
+
+  .atlas-finances-simulator-roi-col small {
+    color: var(--atlas-text-secondary);
+    font-size: 0.72rem;
+  }
+
+  .atlas-finances-simulator-roi-col em {
+    font-size: 0.78rem;
+    font-style: normal;
+    font-weight: 700;
+    margin-top: 4px;
+  }
+
+  .atlas-finances-simulator-roi-col em.is-profit {
+    color: var(--semantic-success-text, #4ade80);
+  }
+
+  .atlas-finances-simulator-roi-col em.is-loss {
+    color: var(--semantic-error-text, #ef4444);
   }
 
   .atlas-finances-recommendation-list {

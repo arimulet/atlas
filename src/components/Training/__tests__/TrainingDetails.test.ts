@@ -7,6 +7,8 @@ describe("TrainingDetails", () => {
   const mockHistory: TrainingReport[] = [
     {
       id: "report-1",
+      playerId: 101,
+      date: "2026-05-01",
       gameWeek: 105,
       season: 25,
       seasonWeek: 5,
@@ -25,6 +27,7 @@ describe("TrainingDetails", () => {
         playmaking: 7,
         scoring: 4
       },
+      skillsChange: {},
       skillChanges: []
     }
   ];

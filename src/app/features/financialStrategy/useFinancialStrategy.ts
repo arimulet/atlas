@@ -1,12 +1,20 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  fetchAcquisitionSimulation,
   fetchFinancialStrategy,
   fetchInvestmentSafety,
-  type FinancialStrategyData
+  lookupPlayer,
+  type FinancialStrategyData,
+  type PlayerLookupResult
 } from "@/api";
-import type { InvestmentSafetyAssessment } from "@atlas/domain";
+import type {
+  InvestmentSafetyAssessment,
+  PlayerAcquisitionSimulationInput,
+  PlayerAcquisitionSimulationResult
+} from "@atlas/domain";
 import type { SquadPlanningBundle } from "@/app/types";
 import {
+  createAcquisitionSimulationViewModel,
   createFinancialStrategyViewModel,
   createInvestmentSafetyViewModel,
   type FinancialStrategyViewModel
@@ -23,10 +31,16 @@ export interface FinancialStrategyState {
   viewModel: FinancialStrategyViewModel | null;
   investmentSafety: InvestmentSafetyAssessment | null;
   investmentSafetyView: ReturnType<typeof createInvestmentSafetyViewModel>;
+  acquisitionResult: ReturnType<typeof createAcquisitionSimulationViewModel>;
+  isSimulatingAcquisition: boolean;
   status: "idle" | "loading" | "ready" | "error";
   isSimulating: boolean;
   error: Error | null;
   simulateInvestment: (amount: number) => Promise<void>;
+  simulateAcquisition: (
+    input: PlayerAcquisitionSimulationInput
+  ) => Promise<PlayerAcquisitionSimulationResult>;
+  lookupPlayer: (playerId: number) => Promise<PlayerLookupResult>;
 }
 
 export function useFinancialStrategy({
@@ -41,6 +55,9 @@ export function useFinancialStrategy({
   const [error, setError] = useState<Error | null>(null);
   const [investmentSafety, setInvestmentSafety] = useState<InvestmentSafetyAssessment | null>(null);
   const [isSimulating, setIsSimulating] = useState(false);
+  const [acquisitionResultRaw, setAcquisitionResultRaw] =
+    useState<PlayerAcquisitionSimulationResult | null>(null);
+  const [isSimulatingAcquisition, setIsSimulatingAcquisition] = useState(false);
 
   useEffect(() => {
     let isCurrent = true;
@@ -88,6 +105,27 @@ export function useFinancialStrategy({
     [clubId]
   );
 
+  const simulateAcquisition = useCallback(
+    async (input: PlayerAcquisitionSimulationInput): Promise<PlayerAcquisitionSimulationResult> => {
+      setIsSimulatingAcquisition(true);
+      try {
+        const result = await fetchAcquisitionSimulation(input);
+        setAcquisitionResultRaw(result);
+        return result;
+      } finally {
+        setIsSimulatingAcquisition(false);
+      }
+    },
+    []
+  );
+
+  const handleLookupPlayer = useCallback(
+    async (playerId: number): Promise<PlayerLookupResult> => {
+      return lookupPlayer(playerId);
+    },
+    []
+  );
+
   const viewModel = useMemo(
     () => (data ? createFinancialStrategyViewModel(data, currency, squadPlanning) : null),
     [currency, data, squadPlanning]
@@ -96,15 +134,23 @@ export function useFinancialStrategy({
     () => createInvestmentSafetyViewModel(investmentSafety, currency),
     [currency, investmentSafety]
   );
+  const acquisitionResult = useMemo(
+    () => createAcquisitionSimulationViewModel(acquisitionResultRaw, currency),
+    [acquisitionResultRaw, currency]
+  );
 
   return {
     data,
     viewModel,
     investmentSafety,
     investmentSafetyView,
+    acquisitionResult,
+    isSimulatingAcquisition,
     status,
     isSimulating,
     error,
-    simulateInvestment
+    simulateInvestment,
+    simulateAcquisition,
+    lookupPlayer: handleLookupPlayer
   };
 }
