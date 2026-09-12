@@ -5,7 +5,8 @@ import {
   GraduationCap,
   CircleDollarSign,
   Activity,
-  LineChart
+  LineChart,
+  Calculator
 } from "lucide-react";
 import { pathForMainView } from "@/app/routing";
 import type { NavigationGroup } from "@/app/types";
@@ -71,6 +72,12 @@ const navigationGroups: NavigationGroup[] = [
         label: "Finances",
         icon: <CircleDollarSign size={ICON_SIZE} />,
         path: pathForMainView("finances")
+      },
+      {
+        id: "investment-simulator",
+        label: "Investment Simulator",
+        icon: <Calculator size={ICON_SIZE} />,
+        path: pathForMainView("investment-simulator")
       }
     ]
   },
