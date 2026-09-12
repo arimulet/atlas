@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { runMarketTransferSyncJob } from "@atlas/application";
-import { connectMongoDb, getLatestMarketTransferSyncRun } from "@atlas/database";
+import { getLatestMarketTransferSyncRun } from "@atlas/database";
+import { ensureMongoDbConnection } from "@/lib/api-helper";
 
 export const dynamic = "force-dynamic";
 
@@ -25,9 +26,9 @@ export async function POST(request: NextRequest) {
   }
 
   // 3. Conexión a Base de Datos
-  if (process.env.MONGODB_URI) {
-    await connectMongoDb(process.env.MONGODB_URI).catch(() => null);
-  }
+  await ensureMongoDbConnection().catch((err) => {
+    console.error("[MarketTransferSyncRoute] DB connection failed:", err);
+  });
 
   // 4. Ejecución del Job en segundo plano (Asíncrono)
   console.log("[MarketTransferSyncRoute] HTTP POST request received. Triggering background execution...");
@@ -43,9 +44,9 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET() {
-  if (process.env.MONGODB_URI) {
-    await connectMongoDb(process.env.MONGODB_URI).catch(() => null);
-  }
+  await ensureMongoDbConnection().catch((err) => {
+    console.error("[MarketTransferSyncRoute GET] DB connection failed:", err);
+  });
 
   try {
     const latestRun = await getLatestMarketTransferSyncRun();

@@ -1,13 +1,22 @@
 import { cache } from "react";
 import { NextResponse } from "next/server";
-import { connectMongoDb } from "@atlas/database";
+import { connectMongoDb, isMongoConnected } from "@atlas/database";
 import { getUserClubs } from "@atlas/application";
 import { getAuthenticatedUserServer } from "./session";
 
-export const getEffectiveClubId = cache(async (): Promise<string> => {
-  if (process.env.MONGODB_URI) {
-    await connectMongoDb(process.env.MONGODB_URI).catch(() => null);
+export async function ensureMongoDbConnection(): Promise<void> {
+  if (isMongoConnected()) {
+    return;
   }
+  const uri = process.env.MONGODB_URI;
+  if (!uri) {
+    throw new Error("MONGODB_URI no está configurada en las variables de entorno.");
+  }
+  await connectMongoDb(uri);
+}
+
+export const getEffectiveClubId = cache(async (): Promise<string> => {
+  await ensureMongoDbConnection().catch(() => null);
 
   try {
     const user = await getAuthenticatedUserServer();
