@@ -5,11 +5,12 @@ import {
   validateSokkerSyncPayload,
   persistSokkerSync
 } from "@atlas/application";
-import { jsonResponse } from "@/lib/api-helper";
+import { ensureMongoDbConnection, jsonResponse } from "@/lib/api-helper";
 import { getAuthenticatedUserServer } from "@/lib/session";
 
 export async function POST(request: NextRequest) {
   try {
+    await ensureMongoDbConnection();
     const body = await request.json();
     const credentials = { login: body.login ?? "", password: body.password ?? "" };
     const authUser = await getAuthenticatedUserServer();

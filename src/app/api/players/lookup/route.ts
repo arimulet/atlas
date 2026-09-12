@@ -1,7 +1,7 @@
 import { PlayerModel } from "@/database/models/player";
 import { MarketTransferCurrentModel } from "@/database/models/marketTransferCurrent";
 import { MarketTransferModel } from "@/database/models/marketTransfer";
-import { handleApiError, jsonResponse } from "@/lib/api-helper";
+import { ensureMongoDbConnection, handleApiError, jsonResponse } from "@/lib/api-helper";
 import { inferPositionFromSkills } from "@atlas/domain";
 import { NextRequest } from "next/server";
 
@@ -24,6 +24,7 @@ function normalizeSkills(raw: Record<string, number | null | undefined>): Record
 
 export async function GET(request: NextRequest) {
   try {
+    await ensureMongoDbConnection();
     const { searchParams } = new URL(request.url);
     const playerIdRaw = searchParams.get("playerId");
     const playerId = Number(playerIdRaw);
