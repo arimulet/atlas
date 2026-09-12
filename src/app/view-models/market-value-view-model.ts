@@ -15,7 +15,7 @@ import type {
 import type { MoneyTotal } from "@atlas/web/app/types";
 import { formatAge, formatDate, formatMoney, formatSignedWeeks, formatWeeks } from "../formatters";
 
-const MAX_VISIBLE_COMPARABLES = 5;
+const MAX_VISIBLE_COMPARABLES = 10;
 
 export interface MarketValueAmount {
   value: number;

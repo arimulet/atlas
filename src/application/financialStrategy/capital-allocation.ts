@@ -47,7 +47,7 @@ export async function simulatePlayerAcquisitionApplication(
   const [context, training, transfers] = await Promise.all([
     getCapitalAllocationContext(clubId),
     getTrainingPageData(clubId).catch(() => null),
-    findFinalMarketTransfersUpToDate(new Date(), 20).catch(() => [])
+    findFinalMarketTransfersUpToDate(new Date(), 50).catch(() => [])
   ]);
 
   let enrichedInput: PlayerAcquisitionSimulationInput = { ...input };
