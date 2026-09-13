@@ -37,7 +37,9 @@ export function formatTalent(value: number | null | undefined): string {
 }
 
 export function formatAge(value: number | null | undefined): string {
-  return value === null || value === undefined ? "—" : `~${value.toLocaleString("en-US", { maximumFractionDigits: 1 })}`;
+  return value === null || value === undefined
+    ? "—"
+    : `~${value.toLocaleString("en-US", { maximumFractionDigits: 1 })}`;
 }
 
 export interface FormatWeeksOptions {
