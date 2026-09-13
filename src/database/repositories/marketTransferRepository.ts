@@ -116,6 +116,34 @@ export async function upsertMarketTransferCurrent(
   );
 }
 
+export async function bulkUpsertMarketTransferCurrents(
+  transfers: Array<Omit<PersistedMarketTransferCurrent, "firstSeenAt">>
+): Promise<number> {
+  if (transfers.length === 0) return 0;
+  const now = new Date();
+  const ops = transfers.map((transfer) => ({
+    updateOne: {
+      filter: { playerId: transfer.playerId },
+      update: {
+        $set: {
+          lastSeenAt: transfer.lastSeenAt,
+          deadline: transfer.deadline,
+          status: transfer.status,
+          lastSyncRunId: transfer.lastSyncRunId,
+          player: transfer.player
+        },
+        $setOnInsert: {
+          firstSeenAt: now
+        }
+      },
+      upsert: true
+    }
+  }));
+
+  const res = await MarketTransferCurrentModel.bulkWrite(ops, { ordered: false });
+  return (res.upsertedCount ?? 0) + (res.modifiedCount ?? 0);
+}
+
 export async function markMissingMarketTransferCurrent(lastSyncRunId: string): Promise<number> {
   const result = await MarketTransferCurrentModel.updateMany(
     { lastSyncRunId: { $ne: lastSyncRunId }, status: "active" },
@@ -133,9 +161,23 @@ export async function getMarketTransferCurrentByPlayerId(
   return doc as unknown as PersistedMarketTransferCurrent | null;
 }
 
-export async function getMissingMarketTransfers(): Promise<PersistedMarketTransferCurrent[]> {
-  const docs = await MarketTransferCurrentModel.find({ status: "missing" }).lean();
+export async function getMissingMarketTransfers(
+  maxDeadline: Date = new Date()
+): Promise<PersistedMarketTransferCurrent[]> {
+  const docs = await MarketTransferCurrentModel.find({
+    status: "missing",
+    deadline: { $lte: maxDeadline }
+  }).lean();
   return docs as unknown as PersistedMarketTransferCurrent[];
+}
+
+export async function cleanupStaleMarketTransferCurrents(olderThanDays: number = 7): Promise<number> {
+  const cutoff = new Date(Date.now() - olderThanDays * 24 * 60 * 60 * 1000);
+  const res = await MarketTransferCurrentModel.deleteMany({
+    status: "missing",
+    deadline: { $lt: cutoff }
+  });
+  return res.deletedCount ?? 0;
 }
 
 export async function deleteMarketTransferCurrent(playerId: number): Promise<void> {
@@ -166,9 +208,14 @@ const MARKET_TRANSFER_PROFILES: readonly string[] = [
 export async function promoteToFinalMarketTransfer(
   transfer: PersistedMarketTransfer
 ): Promise<void> {
-  const current = await MarketTransferCurrentModel.findOne({ playerId: transfer.playerId });
-  if (!current) {
-    throw new Error(`Cannot promote transfer for player ${transfer.playerId}: no current record found`);
+  let skills = transfer.skills;
+
+  if (!skills || Object.keys(skills).length === 0) {
+    const current = await MarketTransferCurrentModel.findOne({ playerId: transfer.playerId });
+    if (!current) {
+      throw new Error(`Cannot promote transfer for player ${transfer.playerId}: no current record found`);
+    }
+    skills = current.player.skills;
   }
 
   const profile =
@@ -176,7 +223,7 @@ export async function promoteToFinalMarketTransfer(
     suggestDevelopmentProfile({
       playerId: transfer.playerId,
       age: transfer.age,
-      skills: current.player.skills
+      skills
     }).profile;
 
   // 1. Upsert final transfer
@@ -192,7 +239,7 @@ export async function promoteToFinalMarketTransfer(
         week: transfer.week,
         salePrice: transfer.salePrice,
         age: transfer.age,
-        skills: current.player.skills,
+        skills,
         profile
       }
     },
