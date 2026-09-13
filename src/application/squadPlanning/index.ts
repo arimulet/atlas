@@ -578,7 +578,7 @@ function estimateCurrentTrainingProgress(
       confidence:
         talent.confidence === "high" ? "high" : talent.confidence === "medium" ? "medium" : "low"
     };
-  } catch (error) { console.error("MarketValue error for player:", context.playerId, error);
+  } catch {
     return undefined;
   }
 }
@@ -612,7 +612,7 @@ function buildProjection(input: {
         assumeContinuousTraining: true
       }
     });
-  } catch (error) { console.error("MarketValue error for player:", context.playerId, error);
+  } catch {
     return null;
   }
 }

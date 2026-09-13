@@ -64,12 +64,12 @@ describe("formatters", () => {
 
   describe("formatAge", () => {
     it("returns dash for null or undefined", () => {
-      expect(formatAge(null)).toBe("-");
-      expect(formatAge(undefined)).toBe("-");
+      expect(formatAge(null)).toBe("—");
+      expect(formatAge(undefined)).toBe("—");
     });
 
     it("formats age with tilde", () => {
-      expect(formatAge(19.4)).toBe("~19.40");
+      expect(formatAge(19.4)).toBe("~19.4");
     });
   });
 

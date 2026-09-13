@@ -1,4 +1,4 @@
-import { normalizeSeasonWeek, WEEKS_PER_SOKKER_SEASON, addSokkerWeeks } from "../sokker/calendar.js";
+import { normalizeSeasonWeek, WEEKS_PER_SOKKER_SEASON } from "../sokker/calendar.js";
 import {
   calculateRequiredTrainingPoints,
   calculateWeeklyTrainingPointsByKind
@@ -472,16 +472,7 @@ function projectAge(
   _date: Date,
   elapsedWeeks: number
 ): number {
-  const baseAge = context.player.age;
-  const years = Math.floor(baseAge);
-  let baseWeeks = Math.round((baseAge - years) * 100);
-  
-  if (baseWeeks === 0 && context.currentGameWeek) {
-    baseWeeks = normalizeSeasonWeek(context.currentGameWeek);
-  }
-  
-  const startingAge = years + (baseWeeks / 100);
-  return addSokkerWeeks(startingAge, elapsedWeeks);
+  return context.player.age + elapsedWeeks / DEVELOPMENT_PROJECTION_WEEKS_PER_YEAR;
 }
 
 function addWeeks(date: Date, weeks: number): Date {
