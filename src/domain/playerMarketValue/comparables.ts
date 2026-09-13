@@ -546,9 +546,12 @@ function detectPriceOutliers(
   const outlierComparables = comparables.filter(
     (item) => Math.abs(item.adjustedSalePrice - median) > tolerance
   );
-  // If more than 1 outlier is detected in a small sample (<= 5),
+  // If more than 1 outlier is detected in a small sample (<= 5), or if outliers exceed 30% of a larger sample,
   // the data represents broad market price dispersion, not isolated rogue sales.
-  if (comparables.length <= 5 && outlierComparables.length > 1) {
+  if (
+    (comparables.length <= 5 && outlierComparables.length > 1) ||
+    outlierComparables.length > Math.floor(comparables.length * 0.3)
+  ) {
     return { outlierKeys: new Set(), outliers: [] };
   }
   const outliers = outlierComparables.map((item): ComparableMarketOutlier => ({

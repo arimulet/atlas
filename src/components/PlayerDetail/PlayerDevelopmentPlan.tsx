@@ -2,6 +2,7 @@ import { useState, type ReactNode } from "react";
 import { ArrowRight } from "lucide-react";
 import type { PlayerDevelopmentTargetOverride } from "@atlas/domain";
 import { formatEta, formatPercentage } from "@/app/formatters";
+import { skillLevelLabel } from "@/app/view-models/skill-level-label";
 import {
   type DevelopmentPlanPathRow,
   type DevelopmentPlanTargetRow,
@@ -266,8 +267,8 @@ function SkillTargets({ targets, title }: { targets: DevelopmentPlanTargetRow[],
             {targets.map((target) => (
               <tr key={target.skill}>
                 <th>{skillLabel(target.skill)}</th>
-                <td>{target.currentLevel}</td>
-                <td>{target.targetLevel}</td>
+                <td title={skillLevelLabel(target.currentLevel) ?? undefined}>{target.currentLevel}</td>
+                <td title={skillLevelLabel(target.targetLevel) ?? undefined}>{target.targetLevel}</td>
                 <td>{target.remaining}</td>
                 <td>{capitalize(target.priority)}</td>
                 <td>{statusLabel(target.status)}</td>
@@ -300,7 +301,9 @@ function TrainingPath({ path, completed }: { path: DevelopmentPlanPathRow[]; com
               <b>{step.order}</b>
               <strong>{skillLabel(step.skill)}</strong>
               <span>
-                {step.fromLevel} <ArrowRight size={13} className="inline-block align-middle" /> {step.toLevel}
+                <span title={skillLevelLabel(step.fromLevel) ?? undefined}>{step.fromLevel}</span>{" "}
+                <ArrowRight size={13} className="inline-block align-middle" />{" "}
+                <span title={skillLevelLabel(step.toLevel) ?? undefined}>{step.toLevel}</span>
               </span>
               <span>{formatEta(step.estimatedWeeks)}</span>
               <small>

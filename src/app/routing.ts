@@ -1,7 +1,15 @@
 import { useCallback, useEffect, useState } from "react";
 
 export type MainViewId =
-  "dashboard" | "squad" | "player-decisions" | "training" | "youth" | "youth-performances" | "finances" | "diagnostics";
+  | "dashboard"
+  | "squad"
+  | "player-decisions"
+  | "training"
+  | "youth"
+  | "youth-performances"
+  | "finances"
+  | "investment-simulator"
+  | "diagnostics";
 
 export type Route =
   | { kind: "main"; view: MainViewId; path: string }
@@ -27,6 +35,7 @@ const mainPaths: Record<MainViewId, string> = {
   youth: "/youth",
   "youth-performances": "/youth/performances",
   finances: "/finances",
+  "investment-simulator": "/investment-simulator",
   diagnostics: "/diagnostics"
 };
 

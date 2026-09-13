@@ -15,6 +15,38 @@ const FLAG_STYLE: CSSProperties = {
 
 COUNTRY_LOCALES.forEach((locale) => countries.registerLocale(locale));
 
+const SOKKER_COUNTRY_OVERRIDES: Readonly<Record<string, string>> = {
+  // Albania (Shqipëria is the official native name in Sokker, i18n-iso-countries only contains Shqipëri)
+  shqiperia: "AL",
+  shqiperi: "AL",
+
+  // United Kingdom constituent nations
+  england: "GB-ENG",
+  scotland: "GB-SCT",
+  cymru: "GB-WLS",
+  wales: "GB-WLS",
+  "northern ireland": "GB-NIR",
+
+  // Sokker native endonyms and regional spellings
+  "al maghrib": "MA",
+  "al-jaza'ir": "DZ",
+  "al-jazair": "DZ",
+  "as-sa'udiyya": "SA",
+  "as-saudiyya": "SA",
+  "daehan minguk": "KR",
+  hayastan: "AM",
+  letzebuerg: "LU",
+  nippon: "JP",
+  "o'zbekiston": "UZ",
+  ozbekiston: "UZ",
+  pilipinas: "PH",
+  "prathet thai": "TH",
+  sakartvelo: "GE",
+  "u.a.e.": "AE",
+  uae: "AE",
+  zhongguo: "CN"
+};
+
 export interface CountryNameFlagProps {
   countryName: string;
 }
@@ -23,6 +55,7 @@ function normalizeCountryName(countryName: string): string {
   return countryName
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’‘ʻ`]/g, "'")
     .trim()
     .toLocaleLowerCase();
 }
@@ -34,7 +67,15 @@ export function findCountryCode(countryName: string): string | undefined {
     return undefined;
   }
 
-  if (/^[a-z]{2}$/i.test(normalizedCountryName)) {
+  const override = SOKKER_COUNTRY_OVERRIDES[normalizedCountryName];
+  if (override) {
+    return override;
+  }
+
+  if (
+    /^[a-z]{2}$/i.test(normalizedCountryName) ||
+    /^[a-z]{2}-[a-z]{3}$/i.test(normalizedCountryName)
+  ) {
     return normalizedCountryName.toUpperCase();
   }
 

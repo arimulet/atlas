@@ -166,7 +166,10 @@ function YouthPlayerRows({
         </th>
         <td className="atlas-youth-table__center">{row.age}</td>
         <td>
-          <span className="atlas-youth-skill-level">
+          <span
+            className="atlas-youth-skill-level"
+            title={row.level ? (skillLevelLabel(row.level.value) ?? undefined) : undefined}
+          >
             <span className={`atlas-youth-skill-level__value${skillChangeClass}`}>
               {formatLevel(row.level)}
             </span>
@@ -174,7 +177,9 @@ function YouthPlayerRows({
           </span>
         </td>
         <td className="atlas-youth-table__center">{row.weeksLeft ?? "—"}</td>
-        <td>{formatLevelValue(row.expectedLevel)}</td>
+        <td title={row.expectedLevel !== null ? (skillLevelLabel(row.expectedLevel) ?? undefined) : undefined}>
+          {formatLevelValue(row.expectedLevel)}
+        </td>
         <td className="atlas-youth-table__center">{row.expectedAge ?? "—"}</td>
         <td className="atlas-youth-table__center">{row.initialWeeks ?? "—"}</td>
         <td className="atlas-youth-table__center">{formatLevelPops(row.levelPops)}</td>

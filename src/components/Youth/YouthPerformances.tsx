@@ -166,7 +166,10 @@ export function YouthPerformances({ clubId, youthAcademy }: YouthPerformancesPro
                         </span>{" "}
                         <span style={{ fontWeight: "normal", color: "var(--color-text-secondary, #888)", fontSize: "0.9em" }}>({p.player.age}yo, {p.player.weeksRemaining ?? "-"}w)</span>
                       </th>
-                      <td className={getSkillColorClass(p.player.skill)}>
+                      <td
+                        className={getSkillColorClass(p.player.skill)}
+                        title={p.player.skill !== null ? `${skillLevelLabel(p.player.skill)} [${p.player.skill}]` : undefined}
+                      >
                         {p.player.skill !== null ? skillLevelLabel(p.player.skill) : "-"}
                       </td>
                       <td>
@@ -247,7 +250,10 @@ export function YouthPerformances({ clubId, youthAcademy }: YouthPerformancesPro
                       <td className="performance-cell-wrapper">
                         <div className={"performance-cell " + att.className}>{att.text}</div>
                       </td>
-                      <td className={getSkillColorClass(p.player.skill)}>
+                      <td
+                        className={getSkillColorClass(p.player.skill)}
+                        title={p.player.skill !== null ? `${skillLevelLabel(p.player.skill)} [${p.player.skill}]` : undefined}
+                      >
                         {p.player.skill !== null ? skillLevelLabel(p.player.skill) : "-"}
                       </td>
                       <td>

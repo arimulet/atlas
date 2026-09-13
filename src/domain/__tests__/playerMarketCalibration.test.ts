@@ -296,7 +296,7 @@ describe("Player Market comparable calibration", () => {
   });
 
   it("can reach high confidence with enough strong, recent and consistent sales", () => {
-    const transfers = Array.from({ length: 6 }, (_, index) =>
+    const transfers = Array.from({ length: 10 }, (_, index) =>
       transfer({
         transferId: `high-${index}`,
         transferDate: new Date(2026, 7, index + 1),

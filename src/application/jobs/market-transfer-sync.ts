@@ -1,9 +1,10 @@
 import {
   acquireMarketTransferSyncRun,
   finishMarketTransferSyncRun,
-  upsertMarketTransferCurrent,
+  bulkUpsertMarketTransferCurrents,
   markMissingMarketTransferCurrent,
   getMissingMarketTransfers,
+  cleanupStaleMarketTransferCurrents,
   deleteMarketTransferCurrent,
   promoteToFinalMarketTransfer,
   getLastSuccessfulMarketTransferSyncRun,
@@ -75,37 +76,42 @@ export async function runMarketTransferSyncJob(
         break;
       }
 
-      for (const t of actives) {
-        await upsertMarketTransferCurrent({
-          playerId: t.playerId,
-          lastSeenAt: new Date(),
-          deadline: new Date(t.deadline),
-          status: "active",
-          lastSyncRunId: runId,
-          player: {
-            name: t.player.name,
-            countryId: t.player.countryId,
-            age: t.player.age,
-            skills: t.player.skills as Record<string, number>
-          }
-        });
-        counts.currentUpserted++;
-      }
-      
+      const transfersToUpsert = actives.map((t) => ({
+        playerId: t.playerId,
+        lastSeenAt: new Date(),
+        deadline: new Date(t.deadline),
+        status: "active" as const,
+        lastSyncRunId: runId,
+        player: {
+          name: t.player.name,
+          countryId: t.player.countryId,
+          age: t.player.age,
+          skills: t.player.skills as Record<string, number>
+        }
+      }));
+
+      await bulkUpsertMarketTransferCurrents(transfersToUpsert);
+      counts.currentUpserted += transfersToUpsert.length;
       counts.pagesRead++;
-      console.log(`[MarketTransferSync] Page ${pageNum}: upserted ${actives.length} active transfers (Total upserted: ${counts.currentUpserted})`);
+      console.log(`[MarketTransferSync] Page ${pageNum}: upserted ${actives.length} active transfers in bulk (Total: ${counts.currentUpserted})`);
       offset += limit;
     }
 
-    // Mark missing
+    // Step 2: Mark missing
     counts.currentMissing = await markMissingMarketTransferCurrent(runId);
     console.log(`[MarketTransferSync] Step 2: Completed active transfers scan. Marked ${counts.currentMissing} transfers as missing.`);
 
-    // 4. Process Missing Currents by hitting individual transfer histories in parallel chunks
-    const missingCurrents = await getMissingMarketTransfers();
+    // Purge stale missing transfers older than 7 days
+    const cleanedStale = await cleanupStaleMarketTransferCurrents(7);
+    if (cleanedStale > 0) {
+      console.log(`[MarketTransferSync] Cleaned up ${cleanedStale} stale missing transfers older than 7 days.`);
+    }
+
+    // Step 3: Process Missing Currents whose deadline has actually passed (deadline <= now)
+    const missingCurrents = await getMissingMarketTransfers(new Date());
     const totalMissing = missingCurrents.length;
-    const concurrency = 10;
-    console.log(`[MarketTransferSync] Step 3: Resolving ${totalMissing} missing current transfers by checking individual player history (concurrency: ${concurrency})...`);
+    const concurrency = 15;
+    console.log(`[MarketTransferSync] Step 3: Resolving ${totalMissing} expired missing transfers by checking individual player history (concurrency: ${concurrency})...`);
 
     let processedCount = 0;
 
@@ -114,6 +120,7 @@ export async function runMarketTransferSyncJob(
 
       await Promise.all(
         chunk.map(async (current) => {
+          let wasPromoted = false;
           try {
             const history = await provider.getPlayerTransferHistory(current.playerId);
             const latest = history[0];
@@ -141,6 +148,7 @@ export async function runMarketTransferSyncJob(
                   skills: current.player.skills
                 });
                 counts.finalCreatedOrUpdated++;
+                wasPromoted = true;
               }
             }
           } catch (playerErr) {
@@ -148,7 +156,11 @@ export async function runMarketTransferSyncJob(
             console.warn(`[MarketTransferSync] Failed to fetch transfer history for player ${current.playerId}: ${msg}`);
           }
           
-          await deleteMarketTransferCurrent(current.playerId);
+          // promoteToFinalMarketTransfer already deletes the current record when promoted.
+          // If not promoted (e.g. expired without sale), delete it here so it is not queried again.
+          if (!wasPromoted) {
+            await deleteMarketTransferCurrent(current.playerId);
+          }
           counts.currentDeleted++;
           counts.pagesRead++;
         })

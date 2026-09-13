@@ -8,7 +8,27 @@ import { migrateSquadRoleAssignments } from "./migrations/squad-role-assignments
 
 export type MongoSession = ClientSession;
 
-let connectionPromise: Promise<typeof mongoose> | null = null;
+interface MongoConnectionCache {
+  conn: typeof mongoose | null;
+  promise: Promise<typeof mongoose> | null;
+}
+
+declare global {
+  var __mongoConnectionCache: MongoConnectionCache | undefined;
+}
+
+const cached: MongoConnectionCache = globalThis.__mongoConnectionCache ?? {
+  conn: null,
+  promise: null
+};
+
+if (!globalThis.__mongoConnectionCache) {
+  globalThis.__mongoConnectionCache = cached;
+}
+
+export function isMongoConnected(): boolean {
+  return mongoose.connection.readyState === 1;
+}
 
 export async function runMongoMigrations(): Promise<void> {
   await migrateClubProfileDocuments();
@@ -19,38 +39,56 @@ export async function runMongoMigrations(): Promise<void> {
   await migrateSnapshotClubIds();
 }
 
-export async function connectMongoDb(uri: string): Promise<typeof mongoose> {
+export async function connectMongoDb(uri?: string): Promise<typeof mongoose> {
+  const targetUri = uri ?? process.env.MONGODB_URI;
+
   if (mongoose.connection.readyState === 1) {
+    cached.conn = mongoose;
     return mongoose;
   }
 
-  if (!connectionPromise) {
-    connectionPromise = mongoose.connect(uri);
+  if (!targetUri) {
+    throw new Error(
+      "No MongoDB connection URI provided and MONGODB_URI environment variable is not defined."
+    );
+  }
+
+  if (!cached.promise || mongoose.connection.readyState === 0) {
+    cached.promise = mongoose.connect(targetUri).then((m) => {
+      cached.conn = m;
+      return m;
+    });
   }
 
   try {
-    return await connectionPromise;
+    cached.conn = await cached.promise;
+    return cached.conn;
   } catch (error) {
-    connectionPromise = null;
+    cached.promise = null;
+    cached.conn = null;
     throw error;
   }
 }
 
 export async function disconnectMongoDb(): Promise<void> {
-  connectionPromise = null;
+  cached.conn = null;
+  cached.promise = null;
   await mongoose.disconnect();
 }
 
 export function mongoTransactionsAvailable(): boolean {
+  if (mongoose.connection.readyState !== 1) {
+    return false;
+  }
   const client = mongoose.connection.getClient() as unknown as {
     options: { replicaSet?: string };
     topology?: { description?: { type?: string } };
   };
-  const topologyType = client.topology?.description?.type;
+  const topologyType = client?.topology?.description?.type;
   return (
     topologyType === "ReplicaSet" ||
     topologyType === "Sharded" ||
-    (typeof client.options.replicaSet === "string" && client.options.replicaSet.length > 0)
+    (typeof client?.options?.replicaSet === "string" && client.options.replicaSet.length > 0)
   );
 }
 

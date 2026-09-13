@@ -25,3 +25,4 @@ export {
   buildLiquidityScenario,
   simulateSquadImpact
 } from "./recommendations.js";
+export * from "./acquisition-simulator.js";

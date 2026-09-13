@@ -1,5 +1,6 @@
 import { AlertCircle, AlertTriangle, Sparkles } from "lucide-react";
 import type { PlayerDetailViewModel } from "@/app/view-models/player-detail-view-model";
+import { skillLevelLabel } from "@/app/view-models/skill-level-label";
 import { formatEta, formatNumber, formatPercentage } from "@/app/formatters";
 import { TalentPanel } from "./TalentPanel";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -30,7 +31,11 @@ export function ProjectionPanel({ projection, talent, training }: ProjectionPane
         <h3>Current</h3>
         <dl className="atlas-player-detail__data-list">
           <DataRow label="Skill" value={projection.current.skill ?? "—"} />
-          <DataRow label="Level" value={formatNumber(projection.current.level)} />
+          <DataRow
+            label="Level"
+            value={formatNumber(projection.current.level)}
+            title={skillLevelLabel(projection.current.level) ?? undefined}
+          />
           <DataRow label="Progress" value={formatPercentage(projection.current.progress)} />
         </dl>
       </div>
@@ -42,6 +47,7 @@ export function ProjectionPanel({ projection, talent, training }: ProjectionPane
             <DataRow
               label={projection.current.skill ?? "Skill"}
               value={formatNumber(projection.nextSkillUp.targetLevel)}
+              title={skillLevelLabel(projection.nextSkillUp.targetLevel) ?? undefined}
             />
             <DataRow
               label="Estimated weeks"
@@ -60,6 +66,7 @@ export function ProjectionPanel({ projection, talent, training }: ProjectionPane
             <DataRow
               label={projection.current.skill ?? "Skill"}
               value={formatNumber(projection.horizon.projectedLevel)}
+              title={skillLevelLabel(projection.horizon.projectedLevel) ?? undefined}
             />
           </dl>
         </div>
@@ -109,13 +116,14 @@ function TrainingSignalSummary({
 interface DataRowProps {
   label: string;
   value: string | number;
+  title?: string;
 }
 
-function DataRow({ label, value }: DataRowProps) {
+function DataRow({ label, value, title }: DataRowProps) {
   return (
     <div>
       <dt>{label}</dt>
-      <dd>{value}</dd>
+      <dd title={title}>{value}</dd>
     </div>
   );
 }

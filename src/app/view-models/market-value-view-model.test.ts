@@ -97,7 +97,7 @@ function comparable(index: number, outlier = false): MarketComparable {
 }
 
 function comparableEstimate(): ComparableMarketEstimate {
-  const comparables = Array.from({ length: 6 }, (_, index) => comparable(index, index === 5));
+  const comparables = Array.from({ length: 12 }, (_, index) => comparable(index, index === 11));
   return {
     comparables,
     estimatedValue: { low: 2_300_000, expected: 2_650_000, high: 2_950_000 },
@@ -105,7 +105,7 @@ function comparableEstimate(): ComparableMarketEstimate {
     weightedMedian: 2_550_000,
     sampleSize: comparables.length,
     confidence: "medium",
-    outliers: [{ transferId: "transfer-5", price: 8_000_000, reason: "robust_price_deviation" }],
+    outliers: [{ transferId: "transfer-11", price: 8_000_000, reason: "robust_price_deviation" }],
     priceDispersion: { coefficient: 0.2, low: 2_400_000, high: 8_000_000, median: 2_650_000 }
   };
 }
@@ -217,16 +217,16 @@ describe("market value presentation models", () => {
       depthPlayer({
         marketValue: marketValue({
           comparableEstimate: comparableEstimate(),
-          reasons: [{ type: "comparable_market_evidence", sampleSize: 6 }]
+          reasons: [{ type: "comparable_market_evidence", sampleSize: 12 }]
         })
       }),
       "ARS"
     );
 
-    expect(viewModel?.evidence.sampleSize).toBe(6);
-    expect(viewModel?.evidence.comparables).toHaveLength(5);
+    expect(viewModel?.evidence.sampleSize).toBe(12);
+    expect(viewModel?.evidence.comparables).toHaveLength(10);
     expect(viewModel?.evidence.outliersExcluded).toBe(1);
-    expect(viewModel?.evidence.strongMatches).toBe(6);
+    expect(viewModel?.evidence.strongMatches).toBe(12);
   });
 
   it("maps semantic reasons instead of exposing internal codes", () => {

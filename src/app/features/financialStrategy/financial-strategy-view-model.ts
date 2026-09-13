@@ -1,10 +1,11 @@
-﻿import type {
+import type {
   CapitalAllocationItem,
   ClubFinancialAssessment,
   FinancialPositionStatus,
   FinancialStrategyPlan,
   FinancialStrategyRecommendation,
   InvestmentSafetyAssessment,
+  PlayerAcquisitionSimulationResult,
   ProfileDepthStatus
 } from "@atlas/domain";
 import type { FinancialStrategyData } from "@/api";
@@ -86,11 +87,24 @@ export interface SquadAssetViewModel {
     name: string;
     value: string;
     role: string;
+    rawRole?: string;
     liquidity: string;
+    rawLiquidity?: string;
     recommended: boolean;
     isTheoretical: boolean;
+    position?: string | null;
+    countryName?: string | null;
   }>;
-  protectedAssets: Array<{ playerId: number; name: string; value: string; reasons: string[]; isTheoretical: boolean }>;
+  protectedAssets: Array<{
+    playerId: number;
+    name: string;
+    value: string;
+    reasons: string[];
+    rawReasons?: string[];
+    isTheoretical: boolean;
+    position?: string | null;
+    countryName?: string | null;
+  }>;
 }
 
 export interface DevelopmentCapitalViewModel {
@@ -128,7 +142,7 @@ export function createFinancialStrategyViewModel(
     capacity: createCapacityViewModel(data.capitalAllocation, currency),
     funding: createFundingViewModel(data.capitalAllocation, currency),
     recommendations,
-    assets: createAssetViewModel(data, currency, playerNames),
+    assets: createAssetViewModel(data, currency, playerNames, squadPlanning),
     developmentCapital: createDevelopmentCapitalViewModel(data.financialAssessment, currency),
     conflicts: data.strategyPlan.conflicts.map((conflict) => ({
       playerId: conflict.playerId ?? null,
@@ -153,6 +167,41 @@ export function createInvestmentSafetyViewModel(
     coverage: weeks(assessment.postInvestmentPayrollCoverageWeeks),
     status: financialStatusLabel(assessment.postInvestmentStatus),
     safety: titleCase(assessment.safety)
+  };
+}
+
+export function createAcquisitionSimulationViewModel(
+  result: PlayerAcquisitionSimulationResult | null,
+  currency: string | null
+) {
+  if (!result) return null;
+  return {
+    ...result,
+    financial: {
+      ...result.financial,
+      amountFormatted: money(result.financial.amount, currency),
+      weeklyWageFormatted: money(result.financial.weeklyWage, currency),
+      postInvestmentCashFormatted: money(result.financial.postInvestmentCash, currency),
+      currentWeeklyPayrollFormatted: money(result.financial.currentWeeklyPayroll, currency),
+      projectedWeeklyPayrollFormatted: money(result.financial.projectedWeeklyPayroll, currency),
+      postInvestmentPayrollCoverageWeeksFormatted: weeks(
+        result.financial.postInvestmentPayrollCoverageWeeks
+      ),
+      currentPayrollCoverageWeeksFormatted: weeks(result.financial.currentPayrollCoverageWeeks),
+      safetyFormatted: titleCase(result.financial.safety)
+    },
+    roi: result.roi
+      ? {
+          ...result.roi,
+          currentEstimatedValueFormatted: money(result.roi.currentEstimatedValue, currency),
+          projectedValueSeason1Formatted: money(result.roi.projectedValueSeason1, currency),
+          projectedValueSeason2Formatted: money(result.roi.projectedValueSeason2, currency),
+          totalCostSeason1Formatted: money(result.roi.totalCostSeason1, currency),
+          totalCostSeason2Formatted: money(result.roi.totalCostSeason2, currency),
+          netMarginSeason1Formatted: money(result.roi.netMarginSeason1, currency),
+          netMarginSeason2Formatted: money(result.roi.netMarginSeason2, currency)
+        }
+      : null
   };
 }
 
@@ -259,7 +308,8 @@ function createRecommendationViewModel(
 function createAssetViewModel(
   data: FinancialStrategyData,
   currency: string | null,
-  playerNames: ReadonlyMap<number, string>
+  playerNames: ReadonlyMap<number, string>,
+  squadPlanning: SquadPlanningBundle | null = null
 ): SquadAssetViewModel {
   const assessment = data.financialAssessment;
   const allocation = data.capitalAllocation;
@@ -274,6 +324,12 @@ function createAssetViewModel(
         (c) => c.strategicProtection === "critical" || c.strategicProtection === "high"
       )
       .map((c) => c.playerId)
+  );
+  const playerProfileMap = new Map(
+    (squadPlanning?.assessment.depthPlayers ?? []).map((p) => [p.playerId, p.profile])
+  );
+  const playerCountryMap = new Map(
+    (squadPlanning?.assessment.depthPlayers ?? []).map((p) => [p.playerId, p.countryName ?? null])
   );
 
   return {
@@ -298,9 +354,13 @@ function createAssetViewModel(
       .map((asset) => ({
         playerId: asset.playerId,
         name: playerNames.get(asset.playerId) ?? `Player ${asset.playerId}`,
+        countryName: playerCountryMap.get(asset.playerId) ?? null,
+        position: playerProfileMap.get(asset.playerId) ?? null,
         value: money(asset.estimatedMarketValue, currency),
         role: roleLabel(asset.squadRole),
+        rawRole: asset.squadRole,
         liquidity: titleCase(asset.liquidityPotential),
+        rawLiquidity: asset.liquidityPotential,
         recommended: recommendationPlayerIds.has(asset.playerId),
         isTheoretical: asset.isTheoretical
       })),
@@ -312,8 +372,11 @@ function createAssetViewModel(
       .map((candidate) => ({
         playerId: candidate.playerId,
         name: playerNames.get(candidate.playerId) ?? `Player ${candidate.playerId}`,
+        countryName: playerCountryMap.get(candidate.playerId) ?? null,
+        position: playerProfileMap.get(candidate.playerId) ?? null,
         value: money(candidate.marketValue, currency),
         reasons: candidate.reasons.map((reason) => monetizationReasonLabel(reason)),
+        rawReasons: candidate.reasons.map((reason) => reason.type),
         isTheoretical: candidate.isTheoretical
       }))
   };

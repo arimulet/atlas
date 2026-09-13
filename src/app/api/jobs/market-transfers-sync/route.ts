@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { runMarketTransferSyncJob } from "@atlas/application";
-import { connectMongoDb, getLatestMarketTransferSyncRun } from "@atlas/database";
+import { getLatestMarketTransferSyncRun } from "@atlas/database";
+import { ensureMongoDbConnection } from "@/lib/api-helper";
 
 export const dynamic = "force-dynamic";
+// export const maxDuration = 300; // 5 minutos de tiempo máximo de ejecución en Cloud Run
 
 export async function POST(request: NextRequest) {
   // 1. Validar autorización
@@ -18,34 +20,47 @@ export async function POST(request: NextRequest) {
   const password = process.env.SOKKER_MARKET_PASSWORD;
 
   if (!login || !password) {
-    return NextResponse.json(
-      { error: "Market credentials not configured" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Market credentials not configured" }, { status: 500 });
   }
 
   // 3. Conexión a Base de Datos
-  if (process.env.MONGODB_URI) {
-    await connectMongoDb(process.env.MONGODB_URI).catch(() => null);
-  }
-
-  // 4. Ejecución del Job en segundo plano (Asíncrono)
-  console.log("[MarketTransferSyncRoute] HTTP POST request received. Triggering background execution...");
-
-  runMarketTransferSyncJob(login, password).catch((err) => {
-    console.error("[MarketTransferSyncRoute] Error during background execution:", err);
+  await ensureMongoDbConnection().catch((err) => {
+    console.error("[MarketTransferSyncRoute] DB connection failed:", err);
   });
 
-  return NextResponse.json(
-    { message: "Market transfer sync job started in background" },
-    { status: 202 }
+  // 4. Ejecución del Job sincrónica (con await para evitar que Cloud Run congele el proceso)
+  console.log(
+    "[MarketTransferSyncRoute] HTTP POST request received. Starting synchronous execution..."
   );
+  const startTime = Date.now();
+
+  try {
+    const result = await runMarketTransferSyncJob(login, password);
+    const durationSec = ((Date.now() - startTime) / 1000).toFixed(1);
+
+    if (result.success) {
+      console.log(
+        `[MarketTransferSyncRoute] Job completed in ${durationSec}s. Status 200 returned.`
+      );
+      return NextResponse.json({ ...result, durationSec: Number(durationSec) }, { status: 200 });
+    } else {
+      console.warn(
+        `[MarketTransferSyncRoute] Job finished with errors in ${durationSec}s:`,
+        result.reason
+      );
+      return NextResponse.json({ ...result, durationSec: Number(durationSec) }, { status: 409 });
+    }
+  } catch (err) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    console.error("[MarketTransferSyncRoute] Unexpected error during execution:", err);
+    return NextResponse.json({ error: errorMsg }, { status: 500 });
+  }
 }
 
 export async function GET() {
-  if (process.env.MONGODB_URI) {
-    await connectMongoDb(process.env.MONGODB_URI).catch(() => null);
-  }
+  await ensureMongoDbConnection().catch((err) => {
+    console.error("[MarketTransferSyncRoute GET] DB connection failed:", err);
+  });
 
   try {
     const latestRun = await getLatestMarketTransferSyncRun();

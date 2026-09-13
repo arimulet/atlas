@@ -1,12 +1,12 @@
 import type { MarketCalibrationConfig } from "./calibration-types.js";
 
 export const MARKET_CALIBRATION_CONFIG: MarketCalibrationConfig = {
-  maxComparables: 5,
+  maxComparables: 10,
   minimumSimilarity: 0.75,
   maxAgeDifference: 0,
   recencyHalfLifeDays: 180,
-  minimumSamplesForMediumConfidence: 3,
-  minimumSamplesForHighConfidence: 5,
+  minimumSamplesForMediumConfidence: 4,
+  minimumSamplesForHighConfidence: 8,
   maximumWeakEvidenceAdjustment: 0.25,
   maximumCalibrationAdjustment: 0.5,
   maximumComparablePriceAdjustment: 0.35,

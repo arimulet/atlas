@@ -201,7 +201,8 @@ export function createPlayerDetailViewModel(
     observedPlayer?.observedPosition,
     player.training.position
   );
-  const marketPlayer = input.squadPlanning?.assessment.depthPlayers.find(
+  const marketPlayers = input.squadPlanning?.assessment?.depthPlayers ?? [];
+  const marketPlayer = marketPlayers.find(
     (candidate) =>
       identifiersMatch(candidate.playerId, observedPlayer?.playerId) ||
       identifiersMatch(candidate.playerId, player.playerId)

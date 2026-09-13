@@ -1,4 +1,6 @@
 import {
+  connectMongoDb,
+  isMongoConnected,
   mongoTransactionsAvailable,
   MongoClubRepository,
   MongoJuniorRepository,
@@ -57,6 +59,11 @@ export class SokkerSyncPersistence {
     const payload = validatedPayload.payload;
     const teamId = payload.current.team.id;
     const gameWeek = payload.current.calendar.gameWeek;
+
+    if (!isMongoConnected()) {
+      await connectMongoDb();
+    }
+
     const syncRunId = await this.repositories.syncRuns.start({ teamId, gameWeek });
     const importedAt = new Date();
 

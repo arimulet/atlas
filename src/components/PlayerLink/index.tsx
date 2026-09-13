@@ -13,6 +13,7 @@ export interface PlayerLinkProps {
   playerId: string;
   onSelectPlayer: (playerId: string) => void;
   className?: string;
+  title?: string;
 }
 
 export function PlayerLink({
@@ -20,7 +21,8 @@ export function PlayerLink({
   countryName,
   onSelectPlayer,
   playerId,
-  className
+  className,
+  title
 }: PlayerLinkProps) {
   if (countryName) {
     registerPlayerCountry(playerId, countryName);
@@ -33,6 +35,7 @@ export function PlayerLink({
     <Link
       className={`atlas-player-link${className ? ` ${className}` : ""}`}
       href={pathForPlayerDetail(playerId)}
+      title={title}
       onClick={(event) => {
         if (
           event.button !== 0 ||
