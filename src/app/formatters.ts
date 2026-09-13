@@ -37,7 +37,12 @@ export function formatTalent(value: number | null | undefined): string {
 }
 
 export function formatAge(value: number | null | undefined): string {
-  return value === null || value === undefined ? "—" : `~${value.toLocaleString("en-US", { maximumFractionDigits: 1 })}`;
+  if (value === null || value === undefined) return "-";
+  
+  const years = Math.floor(value);
+  const weeks = Math.round((value - years) * 100);
+  
+  return `~${years}.${weeks.toString().padStart(2, "0")}`; // Ensures week 10 is .10, week 1 is .01
 }
 
 export interface FormatWeeksOptions {

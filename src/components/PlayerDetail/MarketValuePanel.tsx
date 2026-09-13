@@ -7,7 +7,6 @@ import {
   XAxis,
   YAxis
 } from "recharts";
-import { WEEKS_PER_SOKKER_SEASON } from "@atlas/domain";
 import type {
   AdvancedImpactViewModel,
   MarketComparableViewModel,
@@ -344,11 +343,8 @@ function ProjectionRow({ point }: { point: ProjectionPointViewModel }) {
 function formatProjectionTimeline(weeks: number | null): string {
   if (weeks === null) return "Timeline unavailable";
 
-  const formattedWeeks = weeks.toLocaleString("en-US", { maximumFractionDigits: 1 });
-  const seasons = weeks / WEEKS_PER_SOKKER_SEASON;
-  const formattedSeasons = seasons.toLocaleString("en-US", { maximumFractionDigits: 1 });
-
-  return `${formattedWeeks} weeks · ${formattedSeasons} Sokker ${seasons === 1 ? "season" : "seasons"}`;
+  const roundedWeeks = Math.ceil(weeks);
+  return `${roundedWeeks} ${roundedWeeks === 1 ? "week" : "weeks"}`;
 }
 function TrainingValueEfficiency({ training }: { training: TrainingValueViewModel | null }) {
   if (!training) return null;

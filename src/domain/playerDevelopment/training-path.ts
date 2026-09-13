@@ -4,7 +4,7 @@ import {
   calculateWeeklyTrainingPoints
 } from "../training/index.js";
 import { DEFAULT_TALENT_FOR_RELATIVE_COMPARISON, MAX_SKILL_LEVEL } from "../training/constants.js";
-import { WEEKS_PER_SOKKER_SEASON } from "../sokker/calendar.js";
+import { WEEKS_PER_SOKKER_SEASON, addSokkerWeeks } from "../sokker/calendar.js";
 import { DEVELOPMENT_PRIORITY_WEIGHTS, DEVELOPMENT_PROFILES } from "./profiles.js";
 import type { DevelopmentPriority, DevelopmentSkill, PlayerDevelopmentTarget } from "./types.js";
 import type {
@@ -114,9 +114,10 @@ export function generateNextTrainingCandidates(
         requiredTrainingPoints,
         expectedWeeklyTrainingPoints,
         estimatedWeeks: requiredTrainingPoints / expectedWeeklyTrainingPoints,
-        estimatedAgeAtStep:
-          state.estimatedAge +
-          requiredTrainingPoints / expectedWeeklyTrainingPoints / DEVELOPMENT_PATH_WEEKS_PER_YEAR,
+        estimatedAgeAtStep: (() => {
+          const elapsedWeeks = requiredTrainingPoints / expectedWeeklyTrainingPoints;
+          return addSokkerWeeks(state.estimatedAge, elapsedWeeks);
+        })(),
         targetPriority: targetSkill.priority,
         developmentReturnScore: breakdown.developmentReturnScore,
         developmentValue: breakdown.developmentValue,

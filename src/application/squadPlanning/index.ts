@@ -402,7 +402,7 @@ function createMarketValues(
           ? createMarketTrainingComparison(context, player, current, projection, transfers)
           : null;
       values.set(context.playerId, { current, projection, trainingComparison });
-    } catch {
+    } catch (error) { console.error("MarketValue error for player:", context.playerId, error);
       // Market value is derived data. A malformed player must not break squad planning.
     }
   }
@@ -497,7 +497,7 @@ function createMarketTrainingComparison(
       formation: formationInput,
       fixedHorizonWeeks: PLAYER_MARKET_VALUE_COMPARISON_HORIZON_WEEKS
     });
-  } catch {
+  } catch (error) { console.error("MarketValue error for player:", context.playerId, error);
     return null;
   }
 }
@@ -533,7 +533,7 @@ function createScenarioProjection(
         assumeContinuousTraining: context.projection.assumptions.assumeContinuousTraining
       }
     });
-  } catch {
+  } catch (error) { console.error("MarketValue error for player:", context.playerId, error);
     return null;
   }
 }
@@ -578,7 +578,7 @@ function estimateCurrentTrainingProgress(
       confidence:
         talent.confidence === "high" ? "high" : talent.confidence === "medium" ? "medium" : "low"
     };
-  } catch {
+  } catch (error) { console.error("MarketValue error for player:", context.playerId, error);
     return undefined;
   }
 }
@@ -612,7 +612,7 @@ function buildProjection(input: {
         assumeContinuousTraining: true
       }
     });
-  } catch {
+  } catch (error) { console.error("MarketValue error for player:", context.playerId, error);
     return null;
   }
 }

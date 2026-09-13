@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import type { PlayerDevelopment, TrainingPageData } from "@atlas/web/app/types";
+import type {
+  PlayerDevelopment,
+  SquadPlanningBundle,
+  TrainingPageData
+} from "@atlas/web/app/types";
 import { createPlayerDetailViewModel } from "./player-detail-view-model";
 
 describe("createPlayerDetailViewModel", () => {
@@ -262,5 +266,33 @@ describe("createPlayerDetailViewModel", () => {
     expect(viewModel?.skills.find((skill) => skill.key === "playmaker")).toMatchObject({
       isImportant: true
     });
+  });
+
+  it("renders the player when the market assessment is unavailable", () => {
+    const viewModel = createPlayerDetailViewModel({
+      playerId: "42",
+      training: {
+        snapshotId: "snapshot-1",
+        snapshotDate: "2026-08-14",
+        configuration: null,
+        players: [
+          {
+            id: "snapshot-player-1",
+            playerId: 42,
+            name: "Player One",
+            age: 20,
+            training: { position: 2, advanced: true }
+          }
+        ]
+      },
+      development: null,
+      trainingDiagnostic: null,
+      trainingStatus: "ready",
+      squadPlanning: {
+        assessment: undefined
+      } as unknown as SquadPlanningBundle
+    });
+
+    expect(viewModel?.player).toMatchObject({ id: "42", gameValue: null });
   });
 });
