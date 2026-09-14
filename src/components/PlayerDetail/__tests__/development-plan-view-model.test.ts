@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
+import type {
+  PlayerDevelopmentPlan,
+  PlayerDevelopmentProjection,
+  PlayerTrainingPath
+} from "@atlas/domain";
 import type { PlayerDetailViewModel } from "@/app/view-models/player-detail-view-model";
-import {
-  createDevelopmentPlanViewModel,
-  targetDefaultsForProfile
-} from "../development-plan-view-model";
+import { createDevelopmentPlanViewModel } from "../development-plan-view-model";
 
 function createPlayer(): PlayerDetailViewModel {
   return {
@@ -39,41 +41,92 @@ function createPlayer(): PlayerDetailViewModel {
     diagnostics: [],
     trainingHistory: [],
     developmentPlan: {
+      suggestion: { profile: "defender", confidence: "high", reasons: [] },
       target: {
+        playerId: 7,
         profile: "defender",
         source: "automatic",
-        targetSkills: [{ skill: "defending", targetLevel: 11, priority: "primary", reasons: [] }]
+        targetSkills: [{ skill: "defender", targetLevel: 11, priority: "primary", reasons: [] }]
       },
       idealTarget: {
+        playerId: 7,
         profile: "defender",
-        targetSkills: [{ skill: "defending", targetLevel: 11, priority: "primary", reasons: [] }]
+        source: "automatic",
+        targetSkills: [{ skill: "defender", targetLevel: 11, priority: "primary", reasons: [] }]
       },
-      gap: { skills: [{ skill: "defending", currentLevel: 10, targetLevel: 11, difference: 1 }] },
-      suggestion: { profile: "defender", score: 100, isBest: true }
-    } as any,
+      gap: {
+        playerId: 7,
+        profile: "defender",
+        skills: [
+          {
+            skill: "defender",
+            currentLevel: 10,
+            targetLevel: 11,
+            levelsRemaining: 1,
+            priority: "primary",
+            completed: false
+          }
+        ],
+        totalGap: 1,
+        progress: 0.9
+      }
+    } satisfies PlayerDevelopmentPlan,
     trainingPath: {
-      steps: [{ order: 1, skill: "defending", currentLevel: 10, targetLevel: 11, pointsRequired: 1000, reason: [] }]
-    } as any,
-    developmentProjection: {
+      playerId: 7,
+      profile: "defender",
       steps: [
         {
           order: 1,
-          startAge: 18,
-          startWeek: 1,
-          completedAge: 18,
-          completedWeek: 10,
-          totalWeeks: 9,
-          pointsAccumulated: 1000
+          skill: "defender",
+          fromLevel: 10,
+          toLevel: 11,
+          priority: "primary",
+          estimatedTrainingPoints: 1000,
+          developmentValue: 1,
+          reason: []
         }
       ],
       milestones: [],
+      totals: { skillUps: 1, estimatedTrainingPoints: 1000 },
+      completed: false,
+      confidence: "high"
+    } satisfies PlayerTrainingPath,
+    developmentProjection: {
+      playerId: 7,
+      profile: "defender",
+      generatedAtGameWeek: 1200,
+      generatedAtDate: new Date("2026-08-20T00:00:00.000Z"),
+      steps: [
+        {
+          order: 1,
+          skill: "defender",
+          fromLevel: 10,
+          toLevel: 11,
+          estimatedTrainingPoints: 1000,
+          estimatedWeeks: 9,
+          cumulativeWeeks: 9,
+          estimatedGameWeek: 1209,
+          estimatedDate: new Date("2026-10-22T00:00:00.000Z"),
+          estimatedAge: 18,
+          confidence: "high"
+        }
+      ],
+      milestones: [],
+      completion: {
+        estimatedWeeks: 9,
+        estimatedGameWeek: 1209,
+        estimatedDate: new Date("2026-10-22T00:00:00.000Z"),
+        estimatedAge: 18
+      },
+      confidence: "high",
       warnings: [],
       assumptions: {
-        trainingKind: 'advanced',
+        trainingKind: "advanced",
         expectedIntensity: 100,
         assumeContinuousTraining: true
-      }
-    } as any
+      },
+      projectionStatus: "projected"
+    } satisfies PlayerDevelopmentProjection
   };
 }
 
