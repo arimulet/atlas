@@ -132,6 +132,9 @@ export interface PlayerDetailViewModel {
     }>;
   }>;
   marketValue?: PlayerMarketValueViewModel | null;
+  developmentPlan?: import("@atlas/domain").PlayerDevelopmentPlan | null;
+  trainingPath?: import("@atlas/domain").PlayerTrainingPath | null;
+  developmentProjection?: import("@atlas/domain").PlayerDevelopmentProjection | null;
 }
 
 export interface PlayerTrainingProjectionSummary {
@@ -258,7 +261,10 @@ export function createPlayerDetailViewModel(
     trainingHistory: createTrainingHistoryRows(input.training, observedPlayer?.playerId ?? null),
     marketValue: marketPlayer
       ? createPlayerMarketValueViewModel(marketPlayer, input.currency ?? null)
-      : null
+      : null,
+    developmentPlan: marketPlayer?.developmentPlan ?? null,
+    trainingPath: marketPlayer?.trainingPath ?? null,
+    developmentProjection: marketPlayer?.projection ?? null
   };
 }
 
