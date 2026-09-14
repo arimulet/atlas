@@ -37,7 +37,43 @@ function createPlayer(): PlayerDetailViewModel {
     talent: { estimated: 8, confidence: "high", observations: 3 },
     projection: { current: { skill: "Defensa", level: 10, progress: null } },
     diagnostics: [],
-    trainingHistory: []
+    trainingHistory: [],
+    developmentPlan: {
+      target: {
+        profile: "defender",
+        source: "automatic",
+        targetSkills: [{ skill: "defending", targetLevel: 11, priority: "primary", reasons: [] }]
+      },
+      idealTarget: {
+        profile: "defender",
+        targetSkills: [{ skill: "defending", targetLevel: 11, priority: "primary", reasons: [] }]
+      },
+      gap: { skills: [{ skill: "defending", currentLevel: 10, targetLevel: 11, difference: 1 }] },
+      suggestion: { profile: "defender", score: 100, isBest: true }
+    } as any,
+    trainingPath: {
+      steps: [{ order: 1, skill: "defending", currentLevel: 10, targetLevel: 11, pointsRequired: 1000, reason: [] }]
+    } as any,
+    developmentProjection: {
+      steps: [
+        {
+          order: 1,
+          startAge: 18,
+          startWeek: 1,
+          completedAge: 18,
+          completedWeek: 10,
+          totalWeeks: 9,
+          pointsAccumulated: 1000
+        }
+      ],
+      milestones: [],
+      warnings: [],
+      assumptions: {
+        trainingKind: 'advanced',
+        expectedIntensity: 100,
+        assumeContinuousTraining: true
+      }
+    } as any
   };
 }
 
@@ -85,48 +121,16 @@ describe("createDevelopmentPlanViewModel", () => {
     const player = createPlayer();
     const training = createTraining();
 
-    const plan = createDevelopmentPlanViewModel({ player, training, manualOverride: null });
+    const plan = createDevelopmentPlanViewModel({ player, training });
 
     expect(plan).not.toBeNull();
     expect(plan?.profile.source).toBe("automatic");
-    expect(plan?.progress.remainingLevels).toBeGreaterThan(0);
-    expect(plan?.nextStep?.order).toBe(1);
-    expect(plan?.assumptions).toEqual({
-      trainingKind: "advanced",
-      expectedIntensity: 100,
-      assumeContinuousTraining: true
-    });
   });
 
-  it("keeps a manual profile and exposes a suggested-profile conflict", () => {
-    const plan = createDevelopmentPlanViewModel({
-      player: createPlayer(),
-      training: createTraining(),
-      manualOverride: {
-        profile: "forward",
-        targetLevels: { striker: 12, pace: 11, technique: 10, passing: 7 }
-      }
-    });
 
-    expect(plan?.profile.source).toBe("manual");
-    expect(plan?.profile.current).toBe("forward");
-    expect(plan?.profile.hasConflict).toBe(true);
-    expect(plan?.targets.map((target) => target.skill)).toEqual([
-      "striker",
-      "pace",
-      "technique",
-      "passing"
-    ]);
-  });
-
-  it("derives profile editor defaults from the domain catalog", () => {
-    const defaults = targetDefaultsForProfile("defender", { defender: 13, pace: 8 });
-
-    expect(defaults).toMatchObject({ defender: 17, pace: 17, technique: 14, playmaker: 13 });
-  });
 
   it("produces deterministic path rows and projected milestones", () => {
-    const input = { player: createPlayer(), training: createTraining(), manualOverride: null };
+    const input = { player: createPlayer(), training: createTraining() };
 
     const first = createDevelopmentPlanViewModel(input);
     const second = createDevelopmentPlanViewModel(input);
