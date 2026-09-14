@@ -116,14 +116,14 @@ function ProfileSummary({ plan }: { plan: DevelopmentPlanViewModel }) {
       <div>
         <span className="atlas-player-development-plan__eyebrow">Operational Target Summary</span>
         <p>
-          {plan.progress.remainingLevels} pending skill-ups ·{" "}
-          {plan.completion.estimatedWeeks !== null ? formatEta(plan.completion.estimatedWeeks) : "Unknown timeframe"} ·{" "}
+          {plan.progress.remainingLevels} pending skill-ups Â·{" "}
+          {plan.completion.estimatedWeeks !== null ? formatEta(plan.completion.estimatedWeeks) : "Unknown timeframe"} Â·{" "}
           {plan.completion.estimatedAge !== null ? `Age ~${plan.completion.estimatedAge.toLocaleString("en-US", { maximumFractionDigits: 1 })}` : "Unknown age"}
         </p>
       </div>
       {plan.profile.hasConflict ? (
         <p>
-          ATLAS suggestion: {plan.profile.suggestedLabel} ·{" "}
+          ATLAS suggestion: {plan.profile.suggestedLabel} Â·{" "}
           {capitalize(plan.profile.suggestionConfidence)} confidence
         </p>
       ) : null}
@@ -141,7 +141,7 @@ function TrainingAlignment({ plan }: { plan: DevelopmentPlanViewModel }) {
   if (alignment.status === "aligned") {
     return (
       <p className="atlas-player-development-plan__alignment is-aligned">
-        Current training aligned with plan · {skillLabel(alignment.plannedSkill!)}
+        Current training aligned with plan Â· {skillLabel(alignment.plannedSkill!)}
       </p>
     );
   }
@@ -192,7 +192,7 @@ function SkillTargets({ targets, idealTargets, title }: { targets: DevelopmentPl
                     {target.targetLevel} <small className="atlas-text-muted">({target.remaining} left)</small>
                   </td>
                   <td title={ideal ? skillLevelLabel(ideal.targetLevel) ?? undefined : undefined}>
-                    {ideal ? `${ideal.targetLevel} ` : "—"}
+                    {ideal ? `${ideal.targetLevel} ` : "â€”"}
                     {ideal ? <small className="atlas-text-muted">({ideal.remaining} left)</small> : null}
                   </td>
                   <td>{capitalize(target.priority)}</td>
@@ -219,8 +219,7 @@ function UnifiedTrainingPath({
   marketValue: import("@/app/view-models/market-value-view-model").PlayerMarketValueViewModel | null;
   milestones: import("./development-plan-view-model").DevelopmentPlanMilestoneRow[];
 }) {
-  const [showFullPath, setShowFullPath] = useState(false);
-  const visiblePath = showFullPath ? path : path.slice(0, 7);
+  const visiblePath = path;
   const initialMilestones = milestones.filter(m => m.step === 0);
 
   return (
@@ -287,17 +286,17 @@ function UnifiedTrainingPath({
                       ))}
                     </td>
                     <td>
-                      <div>{formatEta(step.estimatedWeeks)} <small className="atlas-text-muted">({step.cumulativeWeeks === null ? "—" : `~${step.cumulativeWeeks.toFixed(1)}w`})</small></div>
+                      <div>{formatEta(step.estimatedWeeks)} <small className="atlas-text-muted">({step.cumulativeWeeks === null ? "â€”" : `~${step.cumulativeWeeks.toFixed(1)}w`})</small></div>
                       {projPoint ? <small className="atlas-text-muted">Age {projPoint.age}</small> : null}
                     </td>
                     {marketValue ? (
                       <>
-                        <td>{projPoint?.value.label ?? "—"}</td>
+                        <td>{projPoint?.value.label ?? "â€”"}</td>
                         <td className={efficiencyStep?.valueGain?.value && efficiencyStep.valueGain.value < 0 ? "atlas-text-danger" : "atlas-text-success"}>
-                          {efficiencyStep?.valueGain?.label ?? "—"}
+                          {efficiencyStep?.valueGain?.label ?? "â€”"}
                         </td>
                         <td className={efficiencyStep?.valueGainPerWeek?.value && efficiencyStep.valueGainPerWeek.value < 0 ? "atlas-text-danger" : "atlas-text-success"}>
-                          {efficiencyStep?.valueGainPerWeek?.label ?? "—"}
+                          {efficiencyStep?.valueGainPerWeek?.label ?? "â€”"}
                         </td>
                       </>
                     ) : null}
@@ -308,16 +307,6 @@ function UnifiedTrainingPath({
           </table>
         </div>
       )}
-      {path.length > 7 ? (
-        <button
-          className="atlas-player-development-plan__show-more"
-          type="button"
-          onClick={() => setShowFullPath((visible) => !visible)}
-          style={{ marginTop: '1rem' }}
-        >
-          {showFullPath ? "Show less" : "Show full path"}
-        </button>
-      ) : null}
     </PlanSection>
   );
 }
@@ -383,21 +372,21 @@ function DevelopmentImpactDashboard({
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         <span style={{ fontSize: '0.8rem', color: 'var(--atlas-text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}><TrendingUp size={14} /> Value Created</span>
         <strong style={{ fontSize: '1.1rem', color: marketValue?.training?.totalValueGain?.value && marketValue.training.totalValueGain.value < 0 ? 'var(--atlas-danger)' : 'var(--atlas-success)' }}>
-          {marketValue?.training?.totalValueGain?.label ?? "—"}
+          {marketValue?.training?.totalValueGain?.label ?? "â€”"}
         </strong>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         <span style={{ fontSize: '0.8rem', color: 'var(--atlas-text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}><TrendingUp size={14} /> Average Gain / Wk</span>
         <strong style={{ fontSize: '1.1rem', color: marketValue?.training?.averageValueGainPerWeek?.value && marketValue.training.averageValueGainPerWeek.value < 0 ? 'var(--atlas-danger)' : 'var(--atlas-success)' }}>
-          {marketValue?.training?.averageValueGainPerWeek?.label ?? "—"}
+          {marketValue?.training?.averageValueGainPerWeek?.label ?? "â€”"}
         </strong>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         <span style={{ fontSize: '0.8rem', color: 'var(--atlas-text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}><ArrowUpRight size={14} /> Projected Peak</span>
         <strong style={{ fontSize: '1.1rem' }}>
-          {marketValue?.projection?.peak?.value.label ?? "—"}
+          {marketValue?.projection?.peak?.value.label ?? "â€”"}
         </strong>
         {marketValue?.projection?.peak?.age && (
           <small style={{ color: 'var(--atlas-text-muted)' }}>Age {marketValue.projection.peak.age}</small>
@@ -505,3 +494,4 @@ function formatMarketProjectionValue(value: unknown): string {
 
   return typeof value === "string" ? value : "?";
 }
+

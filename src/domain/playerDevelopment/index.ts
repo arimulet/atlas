@@ -1,4 +1,4 @@
-﻿import {
+import {
   DEVELOPMENT_PRIORITY_WEIGHTS,
   DEVELOPMENT_PROFILE_ORDER,
   DEVELOPMENT_PROFILES,
@@ -193,7 +193,7 @@ export function buildIdealDevelopmentTarget(
 export function buildOperationalDevelopmentTarget(
   player: DevelopmentPlayer,
   idealTarget: PlayerDevelopmentTarget,
-  horizonAge: number,
+  options: { horizonAge: number; cycleHorizonWeeks?: number; cycleMaxSteps?: number },
   override: PlayerDevelopmentTargetOverride = {}
 ): PlayerDevelopmentTarget {
   const context = {
@@ -213,9 +213,16 @@ export function buildOperationalDevelopmentTarget(
   }));
 
   while (state.stepsCompleted < MAX_DEVELOPMENT_PATH_STEPS) {
+    if (options.cycleHorizonWeeks && state.estimatedElapsedWeeks >= options.cycleHorizonWeeks) {
+      break;
+    }
+    if (options.cycleMaxSteps && state.stepsCompleted >= options.cycleMaxSteps) {
+      break;
+    }
+
     const candidates = generateNextTrainingCandidates(context, state);
     const validCandidates = candidates.filter(
-      (candidate) => candidate.estimatedAgeAtStep < horizonAge
+      (candidate) => candidate.estimatedAgeAtStep < options.horizonAge
     );
 
     const best = selectBestTrainingCandidate(validCandidates, state.lastSkill);
@@ -311,7 +318,11 @@ export interface PlayerDevelopmentPlan {
 
 export class PlayerDevelopmentPlanner {
   constructor(
-    private readonly config: { developmentHorizonAge: number } = { developmentHorizonAge: 32 }
+    private readonly config: { developmentHorizonAge: number; cycleHorizonWeeks: number; cycleMaxSteps?: number } = {
+      developmentHorizonAge: 32,
+      cycleHorizonWeeks: 48,
+      cycleMaxSteps: 8
+    }
   ) {}
 
   suggest(player: DevelopmentPlayer): DevelopmentProfileSuggestion {
@@ -331,7 +342,11 @@ export class PlayerDevelopmentPlanner {
     return buildOperationalDevelopmentTarget(
       player,
       ideal,
-      this.config.developmentHorizonAge,
+      {
+        horizonAge: this.config.developmentHorizonAge,
+        cycleHorizonWeeks: this.config.cycleHorizonWeeks,
+        cycleMaxSteps: this.config.cycleMaxSteps
+      },
       override
     );
   }
@@ -354,7 +369,11 @@ export class PlayerDevelopmentPlanner {
     const target = buildOperationalDevelopmentTarget(
       player,
       idealTarget,
-      this.config.developmentHorizonAge,
+      {
+        horizonAge: this.config.developmentHorizonAge,
+        cycleHorizonWeeks: this.config.cycleHorizonWeeks,
+        cycleMaxSteps: this.config.cycleMaxSteps
+      },
       override
     );
 
