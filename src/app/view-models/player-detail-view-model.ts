@@ -2,7 +2,8 @@ import { formatTrainingPriority } from "../formatters";
 import {
   calculateRequiredTrainingPoints,
   calculateWeeklyTrainingPointsByKind,
-  type DevelopmentPlayer
+  type DevelopmentPlayer,
+  type SquadDepthPlayer
 } from "@atlas/domain";
 import type {
   DashboardStatus,
