@@ -4,10 +4,9 @@ import {
   type DevelopmentSkill,
   type DevelopmentTrainingAssumptions,
   type PlayerDevelopmentProjection,
-  type PlayerDevelopmentTargetOverride,
   type PlayerTrainingPath
 } from "@atlas/application";
-import { DEVELOPMENT_PROFILES, type TalentEstimate as DomainTalentEstimate } from "@atlas/domain";
+import { DEVELOPMENT_PROFILES } from "@atlas/domain";
 import type { TrainingPageData, TrainingPagePlayer } from "@atlas/web/app/types";
 import type { PlayerDetailViewModel } from "@/app/view-models/player-detail-view-model";
 
@@ -269,29 +268,6 @@ function currentTrainingReport(
       ?.filter((report) => report.playerId === Number(player?.id))
       .sort((left, right) => right.gameWeek - left.gameWeek)[0] ?? null
   );
-}
-
-function toDomainTalent(
-  talent: TrainingPagePlayer["talentEstimate"] | null
-): DomainTalentEstimate | null {
-  if (!talent) return null;
-
-  return {
-    value: talent.value,
-    confidence: talent.confidence,
-    evidenceCount: talent.evidenceCount,
-    evidences: []
-  };
-}
-
-function normalizedIntensity(value: number | null | undefined): number {
-  return typeof value === "number" && Number.isFinite(value) && value > 0 ? value : 100;
-}
-
-function validDate(value: string | null | undefined): Date | null {
-  if (!value) return null;
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? null : date;
 }
 
 function profileLabel(profile: DevelopmentProfile): string {
