@@ -1,5 +1,14 @@
-import { useState, type ReactNode } from "react";
-import { ArrowRight } from "lucide-react";
+import React, { useState, type ReactNode } from "react";
+import { ArrowRight, Award, TrendingUp, Clock, Target, ArrowUpRight } from "lucide-react";
+import {
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis
+} from "recharts";
 import type { PlayerDevelopmentTargetOverride } from "@atlas/domain";
 import { formatEta, formatPercentage } from "@/app/formatters";
 import { skillLevelLabel } from "@/app/view-models/skill-level-label";
@@ -12,6 +21,7 @@ import { EditDevelopmentTargetModal } from "./EditDevelopmentTargetModal";
 
 interface PlayerDevelopmentPlanProps {
   plan: DevelopmentPlanViewModel | null;
+  marketValue: import("@/app/view-models/market-value-view-model").PlayerMarketValueViewModel | null;
   isLoading: boolean;
   isSaving: boolean;
   error: Error | null;
@@ -21,6 +31,7 @@ interface PlayerDevelopmentPlanProps {
 
 export function PlayerDevelopmentPlan({
   plan,
+  marketValue,
   isLoading,
   isSaving,
   error,
@@ -73,23 +84,14 @@ export function PlayerDevelopmentPlan({
         </p>
       ) : null}
       <ProfileSummary plan={plan} />
-      <ProgressSummary plan={plan} />
-      <div className="atlas-player-development-plan__highlight-grid">
-        <NextStep plan={plan} />
-        <CompletionSummary plan={plan} />
-      </div>
+      <DevelopmentImpactDashboard plan={plan} marketValue={marketValue} />
+      {marketValue?.projection?.points && marketValue.projection.points.length > 0 && (
+        <MarketProjectionChart points={marketValue.projection.points} />
+      )}
       <TrainingAlignment plan={plan} />
       <Warnings plan={plan} />
-      <SkillTargets targets={plan.targets} title="Recommended target / Target operativo" />
-      <TrainingPath path={plan.path} completed={plan.completed} />
-      <Milestones plan={plan} />
-      <details className="atlas-player-development-plan__ideal-profile">
-        <summary>Ideal profile target (Long-term reference)</summary>
-        <p className="atlas-player-development-plan__ideal-note">
-          This is a long-term reference profile and not a direct recommendation for immediate training.
-        </p>
-        <SkillTargets targets={plan.idealTargets} title="Ideal Target" />
-      </details>
+      <UnifiedTrainingPath path={plan.path} completed={plan.completed} marketValue={marketValue} milestones={plan.milestones} />
+      <SkillTargets targets={plan.targets} idealTargets={plan.idealTargets} title="Target operativo e Ideal" />
       {isEditorOpen ? (
         <EditDevelopmentTargetModal
           plan={plan}
@@ -129,90 +131,6 @@ function ProfileSummary({ plan }: { plan: DevelopmentPlanViewModel }) {
   );
 }
 
-function ProgressSummary({ plan }: { plan: DevelopmentPlanViewModel }) {
-  return (
-    <div className="atlas-player-development-plan__progress-block">
-      <div className="atlas-player-development-plan__section-heading">
-        <h3>Development progress</h3>
-        <strong>{formatPercentage(plan.progress.percentage)}</strong>
-      </div>
-      <div
-        className="atlas-player-development-plan__progress"
-        aria-label={`Development progress ${formatPercentage(plan.progress.percentage)}`}
-      >
-        <span style={{ width: `${Math.min(plan.progress.percentage, 100)}%` }} />
-      </div>
-      <p>
-        {plan.progress.totalLevels === 0
-          ? "No target skill levels defined."
-          : `${plan.progress.completedLevels} of ${plan.progress.totalLevels} target skill levels completed`}
-      </p>
-    </div>
-  );
-}
-
-function NextStep({ plan }: { plan: DevelopmentPlanViewModel }) {
-  const step = plan.nextStep;
-  return (
-    <article className="atlas-player-development-plan__highlight">
-      <span className="atlas-player-development-plan__eyebrow">Next training step</span>
-      {step ? (
-        <>
-          <strong>{skillLabel(step.skill)}</strong>
-          <span>
-            {step.fromLevel} <ArrowRight size={13} className="inline-block align-middle" /> {step.toLevel}
-          </span>
-          <small>{formatEta(step.estimatedWeeks)}</small>
-          <p>{step.reasons[0] ?? "Next best step in the generated path."}</p>
-        </>
-      ) : (
-        <strong>{plan.completed ? "Development target completed" : "No step available"}</strong>
-      )}
-    </article>
-  );
-}
-
-function CompletionSummary({ plan }: { plan: DevelopmentPlanViewModel }) {
-  return (
-    <article className="atlas-player-development-plan__highlight">
-      <span className="atlas-player-development-plan__eyebrow">Projected completion</span>
-      {plan.completion.estimatedWeeks !== null ? (
-        <>
-          <strong>{formatEta(plan.completion.estimatedWeeks)}</strong>
-          <span>
-            {plan.completion.estimatedAge === null
-              ? "Age unavailable"
-              : `Age ~${plan.completion.estimatedAge.toLocaleString("en-US", { maximumFractionDigits: 1 })}`}
-          </span>
-          <span>
-            {plan.completion.estimatedGameWeek === null
-              ? "Game Week unavailable"
-              : `Game Week ${plan.completion.estimatedGameWeek}`}
-          </span>
-        </>
-      ) : (
-        <strong>Timeline unavailable</strong>
-      )}
-      {plan.projectionStatus === "partial" ? (
-        <span className="atlas-player-development-plan__partial">
-          Partial timeline — long-term projection unavailable.
-        </span>
-      ) : null}
-      <small>{capitalize(plan.completion.confidence)} confidence</small>
-      <details>
-        <summary>Assumptions</summary>
-        <p>
-          {capitalize(plan.assumptions.trainingKind)} training ·{" "}
-          {plan.assumptions.expectedIntensity}% intensity ·{" "}
-          {plan.assumptions.assumeContinuousTraining
-            ? "continuous training"
-            : "non-continuous training"}
-        </p>
-      </details>
-    </article>
-  );
-}
-
 function TrainingAlignment({ plan }: { plan: DevelopmentPlanViewModel }) {
   const alignment = plan.weeklyTrainingAlignment;
 
@@ -247,7 +165,7 @@ function Warnings({ plan }: { plan: DevelopmentPlanViewModel }) {
   ) : null;
 }
 
-function SkillTargets({ targets, title }: { targets: DevelopmentPlanTargetRow[], title: string }) {
+function SkillTargets({ targets, idealTargets, title }: { targets: DevelopmentPlanTargetRow[], idealTargets: DevelopmentPlanTargetRow[], title: string }) {
   return (
     <PlanSection title={title}>
       <div className="atlas-player-detail__table-wrap">
@@ -256,25 +174,33 @@ function SkillTargets({ targets, title }: { targets: DevelopmentPlanTargetRow[],
             <tr>
               <th>Skill</th>
               <th>Current</th>
-              <th>Target</th>
-              <th>Remaining</th>
+              <th>Operative Target</th>
+              <th>Ideal Target</th>
               <th>Priority</th>
               <th>Status</th>
               <th>Reason</th>
             </tr>
           </thead>
           <tbody>
-            {targets.map((target) => (
-              <tr key={target.skill}>
-                <th>{skillLabel(target.skill)}</th>
-                <td title={skillLevelLabel(target.currentLevel) ?? undefined}>{target.currentLevel}</td>
-                <td title={skillLevelLabel(target.targetLevel) ?? undefined}>{target.targetLevel}</td>
-                <td>{target.remaining}</td>
-                <td>{capitalize(target.priority)}</td>
-                <td>{statusLabel(target.status)}</td>
-                <td>{target.reasons.join(", ")}</td>
-              </tr>
-            ))}
+            {targets.map((target) => {
+              const ideal = idealTargets.find(t => t.skill === target.skill);
+              return (
+                <tr key={target.skill}>
+                  <th>{skillLabel(target.skill)}</th>
+                  <td title={skillLevelLabel(target.currentLevel) ?? undefined}>{target.currentLevel}</td>
+                  <td title={skillLevelLabel(target.targetLevel) ?? undefined}>
+                    {target.targetLevel} <small className="atlas-text-muted">({target.remaining} left)</small>
+                  </td>
+                  <td title={ideal ? skillLevelLabel(ideal.targetLevel) ?? undefined : undefined}>
+                    {ideal ? `${ideal.targetLevel} ` : "—"}
+                    {ideal ? <small className="atlas-text-muted">({ideal.remaining} left)</small> : null}
+                  </td>
+                  <td>{capitalize(target.priority)}</td>
+                  <td>{statusLabel(target.status)}</td>
+                  <td>{target.reasons.join(", ")}</td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -282,35 +208,104 @@ function SkillTargets({ targets, title }: { targets: DevelopmentPlanTargetRow[],
   );
 }
 
-function TrainingPath({ path, completed }: { path: DevelopmentPlanPathRow[]; completed: boolean }) {
+function UnifiedTrainingPath({ 
+  path, 
+  completed, 
+  marketValue,
+  milestones
+}: { 
+  path: DevelopmentPlanPathRow[]; 
+  completed: boolean;
+  marketValue: import("@/app/view-models/market-value-view-model").PlayerMarketValueViewModel | null;
+  milestones: import("./development-plan-view-model").DevelopmentPlanMilestoneRow[];
+}) {
   const [showFullPath, setShowFullPath] = useState(false);
   const visiblePath = showFullPath ? path : path.slice(0, 7);
+  const initialMilestones = milestones.filter(m => m.step === 0);
+
   return (
-    <PlanSection title="Training path">
+    <PlanSection title="Development & Financial Trajectory">
       <p className="atlas-player-development-plan__path-note">
         {completed
           ? "Target path completed."
           : "Current step is highlighted; future steps are recalculated from the current state."}
       </p>
-      {path.length === 0 ? (
+      {path.length === 0 && initialMilestones.length === 0 ? (
         <p className="atlas-player-detail__message">No pending skill-ups.</p>
       ) : (
-        <div className="atlas-player-development-plan__path">
-          {visiblePath.map((step) => (
-            <div className={step.isCurrent ? "is-current" : ""} key={step.order}>
-              <b>{step.order}</b>
-              <strong>{skillLabel(step.skill)}</strong>
-              <span>
-                <span title={skillLevelLabel(step.fromLevel) ?? undefined}>{step.fromLevel}</span>{" "}
-                <ArrowRight size={13} className="inline-block align-middle" />{" "}
-                <span title={skillLevelLabel(step.toLevel) ?? undefined}>{step.toLevel}</span>
-              </span>
-              <span>{formatEta(step.estimatedWeeks)}</span>
-              <small>
-                {step.cumulativeWeeks === null ? "—" : `~${step.cumulativeWeeks.toFixed(1)}w`}
-              </small>
+        <div className="atlas-player-development-plan__path-table-wrap" style={{ overflowX: "auto" }}>
+          {initialMilestones.length > 0 ? (
+            <div style={{ marginBottom: "1rem", padding: "0.75rem", backgroundColor: "var(--atlas-surface-alt)", borderRadius: "var(--atlas-radius-md)" }}>
+              {initialMilestones.map(milestone => (
+                <div key={milestone.type} style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                  <Award size={16} style={{ color: "var(--atlas-primary)" }} />
+                  <strong>GW {milestone.estimatedGameWeek}</strong>
+                  <span>{milestone.label}</span>
+                  <small className="atlas-text-muted">
+                    {milestone.estimatedAge === null ? "" : `(Age ~${milestone.estimatedAge.toLocaleString("en-US", { maximumFractionDigits: 1 })})`}
+                  </small>
+                </div>
+              ))}
             </div>
-          ))}
+          ) : null}
+          <table className="atlas-player-detail__table">
+            <thead>
+              <tr>
+                <th scope="col">Step</th>
+                <th scope="col">Skill Progression</th>
+                <th scope="col">Timeline</th>
+                {marketValue ? (
+                  <>
+                    <th scope="col">Projected Value</th>
+                    <th scope="col">Expected Gain</th>
+                    <th scope="col">Gain / Wk</th>
+                  </>
+                ) : null}
+              </tr>
+            </thead>
+            <tbody>
+              {visiblePath.map((step) => {
+                const projPoint = marketValue?.projection?.points.find(p => p.step === step.order);
+                const efficiencyStep = marketValue?.training?.steps.find(s => s.step === step.order);
+                const stepMilestones = milestones.filter(m => m.step === step.order);
+
+                return (
+                  <tr key={step.order} className={step.isCurrent ? "is-current" : ""}>
+                    <th scope="row"><b>{step.order}</b></th>
+                    <td>
+                      <div>
+                        <strong>{skillLabel(step.skill)}</strong>{" "}
+                        <span title={skillLevelLabel(step.fromLevel) ?? undefined}>{step.fromLevel}</span>{" "}
+                        <ArrowRight size={13} className="inline-block align-middle" />{" "}
+                        <span title={skillLevelLabel(step.toLevel) ?? undefined}>{step.toLevel}</span>
+                      </div>
+                      {stepMilestones.map(m => (
+                        <div key={m.type} style={{ marginTop: '4px', fontSize: '0.85em', color: 'var(--atlas-primary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <Award size={14} />
+                          <span>{m.label}</span>
+                        </div>
+                      ))}
+                    </td>
+                    <td>
+                      <div>{formatEta(step.estimatedWeeks)} <small className="atlas-text-muted">({step.cumulativeWeeks === null ? "—" : `~${step.cumulativeWeeks.toFixed(1)}w`})</small></div>
+                      {projPoint ? <small className="atlas-text-muted">Age {projPoint.age}</small> : null}
+                    </td>
+                    {marketValue ? (
+                      <>
+                        <td>{projPoint?.value.label ?? "—"}</td>
+                        <td className={efficiencyStep?.valueGain?.value && efficiencyStep.valueGain.value < 0 ? "atlas-text-danger" : "atlas-text-success"}>
+                          {efficiencyStep?.valueGain?.label ?? "—"}
+                        </td>
+                        <td className={efficiencyStep?.valueGainPerWeek?.value && efficiencyStep.valueGainPerWeek.value < 0 ? "atlas-text-danger" : "atlas-text-success"}>
+                          {efficiencyStep?.valueGainPerWeek?.label ?? "—"}
+                        </td>
+                      </>
+                    ) : null}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       )}
       {path.length > 7 ? (
@@ -318,37 +313,11 @@ function TrainingPath({ path, completed }: { path: DevelopmentPlanPathRow[]; com
           className="atlas-player-development-plan__show-more"
           type="button"
           onClick={() => setShowFullPath((visible) => !visible)}
+          style={{ marginTop: '1rem' }}
         >
           {showFullPath ? "Show less" : "Show full path"}
         </button>
       ) : null}
-    </PlanSection>
-  );
-}
-
-function Milestones({ plan }: { plan: DevelopmentPlanViewModel }) {
-  return (
-    <PlanSection title="Milestones">
-      {plan.milestones.length === 0 ? (
-        <p className="atlas-player-detail__message">
-          Milestones will appear as the path is projected.
-        </p>
-      ) : (
-        <ol className="atlas-player-development-plan__milestones">
-          {plan.milestones.map((milestone) => (
-            <li key={`${milestone.type}-${milestone.step}`}>
-              <strong>GW {milestone.estimatedGameWeek}</strong>
-              <span>{milestone.label}</span>
-              <small>
-                {milestone.estimatedAge === null
-                  ? "Age unavailable"
-                  : `Age ~${milestone.estimatedAge.toLocaleString("en-US", { maximumFractionDigits: 1 })}`}{" "}
-                · {capitalize(milestone.confidence)}
-              </small>
-            </li>
-          ))}
-        </ol>
-      )}
     </PlanSection>
   );
 }
@@ -390,4 +359,149 @@ function statusLabel(status: DevelopmentPlanTargetRow["status"]): string {
 
 function capitalize(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+function DevelopmentImpactDashboard({ 
+  plan, 
+  marketValue 
+}: { 
+  plan: DevelopmentPlanViewModel, 
+  marketValue: import("@/app/view-models/market-value-view-model").PlayerMarketValueViewModel | null 
+}) {
+  return (
+    <div className="atlas-player-development-plan__impact-dashboard" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.5rem', backgroundColor: 'var(--atlas-surface-alt)', padding: '1rem', borderRadius: 'var(--atlas-radius-md)' }}>
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <span style={{ fontSize: '0.8rem', color: 'var(--atlas-text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}><Clock size={14} /> Time to Target</span>
+        <strong style={{ fontSize: '1.1rem' }}>
+          {plan.completion.estimatedWeeks !== null ? formatEta(plan.completion.estimatedWeeks) : "Unknown"}
+        </strong>
+        {plan.completion.estimatedAge !== null && (
+          <small style={{ color: 'var(--atlas-text-muted)' }}>Age ~{plan.completion.estimatedAge.toLocaleString("en-US", { maximumFractionDigits: 1 })}</small>
+        )}
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <span style={{ fontSize: '0.8rem', color: 'var(--atlas-text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}><TrendingUp size={14} /> Value Created</span>
+        <strong style={{ fontSize: '1.1rem', color: marketValue?.training?.totalValueGain?.value && marketValue.training.totalValueGain.value < 0 ? 'var(--atlas-danger)' : 'var(--atlas-success)' }}>
+          {marketValue?.training?.totalValueGain?.label ?? "—"}
+        </strong>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <span style={{ fontSize: '0.8rem', color: 'var(--atlas-text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}><TrendingUp size={14} /> Average Gain / Wk</span>
+        <strong style={{ fontSize: '1.1rem', color: marketValue?.training?.averageValueGainPerWeek?.value && marketValue.training.averageValueGainPerWeek.value < 0 ? 'var(--atlas-danger)' : 'var(--atlas-success)' }}>
+          {marketValue?.training?.averageValueGainPerWeek?.label ?? "—"}
+        </strong>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <span style={{ fontSize: '0.8rem', color: 'var(--atlas-text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}><ArrowUpRight size={14} /> Projected Peak</span>
+        <strong style={{ fontSize: '1.1rem' }}>
+          {marketValue?.projection?.peak?.value.label ?? "—"}
+        </strong>
+        {marketValue?.projection?.peak?.age && (
+          <small style={{ color: 'var(--atlas-text-muted)' }}>Age {marketValue.projection.peak.age}</small>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function MarketProjectionChart({ points }: { points: import("@/app/view-models/market-value-view-model").ProjectionPointViewModel[] }) {
+  if (points.length === 0) return null;
+
+  const data = points.map((point) => ({
+    label: point.label,
+    value: point.value.value,
+    valueLabel: point.value.label,
+    rangeLabel: point.range?.label ?? null,
+    age: point.age,
+    weeks: point.weeks,
+    confidence: point.confidence.label
+  }));
+
+  return (
+    <div className="atlas-market-value__chart-wrap" style={{ height: '300px', marginBottom: '2rem' }}>
+      <div
+        className="atlas-market-value__chart"
+        role="img"
+        aria-label="Estimated market value by development milestone"
+        style={{ width: '100%', height: '100%' }}
+      >
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={data} margin={{ top: 12, right: 16, bottom: 4, left: 4 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--atlas-border)" />
+            <XAxis
+              dataKey="label"
+              axisLine={false}
+              tickLine={false}
+              tickMargin={10}
+              stroke="var(--atlas-text-muted)"
+              interval="preserveStartEnd"
+              minTickGap={30}
+            />
+            <YAxis
+              axisLine={false}
+              tickLine={false}
+              tickMargin={8}
+              tickFormatter={formatCompactValue}
+              width={58}
+              stroke="var(--atlas-text-muted)"
+            />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: "var(--atlas-surface)",
+                border: "1px solid var(--atlas-border)",
+                borderRadius: "var(--atlas-radius-sm)"
+              }}
+              formatter={(value) => [formatMarketProjectionValue(value), "Estimated value"]}
+              labelFormatter={(label, payload) => {
+                const data = payload?.[0]?.payload;
+                if (data && data.age) {
+                  return `${label} (Age ${data.age})`;
+                }
+                return label;
+              }}
+              labelStyle={{ color: "var(--atlas-text)", fontWeight: 500, marginBottom: 4 }}
+            />
+            <Line
+              type="monotone"
+              dataKey="value"
+              name="Estimated value"
+              stroke="var(--atlas-accent)"
+              strokeWidth={3}
+              dot={{
+                fill: "var(--atlas-surface)",
+                r: 4,
+                stroke: "var(--atlas-accent)",
+                strokeWidth: 3
+              }}
+              activeDot={{
+                fill: "var(--atlas-surface)",
+                r: 6,
+                stroke: "var(--atlas-accent)",
+                strokeWidth: 3
+              }}
+              isAnimationActive={false}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+}
+
+function formatCompactValue(value: number): string {
+  return new Intl.NumberFormat("en-US", {
+    notation: "compact",
+    maximumFractionDigits: 1
+  }).format(value);
+}
+
+function formatMarketProjectionValue(value: unknown): string {
+  if (typeof value === "number") {
+    return value.toLocaleString("en-US");
+  }
+
+  return typeof value === "string" ? value : "?";
 }
