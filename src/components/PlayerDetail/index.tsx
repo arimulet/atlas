@@ -11,8 +11,8 @@ import {
 } from "@/app/view-models/player-detail-view-model";
 import { PlayerDevelopmentPlan } from "./PlayerDevelopmentPlan";
 import { usePlayerDevelopmentPlan } from "./usePlayerDevelopmentPlan";
-import { PlayerMarketValueSection } from "./MarketValuePanel";
 import { PlayerPersonalInfoPanel } from "./PlayerPersonalInfoPanel";
+import type { PlayerMarketValueViewModel } from "@/app/view-models/market-value-view-model";
 
 export function PlayerDetail({
   clubId,
@@ -92,9 +92,8 @@ function PlayerDetailContent({
           training={viewModel.training}
         />
       </div>
-      <PlayerMarketValueSection marketValue={viewModel.marketValue ?? null} />
       <DevelopmentPlanBoundary key={viewModel.player.id}>
-        <DevelopmentPlanSection clubId={clubId} player={viewModel} training={training} />
+        <DevelopmentPlanSection clubId={clubId} player={viewModel} training={training} marketValue={viewModel.marketValue ?? null} />
       </DevelopmentPlanBoundary>
       <TrainingHistoryPanel rows={viewModel.trainingHistory} />
     </div>
@@ -105,14 +104,16 @@ interface DevelopmentPlanSectionProps {
   clubId: string | null;
   player: PlayerDetailViewModel;
   training: PlayerDetailProps["training"];
+  marketValue: PlayerMarketValueViewModel | null;
 }
 
-function DevelopmentPlanSection({ clubId, player, training }: DevelopmentPlanSectionProps) {
+function DevelopmentPlanSection({ clubId, player, training, marketValue }: DevelopmentPlanSectionProps) {
   const developmentPlan = usePlayerDevelopmentPlan({ clubId, player, training });
 
   return (
     <PlayerDevelopmentPlan
       plan={developmentPlan.plan}
+      marketValue={marketValue}
       isLoading={developmentPlan.isLoading}
       isSaving={developmentPlan.isSaving}
       error={developmentPlan.error}
