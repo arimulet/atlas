@@ -222,7 +222,7 @@ export function createPlayerDetailViewModel(
           : formatMarketMoney(player.value, input.currency ?? null),
       gameValueChange: gameValueChange(player.valueChange ?? null, input.currency ?? null)
     },
-    developmentPlayer: createDevelopmentPlayer(String(player.playerId), observedPlayer),
+    developmentPlayer: createDevelopmentPlayer(String(player.playerId), observedPlayer, marketPlayer),
     skills: SKILL_DEFINITIONS.map((definition) => {
       const value = observedPlayer?.skills[definition.key] ?? null;
 
@@ -263,7 +263,8 @@ export function createPlayerDetailViewModel(
 
 function createDevelopmentPlayer(
   playerId: string,
-  observedPlayer: PlayerDevelopment["observed"]["players"][number] | undefined
+  observedPlayer: PlayerDevelopment["observed"]["players"][number] | undefined,
+  marketPlayer: SquadDepthPlayer | undefined
 ): (DevelopmentPlayer & { age: number }) | null {
   const stablePlayerId = observedPlayer?.playerId ?? playerId;
   const numericPlayerId = Number(stablePlayerId);
@@ -276,7 +277,8 @@ function createDevelopmentPlayer(
     playerId: numericPlayerId,
     age: observedPlayer.age,
     observedPosition: toObservedPosition(observedPlayer.observedPosition),
-    skills: observedPlayer.skills
+    skills: observedPlayer.skills,
+    formation: marketPlayer?.formation ?? null
   };
 }
 
