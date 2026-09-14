@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import {
   buildIdealDevelopmentTarget,
@@ -139,7 +139,7 @@ describe("Player Development Plan", () => {
     const currentPlayer = player({ age: 20 });
     const idealTarget = buildIdealDevelopmentTarget(currentPlayer, "defender");
 
-    const target = buildOperationalDevelopmentTarget(currentPlayer, idealTarget, 32);
+    const target = buildOperationalDevelopmentTarget(currentPlayer, idealTarget, { horizonAge: 32 });
 
     expect(calculateDevelopmentGap(currentPlayer, target).totalGap).toBeGreaterThan(0);
   });

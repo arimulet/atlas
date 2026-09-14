@@ -59,7 +59,9 @@ export function buildPlayerDevelopmentPlan(
   manualOverride: PlayerDevelopmentTargetOverride | null = null
 ): PlayerDevelopmentPlan {
   return new PlayerDevelopmentPlanner({
-    developmentHorizonAge: SQUAD_PLANNING_CONFIG.advancedLifecycleAge
+    developmentHorizonAge: SQUAD_PLANNING_CONFIG.advancedLifecycleAge,
+    cycleHorizonWeeks: 48,
+    cycleMaxSteps: 8
   }).createPlan(player, manualOverride ?? {});
 }
 
