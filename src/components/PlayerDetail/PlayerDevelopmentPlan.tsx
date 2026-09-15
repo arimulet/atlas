@@ -118,7 +118,7 @@ function ProfileSummary({ plan }: { plan: DevelopmentPlanViewModel }) {
         <p>
           {plan.progress.remainingLevels} pending skill-ups ·{" "}
           {plan.completion.estimatedWeeks !== null ? formatEta(plan.completion.estimatedWeeks) : "Unknown timeframe"} ·{" "}
-          {plan.completion.estimatedAge !== null ? `Age ~${plan.completion.estimatedAge.toLocaleString("en-US", { maximumFractionDigits: 1 })}` : "Unknown age"}
+          {plan.completion.estimatedAge !== null ? `Age ~${plan.completion.estimatedAge}` : "Unknown age"}
         </p>
       </div>
       {plan.profile.hasConflict ? (
@@ -368,9 +368,9 @@ function DevelopmentImpactDashboard({
         <strong style={{ fontSize: '1.1rem' }}>
           {plan.completion.estimatedWeeks !== null ? formatEta(plan.completion.estimatedWeeks) : "Unknown"}
         </strong>
-        {plan.completion.estimatedAge !== null && (
-          <small style={{ color: 'var(--atlas-text-muted)' }}>Age ~{plan.completion.estimatedAge.toLocaleString("en-US", { maximumFractionDigits: 1 })}</small>
-        )}
+          {plan.completion.estimatedAge !== null && (
+            <small style={{ color: 'var(--atlas-text-muted)' }}>Age ~{plan.completion.estimatedAge}</small>
+          )}
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column' }}>

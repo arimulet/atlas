@@ -46,8 +46,8 @@ export const DEVELOPMENT_PROFILES: Readonly<
     relevantSkills: [
       { skill: "playmaker", priority: "primary", defaultTargetLevel: 17 },
       { skill: "passing", priority: "primary", defaultTargetLevel: 17 },
-      { skill: "technique", priority: "secondary", defaultTargetLevel: 16 },
-      { skill: "pace", priority: "supporting", defaultTargetLevel: 15 }
+      { skill: "pace", priority: "primary", defaultTargetLevel: 17 },
+      { skill: "technique", priority: "secondary", defaultTargetLevel: 16 }
     ]
   },
   winger: {
