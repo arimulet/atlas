@@ -95,9 +95,34 @@ export interface CreateDevelopmentPlanViewModelInput {
   training: TrainingPageData | null;
 }
 
+import { getSokkerSeason } from "@atlas/domain";
+
+function getProjectedAge(
+  baseAge: number | null | undefined,
+  baseGameWeek: number | null | undefined,
+  targetGameWeek: number | null | undefined,
+  fallbackAge: number | null | undefined
+): number | null {
+  if (
+    typeof baseAge === "number" &&
+    typeof baseGameWeek === "number" &&
+    typeof targetGameWeek === "number"
+  ) {
+    try {
+      const baseSeason = getSokkerSeason(baseGameWeek);
+      const targetSeason = getSokkerSeason(targetGameWeek);
+      return baseAge + (targetSeason - baseSeason);
+    } catch {
+      // fallback
+    }
+  }
+  return typeof fallbackAge === "number" ? Math.floor(fallbackAge) : null;
+}
+
 export function createDevelopmentPlanViewModel(
   input: CreateDevelopmentPlanViewModelInput
 ): DevelopmentPlanViewModel | null {
+  if (!input.player) return null;
   const { developmentPlan, trainingPath, developmentProjection } = input.player;
 
   if (!developmentPlan || !trainingPath || !developmentProjection) {
@@ -111,6 +136,7 @@ export function createDevelopmentPlanViewModel(
     plan: developmentPlan,
     path: trainingPath,
     projection: developmentProjection,
+    playerAge: input.player.player.age,
     latestReport
   });
 }
@@ -119,9 +145,11 @@ function mapPlan(input: {
   plan: import("@atlas/domain").PlayerDevelopmentPlan;
   path: import("@atlas/domain").PlayerTrainingPath;
   projection: import("@atlas/domain").PlayerDevelopmentProjection;
+  playerAge: number;
   latestReport: NonNullable<TrainingPagePlayer["latestReport"]> | null;
 }): DevelopmentPlanViewModel {
   const projectionByOrder = new Map(input.projection.steps.map((step) => [step.order, step]));
+  const baseGameWeek = input.projection.generatedAtGameWeek;
   const idealTargets = input.plan.idealTarget.targetSkills.map((skill) => ({
     skill: skill.skill,
     currentLevel: input.plan.gap.skills.find(s => s.skill === skill.skill)?.currentLevel ?? 0,
@@ -163,7 +191,12 @@ function mapPlan(input: {
         estimatedWeeks: projectionStep?.estimatedWeeks ?? null,
         cumulativeWeeks: projectionStep?.cumulativeWeeks ?? null,
         estimatedGameWeek: projectionStep?.estimatedGameWeek ?? null,
-        estimatedAge: projectionStep?.estimatedAge ?? null,
+        estimatedAge: getProjectedAge(
+          input.playerAge,
+          baseGameWeek,
+          projectionStep?.estimatedGameWeek,
+          projectionStep?.estimatedAge
+        ),
         confidence: projectionStep?.confidence ?? null,
         isCurrent: step.order === 1,
         reasons: step.reason.map(reasonLabel)
@@ -181,7 +214,12 @@ function mapPlan(input: {
     cumulativeWeeks: milestone.cumulativeWeeks,
     estimatedGameWeek: milestone.estimatedGameWeek,
     estimatedDate: milestone.estimatedDate,
-    estimatedAge: milestone.estimatedAge,
+    estimatedAge: getProjectedAge(
+      input.playerAge,
+      baseGameWeek,
+      milestone.estimatedGameWeek,
+      milestone.estimatedAge
+    ),
     confidence: milestone.confidence,
     label: milestoneLabel(milestone.type, milestone.skill)
   }));
@@ -207,6 +245,12 @@ function mapPlan(input: {
     nextStep: path[0] ?? null,
     completion: {
       ...input.projection.completion,
+      estimatedAge: getProjectedAge(
+        input.playerAge,
+        baseGameWeek,
+        input.projection.completion.estimatedGameWeek,
+        input.projection.completion.estimatedAge
+      ),
       confidence: input.projection.confidence
     },
     assumptions: input.projection.assumptions,
