@@ -113,10 +113,10 @@ export function generateNextTrainingCandidates(
         toLevel,
         requiredTrainingPoints,
         expectedWeeklyTrainingPoints,
-        estimatedWeeks: requiredTrainingPoints / expectedWeeklyTrainingPoints,
+        estimatedWeeks: Math.ceil(requiredTrainingPoints / expectedWeeklyTrainingPoints),
         estimatedAgeAtStep:
           state.estimatedAge +
-          requiredTrainingPoints / expectedWeeklyTrainingPoints / DEVELOPMENT_PATH_WEEKS_PER_YEAR,
+          Math.ceil(requiredTrainingPoints / expectedWeeklyTrainingPoints) / DEVELOPMENT_PATH_WEEKS_PER_YEAR,
         targetPriority: targetSkill.priority,
         developmentReturnScore: breakdown.developmentReturnScore,
         developmentValue: breakdown.developmentValue,

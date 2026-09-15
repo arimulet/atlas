@@ -28,6 +28,8 @@ export interface DevelopmentPlanPathRow {
   priority: "primary" | "secondary" | "supporting";
   estimatedWeeks: number | null;
   cumulativeWeeks: number | null;
+  estimatedGameWeek: number | null;
+  estimatedAge: number | null;
   confidence: "low" | "medium" | "high" | null;
   isCurrent: boolean;
   reasons: string[];
@@ -152,18 +154,20 @@ function mapPlan(input: {
   const path = input.path.steps.map((step) => {
     const projectionStep = projectionByOrder.get(step.order);
 
-    return {
-      order: step.order,
-      skill: step.skill,
-      fromLevel: step.fromLevel,
-      toLevel: step.toLevel,
-      priority: step.priority,
-      estimatedWeeks: projectionStep?.estimatedWeeks ?? null,
-      cumulativeWeeks: projectionStep?.cumulativeWeeks ?? null,
-      confidence: projectionStep?.confidence ?? null,
-      isCurrent: step.order === 1,
-      reasons: step.reason.map(reasonLabel)
-    };
+      return {
+        order: step.order,
+        skill: step.skill,
+        fromLevel: step.fromLevel,
+        toLevel: step.toLevel,
+        priority: step.priority,
+        estimatedWeeks: projectionStep?.estimatedWeeks ?? null,
+        cumulativeWeeks: projectionStep?.cumulativeWeeks ?? null,
+        estimatedGameWeek: projectionStep?.estimatedGameWeek ?? null,
+        estimatedAge: projectionStep?.estimatedAge ?? null,
+        confidence: projectionStep?.confidence ?? null,
+        isCurrent: step.order === 1,
+        reasons: step.reason.map(reasonLabel)
+      };
   });
   const completedLevels = targets.reduce(
     (total, target) => total + Math.min(target.currentLevel, target.targetLevel),

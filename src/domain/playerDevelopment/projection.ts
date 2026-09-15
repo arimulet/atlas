@@ -111,7 +111,7 @@ export function projectDevelopment(
 
       const estimatedWeeks =
         expectedWeeklyPoints > 0 && Number.isFinite(expectedWeeklyPoints)
-          ? requiredTrainingPoints / expectedWeeklyPoints
+          ? Math.ceil(requiredTrainingPoints / expectedWeeklyPoints)
           : Number.NaN;
       const nextCumulativeWeeks = state.elapsedWeeks + estimatedWeeks;
 

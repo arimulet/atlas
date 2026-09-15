@@ -9,7 +9,7 @@ import {
   XAxis,
   YAxis
 } from "recharts";
-import type { PlayerDevelopmentTargetOverride } from "@atlas/domain";
+import { getSokkerSeason, normalizeSeasonWeek, type PlayerDevelopmentTargetOverride } from "@atlas/domain";
 import { formatEta, formatPercentage } from "@/app/formatters";
 import { skillLevelLabel } from "@/app/view-models/skill-level-label";
 import {
@@ -116,14 +116,14 @@ function ProfileSummary({ plan }: { plan: DevelopmentPlanViewModel }) {
       <div>
         <span className="atlas-player-development-plan__eyebrow">Operational Target Summary</span>
         <p>
-          {plan.progress.remainingLevels} pending skill-ups Â·{" "}
-          {plan.completion.estimatedWeeks !== null ? formatEta(plan.completion.estimatedWeeks) : "Unknown timeframe"} Â·{" "}
+          {plan.progress.remainingLevels} pending skill-ups ·{" "}
+          {plan.completion.estimatedWeeks !== null ? formatEta(plan.completion.estimatedWeeks) : "Unknown timeframe"} ·{" "}
           {plan.completion.estimatedAge !== null ? `Age ~${plan.completion.estimatedAge.toLocaleString("en-US", { maximumFractionDigits: 1 })}` : "Unknown age"}
         </p>
       </div>
       {plan.profile.hasConflict ? (
         <p>
-          ATLAS suggestion: {plan.profile.suggestedLabel} Â·{" "}
+          ATLAS suggestion: {plan.profile.suggestedLabel} ·{" "}
           {capitalize(plan.profile.suggestionConfidence)} confidence
         </p>
       ) : null}
@@ -141,7 +141,7 @@ function TrainingAlignment({ plan }: { plan: DevelopmentPlanViewModel }) {
   if (alignment.status === "aligned") {
     return (
       <p className="atlas-player-development-plan__alignment is-aligned">
-        Current training aligned with plan Â· {skillLabel(alignment.plannedSkill!)}
+        Current training aligned with plan · {skillLabel(alignment.plannedSkill!)}
       </p>
     );
   }
@@ -192,7 +192,7 @@ function SkillTargets({ targets, idealTargets, title }: { targets: DevelopmentPl
                     {target.targetLevel} <small className="atlas-text-muted">({target.remaining} left)</small>
                   </td>
                   <td title={ideal ? skillLevelLabel(ideal.targetLevel) ?? undefined : undefined}>
-                    {ideal ? `${ideal.targetLevel} ` : "â€”"}
+                    {ideal ? `${ideal.targetLevel} ` : "—"}
                     {ideal ? <small className="atlas-text-muted">({ideal.remaining} left)</small> : null}
                   </td>
                   <td>{capitalize(target.priority)}</td>
@@ -286,17 +286,21 @@ function UnifiedTrainingPath({
                       ))}
                     </td>
                     <td>
-                      <div>{formatEta(step.estimatedWeeks)} <small className="atlas-text-muted">({step.cumulativeWeeks === null ? "â€”" : `~${step.cumulativeWeeks.toFixed(1)}w`})</small></div>
-                      {projPoint ? <small className="atlas-text-muted">Age {projPoint.age}</small> : null}
+                      <div>
+                        {step.estimatedWeeks !== null ? `+${step.estimatedWeeks} weeks` : "—"}
+                      </div>
+                      <small className="atlas-text-muted">
+                        {step.estimatedGameWeek !== null ? `${step.estimatedAge ? Math.floor(step.estimatedAge) + " yo" : "S" + getSokkerSeason(step.estimatedGameWeek)} · W${normalizeSeasonWeek(step.estimatedGameWeek)}` : "—"}
+                      </small>
                     </td>
                     {marketValue ? (
                       <>
-                        <td>{projPoint?.value.label ?? "â€”"}</td>
+                        <td>{projPoint?.value.label ?? "—"}</td>
                         <td className={efficiencyStep?.valueGain?.value && efficiencyStep.valueGain.value < 0 ? "atlas-text-danger" : "atlas-text-success"}>
-                          {efficiencyStep?.valueGain?.label ?? "â€”"}
+                          {efficiencyStep?.valueGain?.label ?? "—"}
                         </td>
                         <td className={efficiencyStep?.valueGainPerWeek?.value && efficiencyStep.valueGainPerWeek.value < 0 ? "atlas-text-danger" : "atlas-text-success"}>
-                          {efficiencyStep?.valueGainPerWeek?.label ?? "â€”"}
+                          {efficiencyStep?.valueGainPerWeek?.label ?? "—"}
                         </td>
                       </>
                     ) : null}
@@ -372,21 +376,21 @@ function DevelopmentImpactDashboard({
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         <span style={{ fontSize: '0.8rem', color: 'var(--atlas-text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}><TrendingUp size={14} /> Value Created</span>
         <strong style={{ fontSize: '1.1rem', color: marketValue?.training?.totalValueGain?.value && marketValue.training.totalValueGain.value < 0 ? 'var(--atlas-danger)' : 'var(--atlas-success)' }}>
-          {marketValue?.training?.totalValueGain?.label ?? "â€”"}
+          {marketValue?.training?.totalValueGain?.label ?? "—"}
         </strong>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         <span style={{ fontSize: '0.8rem', color: 'var(--atlas-text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}><TrendingUp size={14} /> Average Gain / Wk</span>
         <strong style={{ fontSize: '1.1rem', color: marketValue?.training?.averageValueGainPerWeek?.value && marketValue.training.averageValueGainPerWeek.value < 0 ? 'var(--atlas-danger)' : 'var(--atlas-success)' }}>
-          {marketValue?.training?.averageValueGainPerWeek?.label ?? "â€”"}
+          {marketValue?.training?.averageValueGainPerWeek?.label ?? "—"}
         </strong>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         <span style={{ fontSize: '0.8rem', color: 'var(--atlas-text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}><ArrowUpRight size={14} /> Projected Peak</span>
         <strong style={{ fontSize: '1.1rem' }}>
-          {marketValue?.projection?.peak?.value.label ?? "â€”"}
+          {marketValue?.projection?.peak?.value.label ?? "—"}
         </strong>
         {marketValue?.projection?.peak?.age && (
           <small style={{ color: 'var(--atlas-text-muted)' }}>Age {marketValue.projection.peak.age}</small>
@@ -494,4 +498,3 @@ function formatMarketProjectionValue(value: unknown): string {
 
   return typeof value === "string" ? value : "?";
 }
-
