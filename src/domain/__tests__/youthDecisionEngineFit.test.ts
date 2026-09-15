@@ -408,14 +408,14 @@ describe("Youth Fit & Development Opportunity", () => {
     const assessment = assessYouthDevelopmentOpportunity(
       context({
         player: player({
-          skills: { defender: 10, pace: 12, technique: 11, passing: 8, playmaker: 7 }
+          skills: { defender: 12, pace: 10, technique: 8, passing: 10, playmaker: 10 }
         }),
         depthAnalysis: {
           profiles: [
             depthProfile({ status: "overstocked" }),
             depthProfile({
-              profile: "wing_defender",
-              requirement: { profile: "wing_defender", minimum: 2, ideal: 3, maximum: 4 },
+              profile: "midfielder",
+              requirement: { profile: "midfielder", minimum: 2, ideal: 3, maximum: 4 },
               status: "thin",
               current: { ...depthProfile().current, strongOptions: 0 },
               nextSeason: { ...depthProfile().nextSeason, strongOptions: 0 },
@@ -435,7 +435,7 @@ describe("Youth Fit & Development Opportunity", () => {
       })
     );
 
-    expect(assessment.reprofileOpportunity?.alternativeProfile).toBe("wing_defender");
+    expect(assessment.reprofileOpportunity?.alternativeProfile).toBe("midfielder");
     expect(assessment.reprofileOpportunity?.viable).toBe(true);
   });
 

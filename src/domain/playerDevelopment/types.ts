@@ -5,7 +5,7 @@ export type DevelopmentSkill = SkillKey;
 export type Formation = "GK" | "DEF" | "MID" | "ATT";
 
 export type DevelopmentProfile =
-  "goalkeeper" | "defender" | "wing_defender" | "midfielder" | "winger" | "forward";
+  "goalkeeper" | "defender" | "midfielder" | "forward";
 
 export type DevelopmentPriority = "primary" | "secondary" | "supporting";
 

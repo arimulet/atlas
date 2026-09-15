@@ -100,9 +100,9 @@ export default function DiagnosticsPage() {
 
   const diagnosticAlertCount = useMemo(
     () =>
-      trainingDiagnostic?.findings.filter(
+      (trainingDiagnostic?.findings ?? []).filter(
         (diagnostic) => diagnostic.severity === "high" || diagnostic.severity === "medium"
-      ).length ?? 0,
+      ).length,
     [trainingDiagnostic]
   );
 

@@ -80,12 +80,11 @@ export function trainingStatusForPlayer(
   player: TrainingPagePlayer,
   diagnostic: TrainingDiagnostic | null
 ): TrainingStatusLabel | null {
-  const findings =
-    diagnostic?.findings.filter(
-      (finding) =>
-        finding.category === "training-potential" &&
-        isFindingForPlayer(finding, String(player.playerId), player.name, player.id)
-    ) ?? [];
+  const findings = (diagnostic?.findings ?? []).filter(
+    (finding) =>
+      finding.category === "training-potential" &&
+      isFindingForPlayer(finding, String(player.playerId), player.name, player.id)
+  );
 
   return findings.length === 0 ? null : "Training prospect";
 }
@@ -94,11 +93,11 @@ export function diagnosticFindingsForPlayer(
   diagnostic: TrainingDiagnostic | null,
   player: TrainingPagePlayer
 ): DiagnosticFinding[] {
-  return (
-    diagnostic?.findings.filter((finding) =>
+  return (diagnostic?.findings ?? [])
+    .filter((finding) =>
       isFindingForPlayer(finding, String(player.playerId), player.name, player.id)
-    ) ?? []
-  ).sort(compareDiagnosticSeverity);
+    )
+    .sort(compareDiagnosticSeverity);
 }
 
 export function isFindingForPlayer(

@@ -707,8 +707,8 @@ function transferFingerprint(transfer: PlayerTransferRecord): string {
 
 function formationForProfile(profile: DevelopmentProfile | null): Formation | null {
   if (profile === "goalkeeper") return "GK";
-  if (profile === "defender" || profile === "wing_defender") return "DEF";
-  if (profile === "midfielder" || profile === "winger") return "MID";
+  if (profile === "defender") return "DEF";
+  if (profile === "midfielder") return "MID";
   if (profile === "forward") return "ATT";
   return null;
 }
