@@ -74,17 +74,6 @@ describe("squad planning presentation", () => {
     expect(profile?.statusLabel).toBe("Critical");
   });
 
-  it("hides unsupported wing profiles from the squad depth view", () => {
-    const planning = createBundle();
-    planning.depth.profiles.push(createProfile("wing_defender", [], [], [], "critical", "high"));
-    planning.depth.profiles.push(createProfile("winger", [], [], [], "critical", "high"));
-
-    const viewModel = createSquadPlanningViewModel(planning, createRows());
-
-    expect(viewModel.profiles.map((profile) => profile.profile)).not.toContain("wing_defender");
-    expect(viewModel.profiles.map((profile) => profile.profile)).not.toContain("winger");
-  });
-
   it("exposes succession, dependency, congestion and missing pipeline signals", () => {
     const viewModel = createSquadPlanningViewModel(createBundle(), createRows());
     const profile = viewModel.profiles.find((entry) => entry.profile === "defender");

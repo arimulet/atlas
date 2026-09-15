@@ -380,11 +380,11 @@ describe("Youth Decision Recommendations", () => {
       context({
         prospect: prospect(player(), { prospectScore: 0.78, confidence: "high" }),
         opportunity: opportunity({
-          profile: "winger",
+          profile: "defender",
           clubFitScore: 0.25,
           opportunity: "poor",
           reprofileOpportunity: {
-            currentProfile: "winger",
+            currentProfile: "defender",
             alternativeProfile: "midfielder",
             compatibilityScore: 0.82,
             squadNeedImprovement: 0.3,

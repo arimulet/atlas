@@ -1,5 +1,5 @@
 export type PersistedDevelopmentProfile =
-  "goalkeeper" | "defender" | "wing_defender" | "midfielder" | "winger" | "forward";
+  "goalkeeper" | "defender" | "midfielder" | "forward";
 
 export type PersistedDevelopmentSkill =
   "stamina" | "pace" | "technique" | "passing" | "keeper" | "defender" | "playmaker" | "striker";

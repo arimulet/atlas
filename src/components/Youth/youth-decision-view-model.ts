@@ -180,9 +180,7 @@ export function profileLabel(profile: DevelopmentProfile | null): string {
   const labels: Record<DevelopmentProfile, string> = {
     goalkeeper: "Goalkeeper",
     defender: "Defender",
-    wing_defender: "Wing Defender",
     midfielder: "Midfielder",
-    winger: "Winger",
     forward: "Forward"
   };
   return labels[profile];

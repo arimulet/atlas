@@ -259,7 +259,7 @@ function mapPlan(input: {
     targets,
     path,
     milestones,
-    completed: input.path.completed,
+    completed: input.plan.gap.totalGap === 0,
     projectionStatus: input.projection.projectionStatus,
     weeklyTrainingAlignment: {
       status:

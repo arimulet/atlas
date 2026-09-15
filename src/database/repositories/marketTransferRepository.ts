@@ -199,9 +199,7 @@ export function invalidateFinalMarketTransfersCache(): void {
 const MARKET_TRANSFER_PROFILES: readonly string[] = [
   "goalkeeper",
   "defender",
-  "wing_defender",
   "midfielder",
-  "winger",
   "forward"
 ];
 

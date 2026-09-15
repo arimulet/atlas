@@ -10,9 +10,7 @@ const playerDevelopmentSchema = new Schema(
       enum: [
         "goalkeeper",
         "defender",
-        "wing_defender",
         "midfielder",
-        "winger",
         "forward"
       ]
     },

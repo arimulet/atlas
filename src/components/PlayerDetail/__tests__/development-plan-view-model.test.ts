@@ -192,4 +192,14 @@ describe("createDevelopmentPlanViewModel", () => {
     expect(first?.milestones).toEqual(second?.milestones);
     expect(first?.path.every((step) => step.order > 0)).toBe(true);
   });
+
+  it("does not mark a plan complete while it still has pending skill-ups", () => {
+    const player = createPlayer();
+    player.trainingPath = { ...player.trainingPath!, completed: true };
+
+    const plan = createDevelopmentPlanViewModel({ player, training: createTraining() });
+
+    expect(plan?.progress.remainingLevels).toBeGreaterThan(0);
+    expect(plan?.completed).toBe(false);
+  });
 });

@@ -79,4 +79,19 @@ describe("createTrainingPlayerRows", () => {
 
     expect(status).toBe("Training prospect");
   });
+
+  it("returns no status when a diagnostic has no findings", () => {
+    const player = {
+      id: "player-1",
+      playerId: 42,
+      name: "Player One",
+      age: 18,
+      training: { position: 2, advanced: true }
+    };
+    const diagnostic = {} as unknown as { findings: never[] };
+
+    const status = trainingStatusForPlayer(player, diagnostic);
+
+    expect(status).toBeNull();
+  });
 });

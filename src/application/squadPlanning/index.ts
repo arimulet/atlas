@@ -383,9 +383,15 @@ function createMarketValues(
       developmentPlan: context.developmentPlan ?? null,
       talent: context.talent ?? null
     };
+
+    const current = createCurrentMarketValue(marketContext, transfers);
+    if (current === null) {
+      continue;
+    }
+
+    let projection: ReturnType<typeof projectPlayerMarketValue> | null = null;
     try {
-      const current = calibratePlayerMarketValue(marketContext, transfers);
-      const projection =
+      projection =
         context.developmentPlan && context.trainingPath && context.projection
           ? projectPlayerMarketValue({
               player,
@@ -397,17 +403,40 @@ function createMarketValues(
               transfers
             })
           : null;
-      const trainingComparison =
+    } catch {
+      // A partial market projection must not hide the current player valuation.
+    }
+
+    let trainingComparison: ReturnType<typeof compareAdvancedAndFormationMarketValue> | null =
+      null;
+    try {
+      trainingComparison =
         context.developmentPlan && context.trainingPath
           ? createMarketTrainingComparison(context, player, current, projection, transfers)
           : null;
-      values.set(context.playerId, { current, projection, trainingComparison });
-    } catch (error) { console.error("MarketValue error for player:", context.playerId, error);
-      // Market value is derived data. A malformed player must not break squad planning.
+    } catch {
+      // A comparison is supplementary and must not hide the base valuation or projection.
     }
+
+    values.set(context.playerId, { current, projection, trainingComparison });
   }
 
   return values;
+}
+
+function createCurrentMarketValue(
+  context: Parameters<typeof calibratePlayerMarketValue>[0],
+  transfers: import("@atlas/domain").PlayerTransferRecord[]
+): ReturnType<typeof calibratePlayerMarketValue> | null {
+  try {
+    return calibratePlayerMarketValue(context, transfers);
+  } catch {
+    try {
+      return calibratePlayerMarketValue(context, []);
+    } catch {
+      return null;
+    }
+  }
 }
 
 interface MarketValueEntry {

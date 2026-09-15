@@ -35,8 +35,8 @@ const FORMATION_PROFILE_AFFINITY: Readonly<
   Record<Formation, Partial<Record<DevelopmentProfile, number>>>
 > = {
   GK: { goalkeeper: 3 },
-  DEF: { defender: 3, wing_defender: 2 },
-  MID: { midfielder: 3, winger: 2 },
+  DEF: { defender: 3 },
+  MID: { midfielder: 3 },
   ATT: { forward: 3 }
 };
 
