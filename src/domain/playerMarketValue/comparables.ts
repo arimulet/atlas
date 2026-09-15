@@ -338,7 +338,7 @@ function calculateSkillSimilarity(
   if (known.length === 0) return null;
 
   const hasSeverePrimaryMismatch = known.some(
-    (item) => item.priority === "primary" && Math.abs(item.target - item.comparable) > 3
+    (item) => item.priority === "primary" && Math.abs(item.target - item.comparable) > 1
   );
   if (hasSeverePrimaryMismatch) return 0;
 
@@ -722,7 +722,8 @@ function formationFromTrainingPosition(position: number | undefined): Formation 
 }
 
 function readSkill(skills: SkillSet, skill: SkillKey): number | null {
-  const value = skills[skill];
+  const mappedSkill = skill === "defender" ? "defending" : skill === "playmaker" ? "playmaking" : skill;
+  const value = skills[skill] ?? (skills as any)[mappedSkill];
   return typeof value === "number" && Number.isFinite(value)
     ? clamp(value, 0, VALID_MAXIMUM_SKILL)
     : null;

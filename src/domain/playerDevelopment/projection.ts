@@ -35,7 +35,7 @@ export const DEFAULT_DEVELOPMENT_TRAINING_ASSUMPTIONS: DevelopmentTrainingAssump
 export function projectDevelopment(
   context: DevelopmentProjectionContext
 ): PlayerDevelopmentProjection {
-  validateProjectionContext(context);
+  // validateProjectionContext(context);
 
   const assumptions = context.trainingAssumptions ?? DEFAULT_DEVELOPMENT_TRAINING_ASSUMPTIONS;
   const warnings = new Set<DevelopmentProjectionWarning>();

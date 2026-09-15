@@ -413,7 +413,8 @@ function talentSignalForMarket(talent: TalentEstimate | null): number {
 }
 
 function readSkill(skills: SkillSet, skill: SkillKey): number | null {
-  const level = skills[skill];
+  const mappedSkill = skill === "defender" ? "defending" : skill === "playmaker" ? "playmaking" : skill;
+  const level = skills[skill] ?? (skills as any)[mappedSkill];
   if (typeof level !== "number" || !Number.isFinite(level)) return null;
   return clamp(level, VALID_MINIMUM_SKILL, VALID_MAXIMUM_SKILL);
 }
