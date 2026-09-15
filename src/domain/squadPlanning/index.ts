@@ -643,7 +643,10 @@ function hasPrimarySkillsAtLeast(
 }
 
 function readSkill(context: SquadPlayerContext, skill: DevelopmentSkill): number {
-  const value = context.skills[skill];
+  const mappedSkill = skill === "defender" ? "defending" : skill === "playmaker" ? "playmaking" : skill;
+  const value =
+    context.skills[skill] ??
+    (context.skills as Partial<Record<string, unknown>>)[mappedSkill];
   return typeof value === "number" && Number.isFinite(value) ? Math.max(value, 0) : 0;
 }
 

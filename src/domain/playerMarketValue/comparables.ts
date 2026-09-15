@@ -722,7 +722,9 @@ function formationFromTrainingPosition(position: number | undefined): Formation 
 }
 
 function readSkill(skills: SkillSet, skill: SkillKey): number | null {
-  const value = skills[skill];
+  const mappedSkill = skill === "defender" ? "defending" : skill === "playmaker" ? "playmaking" : skill;
+  const value =
+    skills[skill] ?? (skills as Partial<Record<string, unknown>>)[mappedSkill];
   return typeof value === "number" && Number.isFinite(value)
     ? clamp(value, 0, VALID_MAXIMUM_SKILL)
     : null;
