@@ -396,7 +396,8 @@ function readFormation(player: DevelopmentPlayer): Formation | null {
 
 function readSkill(player: DevelopmentPlayer, skill: DevelopmentSkill): number | null {
   const mappedSkill = skill === "defender" ? "defending" : skill === "playmaker" ? "playmaking" : skill;
-  const level = player.skills[skill] ?? (player.skills as any)[mappedSkill];
+  const level =
+    player.skills[skill] ?? (player.skills as Partial<Record<string, unknown>>)[mappedSkill];
   if (typeof level !== "number" || !Number.isFinite(level)) return null;
   return Math.max(level, 0);
 }
