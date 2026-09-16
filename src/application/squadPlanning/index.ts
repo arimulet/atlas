@@ -23,6 +23,9 @@ import {
   projectDevelopment,
   buildWeeklyTrainingReport,
   estimateTalentFromTrainingHistory,
+  BASE_TRAINING_POINTS,
+  calculateWeeklyTrainingPointsByKind,
+  calculateRequiredTrainingPoints,
   type DevelopmentCurrentSkillProgress,
   type DevelopmentPlayer,
   type PlayerDevelopmentTargetOverride,
@@ -324,7 +327,12 @@ function buildPlayerContext(
   const plan = buildPlan(developmentPlayer, override);
   const talent = history ? estimateTalentFromTrainingHistory(history) : null;
   const latestTraining = history?.weeks.at(-1);
-  const currentTrainingProgress = estimateCurrentTrainingProgress(history, talent, currentGameWeek);
+  const currentTrainingProgress = estimateCurrentTrainingProgress(
+    history,
+    player.age,
+    talent,
+    currentGameWeek
+  );
   const trainingPath = generatePlayerTrainingPath({
     player: { ...developmentPlayer, age: player.age ?? 16 },
     target: plan.target,
@@ -582,35 +590,61 @@ function toMarketValuePlayer(context: SquadPlayerContext): PlayerMarketValuePlay
 
 function estimateCurrentTrainingProgress(
   history: TrainingHistory | null,
+  playerAge: number | null,
   talent: ReturnType<typeof estimateTalentFromTrainingHistory> | null,
   currentGameWeek: number | null
 ): DevelopmentCurrentSkillProgress | undefined {
-  if (!history || !talent?.value || currentGameWeek === null) return undefined;
+  if (!history || currentGameWeek === null) return undefined;
 
   try {
     const report = buildWeeklyTrainingReport({
-      players: [{ history, talent: talent.value }],
+      players: [{ history, talent: talent?.value }],
       gameWeek: currentGameWeek
     }).players[0];
-    if (
-      !report ||
-      report.trainingPoints.estimatedProgress === null ||
-      report.trainingPoints.remainingToNextLevel === null
-    ) {
-      return undefined;
+
+    const currentSkill = report?.training.skill;
+    if (!currentSkill) return undefined;
+
+    const weeks = [...history.weeks].sort((a, b) => a.week - b.week);
+    const lastPopWeek = [...weeks]
+      .reverse()
+      .find((w) => w.skillChanges?.some((c) => c.direction === "up"))?.week ?? 0;
+    const accumulatedPoints = weeks
+      .filter((w) => w.week > lastPopWeek && w.kind !== "missing")
+      .reduce((sum, w) => sum + (w.trainingPoints ?? 0), 0);
+
+    let remainingToNextLevel = report?.trainingPoints.remainingToNextLevel ?? null;
+    let estimatedProgress = report?.trainingPoints.estimatedProgress ?? null;
+
+    if (remainingToNextLevel === null && playerAge !== null && currentSkill) {
+      const currentLevel = weeks.at(-1)?.skillLevelAfter ?? 10;
+      try {
+        const required = calculateRequiredTrainingPoints({
+          talent: talent?.value ?? 1.0,
+          age: playerAge,
+          skill: currentSkill,
+          targetSkillLevel: currentLevel + 1
+        }).requiredTrainingPoints;
+        remainingToNextLevel = Math.max(0, required - accumulatedPoints);
+        estimatedProgress = Math.min(1, Math.max(0, accumulatedPoints / required));
+      } catch {
+        // fallback
+      }
     }
 
     return {
-      skill: report.training.skill,
-      estimatedProgress: report.trainingPoints.estimatedProgress,
-      remainingToNextLevel: report.trainingPoints.remainingToNextLevel,
+      skill: currentSkill,
+      estimatedProgress,
+      remainingToNextLevel,
+      accumulatedPoints,
       confidence:
-        talent.confidence === "high" ? "high" : talent.confidence === "medium" ? "medium" : "low"
+        talent?.confidence === "high" ? "high" : talent?.confidence === "medium" ? "medium" : "low"
     };
   } catch {
     return undefined;
   }
 }
+
 function buildProjection(input: {
   player: PersistedPlayerSnapshot;
   developmentPlayer: DevelopmentPlayer;
@@ -626,6 +660,13 @@ function buildProjection(input: {
     return null;
   }
 
+  const trainingKind = input.latestTraining?.kind === "advanced" ? "advanced" : "formation";
+  const expectedIntensity = input.latestTraining?.intensity ?? 100;
+  const talentValue = input.talent?.value ?? 1.0;
+  const kindFactor = trainingKind === "advanced" ? 1.0 : 0.588235;
+
+  const expectedWeeklyTrainingPoints = 35.2 * kindFactor * (expectedIntensity / 100) * talentValue;
+
   try {
     return projectDevelopment({
       player: { ...input.developmentPlayer, age: input.player.age },
@@ -635,9 +676,10 @@ function buildProjection(input: {
       currentDate: input.currentDate,
       talent: input.talent,
       currentTrainingProgress: input.currentTrainingProgress,
+      expectedWeeklyTrainingPoints,
       trainingAssumptions: {
-        trainingKind: input.latestTraining?.kind === "advanced" ? "advanced" : "formation",
-        expectedIntensity: input.latestTraining?.intensity ?? 100,
+        trainingKind,
+        expectedIntensity,
         assumeContinuousTraining: true
       }
     });
