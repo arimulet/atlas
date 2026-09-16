@@ -218,6 +218,13 @@
     margin-left: auto;
   }
 
+  .atlas-player-link-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    vertical-align: middle;
+  }
+
   .atlas-player-link {
     align-items: center;
     background: transparent;
@@ -239,6 +246,45 @@
       outline: 0;
       text-decoration: underline;
       text-underline-offset: 2px;
+    }
+  }
+
+  .atlas-player-link__external {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--atlas-text-muted, #8a99ad);
+    opacity: 0.65;
+    transition: color 0.15s ease, opacity 0.15s ease, transform 0.15s ease;
+    text-decoration: none;
+    line-height: 1;
+
+    &:hover,
+    &:focus-visible {
+      color: var(--atlas-accent, #38bdf8);
+      opacity: 1;
+      transform: scale(1.15);
+      outline: 0;
+    }
+  }
+
+  .atlas-player-header__external-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 8px;
+    color: var(--atlas-text-muted, #8a99ad);
+    opacity: 0.7;
+    transition: color 0.15s ease, opacity 0.15s ease, transform 0.15s ease;
+    text-decoration: none;
+    vertical-align: middle;
+
+    &:hover,
+    &:focus-visible {
+      color: var(--atlas-accent, #38bdf8);
+      opacity: 1;
+      transform: scale(1.15);
+      outline: 0;
     }
   }
 
