@@ -261,7 +261,9 @@ function resolveProfile(context: PlayerMarketValueContext): {
     context.squadAssessment?.profile ??
     context.player.profile ??
     null;
-  if (explicitProfile) return { profile: explicitProfile, usedFallback: false };
+  if (explicitProfile && Object.hasOwn(DEVELOPMENT_PROFILES, explicitProfile)) {
+    return { profile: explicitProfile, usedFallback: false };
+  }
 
   return { ...resolveProfileForPlayer(context.player), usedFallback: true };
 }
@@ -277,7 +279,9 @@ function resolveProfileForPlayer(player: PlayerMarketValuePlayerInput): {
     position: player.position,
     observedPosition: player.observedPosition
   };
-  return { profile: suggestDevelopmentProfile(developmentPlayer).profile };
+  const suggested = suggestDevelopmentProfile(developmentPlayer).profile;
+  const profile = Object.hasOwn(DEVELOPMENT_PROFILES, suggested) ? suggested : "defender";
+  return { profile };
 }
 
 function formationFromTrainingPosition(

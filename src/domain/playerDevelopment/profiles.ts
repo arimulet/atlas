@@ -29,7 +29,7 @@ export const DEVELOPMENT_PROFILES: Readonly<
       { skill: "defender", priority: "primary", defaultTargetLevel: 17 },
       { skill: "pace", priority: "primary", defaultTargetLevel: 17 },
       { skill: "technique", priority: "secondary", defaultTargetLevel: 14 },
-      { skill: "playmaker", priority: "supporting", defaultTargetLevel: 13 }
+      { skill: "passing", priority: "supporting", defaultTargetLevel: 13 }
     ]
   },
   midfielder: {

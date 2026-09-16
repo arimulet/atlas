@@ -65,6 +65,8 @@ export function projectDevelopment(
   }
 
   if (projectionStatus !== "unavailable") {
+    const skillsWithProgressApplied = new Set<DevelopmentSkill>();
+
     for (const pathStep of context.path.steps) {
       if (
         !Number.isFinite(pathStep.estimatedTrainingPoints) ||
@@ -80,14 +82,22 @@ export function projectDevelopment(
         break;
       }
 
+      const usePartialProgress =
+        !skillsWithProgressApplied.has(pathStep.skill) &&
+        progressForSkill(context.currentTrainingProgress, pathStep.skill) !== null;
+
       const requiredTrainingPoints = calculateStepTrainingPoints({
         context,
         assumptions,
         state,
         skill: pathStep.skill,
         toLevel: pathStep.toLevel,
-        usePartialProgress: progressForSkill(context.currentTrainingProgress, pathStep.skill) !== null
+        usePartialProgress
       });
+
+      if (usePartialProgress && requiredTrainingPoints !== null) {
+        skillsWithProgressApplied.add(pathStep.skill);
+      }
 
       if (requiredTrainingPoints === null) {
         warnings.add("invalid_training_points");
@@ -339,25 +349,41 @@ function calculateStepTrainingPoints(input: {
 
   if (input.usePartialProgress) {
     const progress = progressForSkill(input.context.currentTrainingProgress, input.skill);
+    let remainingPoints: number | null = null;
+
     if (progress?.remainingToNextLevel !== undefined && progress.remainingToNextLevel !== null) {
-      return validNonNegative(progress.remainingToNextLevel) ? progress.remainingToNextLevel : null;
-    }
-    if (
+      remainingPoints = validNonNegative(progress.remainingToNextLevel) ? progress.remainingToNextLevel : null;
+    } else if (
       progress?.accumulatedPoints !== undefined &&
       progress.accumulatedPoints !== null &&
       Number.isFinite(progress.accumulatedPoints) &&
       progress.accumulatedPoints >= 0
     ) {
-      return Math.max(0, fullLevelPoints - progress.accumulatedPoints);
-    }
-    if (
+      remainingPoints = Math.max(0, fullLevelPoints - progress.accumulatedPoints);
+    } else if (
       progress?.estimatedProgress !== undefined &&
       progress.estimatedProgress !== null &&
       Number.isFinite(progress.estimatedProgress) &&
       progress.estimatedProgress >= 0 &&
       progress.estimatedProgress <= 1
     ) {
-      return Math.max(0, fullLevelPoints * (1 - progress.estimatedProgress));
+      remainingPoints = Math.max(0, fullLevelPoints * (1 - progress.estimatedProgress));
+    }
+
+    if (remainingPoints !== null) {
+      if (remainingPoints <= 0) {
+        let expectedWeeklyPoints: number;
+        try {
+          expectedWeeklyPoints = calculateWeeklyTrainingPointsByKind({
+            intensity: input.assumptions.expectedIntensity,
+            kind: input.assumptions.trainingKind
+          });
+        } catch {
+          expectedWeeklyPoints = 100;
+        }
+        return expectedWeeklyPoints > 0 ? expectedWeeklyPoints : 1;
+      }
+      return remainingPoints;
     }
   }
 
