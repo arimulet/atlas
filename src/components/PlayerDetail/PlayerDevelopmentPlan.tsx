@@ -284,13 +284,7 @@ function UnifiedTrainingPath({
                 <th scope="col">Step</th>
                 <th scope="col">Skill Progression</th>
                 <th scope="col">Timeline</th>
-                {marketValue ? (
-                  <>
-                    <th scope="col">Projected Value</th>
-                    <th scope="col">Expected Gain</th>
-                    <th scope="col">Gain / Wk</th>
-                  </>
-                ) : null}
+                {marketValue ? <th scope="col">Projected Value</th> : null}
               </tr>
             </thead>
             <tbody>
@@ -351,15 +345,29 @@ function UnifiedTrainingPath({
                       </div>
                     </td>
                     {marketValue ? (
-                      <>
-                        <td>{projPoint?.value.label ?? "—"}</td>
-                        <td className={efficiencyStep?.valueGain?.value && efficiencyStep.valueGain.value < 0 ? "atlas-text-danger" : "atlas-text-success"}>
-                          {efficiencyStep?.valueGain?.label ?? "—"}
-                        </td>
-                        <td className={efficiencyStep?.valueGainPerWeek?.value && efficiencyStep.valueGainPerWeek.value < 0 ? "atlas-text-danger" : "atlas-text-success"}>
-                          {efficiencyStep?.valueGainPerWeek?.label ?? "—"}
-                        </td>
-                      </>
+                      <td>
+                        <div style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem", whiteSpace: "nowrap" }}>
+                          <strong style={{ fontSize: "0.88rem", fontWeight: 700, color: "var(--atlas-text)" }}>
+                            {projPoint?.value.label ?? "—"}
+                          </strong>
+                          {efficiencyStep?.valueGain ? (
+                            <span
+                              style={{
+                                fontSize: "0.82rem",
+                                fontWeight: 600,
+                                color:
+                                  efficiencyStep.valueGain.value > 0
+                                    ? "var(--atlas-success, #059669)"
+                                    : efficiencyStep.valueGain.value < 0
+                                      ? "var(--atlas-danger, #dc2626)"
+                                      : "var(--atlas-text-muted)"
+                              }}
+                            >
+                              ({efficiencyStep.valueGain.label})
+                            </span>
+                          ) : null}
+                        </div>
+                      </td>
                     ) : null}
                   </tr>
                 );

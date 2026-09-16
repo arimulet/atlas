@@ -394,3 +394,16 @@
     color: var(--semantic-info-text);
   }
 }
+
+.atlas-text-success {
+  color: var(--atlas-success, #059669) !important;
+}
+
+.atlas-text-danger {
+  color: var(--atlas-danger, #dc2626) !important;
+}
+
+.atlas-text-muted {
+  color: var(--atlas-text-muted) !important;
+}
+
