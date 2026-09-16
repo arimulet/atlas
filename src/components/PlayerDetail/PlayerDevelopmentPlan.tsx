@@ -334,12 +334,21 @@ function UnifiedTrainingPath({
                       </div>
                     </td>
                     <td>
-                      <div>
-                        {step.estimatedWeeks !== null ? `+${step.estimatedWeeks} weeks` : "—"}
+                      <div style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem", whiteSpace: "nowrap" }}>
+                        <strong>{step.estimatedWeeks !== null ? `+${step.estimatedWeeks} weeks` : "—"}</strong>
+                        {step.estimatedAge ? (
+                          <>
+                            <span className="atlas-text-muted">·</span>
+                            <span>{Math.floor(step.estimatedAge)} yo</span>
+                          </>
+                        ) : null}
+                        {step.estimatedGameWeek !== null ? (
+                          <>
+                            <span className="atlas-text-muted">·</span>
+                            <span className="atlas-text-muted">W{normalizeSeasonWeek(step.estimatedGameWeek)}</span>
+                          </>
+                        ) : null}
                       </div>
-                      <small className="atlas-text-muted">
-                        {step.estimatedGameWeek !== null ? `${step.estimatedAge ? Math.floor(step.estimatedAge) + " yo" : "S" + getSokkerSeason(step.estimatedGameWeek)} · W${normalizeSeasonWeek(step.estimatedGameWeek)}` : "—"}
-                      </small>
                     </td>
                     {marketValue ? (
                       <>
