@@ -15,6 +15,7 @@ export interface DevelopmentCurrentSkillProgress {
   skill: DevelopmentSkill | "defending" | "playmaking" | "scoring";
   estimatedProgress?: number | null;
   remainingToNextLevel?: number | null;
+  accumulatedPoints?: number | null;
   confidence?: Confidence;
 }
 
@@ -41,6 +42,7 @@ export interface DevelopmentProjectionContext {
   talent?: TalentEstimate | null;
   trainingAssumptions?: DevelopmentTrainingAssumptions;
   currentTrainingProgress?: DevelopmentCurrentSkillProgress;
+  expectedWeeklyTrainingPoints?: number | null;
   birthDate?: Date | null;
   calibrationConfidence?: Confidence;
   maxProjectionWeeks?: number;
