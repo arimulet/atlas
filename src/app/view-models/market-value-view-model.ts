@@ -295,6 +295,30 @@ function createComparableViewModel(
   };
 }
 
+import { getSokkerSeason } from "@atlas/domain";
+
+function getProjectedAge(
+  baseAge: number | null | undefined,
+  baseGameWeek: number | null | undefined,
+  targetGameWeek: number | null | undefined,
+  fallbackAge: number | null | undefined
+): number | null {
+  if (
+    typeof baseAge === "number" &&
+    typeof baseGameWeek === "number" &&
+    typeof targetGameWeek === "number"
+  ) {
+    try {
+      const baseSeason = getSokkerSeason(baseGameWeek);
+      const targetSeason = getSokkerSeason(targetGameWeek);
+      return baseAge + (targetSeason - baseSeason);
+    } catch {
+      // fallback
+    }
+  }
+  return typeof fallbackAge === "number" ? Math.floor(fallbackAge) : null;
+}
+
 function createProjectionViewModel(
   player: SquadDepthPlayer,
   marketValue: CalibratedPlayerMarketValueEstimate,
@@ -303,7 +327,8 @@ function createProjectionViewModel(
   const projection = player.marketProjection;
   if (!projection) return null;
 
-  const points = projection.points.map((point) => createPointViewModel(point, currency));
+  const playerAge = player.age;
+  const points = projection.points.map((point) => createPointViewModel(point, playerAge, currency));
   const lastPoint = points.at(-1) ?? null;
   const completionPoint = projection.completion?.marketValue
     ? createPointViewModel(
@@ -320,9 +345,14 @@ function createProjectionViewModel(
           confidence: projection.completion.confidence,
           milestone: "development_target_completed"
         },
+        playerAge,
         currency
       )
     : lastPoint;
+
+  const peakPoint = projection.peak
+    ? points.find((p) => p.step === projection.peak?.step)
+    : null;
 
   return {
     current: amount(marketValue.calibratedValue.expected, currency),
@@ -331,7 +361,7 @@ function createProjectionViewModel(
     peak: projection.peak
       ? {
           value: amount(projection.peak.value, currency),
-          age: formatAge(projection.peak.age),
+          age: peakPoint?.age ?? formatAge(typeof projection.peak.age === "number" ? Math.floor(projection.peak.age) : null),
           step: projection.peak.step
         }
       : null,
@@ -342,8 +372,20 @@ function createProjectionViewModel(
 
 function createPointViewModel(
   point: FutureMarketValuePoint,
+  playerAge: number | null | undefined,
   currency: string | null
 ): ProjectionPointViewModel {
+  const baseGameWeek =
+    typeof point.gameWeek === "number" && typeof point.cumulativeTrainingWeeks === "number"
+      ? point.gameWeek - point.cumulativeTrainingWeeks
+      : null;
+  const projectedAge = getProjectedAge(
+    playerAge,
+    baseGameWeek,
+    point.gameWeek,
+    point.estimatedAge
+  );
+
   return {
     step: point.step,
     label: point.milestone ? milestoneLabel(point.milestone) : `Step ${point.step}`,
@@ -354,7 +396,7 @@ function createPointViewModel(
     gainFromPrevious:
       point.valueGainFromPrevious === null ? null : amount(point.valueGainFromPrevious, currency),
     weeks: point.cumulativeTrainingWeeks,
-    age: formatAge(point.estimatedAge),
+    age: projectedAge !== null ? `~${projectedAge}` : "—",
     confidence: confidence(point.confidence),
     milestone: point.milestone ? milestoneLabel(point.milestone) : null
   };

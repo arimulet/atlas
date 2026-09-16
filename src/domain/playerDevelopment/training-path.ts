@@ -24,7 +24,7 @@ export const DEVELOPMENT_PATH_TIE_EPSILON = 0.05;
 export const DEVELOPMENT_PATH_LOW_COST_EPSILON = 0.1;
 export const DEVELOPMENT_PATH_HIGH_RETURN_THRESHOLD = 0.5;
 export const DEVELOPMENT_PATH_WEEKS_PER_YEAR = WEEKS_PER_SOKKER_SEASON;
-export const DEFAULT_DEVELOPMENT_PATH_WEEKLY_POINTS = 100;
+export const DEFAULT_DEVELOPMENT_PATH_WEEKLY_POINTS = 50;
 
 const DEVELOPMENT_SKILL_ORDER: readonly DevelopmentSkill[] = [
   "stamina",
@@ -113,10 +113,10 @@ export function generateNextTrainingCandidates(
         toLevel,
         requiredTrainingPoints,
         expectedWeeklyTrainingPoints,
-        estimatedWeeks: requiredTrainingPoints / expectedWeeklyTrainingPoints,
+        estimatedWeeks: Math.ceil(requiredTrainingPoints / expectedWeeklyTrainingPoints),
         estimatedAgeAtStep:
           state.estimatedAge +
-          requiredTrainingPoints / expectedWeeklyTrainingPoints / DEVELOPMENT_PATH_WEEKS_PER_YEAR,
+          Math.ceil(requiredTrainingPoints / expectedWeeklyTrainingPoints) / DEVELOPMENT_PATH_WEEKS_PER_YEAR,
         targetPriority: targetSkill.priority,
         developmentReturnScore: breakdown.developmentReturnScore,
         developmentValue: breakdown.developmentValue,

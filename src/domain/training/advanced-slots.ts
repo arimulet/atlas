@@ -46,7 +46,7 @@ const TRIAL_PROFILE_BY_POSITION: Readonly<
   goalkeeper: "goalkeeper",
   defender: "defender",
   midfielder: "midfielder",
-  winger: "winger",
+  winger: "midfielder",
   striker: "forward"
 };
 

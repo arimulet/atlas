@@ -261,7 +261,9 @@ function resolveProfile(context: PlayerMarketValueContext): {
     context.squadAssessment?.profile ??
     context.player.profile ??
     null;
-  if (explicitProfile) return { profile: explicitProfile, usedFallback: false };
+  if (explicitProfile && Object.hasOwn(DEVELOPMENT_PROFILES, explicitProfile)) {
+    return { profile: explicitProfile, usedFallback: false };
+  }
 
   return { ...resolveProfileForPlayer(context.player), usedFallback: true };
 }
@@ -277,7 +279,9 @@ function resolveProfileForPlayer(player: PlayerMarketValuePlayerInput): {
     position: player.position,
     observedPosition: player.observedPosition
   };
-  return { profile: suggestDevelopmentProfile(developmentPlayer).profile };
+  const suggested = suggestDevelopmentProfile(developmentPlayer).profile;
+  const profile = Object.hasOwn(DEVELOPMENT_PROFILES, suggested) ? suggested : "defender";
+  return { profile };
 }
 
 function formationFromTrainingPosition(
@@ -413,7 +417,9 @@ function talentSignalForMarket(talent: TalentEstimate | null): number {
 }
 
 function readSkill(skills: SkillSet, skill: SkillKey): number | null {
-  const level = skills[skill];
+  const mappedSkill = skill === "defender" ? "defending" : skill === "playmaker" ? "playmaking" : skill;
+  const level =
+    skills[skill] ?? (skills as Partial<Record<string, unknown>>)[mappedSkill];
   if (typeof level !== "number" || !Number.isFinite(level)) return null;
   return clamp(level, VALID_MINIMUM_SKILL, VALID_MAXIMUM_SKILL);
 }

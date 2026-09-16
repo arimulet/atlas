@@ -2,7 +2,8 @@ import { formatTrainingPriority } from "../formatters";
 import {
   calculateRequiredTrainingPoints,
   calculateWeeklyTrainingPointsByKind,
-  type DevelopmentPlayer
+  type DevelopmentPlayer,
+  type SquadDepthPlayer
 } from "@atlas/domain";
 import type {
   DashboardStatus,
@@ -45,7 +46,7 @@ const IMPORTANT_SKILLS_BY_POSITION: Readonly<
   Record<NonNullable<DevelopmentPlayer["observedPosition"]>, readonly SkillKey[]>
 > = {
   goalkeeper: ["keeper", "pace", "passing"],
-  defender: ["defender", "pace", "technique", "playmaker"],
+  defender: ["defender", "pace", "technique", "passing"],
   midfielder: ["playmaker", "passing", "technique", "pace"],
   winger: ["pace", "technique", "passing", "playmaker"],
   striker: ["striker", "pace", "technique", "passing"]
@@ -131,6 +132,9 @@ export interface PlayerDetailViewModel {
     }>;
   }>;
   marketValue?: PlayerMarketValueViewModel | null;
+  developmentPlan?: import("@atlas/domain").PlayerDevelopmentPlan | null;
+  trainingPath?: import("@atlas/domain").PlayerTrainingPath | null;
+  developmentProjection?: import("@atlas/domain").PlayerDevelopmentProjection | null;
 }
 
 export interface PlayerTrainingProjectionSummary {
@@ -222,7 +226,7 @@ export function createPlayerDetailViewModel(
           : formatMarketMoney(player.value, input.currency ?? null),
       gameValueChange: gameValueChange(player.valueChange ?? null, input.currency ?? null)
     },
-    developmentPlayer: createDevelopmentPlayer(String(player.playerId), observedPlayer),
+    developmentPlayer: createDevelopmentPlayer(String(player.playerId), observedPlayer, marketPlayer),
     skills: SKILL_DEFINITIONS.map((definition) => {
       const value = observedPlayer?.skills[definition.key] ?? null;
 
@@ -257,13 +261,17 @@ export function createPlayerDetailViewModel(
     trainingHistory: createTrainingHistoryRows(input.training, observedPlayer?.playerId ?? null),
     marketValue: marketPlayer
       ? createPlayerMarketValueViewModel(marketPlayer, input.currency ?? null)
-      : null
+      : null,
+    developmentPlan: marketPlayer?.developmentPlan ?? null,
+    trainingPath: marketPlayer?.trainingPath ?? null,
+    developmentProjection: marketPlayer?.projection ?? null
   };
 }
 
 function createDevelopmentPlayer(
   playerId: string,
-  observedPlayer: PlayerDevelopment["observed"]["players"][number] | undefined
+  observedPlayer: PlayerDevelopment["observed"]["players"][number] | undefined,
+  marketPlayer: SquadDepthPlayer | undefined
 ): (DevelopmentPlayer & { age: number }) | null {
   const stablePlayerId = observedPlayer?.playerId ?? playerId;
   const numericPlayerId = Number(stablePlayerId);
@@ -276,7 +284,8 @@ function createDevelopmentPlayer(
     playerId: numericPlayerId,
     age: observedPlayer.age,
     observedPosition: toObservedPosition(observedPlayer.observedPosition),
-    skills: observedPlayer.skills
+    skills: observedPlayer.skills,
+    formation: marketPlayer?.formation ?? null
   };
 }
 

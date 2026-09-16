@@ -1,19 +1,11 @@
 import {
-  buildPlayerDevelopmentPlan,
-  generatePlayerTrainingPath,
-  projectDevelopment,
   type DevelopmentProfile,
   type DevelopmentProjectionWarning,
   type DevelopmentSkill,
   type DevelopmentTrainingAssumptions,
   type PlayerDevelopmentProjection,
-  type PlayerDevelopmentTargetOverride,
   type PlayerTrainingPath
 } from "@atlas/application";
-import {
-  calculateWeeklyTrainingPointsByKind,
-  type TalentEstimate as DomainTalentEstimate
-} from "@atlas/domain";
 import { DEVELOPMENT_PROFILES } from "@atlas/domain";
 import type { TrainingPageData, TrainingPagePlayer } from "@atlas/web/app/types";
 import type { PlayerDetailViewModel } from "@/app/view-models/player-detail-view-model";
@@ -36,6 +28,8 @@ export interface DevelopmentPlanPathRow {
   priority: "primary" | "secondary" | "supporting";
   estimatedWeeks: number | null;
   cumulativeWeeks: number | null;
+  estimatedGameWeek: number | null;
+  estimatedAge: number | null;
   confidence: "low" | "medium" | "high" | null;
   isCurrent: boolean;
   reasons: string[];
@@ -99,84 +93,63 @@ export interface DevelopmentPlanViewModel {
 export interface CreateDevelopmentPlanViewModelInput {
   player: PlayerDetailViewModel;
   training: TrainingPageData | null;
-  manualOverride: PlayerDevelopmentTargetOverride | null;
+}
+
+import { getSokkerSeason } from "@atlas/domain";
+
+function getProjectedAge(
+  baseAge: number | null | undefined,
+  baseGameWeek: number | null | undefined,
+  targetGameWeek: number | null | undefined,
+  fallbackAge: number | null | undefined
+): number | null {
+  if (
+    typeof baseAge === "number" &&
+    typeof baseGameWeek === "number" &&
+    typeof targetGameWeek === "number"
+  ) {
+    try {
+      const baseSeason = getSokkerSeason(baseGameWeek);
+      const targetSeason = getSokkerSeason(targetGameWeek);
+      return baseAge + (targetSeason - baseSeason);
+    } catch {
+      // fallback
+    }
+  }
+  return typeof fallbackAge === "number" ? Math.floor(fallbackAge) : null;
 }
 
 export function createDevelopmentPlanViewModel(
   input: CreateDevelopmentPlanViewModelInput
 ): DevelopmentPlanViewModel | null {
-  const developmentPlayer = input.player.developmentPlayer;
+  if (!input.player) return null;
+  const { developmentPlan, trainingPath, developmentProjection } = input.player;
 
-  if (!developmentPlayer) {
+  if (!developmentPlan || !trainingPath || !developmentProjection) {
     return null;
   }
 
   const trainingPlayer = findTrainingPlayer(input.training, input.player.player.id);
-  const talent = toDomainTalent(trainingPlayer?.talentEstimate ?? null);
   const latestReport = currentTrainingReport(input.training, trainingPlayer);
-  const plan = buildPlayerDevelopmentPlan(developmentPlayer, input.manualOverride);
-  const expectedIntensity = normalizedIntensity(latestReport?.intensity);
-  const trainingKind = latestReport?.kind;
-  const assumptions: DevelopmentTrainingAssumptions = {
-    trainingKind: trainingKind === "formation" ? "formation" : "advanced",
-    expectedIntensity,
-    assumeContinuousTraining: true
-  };
-  const expectedWeeklyTrainingPoints = calculateWeeklyTrainingPointsByKind({
-    kind: assumptions.trainingKind,
-    intensity: assumptions.expectedIntensity
-  });
-  const path = generatePlayerTrainingPath({
-    player: developmentPlayer,
-    target: plan.target,
-    developmentGap: plan.gap,
-    talent,
-    expectedWeeklyTrainingPoints
-  });
-  const projection = createProjection({
-    player: developmentPlayer,
-    target: plan.target,
-    path,
-    talent,
-    assumptions,
-    latestReport,
-    training: input.training
-  });
 
-  return mapPlan({ plan, path, projection, latestReport });
-}
-
-function createProjection(input: {
-  player: NonNullable<PlayerDetailViewModel["developmentPlayer"]>;
-  target: ReturnType<typeof buildPlayerDevelopmentPlan>["target"];
-  path: PlayerTrainingPath;
-  talent: DomainTalentEstimate | null;
-  assumptions: DevelopmentTrainingAssumptions;
-  latestReport: NonNullable<TrainingPagePlayer["latestReport"]> | null;
-  training: TrainingPageData | null;
-}): PlayerDevelopmentProjection {
-  const currentGameWeek = input.latestReport?.gameWeek ?? 1;
-  const currentDate =
-    validDate(input.latestReport?.date ?? input.training?.snapshotDate) ?? new Date();
-
-  return projectDevelopment({
-    player: input.player,
-    target: input.target,
-    path: input.path,
-    currentGameWeek,
-    currentDate,
-    talent: input.talent,
-    trainingAssumptions: input.assumptions
+  return mapPlan({
+    plan: developmentPlan,
+    path: trainingPath,
+    projection: developmentProjection,
+    playerAge: input.player.player.age,
+    latestReport
   });
 }
 
 function mapPlan(input: {
-  plan: ReturnType<typeof buildPlayerDevelopmentPlan>;
-  path: PlayerTrainingPath;
-  projection: PlayerDevelopmentProjection;
+  plan: import("@atlas/domain").PlayerDevelopmentPlan;
+  path: import("@atlas/domain").PlayerTrainingPath;
+  projection: import("@atlas/domain").PlayerDevelopmentProjection;
+  playerAge: number;
   latestReport: NonNullable<TrainingPagePlayer["latestReport"]> | null;
 }): DevelopmentPlanViewModel {
   const projectionByOrder = new Map(input.projection.steps.map((step) => [step.order, step]));
+  const baseGameWeek = input.projection.generatedAtGameWeek;
   const idealTargets = input.plan.idealTarget.targetSkills.map((skill) => ({
     skill: skill.skill,
     currentLevel: input.plan.gap.skills.find(s => s.skill === skill.skill)?.currentLevel ?? 0,
@@ -209,18 +182,25 @@ function mapPlan(input: {
   const path = input.path.steps.map((step) => {
     const projectionStep = projectionByOrder.get(step.order);
 
-    return {
-      order: step.order,
-      skill: step.skill,
-      fromLevel: step.fromLevel,
-      toLevel: step.toLevel,
-      priority: step.priority,
-      estimatedWeeks: projectionStep?.estimatedWeeks ?? null,
-      cumulativeWeeks: projectionStep?.cumulativeWeeks ?? null,
-      confidence: projectionStep?.confidence ?? null,
-      isCurrent: step.order === 1,
-      reasons: step.reason.map(reasonLabel)
-    };
+      return {
+        order: step.order,
+        skill: step.skill,
+        fromLevel: step.fromLevel,
+        toLevel: step.toLevel,
+        priority: step.priority,
+        estimatedWeeks: projectionStep?.estimatedWeeks ?? null,
+        cumulativeWeeks: projectionStep?.cumulativeWeeks ?? null,
+        estimatedGameWeek: projectionStep?.estimatedGameWeek ?? null,
+        estimatedAge: getProjectedAge(
+          input.playerAge,
+          baseGameWeek,
+          projectionStep?.estimatedGameWeek,
+          projectionStep?.estimatedAge
+        ),
+        confidence: projectionStep?.confidence ?? null,
+        isCurrent: step.order === 1,
+        reasons: step.reason.map(reasonLabel)
+      };
   });
   const completedLevels = targets.reduce(
     (total, target) => total + Math.min(target.currentLevel, target.targetLevel),
@@ -234,7 +214,12 @@ function mapPlan(input: {
     cumulativeWeeks: milestone.cumulativeWeeks,
     estimatedGameWeek: milestone.estimatedGameWeek,
     estimatedDate: milestone.estimatedDate,
-    estimatedAge: milestone.estimatedAge,
+    estimatedAge: getProjectedAge(
+      input.playerAge,
+      baseGameWeek,
+      milestone.estimatedGameWeek,
+      milestone.estimatedAge
+    ),
     confidence: milestone.confidence,
     label: milestoneLabel(milestone.type, milestone.skill)
   }));
@@ -260,6 +245,12 @@ function mapPlan(input: {
     nextStep: path[0] ?? null,
     completion: {
       ...input.projection.completion,
+      estimatedAge: getProjectedAge(
+        input.playerAge,
+        baseGameWeek,
+        input.projection.completion.estimatedGameWeek,
+        input.projection.completion.estimatedAge
+      ),
       confidence: input.projection.confidence
     },
     assumptions: input.projection.assumptions,
@@ -268,7 +259,7 @@ function mapPlan(input: {
     targets,
     path,
     milestones,
-    completed: input.path.completed,
+    completed: input.plan.gap.totalGap === 0,
     projectionStatus: input.projection.projectionStatus,
     weeklyTrainingAlignment: {
       status:
@@ -325,29 +316,6 @@ function currentTrainingReport(
       ?.filter((report) => report.playerId === Number(player?.id))
       .sort((left, right) => right.gameWeek - left.gameWeek)[0] ?? null
   );
-}
-
-function toDomainTalent(
-  talent: TrainingPagePlayer["talentEstimate"] | null
-): DomainTalentEstimate | null {
-  if (!talent) return null;
-
-  return {
-    value: talent.value,
-    confidence: talent.confidence,
-    evidenceCount: talent.evidenceCount,
-    evidences: []
-  };
-}
-
-function normalizedIntensity(value: number | null | undefined): number {
-  return typeof value === "number" && Number.isFinite(value) && value > 0 ? value : 100;
-}
-
-function validDate(value: string | null | undefined): Date | null {
-  if (!value) return null;
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? null : date;
 }
 
 function profileLabel(profile: DevelopmentProfile): string {

@@ -65,6 +65,8 @@ export function projectDevelopment(
   }
 
   if (projectionStatus !== "unavailable") {
+    const skillsWithProgressApplied = new Set<DevelopmentSkill>();
+
     for (const pathStep of context.path.steps) {
       if (
         !Number.isFinite(pathStep.estimatedTrainingPoints) ||
@@ -80,14 +82,22 @@ export function projectDevelopment(
         break;
       }
 
+      const usePartialProgress =
+        !skillsWithProgressApplied.has(pathStep.skill) &&
+        progressForSkill(context.currentTrainingProgress, pathStep.skill) !== null;
+
       const requiredTrainingPoints = calculateStepTrainingPoints({
         context,
         assumptions,
         state,
         skill: pathStep.skill,
         toLevel: pathStep.toLevel,
-        usePartialProgress: progressForSkill(context.currentTrainingProgress, pathStep.skill) !== null
+        usePartialProgress
       });
+
+      if (usePartialProgress && requiredTrainingPoints !== null) {
+        skillsWithProgressApplied.add(pathStep.skill);
+      }
 
       if (requiredTrainingPoints === null) {
         warnings.add("invalid_training_points");
@@ -100,18 +110,27 @@ export function projectDevelopment(
       }
 
       let expectedWeeklyPoints: number;
-      try {
-        expectedWeeklyPoints = calculateWeeklyTrainingPointsByKind({
-          intensity: assumptions.expectedIntensity,
-          kind: assumptions.trainingKind
-        });
-      } catch {
-        expectedWeeklyPoints = Number.NaN;
+      if (
+        context.expectedWeeklyTrainingPoints !== undefined &&
+        context.expectedWeeklyTrainingPoints !== null &&
+        Number.isFinite(context.expectedWeeklyTrainingPoints) &&
+        context.expectedWeeklyTrainingPoints > 0
+      ) {
+        expectedWeeklyPoints = context.expectedWeeklyTrainingPoints;
+      } else {
+        try {
+          expectedWeeklyPoints = calculateWeeklyTrainingPointsByKind({
+            intensity: assumptions.expectedIntensity,
+            kind: assumptions.trainingKind
+          });
+        } catch {
+          expectedWeeklyPoints = Number.NaN;
+        }
       }
 
       const estimatedWeeks =
         expectedWeeklyPoints > 0 && Number.isFinite(expectedWeeklyPoints)
-          ? requiredTrainingPoints / expectedWeeklyPoints
+          ? Math.ceil(requiredTrainingPoints / expectedWeeklyPoints)
           : Number.NaN;
       const nextCumulativeWeeks = state.elapsedWeeks + estimatedWeeks;
 
@@ -184,87 +203,114 @@ export function projectDevelopment(
 
   const completed = isTargetComplete(context.target, state);
   if (projectionStatus === "projected" && (!completed || !context.path.completed)) {
-    warnings.add("path_incomplete");
     projectionStatus = "partial";
+    if (!context.path.completed) {
+      warnings.add("path_incomplete");
+    }
   }
 
-  if (completed && steps.length === 0 && milestones.length === 0) {
+  if (completed && steps.length === 0) {
     milestones.push({
       type: "development_target_completed",
       step: 0,
       cumulativeWeeks: 0,
       estimatedGameWeek: context.currentGameWeek,
-      estimatedDate: new Date(context.currentDate.getTime()),
+      estimatedDate: context.currentDate,
       estimatedAge: projectAge(context, context.currentDate, 0),
-      confidence: baseProjectionConfidence(context)
+      confidence: "high"
     });
   }
 
-  const hasUnavailableCompletion = projectionStatus === "unavailable";
-  const completion =
-    completed && !hasUnavailableCompletion
-      ? {
-          estimatedWeeks: state.elapsedWeeks,
-          estimatedGameWeek: state.estimatedGameWeek,
-          estimatedDate: new Date(state.estimatedDate.getTime()),
-          estimatedAge: state.estimatedAge
-        }
-      : {
-          estimatedWeeks: null,
-          estimatedGameWeek: null,
-          estimatedDate: null,
-          estimatedAge: null
-        };
+  const completionWeeks =
+    projectionStatus === "unavailable"
+      ? null
+      : projectionStatus === "partial" || !completed || !context.path.completed
+        ? null
+        : (steps.at(-1)?.cumulativeWeeks ?? 0);
+  const completionGameWeek =
+    projectionStatus === "unavailable"
+      ? null
+      : projectionStatus === "partial" || !completed || !context.path.completed
+        ? null
+        : (steps.at(-1)?.estimatedGameWeek ?? context.currentGameWeek);
+  const completionDate =
+    projectionStatus === "unavailable"
+      ? null
+      : projectionStatus === "partial" || !completed || !context.path.completed
+        ? null
+        : (steps.at(-1)?.estimatedDate ?? context.currentDate);
+  const completionAge =
+    projectionStatus === "unavailable"
+      ? null
+      : projectionStatus === "partial" || !completed || !context.path.completed
+        ? null
+        : (steps.at(-1)?.estimatedAge ?? (context.player.age ?? null));
+  const completionConfidence = overallConfidence(context, steps, projectionStatus, completed);
 
   return {
     playerId: context.player.playerId,
     profile: context.target.profile,
     generatedAtGameWeek: context.currentGameWeek,
-    generatedAtDate: new Date(context.currentDate.getTime()),
+    generatedAtDate: context.currentDate,
     steps,
     milestones,
-    completion,
-    confidence: overallConfidence(context, steps, projectionStatus, completed),
-    assumptions,
+    completion: {
+      estimatedWeeks: completionWeeks,
+      estimatedGameWeek: completionGameWeek,
+      estimatedDate: completionDate,
+      estimatedAge: completionAge
+    },
+    confidence: completionConfidence,
     projectionStatus,
-    warnings: [...warnings]
+    warnings: Array.from(warnings),
+    assumptions
   };
 }
 
 function validateProjectionContext(context: DevelopmentProjectionContext): void {
-  validateDevelopmentTarget(context.target, context.player.playerId);
-  normalizeSeasonWeek(context.currentGameWeek);
-
   if (context.path.playerId !== context.player.playerId) {
     throw new Error("Training path playerId does not match the projection player.");
   }
-  if (context.path.profile !== context.target.profile) {
-    throw new Error("Training path profile does not match the development target.");
+  if (context.target.playerId !== context.player.playerId) {
+    throw new Error("Target playerId does not match the projection player.");
   }
-  if (!(context.currentDate instanceof Date) || Number.isNaN(context.currentDate.getTime())) {
-    throw new Error("Projection currentDate must be a valid Date.");
+  validateDevelopmentTarget(context.target, context.player.playerId);
+}
+
+function addAssumptionWarnings(
+  warnings: Set<DevelopmentProjectionWarning>,
+  assumptions: DevelopmentTrainingAssumptions,
+  wereDefaulted: boolean
+): void {
+  if (wereDefaulted || assumptions.trainingKind === "formation") {
+    warnings.add("formation_training_assumed");
+  } else if (assumptions.trainingKind === "advanced") {
+    warnings.add("advanced_training_assumed");
   }
-  if (
-    context.maxProjectionWeeks !== undefined &&
-    (!Number.isFinite(context.maxProjectionWeeks) || context.maxProjectionWeeks <= 0)
-  ) {
-    throw new Error("Projection maxProjectionWeeks must be a positive finite number.");
+
+  if (wereDefaulted || assumptions.expectedIntensity !== 100) {
+    warnings.add("intensity_assumed");
+  }
+
+  if (wereDefaulted || assumptions.assumeContinuousTraining === false) {
+    warnings.add("continuous_training_not_assumed");
   }
 }
 
 function createTimelineState(context: DevelopmentProjectionContext): DevelopmentTimelineState {
-  const skills: Partial<Record<DevelopmentSkill, number>> = {};
+  const initialSkills: Partial<Record<DevelopmentSkill, number>> = {};
   for (const targetSkill of context.target.targetSkills) {
     const value = context.player.skills[targetSkill.skill];
-    skills[targetSkill.skill] = typeof value === "number" && Number.isFinite(value) ? value : 0;
+    initialSkills[targetSkill.skill] =
+      typeof value === "number" && Number.isFinite(value) ? Math.max(value, 0) : 0;
   }
 
   return {
     elapsedWeeks: 0,
-    estimatedDate: new Date(context.currentDate.getTime()),
+    estimatedDate: context.currentDate,
     estimatedGameWeek: context.currentGameWeek,
     estimatedAge: projectAge(context, context.currentDate, 0),
-    skills
+    skills: initialSkills
   };
 }
 
@@ -303,17 +349,41 @@ function calculateStepTrainingPoints(input: {
 
   if (input.usePartialProgress) {
     const progress = progressForSkill(input.context.currentTrainingProgress, input.skill);
+    let remainingPoints: number | null = null;
+
     if (progress?.remainingToNextLevel !== undefined && progress.remainingToNextLevel !== null) {
-      return validNonNegative(progress.remainingToNextLevel) ? progress.remainingToNextLevel : null;
-    }
-    if (
+      remainingPoints = validNonNegative(progress.remainingToNextLevel) ? progress.remainingToNextLevel : null;
+    } else if (
+      progress?.accumulatedPoints !== undefined &&
+      progress.accumulatedPoints !== null &&
+      Number.isFinite(progress.accumulatedPoints) &&
+      progress.accumulatedPoints >= 0
+    ) {
+      remainingPoints = Math.max(0, fullLevelPoints - progress.accumulatedPoints);
+    } else if (
       progress?.estimatedProgress !== undefined &&
       progress.estimatedProgress !== null &&
       Number.isFinite(progress.estimatedProgress) &&
       progress.estimatedProgress >= 0 &&
       progress.estimatedProgress <= 1
     ) {
-      return fullLevelPoints * (1 - progress.estimatedProgress);
+      remainingPoints = Math.max(0, fullLevelPoints * (1 - progress.estimatedProgress));
+    }
+
+    if (remainingPoints !== null) {
+      if (remainingPoints <= 0) {
+        let expectedWeeklyPoints: number;
+        try {
+          expectedWeeklyPoints = calculateWeeklyTrainingPointsByKind({
+            intensity: input.assumptions.expectedIntensity,
+            kind: input.assumptions.trainingKind
+          });
+        } catch {
+          expectedWeeklyPoints = 100;
+        }
+        return expectedWeeklyPoints > 0 ? expectedWeeklyPoints : 1;
+      }
+      return remainingPoints;
     }
   }
 
@@ -345,14 +415,15 @@ function addProjectionMilestones(input: {
   milestones: DevelopmentProjectionMilestone[];
   confidence: Confidence;
 }): void {
+  const pathMilestones = input.path.milestones.filter((milestone) => milestone.step === input.step);
   const projectionStep = input.steps.at(-1);
   if (!projectionStep) return;
 
-  for (const milestone of input.path.milestones.filter((item) => item.step === input.step)) {
+  for (const pathMilestone of pathMilestones) {
     input.milestones.push({
-      type: milestone.type,
-      ...(milestone.skill ? { skill: milestone.skill } : {}),
-      step: milestone.step,
+      type: pathMilestone.type,
+      skill: pathMilestone.skill,
+      step: pathMilestone.step,
       cumulativeWeeks: projectionStep.cumulativeWeeks ?? 0,
       estimatedGameWeek: projectionStep.estimatedGameWeek ?? 0,
       estimatedDate: projectionStep.estimatedDate,
@@ -369,65 +440,50 @@ function calculateStepConfidence(input: {
   currentProgressKnown: boolean;
   currentProgressConfidence?: Confidence;
 }): Confidence {
-  let confidence = baseProjectionConfidence(input.context);
+  let confidence: Confidence = "high";
 
-  if (input.cumulativeWeeks > DEVELOPMENT_PROJECTION_LONG_TERM_WEEKS) {
-    confidence = minimumConfidence(confidence, "low");
-  } else if (input.cumulativeWeeks > DEVELOPMENT_PROJECTION_MEDIUM_TERM_WEEKS) {
-    confidence = minimumConfidence(confidence, "medium");
+  if (input.context.talent?.confidence === "medium") confidence = "medium";
+  if (input.context.talent?.confidence === "low" || input.context.talent?.confidence === "unknown") {
+    confidence = "low";
   }
+
   if (input.firstStep && !input.currentProgressKnown) {
     confidence = minimumConfidence(confidence, "low");
   }
-  if (input.currentProgressConfidence) {
+
+  if (input.firstStep && input.currentProgressConfidence) {
     confidence = minimumConfidence(confidence, input.currentProgressConfidence);
   }
+
+  if (input.cumulativeWeeks >= DEVELOPMENT_PROJECTION_LONG_TERM_WEEKS) {
+    confidence = minimumConfidence(confidence, "low");
+  } else if (input.cumulativeWeeks >= DEVELOPMENT_PROJECTION_MEDIUM_TERM_WEEKS) {
+    confidence = minimumConfidence(confidence, "medium");
+  }
+
   return confidence;
 }
 
 function overallConfidence(
   context: DevelopmentProjectionContext,
-  steps: readonly DevelopmentProjectionStep[],
+  steps: DevelopmentProjectionStep[],
   status: DevelopmentProjectionStatus,
   completed: boolean
 ): Confidence {
-  let confidence = baseProjectionConfidence(context);
-  if (status !== "projected" || !completed) confidence = minimumConfidence(confidence, "low");
-  for (const step of steps) confidence = minimumConfidence(confidence, step.confidence);
-  return confidence;
-}
+  if (steps.length === 0) return "low";
 
-function baseProjectionConfidence(context: DevelopmentProjectionContext): Confidence {
-  let confidence = context.path.confidence;
-  const talentConfidence = context.talent?.confidence;
-
-  if (!context.talent?.value || talentConfidence === "unknown" || talentConfidence === "low") {
-    confidence = minimumConfidence(confidence, "low");
-  } else if (talentConfidence === "medium") {
-    confidence = minimumConfidence(confidence, "medium");
-  }
-  if (context.calibrationConfidence) {
-    confidence = minimumConfidence(confidence, context.calibrationConfidence);
-  }
-  return confidence;
-}
-
-function addAssumptionWarnings(
-  warnings: Set<DevelopmentProjectionWarning>,
-  assumptions: DevelopmentTrainingAssumptions,
-  wereDefaulted: boolean
-): void {
-  warnings.add(
-    assumptions.trainingKind === "advanced"
-      ? "advanced_training_assumed"
-      : "formation_training_assumed"
+  let confidence = steps.reduce(
+    (min, step) => minimumConfidence(min, step.confidence),
+    "high" as Confidence
   );
-  if (wereDefaulted || assumptions.expectedIntensity !== 100) {
-    warnings.add("intensity_assumed");
+
+  if (!context.talent?.value || context.talent.confidence === "low") {
+    confidence = minimumConfidence(confidence, "low");
   }
-  if (!assumptions.assumeContinuousTraining) {
-    warnings.add("continuous_training_not_assumed");
-  }
+
+  if (status !== "projected" || !completed) confidence = minimumConfidence(confidence, "low");
+
+  return confidence;
 }
 
 function progressForSkill(
@@ -447,6 +503,9 @@ function hasKnownCurrentProgress(
     (currentProgress?.remainingToNextLevel !== undefined &&
       currentProgress.remainingToNextLevel !== null &&
       validNonNegative(currentProgress.remainingToNextLevel)) ||
+    (currentProgress?.accumulatedPoints !== undefined &&
+      currentProgress.accumulatedPoints !== null &&
+      validNonNegative(currentProgress.accumulatedPoints)) ||
     (currentProgress?.estimatedProgress !== undefined &&
       currentProgress.estimatedProgress !== null &&
       Number.isFinite(currentProgress.estimatedProgress) &&
@@ -464,7 +523,7 @@ function normalizeProgressSkill(skill: DevelopmentCurrentSkillProgress["skill"])
 
 function usableTalent(context: DevelopmentProjectionContext): number | null {
   const talent = context.talent?.value;
-  return validPositive(talent) ? talent : null;
+  return typeof talent === "number" && validPositive(talent) ? talent : null;
 }
 
 function projectAge(
@@ -472,7 +531,8 @@ function projectAge(
   _date: Date,
   elapsedWeeks: number
 ): number {
-  return context.player.age + elapsedWeeks / DEVELOPMENT_PROJECTION_WEEKS_PER_YEAR;
+  const baseAge = context.player.age ?? 18;
+  return baseAge + elapsedWeeks / DEVELOPMENT_PROJECTION_WEEKS_PER_YEAR;
 }
 
 function addWeeks(date: Date, weeks: number): Date {
@@ -500,10 +560,10 @@ function minimumConfidence(left: Confidence, right: Confidence): Confidence {
   return rank[left] <= rank[right] ? left : right;
 }
 
-function validPositive(value: number | null | undefined): value is number {
-  return typeof value === "number" && Number.isFinite(value) && value > 0;
+function validNonNegative(value: number | null | undefined): boolean {
+  return typeof value === "number" && Number.isFinite(value) && value >= 0;
 }
 
-function validNonNegative(value: number | null | undefined): value is number {
-  return typeof value === "number" && Number.isFinite(value) && value >= 0;
+function validPositive(value: number | null | undefined): boolean {
+  return typeof value === "number" && Number.isFinite(value) && value > 0;
 }

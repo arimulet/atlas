@@ -309,10 +309,13 @@ describe("Development Projection & Timeline", () => {
 
   it("supports formation assumptions with their lower effectiveness", () => {
     const advanced = projectDevelopment(
-      projectionContext([{ skill: "defender", targetLevel: 13, priority: "primary" }])
+      projectionContext([{ skill: "defender", targetLevel: 13, priority: "primary" }], {
+        currentTrainingProgress: { skill: "defender", remainingToNextLevel: 100 }
+      })
     );
     const formation = projectDevelopment(
       projectionContext([{ skill: "defender", targetLevel: 13, priority: "primary" }], {
+        currentTrainingProgress: { skill: "defender", remainingToNextLevel: 100 },
         trainingAssumptions: {
           trainingKind: "formation",
           expectedIntensity: 100,
@@ -327,10 +330,13 @@ describe("Development Projection & Timeline", () => {
 
   it("projects lower intensity more slowly", () => {
     const fullIntensity = projectDevelopment(
-      projectionContext([{ skill: "defender", targetLevel: 13, priority: "primary" }])
+      projectionContext([{ skill: "defender", targetLevel: 13, priority: "primary" }], {
+        currentTrainingProgress: { skill: "defender", remainingToNextLevel: 100 }
+      })
     );
     const lowerIntensity = projectDevelopment(
       projectionContext([{ skill: "defender", targetLevel: 13, priority: "primary" }], {
+        currentTrainingProgress: { skill: "defender", remainingToNextLevel: 100 },
         trainingAssumptions: {
           trainingKind: "advanced",
           expectedIntensity: 50,

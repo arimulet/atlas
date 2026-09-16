@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import {
   buildIdealDevelopmentTarget,
@@ -125,7 +125,7 @@ describe("Player Development Plan", () => {
       "defender",
       "pace",
       "technique",
-      "playmaker"
+      "passing"
     ]);
   });
 
@@ -139,7 +139,7 @@ describe("Player Development Plan", () => {
     const currentPlayer = player({ age: 20 });
     const idealTarget = buildIdealDevelopmentTarget(currentPlayer, "defender");
 
-    const target = buildOperationalDevelopmentTarget(currentPlayer, idealTarget, 32);
+    const target = buildOperationalDevelopmentTarget(currentPlayer, idealTarget, { horizonAge: 32 });
 
     expect(calculateDevelopmentGap(currentPlayer, target).totalGap).toBeGreaterThan(0);
   });
@@ -236,7 +236,7 @@ describe("Player Development Plan", () => {
   it("reports a target as completed only when every target skill is complete", () => {
     const planner = new PlayerDevelopmentPlanner();
     const plan = planner.createPlan(
-      player({ skills: { defender: 17, pace: 17, technique: 14, playmaker: 13 } }),
+      player({ skills: { defender: 17, pace: 17, technique: 14, passing: 13 } }),
       {
         profile: "defender"
       }

@@ -484,15 +484,15 @@ describe("squad depth analysis", () => {
     const multiProfilePlayer = player({
       playerId: 1,
       profile: "forward",
-      compatibleProfiles: ["winger"],
-      profileContributions: { winger: 0.7 },
+      compatibleProfiles: ["midfielder"],
+      profileContributions: { midfielder: 0.7 },
       currentContributionScore: 0.8,
       futureContributionScore: 0.8
     });
     const result = analyzeSquadDepth([multiProfilePlayer], {
       requirements: [
         { profile: "forward", minimum: 1, ideal: 1 },
-        { profile: "winger", minimum: 1, ideal: 1 }
+        { profile: "midfielder", minimum: 1, ideal: 1 }
       ]
     });
 
@@ -500,7 +500,7 @@ describe("squad depth analysis", () => {
       result.profiles.find((profile) => profile.profile === "forward")?.current.availablePlayers
     ).toBe(1);
     expect(
-      result.profiles.find((profile) => profile.profile === "winger")?.current.availablePlayers
+      result.profiles.find((profile) => profile.profile === "midfielder")?.current.availablePlayers
     ).toBe(0.65);
   });
 

@@ -95,10 +95,10 @@ const POSITION_TO_PROFILE: Record<string, DevelopmentProfile> = {
   goalkeeper: "goalkeeper",
   DEF: "defender",
   defender: "defender",
-  wing_defender: "wing_defender",
+  wing_defender: "defender",
   MID: "midfielder",
   midfielder: "midfielder",
-  winger: "winger",
+  winger: "midfielder",
   ATT: "forward",
   forward: "forward",
   striker: "forward"

@@ -173,9 +173,7 @@ const ROLE_LABELS: Record<SquadRole, string> = {
 const PROFILE_LABELS: Record<DevelopmentProfile, string> = {
   goalkeeper: "Goalkeeper",
   defender: "Defender",
-  wing_defender: "Wing Defender",
   midfielder: "Midfielder",
-  winger: "Winger",
   forward: "Forward"
 };
 
