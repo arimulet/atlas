@@ -285,6 +285,12 @@
   font-weight: 700;
 }
 
+.atlas .atlas-player-detail__table tr.is-current th,
+.atlas .atlas-player-detail__table tr.is-current td {
+  background-color: color-mix(in srgb, var(--atlas-primary, #0284c7) 12%, transparent);
+  color: var(--atlas-text);
+}
+
 .atlas .atlas-player-detail__table tr:last-child th,
 .atlas .atlas-player-detail__table tr:last-child td {
   border-bottom: 0;

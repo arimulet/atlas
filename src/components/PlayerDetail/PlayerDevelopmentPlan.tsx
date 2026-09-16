@@ -134,16 +134,8 @@ function ProfileSummary({ plan }: { plan: DevelopmentPlanViewModel }) {
 function TrainingAlignment({ plan }: { plan: DevelopmentPlanViewModel }) {
   const alignment = plan.weeklyTrainingAlignment;
 
-  if (alignment.status === "unavailable") {
+  if (alignment.status !== "mismatch") {
     return null;
-  }
-
-  if (alignment.status === "aligned") {
-    return (
-      <p className="atlas-player-development-plan__alignment is-aligned">
-        Current training aligned with plan · {skillLabel(alignment.plannedSkill!)}
-      </p>
-    );
   }
 
   return (
@@ -249,11 +241,6 @@ function UnifiedTrainingPath({
 
   return (
     <PlanSection title="Development & Financial Trajectory">
-      <p className="atlas-player-development-plan__path-note">
-        {completed
-          ? "Target path completed."
-          : "Current step is highlighted; future steps are recalculated from the current state."}
-      </p>
       {path.length === 0 && initialMilestones.length === 0 ? (
         <p className="atlas-player-detail__message">No pending skill-ups.</p>
       ) : (
