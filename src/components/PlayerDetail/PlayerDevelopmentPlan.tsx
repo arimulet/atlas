@@ -1,5 +1,5 @@
 import React, { useState, type ReactNode } from "react";
-import { ArrowRight, Award, TrendingUp, Clock, Target, ArrowUpRight } from "lucide-react";
+import { ArrowRight, Award, TrendingUp, Clock, Target, ArrowUpRight, Star, Trophy } from "lucide-react";
 import {
   CartesianGrid,
   Line,
@@ -208,6 +208,31 @@ function SkillTargets({ targets, idealTargets, title }: { targets: DevelopmentPl
   );
 }
 
+function getMilestoneConfig(type: import("./development-plan-view-model").DevelopmentPlanMilestoneRow["type"]) {
+  switch (type) {
+    case "skill_target_completed":
+      return {
+        icon: Target,
+        color: "var(--atlas-info, #0284c7)"
+      };
+    case "primary_skills_completed":
+      return {
+        icon: Star,
+        color: "var(--atlas-warning, #d97706)"
+      };
+    case "development_target_completed":
+      return {
+        icon: Trophy,
+        color: "var(--atlas-success, #059669)"
+      };
+    default:
+      return {
+        icon: Award,
+        color: "var(--atlas-primary)"
+      };
+  }
+}
+
 function UnifiedTrainingPath({ 
   path, 
   completed, 
@@ -235,16 +260,22 @@ function UnifiedTrainingPath({
         <div className="atlas-player-development-plan__path-table-wrap" style={{ overflowX: "auto" }}>
           {initialMilestones.length > 0 ? (
             <div style={{ marginBottom: "1rem", padding: "0.75rem", backgroundColor: "var(--atlas-surface-alt)", borderRadius: "var(--atlas-radius-md)" }}>
-              {initialMilestones.map(milestone => (
-                <div key={milestone.type} style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                  <Award size={16} style={{ color: "var(--atlas-primary)" }} />
-                  <strong>GW {milestone.estimatedGameWeek}</strong>
-                  <span>{milestone.label}</span>
-                  <small className="atlas-text-muted">
-                    {milestone.estimatedAge === null ? "" : `(Age ~${milestone.estimatedAge.toLocaleString("en-US", { maximumFractionDigits: 1 })})`}
-                  </small>
-                </div>
-              ))}
+              {initialMilestones.map(milestone => {
+                const config = getMilestoneConfig(milestone.type);
+                const Icon = config.icon;
+                return (
+                  <div key={milestone.type} style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                    <span title={milestone.label} style={{ display: "inline-flex", alignItems: "center" }}>
+                      <Icon size={16} style={{ color: config.color }} />
+                    </span>
+                    <strong>GW {milestone.estimatedGameWeek}</strong>
+                    <span>{milestone.label}</span>
+                    <small className="atlas-text-muted">
+                      {milestone.estimatedAge === null ? "" : `(Age ~${milestone.estimatedAge.toLocaleString("en-US", { maximumFractionDigits: 1 })})`}
+                    </small>
+                  </div>
+                );
+              })}
             </div>
           ) : null}
           <table className="atlas-player-detail__table">
@@ -270,7 +301,30 @@ function UnifiedTrainingPath({
 
                 return (
                   <tr key={step.order} className={step.isCurrent ? "is-current" : ""}>
-                    <th scope="row"><b>{step.order}</b></th>
+                    <th scope="row">
+                      <div style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem" }}>
+                        <b>{step.order}</b>
+                        {stepMilestones.map(m => {
+                          const config = getMilestoneConfig(m.type);
+                          const Icon = config.icon;
+                          return (
+                            <span
+                              key={m.type}
+                              title={m.label}
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                color: config.color,
+                                cursor: "help"
+                              }}
+                              aria-label={m.label}
+                            >
+                              <Icon size={14} />
+                            </span>
+                          );
+                        })}
+                      </div>
+                    </th>
                     <td>
                       <div>
                         <strong>{skillLabel(step.skill)}</strong>{" "}
@@ -278,12 +332,6 @@ function UnifiedTrainingPath({
                         <ArrowRight size={13} className="inline-block align-middle" />{" "}
                         <span title={skillLevelLabel(step.toLevel) ?? undefined}>{step.toLevel}</span>
                       </div>
-                      {stepMilestones.map(m => (
-                        <div key={m.type} style={{ marginTop: '4px', fontSize: '0.85em', color: 'var(--atlas-primary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <Award size={14} />
-                          <span>{m.label}</span>
-                        </div>
-                      ))}
                     </td>
                     <td>
                       <div>
