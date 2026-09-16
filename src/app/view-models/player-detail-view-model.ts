@@ -46,7 +46,7 @@ const IMPORTANT_SKILLS_BY_POSITION: Readonly<
   Record<NonNullable<DevelopmentPlayer["observedPosition"]>, readonly SkillKey[]>
 > = {
   goalkeeper: ["keeper", "pace", "passing"],
-  defender: ["defender", "pace", "technique", "playmaker"],
+  defender: ["defender", "pace", "technique", "passing"],
   midfielder: ["playmaker", "passing", "technique", "pace"],
   winger: ["pace", "technique", "passing", "playmaker"],
   striker: ["striker", "pace", "technique", "passing"]

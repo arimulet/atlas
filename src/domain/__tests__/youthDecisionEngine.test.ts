@@ -158,7 +158,7 @@ describe("Youth Decision Engine: Youth Prospect Assessment", () => {
       "defender",
       "pace",
       "technique",
-      "playmaker"
+      "passing"
     ]);
   });
 

@@ -605,10 +605,22 @@ function estimateCurrentTrainingProgress(
     const currentSkill = report?.training.skill;
     if (!currentSkill) return undefined;
 
+    const isMatchingSkill = (changeSkill: string, targetSkill: string): boolean => {
+      if (changeSkill === targetSkill) return true;
+      if (changeSkill === "striker" && targetSkill === "scoring") return true;
+      if (changeSkill === "defender" && targetSkill === "defending") return true;
+      if (changeSkill === "playmaker" && targetSkill === "playmaking") return true;
+      return false;
+    };
+
     const weeks = [...history.weeks].sort((a, b) => a.week - b.week);
     const lastPopWeek = [...weeks]
       .reverse()
-      .find((w) => w.skillChanges?.some((c) => c.direction === "up"))?.week ?? 0;
+      .find((w) =>
+        w.skillChanges?.some(
+          (c) => c.direction === "up" && isMatchingSkill(c.skill, currentSkill)
+        )
+      )?.week ?? 0;
     const accumulatedPoints = weeks
       .filter((w) => w.week > lastPopWeek && w.kind !== "missing")
       .reduce((sum, w) => sum + (w.trainingPoints ?? 0), 0);

@@ -261,15 +261,16 @@ export function assessTransferDataQuality(
 ): TransferDataQuality {
   if (transfer.dataQuality) return transfer.dataQuality;
   const profile = resolveTransferProfile(transfer) ?? resolveProfile(target ?? null, null);
-  const knownSkills = profile
-    ? DEVELOPMENT_PROFILES[profile].relevantSkills.filter(
+  const profileDef = profile && Object.hasOwn(DEVELOPMENT_PROFILES, profile) ? DEVELOPMENT_PROFILES[profile] : null;
+  const knownSkills = profileDef
+    ? profileDef.relevantSkills.filter(
         ({ skill }) => skill !== "stamina" && readSkill(transfer.skills, skill) !== null
       ).length
     : Object.entries(transfer.skills).filter(
         ([key, value]) => key !== "stamina" && typeof value === "number" && Number.isFinite(value)
       ).length;
-  const requiredSkills = profile
-    ? DEVELOPMENT_PROFILES[profile].relevantSkills.filter(({ skill }) => skill !== "stamina").length
+  const requiredSkills = profileDef
+    ? profileDef.relevantSkills.filter(({ skill }) => skill !== "stamina").length
     : 4;
   if (isValidAge(transfer.age) && knownSkills >= requiredSkills) return "complete";
   if (isValidAge(transfer.age) && knownSkills >= 2) return "partial";
@@ -317,8 +318,9 @@ function calculateSkillSimilarity(
   comparableSkills: SkillSet,
   profile: DevelopmentProfile | null
 ): number | null {
-  const relevantSkills = profile
-    ? DEVELOPMENT_PROFILES[profile].relevantSkills
+  const profileDef = profile && Object.hasOwn(DEVELOPMENT_PROFILES, profile) ? DEVELOPMENT_PROFILES[profile] : null;
+  const relevantSkills = profileDef
+    ? profileDef.relevantSkills
     : Object.keys(targetSkills).map((skill) => ({
         skill: skill as SkillKey,
         priority: "supporting" as const,
@@ -394,8 +396,9 @@ function calculateComparableDifferences(
   if (targetPlayer.age !== comparable.age)
     differences.push({ type: "age", target: targetPlayer.age ?? 0, comparable: comparable.age });
   const profile = targetProfile ?? comparableProfile;
-  if (profile) {
-    for (const { skill } of DEVELOPMENT_PROFILES[profile].relevantSkills) {
+  const profileDef = profile && Object.hasOwn(DEVELOPMENT_PROFILES, profile) ? DEVELOPMENT_PROFILES[profile] : null;
+  if (profileDef) {
+    for (const { skill } of profileDef.relevantSkills) {
       if (skill === "stamina") continue;
       const targetLevel = readSkill(targetPlayer.skills, skill);
       const comparableLevel = readSkill(comparable.skills, skill);
@@ -419,7 +422,7 @@ function resolveProfile(
   player: PlayerMarketValuePlayerInput | null,
   explicitProfile: DevelopmentProfile | null | undefined
 ): DevelopmentProfile | null {
-  if (explicitProfile) return explicitProfile;
+  if (explicitProfile && Object.hasOwn(DEVELOPMENT_PROFILES, explicitProfile)) return explicitProfile;
   if (!player) return null;
   const developmentPlayer: DevelopmentPlayer = {
     playerId: player.playerId,
@@ -429,13 +432,16 @@ function resolveProfile(
     position: player.position,
     observedPosition: player.observedPosition
   };
-  return suggestDevelopmentProfile(developmentPlayer).profile;
+  const suggested = suggestDevelopmentProfile(developmentPlayer).profile;
+  return Object.hasOwn(DEVELOPMENT_PROFILES, suggested) ? suggested : null;
 }
 
 const transferProfileCache = new WeakMap<PlayerTransferRecord, DevelopmentProfile | null>();
 
 function resolveTransferProfile(transfer: PlayerTransferRecord): DevelopmentProfile | null {
-  if (transfer.developmentProfile) return transfer.developmentProfile;
+  if (transfer.developmentProfile && Object.hasOwn(DEVELOPMENT_PROFILES, transfer.developmentProfile)) {
+    return transfer.developmentProfile;
+  }
   const cached = transferProfileCache.get(transfer);
   if (cached !== undefined) return cached;
   const player = playerFromTransferRecord(transfer);

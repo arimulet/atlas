@@ -503,8 +503,9 @@ function summarizeBacktest(
 
 function readPrimarySkillLevel(transfer: PlayerTransferRecord): number | null {
   const profile = transfer.developmentProfile ?? null;
-  const primary = profile
-    ? DEVELOPMENT_PROFILES[profile].relevantSkills.filter((item) => item.priority === "primary")
+  const profileDef = profile && Object.hasOwn(DEVELOPMENT_PROFILES, profile) ? DEVELOPMENT_PROFILES[profile] : null;
+  const primary = profileDef
+    ? profileDef.relevantSkills.filter((item) => item.priority === "primary")
     : [];
   const levels = primary
     .map((item) => transfer.skills[item.skill as SkillKey])

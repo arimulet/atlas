@@ -464,7 +464,7 @@ describe("Player Market comparable calibration", () => {
       skills: {
         ...player().skills,
         defender: 9,
-        playmaker: 8,
+        passing: 8,
         pace: 7,
         technique: 7
       }
@@ -476,7 +476,7 @@ describe("Player Market comparable calibration", () => {
       skills: {
         ...player().skills,
         defender: 9,
-        playmaker: 2,
+        passing: 2,
         pace: 7,
         technique: 7
       }
@@ -488,7 +488,7 @@ describe("Player Market comparable calibration", () => {
       skills: {
         ...player().skills,
         defender: 9,
-        playmaker: 6,
+        passing: 6,
         pace: 7,
         technique: 7
       }

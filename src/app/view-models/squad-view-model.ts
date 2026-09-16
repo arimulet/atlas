@@ -44,7 +44,6 @@ const TRAINING_POSITION_DEVELOPMENT_PROFILES: Record<TrainingPositionCode, Devel
 const DEEMPHASIZED_SQUAD_SKILLS: Readonly<
   Partial<Record<TrainingPositionCode, readonly SquadSkillKey[]>>
 > = {
-  DEF: ["playmaker"],
   ATT: ["passing"]
 };
 
