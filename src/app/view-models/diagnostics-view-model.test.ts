@@ -7,7 +7,7 @@ import type {
   TrainingPageData,
   YouthPipelinePlanning
 } from "@atlas/web/app/types";
-import { createDiagnosticsPageViewModel } from "./diagnostics-view-model";
+import { createDiagnosticsPageViewModel, processEvidence } from "./diagnostics-view-model";
 
 describe("createDiagnosticsPageViewModel", () => {
   it("aggregates existing sources, preserves subjects, and orders by formal severity", () => {
@@ -95,6 +95,41 @@ describe("createDiagnosticsPageViewModel", () => {
     });
 
     expect(viewModel.diagnostics).toEqual([]);
+  });
+
+  it("populates formatted contextItems and context string from evidence", () => {
+    const result = processEvidence([
+      { code: "player.wage", value: 120000 },
+      { code: "player.estimated-value", value: 1500000 },
+      { code: "player.value-to-wage-ratio", value: 12.5 },
+      { code: "player.age", value: 31 },
+      { code: "player.observed-position", value: "defender" }
+    ]);
+
+    expect(result.contextItems).toEqual([
+      { label: "Wage", value: "$120,000" },
+      { label: "Estimated Value", value: "$1,500,000" },
+      { label: "Value/Wage Ratio", value: "12.5x" },
+      { label: "Age", value: "31 yrs" },
+      { label: "Position", value: "Defender" }
+    ]);
+    expect(result.context).toBe(
+      "Wage: $120,000 · Estimated Value: $1,500,000 · Value/Wage Ratio: 12.5x · Age: 31 yrs · Position: Defender"
+    );
+  });
+
+  it("deduplicates context items with repeated labels", () => {
+    const result = processEvidence([
+      { code: "player.observed-position", value: "defender" },
+      { code: "player.role", value: "defender" },
+      { code: "player.age", value: 25 },
+      { label: "Edad", value: 25 }
+    ]);
+
+    expect(result.contextItems).toEqual([
+      { label: "Position", value: "Defender" },
+      { label: "Age", value: "25 yrs" }
+    ]);
   });
 });
 

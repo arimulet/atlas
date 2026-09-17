@@ -726,12 +726,6 @@ function buildFindingEvidence(
   snapshotCount: number
 ): DevelopmentEvidence[] {
   return [
-    { kind: "observed", label: "Jugador", value: current.name },
-    { kind: "observed", label: "Snapshots disponibles", value: snapshotCount },
-    { kind: "observed", label: "Snapshot anterior", value: previousPoint?.snapshotId ?? null },
-    { kind: "observed", label: "Fecha anterior", value: previousPoint?.snapshotDate ?? null },
-    { kind: "observed", label: "Snapshot actual", value: currentSnapshot.id },
-    { kind: "observed", label: "Fecha actual", value: formatDate(currentSnapshot.snapshotDate) },
     {
       kind: "observed",
       label: "Ventana temporal",
