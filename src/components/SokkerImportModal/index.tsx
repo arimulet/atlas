@@ -39,13 +39,13 @@ export function SokkerImportModal({ isOpen, onClose, onImport }: SokkerImportMod
       >
         <div className="atlas-sokker-modal__header">
           <div>
-            <p className="atlas-sokker-modal__eyebrow">Importador Sokker</p>
-            <h2 id="atlas-sokker-modal-title">Actualizar datos de Sokker</h2>
+            <p className="atlas-sokker-modal__eyebrow">Sokker Importer</p>
+            <h2 id="atlas-sokker-modal-title">Update Sokker Data</h2>
           </div>
           <button
             type="button"
             className="atlas-sokker-modal__close"
-            aria-label="Cerrar"
+            aria-label="Close"
             onClick={onClose}
             disabled={isLoading}
           >
@@ -54,7 +54,7 @@ export function SokkerImportModal({ isOpen, onClose, onImport }: SokkerImportMod
         </div>
 
         <p id="atlas-sokker-modal-description" className="atlas-sokker-modal__description">
-          Ingresá tus credenciales de Sokker para actualizar los datos de ATLAS.
+          Enter your Sokker credentials to update ATLAS data.
         </p>
 
         <SokkerImporterForm onCancel={onClose} onImport={onImport} onLoadingChange={setIsLoading} />

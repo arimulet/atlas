@@ -23,7 +23,7 @@ export interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const FIREBASE_CONFIGURATION_ERROR =
-  "La autenticación no está configurada. Configure las variables NEXT_PUBLIC_FIREBASE_* e intente nuevamente.";
+  "Authentication is not configured. Configure NEXT_PUBLIC_FIREBASE_* environment variables and try again.";
 
 function getFirebaseAuth(): Auth {
   if (!auth) {
@@ -38,24 +38,24 @@ export function translateFirebaseError(code: string): string {
     case "auth/invalid-credential":
     case "auth/wrong-password":
     case "auth/user-not-found":
-      return "El correo electrónico o la contraseña son incorrectos.";
+      return "Incorrect email address or password.";
     case "auth/email-already-in-use":
-      return "Ya existe una cuenta registrada con este correo electrónico.";
+      return "An account is already registered with this email address.";
     case "auth/weak-password":
-      return "La contraseña es muy débil. Debe tener al menos 6 caracteres.";
+      return "The password is too weak. Must be at least 6 characters long.";
     case "auth/invalid-email":
-      return "El formato del correo electrónico no es válido.";
+      return "The email address format is invalid.";
     case "auth/user-disabled":
-      return "Esta cuenta ha sido deshabilitada.";
+      return "This account has been disabled.";
     case "auth/too-many-requests":
-      return "Demasiados intentos fallidos. Intente nuevamente en unos minutos.";
+      return "Too many failed attempts. Please try again in a few minutes.";
     case "auth/network-request-failed":
-      return "Error de conexión. Verifique su acceso a internet.";
+      return "Connection error. Please check your internet connection.";
     case "auth/api-key-not-valid.-please-pass-a-valid-api-key.":
     case "auth/invalid-api-key":
-      return "La clave de API de Firebase no es válida. Configure NEXT_PUBLIC_FIREBASE_API_KEY en su archivo .env.";
+      return "The Firebase API key is invalid. Configure NEXT_PUBLIC_FIREBASE_API_KEY in your .env file.";
     default:
-      return "Ocurrió un error al autenticar. Por favor intente nuevamente.";
+      return "An error occurred during authentication. Please try again.";
   }
 }
 
@@ -146,7 +146,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuth(): AuthContextType {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error("useAuth debe ser utilizado dentro de un AuthProvider");
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 }

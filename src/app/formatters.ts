@@ -143,25 +143,25 @@ export function formatDiagnosticNumber(
   value: DiagnosticParameterValue | undefined
 ): string {
   if (typeof value === "number") {
-    return value.toLocaleString("es-AR");
+    return value.toLocaleString("en-US");
   }
   if (value === null || value === undefined) {
-    return "dato no disponible";
+    return "data unavailable";
   }
   return String(value);
 }
 
 export function formatTrainingPriority(value: number): string {
   const mapping: Record<number, string> = {
-    0: "Forma",
-    1: "Condicion",
-    2: "Porteria",
-    3: "Creacion",
-    4: "Pases",
-    5: "Tecnica",
-    6: "Defensa",
-    7: "Anotacion",
-    8: "Rapidez"
+    0: "Form",
+    1: "Stamina",
+    2: "Keeper",
+    3: "Playmaking",
+    4: "Passing",
+    5: "Technique",
+    6: "Defending",
+    7: "Scoring",
+    8: "Pace"
   };
 
   return mapping[value] ?? value.toString();

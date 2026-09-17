@@ -259,7 +259,7 @@ function classifyYouthPlayer(
       : null;
 
   if (weeksInAcademy !== null) {
-    evidence.push({ kind: "derived", label: "Semanas en academia", value: weeksInAcademy });
+    evidence.push({ kind: "derived", label: "Weeks in academy", value: weeksInAcademy });
   }
 
   if (player.skill !== null) {
@@ -281,7 +281,7 @@ function classifyYouthPlayer(
   if (projectedPromotionAge !== null) {
     evidence.push({
       kind: "derived",
-      label: "Edad proyectada de ascenso",
+      label: "Projected promotion age",
       value: projectedPromotionAge
     });
   }
@@ -289,7 +289,7 @@ function classifyYouthPlayer(
   let category: YouthAcademyCategory = "follow_up";
   let severity: RealYouthAcademyPlayerPlan["severity"] = "info";
   let confidence: RealYouthAcademyPlayerPlan["confidence"] = "medium";
-  let rationale = "Juvenil en formacion habitual dentro de la escuela juvenil.";
+  let rationale = "Youth player in standard academy development.";
 
   const isReady =
     player.status === "ready_for_promotion" ||
@@ -302,12 +302,12 @@ function classifyYouthPlayer(
     severity = "info";
     confidence = player.weeksRemaining !== null ? "high" : "medium";
     rationale =
-      "El juvenil ha completado su ciclo de formacion y esta listo para ser promovido al plantel principal.";
+      "The youth player has completed their development cycle and is ready for promotion to the first team.";
     signals.push({
       code: "youth_ready_for_promotion",
       severity: "info",
       confidence,
-      message: "Listo para promocion al primer equipo.",
+      message: "Ready for promotion to the first team.",
       evidence
     });
   } else if (
@@ -317,38 +317,38 @@ function classifyYouthPlayer(
     category = "standout_prospect";
     severity = "low";
     confidence = player.weeksRemaining !== null ? "high" : "medium";
-    rationale = "Prospecto destacado con skill elevado y proyeccion favorable de ascenso.";
+    rationale = "Standout prospect with high skill level and favorable promotion outlook.";
     signals.push({
       code: "standout_youth_prospect",
       severity: "low",
       confidence,
-      message: "Prospecto destacado con alto talento estimado.",
+      message: "Standout prospect with high estimated talent.",
       evidence
     });
   } else if (weeksInAcademy !== null && weeksInAcademy >= 16 && !isHigh) {
     category = "stagnation_risk";
     severity = "medium";
     confidence = "medium";
-    rationale = "Juvenil con permanencia prolongada en academia y skill no alto.";
+    rationale = "Youth player with long tenure in academy and average skill level.";
     signals.push({
       code: "youth_stagnation_risk",
       severity,
       confidence,
-      message: "Riesgo de estancamiento por permanencia prolongada sin nivel alto.",
+      message: "Stagnation risk due to extended tenure without reaching a high level.",
       evidence
     });
   } else if (player.weeksRemaining === null || player.skill === null) {
     if (player.weeksRemaining === null) {
       warnings.push({
         code: "missing_weeks_remaining",
-        message: "Falta semanas restantes; no se puede proyectar la fecha exacta de promocion.",
+        message: "Missing weeks remaining; exact promotion date cannot be projected.",
         evidence
       });
     }
     if (player.skill === null) {
       warnings.push({
         code: "missing_skill",
-        message: "Falta skill; la confianza en la evaluacion de talento es menor.",
+        message: "Missing skill; confidence in talent evaluation is reduced.",
         evidence
       });
     }
