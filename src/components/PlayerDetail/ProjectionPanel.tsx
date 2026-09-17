@@ -1,4 +1,4 @@
-import { AlertCircle, AlertTriangle, Sparkles } from "lucide-react";
+import { AlertCircle, AlertTriangle } from "lucide-react";
 import type { PlayerDetailViewModel } from "@/app/view-models/player-detail-view-model";
 import { skillLevelLabel } from "@/app/view-models/skill-level-label";
 import { formatEta, formatNumber, formatPercentage } from "@/app/formatters";
@@ -25,7 +25,6 @@ export function ProjectionPanel({ projection, talent, training }: ProjectionPane
       </div>
       <TalentPanel talent={talent} />
       <TrainingSignalSummary status={training.status} />
-      <p className="atlas-player-detail__projection-assumption">Assuming current training</p>
 
       <div className="atlas-player-detail__projection-section">
         <h3>Current</h3>
@@ -86,14 +85,6 @@ function TrainingSignalSummary({
 }: {
   status: PlayerDetailViewModel["training"]["status"];
 }) {
-  if (status === "Training prospect") {
-    return (
-      <p className="atlas-player-detail__training-signal is-prospect">
-        <Sparkles size={14} /> Training prospect: young player with a strong role fit.
-      </p>
-    );
-  }
-
   if (status === "Attention" || status === "Critical") {
     return (
       <p className="atlas-player-detail__training-signal is-warning">

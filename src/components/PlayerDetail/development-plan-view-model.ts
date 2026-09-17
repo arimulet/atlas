@@ -32,6 +32,7 @@ export interface DevelopmentPlanPathRow {
   estimatedAge: number | null;
   confidence: "low" | "medium" | "high" | null;
   isCurrent: boolean;
+  hasUnknownSublevel?: boolean;
   reasons: string[];
 }
 
@@ -199,6 +200,7 @@ function mapPlan(input: {
         ),
         confidence: projectionStep?.confidence ?? null,
         isCurrent: step.order === 1,
+        hasUnknownSublevel: step.order === 1 && input.projection.warnings.includes("unknown_current_sublevel"),
         reasons: step.reason.map(reasonLabel)
       };
   });
@@ -254,7 +256,17 @@ function mapPlan(input: {
       confidence: input.projection.confidence
     },
     assumptions: input.projection.assumptions,
-    warnings: input.projection.warnings.map((code) => ({ code, label: warningLabel(code) })),
+    warnings: input.projection.warnings
+      .filter(
+        (code) =>
+          code !== "intensity_assumed" &&
+          code !== "advanced_training_assumed" &&
+          code !== "formation_training_assumed" &&
+          code !== "low_talent_confidence" &&
+          code !== "long_term_projection" &&
+          code !== "unknown_current_sublevel"
+      )
+      .map((code) => ({ code, label: warningLabel(code) })),
     idealTargets,
     targets,
     path,

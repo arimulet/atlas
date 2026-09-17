@@ -58,10 +58,10 @@ export function formatWeeks(
 
   if (options?.unit === "long") {
     if (value < 1) {
-      return "less than one week";
+      return "less than 1 week";
     }
     const rounded = Math.round(value * 10) / 10;
-    return `~${rounded} weeks`;
+    return `~${rounded} ${rounded === 1 ? "week" : "weeks"}`;
   }
 
   if (value > 0 && value < 1) {

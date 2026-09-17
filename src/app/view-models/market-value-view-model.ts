@@ -66,7 +66,7 @@ export interface PlayerMarketValueViewModel {
     current: MarketValueAmount;
     nextSkillUp: ProjectionPointViewModel | null;
     targetCompletion: ProjectionPointViewModel | null;
-    peak: { value: MarketValueAmount; age: string; step: number } | null;
+    peak: { value: MarketValueAmount; age: string; step: number; range: MarketValueRangeViewModel | null } | null;
     points: ProjectionPointViewModel[];
     confidence: ConfidenceViewModel;
   } | null;
@@ -362,7 +362,8 @@ function createProjectionViewModel(
       ? {
           value: amount(projection.peak.value, currency),
           age: peakPoint?.age ?? formatAge(typeof projection.peak.age === "number" ? Math.floor(projection.peak.age) : null),
-          step: projection.peak.step
+          step: projection.peak.step,
+          range: peakPoint?.range ?? null
         }
       : null,
     points,

@@ -96,7 +96,7 @@ function InfoFact({ label, value }: InfoFactProps) {
 }
 
 function trainingKindIcon(kind: PlayerDetailViewModel["training"]["trainingKind"]): ReactNode {
-  if (kind === "advanced") return <Sparkles size={12} />;
+  if (kind === "advanced") return <Sparkles size={12} style={{ color: "var(--atlas-success, #059669)" }} />;
   if (kind === "formation") return <CircleDashed size={12} />;
   return "—";
 }

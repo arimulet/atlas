@@ -320,10 +320,14 @@
   font-size: 0.8rem;
 }
 
-.atlas .atlas-player-detail__talent-summary span:not(:last-child)::after {
+.atlas .atlas-player-detail__talent-summary span:not(:last-child):not(.atlas-talent-badge)::after {
   color: var(--atlas-text-muted);
   content: "·";
   margin-left: 8px;
+}
+
+.atlas .atlas-player-detail__talent-summary span.atlas-talent-badge::after {
+  content: none !important;
 }
 
 .atlas .atlas-player-detail__projection-assumption {
