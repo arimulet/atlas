@@ -1,7 +1,7 @@
 import { AlertCircle, AlertTriangle } from "lucide-react";
 import type { PlayerDetailViewModel } from "@/app/view-models/player-detail-view-model";
 import { skillLevelLabel } from "@/app/view-models/skill-level-label";
-import { formatEta, formatNumber, formatPercentage } from "@/app/formatters";
+import { formatNumber } from "@/app/formatters";
 import { TalentPanel } from "./TalentPanel";
 import { StatusBadge } from "@/components/StatusBadge";
 
@@ -26,37 +26,7 @@ export function ProjectionPanel({ projection, talent, training }: ProjectionPane
       <TalentPanel talent={talent} />
       <TrainingSignalSummary status={training.status} />
 
-      <div className="atlas-player-detail__projection-section">
-        <h3>Current</h3>
-        <dl className="atlas-player-detail__data-list">
-          <DataRow label="Skill" value={projection.current.skill ?? "—"} />
-          <DataRow
-            label="Level"
-            value={formatNumber(projection.current.level)}
-            title={skillLevelLabel(projection.current.level) ?? undefined}
-          />
-          <DataRow label="Progress" value={formatPercentage(projection.current.progress)} />
-        </dl>
-      </div>
-
-      <div className="atlas-player-detail__projection-section">
-        <h3>Next skill-up</h3>
-        {projection.nextSkillUp ? (
-          <dl className="atlas-player-detail__data-list">
-            <DataRow
-              label={projection.current.skill ?? "Skill"}
-              value={formatNumber(projection.nextSkillUp.targetLevel)}
-              title={skillLevelLabel(projection.nextSkillUp.targetLevel) ?? undefined}
-            />
-            <DataRow
-              label="Estimated weeks"
-              value={formatEta(projection.nextSkillUp.estimatedWeeks)}
-            />
-          </dl>
-        ) : (
-          <p className="atlas-player-detail__message">Next skill-up —</p>
-        )}
-      </div>
+      <TrainingProgressTrajectory projection={projection} />
 
       {projection.horizon ? (
         <div className="atlas-player-detail__projection-section">
@@ -78,6 +48,77 @@ export function ProjectionPanel({ projection, talent, training }: ProjectionPane
       ) : null}
     </section>
   );
+}
+
+function TrainingProgressTrajectory({
+  projection
+}: {
+  projection: PlayerDetailViewModel["projection"];
+}) {
+  const currentLevel = projection.current.level;
+  const nextSkillUp = projection.nextSkillUp;
+  const progress = projection.current.progress;
+  const progressValue = progress === null ? 0 : Math.min(100, Math.max(0, progress));
+
+  return (
+    <div className="atlas-player-detail__projection-trajectory">
+      <div className="atlas-player-detail__projection-trajectory-heading">
+        <span>Training now</span>
+        <strong>{projection.current.skill ?? "—"}</strong>
+      </div>
+      <div className="atlas-player-detail__projection-levels">
+        <div>
+          <span>Current</span>
+          <strong title={skillLevelLabel(currentLevel) ?? undefined}>
+            {formatSkillLevel(currentLevel)}
+          </strong>
+        </div>
+        <div className="atlas-player-detail__projection-level-connector" aria-hidden="true" />
+        <div className="is-next">
+          <span>Next skill-up</span>
+          <strong title={skillLevelLabel(nextSkillUp?.targetLevel ?? null) ?? undefined}>
+            {formatSkillLevel(nextSkillUp?.targetLevel ?? null)}
+          </strong>
+        </div>
+      </div>
+      <div
+        className="atlas-player-detail__projection-progress"
+        aria-label="Progress to next skill-up"
+      >
+        <div className="atlas-player-detail__projection-progress-track">
+          <span style={{ width: `${progressValue}%` }} />
+        </div>
+        <div className="atlas-player-detail__projection-progress-summary">
+          <strong>{formatProgress(progress)}</strong>
+          <span>
+            {nextSkillUp
+              ? formatEstimatedWeeks(nextSkillUp.estimatedWeeks)
+              : "Next skill-up unavailable"}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function formatSkillLevel(level: number | null): string {
+  const levelLabel = skillLevelLabel(level);
+  const formattedLevel = formatNumber(level);
+
+  return levelLabel ? `${formattedLevel} (${levelLabel})` : formattedLevel;
+}
+
+function formatProgress(value: number | null): string {
+  return value === null ? "—" : `${Math.floor(value)}%`;
+}
+
+function formatEstimatedWeeks(value: number | null): string {
+  if (value === null) {
+    return "—";
+  }
+
+  const weeks = Math.max(0, Math.floor(value));
+  return `${weeks} ${weeks === 1 ? "week" : "weeks"}`;
 }
 
 function TrainingSignalSummary({
