@@ -15,6 +15,11 @@ export function parseTokenString(token: string): ServerSessionUser | null {
       const payloadBase64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
       const jsonPayload = Buffer.from(payloadBase64, "base64").toString("utf-8");
       const decoded = JSON.parse(jsonPayload);
+
+      if (typeof decoded.exp === "number" && Date.now() >= decoded.exp * 1000) {
+        return null;
+      }
+
       const uid = decoded.user_id || decoded.sub || decoded.uid;
       if (uid && typeof uid === "string") {
         return {
@@ -24,20 +29,40 @@ export function parseTokenString(token: string): ServerSessionUser | null {
       }
     }
 
-    return { uid: trimmed };
+    if (process.env.NODE_ENV !== "production" && !trimmed.includes(".")) {
+      return { uid: trimmed };
+    }
+
+    return null;
   } catch {
-    return { uid: trimmed };
+    return null;
   }
 }
 
 export async function getAuthenticatedUserServer(): Promise<ServerSessionUser | null> {
   try {
-    const cookieStore = await cookies();
-    const sessionToken = cookieStore.get("__session")?.value;
-    if (!sessionToken) {
+    let token: string | undefined;
+
+    try {
+      const { headers } = await import("next/headers");
+      const headerList = await headers();
+      const authHeader = headerList.get("authorization");
+      if (authHeader && authHeader.startsWith("Bearer ")) {
+        token = authHeader.substring(7).trim();
+      }
+    } catch {
+      // headers() call may fail outside request context or in unit tests
+    }
+
+    if (!token) {
+      const cookieStore = await cookies();
+      token = cookieStore.get("__session")?.value;
+    }
+
+    if (!token) {
       return null;
     }
-    return parseTokenString(sessionToken);
+    return parseTokenString(token);
   } catch {
     return null;
   }
