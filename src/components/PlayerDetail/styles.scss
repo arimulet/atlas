@@ -320,10 +320,14 @@
   font-size: 0.8rem;
 }
 
-.atlas .atlas-player-detail__talent-summary span:not(:last-child)::after {
+.atlas .atlas-player-detail__talent-summary span:not(:last-child):not(.atlas-talent-badge)::after {
   color: var(--atlas-text-muted);
   content: "·";
   margin-left: 8px;
+}
+
+.atlas .atlas-player-detail__talent-summary span.atlas-talent-badge::after {
+  content: none !important;
 }
 
 .atlas .atlas-player-detail__projection-assumption {
@@ -356,6 +360,100 @@
   letter-spacing: 0.07em;
   margin: 0 0 4px;
   text-transform: uppercase;
+}
+
+.atlas .atlas-player-detail__projection-trajectory {
+  border-top: 1px solid color-mix(in srgb, var(--atlas-border) 72%, transparent);
+  margin-top: 12px;
+  padding-top: 11px;
+}
+
+.atlas .atlas-player-detail__projection-trajectory-heading,
+.atlas .atlas-player-detail__projection-levels,
+.atlas .atlas-player-detail__projection-progress-summary {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.atlas .atlas-player-detail__projection-trajectory-heading {
+  margin-bottom: 10px;
+}
+
+.atlas .atlas-player-detail__projection-trajectory-heading span,
+.atlas .atlas-player-detail__projection-levels span {
+  color: var(--atlas-text-muted);
+  font-size: 0.64rem;
+  font-weight: 750;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.atlas .atlas-player-detail__projection-trajectory-heading strong {
+  color: var(--atlas-text);
+  font-size: 0.82rem;
+}
+
+.atlas .atlas-player-detail__projection-levels > div {
+  display: grid;
+  gap: 3px;
+}
+
+.atlas .atlas-player-detail__projection-levels > div strong {
+  color: var(--atlas-text);
+  font-size: 1rem;
+}
+
+.atlas .atlas-player-detail__projection-levels > div.is-next {
+  justify-items: end;
+}
+
+.atlas .atlas-player-detail__projection-level-connector {
+  align-self: end;
+  background: var(--atlas-border);
+  height: 1px;
+  margin: 0 12px 7px;
+  min-width: 28px;
+  position: relative;
+}
+
+.atlas .atlas-player-detail__projection-level-connector::after {
+  border-bottom: 4px solid transparent;
+  border-left: 5px solid var(--atlas-text-muted);
+  border-top: 4px solid transparent;
+  content: "";
+  position: absolute;
+  right: -1px;
+  top: -4px;
+}
+
+.atlas .atlas-player-detail__projection-progress {
+  margin-top: 10px;
+}
+
+.atlas .atlas-player-detail__projection-progress-track {
+  background: color-mix(in srgb, var(--atlas-border) 72%, transparent);
+  border-radius: 999px;
+  height: 6px;
+  overflow: hidden;
+}
+
+.atlas .atlas-player-detail__projection-progress-track span {
+  background: var(--atlas-accent);
+  border-radius: inherit;
+  display: block;
+  height: 100%;
+  min-width: 3px;
+}
+
+.atlas .atlas-player-detail__projection-progress-summary {
+  color: var(--atlas-text-secondary);
+  font-size: 0.76rem;
+  margin-top: 6px;
+}
+
+.atlas .atlas-player-detail__projection-progress-summary strong {
+  color: var(--atlas-accent);
 }
 
 .atlas .atlas-market-value {

@@ -29,7 +29,7 @@ const navigationGroups: NavigationGroup[] = [
   },
   {
     id: "first-team",
-    label: "Primer Equipo",
+    label: "First Team",
     items: [
       {
         id: "squad",
@@ -47,7 +47,7 @@ const navigationGroups: NavigationGroup[] = [
   },
   {
     id: "academy",
-    label: "Academia",
+    label: "Academy",
     items: [
       {
         id: "youth",
@@ -65,7 +65,7 @@ const navigationGroups: NavigationGroup[] = [
   },
   {
     id: "admin",
-    label: "Administración",
+    label: "Administration",
     items: [
       {
         id: "finances",
@@ -83,7 +83,7 @@ const navigationGroups: NavigationGroup[] = [
   },
   {
     id: "system",
-    label: "Sistema",
+    label: "System",
     items: [
       {
         id: "diagnostics",

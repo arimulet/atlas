@@ -15,7 +15,7 @@ describe("youth view model", () => {
       countryName: "Argentina",
       age: 16,
       position: null,
-      level: { value: 8, label: "sólido", change: 1 },
+      level: { value: 8, label: "solid", change: 1 },
       expectedLevel: 8,
       expectedAge: null,
       initialWeeks: 8,

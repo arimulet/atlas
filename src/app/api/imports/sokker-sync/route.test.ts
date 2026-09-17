@@ -67,7 +67,7 @@ describe("POST /api/imports/sokker-sync", () => {
 
   it("returns rejected status with clear api error when DB connection fails", async () => {
     mockEnsureMongoDbConnection.mockRejectedValue(
-      new Error("MONGODB_URI no está configurada en las variables de entorno.")
+      new Error("MONGODB_URI is not configured in environment variables.")
     );
 
     const req = new NextRequest("http://localhost/api/imports/sokker-sync", {
@@ -81,7 +81,7 @@ describe("POST /api/imports/sokker-sync", () => {
     expect(json.importResult.status).toBe("rejected");
     expect(json.importResult.errors[0]).toEqual({
       path: "api",
-      message: "MONGODB_URI no está configurada en las variables de entorno."
+      message: "MONGODB_URI is not configured in environment variables."
     });
   });
 });

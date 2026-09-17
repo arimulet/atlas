@@ -21,7 +21,7 @@ export function DiagnosticNotifications({
       );
   const hasDiagnostics = displayedDiagnostics.length > 0;
   const notificationCountLabel =
-    displayedDiagnostics.length > 99 ? "99+" : displayedDiagnostics.length.toLocaleString("es-AR");
+    displayedDiagnostics.length > 99 ? "99+" : displayedDiagnostics.length.toLocaleString("en-US");
 
   const handleToggle = () => {
     setIsOpen((currentValue) => !currentValue);
@@ -34,8 +34,8 @@ export function DiagnosticNotifications({
         aria-expanded={isOpen}
         aria-label={
           hasDiagnostics
-            ? "Notificaciones: " + displayedDiagnostics.length + " hallazgo(s) de diagnóstico"
-            : "Notificaciones"
+            ? "Notifications: " + displayedDiagnostics.length + " diagnostic finding(s)"
+            : "Notifications"
         }
         className="atlas-diagnostic-notifications__button"
         type="button"
@@ -56,11 +56,11 @@ export function DiagnosticNotifications({
         <section
           className="atlas-diagnostic-notifications__panel"
           id={panelId}
-          aria-label="Notificaciones de diagnóstico"
+          aria-label="Diagnostic notifications"
         >
           <header className="atlas-diagnostic-notifications__panel-header">
-            <strong>Notificaciones</strong>
-            {hasDiagnostics ? <span>{displayedDiagnostics.length} hallazgo(s)</span> : null}
+            <strong>Notifications</strong>
+            {hasDiagnostics ? <span>{displayedDiagnostics.length} finding(s)</span> : null}
           </header>
 
           {hasDiagnostics ? (

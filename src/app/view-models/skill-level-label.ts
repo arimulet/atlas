@@ -42,7 +42,7 @@ export const SKILL_LEVEL_LABELS_EN: Readonly<Record<number, string>> = {
   18: "superdivine"
 };
 
-export function skillLevelLabel(level: number | null, lang: "es" | "en" = "es"): string | null {
+export function skillLevelLabel(level: number | null, lang: "es" | "en" = "en"): string | null {
   if (level === null) return null;
   const labels = lang === "en" ? SKILL_LEVEL_LABELS_EN : SKILL_LEVEL_LABELS_ES;
   return labels[level] ?? null;
@@ -54,6 +54,6 @@ export function skillLevelLabelEn(level: number | null): string | null {
 
 export function formatSokkerSkill(level: number | null | undefined, lang: "en" | "es" = "en"): string {
   if (level === null || level === undefined) return "—";
-  const label = lang === "en" ? skillLevelLabelEn(level) : skillLevelLabel(level);
+  const label = lang === "en" ? skillLevelLabelEn(level) : skillLevelLabel(level, "es");
   return label ? `${label} [${level}]` : `[${level}]`;
 }

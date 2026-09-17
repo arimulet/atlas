@@ -50,9 +50,13 @@ const clientInFlight = new Map<string, Promise<ClientCacheEntry>>();
 const clientCache = new Map<string, ClientCacheEntry>();
 const CLIENT_CACHE_TTL_MS = 20_000; // 20 seconds TTL for idempotent GET queries
 
+const isClientContext = typeof window !== "undefined" || process.env.NODE_ENV === "test";
+
 export function invalidateClientApiCache(): void {
-  clientCache.clear();
-  clientInFlight.clear();
+  if (isClientContext) {
+    clientCache.clear();
+    clientInFlight.clear();
+  }
 }
 
 function createResponseFromEntry(entry: ClientCacheEntry): Response {
@@ -71,11 +75,11 @@ async function fetchAuthenticated(
   const isGet = method === "GET";
   const cacheKey = typeof input === "string" ? input : input.toString();
 
-  // If this is a mutation (POST, PUT, DELETE, PATCH), invalidate cached GET responses
+  // If this is a mutation (POST, PUT, DELETE, PATCH), invalidate cached GET responses in client context
   if (!isGet) {
     invalidateClientApiCache();
-  } else {
-    // Check in-memory cache for GET requests
+  } else if (isClientContext) {
+    // Check in-memory cache for GET requests in client context
     const cached = clientCache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < CLIENT_CACHE_TTL_MS) {
       return createResponseFromEntry(cached);
@@ -128,12 +132,12 @@ async function fetchAuthenticated(
     }
   }
 
-  // Non-GET requests run directly
-  if (!isGet) {
+  // Non-GET requests or server-side requests run directly without global memory caching
+  if (!isGet || !isClientContext) {
     return fetch(url, { ...init, headers });
   }
 
-  // In-flight request deduplication for concurrent GET calls
+  // In-flight request deduplication for concurrent GET calls in browser
   let inFlightPromise = clientInFlight.get(cacheKey);
   if (!inFlightPromise) {
     inFlightPromise = (async () => {

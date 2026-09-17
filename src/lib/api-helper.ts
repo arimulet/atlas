@@ -10,27 +10,33 @@ export async function ensureMongoDbConnection(): Promise<void> {
   }
   const uri = process.env.MONGODB_URI;
   if (!uri) {
-    throw new Error("MONGODB_URI no está configurada en las variables de entorno.");
+    throw new Error("MONGODB_URI is not configured in environment variables.");
   }
   await connectMongoDb(uri);
+}
+
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    public statusCode: number = 400
+  ) {
+    super(message);
+    this.name = "ApiError";
+  }
 }
 
 export const getEffectiveClubId = cache(async (): Promise<string> => {
   await ensureMongoDbConnection().catch(() => null);
 
-  try {
-    const user = await getAuthenticatedUserServer();
-    if (user?.uid) {
-      const clubs = await getUserClubs(user.uid);
-      if (clubs && clubs.length > 0 && clubs[0]?.id) {
-        return String(clubs[0].id);
-      }
+  const user = await getAuthenticatedUserServer();
+  if (user?.uid) {
+    const clubs = await getUserClubs(user.uid);
+    if (clubs && clubs.length > 0 && clubs[0]?.id) {
+      return String(clubs[0].id);
     }
-  } catch {
-    // Ignore fallback errors
   }
 
-  return "1";
+  throw new ApiError("Unauthorized session or no club associated with user.", 401);
 });
 
 export function jsonResponse<T>(data: T, status = 200) {
@@ -38,11 +44,13 @@ export function jsonResponse<T>(data: T, status = 200) {
 }
 
 export function handleApiError(error: unknown) {
+  const statusCode = error instanceof ApiError ? error.statusCode : 500;
+  const message = error instanceof Error ? error.message : "Error processing request";
   return NextResponse.json(
     {
-      error: "ApiError",
-      message: error instanceof Error ? error.message : "Error al procesar la solicitud"
+      error: error instanceof ApiError ? error.name : "ApiError",
+      message
     },
-    { status: 200 }
+    { status: statusCode }
   );
 }

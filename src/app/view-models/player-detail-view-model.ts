@@ -26,7 +26,11 @@ import {
   formatMarketMoney,
   type PlayerMarketValueViewModel
 } from "./market-value-view-model";
-import { PLAYER_SKILL_DEFINITIONS, type PlayerSkillKey } from "./player-skills";
+import {
+  PLAYER_SKILL_DEFINITIONS,
+  TRAINABLE_SKILL_DEFINITIONS,
+  type PlayerSkillKey
+} from "./player-skills";
 import { skillLevelLabel } from "./skill-level-label";
 
 const SKILL_DEFINITIONS = [
@@ -198,7 +202,9 @@ export function createPlayerDetailViewModel(
     ),
     skill: trainedSkillDefinition?.key ?? null,
     talentEstimate,
-    age: player.age
+    age: player.age,
+    trainingKind:
+      player.latestReport?.kind ?? (player.training?.advanced ? "advanced" : "formation")
   });
   const nextSkillUp = trainingProjection?.nextSkillUp;
   const importantSkills = importantSkillsForPlayer(
@@ -226,7 +232,11 @@ export function createPlayerDetailViewModel(
           : formatMarketMoney(player.value, input.currency ?? null),
       gameValueChange: gameValueChange(player.valueChange ?? null, input.currency ?? null)
     },
-    developmentPlayer: createDevelopmentPlayer(String(player.playerId), observedPlayer, marketPlayer),
+    developmentPlayer: createDevelopmentPlayer(
+      String(player.playerId),
+      observedPlayer,
+      marketPlayer
+    ),
     skills: SKILL_DEFINITIONS.map((definition) => {
       const value = observedPlayer?.skills[definition.key] ?? null;
 
@@ -345,7 +355,7 @@ function createTrainingHistoryRows(
       type: trainingTypeLabel(report.type),
       kind: report.kind,
       intensity: report.intensity,
-      skills: PLAYER_SKILL_DEFINITIONS.map((skill) => {
+      skills: TRAINABLE_SKILL_DEFINITIONS.map((skill) => {
         const value = trainingHistorySkillValue(report.skills, skill.key);
         const previousValue = previousReport
           ? trainingHistorySkillValue(previousReport.skills, skill.key)
@@ -467,6 +477,7 @@ function createTrainingProjection(input: {
   history: NonNullable<TrainingPageData["history"]>;
   skill: SkillKey | null;
   talentEstimate: TrainingPageData["players"][number]["talentEstimate"];
+  trainingKind?: "advanced" | "formation" | "missing" | null;
 }): {
   progress: number;
   nextSkillUp: { targetLevel: number; estimatedWeeks: number | null };
@@ -515,17 +526,16 @@ function createTrainingProjection(input: {
     targetSkillLevel: input.currentSkillLevel + 1
   }).requiredTrainingPoints;
   const remainingPoints = Math.max(0, requiredPoints - accumulatedPoints);
-  const averageWeeklyPoints =
-    effectiveWeeks.length === 0 ? null : accumulatedPoints / effectiveWeeks.length;
+  const expectedWeeklyPoints = calculateWeeklyTrainingPointsByKind({
+    intensity: 100,
+    kind: input.trainingKind === "formation" ? "formation" : "advanced"
+  });
 
   return {
     progress: Math.min(100, Math.max(0, (accumulatedPoints / requiredPoints) * 100)),
     nextSkillUp: {
       targetLevel: input.currentSkillLevel + 1,
-      estimatedWeeks:
-        averageWeeklyPoints && averageWeeklyPoints > 0
-          ? remainingPoints / averageWeeklyPoints
-          : null
+      estimatedWeeks: expectedWeeklyPoints > 0 ? remainingPoints / expectedWeeklyPoints : null
     }
   };
 }

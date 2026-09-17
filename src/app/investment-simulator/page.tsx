@@ -84,13 +84,13 @@ export default function InvestmentSimulatorPage() {
           .map((error) => (error.path ? `${error.path}: ${error.message}` : error.message))
           .join(" ");
 
-        throw new Error(message || "No se pudieron actualizar los datos.");
+        throw new Error(message || "Failed to update data.");
       }
 
       if (body.importResult.clubId) {
         const loaded = await loadSimulatorData();
         if (!loaded) {
-          throw new Error("Datos actualizados, pero no se pudo recargar el simulador.");
+          throw new Error("Data updated, but unable to reload simulator.");
         }
         setIsSokkerImportOpen(false);
       }
@@ -111,7 +111,7 @@ export default function InvestmentSimulatorPage() {
     return (
       <div className="atlas-auth-loading-screen">
         <span className="atlas-auth-spinner" aria-hidden="true" />
-        <span>Cargando ATLAS...</span>
+        <span>Loading ATLAS...</span>
       </div>
     );
   }

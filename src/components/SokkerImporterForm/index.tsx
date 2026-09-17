@@ -10,12 +10,12 @@ function getSuccessFeedback(result: ImportResponse): NonNullable<Feedback> {
   if (result.importResult.status === "accepted-with-warnings") {
     return {
       kind: "success",
-      message: "Datos actualizados con advertencias.",
+      message: "Data updated with warnings.",
       details: result.importResult.warnings.map((warning) => warning.message)
     };
   }
 
-  return { kind: "success", message: "Datos actualizados correctamente." };
+  return { kind: "success", message: "Data successfully updated." };
 }
 
 export function SokkerImporterForm({
@@ -47,7 +47,7 @@ export function SokkerImporterForm({
     } catch (error) {
       setFeedback({
         kind: "error",
-        message: error instanceof Error ? error.message : "No se pudieron actualizar los datos."
+        message: error instanceof Error ? error.message : "Failed to update data."
       });
     } finally {
       setIsLoading(false);
@@ -59,7 +59,7 @@ export function SokkerImporterForm({
     <form className="atlas-sokker-importer" onSubmit={handleSubmit}>
       <div className="atlas-sokker-importer__fields">
         <div className="atlas-sokker-importer__field">
-          <label htmlFor="atlas-sokker-login">Usuario</label>
+          <label htmlFor="atlas-sokker-login">Username</label>
           <input
             id="atlas-sokker-login"
             type="text"
@@ -73,7 +73,7 @@ export function SokkerImporterForm({
         </div>
 
         <div className="atlas-sokker-importer__field">
-          <label htmlFor="atlas-sokker-password">Contraseña</label>
+          <label htmlFor="atlas-sokker-password">Password</label>
           <input
             id="atlas-sokker-password"
             type="password"
@@ -116,7 +116,7 @@ export function SokkerImporterForm({
           onClick={onCancel}
           disabled={isLoading}
         >
-          Cancelar
+          Cancel
         </button>
         <button
           type="submit"
@@ -126,10 +126,10 @@ export function SokkerImporterForm({
           {isLoading ? (
             <>
               <span className="atlas-spinner" aria-hidden="true" />
-              Actualizando...
+              Updating...
             </>
           ) : (
-            "Actualizar"
+            "Update"
           )}
         </button>
       </div>

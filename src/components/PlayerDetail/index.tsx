@@ -1,5 +1,5 @@
 import { Component, type ReactNode } from "react";
-import { ArrowLeft, ArrowUp, ArrowDown, Ban, CircleDashed, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowUp, ArrowDown, Ban, CircleDashed, Sparkles, ExternalLink } from "lucide-react";
 import type { PlayerDetailProps } from "./types";
 import { ProjectionPanel } from "./ProjectionPanel";
 import { formatNumber } from "@/app/formatters";
@@ -173,6 +173,8 @@ interface PlayerHeaderProps {
 }
 
 function PlayerHeader({ diagnostics, onBack, player }: PlayerHeaderProps) {
+  const externalUrl = `https://sokker.org/player/PID/${player.id}`;
+
   return (
     <header className="atlas-player-detail__header">
       <div className="atlas-player-detail__header-actions">
@@ -184,6 +186,16 @@ function PlayerHeader({ diagnostics, onBack, player }: PlayerHeaderProps) {
       <h1>
         {player.countryName ? <CountryNameFlag countryName={player.countryName} /> : null}
         <span>{player.name}</span>
+        <a
+          className="atlas-player-header__external-link"
+          href={externalUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Ver en Sokker.org"
+          aria-label={`Ver ${player.name} en Sokker.org`}
+        >
+          <ExternalLink size={16} />
+        </a>
       </h1>
     </header>
   );

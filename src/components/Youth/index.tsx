@@ -189,7 +189,7 @@ function YouthPlayerRows({
         <tr className="atlas-youth-player-detail-row">
           <td colSpan={9}>
             <div className="atlas-youth-player-detail__content" style={{ padding: "16px", backgroundColor: "rgba(0,0,0,0.15)" }}>
-              <h3 style={{ fontSize: "14px", margin: "0 0 8px 0", color: "#ccc" }}>Gráfico de nivel de habilidad</h3>
+              <h3 style={{ fontSize: "14px", margin: "0 0 8px 0", color: "#ccc" }}>Skill level chart</h3>
               <YouthPlayerSkillChart history={row.history} />
             </div>
           </td>

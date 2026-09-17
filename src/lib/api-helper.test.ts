@@ -51,7 +51,7 @@ describe("api-helper ensureMongoDbConnection", () => {
     delete process.env.MONGODB_URI;
 
     await expect(ensureMongoDbConnection()).rejects.toThrow(
-      "MONGODB_URI no está configurada en las variables de entorno."
+      "MONGODB_URI is not configured in environment variables."
     );
   });
 });

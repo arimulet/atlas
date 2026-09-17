@@ -11,9 +11,30 @@ import { getAuthenticatedUserServer } from "@/lib/session";
 export async function POST(request: NextRequest) {
   try {
     await ensureMongoDbConnection();
+    const authUser = await getAuthenticatedUserServer();
+    if (!authUser) {
+      return jsonResponse(
+        {
+          importResult: {
+            status: "rejected",
+            errors: [
+              {
+                path: "session",
+                message: "Authentication required to import Sokker data."
+              }
+            ],
+            warnings: [],
+            clubId: null,
+            importedPlayerCount: 0
+          },
+          summary: null,
+          diagnostic: null
+        },
+        401
+      );
+    }
     const body = await request.json();
     const credentials = { login: body.login ?? "", password: body.password ?? "" };
-    const authUser = await getAuthenticatedUserServer();
     const provider = createSokkerDataProvider(credentials);
     const loadedPayload = await loadSokkerSyncPayload(provider);
     const validation = validateSokkerSyncPayload(loadedPayload);
