@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { parseTokenString } from "./session";
 
 describe("parseTokenString", () => {
@@ -29,13 +29,12 @@ describe("parseTokenString", () => {
   });
 
   it("rejects malformed token strings in production", () => {
-    const originalEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = "production";
+    vi.stubEnv("NODE_ENV", "production");
 
     try {
       expect(parseTokenString("invalid-plain-text")).toBeNull();
     } finally {
-      process.env.NODE_ENV = originalEnv;
+      vi.unstubAllEnvs();
     }
   });
 });
