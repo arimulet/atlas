@@ -213,6 +213,8 @@ function DiagnosticRow({ diagnostic, onSelectPlayer, showContext }: DiagnosticRo
   const contextCountry = usePlayerCountry(diagnostic.subject?.id);
   const countryName = diagnostic.subject?.countryName ?? contextCountry;
 
+  const hasContextItems = Boolean(diagnostic.contextItems && diagnostic.contextItems.length > 0);
+
   return (
     <tr>
       <td>
@@ -240,7 +242,22 @@ function DiagnosticRow({ diagnostic, onSelectPlayer, showContext }: DiagnosticRo
         )}
       </td>
       <td className="atlas-diagnostics-message">{diagnostic.message}</td>
-      {showContext ? <td className="atlas-diagnostics-context">{diagnostic.context ?? "—"}</td> : null}
+      {showContext ? (
+        <td className="atlas-diagnostics-context">
+          {hasContextItems ? (
+            <div className="atlas-diagnostics-context-chips">
+              {diagnostic.contextItems!.map((item, index) => (
+                <span className="atlas-diagnostics-context-chip" key={index}>
+                  <span className="atlas-diagnostics-context-chip__label">{item.label}:</span>
+                  <span className="atlas-diagnostics-context-chip__value">{item.value}</span>
+                </span>
+              ))}
+            </div>
+          ) : (
+            diagnostic.context ?? "—"
+          )}
+        </td>
+      ) : null}
     </tr>
   );
 }
