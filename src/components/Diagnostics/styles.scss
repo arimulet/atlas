@@ -55,63 +55,7 @@
     }
   }
 
-  .atlas-diagnostics-summary {
-    background: var(--atlas-surface);
-    border: 1px solid var(--atlas-border);
-    border-radius: var(--atlas-radius-md);
-    padding: 15px 18px;
 
-    h2 {
-      color: var(--atlas-text-muted);
-      font-size: 0.68rem;
-      letter-spacing: 0.1em;
-      margin: 0 0 12px;
-      text-transform: uppercase;
-    }
-
-    &__content {
-      align-items: center;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px 22px;
-    }
-
-    &__eyebrow {
-      color: var(--atlas-text);
-      font-size: 0.75rem;
-      font-weight: 800;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-    }
-
-    &__counters {
-      align-items: center;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 7px 18px;
-    }
-
-    &__counter {
-      align-items: baseline;
-      display: inline-flex;
-      gap: 6px;
-
-      strong {
-        color: var(--atlas-text);
-        font-size: 1.05rem;
-      }
-
-      span {
-        color: var(--atlas-text-secondary);
-        font-size: 0.76rem;
-      }
-    }
-
-    &__empty {
-      color: var(--atlas-text-muted);
-      font-size: 0.76rem;
-    }
-  }
 
   .atlas-diagnostics-filter-group {
     align-items: center;

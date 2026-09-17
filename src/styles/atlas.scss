@@ -74,7 +74,6 @@
     .atlas-youth-panel,
     .atlas-finances-panel,
     .atlas-player-detail-panel,
-    .atlas-diagnostics-summary,
     .atlas-diagnostics-table-wrap
   ) {
     background: var(--atlas-surface);
@@ -90,10 +89,6 @@
     .atlas-finances-panel,
     .atlas-player-detail-panel
   ) {
-    padding: var(--atlas-panel-padding-y) var(--atlas-panel-padding-x);
-  }
-
-  .atlas-diagnostics-summary {
     padding: var(--atlas-panel-padding-y) var(--atlas-panel-padding-x);
   }
 

@@ -73,8 +73,6 @@ export function Diagnostics({
         <h1>Diagnostics</h1>
       </header>
 
-      <DiagnosticSummary viewModel={viewModel} />
-
       <section className="atlas-diagnostics__filters" aria-labelledby="diagnostics-filters-title">
         <h2 id="diagnostics-filters-title" className="atlas-diagnostics__section-label">
           Filters
@@ -147,36 +145,7 @@ export function Diagnostics({
   );
 }
 
-interface DiagnosticSummaryProps {
-  viewModel: ReturnType<typeof createDiagnosticsPageViewModel>;
-}
 
-function DiagnosticSummary({ viewModel }: DiagnosticSummaryProps) {
-  const severities = severityOrder.filter((severity) => viewModel.summary.bySeverity[severity]);
-
-  return (
-    <section className="atlas-diagnostics-summary" aria-labelledby="diagnostic-summary-title">
-      <h2 id="diagnostic-summary-title" className="atlas-section-title">
-        Diagnostic Summary
-      </h2>
-      <div className="atlas-diagnostics-summary__content">
-        <span className="atlas-diagnostics-summary__eyebrow">Diagnostics</span>
-        {severities.length > 0 ? (
-          <div className="atlas-diagnostics-summary__counters">
-            {severities.map((severity) => (
-              <span className={`atlas-diagnostics-summary__counter is-${severity}`} key={severity}>
-                <strong>{viewModel.summary.bySeverity[severity]}</strong>
-                <span>{severityLabel(severity)}</span>
-              </span>
-            ))}
-          </div>
-        ) : (
-          <span className="atlas-diagnostics-summary__empty">No current signals</span>
-        )}
-      </div>
-    </section>
-  );
-}
 
 interface FilterButtonProps {
   isActive: boolean;
