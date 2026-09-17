@@ -138,7 +138,7 @@ describe("createPlayerDetailViewModel", () => {
     });
 
     expect(viewModel?.projection.current).toEqual({
-      skill: "Creacion",
+      skill: "Playmaking",
       level: 12,
       progress: null
     });
@@ -147,7 +147,7 @@ describe("createPlayerDetailViewModel", () => {
     expect(viewModel?.projection.horizon).toBeUndefined();
     expect(viewModel?.skills.find((skill) => skill.key === "playmaker")).toMatchObject({
       value: 12,
-      levelLabel: "destacado",
+      levelLabel: "outstanding",
       isImportant: true,
       lastWeekChange: { direction: "up", levelDelta: 1 }
     });
@@ -160,7 +160,7 @@ describe("createPlayerDetailViewModel", () => {
     expect(history.map((row) => row.seasonWeek)).toEqual([12, 11, 10]);
     expect(history[0]!).toMatchObject({
       season: 17,
-      type: "Creacion",
+      type: "Playmaking",
       kind: "advanced",
       intensity: 100
     });
@@ -176,7 +176,7 @@ describe("createPlayerDetailViewModel", () => {
     ]);
     expect(history[1]!.skills.find((skill) => skill.key === "playmaker")).toMatchObject({
       value: 12,
-      levelLabel: "destacado",
+      levelLabel: "outstanding",
       change: { direction: "up", levelDelta: 1 }
     });
     expect(history[1]!.skills.find((skill) => skill.key === "defender")).toMatchObject({

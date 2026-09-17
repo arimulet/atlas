@@ -345,8 +345,8 @@ function buildGlobalWarnings(snapshots: PersistedSnapshot[]): PlayerDevelopmentW
     return [
       {
         code: "few_snapshots",
-        message: "Hay pocos snapshots; ATLAS solo muestra datos actuales sin evaluar evolucion.",
-        evidence: [{ kind: "observed", label: "Snapshots disponibles", value: snapshots.length }]
+        message: "Few snapshots available; ATLAS displays current data without evaluating evolution.",
+        evidence: [{ kind: "observed", label: "Available snapshots", value: snapshots.length }]
       }
     ];
   }
@@ -365,9 +365,9 @@ function buildPlayerWarnings(
   if (!player.playerId) {
     warnings.push({
       code: "ambiguous_identity",
-      message: "Falta identidad estable; no se fusiona historial automaticamente.",
+      message: "Missing stable identity; history is not merged automatically.",
       evidence: [
-        { kind: "observed", label: "Jugador", value: player.name },
+        { kind: "observed", label: "Player", value: player.name },
         { kind: "observed", label: "Player id", value: player.playerId }
       ]
     });
@@ -376,9 +376,9 @@ function buildPlayerWarnings(
   if (player.playerId && (latestIdentityIndex.get(player.playerId)?.length ?? 0) > 1) {
     warnings.push({
       code: "ambiguous_identity",
-      message: "La identidad estable aparece duplicada en el snapshot actual.",
+      message: "Stable identity appears duplicated in the current snapshot.",
       evidence: [
-        { kind: "observed", label: "Jugador", value: player.name },
+        { kind: "observed", label: "Player", value: player.name },
         { kind: "observed", label: "Player id", value: player.playerId }
       ]
     });
@@ -387,8 +387,8 @@ function buildPlayerWarnings(
   if (snapshots.length < 2) {
     warnings.push({
       code: "insufficient_history",
-      message: "No existe historial suficiente para evaluar evolucion del jugador.",
-      evidence: [{ kind: "observed", label: "Snapshots disponibles", value: snapshots.length }]
+      message: "Insufficient history to evaluate player evolution.",
+      evidence: [{ kind: "observed", label: "Available snapshots", value: snapshots.length }]
     });
   }
 
@@ -396,10 +396,10 @@ function buildPlayerWarnings(
     warnings.push({
       code: "missing_skills",
       message:
-        "Faltan habilidades visibles; las comparaciones se calculan solo con datos presentes.",
+        "Missing visible skills; comparisons are computed using present data only.",
       evidence: [
-        { kind: "observed", label: "Jugador", value: player.name },
-        { kind: "observed", label: "Habilidades faltantes", value: missingSkills.join(", ") }
+        { kind: "observed", label: "Player", value: player.name },
+        { kind: "observed", label: "Missing skills", value: missingSkills.join(", ") }
       ]
     });
   }
@@ -483,20 +483,20 @@ function buildFindings(input: {
         type: "insufficient_data",
         severity: "info",
         confidence: "low",
-        title: "Datos insuficientes",
+        title: "Insufficient data",
         description:
-          "No hay dos snapshots comparables con habilidades suficientes para clasificar evolucion.",
+          "There are not two comparable snapshots with sufficient skills to classify evolution.",
         evidence: [
           ...baseEvidence,
           {
             kind: "derived",
-            label: "Habilidades comparables",
+            label: "Comparable skills",
             value: input.evolution.comparableSkills
           },
           {
             kind: "inferred",
             label: "Conclusion",
-            value: "Insuficiente"
+            value: "Insufficient"
           }
         ]
       }
@@ -509,14 +509,14 @@ function buildFindings(input: {
         type: "decline",
         severity: severityFromNetDelta(totalDelta(declinedSkills), "decline"),
         confidence: input.evolution.confidence,
-        title: "Deterioro observado",
+        title: "Observed decline",
         description:
-          "El ultimo snapshot muestra mas habilidades visibles en baja que en mejora. Es una lectura observada, no una causa de entrenamiento.",
+          "The latest snapshot shows more visible skills declining than improving. This is an observed reading, not a training cause.",
         evidence: [
           ...baseEvidence,
           ...skillEvidence(declinedSkills),
-          { kind: "derived", label: "Delta neto de skills", value: totalDelta(changedSkills) },
-          { kind: "inferred", label: "Causalidad de entrenamiento", value: "No atribuida" }
+          { kind: "derived", label: "Net skill delta", value: totalDelta(changedSkills) },
+          { kind: "inferred", label: "Training causality", value: "Not attributed" }
         ]
       }
     ];
@@ -528,14 +528,14 @@ function buildFindings(input: {
         type: "improvement",
         severity: severityFromNetDelta(totalDelta(improvedSkills), "improvement"),
         confidence: input.evolution.confidence,
-        title: "Mejora observada",
+        title: "Observed improvement",
         description:
-          "El ultimo snapshot muestra mas habilidades visibles en mejora que en baja. ATLAS no atribuye causalidad al entrenamiento.",
+          "The latest snapshot shows more visible skills improving than declining. ATLAS does not attribute causality to training.",
         evidence: [
           ...baseEvidence,
           ...skillEvidence(improvedSkills),
-          { kind: "derived", label: "Delta neto de skills", value: totalDelta(changedSkills) },
-          { kind: "inferred", label: "Causalidad de entrenamiento", value: "No atribuida" }
+          { kind: "derived", label: "Net skill delta", value: totalDelta(changedSkills) },
+          { kind: "inferred", label: "Training causality", value: "Not attributed" }
         ]
       }
     ];
@@ -557,14 +557,14 @@ function buildFindings(input: {
       type: "stagnation",
       severity: stagnationSeverity,
       confidence: input.evolution.confidence,
-      title: "Estancamiento observado",
+      title: "Observed stagnation",
       description:
-        "Las habilidades visibles comparables no muestran progreso neto en la ventana analizada.",
+        "Comparable visible skills show no net progress over the analyzed window.",
       evidence: [
         ...baseEvidence,
-        { kind: "derived", label: "Habilidades estables", value: input.evolution.stableSkills },
-        { kind: "derived", label: "Delta neto de skills", value: totalDelta(changedSkills) },
-        { kind: "inferred", label: "Conclusion", value: "Estancamiento observado" }
+        { kind: "derived", label: "Stable skills", value: input.evolution.stableSkills },
+        { kind: "derived", label: "Net skill delta", value: totalDelta(changedSkills) },
+        { kind: "inferred", label: "Conclusion", value: "Observed stagnation" }
       ]
     }
   ];
@@ -582,8 +582,8 @@ function buildSignals(
     signals.push({
       code: "needs_more_history",
       confidence: "low",
-      message: "Sin dos puntos comparables no hay lectura prudente de evolucion.",
-      evidence: [{ kind: "derived", label: "Habilidades comparables", value: 0 }]
+      message: "Without two comparable points, prudent evolution reading is unavailable.",
+      evidence: [{ kind: "derived", label: "Comparable skills", value: 0 }]
     });
     return signals;
   }
@@ -592,11 +592,11 @@ function buildSignals(
     signals.push({
       code: "observed_skill_growth",
       confidence: evolution.confidence,
-      message: "Hay mejora observada en mas habilidades que deterioros.",
+      message: "Observed improvement in more skills than declines.",
       evidence: [
-        { kind: "observed", label: "Jugador", value: player.name },
-        { kind: "derived", label: "Habilidades que subieron", value: evolution.improvedSkills },
-        { kind: "derived", label: "Habilidades que bajaron", value: evolution.declinedSkills }
+        { kind: "observed", label: "Player", value: player.name },
+        { kind: "derived", label: "Skills improved", value: evolution.improvedSkills },
+        { kind: "derived", label: "Skills declined", value: evolution.declinedSkills }
       ]
     });
   }
@@ -605,9 +605,9 @@ function buildSignals(
     signals.push({
       code: "observed_skill_decline",
       confidence: evolution.confidence,
-      message: "Hay deterioro observado en al menos una habilidad visible.",
+      message: "Observed decline in at least one visible skill.",
       evidence: [
-        { kind: "derived", label: "Habilidades que bajaron", value: evolution.declinedSkills }
+        { kind: "derived", label: "Skills declined", value: evolution.declinedSkills }
       ]
     });
   }
@@ -615,10 +615,10 @@ function buildSignals(
   signals.push({
     code: "training_priority_context",
     confidence: "low",
-    message: "La prioridad de entrenamiento se muestra solo como contexto manual del club.",
+    message: "Training priority is displayed as manual club context only.",
     evidence: [
       { kind: "manual", label: "training.priority", value: trainingPriority },
-      { kind: "inferred", label: "Causalidad atribuida", value: "No" }
+      { kind: "inferred", label: "Attributed causality", value: "No" }
     ]
   });
 
@@ -883,14 +883,14 @@ function buildPlayerContext(
   const first = history[0] ?? null;
   const latest = history.at(-1) ?? null;
   const limits: string[] = [
-    "Solo jovenes observados en el plantel senior.",
-    "No usa datos de escuela juvenil real de Sokker."
+    "Young senior players observed in senior squad only.",
+    "Does not use real Sokker youth academy data."
   ];
 
-  if (history.length < 2) limits.push("Historial corto para evolucion individual.");
-  if (!hasCompleteSkills(player)) limits.push("Habilidades visibles incompletas.");
+  if (history.length < 2) limits.push("Short history for individual evolution.");
+  if (!hasCompleteSkills(player)) limits.push("Incomplete visible skills.");
   if (player.wage <= 0 || player.value <= 0) {
-    limits.push("Valor o salario faltante limita lectura patrimonial.");
+    limits.push("Missing value or wage limits asset evaluation.");
   }
 
   return {
@@ -983,17 +983,17 @@ function buildYouthWarnings(
   if (!developmentSummary || developmentSummary.recentEvolution.comparableSkills === 0) {
     warnings.push({
       code: "short_player_history",
-      message: "El jugador no tiene dos puntos comparables de desarrollo.",
-      evidence: [{ kind: "derived", label: "Habilidades comparables", value: 0 }]
+      message: "The player does not have two comparable development points.",
+      evidence: [{ kind: "derived", label: "Comparable skills", value: 0 }]
     });
   }
 
   if (missingSkills.length > 0) {
     warnings.push({
       code: "missing_skills",
-      message: "Faltan habilidades visibles; la clasificacion queda limitada.",
+      message: "Missing visible skills; classification is limited.",
       evidence: [
-        { kind: "observed", label: "Habilidades faltantes", value: missingSkills.join(", ") }
+        { kind: "observed", label: "Missing skills", value: missingSkills.join(", ") }
       ]
     });
   }
@@ -1006,16 +1006,16 @@ function buildYouthWarnings(
     warnings.push({
       code: "contradictory_signals",
       message:
-        "Hay senales mixtas de mejora y baja; corresponde seguimiento antes de clasificar con fuerza.",
+        "Mixed signals of improvement and decline; follow-up is required before strong classification.",
       evidence: [
         {
           kind: "derived",
-          label: "Habilidades que subieron",
+          label: "Skills improved",
           value: developmentSummary.recentEvolution.improvedSkills
         },
         {
           kind: "derived",
-          label: "Habilidades que bajaron",
+          label: "Skills declined",
           value: developmentSummary.recentEvolution.declinedSkills
         }
       ]
@@ -1025,8 +1025,8 @@ function buildYouthWarnings(
   if (player.age === null || !Number.isFinite(player.age)) {
     warnings.push({
       code: "missing_age",
-      message: "Falta edad comparable; la lectura juvenil no puede ser fuerte.",
-      evidence: [{ kind: "observed", label: "Edad", value: player.age }]
+      message: "Missing comparable age; youth evaluation cannot be strong.",
+      evidence: [{ kind: "observed", label: "Age", value: player.age }]
     });
   }
 
@@ -1073,21 +1073,21 @@ function buildYouthSignals(input: {
           ? (development?.recentEvolution.confidence ?? "medium")
           : "medium",
       message:
-        "Jugador joven del plantel senior con habilidades relevantes altas y mejora observada.",
+        "Young senior squad player with high relevant skills and observed improvement.",
       evidence: [
-        { kind: "observed", label: "Edad", value: input.player.age },
-        { kind: "observed", label: "Rol", value: resolveRole(input.player).label },
-        { kind: "observed", label: "Ventana desde", value: input.context.window.from },
-        { kind: "observed", label: "Ventana hasta", value: input.context.window.to },
-        { kind: "derived", label: "Promedio skills relevantes", value: relevantSkillAverage },
-        { kind: "derived", label: "Habilidades que subieron", value: improvedSkills },
+        { kind: "observed", label: "Age", value: input.player.age },
+        { kind: "observed", label: "Role", value: resolveRole(input.player).label },
+        { kind: "observed", label: "Window from", value: input.context.window.from },
+        { kind: "observed", label: "Window to", value: input.context.window.to },
+        { kind: "derived", label: "Relevant skill average", value: relevantSkillAverage },
+        { kind: "derived", label: "Skills improved", value: improvedSkills },
         {
           kind: "derived",
-          label: "Variacion valor %",
+          label: "Value variation %",
           value: input.context.valueAndWage.valueDeltaPercent
         },
-        { kind: "observed", label: "Salario", value: input.player.wage },
-        { kind: "observed", label: "Valor estimado", value: input.player.value },
+        { kind: "observed", label: "Wage", value: input.player.wage },
+        { kind: "observed", label: "Estimated value", value: input.player.value },
         { kind: "manual", label: "academy.investment", value: input.academyInvestment }
       ]
     });
@@ -1099,12 +1099,12 @@ function buildYouthSignals(input: {
       severity: "medium",
       confidence: input.marketPlan.confidence,
       message:
-        "La planificacion interna de mercado tambien marca al jugador como activo a proteger.",
+        "Internal market planning also marks the player as an asset to protect.",
       evidence: [
-        { kind: "inferred", label: "Senal mercado interno", value: input.marketPlan.category },
-        { kind: "inferred", label: "Timing mercado", value: input.marketPlan.timing.label },
-        { kind: "observed", label: "Ventana desde", value: input.context.window.from },
-        { kind: "observed", label: "Ventana hasta", value: input.context.window.to }
+        { kind: "inferred", label: "Internal market signal", value: input.marketPlan.category },
+        { kind: "inferred", label: "Market timing", value: input.marketPlan.timing.label },
+        { kind: "observed", label: "Window from", value: input.context.window.from },
+        { kind: "observed", label: "Window to", value: input.context.window.to }
       ]
     });
   }
@@ -1115,24 +1115,24 @@ function buildYouthSignals(input: {
       severity: input.player.age >= 22 ? "medium" : "low",
       confidence: development.recentEvolution.confidence,
       message:
-        "El modulo de desarrollo muestra estancamiento observado; requiere revisar prioridad de seguimiento.",
+        "The development module shows observed stagnation; follow-up priority should be reviewed.",
       evidence: [
-        { kind: "observed", label: "Edad", value: input.player.age },
-        { kind: "observed", label: "Rol", value: resolveRole(input.player).label },
-        { kind: "observed", label: "Ventana desde", value: input.context.window.from },
-        { kind: "observed", label: "Ventana hasta", value: input.context.window.to },
-        { kind: "derived", label: "Habilidades comparables", value: comparableSkills },
+        { kind: "observed", label: "Age", value: input.player.age },
+        { kind: "observed", label: "Role", value: resolveRole(input.player).label },
+        { kind: "observed", label: "Window from", value: input.context.window.from },
+        { kind: "observed", label: "Window to", value: input.context.window.to },
+        { kind: "derived", label: "Comparable skills", value: comparableSkills },
         {
           kind: "derived",
-          label: "Variacion valor %",
+          label: "Value variation %",
           value: input.context.valueAndWage.valueDeltaPercent
         },
         {
           kind: "derived",
-          label: "Variacion salario %",
+          label: "Wage variation %",
           value: input.context.valueAndWage.wageDeltaPercent
         },
-        { kind: "inferred", label: "Hallazgo desarrollo", value: "stagnation" }
+        { kind: "inferred", label: "Development finding", value: "stagnation" }
       ]
     });
   }
@@ -1142,15 +1142,15 @@ function buildYouthSignals(input: {
       code: "young_decline_review",
       severity: "medium",
       confidence: development?.recentEvolution.confidence ?? "low",
-      message: "Hay mas habilidades visibles en baja que en mejora para un jugador joven.",
+      message: "More visible skills declining than improving for a young player.",
       evidence: [
-        { kind: "observed", label: "Ventana desde", value: input.context.window.from },
-        { kind: "observed", label: "Ventana hasta", value: input.context.window.to },
-        { kind: "derived", label: "Habilidades que bajaron", value: declinedSkills },
-        { kind: "derived", label: "Habilidades que subieron", value: improvedSkills },
+        { kind: "observed", label: "Window from", value: input.context.window.from },
+        { kind: "observed", label: "Window to", value: input.context.window.to },
+        { kind: "derived", label: "Skills declined", value: declinedSkills },
+        { kind: "derived", label: "Skills improved", value: improvedSkills },
         {
           kind: "derived",
-          label: "Variacion valor %",
+          label: "Value variation %",
           value: input.context.valueAndWage.valueDeltaPercent
         }
       ]
@@ -1163,14 +1163,14 @@ function buildYouthSignals(input: {
       severity: "low",
       confidence: "low",
       message:
-        "Jugador joven del plantel senior sin historial comparable suficiente; corresponde seguimiento prudente.",
+        "Young senior squad player without sufficient comparable history; prudent follow-up required.",
       evidence: [
-        { kind: "observed", label: "Edad", value: input.player.age },
-        { kind: "observed", label: "Rol", value: resolveRole(input.player).label },
-        { kind: "derived", label: "Habilidades comparables", value: comparableSkills },
+        { kind: "observed", label: "Age", value: input.player.age },
+        { kind: "observed", label: "Role", value: resolveRole(input.player).label },
+        { kind: "derived", label: "Comparable skills", value: comparableSkills },
         {
           kind: "observed",
-          label: "Snapshots comparables",
+          label: "Comparable snapshots",
           value: input.context.window.snapshotCount
         },
         { kind: "manual", label: "academy.investment", value: input.academyInvestment }
@@ -1232,18 +1232,18 @@ function calculateConfidence(
 
 function buildRationale(category: Category): string {
   if (category === "standout_prospect") {
-    return "Prospecto destacado dentro del plantel senior; no implica escuela juvenil real.";
+    return "Standout prospect within senior squad; does not imply real youth academy.";
   }
 
   if (category === "stagnation_risk") {
-    return "Riesgo de estancamiento o deterioro observado que requiere seguimiento prudente.";
+    return "Stagnation or decline risk observed, requiring prudent follow-up.";
   }
 
   if (category === "follow_up") {
-    return "Jugador joven senior para monitorear antes de extraer conclusiones fuertes.";
+    return "Young senior player to monitor before drawing strong conclusions.";
   }
 
-  return "Datos insuficientes para clasificar con fuerza.";
+  return "Insufficient data to strongly classify.";
 }
 
 function buildInsufficientSignal(player: PersistedPlayerSnapshot): YouthPipelineSignal {
@@ -1251,8 +1251,8 @@ function buildInsufficientSignal(player: PersistedPlayerSnapshot): YouthPipeline
     code: "insufficient_youth_signal",
     severity: "info",
     confidence: "low",
-    message: "No hay evidencia suficiente para clasificar con fuerza al joven senior.",
-    evidence: [{ kind: "observed", label: "Jugador", value: player.name }]
+    message: "Insufficient evidence to strongly classify the young senior player.",
+    evidence: [{ kind: "observed", label: "Player", value: player.name }]
   };
 }
 
@@ -1361,16 +1361,16 @@ function buildGlobalYouthWarnings(
   if (youngPlayers.length === 0) {
     warnings.push({
       code: "no_young_senior_players",
-      message: "No hay jugadores del plantel senior dentro del umbral juvenil definido.",
-      evidence: [{ kind: "derived", label: "Jovenes senior", value: 0 }]
+      message: "No senior squad players within the defined youth threshold.",
+      evidence: [{ kind: "derived", label: "Young seniors", value: 0 }]
     });
   }
 
   if (snapshots.length < 2) {
     warnings.push({
       code: "short_history",
-      message: "La lectura de pipeline juvenil senior mejora con al menos dos snapshots.",
-      evidence: [{ kind: "observed", label: "Snapshots disponibles", value: snapshots.length }]
+      message: "Young senior pipeline reading improves with at least two snapshots.",
+      evidence: [{ kind: "observed", label: "Available snapshots", value: snapshots.length }]
     });
   }
 

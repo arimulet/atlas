@@ -36,7 +36,7 @@ export function AuthScreen() {
     clearMessages();
 
     if (!email.trim()) {
-      setErrorMessage("Por favor ingrese su correo electrónico.");
+      setErrorMessage("Please enter your email address.");
       return;
     }
 
@@ -44,9 +44,9 @@ export function AuthScreen() {
       setIsSubmitting(true);
       try {
         await resetPassword(email.trim());
-        setSuccessMessage("Se ha enviado un correo con instrucciones para restablecer su contraseña.");
+        setSuccessMessage("An email with instructions to reset your password has been sent.");
       } catch (err) {
-        const message = err instanceof Error ? err.message : "No se pudo enviar el correo de recuperación.";
+        const message = err instanceof Error ? err.message : "Could not send recovery email.";
         setErrorMessage(message);
       } finally {
         setIsSubmitting(false);
@@ -55,17 +55,17 @@ export function AuthScreen() {
     }
 
     if (!password) {
-      setErrorMessage("Por favor ingrese su contraseña.");
+      setErrorMessage("Please enter your password.");
       return;
     }
 
     if (mode === "signup") {
       if (password.length < 6) {
-        setErrorMessage("La contraseña debe tener al menos 6 caracteres.");
+        setErrorMessage("Password must be at least 6 characters long.");
         return;
       }
       if (password !== confirmPassword) {
-        setErrorMessage("Las contraseñas no coinciden.");
+        setErrorMessage("Passwords do not match.");
         return;
       }
     }
@@ -78,7 +78,7 @@ export function AuthScreen() {
         await signUp(email.trim(), password);
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Ocurrió un error al procesar su solicitud.";
+      const message = err instanceof Error ? err.message : "An error occurred while processing your request.";
       setErrorMessage(message);
     } finally {
       setIsSubmitting(false);
@@ -97,20 +97,20 @@ export function AuthScreen() {
           </div>
           <p className="atlas-auth-card__subtitle">
             {mode === "login"
-              ? "Inicia sesión para acceder a tu plataforma"
+              ? "Sign in to access your platform"
               : mode === "signup"
-              ? "Crea una cuenta para comenzar"
-              : "Restablecer contraseña"}
+              ? "Create an account to get started"
+              : "Reset password"}
           </p>
         </div>
 
         {!isFirebaseConfigured && (
           <div className="atlas-auth-alert atlas-auth-alert--warning">
             <strong>
-              <AlertTriangle size={15} className="inline-block align-middle" /> Configuración de Firebase requerida:
+              <AlertTriangle size={15} className="inline-block align-middle" /> Firebase configuration required:
             </strong>
             <span>
-              Configura tus credenciales en el archivo <code>.env</code> usando la plantilla <code>.env.example</code>.
+              Configure your credentials in the <code>.env</code> file using the <code>.env.example</code> template.
             </span>
           </div>
         )}
@@ -124,7 +124,7 @@ export function AuthScreen() {
               className={`atlas-auth-tab ${mode === "login" ? "atlas-auth-tab--active" : ""}`}
               onClick={() => handleTabSwitch("login")}
             >
-              Iniciar Sesión
+              Sign In
             </button>
             <button
               type="button"
@@ -133,7 +133,7 @@ export function AuthScreen() {
               className={`atlas-auth-tab ${mode === "signup" ? "atlas-auth-tab--active" : ""}`}
               onClick={() => handleTabSwitch("signup")}
             >
-              Crear Cuenta
+              Create Account
             </button>
           </div>
         )}
@@ -152,11 +152,11 @@ export function AuthScreen() {
 
         <form onSubmit={handleSubmit} className="atlas-auth-form" noValidate>
           <div className="atlas-auth-field">
-            <label htmlFor="auth-email">Correo Electrónico</label>
+            <label htmlFor="auth-email">Email Address</label>
             <input
               id="auth-email"
               type="email"
-              placeholder="usuario@ejemplo.com"
+              placeholder="user@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={isSubmitting}
@@ -168,14 +168,14 @@ export function AuthScreen() {
           {mode !== "forgot" && (
             <div className="atlas-auth-field">
               <div className="atlas-auth-field__label-row">
-                <label htmlFor="auth-password">Contraseña</label>
+                <label htmlFor="auth-password">Password</label>
                 {mode === "login" && (
                   <button
                     type="button"
                     className="atlas-auth-link"
                     onClick={() => handleTabSwitch("forgot")}
                   >
-                    ¿Olvidaste tu contraseña?
+                    Forgot your password?
                   </button>
                 )}
               </div>
@@ -195,7 +195,7 @@ export function AuthScreen() {
                   className="atlas-auth-toggle-pwd"
                   onClick={() => setShowPassword(!showPassword)}
                   tabIndex={-1}
-                  aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
@@ -205,7 +205,7 @@ export function AuthScreen() {
 
           {mode === "signup" && (
             <div className="atlas-auth-field">
-              <label htmlFor="auth-confirm-password">Confirmar Contraseña</label>
+              <label htmlFor="auth-confirm-password">Confirm Password</label>
               <input
                 id="auth-confirm-password"
                 type={showPassword ? "text" : "password"}
@@ -227,11 +227,11 @@ export function AuthScreen() {
             {isSubmitting ? (
               <span className="atlas-auth-spinner" aria-hidden="true" />
             ) : mode === "login" ? (
-              "Ingresar"
+              "Sign In"
             ) : mode === "signup" ? (
-              "Registrarse"
+              "Sign Up"
             ) : (
-              "Enviar Correo de Recuperación"
+              "Send Recovery Email"
             )}
           </button>
         </form>
@@ -243,7 +243,7 @@ export function AuthScreen() {
               className="atlas-auth-back-btn"
               onClick={() => handleTabSwitch("login")}
             >
-              <ArrowLeft size={14} /> Volver a Iniciar Sesión
+              <ArrowLeft size={14} /> Back to Sign In
             </button>
           </div>
         )}

@@ -10,7 +10,7 @@ export async function ensureMongoDbConnection(): Promise<void> {
   }
   const uri = process.env.MONGODB_URI;
   if (!uri) {
-    throw new Error("MONGODB_URI no está configurada en las variables de entorno.");
+    throw new Error("MONGODB_URI is not configured in environment variables.");
   }
   await connectMongoDb(uri);
 }
@@ -41,7 +41,7 @@ export function handleApiError(error: unknown) {
   return NextResponse.json(
     {
       error: "ApiError",
-      message: error instanceof Error ? error.message : "Error al procesar la solicitud"
+      message: error instanceof Error ? error.message : "Error processing request"
     },
     { status: 200 }
   );

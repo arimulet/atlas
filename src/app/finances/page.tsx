@@ -84,13 +84,13 @@ export default function FinancesPage() {
           .map((error) => (error.path ? `${error.path}: ${error.message}` : error.message))
           .join(" ");
 
-        throw new Error(message || "No se pudieron actualizar los datos.");
+        throw new Error(message || "Failed to update data.");
       }
 
       if (body.importResult.clubId) {
         const loaded = await loadFinancesData();
         if (!loaded) {
-          throw new Error("Datos actualizados, pero no se pudo recargar finanzas.");
+          throw new Error("Data updated, but unable to reload finances.");
         }
         setIsSokkerImportOpen(false);
       }
@@ -118,7 +118,7 @@ export default function FinancesPage() {
     return (
       <div className="atlas-auth-loading-screen">
         <span className="atlas-auth-spinner" aria-hidden="true" />
-        <span>Cargando ATLAS...</span>
+        <span>Loading ATLAS...</span>
       </div>
     );
   }

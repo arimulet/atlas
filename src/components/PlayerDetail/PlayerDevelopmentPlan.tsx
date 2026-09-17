@@ -94,10 +94,10 @@ export function PlayerDevelopmentPlan({
             <span
               title={
                 plan.assumptions.trainingKind === "advanced"
-                  ? "Entrenamiento Avanzado"
+                  ? "Advanced Training"
                   : plan.assumptions.trainingKind === "formation"
-                    ? "Entrenamiento de Formación"
-                    : "Entrenamiento"
+                    ? "Standard Training"
+                    : "Training"
               }
               style={{
                 display: "inline-flex",
@@ -111,10 +111,10 @@ export function PlayerDevelopmentPlan({
               }}
               aria-label={
                 plan.assumptions.trainingKind === "advanced"
-                  ? "Entrenamiento Avanzado"
+                  ? "Advanced Training"
                   : plan.assumptions.trainingKind === "formation"
-                    ? "Entrenamiento de Formación"
-                    : "Entrenamiento"
+                    ? "Standard Training"
+                    : "Training"
               }
             >
               {plan.assumptions.trainingKind === "advanced" ? (
@@ -503,7 +503,7 @@ function UnifiedTrainingPath({
                         </span>
                         {step.hasUnknownSublevel ? (
                           <span
-                            title="Subnivel inicial no registrado; se utiliza una estimación conservadora"
+                            title="Initial sublevel not recorded; conservative estimate is used"
                             style={{
                               display: "inline-flex",
                               alignItems: "center",
@@ -511,7 +511,7 @@ function UnifiedTrainingPath({
                               cursor: "help",
                               marginLeft: "0.2rem"
                             }}
-                            aria-label="Subnivel inicial estimado de forma conservadora"
+                            aria-label="Initial sublevel conservatively estimated"
                           >
                             <HelpCircle size={13} />
                           </span>

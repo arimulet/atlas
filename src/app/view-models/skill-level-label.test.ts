@@ -4,7 +4,7 @@ import { skillLevelLabel, skillLevelLabelEn, formatSokkerSkill } from "./skill-l
 
 describe("skillLevelLabel", () => {
   it("returns the Sokker label for a known level", () => {
-    expect(skillLevelLabel(8)).toBe("sólido");
+    expect(skillLevelLabel(8)).toBe("solid");
   });
 
   it("returns the English Sokker label when requested", () => {

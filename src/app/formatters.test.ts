@@ -134,13 +134,13 @@ describe("formatters", () => {
   });
 
   describe("formatDiagnosticNumber", () => {
-    it("formats numbers using es-AR locale", () => {
-      expect(formatDiagnosticNumber(1234)).toBe("1.234");
+    it("formats numbers using en-US locale", () => {
+      expect(formatDiagnosticNumber(1234)).toBe("1,234");
     });
 
     it("handles null and undefined", () => {
-      expect(formatDiagnosticNumber(null)).toBe("dato no disponible");
-      expect(formatDiagnosticNumber(undefined)).toBe("dato no disponible");
+      expect(formatDiagnosticNumber(null)).toBe("data unavailable");
+      expect(formatDiagnosticNumber(undefined)).toBe("data unavailable");
     });
 
     it("handles strings and booleans", () => {
@@ -150,8 +150,8 @@ describe("formatters", () => {
 
   describe("formatTrainingPriority", () => {
     it("maps training priority IDs to text labels", () => {
-      expect(formatTrainingPriority(1)).toBe("Condicion");
-      expect(formatTrainingPriority(6)).toBe("Defensa");
+      expect(formatTrainingPriority(1)).toBe("Stamina");
+      expect(formatTrainingPriority(6)).toBe("Defending");
       expect(formatTrainingPriority(99)).toBe("99");
     });
   });

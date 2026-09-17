@@ -5,7 +5,7 @@ import { PlayerCountryProvider } from "@/context/PlayerCountryContext";
 
 export const metadata: Metadata = {
   title: "ATLAS - Football Manager",
-  description: "Sistema de gestión y análisis táctico para Sokker Manager"
+  description: "Tactical management and analysis system for Sokker Manager"
 };
 
 export default function RootLayout({
@@ -14,7 +14,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es">
+    <html lang="en">
       <body suppressHydrationWarning>
         <AuthProvider>
           <PlayerCountryProvider>{children}</PlayerCountryProvider>
