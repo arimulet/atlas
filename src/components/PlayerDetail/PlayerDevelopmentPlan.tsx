@@ -153,7 +153,7 @@ export function PlayerDevelopmentPlan({
       <SkillTargets
         targets={plan.targets}
         idealTargets={plan.idealTargets}
-        title="Target operativo e Ideal"
+        title="Operative & Ideal Targets"
       />
       {isEditorOpen ? (
         <EditDevelopmentTargetModal
@@ -218,36 +218,49 @@ function SkillTargets({
         <table className="atlas-player-detail__table">
           <thead>
             <tr>
-              <th>Skill</th>
-              <th>Current</th>
-              <th>Operative Target</th>
-              <th>Ideal Target</th>
-              <th>Priority</th>
-              <th>Status</th>
-              <th>Reason</th>
+              <th scope="col">Skill</th>
+              <th scope="col">Current</th>
+              <th scope="col">Operative Target</th>
+              <th scope="col">Ideal Target</th>
+              <th scope="col">Status</th>
+              <th scope="col">Reasons</th>
             </tr>
           </thead>
           <tbody>
             {targets.map((target) => {
               const ideal = idealTargets.find((t) => t.skill === target.skill);
+              const currentLevelLabel = skillLevelLabel(target.currentLevel);
+              const operativeLevelLabel = skillLevelLabel(target.targetLevel);
+              const idealLevelLabel = ideal ? skillLevelLabel(ideal.targetLevel) : null;
+
               return (
                 <tr key={target.skill}>
-                  <th>{skillLabel(target.skill)}</th>
-                  <td title={skillLevelLabel(target.currentLevel) ?? undefined}>
-                    {target.currentLevel}
+                  <th scope="row" style={{ fontSize: "0.88rem", fontWeight: 800, color: "var(--atlas-text)" }}>
+                    <div style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem" }}>
+                      <PriorityIcon priority={target.priority} />
+                      <span>{skillLabel(target.skill)}</span>
+                    </div>
+                  </th>
+                  <td title={currentLevelLabel ? `${target.currentLevel} - ${currentLevelLabel}` : undefined}>
+                    <strong style={{ fontSize: "0.88rem" }}>{target.currentLevel}</strong>
                   </td>
-                  <td title={skillLevelLabel(target.targetLevel) ?? undefined}>
-                    {target.targetLevel}{" "}
+                  <td title={operativeLevelLabel ? `${target.targetLevel} - ${operativeLevelLabel}` : undefined}>
+                    <strong style={{ fontSize: "0.88rem" }}>{target.targetLevel}</strong>{" "}
                     <small className="atlas-text-muted">({target.remaining} left)</small>
                   </td>
-                  <td title={ideal ? (skillLevelLabel(ideal.targetLevel) ?? undefined) : undefined}>
-                    {ideal ? `${ideal.targetLevel} ` : "—"}
+                  <td title={idealLevelLabel && ideal ? `${ideal.targetLevel} - ${idealLevelLabel}` : undefined}>
                     {ideal ? (
-                      <small className="atlas-text-muted">({ideal.remaining} left)</small>
-                    ) : null}
+                      <>
+                        <strong style={{ fontSize: "0.88rem" }}>{ideal.targetLevel}</strong>{" "}
+                        <small className="atlas-text-muted">({ideal.remaining} left)</small>
+                      </>
+                    ) : (
+                      "—"
+                    )}
                   </td>
-                  <td>{capitalize(target.priority)}</td>
-                  <td>{statusLabel(target.status)}</td>
+                  <td>
+                    <StatusBadgeForTarget status={target.status} />
+                  </td>
                   <td>{target.reasons.join(", ")}</td>
                 </tr>
               );
@@ -257,6 +270,94 @@ function SkillTargets({
       </div>
     </PlanSection>
   );
+}
+
+function PriorityIcon({ priority }: { priority: DevelopmentPlanTargetRow["priority"] }) {
+  const config = getPriorityConfig(priority);
+  const Icon = config.icon;
+  const tooltip = `${capitalize(priority)} priority`;
+
+  return (
+    <span
+      title={tooltip}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        color: config.color,
+        cursor: "help"
+      }}
+      aria-label={tooltip}
+    >
+      <Icon size={14} />
+    </span>
+  );
+}
+
+function getPriorityConfig(priority: DevelopmentPlanTargetRow["priority"]) {
+  switch (priority) {
+    case "primary":
+      return {
+        icon: Star,
+        color: "var(--atlas-warning, #d97706)"
+      };
+    case "secondary":
+      return {
+        icon: TrendingUp,
+        color: "var(--atlas-accent, #2563eb)"
+      };
+    case "supporting":
+    default:
+      return {
+        icon: Award,
+        color: "var(--atlas-text-muted, #6b7280)"
+      };
+  }
+}
+
+function StatusBadgeForTarget({ status }: { status: DevelopmentPlanTargetRow["status"] }) {
+  const config = getTargetStatusBadgeConfig(status);
+  const label = status === "complete" ? "Complete" : status === "in_progress" ? "In progress" : "Pending";
+
+  return (
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        padding: "2px 8px",
+        borderRadius: "var(--atlas-radius-sm, 4px)",
+        fontSize: "0.72rem",
+        fontWeight: 600,
+        backgroundColor: config.bg,
+        color: config.color,
+        border: `1px solid ${config.border}`
+      }}
+    >
+      {label}
+    </span>
+  );
+}
+
+function getTargetStatusBadgeConfig(status: DevelopmentPlanTargetRow["status"]) {
+  switch (status) {
+    case "complete":
+      return {
+        bg: "rgba(16, 185, 129, 0.12)",
+        color: "var(--atlas-success, #059669)",
+        border: "rgba(16, 185, 129, 0.3)"
+      };
+    case "in_progress":
+      return {
+        bg: "rgba(37, 99, 235, 0.12)",
+        color: "var(--atlas-accent, #2563eb)",
+        border: "rgba(37, 99, 235, 0.3)"
+      };
+    default:
+      return {
+        bg: "rgba(107, 114, 128, 0.12)",
+        color: "var(--atlas-text-muted, #6b7280)",
+        border: "rgba(107, 114, 128, 0.3)"
+      };
+  }
 }
 
 function getMilestoneConfig(
