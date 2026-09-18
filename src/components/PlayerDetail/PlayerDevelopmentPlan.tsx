@@ -23,10 +23,7 @@ import {
   XAxis,
   YAxis
 } from "recharts";
-import {
-  normalizeSeasonWeek,
-  type PlayerDevelopmentTargetOverride
-} from "@atlas/domain";
+import { normalizeSeasonWeek, type PlayerDevelopmentTargetOverride } from "@atlas/domain";
 import { formatEta } from "@/app/formatters";
 import { skillLevelLabel } from "@/app/view-models/skill-level-label";
 import {
@@ -234,20 +231,41 @@ function SkillTargets({
 
               return (
                 <tr key={target.skill}>
-                  <th scope="row" style={{ fontSize: "0.88rem", fontWeight: 800, color: "var(--atlas-text)" }}>
+                  <th
+                    scope="row"
+                    style={{ fontSize: "0.88rem", fontWeight: 800, color: "var(--atlas-text)" }}
+                  >
                     <div style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem" }}>
                       <PriorityIcon priority={target.priority} />
                       <span>{skillLabel(target.skill)}</span>
                     </div>
                   </th>
-                  <td title={currentLevelLabel ? `${target.currentLevel} - ${currentLevelLabel}` : undefined}>
+                  <td
+                    title={
+                      currentLevelLabel
+                        ? `${target.currentLevel} - ${currentLevelLabel}`
+                        : undefined
+                    }
+                  >
                     <strong style={{ fontSize: "0.88rem" }}>{target.currentLevel}</strong>
                   </td>
-                  <td title={operativeLevelLabel ? `${target.targetLevel} - ${operativeLevelLabel}` : undefined}>
+                  <td
+                    title={
+                      operativeLevelLabel
+                        ? `${target.targetLevel} - ${operativeLevelLabel}`
+                        : undefined
+                    }
+                  >
                     <strong style={{ fontSize: "0.88rem" }}>{target.targetLevel}</strong>{" "}
                     <small className="atlas-text-muted">({target.remaining} left)</small>
                   </td>
-                  <td title={idealLevelLabel && ideal ? `${ideal.targetLevel} - ${idealLevelLabel}` : undefined}>
+                  <td
+                    title={
+                      idealLevelLabel && ideal
+                        ? `${ideal.targetLevel} - ${idealLevelLabel}`
+                        : undefined
+                    }
+                  >
                     {ideal ? (
                       <>
                         <strong style={{ fontSize: "0.88rem" }}>{ideal.targetLevel}</strong>{" "}
@@ -315,7 +333,8 @@ function getPriorityConfig(priority: DevelopmentPlanTargetRow["priority"]) {
 
 function StatusBadgeForTarget({ status }: { status: DevelopmentPlanTargetRow["status"] }) {
   const config = getTargetStatusBadgeConfig(status);
-  const label = status === "complete" ? "Complete" : status === "in_progress" ? "In progress" : "Pending";
+  const label =
+    status === "complete" ? "Complete" : status === "in_progress" ? "In progress" : "Pending";
 
   return (
     <span
@@ -637,6 +656,14 @@ function DevelopmentImpactDashboard({
   marketValue:
     import("@/app/view-models/market-value-view-model").PlayerMarketValueViewModel | null;
 }) {
+  const peakStep = marketValue?.projection?.peak?.step;
+  const totalGain =
+    peakStep === undefined
+      ? null
+      : (marketValue?.projection?.points.find((point) => point.step === peakStep)
+          ?.gainFromCurrent ?? null);
+  const isLoss = (totalGain?.value ?? 0) < 0;
+
   return (
     <div
       className="atlas-player-development-plan__impact-dashboard"
