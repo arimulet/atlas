@@ -12,6 +12,7 @@ import {
   MAX_DEVELOPMENT_PATH_STEPS
 } from "./training-path.js";
 import type {
+  DevelopmentObjective,
   DevelopmentPlayer,
   DevelopmentProfile,
   DevelopmentProfileEvaluation,
@@ -170,6 +171,7 @@ export function evaluateDevelopmentProfiles(
 export function buildIdealDevelopmentTarget(
   player: DevelopmentPlayer,
   profile: DevelopmentProfile,
+  objective: DevelopmentObjective = "sportive",
   source: "automatic" | "manual" = "automatic"
 ): PlayerDevelopmentTarget {
   const definition = DEVELOPMENT_PROFILES[profile];
@@ -185,6 +187,7 @@ export function buildIdealDevelopmentTarget(
   return {
     playerId: player.playerId,
     profile,
+    objective,
     targetSkills,
     source
   };
@@ -196,12 +199,16 @@ export function buildOperationalDevelopmentTarget(
   options: { horizonAge: number; cycleHorizonWeeks?: number; cycleMaxSteps?: number },
   override: PlayerDevelopmentTargetOverride = {}
 ): PlayerDevelopmentTarget {
+  const resolvedObjective = override.objective ?? idealTarget.objective ?? "sportive";
   const context = {
     player: {
       ...player,
       age: player.age ?? 18
     },
-    target: idealTarget
+    target: {
+      ...idealTarget,
+      objective: resolvedObjective
+    }
   };
 
   const state = createDevelopmentSimulationState(context);
@@ -246,7 +253,7 @@ export function buildOperationalDevelopmentTarget(
     }
   }
 
-  if (override.targetLevels) {
+  if (override.targetLevels && Object.keys(override.targetLevels).length > 0) {
     for (const skill of operationalTargetSkills) {
       const requestedTarget = override.targetLevels[skill.skill];
       if (requestedTarget !== undefined) {
@@ -259,6 +266,7 @@ export function buildOperationalDevelopmentTarget(
   return {
     playerId: player.playerId,
     profile: idealTarget.profile,
+    objective: resolvedObjective,
     targetSkills: operationalTargetSkills,
     source: hasManualOverride(override) ? "manual" : "automatic"
   };
@@ -334,9 +342,11 @@ export class PlayerDevelopmentPlanner {
     profile: DevelopmentProfile,
     override: PlayerDevelopmentTargetOverride = {}
   ): PlayerDevelopmentTarget {
+    const objective = override.objective ?? "sportive";
     const ideal = buildIdealDevelopmentTarget(
       player,
       profile,
+      objective,
       hasManualOverride(override) ? "manual" : "automatic"
     );
     return buildOperationalDevelopmentTarget(
@@ -361,9 +371,11 @@ export class PlayerDevelopmentPlanner {
   ): PlayerDevelopmentPlan {
     const suggestion = suggestDevelopmentProfile(player);
     const profile = override.profile ?? suggestion.profile;
+    const objective = override.objective ?? "sportive";
     const idealTarget = buildIdealDevelopmentTarget(
       player,
       profile,
+      objective,
       hasManualOverride(override) ? "manual" : "automatic"
     );
     const target = buildOperationalDevelopmentTarget(
@@ -431,7 +443,10 @@ function profileOrder(profile: DevelopmentProfile): number {
 }
 
 function hasManualOverride(override: PlayerDevelopmentTargetOverride): boolean {
-  return override.profile !== undefined || override.targetLevels !== undefined;
+  return (
+    override.profile !== undefined ||
+    (override.targetLevels !== undefined && Object.keys(override.targetLevels).length > 0)
+  );
 }
 
 function clamp(value: number, minimum: number, maximum: number): number {

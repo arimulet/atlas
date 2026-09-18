@@ -323,6 +323,7 @@ function resolveTarget(
     return {
       playerId: context.playerId,
       profile: context.developmentGap.profile,
+      objective: "sportive",
       targetSkills: context.developmentGap.skills.map((skill) => ({
         skill: skill.skill,
         targetLevel: skill.targetLevel,
@@ -341,6 +342,7 @@ function defaultTarget(
   return {
     playerId: context.playerId,
     profile,
+    objective: "sportive",
     targetSkills: DEVELOPMENT_PROFILES[profile].relevantSkills.map((skill) => ({
       skill: skill.skill,
       targetLevel: skill.defaultTargetLevel,

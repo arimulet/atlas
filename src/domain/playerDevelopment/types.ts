@@ -9,6 +9,8 @@ export type DevelopmentProfile =
 
 export type DevelopmentPriority = "primary" | "secondary" | "supporting";
 
+export type DevelopmentObjective = "sportive" | "financial";
+
 export type DevelopmentTargetSource = "automatic" | "manual";
 
 export interface DevelopmentPlayer {
@@ -36,6 +38,7 @@ export interface DevelopmentTargetSkill {
 export interface PlayerDevelopmentTarget {
   playerId: number;
   profile: DevelopmentProfile;
+  objective?: DevelopmentObjective;
   targetSkills: DevelopmentTargetSkill[];
   source: DevelopmentTargetSource;
 }
@@ -105,6 +108,7 @@ export interface PlayerDevelopmentGap {
 
 export interface PlayerDevelopmentTargetOverride {
   profile?: DevelopmentProfile | null;
+  objective?: DevelopmentObjective | null;
   targetLevels?: Partial<Record<DevelopmentSkill, number>>;
 }
 

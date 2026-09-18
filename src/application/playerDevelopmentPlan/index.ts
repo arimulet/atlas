@@ -81,24 +81,35 @@ export async function getPlayerDevelopmentTarget(input: {
 export async function savePlayerDevelopmentTarget(
   input: Omit<SavePlayerDevelopmentOverrideInput, "clubId"> & { clubId: ClubId }
 ): Promise<PersistedPlayerDevelopmentOverride> {
+  const numericClubId = await resolveNumericClubId(input.clubId);
   invalidateSquadAssessmentCache(input.clubId);
+  invalidateSquadAssessmentCache(numericClubId);
   invalidateYouthDecisionPlanningCache(input.clubId);
-  return playerRepository.saveDevelopmentOverride({
+  invalidateYouthDecisionPlanningCache(numericClubId);
+  const result = await playerRepository.saveDevelopmentOverride({
     ...input,
-    clubId: await resolveNumericClubId(input.clubId)
+    clubId: numericClubId
   });
+  invalidateSquadAssessmentCache();
+  invalidateYouthDecisionPlanningCache();
+  return result;
 }
 
 export async function resetPlayerDevelopmentTarget(input: {
   playerId: number;
   clubId: ClubId;
 }): Promise<void> {
+  const numericClubId = await resolveNumericClubId(input.clubId);
   invalidateSquadAssessmentCache(input.clubId);
+  invalidateSquadAssessmentCache(numericClubId);
   invalidateYouthDecisionPlanningCache(input.clubId);
+  invalidateYouthDecisionPlanningCache(numericClubId);
   await playerRepository.deleteDevelopmentOverride({
     ...input,
-    clubId: await resolveNumericClubId(input.clubId)
+    clubId: numericClubId
   });
+  invalidateSquadAssessmentCache();
+  invalidateYouthDecisionPlanningCache();
 }
 
 async function resolveNumericClubId(clubId: ClubId): Promise<number> {

@@ -171,6 +171,7 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
         training={training}
         trainingDiagnostic={trainingDiagnostic}
         trainingStatus={trainingStatus}
+        onTargetUpdated={loadPlayerData}
       />
     </AppShell>
   );

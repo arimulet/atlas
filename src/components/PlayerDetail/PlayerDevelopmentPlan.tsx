@@ -702,6 +702,23 @@ function DevelopmentImpactDashboard({
           <span className="atlas-badge" style={{ fontSize: "0.68rem", padding: "1px 6px" }}>
             {plan.profile.source === "manual" ? "Manual target" : "Automatic target"}
           </span>
+          <span
+            className="atlas-badge"
+            style={{
+              fontSize: "0.68rem",
+              padding: "1px 6px",
+              backgroundColor:
+                plan.profile.objective === "financial"
+                  ? "rgba(217, 119, 6, 0.15)"
+                  : "var(--atlas-surface-subtle)",
+              color:
+                plan.profile.objective === "financial"
+                  ? "var(--atlas-warning, #d97706)"
+                  : "var(--atlas-text)"
+            }}
+          >
+            {plan.profile.objective === "financial" ? "💰 Financial" : "⚽ Sportive"}
+          </span>
           {plan.profile.hasConflict && (
             <small
               style={{ color: "var(--atlas-warning, #d97706)" }}

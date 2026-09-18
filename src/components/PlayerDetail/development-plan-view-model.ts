@@ -6,7 +6,7 @@ import {
   type PlayerDevelopmentProjection,
   type PlayerTrainingPath
 } from "@atlas/application";
-import { DEVELOPMENT_PROFILES } from "@atlas/domain";
+import { DEVELOPMENT_PROFILES, type DevelopmentObjective } from "@atlas/domain";
 import type { TrainingPageData, TrainingPagePlayer } from "@atlas/web/app/types";
 import type { PlayerDetailViewModel } from "@/app/view-models/player-detail-view-model";
 
@@ -52,6 +52,8 @@ export interface DevelopmentPlanViewModel {
   profile: {
     current: DevelopmentProfile;
     currentLabel: string;
+    objective: DevelopmentObjective;
+    objectiveLabel: string;
     source: "automatic" | "manual";
     suggested: DevelopmentProfile;
     suggestedLabel: string;
@@ -87,6 +89,7 @@ export interface DevelopmentPlanViewModel {
   };
   editor: {
     profile: DevelopmentProfile;
+    objective: DevelopmentObjective;
     targetLevels: Partial<Record<DevelopmentSkill, number>>;
   };
 }
@@ -232,6 +235,8 @@ function mapPlan(input: {
     profile: {
       current: input.plan.target.profile,
       currentLabel: profileLabel(input.plan.target.profile),
+      objective: input.plan.target.objective ?? "sportive",
+      objectiveLabel: objectiveLabel(input.plan.target.objective ?? "sportive"),
       source: input.plan.target.source,
       suggested: input.plan.suggestion.profile,
       suggestedLabel: profileLabel(input.plan.suggestion.profile),
@@ -285,11 +290,16 @@ function mapPlan(input: {
     },
     editor: {
       profile: input.plan.target.profile,
+      objective: input.plan.target.objective ?? "sportive",
       targetLevels: Object.fromEntries(
         input.plan.target.targetSkills.map((skill) => [skill.skill, skill.targetLevel])
       )
     }
   };
+}
+
+export function objectiveLabel(objective: DevelopmentObjective): string {
+  return objective === "financial" ? "Financial" : "Sportive";
 }
 
 export function developmentProfileOptions(): DevelopmentProfile[] {
