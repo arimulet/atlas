@@ -32,4 +32,4 @@ type MarketTransferCurrentDocument = InferSchemaType<typeof marketTransferCurren
 
 export const MarketTransferCurrentModel =
   (mongoose.models?.marketTransfers_current as Model<MarketTransferCurrentDocument> | undefined) ??
-  model<MarketTransferCurrentDocument>("marketTransfers_current", marketTransferCurrentSchema);
+  model<MarketTransferCurrentDocument>("marketTransfers_current", marketTransferCurrentSchema, "markettransfers_currents");

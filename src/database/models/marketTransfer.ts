@@ -29,4 +29,4 @@ type MarketTransferDocument = InferSchemaType<typeof marketTransferSchema>;
 
 export const MarketTransferModel =
   (mongoose.models?.marketTransfers as Model<MarketTransferDocument> | undefined) ??
-  model<MarketTransferDocument>("marketTransfers", marketTransferSchema);
+  model<MarketTransferDocument>("marketTransfers", marketTransferSchema, "markettransfers");
