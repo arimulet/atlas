@@ -116,7 +116,9 @@ export function InvestmentSimulator({
       const res = await financialStrategy.lookupPlayer(id);
       if (res.found && res.player) {
         setLoadedPlayer(res.player);
-        setLookupMessage(null);
+        setLookupMessage(
+          `Player loaded: ${res.player.name} (${res.source === "club_player" ? "Squad" : "Transfer Market"})`
+        );
       } else {
         setLoadedPlayer(null);
         setLookupMessage(res.message || "Player not found in local records.");

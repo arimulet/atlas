@@ -66,4 +66,4 @@ type PlayerDocument = InferSchemaType<typeof playerSchema>;
 
 export const PlayerModel =
   (mongoose.models?.Player as Model<PlayerDocument> | undefined) ??
-  model<PlayerDocument>("Player", playerSchema);
+  model<PlayerDocument>("Player", playerSchema, "players");
