@@ -24,11 +24,10 @@ import {
   YAxis
 } from "recharts";
 import {
-  getSokkerSeason,
   normalizeSeasonWeek,
   type PlayerDevelopmentTargetOverride
 } from "@atlas/domain";
-import { formatEta, formatPercentage } from "@/app/formatters";
+import { formatEta } from "@/app/formatters";
 import { skillLevelLabel } from "@/app/view-models/skill-level-label";
 import {
   type DevelopmentPlanPathRow,
@@ -389,7 +388,7 @@ function getMilestoneConfig(
 
 function UnifiedTrainingPath({
   path,
-  completed,
+  completed: _completed,
   marketValue,
   milestones
 }: {
@@ -626,10 +625,6 @@ function skillLabel(skill: DevelopmentPlanPathRow["skill"]): string {
   return labels[skill];
 }
 
-function statusLabel(status: DevelopmentPlanTargetRow["status"]): string {
-  return status === "complete" ? "Complete" : status === "in_progress" ? "In progress" : "Pending";
-}
-
 function capitalize(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
@@ -642,10 +637,6 @@ function DevelopmentImpactDashboard({
   marketValue:
     import("@/app/view-models/market-value-view-model").PlayerMarketValueViewModel | null;
 }) {
-  const totalGain = marketValue?.training?.totalValueGain;
-  const isLoss = totalGain?.value !== undefined && totalGain.value < 0;
-  const gainColor = isLoss ? "var(--atlas-danger)" : "var(--atlas-success)";
-
   return (
     <div
       className="atlas-player-development-plan__impact-dashboard"

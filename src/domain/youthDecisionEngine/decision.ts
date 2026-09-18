@@ -349,7 +349,6 @@ function stabilizeDecision(
   if (scoreChanges.every((change) => change <= config.decisionStabilityMargin)) {
     return previous.decision;
   }
-  if (previous.decision === "release" || decision === "release") return "unknown";
   if (
     (previous.decision === "train" || decision === "train") &&
     context.prospect.confidence !== "high"

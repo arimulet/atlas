@@ -68,6 +68,10 @@ export interface PlayerAcquisitionSimulationResult {
     currentPayrollCoverageWeeks: number | null;
     currentWeeklyPayroll: number;
     projectedWeeklyPayroll: number;
+    accumulatedWage4Weeks: number;
+    accumulatedWage8Weeks: number;
+    accumulatedWage16Weeks: number;
+    postInvestmentCashAfter8Weeks: number | null;
     safety: InvestmentSafetyAssessment["safety"];
     reasons: CapitalAllocationReason[];
   };
@@ -272,6 +276,14 @@ export function simulatePlayerAcquisition(
   const currentWeeklyPayroll = context.financialAssessment.payroll.totalWeekly;
   const projectedWeeklyPayroll = currentWeeklyPayroll + resolvedWage;
   const currentPayrollCoverageWeeks = context.financialAssessment.position.metrics.payrollCoverageWeeks;
+
+  const accumulatedWage4Weeks = resolvedWage * 4;
+  const accumulatedWage8Weeks = resolvedWage * 8;
+  const accumulatedWage16Weeks = resolvedWage * 16;
+  const postInvestmentCashAfter8Weeks =
+    financialSafety.postInvestmentCash !== null
+      ? financialSafety.postInvestmentCash - accumulatedWage8Weeks
+      : null;
 
   // 4. Encaje en Plantilla (Squad Fit)
   const profileDepth = targetProfile
@@ -486,6 +498,10 @@ export function simulatePlayerAcquisition(
       currentPayrollCoverageWeeks,
       currentWeeklyPayroll,
       projectedWeeklyPayroll,
+      accumulatedWage4Weeks,
+      accumulatedWage8Weeks,
+      accumulatedWage16Weeks,
+      postInvestmentCashAfter8Weeks,
       safety: financialSafety.safety,
       reasons: financialSafety.reasons
     },

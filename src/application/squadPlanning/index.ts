@@ -23,8 +23,6 @@ import {
   projectDevelopment,
   buildWeeklyTrainingReport,
   estimateTalentFromTrainingHistory,
-  BASE_TRAINING_POINTS,
-  calculateWeeklyTrainingPointsByKind,
   calculateRequiredTrainingPoints,
   type DevelopmentCurrentSkillProgress,
   type DevelopmentPlayer,
