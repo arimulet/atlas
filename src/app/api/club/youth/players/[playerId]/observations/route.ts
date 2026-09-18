@@ -5,7 +5,7 @@ import { getEffectiveClubId, handleApiError, jsonResponse } from "@/lib/api-help
 
 const playerIdParamSchema = z.coerce.number().int().positive();
 const observationsBodySchema = z.object({
-  observations: z.array(z.record(z.string(), z.unknown())).optional().default([])
+  observations: z.string()
 });
 
 export async function PATCH(
