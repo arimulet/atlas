@@ -54,10 +54,15 @@ export async function connectMongoDb(uri?: string): Promise<typeof mongoose> {
   }
 
   if (!cached.promise || mongoose.connection.readyState === 0) {
-    cached.promise = mongoose.connect(targetUri).then((m) => {
-      cached.conn = m;
-      return m;
-    });
+    cached.promise = mongoose
+      .connect(targetUri, {
+        serverSelectionTimeoutMS: 5000,
+        connectTimeoutMS: 10000
+      })
+      .then((m) => {
+        cached.conn = m;
+        return m;
+      });
   }
 
   try {

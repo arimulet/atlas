@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { z } from "zod";
 import {
   getPlayerDevelopmentTarget,
   resetPlayerDevelopmentTarget,
@@ -6,14 +7,22 @@ import {
 } from "@atlas/application";
 import { getEffectiveClubId, handleApiError, jsonResponse } from "@/lib/api-helper";
 
+const playerIdParamSchema = z.coerce.number().int().positive();
+const developmentTargetBodySchema = z.object({
+  profile: z.enum(["goalkeeper", "defender", "midfielder", "forward"]),
+  objective: z.enum(["sportive", "financial"]).optional(),
+  targetLevels: z.record(z.string(), z.number()).optional()
+});
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ playerId: string }> }
 ) {
   try {
-    const { playerId } = await params;
+    const rawParams = await params;
+    const playerId = playerIdParamSchema.parse(rawParams.playerId);
     const clubId = await getEffectiveClubId();
-    const data = await getPlayerDevelopmentTarget({ clubId, playerId: Number(playerId) });
+    const data = await getPlayerDevelopmentTarget({ clubId, playerId });
     return jsonResponse(data);
   } catch (error) {
     return handleApiError(error);
@@ -25,13 +34,16 @@ export async function PUT(
   { params }: { params: Promise<{ playerId: string }> }
 ) {
   try {
-    const { playerId } = await params;
+    const rawParams = await params;
+    const playerId = playerIdParamSchema.parse(rawParams.playerId);
     const clubId = await getEffectiveClubId();
-    const body = await request.json();
+    const rawBody = await request.json();
+    const body = developmentTargetBodySchema.parse(rawBody);
     const data = await savePlayerDevelopmentTarget({
       clubId,
-      playerId: Number(playerId),
+      playerId,
       profile: body.profile,
+      objective: body.objective,
       targetLevels: body.targetLevels
     });
     return jsonResponse(data);
@@ -45,9 +57,10 @@ export async function DELETE(
   { params }: { params: Promise<{ playerId: string }> }
 ) {
   try {
-    const { playerId } = await params;
+    const rawParams = await params;
+    const playerId = playerIdParamSchema.parse(rawParams.playerId);
     const clubId = await getEffectiveClubId();
-    await resetPlayerDevelopmentTarget({ clubId, playerId: Number(playerId) });
+    await resetPlayerDevelopmentTarget({ clubId, playerId });
     return jsonResponse({ status: "ok" });
   } catch (error) {
     return handleApiError(error);

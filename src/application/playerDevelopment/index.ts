@@ -47,7 +47,7 @@ const roleRelevantSkills: Record<string, SkillKey[]> = {
   defender: ["defender", "pace", "technique", "passing"],
   midfielder: ["playmaker", "passing", "technique", "pace"],
   winger: ["pace", "technique", "passing", "playmaker"],
-  striker: ["striker", "pace", "technique"],
+  striker: ["striker", "pace", "technique", "passing"],
   trainee: ["pace", "technique", "passing", "playmaker", "striker", "defender"],
   undefined: ["pace", "technique", "passing", "playmaker"]
 };
@@ -723,7 +723,7 @@ function buildFindingEvidence(
   current: PersistedPlayerSnapshot,
   currentSnapshot: PersistedSnapshot,
   previousPoint: ComparablePlayerPoint | null,
-  snapshotCount: number
+  _snapshotCount: number
 ): DevelopmentEvidence[] {
   return [
     {

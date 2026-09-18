@@ -461,6 +461,10 @@ export function calculateYouthDevelopmentMetrics(input: {
 
   const levelPops = input.currentLevel - input.initialLevel;
 
+  if (input.currentLevel >= 17) {
+    return { levelPops: Math.max(levelPops, 0), talent: null, expectedLevel: 17 };
+  }
+
   if (
     levelPops <= 0 ||
     input.initialWeeks === null ||
@@ -475,7 +479,7 @@ export function calculateYouthDevelopmentMetrics(input: {
   return {
     levelPops,
     talent,
-    expectedLevel: input.currentLevel + Math.floor(input.weeksRemaining / talent)
+    expectedLevel: Math.min(17, input.currentLevel + Math.floor(input.weeksRemaining / talent))
   };
 }
 

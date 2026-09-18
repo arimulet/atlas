@@ -296,10 +296,7 @@ function SquadAssetsSection({
       />
       <DevelopmentUpside development={development} />
       {assets.distribution.length > 0 ? (
-        <CompactList
-          title="Asset distribution"
-          items={assets.distribution.map((item) => `${item.role} · ${item.value}`)}
-        />
+        <AssetDistribution distribution={assets.distribution} />
       ) : null}
       {assets.monetizable.length > 0 || assets.protectedAssets.length > 0 ? (
         <div className="atlas-finances-asset-grid">
@@ -685,15 +682,54 @@ function PositionSignals({ reasons, warnings }: { reasons: string[]; warnings: s
   );
 }
 
-function CompactList({ title, items }: { title: string; items: string[] }) {
+function AssetDistribution({
+  distribution
+}: {
+  distribution: NonNullable<FinancialStrategyState["viewModel"]>["assets"]["distribution"];
+}) {
+  if (!distribution || distribution.length === 0) return null;
+
   return (
-    <div className="atlas-finances-subsection">
-      <h3>{title}</h3>
-      <ul className="atlas-finances-compact-list">
-        {items.map((item) => (
-          <li key={item}>{item}</li>
+    <div className="atlas-finances-subsection atlas-finances-distribution-section">
+      <div className="atlas-finances-distribution-header">
+        <h3>Asset distribution</h3>
+        <span className="atlas-finances-distribution-subtitle">Share of squad value by role</span>
+      </div>
+
+      <div className="atlas-finances-distribution-bar" aria-label="Asset distribution bar">
+        {distribution.map((item) => (
+          <div
+            key={item.rawRole}
+            className={`atlas-finances-distribution-bar__segment atlas-finances-distribution-bar__segment--${item.rawRole}`}
+            style={{ width: `${Math.max(item.ratio * 100, 2)}%` }}
+            data-tooltip={`${item.role}: ${item.value} (${item.share})`}
+          />
         ))}
-      </ul>
+      </div>
+
+      <div className="atlas-finances-distribution-grid">
+        {distribution.map((item) => (
+          <div
+            key={item.rawRole}
+            className={`atlas-finances-distribution-card atlas-finances-distribution-card--${item.rawRole}`}
+          >
+            <div className="atlas-finances-distribution-card__header">
+              <div className="atlas-finances-distribution-card__role">
+                <AssetRoleIcon role={item.role} rawRole={item.rawRole} />
+                <span className="atlas-finances-distribution-card__title">{item.role}</span>
+              </div>
+              <span className="atlas-finances-distribution-card__share">{item.share}</span>
+            </div>
+            <div className="atlas-finances-distribution-card__value">{item.value}</div>
+            <div className="atlas-finances-distribution-card__progress">
+              <div
+                className={`atlas-finances-distribution-card__progress-fill atlas-finances-distribution-card__progress-fill--${item.rawRole}`}
+                style={{ width: `${item.ratio * 100}%` }}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

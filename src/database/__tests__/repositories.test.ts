@@ -472,6 +472,7 @@ describe("Mongo repositories", () => {
       clubId: 1,
       playerId: 1001,
       profile: "forward",
+      objective: "financial",
       targetLevels: { striker: 15 }
     });
 
@@ -486,11 +487,12 @@ describe("Mongo repositories", () => {
     const override = await players.findDevelopmentOverride({ clubId: 1, playerId: 1001 });
     const rawPlayer = await PlayerModel.findOne({ clubId: 1, playerId: 1001 }).lean();
 
-    expect(saved).toMatchObject({ profile: "forward" });
-    expect(override).toMatchObject({ profile: "forward" });
+    expect(saved).toMatchObject({ profile: "forward", objective: "financial" });
+    expect(override).toMatchObject({ profile: "forward", objective: "financial" });
     expect(override?.targetLevels).toEqual({ striker: 15 });
     expect(rawPlayer?.development).toMatchObject({
       profile: "forward",
+      objective: "financial",
       targetLevels: { striker: 15 }
     });
   });

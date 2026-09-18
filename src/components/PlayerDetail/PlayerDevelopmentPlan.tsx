@@ -23,12 +23,8 @@ import {
   XAxis,
   YAxis
 } from "recharts";
-import {
-  getSokkerSeason,
-  normalizeSeasonWeek,
-  type PlayerDevelopmentTargetOverride
-} from "@atlas/domain";
-import { formatEta, formatPercentage } from "@/app/formatters";
+import { normalizeSeasonWeek, type PlayerDevelopmentTargetOverride } from "@atlas/domain";
+import { formatEta } from "@/app/formatters";
 import { skillLevelLabel } from "@/app/view-models/skill-level-label";
 import {
   type DevelopmentPlanPathRow,
@@ -235,20 +231,41 @@ function SkillTargets({
 
               return (
                 <tr key={target.skill}>
-                  <th scope="row" style={{ fontSize: "0.88rem", fontWeight: 800, color: "var(--atlas-text)" }}>
+                  <th
+                    scope="row"
+                    style={{ fontSize: "0.88rem", fontWeight: 800, color: "var(--atlas-text)" }}
+                  >
                     <div style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem" }}>
                       <PriorityIcon priority={target.priority} />
                       <span>{skillLabel(target.skill)}</span>
                     </div>
                   </th>
-                  <td title={currentLevelLabel ? `${target.currentLevel} - ${currentLevelLabel}` : undefined}>
+                  <td
+                    title={
+                      currentLevelLabel
+                        ? `${target.currentLevel} - ${currentLevelLabel}`
+                        : undefined
+                    }
+                  >
                     <strong style={{ fontSize: "0.88rem" }}>{target.currentLevel}</strong>
                   </td>
-                  <td title={operativeLevelLabel ? `${target.targetLevel} - ${operativeLevelLabel}` : undefined}>
+                  <td
+                    title={
+                      operativeLevelLabel
+                        ? `${target.targetLevel} - ${operativeLevelLabel}`
+                        : undefined
+                    }
+                  >
                     <strong style={{ fontSize: "0.88rem" }}>{target.targetLevel}</strong>{" "}
                     <small className="atlas-text-muted">({target.remaining} left)</small>
                   </td>
-                  <td title={idealLevelLabel && ideal ? `${ideal.targetLevel} - ${idealLevelLabel}` : undefined}>
+                  <td
+                    title={
+                      idealLevelLabel && ideal
+                        ? `${ideal.targetLevel} - ${idealLevelLabel}`
+                        : undefined
+                    }
+                  >
                     {ideal ? (
                       <>
                         <strong style={{ fontSize: "0.88rem" }}>{ideal.targetLevel}</strong>{" "}
@@ -316,7 +333,8 @@ function getPriorityConfig(priority: DevelopmentPlanTargetRow["priority"]) {
 
 function StatusBadgeForTarget({ status }: { status: DevelopmentPlanTargetRow["status"] }) {
   const config = getTargetStatusBadgeConfig(status);
-  const label = status === "complete" ? "Complete" : status === "in_progress" ? "In progress" : "Pending";
+  const label =
+    status === "complete" ? "Complete" : status === "in_progress" ? "In progress" : "Pending";
 
   return (
     <span
@@ -389,7 +407,7 @@ function getMilestoneConfig(
 
 function UnifiedTrainingPath({
   path,
-  completed,
+  completed: _completed,
   marketValue,
   milestones
 }: {
@@ -626,10 +644,6 @@ function skillLabel(skill: DevelopmentPlanPathRow["skill"]): string {
   return labels[skill];
 }
 
-function statusLabel(status: DevelopmentPlanTargetRow["status"]): string {
-  return status === "complete" ? "Complete" : status === "in_progress" ? "In progress" : "Pending";
-}
-
 function capitalize(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
@@ -642,9 +656,13 @@ function DevelopmentImpactDashboard({
   marketValue:
     import("@/app/view-models/market-value-view-model").PlayerMarketValueViewModel | null;
 }) {
-  const totalGain = marketValue?.training?.totalValueGain;
-  const isLoss = totalGain?.value !== undefined && totalGain.value < 0;
-  const gainColor = isLoss ? "var(--atlas-danger)" : "var(--atlas-success)";
+  const peakStep = marketValue?.projection?.peak?.step;
+  const totalGain =
+    peakStep === undefined
+      ? null
+      : (marketValue?.projection?.points.find((point) => point.step === peakStep)
+          ?.gainFromCurrent ?? null);
+  const isLoss = (totalGain?.value ?? 0) < 0;
 
   return (
     <div
@@ -683,6 +701,23 @@ function DevelopmentImpactDashboard({
         >
           <span className="atlas-badge" style={{ fontSize: "0.68rem", padding: "1px 6px" }}>
             {plan.profile.source === "manual" ? "Manual target" : "Automatic target"}
+          </span>
+          <span
+            className="atlas-badge"
+            style={{
+              fontSize: "0.68rem",
+              padding: "1px 6px",
+              backgroundColor:
+                plan.profile.objective === "financial"
+                  ? "rgba(217, 119, 6, 0.15)"
+                  : "var(--atlas-surface-subtle)",
+              color:
+                plan.profile.objective === "financial"
+                  ? "var(--atlas-warning, #d97706)"
+                  : "var(--atlas-text)"
+            }}
+          >
+            {plan.profile.objective === "financial" ? "💰 Financial" : "⚽ Sportive"}
           </span>
           {plan.profile.hasConflict && (
             <small

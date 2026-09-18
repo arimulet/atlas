@@ -114,6 +114,7 @@ export interface PersistedPlayer {
 
 export interface PersistedPlayerDevelopment {
   profile: PersistedDevelopmentProfile | null;
+  objective?: "sportive" | "financial" | null;
   targetLevels: Partial<Record<PersistedDevelopmentSkill, number>>;
 }
 
@@ -140,6 +141,7 @@ export interface PersistedPlayerDevelopmentOverride {
   playerId: number;
   clubId: number;
   profile: PersistedPlayerDevelopment["profile"];
+  objective?: "sportive" | "financial" | null;
   targetLevels: PersistedPlayerDevelopment["targetLevels"];
 }
 
@@ -164,6 +166,7 @@ export interface SavePlayerDevelopmentOverrideInput {
   playerId: number;
   clubId: number;
   profile?: PersistedDevelopmentProfile | null;
+  objective?: "sportive" | "financial" | null;
   targetLevels?: Partial<Record<PersistedDevelopmentSkill, number>>;
 }
 

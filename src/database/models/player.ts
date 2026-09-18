@@ -14,6 +14,11 @@ const playerDevelopmentSchema = new Schema(
         "forward"
       ]
     },
+    objective: {
+      type: String,
+      enum: ["sportive", "financial"],
+      default: "sportive"
+    },
     targetLevels: { type: Map, of: Number }
   },
   { _id: false }

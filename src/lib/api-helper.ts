@@ -1,5 +1,6 @@
 import { cache } from "react";
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { connectMongoDb, isMongoConnected } from "@atlas/database";
 import { getUserClubs } from "@atlas/application";
 import { getAuthenticatedUserServer } from "./session";
@@ -44,6 +45,17 @@ export function jsonResponse<T>(data: T, status = 200) {
 }
 
 export function handleApiError(error: unknown) {
+  if (error instanceof z.ZodError) {
+    return NextResponse.json(
+      {
+        error: "ValidationError",
+        message: "Invalid request payload or parameters",
+        issues: error.issues
+      },
+      { status: 400 }
+    );
+  }
+
   const statusCode = error instanceof ApiError ? error.statusCode : 500;
   const message = error instanceof Error ? error.message : "Error processing request";
   return NextResponse.json(

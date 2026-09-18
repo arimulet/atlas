@@ -16,6 +16,7 @@ export interface UsePlayerDevelopmentPlanInput {
   clubId: string | null;
   player: PlayerDetailViewModel;
   training: TrainingPageData | null;
+  onTargetUpdated?: () => Promise<void> | void;
 }
 
 export interface PlayerDevelopmentPlanState {
@@ -55,6 +56,9 @@ export function usePlayerDevelopmentPlan(
           input.player.player.id,
           override
         );
+        if (input.onTargetUpdated) {
+          await input.onTargetUpdated();
+        }
         router.refresh();
       } catch (caught: unknown) {
         const nextError =
@@ -65,7 +69,7 @@ export function usePlayerDevelopmentPlan(
         setIsSaving(false);
       }
     },
-    [input.clubId, input.player.player.id, router]
+    [input.clubId, input.player.player.id, input.onTargetUpdated, router]
   );
 
   const resetToAutomatic = useCallback(async (): Promise<void> => {
@@ -75,6 +79,9 @@ export function usePlayerDevelopmentPlan(
     setError(null);
     try {
       await resetPlayerDevelopmentTarget(input.clubId, input.player.player.id);
+      if (input.onTargetUpdated) {
+        await input.onTargetUpdated();
+      }
       router.refresh();
     } catch (caught: unknown) {
       const nextError =
@@ -84,7 +91,7 @@ export function usePlayerDevelopmentPlan(
     } finally {
       setIsSaving(false);
     }
-  }, [input.clubId, input.player.player.id, router]);
+  }, [input.clubId, input.player.player.id, input.onTargetUpdated, router]);
 
   return { plan, isLoading: false, isSaving, error, updateTarget, resetToAutomatic };
 }

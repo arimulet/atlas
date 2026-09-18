@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { X } from "lucide-react";
 import type {
+  DevelopmentObjective,
   DevelopmentProfile,
   DevelopmentSkill,
   PlayerDevelopmentTargetOverride
@@ -27,6 +28,8 @@ export function EditDevelopmentTargetModal({
   onReset
 }: EditDevelopmentTargetModalProps) {
   const [profile, setProfile] = useState<DevelopmentProfile>(plan.editor.profile);
+  const [objective, setObjective] = useState<DevelopmentObjective>(plan.editor.objective);
+  const [isCustomized, setIsCustomized] = useState<boolean>(plan.profile.source === "manual");
   const currentLevels = useMemo(
     () => Object.fromEntries(plan.targets.map((target) => [target.skill, target.currentLevel])),
     [plan.targets]
@@ -35,43 +38,57 @@ export function EditDevelopmentTargetModal({
     plan.editor.targetLevels
   );
   const [validationError, setValidationError] = useState<string | null>(null);
+
+  const handleObjectiveChange = (nextObjective: DevelopmentObjective) => {
+    setObjective(nextObjective);
+    setIsCustomized(false);
+    setTargetLevels(targetDefaultsForProfile(profile, currentLevels));
+    setValidationError(null);
+  };
+
   const profileSkills = Object.entries(
-    profile === plan.editor.profile
+    profile === plan.editor.profile && objective === plan.editor.objective && isCustomized
       ? plan.editor.targetLevels
       : targetDefaultsForProfile(profile, currentLevels)
   ) as Array<[DevelopmentSkill, number]>;
 
   const handleProfileChange = (nextProfile: DevelopmentProfile) => {
     setProfile(nextProfile);
+    setIsCustomized(false);
     setTargetLevels(targetDefaultsForProfile(nextProfile, currentLevels));
     setValidationError(null);
   };
 
   const handleTargetLevelChange = (skill: DevelopmentSkill, value: string) => {
     const level = Number(value);
+    setIsCustomized(true);
     setTargetLevels((current) => ({ ...current, [skill]: level }));
     setValidationError(null);
   };
 
   const handleSubmit = async () => {
-    const invalid = profileSkills.some(([skill]) => {
-      const level = targetLevels[skill];
-      const current = currentLevels[skill] ?? 0;
-      return (
-        level === undefined ||
-        !Number.isInteger(level) ||
-        level < current ||
-        level < 1 ||
-        level > 18
-      );
-    });
+    if (isCustomized) {
+      const invalid = profileSkills.some(([skill]) => {
+        const level = targetLevels[skill];
+        const current = currentLevels[skill] ?? 0;
+        return (
+          level === undefined ||
+          !Number.isInteger(level) ||
+          level < current ||
+          level < 1 ||
+          level > 18
+        );
+      });
 
-    if (invalid) {
-      setValidationError("Target levels must be whole numbers from the current level through 18.");
-      return;
+      if (invalid) {
+        setValidationError("Target levels must be whole numbers from the current level through 18.");
+        return;
+      }
+
+      await onSave({ profile, objective, targetLevels });
+    } else {
+      await onSave({ profile, objective });
     }
-
-    await onSave({ profile, targetLevels });
   };
 
   const handleReset = async () => {
@@ -104,6 +121,17 @@ export function EditDevelopmentTargetModal({
                 {profileLabel(option)}
               </option>
             ))}
+          </select>
+        </label>
+        <label>
+          Plan Objective
+          <select
+            aria-label="Plan Objective"
+            value={objective}
+            onChange={(event) => handleObjectiveChange(event.target.value as DevelopmentObjective)}
+          >
+            <option value="sportive">⚽ Deportivo (Balanced performance)</option>
+            <option value="financial">💰 Financiero (Market resale value)</option>
           </select>
         </label>
         <div className="atlas-player-development-plan__editor-skills">
