@@ -61,7 +61,20 @@ export async function simulatePlayerAcquisitionApplication(
       MarketTransferModel.findOne({ playerId }).sort({ transferDate: -1 }).lean().catch(() => null)
     ]);
 
-    const resolvedSkills = ((playerDoc?.skills ?? currentTransferDoc?.player.skills ?? histTransferDoc?.skills ?? {}) as Record<string, number>);
+    const rawSkills = ((playerDoc?.skills ?? currentTransferDoc?.player.skills ?? histTransferDoc?.skills ?? {}) as Record<string, number>);
+    const resolvedSkills: Record<string, number> = {
+      stamina: rawSkills.stamina ?? 0,
+      pace: rawSkills.pace ?? 0,
+      technique: rawSkills.technique ?? 0,
+      passing: rawSkills.passing ?? 0,
+      keeper: rawSkills.keeper ?? 0,
+      defender: rawSkills.defender ?? rawSkills.defending ?? 0,
+      playmaker: rawSkills.playmaker ?? rawSkills.playmaking ?? 0,
+      striker: rawSkills.striker ?? rawSkills.scoring ?? 0
+    };
+    if (typeof rawSkills.form === "number") {
+      resolvedSkills.form = rawSkills.form;
+    }
     const resolvedAge = playerDoc?.age ?? currentTransferDoc?.player.age ?? histTransferDoc?.age ?? input.age ?? null;
     const resolvedName = playerDoc?.name ?? currentTransferDoc?.player.name ?? histTransferDoc?.name ?? input.name ?? null;
     const resolvedWage = playerDoc?.wage ?? input.weeklyWage ?? null;
