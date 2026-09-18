@@ -723,7 +723,7 @@ function buildFindingEvidence(
   current: PersistedPlayerSnapshot,
   currentSnapshot: PersistedSnapshot,
   previousPoint: ComparablePlayerPoint | null,
-  snapshotCount: number
+  _snapshotCount: number
 ): DevelopmentEvidence[] {
   return [
     {

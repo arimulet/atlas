@@ -1,9 +1,9 @@
-import { normalizeSeasonWeek, WEEKS_PER_SOKKER_SEASON } from "../sokker/calendar.js";
+import { WEEKS_PER_SOKKER_SEASON } from "../sokker/calendar.js";
 import {
   calculateRequiredTrainingPoints,
   calculateWeeklyTrainingPointsByKind
 } from "../training/index.js";
-import { DEFAULT_TALENT_FOR_RELATIVE_COMPARISON } from "../training/constants.js";
+import { DEFAULT_TALENT_FOR_RELATIVE_COMPARISON, MAX_SKILL_LEVEL } from "../training/constants.js";
 import type { Confidence } from "../types.js";
 import { toTrainingDomainSkill, validateDevelopmentTarget } from "./training-path.js";
 import type { PlayerTrainingPath } from "./training-path-types.js";
@@ -330,7 +330,9 @@ function calculateStepTrainingPoints(input: {
   toLevel: number;
   usePartialProgress: boolean;
 }): number | null {
-  if (!Number.isFinite(input.toLevel) || input.toLevel < 1) return null;
+  if (!Number.isFinite(input.toLevel) || input.toLevel < 1 || input.toLevel > MAX_SKILL_LEVEL) {
+    return null;
+  }
 
   const talent = usableTalent(input.context);
   let fullLevelPoints: number;
