@@ -882,9 +882,158 @@
     margin: 0;
   }
 
-  .atlas-finances-compact-list li {
-    color: var(--atlas-text-secondary);
+  .atlas-finances-distribution-section {
+    margin-top: 16px;
+  }
+
+  .atlas-finances-distribution-header {
+    align-items: baseline;
+    display: flex;
+    gap: 10px;
+    justify-content: space-between;
+    margin-bottom: 8px;
+
+    h3 {
+      color: var(--atlas-text-muted);
+      font-size: 0.66rem;
+      letter-spacing: 0.08em;
+      margin: 0;
+      text-transform: uppercase;
+    }
+  }
+
+  .atlas-finances-distribution-subtitle {
+    color: var(--atlas-text-muted);
+    font-size: 0.72rem;
+  }
+
+  .atlas-finances-distribution-bar {
+    background: color-mix(in srgb, var(--atlas-surface-hover) 60%, transparent);
+    border-radius: var(--atlas-radius-sm, 6px);
+    display: flex;
+    gap: 2px;
+    height: 8px;
+    margin-bottom: 12px;
+    overflow: hidden;
+    padding: 1px;
+    width: 100%;
+  }
+
+  .atlas-finances-distribution-bar__segment {
+    border-radius: 4px;
+    height: 100%;
+    transition: opacity 0.15s ease;
+
+    &:hover {
+      opacity: 0.85;
+    }
+
+    &--core {
+      background: #f59e0b;
+    }
+    &--rotation {
+      background: #38bdf8;
+    }
+    &--depth {
+      background: #94a3b8;
+    }
+    &--prospect {
+      background: #a855f7;
+    }
+    &--developing {
+      background: #22c55e;
+    }
+    &--transition {
+      background: #f97316;
+    }
+  }
+
+  .atlas-finances-distribution-grid {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  }
+
+  .atlas-finances-distribution-card {
+    background: color-mix(in srgb, var(--atlas-surface-hover) 35%, transparent);
+    border: 1px solid color-mix(in srgb, var(--atlas-border) 60%, transparent);
+    border-radius: var(--atlas-radius-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px 12px;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+
+    &:hover {
+      background: color-mix(in srgb, var(--atlas-surface-hover) 65%, transparent);
+      border-color: var(--atlas-border);
+    }
+  }
+
+  .atlas-finances-distribution-card__header {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+    justify-content: space-between;
+  }
+
+  .atlas-finances-distribution-card__role {
+    align-items: center;
+    display: flex;
+    gap: 6px;
+  }
+
+  .atlas-finances-distribution-card__title {
+    color: var(--atlas-text);
     font-size: 0.78rem;
+    font-weight: 600;
+  }
+
+  .atlas-finances-distribution-card__share {
+    color: var(--atlas-text-muted);
+    font-family: var(--atlas-font-mono, monospace);
+    font-size: 0.74rem;
+    font-weight: 700;
+  }
+
+  .atlas-finances-distribution-card__value {
+    color: var(--atlas-text);
+    font-size: 0.96rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .atlas-finances-distribution-card__progress {
+    background: color-mix(in srgb, var(--atlas-surface-hover) 80%, transparent);
+    border-radius: 999px;
+    height: 4px;
+    overflow: hidden;
+    width: 100%;
+  }
+
+  .atlas-finances-distribution-card__progress-fill {
+    border-radius: 999px;
+    height: 100%;
+    transition: width 0.3s ease;
+
+    &--core {
+      background: #f59e0b;
+    }
+    &--rotation {
+      background: #38bdf8;
+    }
+    &--depth {
+      background: #94a3b8;
+    }
+    &--prospect {
+      background: #a855f7;
+    }
+    &--developing {
+      background: #22c55e;
+    }
+    &--transition {
+      background: #f97316;
+    }
   }
 
   .atlas-finances-asset-grid {
