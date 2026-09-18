@@ -80,7 +80,14 @@ export interface SquadAssetViewModel {
   liquidity: string;
   concentration: string;
   concentrationWarning: boolean;
-  distribution: Array<{ role: string; value: string }>;
+  distribution: Array<{
+    role: string;
+    rawRole: string;
+    value: string;
+    rawValue: number;
+    share: string;
+    ratio: number;
+  }>;
   potentialLiquidity: string;
   monetizable: Array<{
     playerId: number;
@@ -341,12 +348,25 @@ function createAssetViewModel(
     concentrationWarning: assessment.warnings.some(
       (warning) => warning.type === "high_asset_concentration"
     ),
-    distribution: assessment.squadAssets.distribution
-      ? Object.entries(assessment.squadAssets.distribution).map(([role, value]) => ({
-          role: roleLabel(role),
-          value: money(value, currency)
-        }))
-      : [],
+    distribution: (() => {
+      if (!assessment.squadAssets.distribution) return [];
+      const entries = Object.entries(assessment.squadAssets.distribution);
+      const total = entries.reduce((sum, [, val]) => sum + val, 0);
+      const denominator = total > 0 ? total : 1;
+      return entries
+        .map(([role, value]) => {
+          const ratio = Math.max(0, Math.min(1, value / denominator));
+          return {
+            role: roleLabel(role),
+            rawRole: role,
+            value: money(value, currency),
+            rawValue: value,
+            share: percentage(ratio),
+            ratio
+          };
+        })
+        .sort((left, right) => right.rawValue - left.rawValue);
+    })(),
     potentialLiquidity: money(allocation.potentialAssetLiquidity, currency),
     monetizable: allocation.monetizableAssets
       .filter((asset) => asset.liquidityPotential !== "low" && asset.estimatedMarketValue !== null && !protectedPlayerIds.has(asset.playerId))
