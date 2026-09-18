@@ -46,7 +46,7 @@ export const DEVELOPMENT_PROFILES: Readonly<
     relevantSkills: [
       { skill: "striker", priority: "primary", defaultTargetLevel: 17 },
       { skill: "pace", priority: "primary", defaultTargetLevel: 17 },
-      { skill: "technique", priority: "secondary", defaultTargetLevel: 16 },
+      { skill: "technique", priority: "primary", defaultTargetLevel: 17 },
       { skill: "passing", priority: "supporting", defaultTargetLevel: 13 }
     ]
   }
