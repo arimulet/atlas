@@ -24,7 +24,8 @@ export function PlayerDetail({
   trainingStatus,
   squadPlanning,
   currency,
-  onBackToSquad
+  onBackToSquad,
+  onTargetUpdated
 }: PlayerDetailProps) {
   const viewModel = createPlayerDetailViewModel({
     playerId,
@@ -63,6 +64,7 @@ export function PlayerDetail({
       player={viewModel}
       training={training}
       onBack={onBack}
+      onTargetUpdated={onTargetUpdated}
     />
   );
 }
@@ -72,13 +74,15 @@ interface PlayerDetailContentProps {
   player: PlayerDetailViewModel;
   training: PlayerDetailProps["training"];
   onBack: PlayerDetailProps["onBack"];
+  onTargetUpdated?: PlayerDetailProps["onTargetUpdated"];
 }
 
 function PlayerDetailContent({
   clubId,
   player: viewModel,
   training,
-  onBack
+  onBack,
+  onTargetUpdated
 }: PlayerDetailContentProps) {
   return (
     <div className="atlas-player-detail">
@@ -93,7 +97,13 @@ function PlayerDetailContent({
         />
       </div>
       <DevelopmentPlanBoundary key={viewModel.player.id}>
-        <DevelopmentPlanSection clubId={clubId} player={viewModel} training={training} marketValue={viewModel.marketValue ?? null} />
+        <DevelopmentPlanSection
+          clubId={clubId}
+          player={viewModel}
+          training={training}
+          marketValue={viewModel.marketValue ?? null}
+          onTargetUpdated={onTargetUpdated}
+        />
       </DevelopmentPlanBoundary>
       <TrainingHistoryPanel rows={viewModel.trainingHistory} />
     </div>
@@ -105,10 +115,11 @@ interface DevelopmentPlanSectionProps {
   player: PlayerDetailViewModel;
   training: PlayerDetailProps["training"];
   marketValue: PlayerMarketValueViewModel | null;
+  onTargetUpdated?: PlayerDetailProps["onTargetUpdated"];
 }
 
-function DevelopmentPlanSection({ clubId, player, training, marketValue }: DevelopmentPlanSectionProps) {
-  const developmentPlan = usePlayerDevelopmentPlan({ clubId, player, training });
+function DevelopmentPlanSection({ clubId, player, training, marketValue, onTargetUpdated }: DevelopmentPlanSectionProps) {
+  const developmentPlan = usePlayerDevelopmentPlan({ clubId, player, training, onTargetUpdated });
 
   return (
     <PlayerDevelopmentPlan

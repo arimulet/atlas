@@ -121,7 +121,13 @@ export function generateNextTrainingCandidates(
         developmentReturnScore: breakdown.developmentReturnScore,
         developmentValue: breakdown.developmentValue,
         pathScore:
-          DEVELOPMENT_PRIORITY_WEIGHTS[targetSkill.priority] * breakdown.developmentReturnScore,
+          (context.target.objective === "financial"
+            ? targetSkill.priority === "primary"
+              ? 12
+              : targetSkill.priority === "secondary"
+                ? 2
+                : 1
+            : DEVELOPMENT_PRIORITY_WEIGHTS[targetSkill.priority]) * breakdown.developmentReturnScore,
         reason: baseReasons({
           skill: targetSkill.skill,
           priority: targetSkill.priority,

@@ -88,6 +88,7 @@ export class MongoPlayerRepository {
       playerId: player.playerId,
       clubId: player.clubId,
       profile: player.development.profile,
+      objective: player.development.objective ?? "sportive",
       targetLevels: player.development.targetLevels
     };
   }
@@ -101,6 +102,7 @@ export class MongoPlayerRepository {
         $set: {
           development: {
             profile: input.profile ?? null,
+            objective: input.objective ?? "sportive",
             targetLevels: input.targetLevels ?? {}
           }
         }
@@ -122,6 +124,7 @@ export class MongoPlayerRepository {
       playerId: mapped.playerId,
       clubId: mapped.clubId,
       profile: mapped.development.profile,
+      objective: mapped.development.objective ?? "sportive",
       targetLevels: mapped.development.targetLevels
     };
   }
@@ -147,6 +150,7 @@ export class MongoPlayerRepository {
         playerId: player.playerId,
         clubId: player.clubId,
         profile: player.development.profile,
+        objective: player.development.objective ?? "sportive",
         targetLevels: player.development.targetLevels
       }));
   }
@@ -209,12 +213,14 @@ function mapPlayer(player: {
   role?: PersistedSquadRole | null;
   development?: {
     profile?: PersistedDevelopmentProfile | null;
+    objective?: "sportive" | "financial" | null;
     targetLevels?: Map<string, number> | Record<string, number> | null;
   } | null;
 }): PersistedPlayer {
   const development = player.development
     ? {
         profile: player.development.profile ?? null,
+        objective: player.development.objective ?? "sportive",
         targetLevels: player.development.targetLevels
           ? player.development.targetLevels instanceof Map
             ? Object.fromEntries(player.development.targetLevels.entries())
@@ -224,7 +230,9 @@ function mapPlayer(player: {
     : null;
   const hasDevelopmentOverride =
     development !== null &&
-    (development.profile !== null || Object.keys(development.targetLevels).length > 0);
+    (development.profile !== null ||
+      (development.objective !== undefined && development.objective !== null) ||
+      Object.keys(development.targetLevels).length > 0);
 
   return {
     id: player._id.toString(),

@@ -100,9 +100,9 @@ const SQUAD_ASSESSMENT_CACHE_TTL_MS = 60 * 1000;
 export function invalidateSquadAssessmentCache(clubId?: ClubId): void {
   if (clubId !== undefined) {
     squadAssessmentCache.delete(String(clubId));
-  } else {
-    squadAssessmentCache.clear();
   }
+  squadAssessmentCache.clear();
+  inFlightSquadAssessments.clear();
 }
 
 export async function getSquadAssessment(
@@ -320,7 +320,12 @@ function buildPlayerContext(
   };
   const override: PlayerDevelopmentTargetOverride = {
     profile: developmentOverride?.profile,
-    targetLevels: developmentOverride?.targetLevels
+    objective: developmentOverride?.objective,
+    targetLevels:
+      developmentOverride?.targetLevels &&
+      Object.keys(developmentOverride.targetLevels).length > 0
+        ? developmentOverride.targetLevels
+        : undefined
   };
   const plan = buildPlan(developmentPlayer, override);
   const talent = history ? estimateTalentFromTrainingHistory(history) : null;

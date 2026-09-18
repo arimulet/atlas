@@ -81,9 +81,9 @@ const inFlightYouthDecisions = new Map<string, Promise<YouthDecisionPlanning>>()
 export function invalidateYouthDecisionPlanningCache(clubId?: ClubId): void {
   if (clubId) {
     youthDecisionCache.delete(String(clubId));
-  } else {
-    youthDecisionCache.clear();
   }
+  youthDecisionCache.clear();
+  inFlightYouthDecisions.clear();
 }
 
 export async function getYouthDecisionPlanning(clubId: ClubId): Promise<YouthDecisionPlanning> {

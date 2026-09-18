@@ -10,6 +10,7 @@ import { getEffectiveClubId, handleApiError, jsonResponse } from "@/lib/api-help
 const playerIdParamSchema = z.coerce.number().int().positive();
 const developmentTargetBodySchema = z.object({
   profile: z.enum(["goalkeeper", "defender", "midfielder", "forward"]),
+  objective: z.enum(["sportive", "financial"]).optional(),
   targetLevels: z.record(z.string(), z.number()).optional()
 });
 
@@ -42,6 +43,7 @@ export async function PUT(
       clubId,
       playerId,
       profile: body.profile,
+      objective: body.objective,
       targetLevels: body.targetLevels
     });
     return jsonResponse(data);

@@ -12,4 +12,5 @@ export interface PlayerDetailProps {
   currency: string | null;
   onBack: () => void;
   onBackToSquad: () => void;
+  onTargetUpdated?: () => Promise<void> | void;
 }
