@@ -2,6 +2,7 @@ import { Fragment, useMemo, useState, type ReactNode } from "react";
 import { Check, CircleDashed, X } from "lucide-react";
 
 import { PlayerLink } from "@/components/PlayerLink";
+import { PositionBadge } from "@/components/PositionBadge";
 import { registerPlayerCountries } from "@/context/PlayerCountryContext";
 import { YouthDecisionCard } from "./YouthDecisionCard";
 import {
@@ -10,6 +11,16 @@ import {
   type YouthDecisionFilter,
   type YouthDecisionViewModel
 } from "./youth-decision-view-model";
+
+export function ProspectBadge({ label }: { label: string }) {
+  const slug = label.toLowerCase().replace(/\s+/g, "-");
+  return <span className={`atlas-prospect-badge is-${slug}`}>{label}</span>;
+}
+
+export function ClubFitBadge({ label }: { label: string }) {
+  const slug = label.toLowerCase().replace(/\s+/g, "-");
+  return <span className={`atlas-club-fit-badge is-${slug}`}>{label}</span>;
+}
 
 interface YouthDecisionSectionsProps {
   models: YouthDecisionViewModel[];
@@ -207,10 +218,18 @@ function YouthDecisionComparison({
                   </td>
                   <td className="atlas-youth-table__center">{formatAdvancedRank(model)}</td>
                   <td>{model.age ?? "—"}</td>
-                  <td>{model.profileLabel}</td>
-                  <td>{model.prospectQualityLabel}</td>
-                  <td>{model.clubFitLabel}</td>
-                  <td>{model.market?.currentValueLabel ?? "—"}</td>
+                  <td>
+                    <PositionBadge position={model.profileLabel} />
+                  </td>
+                  <td>
+                    <ProspectBadge label={model.prospectQualityLabel} />
+                  </td>
+                  <td>
+                    <ClubFitBadge label={model.clubFitLabel} />
+                  </td>
+                  <td className="atlas-youth-comparison-table__market-value">
+                    {model.market?.currentValueLabel ?? "—"}
+                  </td>
                   <td>
                     <span className={`atlas-youth-decision-badge is-${model.decision}`}>
                       {model.decisionLabel}
