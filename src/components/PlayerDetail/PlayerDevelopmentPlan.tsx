@@ -146,11 +146,13 @@ export function PlayerDevelopmentPlan({
         marketValue={marketValue}
         milestones={plan.milestones}
       />
-      <SkillTargets
-        targets={plan.targets}
-        idealTargets={plan.idealTargets}
-        title="Operative & Ideal Targets"
-      />
+      {!plan.completed ? (
+        <SkillTargets
+          targets={plan.targets}
+          idealTargets={plan.idealTargets}
+          title="Operative & Ideal Targets"
+        />
+      ) : null}
       {isEditorOpen ? (
         <EditDevelopmentTargetModal
           plan={plan}
@@ -432,7 +434,7 @@ function UnifiedTrainingPath({
           {initialMilestones.length > 0 ? (
             <div
               style={{
-                marginBottom: "1rem",
+                marginBottom: visiblePath.length > 0 ? "1rem" : 0,
                 padding: "0.75rem",
                 backgroundColor: "var(--atlas-surface-alt)",
                 borderRadius: "var(--atlas-radius-md)"
@@ -441,6 +443,9 @@ function UnifiedTrainingPath({
               {initialMilestones.map((milestone) => {
                 const config = getMilestoneConfig(milestone.type);
                 const Icon = config.icon;
+                const isTargetComplete =
+                  milestone.type === "development_target_completed" ||
+                  milestone.label.toLowerCase().includes("target complete");
                 return (
                   <div
                     key={milestone.type}
@@ -452,36 +457,39 @@ function UnifiedTrainingPath({
                     >
                       <Icon size={16} style={{ color: config.color }} />
                     </span>
-                    <strong>GW {milestone.estimatedGameWeek}</strong>
+                    {!isTargetComplete ? (
+                      <strong>GW {milestone.estimatedGameWeek}</strong>
+                    ) : null}
                     <span>{milestone.label}</span>
-                    <small className="atlas-text-muted">
-                      {milestone.estimatedAge === null
-                        ? ""
-                        : `(Age ~${milestone.estimatedAge.toLocaleString("en-US", { maximumFractionDigits: 1 })})`}
-                    </small>
+                    {!isTargetComplete && milestone.estimatedAge !== null ? (
+                      <small className="atlas-text-muted">
+                        {`(Age ~${milestone.estimatedAge.toLocaleString("en-US", { maximumFractionDigits: 1 })})`}
+                      </small>
+                    ) : null}
                   </div>
                 );
               })}
             </div>
           ) : null}
-          <table className="atlas-player-detail__table">
-            <thead>
-              <tr>
-                <th scope="col">Step</th>
-                <th scope="col">Skill Progression</th>
-                <th scope="col">Timeline</th>
-                {marketValue ? <th scope="col">Projected Value</th> : null}
-              </tr>
-            </thead>
-            <tbody>
-              {visiblePath.map((step) => {
-                const projPoint = marketValue?.projection?.points.find(
-                  (p) => p.step === step.order
-                );
-                const efficiencyStep = marketValue?.training?.steps.find(
-                  (s) => s.step === step.order
-                );
-                const stepMilestones = milestones.filter((m) => m.step === step.order);
+          {visiblePath.length > 0 ? (
+            <table className="atlas-player-detail__table">
+              <thead>
+                <tr>
+                  <th scope="col">Step</th>
+                  <th scope="col">Skill Progression</th>
+                  <th scope="col">Timeline</th>
+                  {marketValue ? <th scope="col">Projected Value</th> : null}
+                </tr>
+              </thead>
+              <tbody>
+                {visiblePath.map((step) => {
+                  const projPoint = marketValue?.projection?.points.find(
+                    (p) => p.step === step.order
+                  );
+                  const efficiencyStep = marketValue?.training?.steps.find(
+                    (s) => s.step === step.order
+                  );
+                  const stepMilestones = milestones.filter((m) => m.step === step.order);
 
                 return (
                   <tr key={step.order} className={step.isCurrent ? "is-current" : ""}>
@@ -607,6 +615,7 @@ function UnifiedTrainingPath({
               })}
             </tbody>
           </table>
+          ) : null}
         </div>
       )}
     </PlanSection>
