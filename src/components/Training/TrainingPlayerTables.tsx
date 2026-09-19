@@ -160,9 +160,9 @@ function TrainingPositionTable({
         </colgroup>
         <thead>
           <tr className="atlas-training-table__columns-row">
-            <th scope="col">Player</th>
-            <th scope="col">Talent</th>
-            <th scope="col">Age</th>
+            <th className="atlas-training-table__col-player" scope="col">Player</th>
+            <th className="atlas-training-table__col-talent" scope="col">Talent</th>
+            <th className="atlas-training-table__col-age" scope="col">Age</th>
             <th scope="col">Value</th>
             {PLAYER_SKILL_DEFINITIONS.map((skill) => (
               <th
@@ -266,29 +266,35 @@ function TrainingPlayerRows({
   return (
     <>
       <tr>
-        <th scope="row">
-          <button
-            aria-expanded={isDetailsOpen}
-            aria-label={`${isDetailsOpen ? "Hide" : "View"} training details for ${player.playerName}`}
-            className="atlas-training-player-detail__toggle"
-            onClick={onToggleDetails}
-            type="button"
-          >
-            {isDetailsOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-          </button>
-          <PlayerLink
-            countryName={sourcePlayer?.countryName}
-            playerId={player.playerId}
-            onSelectPlayer={onSelectPlayer}
-          >
-            {player.playerName}
-          </PlayerLink>
-          <TrainingKind kind={player.trainingKind} />
-          <TrainingStatusIndicator status={player.status} />
-          <TrainingRecommendationIndicator kind={player.trainingKind} recommendation={recommendation} />
+        <th className="atlas-training-table__player-th" scope="row">
+          <div className="atlas-training-table__player-cell">
+            <button
+              aria-expanded={isDetailsOpen}
+              aria-label={`${isDetailsOpen ? "Hide" : "View"} training details for ${player.playerName}`}
+              className="atlas-training-player-detail__toggle"
+              onClick={onToggleDetails}
+              type="button"
+            >
+              {isDetailsOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+            </button>
+            <PlayerLink
+              cards={sourcePlayer?.cards}
+              countryName={sourcePlayer?.countryName}
+              injury={sourcePlayer?.injury}
+              playerId={player.playerId}
+              onSelectPlayer={onSelectPlayer}
+            >
+              {player.playerName}
+            </PlayerLink>
+            <span className="atlas-training-player-indicators">
+              <TrainingKind kind={player.trainingKind} />
+              <TrainingStatusIndicator status={player.status} />
+              <TrainingRecommendationIndicator kind={player.trainingKind} recommendation={recommendation} />
+            </span>
+          </div>
         </th>
-        <td className="atlas-training-table__numeric">{formatTalent(player.talent)}</td>
-        <td className="atlas-training-table__numeric">{player.age}</td>
+        <td className="atlas-training-table__numeric atlas-training-table__talent">{formatTalent(player.talent)}</td>
+        <td className="atlas-training-table__numeric atlas-training-table__age">{player.age}</td>
         <td
           className={`atlas-training-table__numeric atlas-training-table__value${
             (sourcePlayer?.valueChange ?? player.valueChange ?? 0) > 0

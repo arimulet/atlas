@@ -866,8 +866,35 @@
 }
 
 .atlas .atlas-training-table--skills thead .atlas-training-table__columns-row th:nth-child(3),
-.atlas .atlas-training-table--skills tbody td:nth-child(3) {
+.atlas .atlas-training-table--skills tbody td:nth-child(3),
+.atlas .atlas-training-table__col-age,
+.atlas .atlas-training-table__age {
   border-left: 1px solid var(--atlas-border);
+  padding-left: 2px;
+  padding-right: 2px;
+  text-align: center;
+}
+
+.atlas .atlas-training-table__player-th {
+  overflow: hidden;
+  max-width: 0;
+}
+
+.atlas .atlas-training-table__player-cell {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.atlas .atlas-training-player-indicators {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  margin-left: 4px;
 }
 
 .atlas .atlas-training-table--skills .is-position-skill {
@@ -878,7 +905,8 @@
 .atlas .atlas-training-kind {
   align-items: center;
   display: inline-flex;
-  margin-left: 6px;
+  flex-shrink: 0;
+  margin-left: 2px;
   vertical-align: middle;
 }
 
@@ -897,6 +925,9 @@
   margin-right: 7px;
   padding: 2px 4px;
   vertical-align: middle;
+  width: 24px;
+  min-width: 24px;
+  box-sizing: border-box;
 }
 
 .atlas .atlas-training-player-detail__toggle + img {
@@ -1041,15 +1072,17 @@
 }
 
 .atlas .atlas-training-table--skills col.is-player {
-  width: 19%;
+  width: 25%;
 }
 
 .atlas .atlas-training-table--skills col.is-talent {
-  width: 4.5%;
+  width: 4%;
 }
 
 .atlas .atlas-training-table--skills col.is-age {
-  width: 3.5%;
+  width: 2.2%;
+  min-width: 28px;
+  max-width: 36px;
 }
 
 .atlas .atlas-training-table--skills col.is-value {
@@ -1065,7 +1098,7 @@
 }
 
 .atlas .atlas-training-table--skills col.is-planning {
-  width: 16%;
+  width: 15.8%;
 }
 
 .atlas .atlas-training-table--skills th:first-child,
@@ -1407,15 +1440,17 @@
 }
 
 .atlas .atlas-training-table--skills col.is-player {
-  width: 19%;
+  width: 25%;
 }
 
 .atlas .atlas-training-table--skills col.is-talent {
-  width: 4.5%;
+  width: 4%;
 }
 
 .atlas .atlas-training-table--skills col.is-age {
-  width: 3.5%;
+  width: 2.2%;
+  min-width: 28px;
+  max-width: 36px;
 }
 
 .atlas .atlas-training-table--skills col.is-value {
@@ -1431,7 +1466,7 @@
 }
 
 .atlas .atlas-training-table--skills col.is-planning {
-  width: 16%;
+  width: 15.8%;
 }
 
 .atlas .atlas-training-table__market-value {

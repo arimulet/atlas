@@ -202,6 +202,14 @@ export interface PersistedPlayerSnapshot {
   availabilityStatus: "available" | "injured" | "suspended" | "unknown" | null;
   observedPosition: ObservedPosition | null;
   skills: SnapshotSkillSet;
+  cards?: {
+    yellow: number;
+    red: number;
+  };
+  injury?: {
+    days: number | null;
+    severe: boolean | null;
+  };
 }
 
 export interface PersistedJuniorSnapshot {

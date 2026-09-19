@@ -283,6 +283,14 @@ export interface TrainingPagePlayer {
   valueChange?: number | null;
   latestReport?: TrainingReport | null;
   talentEstimate?: TalentEstimate | null;
+  cards?: {
+    yellow: number;
+    red: number;
+  };
+  injury?: {
+    days: number | null;
+    severe: boolean | null;
+  };
 }
 
 export interface TalentEstimate {
