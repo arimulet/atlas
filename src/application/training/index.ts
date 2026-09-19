@@ -13,6 +13,7 @@ import {
   type PersistedPlayerTrainingWeek
 } from "@atlas/database";
 import {
+  assessYouthProspect,
   buildTrainingRecommendations,
   buildWeeklyTrainingCalibrationReport,
   buildWeeklyTrainingReport,
@@ -492,6 +493,14 @@ export function buildAdvancedTrainingOptimizationFromLoadedData(
           intensity: currentWeek.intensity
         },
         talent: talentByPlayer.get(history.playerId) ?? null,
+        prospectQualityScore: assessYouthProspect({
+          player: {
+            playerId: history.playerId,
+            age: currentWeek.playerAge,
+            skills: currentWeek.skills
+          },
+          talent: talentByPlayer.get(history.playerId) ?? null
+        }).prospectScore,
         ...(isTrialCandidate
           ? {
               trial: {
