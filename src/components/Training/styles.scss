@@ -826,10 +826,37 @@
 }
 
 .atlas .atlas-training-progress-modal li {
-  display: grid;
+  align-items: center;
+  border-bottom: 1px solid var(--atlas-border-subtle, rgba(255, 255, 255, 0.05));
+  display: flex;
   font-size: 0.78rem;
-  gap: 8px;
-  grid-template-columns: 80px minmax(0, 1fr) auto;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 6px 0;
+}
+
+.atlas .atlas-training-progress-modal li:last-child {
+  border-bottom: none;
+}
+
+.atlas .atlas-training-progress-modal__player {
+  align-items: center;
+  display: inline-flex;
+  gap: 6px;
+  min-width: 0;
+}
+
+.atlas .atlas-training-progress-modal__age {
+  color: var(--atlas-text-secondary);
+  font-size: 0.75rem;
+}
+
+.atlas .atlas-training-progress-modal__changes {
+  align-items: center;
+  display: inline-flex;
+  flex-shrink: 0;
+  gap: 4px;
+  text-align: right;
 }
 
 @media (max-width: 700px) {
@@ -877,9 +904,6 @@
   vertical-align: middle;
 }
 
-.atlas .atlas-training-progress-modal li {
-  grid-template-columns: minmax(0, 1fr) auto;
-}
 
 .atlas .atlas-training-table__skill {
   position: relative;
