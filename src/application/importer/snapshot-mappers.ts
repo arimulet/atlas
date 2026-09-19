@@ -57,7 +57,12 @@ export function mapPlayersToSnapshotPlayers(
       form: player.skills.form,
       availabilityStatus: player.injury.daysRemaining > 0 ? "injured" : "available",
       observedPosition: null,
-      skills
+      skills,
+      cards: player.cards,
+      injury: {
+        days: player.injury.daysRemaining,
+        severe: player.injury.severe
+      }
     };
   });
 }

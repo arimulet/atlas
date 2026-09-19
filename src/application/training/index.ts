@@ -940,7 +940,9 @@ function mapPlayer(
     value: player.value,
     valueChange: previousValue === null ? null : player.value - previousValue,
     latestReport: latestByPlayer.get(player.playerId) ?? null,
-    talentEstimate
+    talentEstimate,
+    cards: player.cards ?? { yellow: 0, red: 0 },
+    injury: player.injury ?? { days: null, severe: null }
   };
 }
 

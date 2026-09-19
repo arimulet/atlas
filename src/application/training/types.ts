@@ -30,6 +30,14 @@ export interface TrainingPagePlayer {
   valueChange: number | null;
   latestReport: PersistedPlayerTrainingWeek | null;
   talentEstimate: TalentEstimate | null;
+  cards?: {
+    yellow: number;
+    red: number;
+  };
+  injury?: {
+    days: number | null;
+    severe: boolean | null;
+  };
 }
 
 export interface WeeklyTrainingIntelligence {
