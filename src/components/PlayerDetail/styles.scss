@@ -1227,3 +1227,156 @@
 .atlas .atlas-player-detail__history-table tr.is-season-start > td {
   border-top: 2px solid color-mix(in srgb, var(--atlas-accent) 42%, var(--atlas-border));
 }
+
+.atlas .atlas-player-development-plan__objective-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.atlas .atlas-player-development-plan__objective-label {
+  color: var(--atlas-text-secondary);
+  font-size: 0.75rem;
+}
+
+.atlas .atlas-player-development-plan__dual-button {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  background: color-mix(in srgb, var(--atlas-border) 30%, var(--atlas-surface));
+  padding: 4px;
+  border-radius: var(--atlas-radius-sm);
+  border: 1px solid var(--atlas-border);
+}
+
+.atlas .atlas-player-development-plan__dual-button-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: calc(var(--atlas-radius-sm) - 2px);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--atlas-text-muted);
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  transition: all 180ms ease;
+
+  &:hover {
+    color: var(--atlas-text);
+    background: color-mix(in srgb, var(--atlas-surface-raised, var(--atlas-surface)) 60%, transparent);
+  }
+
+  .atlas-dual-button-icon {
+    font-size: 1.1rem;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  .atlas-dual-button-text {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    line-height: 1.25;
+
+    strong {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--atlas-text-secondary);
+    }
+
+    small {
+      font-size: 0.67rem;
+      color: var(--atlas-text-muted);
+      font-weight: 400;
+    }
+  }
+
+  &.is-active {
+    background: var(--atlas-surface-raised, var(--atlas-surface));
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+
+    .atlas-dual-button-text strong {
+      color: var(--atlas-text);
+    }
+  }
+
+  &.is-active.is-sportive {
+    border-color: color-mix(in srgb, var(--atlas-accent, #2563eb) 60%, var(--atlas-border));
+    background: color-mix(in srgb, var(--atlas-accent, #2563eb) 12%, var(--atlas-surface));
+
+    .atlas-dual-button-text strong {
+      color: var(--atlas-accent, #2563eb);
+    }
+  }
+
+  &.is-active.is-financial {
+    border-color: color-mix(in srgb, var(--atlas-warning, #d97706) 60%, var(--atlas-border));
+    background: color-mix(in srgb, var(--atlas-warning, #d97706) 14%, var(--atlas-surface));
+
+    .atlas-dual-button-text strong {
+      color: var(--atlas-warning, #d97706);
+    }
+  }
+}
+
+.atlas .atlas-player-development-plan__profile-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.atlas .atlas-player-development-plan__profile-buttons {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  background: color-mix(in srgb, var(--atlas-border) 30%, var(--atlas-surface));
+  padding: 4px;
+  border-radius: var(--atlas-radius-sm);
+  border: 1px solid var(--atlas-border);
+}
+
+.atlas .atlas-player-development-plan__profile-button-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 6px;
+  border-radius: calc(var(--atlas-radius-sm) - 2px);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--atlas-text-muted);
+  cursor: pointer;
+  font: inherit;
+  transition: all 180ms ease;
+
+  &:hover {
+    color: var(--atlas-text);
+    background: color-mix(in srgb, var(--atlas-surface-raised, var(--atlas-surface)) 60%, transparent);
+  }
+
+  .atlas-profile-button-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--atlas-text-secondary);
+  }
+
+  &.is-active {
+    background: var(--atlas-surface-raised, var(--atlas-surface));
+    border-color: var(--atlas-border);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+
+    .atlas-profile-button-label {
+      color: var(--atlas-text);
+      font-weight: 700;
+    }
+  }
+}
+
+@media (max-width: 520px) {
+  .atlas .atlas-player-development-plan__profile-buttons {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
