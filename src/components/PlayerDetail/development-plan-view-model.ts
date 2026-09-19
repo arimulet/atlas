@@ -16,8 +16,9 @@ export interface DevelopmentPlanTargetRow {
   targetLevel: number;
   remaining: number;
   priority: "primary" | "secondary" | "supporting";
-  status: "complete" | "in_progress" | "pending";
+  status: "complete" | "in_progress";
   reasons: string[];
+  marginalReturn: number | null;
 }
 
 export interface DevelopmentPlanPathRow {
@@ -120,7 +121,7 @@ function getProjectedAge(
       // fallback
     }
   }
-  return typeof fallbackAge === "number" ? Math.floor(fallbackAge) : null;
+  return typeof fallbackAge === "number" ? Math.floor(fallbackAge) : typeof baseAge === "number" ? Math.floor(baseAge) : null;
 }
 
 export function createDevelopmentPlanViewModel(
@@ -154,6 +155,10 @@ function mapPlan(input: {
 }): DevelopmentPlanViewModel {
   const projectionByOrder = new Map(input.projection.steps.map((step) => [step.order, step]));
   const baseGameWeek = input.projection.generatedAtGameWeek;
+  const extractMarginalReturn = (reasons?: import("@atlas/domain").DevelopmentTargetReason[]) => {
+    const reason = reasons?.find((r): r is { type: "positive_marginal_return"; score: number } => r.type === "positive_marginal_return");
+    return reason && typeof reason.score === "number" ? reason.score : null;
+  };
   const idealTargets = input.plan.idealTarget.targetSkills.map((skill) => ({
     skill: skill.skill,
     currentLevel: input.plan.gap.skills.find(s => s.skill === skill.skill)?.currentLevel ?? 0,
@@ -162,10 +167,9 @@ function mapPlan(input: {
     priority: skill.priority,
     status: (input.plan.gap.skills.find(s => s.skill === skill.skill)?.currentLevel ?? 0) >= skill.targetLevel
       ? ("complete" as const)
-      : (input.plan.gap.skills.find(s => s.skill === skill.skill)?.currentLevel ?? 0) > 0
-        ? ("in_progress" as const)
-        : ("pending" as const),
-    reasons: skill.reasons?.map(targetReasonLabel) ?? []
+      : ("in_progress" as const),
+    reasons: skill.reasons?.map(targetReasonLabel) ?? [],
+    marginalReturn: extractMarginalReturn(skill.reasons)
   }));
   const targets = input.plan.gap.skills.map((skill) => {
     const targetSkill = input.plan.target.targetSkills.find(s => s.skill === skill.skill);
@@ -175,12 +179,11 @@ function mapPlan(input: {
       targetLevel: skill.targetLevel,
       remaining: skill.levelsRemaining,
       priority: skill.priority,
-      status: skill.completed
+      status: skill.completed || skill.levelsRemaining === 0 || skill.currentLevel >= skill.targetLevel
         ? ("complete" as const)
-        : skill.currentLevel > 0
-          ? ("in_progress" as const)
-          : ("pending" as const),
-      reasons: targetSkill?.reasons?.map(targetReasonLabel) ?? []
+        : ("in_progress" as const),
+      reasons: targetSkill?.reasons?.map(targetReasonLabel) ?? [],
+      marginalReturn: extractMarginalReturn(targetSkill?.reasons)
     };
   });
   const path = input.path.steps.map((step) => {

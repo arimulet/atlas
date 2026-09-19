@@ -202,4 +202,42 @@ describe("createDevelopmentPlanViewModel", () => {
     expect(plan?.progress.remainingLevels).toBeGreaterThan(0);
     expect(plan?.completed).toBe(false);
   });
+
+  it("keeps projected age unchanged when step stays within the same Sokker season even if latest training report is from previous season", () => {
+    const player = createPlayer();
+    player.player.age = 19;
+    const training = createTraining();
+
+    // Snapshot gameWeek is 1205 (Season 78 Week 8)
+    if (player.developmentProjection) {
+      player.developmentProjection.generatedAtGameWeek = 1205;
+      player.developmentProjection.steps = [
+        {
+          order: 1,
+          skill: "defender",
+          fromLevel: 10,
+          toLevel: 11,
+          estimatedTrainingPoints: 1000,
+          estimatedWeeks: 4,
+          cumulativeWeeks: 4,
+          estimatedGameWeek: 1209, // Season 78 Week 12 (same season -> still 19 yo)
+          estimatedDate: new Date("2026-09-20T00:00:00.000Z"),
+          estimatedAge: 19.3,
+          confidence: "high"
+        }
+      ];
+    }
+
+    // Training history's latest report is from Season 77 Week 13 (gameWeek 1200) because Week 1 training hasn't run yet
+    const latestReport = training.players[0]?.latestReport;
+    if (latestReport) {
+      latestReport.gameWeek = 1200;
+    }
+
+    const plan = createDevelopmentPlanViewModel({ player, training });
+
+    // Step ending at GameWeek 1209 (Season 78 W12) relative to snapshot GameWeek 1205 (Season 78 W8) is still 19 yo
+    expect(plan?.path[0]?.estimatedAge).toBe(19);
+  });
 });
+
