@@ -6,11 +6,22 @@ import type {
   DevelopmentSkill,
   PlayerDevelopmentTargetOverride
 } from "@atlas/domain";
+import { PositionBadge } from "@/components/PositionBadge";
 import {
   developmentProfileOptions,
   targetDefaultsForProfile,
   type DevelopmentPlanViewModel
 } from "./development-plan-view-model";
+
+const PROFILE_CONFIGS: Record<
+  DevelopmentProfile,
+  { code: "GK" | "DEF" | "MID" | "ATT"; label: string }
+> = {
+  goalkeeper: { code: "GK", label: "Goalkeeper" },
+  defender: { code: "DEF", label: "Defender" },
+  midfielder: { code: "MID", label: "Midfielder" },
+  forward: { code: "ATT", label: "Forward" }
+};
 
 interface EditDevelopmentTargetModalProps {
   plan: DevelopmentPlanViewModel;
@@ -110,30 +121,67 @@ export function EditDevelopmentTargetModal({
             <X size={16} />
           </button>
         </div>
-        <label>
-          Development profile
-          <select
-            value={profile}
-            onChange={(event) => handleProfileChange(event.target.value as DevelopmentProfile)}
+        <div className="atlas-player-development-plan__profile-selector">
+          <span className="atlas-player-development-plan__objective-label">Development Profile</span>
+          <div
+            className="atlas-player-development-plan__profile-buttons"
+            role="group"
+            aria-label="Development Profile"
           >
-            {developmentProfileOptions().map((option) => (
-              <option key={option} value={option}>
-                {profileLabel(option)}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Plan Objective
-          <select
+            {(Object.keys(PROFILE_CONFIGS) as DevelopmentProfile[]).map((profileKey) => {
+              const config = PROFILE_CONFIGS[profileKey];
+              const isActive = profile === profileKey;
+              return (
+                <button
+                  key={profileKey}
+                  type="button"
+                  className={`atlas-player-development-plan__profile-button-item ${
+                    isActive ? "is-active" : ""
+                  }`}
+                  onClick={() => handleProfileChange(profileKey)}
+                >
+                  <PositionBadge position={config.code} size="sm" />
+                  <span className="atlas-profile-button-label">{config.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        <div className="atlas-player-development-plan__objective-selector">
+          <span className="atlas-player-development-plan__objective-label">Plan Objective</span>
+          <div
+            className="atlas-player-development-plan__dual-button"
+            role="group"
             aria-label="Plan Objective"
-            value={objective}
-            onChange={(event) => handleObjectiveChange(event.target.value as DevelopmentObjective)}
           >
-            <option value="sportive">⚽ Deportivo (Balanced performance)</option>
-            <option value="financial">💰 Financiero (Market resale value)</option>
-          </select>
-        </label>
+            <button
+              type="button"
+              className={`atlas-player-development-plan__dual-button-item ${
+                objective === "sportive" ? "is-active is-sportive" : ""
+              }`}
+              onClick={() => handleObjectiveChange("sportive")}
+            >
+              <span className="atlas-dual-button-icon">⚽</span>
+              <span className="atlas-dual-button-text">
+                <strong>Sportive</strong>
+                <small>Balanced performance</small>
+              </span>
+            </button>
+            <button
+              type="button"
+              className={`atlas-player-development-plan__dual-button-item ${
+                objective === "financial" ? "is-active is-financial" : ""
+              }`}
+              onClick={() => handleObjectiveChange("financial")}
+            >
+              <span className="atlas-dual-button-icon">💰</span>
+              <span className="atlas-dual-button-text">
+                <strong>Financial</strong>
+                <small>Market resale value</small>
+              </span>
+            </button>
+          </div>
+        </div>
         <div className="atlas-player-development-plan__editor-skills">
           <span>Target skills</span>
           {profileSkills.map(([skill]) => (
