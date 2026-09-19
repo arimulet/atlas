@@ -1,17 +1,13 @@
-import { HeaderProps } from "./types";
+import { BrandLogo } from "@/components/BrandLogo";
 import { useAuth } from "@/context/AuthContext";
+import type { HeaderProps } from "./types";
 
 export function Header({ onOpenSokkerImporter }: HeaderProps) {
   const { user, logout } = useAuth();
 
   return (
     <header className="atlas-header">
-      <div className="atlas-brand" aria-label="ATLAS">
-        <span className="atlas-brand__mark" aria-hidden="true">
-          A
-        </span>
-        <span className="atlas-brand__name">ATLAS</span>
-      </div>
+      <BrandLogo />
 
       <div className="atlas-header__tools">
         <button type="button" className="atlas-import-button" onClick={onOpenSokkerImporter}>

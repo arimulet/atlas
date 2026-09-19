@@ -24,32 +24,8 @@
     margin-bottom: 24px;
     text-align: center;
 
-    .atlas-brand {
-      align-items: center;
-      display: flex;
-      gap: 10px;
+    .atlas-brand-logo {
       margin-bottom: 12px;
-
-      &__mark {
-        align-items: center;
-        background: var(--atlas-accent);
-        border-radius: var(--atlas-radius-sm);
-        color: #10221a;
-        display: inline-flex;
-        font-size: 0.9rem;
-        font-weight: 900;
-        height: 32px;
-        justify-content: center;
-        letter-spacing: -0.04em;
-        width: 32px;
-      }
-
-      &__name {
-        color: var(--atlas-text);
-        font-size: 1.1rem;
-        font-weight: 800;
-        letter-spacing: 0.16em;
-      }
     }
   }
 
