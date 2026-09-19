@@ -135,7 +135,25 @@ export function calculateAdvancedSlotScore(input: AdvancedSlotScoreInput): numbe
   }
 
   const normalizedMarginalBenefit = input.marginalTrainingPoints / MAX_EFFICIENCY;
-  return Math.min(1, normalizedMarginalBenefit * input.developmentPotentialScore);
+
+  const prospectFactor =
+    typeof input.prospectQualityScore === "number" && Number.isFinite(input.prospectQualityScore)
+      ? Math.max(0.1, Math.min(1, input.prospectQualityScore))
+      : 1;
+
+  const clubFitFactor =
+    typeof input.clubFitScore === "number" && Number.isFinite(input.clubFitScore)
+      ? Math.max(0.1, Math.min(1, input.clubFitScore))
+      : 1;
+
+  const hasProspectOrFit =
+    input.prospectQualityScore !== undefined || input.clubFitScore !== undefined;
+
+  const qualityMultiplier = hasProspectOrFit
+    ? input.developmentPotentialScore * 0.45 + prospectFactor * 0.35 + clubFitFactor * 0.20
+    : input.developmentPotentialScore;
+
+  return Math.min(1, normalizedMarginalBenefit * qualityMultiplier);
 }
 
 export function buildAdvancedScoreBreakdown(input: {
@@ -246,7 +264,12 @@ function evaluateCandidate(
   const baseAdvancedScore =
     developmentPotentialScore === null || marginalTrainingPoints === null
       ? null
-      : calculateAdvancedSlotScore({ marginalTrainingPoints, developmentPotentialScore });
+      : calculateAdvancedSlotScore({
+          marginalTrainingPoints,
+          developmentPotentialScore,
+          prospectQualityScore: context.prospectQualityScore,
+          clubFitScore: context.clubFitScore
+        });
   const advancedScore = isTrial
     ? calculateTrialAdvancedScore(baseAdvancedScore, trialProfileQuality)
     : baseAdvancedScore;
@@ -345,7 +368,8 @@ function calculateTrialAdvancedScore(
     return null;
   }
 
-  return (advancedScore + profileQuality) / 2;
+  const qualityFactor = profileQuality < 0.4 ? profileQuality * 0.5 : profileQuality;
+  return (advancedScore + qualityFactor) / 2;
 }
 
 function preferredSkillFor(context: AdvancedTrainingCandidateContext): SkillTrainingCostSkill {

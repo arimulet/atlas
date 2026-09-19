@@ -347,6 +347,8 @@ export interface AdvancedTrainingCandidateContext {
   };
   talent?: TalentEstimate | null;
   trial?: { projectedIntensity: number; academyTalent?: number | null };
+  prospectQualityScore?: number | null;
+  clubFitScore?: number | null;
 }
 
 export interface AdvancedSlotEvaluation {
@@ -426,6 +428,8 @@ export interface AdvancedSlotReplacement {
 export interface AdvancedSlotScoreInput {
   marginalTrainingPoints: number;
   developmentPotentialScore: number;
+  prospectQualityScore?: number | null;
+  clubFitScore?: number | null;
 }
 
 export interface AdvancedTrainingOptimization {
