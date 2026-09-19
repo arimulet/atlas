@@ -373,8 +373,7 @@ function formatEvidenceValue(
   const lowerStr = strVal.toLowerCase();
   if (lowerStr === "goalkeeper") return "Goalkeeper";
   if (lowerStr === "defender") return "Defender";
-  if (lowerStr === "midfielder") return "Midfielder";
-  if (lowerStr === "winger") return "Winger";
+  if (lowerStr === "midfielder" || lowerStr === "winger") return "Midfielder";
   if (lowerStr === "striker") return "Striker";
 
   return strVal;

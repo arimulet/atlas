@@ -48,7 +48,15 @@ const playerSnapshotSchema = new Schema(
     observedPosition: { type: String, enum: [...observedPositionValues, null], default: null },
     skills: { type: skillSetSchema, required: true },
 
-    training: { type: trainingSchema, required: true }
+    training: { type: trainingSchema, required: true },
+    cards: {
+      yellow: { type: Number, default: 0, min: 0 },
+      red: { type: Number, default: 0, min: 0 }
+    },
+    injury: {
+      days: { type: Number, default: null, min: 0 },
+      severe: { type: Boolean, default: null }
+    }
   },
   { _id: true }
 );

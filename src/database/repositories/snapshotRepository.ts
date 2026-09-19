@@ -164,7 +164,7 @@ export class MongoSnapshotRepository {
     }
 
     const players = await PlayerModel.find({ clubId: snapshots[0]!.clubId })
-      .select({ playerId: 1, name: 1, countryId: 1 })
+      .select({ playerId: 1, name: 1, countryId: 1, cards: 1, injury: 1 })
       .lean();
     const missingCountryIds = [
       ...new Set(
@@ -191,7 +191,13 @@ export class MongoSnapshotRepository {
           countryName:
             typeof player.countryId === "number"
               ? (MongoSnapshotRepository.countryNamesCache.get(player.countryId) ?? null)
-              : null
+              : null,
+          cards: player.cards
+            ? { yellow: player.cards.yellow ?? 0, red: player.cards.red ?? 0 }
+            : { yellow: 0, red: 0 },
+          injury: player.injury
+            ? { days: player.injury.days ?? null, severe: player.injury.severe ?? null }
+            : { days: null, severe: null }
         }
       ])
     );
@@ -259,6 +265,14 @@ interface SnapshotDocumentShape {
       playmaker?: number | null;
       striker?: number | null;
     };
+    cards?: {
+      yellow?: number | null;
+      red?: number | null;
+    } | null;
+    injury?: {
+      days?: number | null;
+      severe?: boolean | null;
+    } | null;
   }>;
   juniors?: Array<{
     _id: Types.ObjectId;
@@ -274,7 +288,15 @@ interface SnapshotDocumentShape {
 
 function mapSnapshot(
   snapshot: SnapshotDocumentShape,
-  playerDetails: ReadonlyMap<number, { name: string; countryName: string | null }>
+  playerDetails: ReadonlyMap<
+    number,
+    {
+      name: string;
+      countryName: string | null;
+      cards: { yellow: number; red: number };
+      injury: { days: number | null; severe: boolean | null };
+    }
+  >
 ): PersistedSnapshot {
   return {
     id: snapshot._id.toString(),
@@ -284,32 +306,41 @@ function mapSnapshot(
     gameWeek: snapshot.gameWeek ?? null,
     week: snapshot.week ?? null,
     importedAt: snapshot.importedAt,
-    players: snapshot.players.map((player) => ({
-      id: player._id ? player._id.toString() : String(player.playerId),
-      playerId: player.playerId,
-      name: playerDetails.get(player.playerId)?.name ?? player.name ?? `Player ${player.playerId}`,
-      countryName: playerDetails.get(player.playerId)?.countryName ?? null,
-      age: player.age,
-      wage: player.wage,
-      value: player.value,
-      training: {
-        position: player.training.position,
-        advanced: player.training.advanced
-      },
-      form: player.form ?? null,
-      availabilityStatus: player.availabilityStatus ?? null,
-      observedPosition: player.observedPosition ?? null,
-      skills: {
-        stamina: player.skills.stamina ?? null,
-        pace: player.skills.pace ?? null,
-        technique: player.skills.technique ?? null,
-        passing: player.skills.passing ?? null,
-        keeper: player.skills.keeper ?? null,
-        defender: player.skills.defender ?? null,
-        playmaker: player.skills.playmaker ?? null,
-        striker: player.skills.striker ?? null
-      }
-    })),
+    players: snapshot.players.map((player) => {
+      const details = playerDetails.get(player.playerId);
+      return {
+        id: player._id ? player._id.toString() : String(player.playerId),
+        playerId: player.playerId,
+        name: details?.name ?? player.name ?? `Player ${player.playerId}`,
+        countryName: details?.countryName ?? null,
+        age: player.age,
+        wage: player.wage,
+        value: player.value,
+        training: {
+          position: player.training.position,
+          advanced: player.training.advanced
+        },
+        form: player.form ?? null,
+        availabilityStatus: player.availabilityStatus ?? null,
+        observedPosition: player.observedPosition ?? null,
+        skills: {
+          stamina: player.skills.stamina ?? null,
+          pace: player.skills.pace ?? null,
+          technique: player.skills.technique ?? null,
+          passing: player.skills.passing ?? null,
+          keeper: player.skills.keeper ?? null,
+          defender: player.skills.defender ?? null,
+          playmaker: player.skills.playmaker ?? null,
+          striker: player.skills.striker ?? null
+        },
+        cards: player.cards
+          ? { yellow: player.cards.yellow ?? 0, red: player.cards.red ?? 0 }
+          : (details?.cards ?? { yellow: 0, red: 0 }),
+        injury: player.injury
+          ? { days: player.injury.days ?? null, severe: player.injury.severe ?? null }
+          : (details?.injury ?? { days: null, severe: null })
+      };
+    }),
     juniors: (snapshot.juniors ?? []).map((junior) => ({
       id: junior._id ? junior._id.toString() : String(junior.playerId),
       playerId: junior.playerId,

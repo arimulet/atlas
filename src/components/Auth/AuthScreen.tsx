@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { AlertTriangle, ArrowLeft, Eye, EyeOff } from "lucide-react";
+import { BrandLogo } from "@/components/BrandLogo";
 import { useAuth } from "@/context/AuthContext";
 import { isFirebaseConfigured } from "@/services/firebase";
 import "./styles.scss";
@@ -89,12 +90,7 @@ export function AuthScreen() {
     <div className="atlas-auth-container">
       <div className="atlas-auth-card">
         <div className="atlas-auth-card__header">
-          <div className="atlas-brand" aria-label="ATLAS">
-            <span className="atlas-brand__mark" aria-hidden="true">
-              A
-            </span>
-            <span className="atlas-brand__name">ATLAS</span>
-          </div>
+          <BrandLogo variant="auth" />
           <p className="atlas-auth-card__subtitle">
             {mode === "login"
               ? "Sign in to access your platform"

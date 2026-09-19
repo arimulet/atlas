@@ -8,6 +8,16 @@ import {
   usePlayerCountry
 } from "@/context/PlayerCountryContext";
 
+export interface PlayerLinkCards {
+  yellow?: number;
+  red?: number;
+}
+
+export interface PlayerLinkInjury {
+  days?: number | null;
+  severe?: boolean | null;
+}
+
 export interface PlayerLinkProps {
   children: ReactNode;
   countryName?: string | null;
@@ -16,6 +26,79 @@ export interface PlayerLinkProps {
   className?: string;
   title?: string;
   showExternalLink?: boolean;
+  cards?: PlayerLinkCards | null;
+  injury?: PlayerLinkInjury | null;
+}
+
+export interface PlayerStatusBadgesProps {
+  cards?: PlayerLinkCards | null;
+  injury?: PlayerLinkInjury | null;
+  alwaysReserveSpace?: boolean;
+}
+
+export function PlayerStatusBadges({
+  cards,
+  injury,
+  alwaysReserveSpace = false
+}: PlayerStatusBadgesProps) {
+  const hasInjury = typeof injury?.days === "number" && injury.days > 0;
+  const isSevere = hasInjury && injury.severe === true;
+  const yellowCount = cards?.yellow ?? 0;
+  const redCount = cards?.red ?? 0;
+  const hasYellow = yellowCount > 0;
+  const hasRed = redCount > 0;
+  const hasCards = hasYellow || hasRed;
+
+  if (!hasInjury && !hasCards && !alwaysReserveSpace) {
+    return null;
+  }
+
+  return (
+    <span
+      className={`atlas-player-status-badges${!hasInjury && !hasCards ? " is-empty" : ""}`}
+      aria-label="Estado del jugador"
+    >
+      <span className="atlas-player-status-slot is-injury">
+        {hasInjury ? (
+          <span
+            className={`atlas-injury-badge ${isSevere ? "is-severe" : "is-bruised"}`}
+            title={
+              isSevere
+                ? `Lesionado (grave): ${injury.days} día${injury.days! > 1 ? "s" : ""} restante${injury.days! > 1 ? "s" : ""}`
+                : `Lastimado (con venda): ${injury.days} día${injury.days! > 1 ? "s" : ""} restante${injury.days! > 1 ? "s" : ""}`
+            }
+            aria-label={
+              isSevere
+                ? `Lesionado grave: ${injury.days} días restantes`
+                : `Lastimado con venda: ${injury.days} días restantes`
+            }
+          >
+            {isSevere ? "🚑" : "🩹"}
+          </span>
+        ) : null}
+      </span>
+      <span className="atlas-player-status-slot is-cards">
+        {hasYellow ? (
+          <span
+            className="atlas-card-group"
+            title={`${yellowCount} tarjeta${yellowCount > 1 ? "s" : ""} amarilla${yellowCount > 1 ? "s" : ""}`}
+            aria-label={`${yellowCount} tarjeta${yellowCount > 1 ? "s" : ""} amarilla${yellowCount > 1 ? "s" : ""}`}
+          >
+            {Array.from({ length: Math.min(yellowCount, 3) }).map((_, i) => (
+              <span key={i} className="atlas-card-badge is-yellow" />
+            ))}
+          </span>
+        ) : null}
+        {hasRed ? (
+          <span
+            className="atlas-card-badge is-red"
+            title={redCount > 1 ? `${redCount} tarjetas rojas (Suspendido)` : "Tarjeta roja (Suspendido)"}
+            aria-label={redCount > 1 ? `${redCount} tarjetas rojas (Suspendido)` : "Tarjeta roja (Suspendido)"}
+          />
+        ) : null}
+      </span>
+    </span>
+  );
 }
 
 export function PlayerLink({
@@ -25,8 +108,11 @@ export function PlayerLink({
   playerId,
   className,
   title,
-  showExternalLink = true
-}: PlayerLinkProps) {
+  showExternalLink = true,
+  cards,
+  injury,
+  alwaysReserveStatusSpace
+}: PlayerLinkProps & { alwaysReserveStatusSpace?: boolean }) {
   if (countryName) {
     registerPlayerCountry(playerId, countryName);
   }
@@ -34,6 +120,8 @@ export function PlayerLink({
   const contextCountry = usePlayerCountry(playerId);
   const resolvedCountry = countryName ?? contextCountry;
   const externalUrl = `https://sokker.org/player/PID/${playerId}`;
+  const shouldReserveSpace =
+    alwaysReserveStatusSpace ?? (cards !== undefined || injury !== undefined);
 
   return (
     <span className="atlas-player-link-group">
@@ -56,7 +144,14 @@ export function PlayerLink({
           onSelectPlayer(playerId);
         }}
       >
-        {resolvedCountry ? <CountryNameFlag countryName={resolvedCountry} /> : null}
+        <PlayerStatusBadges
+          cards={cards}
+          injury={injury}
+          alwaysReserveSpace={shouldReserveSpace}
+        />
+        <span className="atlas-player-flag-slot">
+          {resolvedCountry ? <CountryNameFlag countryName={resolvedCountry} /> : null}
+        </span>
         <span className="atlas-player-link__name">{children}</span>
       </Link>
       {showExternalLink ? (

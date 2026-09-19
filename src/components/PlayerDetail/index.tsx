@@ -3,6 +3,7 @@ import { ArrowLeft, ArrowUp, ArrowDown, Ban, CircleDashed, Sparkles, ExternalLin
 import type { PlayerDetailProps } from "./types";
 import { ProjectionPanel } from "./ProjectionPanel";
 import { formatNumber } from "@/app/formatters";
+import { BrowserTitle } from "@/components/BrowserTitle";
 import { CountryNameFlag } from "@/components/CountryNameFlag";
 import { DiagnosticNotifications } from "@/components/Header/DiagnosticNotifications";
 import {
@@ -86,6 +87,7 @@ function PlayerDetailContent({
 }: PlayerDetailContentProps) {
   return (
     <div className="atlas-player-detail">
+      <BrowserTitle pageName={viewModel.player.name} />
       <PlayerHeader diagnostics={viewModel.diagnostics} player={viewModel.player} onBack={onBack} />
       <PlayerPersonalInfoPanel player={viewModel.player} training={viewModel.training} />
       <div className="atlas-player-detail__summary-grid">

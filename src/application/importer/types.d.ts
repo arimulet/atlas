@@ -288,6 +288,14 @@ export interface SnapshotPlayerDto {
     playmaker: number;
     striker: number;
   };
+  cards?: {
+    yellow: number;
+    red: number;
+  };
+  injury?: {
+    days: number | null;
+    severe: boolean | null;
+  };
 }
 
 export interface SnapshotJuniorDto {

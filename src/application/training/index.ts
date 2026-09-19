@@ -13,17 +13,25 @@ import {
   type PersistedPlayerTrainingWeek
 } from "@atlas/database";
 import {
+  assessYouthProspect,
   buildTrainingRecommendations,
   buildWeeklyTrainingCalibrationReport,
   buildWeeklyTrainingReport,
   createTrainingWeek,
   estimateTalentFromTrainingHistory,
+  generatePlayerTrainingPath,
+  getNextPlannedTrainingStep,
   optimizeAdvancedTrainingSlots,
+  PlayerDevelopmentPlanner,
   selectTrainingCalibrationDataset,
+  toTrainingDomainSkill,
+  type DevelopmentPlayer,
+  type PlayerDevelopmentTargetOverride,
   type PlayerSkill,
   type PlayerSkills,
   type PlayerSkillsChange,
-  type SkillTrainingCostSkill
+  type SkillTrainingCostSkill,
+  type TalentEstimate
 } from "@atlas/domain";
 import type {
   AdvancedTrainingCandidateContext,
@@ -59,6 +67,56 @@ function resolvePlayerPosition(
   if (p === "winger") return "winger";
   if (p === "att" || p === "striker" || p === "forward") return "striker";
   return null;
+}
+
+function resolvePlannedSkill(input: {
+  persistedPlayer?: PersistedPlayer;
+  snapshotPlayer?: PersistedPlayerSnapshot;
+  currentSkills: PlayerSkills;
+  playerAge: number;
+  talent?: TalentEstimate | null;
+  history?: TrainingHistory | null;
+}): SkillTrainingCostSkill | null | undefined {
+  const playerId = input.persistedPlayer?.playerId ?? input.snapshotPlayer?.playerId;
+  if (!playerId) {
+    return undefined;
+  }
+
+  const observedPosition = resolvePlayerPosition(input.persistedPlayer, input.snapshotPlayer);
+  if (!observedPosition) {
+    return undefined;
+  }
+
+  const developmentPlayer: DevelopmentPlayer = {
+    playerId,
+    observedPosition,
+    skills: input.snapshotPlayer?.skills ?? input.currentSkills
+  };
+
+  const override: PlayerDevelopmentTargetOverride = {
+    profile: input.persistedPlayer?.development?.profile ?? undefined,
+    objective: input.persistedPlayer?.development?.objective ?? undefined,
+    targetLevels:
+      input.persistedPlayer?.development?.targetLevels &&
+      Object.keys(input.persistedPlayer.development.targetLevels).length > 0
+        ? input.persistedPlayer.development.targetLevels
+        : undefined
+  };
+
+  try {
+    const plan = new PlayerDevelopmentPlanner().createPlan(developmentPlayer, override);
+    const trainingPath = generatePlayerTrainingPath({
+      player: { ...developmentPlayer, age: input.playerAge },
+      target: plan.target,
+      developmentGap: plan.gap,
+      talent: input.talent,
+      trainingHistory: input.history ? [input.history] : undefined
+    });
+    const nextStep = getNextPlannedTrainingStep(trainingPath);
+    return nextStep ? toTrainingDomainSkill(nextStep.skill) : null;
+  } catch {
+    return undefined;
+  }
 }
 const DOMAIN_PLAYER_SKILLS: readonly PlayerSkill[] = [
   "stamina",
@@ -233,6 +291,15 @@ export function buildTrainingRecommendationsFromLoadedData(
 
       const snapshotPlayer = latestSnapshotPlayerMap.get(playerReport.playerId);
       const persistedPlayer = persistedPlayerMap.get(playerReport.playerId);
+      const talent = talentByPlayer.get(playerReport.playerId) ?? null;
+      const plannedSkill = resolvePlannedSkill({
+        persistedPlayer,
+        snapshotPlayer,
+        currentSkills: currentWeek.skills,
+        playerAge: currentWeek.playerAge,
+        talent,
+        history
+      });
 
       return [
         {
@@ -244,7 +311,8 @@ export function buildTrainingRecommendationsFromLoadedData(
           },
           weeklyReport: playerReport,
           trainingHistory: history,
-          talent: talentByPlayer.get(playerReport.playerId) ?? null
+          talent,
+          plannedSkill
         }
       ];
     })
@@ -350,6 +418,15 @@ export function buildAdvancedTrainingOptimizationFromLoadedData(
 
         const snapshotPlayer = latestSnapshotPlayerMap.get(playerReport.playerId);
         const persistedPlayer = persistedPlayerMap.get(playerReport.playerId);
+        const talent = talentByPlayer.get(playerReport.playerId) ?? null;
+        const plannedSkill = resolvePlannedSkill({
+          persistedPlayer,
+          snapshotPlayer,
+          currentSkills: currentWeek.skills,
+          playerAge: currentWeek.playerAge,
+          talent,
+          history
+        });
 
         return [
           {
@@ -361,7 +438,8 @@ export function buildAdvancedTrainingOptimizationFromLoadedData(
             },
             weeklyReport: playerReport,
             trainingHistory: history,
-            talent: talentByPlayer.get(playerReport.playerId) ?? null
+            talent,
+            plannedSkill
           }
         ];
       })
@@ -415,6 +493,14 @@ export function buildAdvancedTrainingOptimizationFromLoadedData(
           intensity: currentWeek.intensity
         },
         talent: talentByPlayer.get(history.playerId) ?? null,
+        prospectQualityScore: assessYouthProspect({
+          player: {
+            playerId: history.playerId,
+            age: currentWeek.playerAge,
+            skills: currentWeek.skills
+          },
+          talent: talentByPlayer.get(history.playerId) ?? null
+        }).prospectScore,
         ...(isTrialCandidate
           ? {
               trial: {
@@ -510,6 +596,15 @@ export function buildWeeklyTrainingIntelligenceFromLoadedData(
 
       const snapshotPlayer = latestSnapshotPlayerMap.get(playerReport.playerId);
       const persistedPlayer = persistedPlayerMap.get(playerReport.playerId);
+      const talent = talentByPlayer.get(playerReport.playerId) ?? null;
+      const plannedSkill = resolvePlannedSkill({
+        persistedPlayer,
+        snapshotPlayer,
+        currentSkills: currentWeek.skills,
+        playerAge: currentWeek.playerAge,
+        talent,
+        history
+      });
 
       return [
         {
@@ -521,7 +616,8 @@ export function buildWeeklyTrainingIntelligenceFromLoadedData(
           },
           weeklyReport: playerReport,
           trainingHistory: history,
-          talent: talentByPlayer.get(playerReport.playerId) ?? null
+          talent,
+          plannedSkill
         }
       ];
     })
@@ -636,6 +732,15 @@ export async function getWeeklyTrainingCalibration(
     }
     const snapshotPlayer = latestSnapshotPlayerMap.get(history.playerId);
     const persistedPlayer = persistedPlayerMap.get(history.playerId);
+    const talent = talentByPlayer.get(history.playerId) ?? null;
+    const plannedSkill = resolvePlannedSkill({
+      persistedPlayer,
+      snapshotPlayer,
+      currentSkills: currentWeek.skills,
+      playerAge: currentWeek.playerAge,
+      talent,
+      history
+    });
     return [
       {
         player: {
@@ -646,7 +751,8 @@ export async function getWeeklyTrainingCalibration(
         },
         weeklyReport: report,
         trainingHistory: history,
-        talent: talentByPlayer.get(history.playerId) ?? null
+        talent,
+        plannedSkill
       }
     ];
   });
@@ -834,7 +940,9 @@ function mapPlayer(
     value: player.value,
     valueChange: previousValue === null ? null : player.value - previousValue,
     latestReport: latestByPlayer.get(player.playerId) ?? null,
-    talentEstimate
+    talentEstimate,
+    cards: player.cards ?? { yellow: 0, red: 0 },
+    injury: player.injury ?? { days: null, severe: null }
   };
 }
 

@@ -1,5 +1,6 @@
-import { describe, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
+  buildTrainingRecommendation,
   PlayerDevelopmentPlanner,
   generatePlayerTrainingPath,
   projectDevelopment,
@@ -87,5 +88,76 @@ describe("Marcelo Cicint Test", () => {
     for (const pt of marketProjection.points) {
       console.log("Point Step", pt.step, "Value:", pt.marketValue?.expected, "GainFromCurrent:", pt.valueGainFromCurrent);
     }
+  });
+
+  it("recommends defending for Cicint when the assigned plan has defending as next step", () => {
+    const cicintPlayer = {
+      playerId: 39811507,
+      age: 21,
+      skills: {
+        stamina: 7,
+        keeper: 1,
+        pace: 14,
+        defender: 15,
+        playmaker: 7,
+        passing: 7,
+        technique: 8,
+        striker: 4
+      }
+    };
+
+    // User assigned target with primary focus on Defending (target 17)
+    const planner = new PlayerDevelopmentPlanner();
+    const assignedPlan = planner.createPlan(cicintPlayer, {
+      profile: "defender",
+      targetLevels: { defender: 17, pace: 14, technique: 8, passing: 7 }
+    });
+
+    const path = generatePlayerTrainingPath({
+      player: cicintPlayer,
+      target: assignedPlan.target
+    });
+
+    expect(path.steps[0]?.skill).toBe("defender");
+
+    // When the team trains passing (currentSkill = passing)
+    const context = {
+      player: {
+        playerId: cicintPlayer.playerId,
+        age: cicintPlayer.age,
+        position: "defender" as const,
+        skills: { defending: 15, passing: 7, technique: 8, pace: 14 }
+      },
+      weeklyReport: {
+        playerId: cicintPlayer.playerId,
+        gameWeek: 1209,
+        training: { skill: "passing" as const, kind: "advanced" as const, intensity: 100 },
+        skill: { previousLevel: 7, currentLevel: 7, skillUp: false },
+        trainingPoints: {
+          earned: 100,
+          estimatedProgress: 20,
+          remainingToNextLevel: 80,
+          estimatedWeeksToNextLevel: 2.5
+        }
+      },
+      trainingHistory: {
+        playerId: cicintPlayer.playerId,
+        weeks: []
+      },
+      talent: { value: 1, confidence: "high" as const, evidenceCount: 3, evidences: [] },
+      plannedSkill: "defending" as const
+    };
+
+    const recommendation = buildTrainingRecommendation(context);
+
+    expect(recommendation.status).toBe("switch_skill");
+    expect(recommendation.recommendedSkill).toBe("defending");
+    expect(recommendation.reasons).toContainEqual(
+      expect.objectContaining({
+        type: "development_plan_step",
+        plannedSkill: "defending",
+        currentSkill: "passing"
+      })
+    );
   });
 });

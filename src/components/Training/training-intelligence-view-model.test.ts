@@ -3,11 +3,13 @@ import { describe, expect, it } from "vitest";
 import type {
   AdvancedTrainingOptimization,
   AdvancedTrainingPlayerRecommendation,
-  PlayerTrainingRecommendation
+  PlayerTrainingRecommendation,
+  SkillTrainingCostSkill
 } from "@atlas/domain";
 import type { TrainingPageData, WeeklyTrainingIntelligence } from "@/app/types";
 import {
   createTrainingIntelligenceViewModel,
+  describeTrainingRecommendationReasons,
   filterTrainingOverview,
   type TrainingOverviewRow
 } from "./training-intelligence-view-model";
@@ -28,8 +30,8 @@ const training: TrainingPageData = {
 function recommendation(
   playerId: number,
   status: PlayerTrainingRecommendation["status"],
-  skill: "defending" | "pace",
-  recommendedSkill?: "defending" | "pace"
+  skill: SkillTrainingCostSkill,
+  recommendedSkill?: SkillTrainingCostSkill
 ): PlayerTrainingRecommendation {
   return {
     playerId,
@@ -303,5 +305,45 @@ describe("filterTrainingOverview", () => {
     ];
 
     expect(filterTrainingOverview(rows, "attention")).toEqual(rows);
+  });
+});
+
+describe("describeTrainingRecommendationReasons", () => {
+  it("formats development plan reasons correctly", () => {
+    const switchRec = recommendation(1, "switch_skill", "passing", "defending");
+    switchRec.reasons = [
+      {
+        type: "development_plan_step",
+        plannedSkill: "defending",
+        currentSkill: "passing"
+      }
+    ];
+
+    expect(describeTrainingRecommendationReasons(switchRec)).toBe(
+      "The assigned development plan recommends training Defending (currently training Passing)."
+    );
+
+    const alignedRec = recommendation(1, "continue", "defending");
+    alignedRec.reasons = [
+      {
+        type: "aligned_with_development_plan",
+        skill: "defending"
+      }
+    ];
+
+    expect(describeTrainingRecommendationReasons(alignedRec)).toBe(
+      "Training is aligned with the development plan (Defending)."
+    );
+
+    const completedRec = recommendation(1, "continue", "defending");
+    completedRec.reasons = [
+      {
+        type: "development_plan_completed"
+      }
+    ];
+
+    expect(describeTrainingRecommendationReasons(completedRec)).toBe(
+      "The player has achieved all targets in their development plan."
+    );
   });
 });

@@ -97,6 +97,7 @@ export function Squad({
         history={training?.history ?? []}
         isOpen={isRecentProgressOpen}
         onClose={() => setIsRecentProgressOpen(false)}
+        onSelectPlayer={onSelectPlayer}
         players={training?.players ?? []}
       />
     </div>
