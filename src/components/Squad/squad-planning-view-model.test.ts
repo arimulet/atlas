@@ -9,6 +9,7 @@ import type {
 } from "@atlas/domain";
 import type { SquadPlanningBundle } from "@atlas/web/app/types";
 import type { SquadPlayerRow } from "@/app/view-models/squad-view-model";
+import { resolveEffectiveSnapshotGameWeek } from "@atlas/application";
 import {
   createSquadPlanningViewModel,
   filterSquadRows,
@@ -20,6 +21,13 @@ import {
 import { describeManualRoleConflict, planningConfidenceWarning } from "./SquadPlanningSections";
 
 describe("squad planning presentation", () => {
+  it("resolves effective snapshot game week when snapshot week advances into new season", () => {
+    // GameWeek 1197 is Season 77 Week 13 (baseWeek 13)
+    // If snapshot.week is 1 (Season 78 Week 1), effectiveGameWeek is 1198 (Season 78 Week 1)
+    expect(resolveEffectiveSnapshotGameWeek({ gameWeek: 1197, week: 1 })).toBe(1198);
+    expect(resolveEffectiveSnapshotGameWeek({ gameWeek: 1198, week: 1 })).toBe(1198);
+    expect(resolveEffectiveSnapshotGameWeek({ gameWeek: 1197, week: 13 })).toBe(1197);
+  });
   it("maps role and profile summaries without adding domain rules", () => {
     const planning = createBundle();
 

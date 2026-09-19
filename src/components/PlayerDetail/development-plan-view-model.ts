@@ -108,9 +108,6 @@ function getProjectedAge(
   targetGameWeek: number | null | undefined,
   fallbackAge: number | null | undefined
 ): number | null {
-  if (typeof fallbackAge === "number" && Number.isFinite(fallbackAge)) {
-    return Math.floor(fallbackAge);
-  }
   if (
     typeof baseAge === "number" &&
     typeof baseGameWeek === "number" &&
@@ -124,7 +121,7 @@ function getProjectedAge(
       // fallback
     }
   }
-  return typeof baseAge === "number" ? Math.floor(baseAge) : null;
+  return typeof fallbackAge === "number" ? Math.floor(fallbackAge) : typeof baseAge === "number" ? Math.floor(baseAge) : null;
 }
 
 export function createDevelopmentPlanViewModel(
