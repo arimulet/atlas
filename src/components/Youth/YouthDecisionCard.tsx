@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 import { CircleDashed } from "lucide-react";
 import { PlayerLink } from "@/components/PlayerLink";
+import { PositionBadge } from "@/components/PositionBadge";
+import { ClubFitBadge, ProspectBadge } from "./YouthDecisionSections";
 import {
   mapYouthFitReason,
   type YouthDecisionMessage,
@@ -29,7 +31,9 @@ export function YouthDecisionCard({ model, onSelectPlayer }: YouthDecisionCardPr
             </PlayerLink>
             <span>{model.age === null ? "Age unknown" : `· ${model.age}`}</span>
           </h3>
-          <p className="atlas-youth-decision-card__profile">{model.profileLabel}</p>
+          <div className="atlas-youth-decision-card__profile">
+            <PositionBadge position={model.profileLabel} size="md" />
+          </div>
         </div>
         <div className="atlas-youth-decision-card__decision" aria-label="ATLAS recommendation">
           <span className={`atlas-youth-decision-badge is-${model.decision}`}>
@@ -73,17 +77,17 @@ export function YouthDecisionCard({ model, onSelectPlayer }: YouthDecisionCardPr
         <summary>Assessment details</summary>
         <div className="atlas-youth-decision-details">
           <DetailSection title="Prospect">
-            <MetricRow label="Quality" value={model.prospectQualityLabel} />
-            <MetricRow label="Development potential" value={model.developmentPotentialLabel} />
-            <MetricRow label="Profile fit" value={model.profileCoherenceLabel} />
+            <MetricRow label="Quality" value={<ProspectBadge label={model.prospectQualityLabel} />} />
+            <MetricRow label="Development potential" value={<ProspectBadge label={model.developmentPotentialLabel} />} />
+            <MetricRow label="Profile fit" value={<ProspectBadge label={model.profileCoherenceLabel} />} />
             <MessageGroup title="Strengths" messages={model.strengths} />
             <MessageGroup title="Weaknesses" messages={model.weaknesses} />
           </DetailSection>
 
           <DetailSection title="Club Fit">
-            <MetricRow label="Club fit" value={model.clubFitLabel} />
-            <MetricRow label="Future squad need" value={model.squadNeedLabel} />
-            <MetricRow label="Succession fit" value={model.successionLabel} />
+            <MetricRow label="Club fit" value={<ClubFitBadge label={model.clubFitLabel} />} />
+            <MetricRow label="Future squad need" value={<ClubFitBadge label={model.squadNeedLabel} />} />
+            <MetricRow label="Succession fit" value={<ClubFitBadge label={model.successionLabel} />} />
             <MetricRow label="Resource competition" value={model.resourceCompetitionLabel} />
             <MessageGroup title="Squad signals" messages={supportingReasons} />
           </DetailSection>
@@ -92,12 +96,12 @@ export function YouthDecisionCard({ model, onSelectPlayer }: YouthDecisionCardPr
             <MetricRow label="Opportunity" value={model.developmentOpportunityLabel} />
             <MetricRow
               label="Recommended profile"
-              value={model.development.recommendedProfileLabel}
+              value={<PositionBadge position={model.development.recommendedProfileLabel} />}
             />
             {profileChanged ? (
               <MetricRow
                 label="Original profile"
-                value={model.initialProfile ? model.profileLabel : "Unknown"}
+                value={model.initialProfile ? <PositionBadge position={model.profileLabel} /> : "Unknown"}
               />
             ) : null}
             <MetricRow
@@ -145,7 +149,10 @@ export function YouthDecisionCard({ model, onSelectPlayer }: YouthDecisionCardPr
 
           {model.market ? (
             <DetailSection title="Market">
-              <MetricRow label="Estimated current value" value={model.market.currentValueLabel} />
+              <MetricRow
+                label="Estimated current value"
+                value={<span className="atlas-youth-card__market-value">{model.market.currentValueLabel}</span>}
+              />
               <MetricRow
                 label="Projected development value"
                 value={model.market.projectedValueLabel}
@@ -207,7 +214,7 @@ function DetailSection({ title, children }: { title: string; children: ReactNode
   );
 }
 
-function MetricRow({ label, value }: { label: string; value: string }) {
+function MetricRow({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="atlas-youth-decision-metric">
       <span>{label}</span>
