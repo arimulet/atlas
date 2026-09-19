@@ -285,7 +285,7 @@ function TrainingPlayerRows({
           </PlayerLink>
           <TrainingKind kind={player.trainingKind} />
           <TrainingStatusIndicator status={player.status} />
-          <TrainingRecommendationIndicator recommendation={recommendation} />
+          <TrainingRecommendationIndicator kind={player.trainingKind} recommendation={recommendation} />
         </th>
         <td className="atlas-training-table__numeric">{formatTalent(player.talent)}</td>
         <td className="atlas-training-table__numeric">{player.age}</td>
@@ -453,11 +453,14 @@ function trainingStatusPresentation(status: NonNullable<TrainingPlayerRow["statu
   return { icon: <Info size={13} />, label: "Training information" };
 }
 
-function TrainingRecommendationIndicator({
+export function TrainingRecommendationIndicator({
+  kind,
   recommendation
 }: {
+  kind?: TrainingPlayerRow["trainingKind"];
   recommendation: string | undefined;
 }) {
+  if (kind !== "advanced") return null;
   if (!recommendation) return null;
   const isActionRequired = recommendation.toLowerCase().startsWith("switch");
   if (!isActionRequired) return null;
