@@ -116,6 +116,37 @@ describe("generateBasicDiagnostic", () => {
     expect(finding?.affectedPlayerIds).toEqual(["1001"]);
   });
 
+  it("requires higher role score as age increases for training potential", () => {
+    const diagnostic = generateBasicDiagnostic(
+      buildSnapshot({
+        players: [
+          player({
+            id: "ps-1",
+            playerId: 1001,
+            name: "23yo Weak Defender",
+            age: 23,
+            observedPosition: "defender",
+            defender: 8,
+            pace: 8
+          }),
+          player({
+            id: "ps-2",
+            playerId: 1002,
+            name: "17yo Good Prospect",
+            age: 17,
+            observedPosition: "defender",
+            defender: 7,
+            pace: 7
+          })
+        ]
+      })
+    );
+
+    const findings = diagnostic.findings.filter((item) => item.category === "training-potential");
+    expect(findings.length).toBe(1);
+    expect(findings[0]?.affectedPlayerIds).toEqual(["1002"]);
+  });
+
   it("marks follow-up when data is missing", () => {
     const diagnostic = generateBasicDiagnostic(
       buildSnapshot({

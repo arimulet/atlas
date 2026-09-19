@@ -107,9 +107,9 @@ const roleAliases: Record<string, PlayerRole> = {
   medio: "midfielder",
   volante: "midfielder",
   mid: "midfielder",
-  winger: "winger",
-  extremo: "winger",
-  wing: "winger",
+  winger: "midfielder",
+  extremo: "midfielder",
+  wing: "midfielder",
   striker: "striker",
   forward: "striker",
   delantero: "striker",
@@ -338,11 +338,22 @@ function createAssetRiskFindings(players: ClassifiedPlayer[]): BasicDiagnosticFi
   });
 }
 
+export function minimumRoleScoreForAge(age: number): number {
+  if (age <= 17) return 6;
+  if (age === 18) return 7;
+  if (age === 19) return 8;
+  if (age === 20) return 9;
+  if (age === 21) return 10;
+  if (age === 22) return 11;
+  return 12;
+}
+
 function createTrainingPotentialFindings(players: ClassifiedPlayer[]): BasicDiagnosticFinding[] {
   return players.flatMap((classified) => {
     const { player, roleScore } = classified;
+    const minRequiredScore = minimumRoleScoreForAge(player.age);
 
-    if (player.age > 23 || roleScore < 8) {
+    if (player.age > 23 || roleScore < minRequiredScore) {
       return [];
     }
 
@@ -360,7 +371,7 @@ function createTrainingPotentialFindings(players: ClassifiedPlayer[]): BasicDiag
         assumptions: [
           ...classified.roleAssumptions,
           assumption("training-age-threshold", { maximumAge: 23 }),
-          assumption("training-role-score-threshold", { minimumScore: 8 })
+          assumption("training-role-score-threshold", { minimumScore: minRequiredScore })
         ],
         confidence: classified.roleAssumptions.length > 0 ? "medium" : "high",
         affectedPlayerIds: [playerIdentifier(classified)],
@@ -419,9 +430,9 @@ function roleScores(
 ): Record<Exclude<PlayerRole, "trainee" | "undefined">, number> {
   return {
     goalkeeper: skill(skills.keeper),
-    defender: average([skills.defender, skills.pace, skills.stamina]),
-    midfielder: average([skills.playmaker, skills.passing, skills.technique, skills.stamina]),
-    winger: average([skills.pace, skills.technique, skills.passing]),
+    defender: average([skills.defender, skills.pace]),
+    midfielder: average([skills.playmaker, skills.passing, skills.technique, skills.pace]),
+    winger: average([skills.playmaker, skills.passing, skills.technique, skills.pace]),
     striker: average([skills.striker, skills.technique, skills.pace])
   };
 }
