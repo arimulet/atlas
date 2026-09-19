@@ -12,7 +12,8 @@ import {
   User,
   Sparkles,
   CircleDashed,
-  HelpCircle
+  HelpCircle,
+  AlertTriangle
 } from "lucide-react";
 import {
   CartesianGrid,
@@ -221,7 +222,22 @@ function SkillTargets({
               <th scope="col">Operative Target</th>
               <th scope="col">Ideal Target</th>
               <th scope="col">Status</th>
-              <th scope="col">Reasons</th>
+              <th scope="col">
+                <div style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                  <span>Marginal Return</span>
+                  <span
+                    title="Efficiency index measuring expected development value gained vs. training weeks required"
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      cursor: "help",
+                      color: "var(--atlas-text-muted)"
+                    }}
+                  >
+                    <HelpCircle size={13} />
+                  </span>
+                </div>
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -280,7 +296,13 @@ function SkillTargets({
                   <td>
                     <StatusBadgeForTarget status={target.status} />
                   </td>
-                  <td>{target.reasons.join(", ")}</td>
+                  <td>
+                    {target.marginalReturn !== null && target.marginalReturn !== undefined ? (
+                      <MarginalReturnBadge value={target.marginalReturn} />
+                    ) : (
+                      "—"
+                    )}
+                  </td>
                 </tr>
               );
             })}
@@ -335,8 +357,7 @@ function getPriorityConfig(priority: DevelopmentPlanTargetRow["priority"]) {
 
 function StatusBadgeForTarget({ status }: { status: DevelopmentPlanTargetRow["status"] }) {
   const config = getTargetStatusBadgeConfig(status);
-  const label =
-    status === "complete" ? "Complete" : status === "in_progress" ? "In progress" : "Pending";
+  const label = status === "complete" ? "Complete" : "In progress";
 
   return (
     <span
@@ -366,18 +387,62 @@ function getTargetStatusBadgeConfig(status: DevelopmentPlanTargetRow["status"]) 
         border: "rgba(16, 185, 129, 0.3)"
       };
     case "in_progress":
-      return {
-        bg: "rgba(37, 99, 235, 0.12)",
-        color: "var(--atlas-accent, #2563eb)",
-        border: "rgba(37, 99, 235, 0.3)"
-      };
     default:
       return {
-        bg: "rgba(107, 114, 128, 0.12)",
-        color: "var(--atlas-text-muted, #6b7280)",
-        border: "rgba(107, 114, 128, 0.3)"
+        bg: "rgba(217, 119, 6, 0.14)",
+        color: "var(--atlas-warning, #d97706)",
+        border: "rgba(217, 119, 6, 0.35)"
       };
   }
+}
+
+function MarginalReturnBadge({ value }: { value: number }) {
+  const percentage = Math.round(value * 100);
+  const config = getMarginalReturnBadgeConfig(percentage);
+
+  return (
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        padding: "2px 7px",
+        borderRadius: "var(--atlas-radius-sm, 4px)",
+        fontSize: "0.75rem",
+        fontWeight: 700,
+        backgroundColor: config.bg,
+        color: config.color,
+        border: `1px solid ${config.border}`
+      }}
+      title={`Marginal Return Efficiency: ${percentage}% (${config.label})`}
+    >
+      {percentage}%
+    </span>
+  );
+}
+
+function getMarginalReturnBadgeConfig(percentage: number) {
+  if (percentage >= 60) {
+    return {
+      label: "High efficiency",
+      bg: "rgba(16, 185, 129, 0.12)",
+      color: "var(--atlas-success, #059669)",
+      border: "rgba(16, 185, 129, 0.3)"
+    };
+  }
+  if (percentage >= 30) {
+    return {
+      label: "Medium efficiency",
+      bg: "rgba(37, 99, 235, 0.12)",
+      color: "var(--atlas-accent, #2563eb)",
+      border: "rgba(37, 99, 235, 0.3)"
+    };
+  }
+  return {
+    label: "Low efficiency",
+    bg: "rgba(217, 119, 6, 0.12)",
+    color: "var(--atlas-warning, #d97706)",
+    border: "rgba(217, 119, 6, 0.3)"
+  };
 }
 
 function getMilestoneConfig(
@@ -729,12 +794,18 @@ function DevelopmentImpactDashboard({
             {plan.profile.objective === "financial" ? "💰 Financial" : "⚽ Sportive"}
           </span>
           {plan.profile.hasConflict && (
-            <small
-              style={{ color: "var(--atlas-warning, #d97706)" }}
+            <span
+              style={{
+                color: "var(--atlas-warning, #d97706)",
+                display: "inline-flex",
+                alignItems: "center",
+                cursor: "help"
+              }}
               title={`ATLAS suggestion: ${plan.profile.suggestedLabel}`}
+              aria-label={`ATLAS suggestion: ${plan.profile.suggestedLabel}`}
             >
-              (Conflict)
-            </small>
+              <AlertTriangle size={15} />
+            </span>
           )}
         </div>
       </div>

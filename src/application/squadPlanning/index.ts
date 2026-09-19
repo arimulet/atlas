@@ -24,6 +24,9 @@ import {
   buildWeeklyTrainingReport,
   estimateTalentFromTrainingHistory,
   calculateRequiredTrainingPoints,
+  calculateGameWeek,
+  getSokkerSeason,
+  normalizeSeasonWeek,
   type DevelopmentCurrentSkillProgress,
   type DevelopmentPlayer,
   type PlayerDevelopmentTargetOverride,
@@ -183,13 +186,14 @@ async function computeSquadAssessment(
   const overrides = new Map(
     rawOverrides.map((override) => [override.playerId, override])
   );
+  const effectiveGameWeek = resolveEffectiveSnapshotGameWeek(latest);
   const contexts = latest.players.map((player) =>
     buildPlayerContext(
       player,
       histories.get(player.playerId) ?? null,
       overrides.get(player.playerId) ?? null,
       assignmentsByPlayer.get(player.playerId) ?? null,
-      latest.gameWeek,
+      effectiveGameWeek,
       latest.snapshotDate
     )
   );
@@ -231,9 +235,32 @@ async function computeSquadAssessment(
   return {
     ...assessment,
     manualAssignments: assignments.map(mapAssignment),
-    currentGameWeek: latest.gameWeek,
+    currentGameWeek: effectiveGameWeek,
     depthPlayers
   };
+}
+
+export function resolveEffectiveSnapshotGameWeek(snapshot: {
+  gameWeek: number | null;
+  week?: number | null;
+}): number | null {
+  if (snapshot.gameWeek === null) return null;
+  if (typeof snapshot.week !== "number") return snapshot.gameWeek;
+
+  try {
+    const baseSeason = getSokkerSeason(snapshot.gameWeek);
+    const baseWeek = normalizeSeasonWeek(snapshot.gameWeek);
+    if (baseWeek === snapshot.week) return snapshot.gameWeek;
+
+    if (snapshot.week < baseWeek) {
+      const seasonDelta = 1 + Math.floor((baseWeek - snapshot.week) / 13);
+      return calculateGameWeek(baseSeason + seasonDelta, snapshot.week);
+    }
+
+    return calculateGameWeek(baseSeason, snapshot.week);
+  } catch {
+    return snapshot.gameWeek;
+  }
 }
 
 export async function getSquadDepthAnalysis(clubId: ClubId): Promise<SquadDepthAnalysis> {
