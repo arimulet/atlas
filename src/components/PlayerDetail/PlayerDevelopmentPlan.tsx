@@ -12,7 +12,8 @@ import {
   User,
   Sparkles,
   CircleDashed,
-  HelpCircle
+  HelpCircle,
+  AlertTriangle
 } from "lucide-react";
 import {
   CartesianGrid,
@@ -729,12 +730,18 @@ function DevelopmentImpactDashboard({
             {plan.profile.objective === "financial" ? "💰 Financial" : "⚽ Sportive"}
           </span>
           {plan.profile.hasConflict && (
-            <small
-              style={{ color: "var(--atlas-warning, #d97706)" }}
+            <span
+              style={{
+                color: "var(--atlas-warning, #d97706)",
+                display: "inline-flex",
+                alignItems: "center",
+                cursor: "help"
+              }}
               title={`ATLAS suggestion: ${plan.profile.suggestedLabel}`}
+              aria-label={`ATLAS suggestion: ${plan.profile.suggestedLabel}`}
             >
-              (Conflict)
-            </small>
+              <AlertTriangle size={15} />
+            </span>
           )}
         </div>
       </div>
