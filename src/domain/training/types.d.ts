@@ -263,6 +263,7 @@ export interface PlayerTrainingRecommendationContext {
   weeklyReport: WeeklyTrainingPlayerReport;
   trainingHistory: TrainingHistory | readonly TrainingHistory[];
   talent?: TalentEstimate | null;
+  plannedSkill?: SkillTrainingCostSkill | null;
 }
 
 export interface TrainingOptionEvaluation {
@@ -288,7 +289,14 @@ export type TrainingRecommendationReason =
   | { type: "insufficient_history" }
   | { type: "no_valid_alternative" }
   | { type: "current_option_not_calculable" }
-  | { type: "talent_uncertain" };
+  | { type: "talent_uncertain" }
+  | { type: "aligned_with_development_plan"; skill: SkillTrainingCostSkill }
+  | {
+      type: "development_plan_step";
+      plannedSkill: SkillTrainingCostSkill;
+      currentSkill: SkillTrainingCostSkill;
+    }
+  | { type: "development_plan_completed" };
 
 export interface PlayerTrainingRecommendation {
   playerId: number;

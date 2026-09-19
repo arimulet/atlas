@@ -86,6 +86,38 @@ export function buildTrainingRecommendation(
     confidence
   };
 
+  const plannedSkill = context.plannedSkill;
+  if (plannedSkill !== undefined) {
+    if (plannedSkill === null) {
+      return {
+        ...common,
+        status: "continue",
+        reasons: [{ type: "development_plan_completed" }]
+      };
+    }
+
+    if (currentSkill === plannedSkill) {
+      return {
+        ...common,
+        status: "continue",
+        reasons: [
+          { type: "aligned_with_development_plan", skill: plannedSkill },
+          ...(talent === null ? [{ type: "talent_uncertain" as const }] : [])
+        ]
+      };
+    }
+
+    return {
+      ...common,
+      status: "switch_skill",
+      recommendedSkill: plannedSkill,
+      reasons: [
+        { type: "development_plan_step", plannedSkill, currentSkill },
+        ...(talent === null ? [{ type: "talent_uncertain" as const }] : [])
+      ]
+    };
+  }
+
   if (!history || history.weeks.length < TRAINING_RECOMMENDATION_MIN_HISTORY_WEEKS) {
     return {
       ...common,

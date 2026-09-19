@@ -254,6 +254,14 @@ export function describeTrainingRecommendationReasons(
       return "The current training return cannot yet be calculated reliably.";
     case "stable_current_skill":
       return `${skillLabel(reason.skill)} remains a reasonable development option for now.`;
+    case "development_plan_step":
+      return `The assigned development plan recommends training ${skillLabel(
+        reason.plannedSkill
+      )} (currently training ${skillLabel(reason.currentSkill)}).`;
+    case "aligned_with_development_plan":
+      return `Training is aligned with the development plan (${skillLabel(reason.skill)}).`;
+    case "development_plan_completed":
+      return "The player has achieved all targets in their development plan.";
     case "insufficient_history":
       return "ATLAS needs more training history before validating a change.";
   }
