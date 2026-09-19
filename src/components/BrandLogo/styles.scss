@@ -1,0 +1,49 @@
+.atlas-brand-logo {
+  align-items: center;
+  display: inline-flex;
+  gap: 9px;
+  line-height: 1;
+
+  &__symbol {
+    color: var(--atlas-accent);
+    display: block;
+    fill: none;
+    flex: 0 0 auto;
+    overflow: visible;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 6;
+  }
+
+  &__wordmark {
+    color: var(--atlas-text);
+    font-weight: 800;
+    letter-spacing: 0.14em;
+  }
+
+  &--header {
+    .atlas-brand-logo__symbol {
+      height: 28px;
+      width: 28px;
+    }
+
+    .atlas-brand-logo__wordmark {
+      font-size: 0.88rem;
+    }
+  }
+
+  &--auth {
+    gap: 10px;
+
+    .atlas-brand-logo__symbol {
+      height: 36px;
+      width: 36px;
+    }
+
+    .atlas-brand-logo__wordmark {
+      font-size: 1.1rem;
+      letter-spacing: 0.16em;
+    }
+  }
+}
