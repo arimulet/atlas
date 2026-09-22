@@ -13,7 +13,8 @@ import {
   Sparkles,
   CircleDashed,
   HelpCircle,
-  AlertTriangle
+  AlertTriangle,
+  Calculator
 } from "lucide-react";
 import {
   CartesianGrid,
@@ -656,6 +657,20 @@ function UnifiedTrainingPath({
                           >
                             {projPoint?.value.label ?? "—"}
                           </strong>
+                          {projPoint?.basedOnFundamentalOnly ? (
+                            <span
+                              title="Fundamental model (no direct market comparables)"
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                color: "var(--atlas-text-muted)",
+                                cursor: "help"
+                              }}
+                              aria-label="Fundamental model (no direct market comparables)"
+                            >
+                              <Calculator size={13} />
+                            </span>
+                          ) : null}
                           {efficiencyStep?.valueGain ? (
                             <span
                               style={{
@@ -822,9 +837,25 @@ function DevelopmentImpactDashboard({
         >
           <DollarSign size={14} /> Current Value
         </span>
-        <strong style={{ fontSize: "1.1rem" }}>
-          {marketValue?.current?.expected?.label ?? "—"}
-        </strong>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
+          <strong style={{ fontSize: "1.1rem" }}>
+            {marketValue?.current?.expected?.label ?? "—"}
+          </strong>
+          {marketValue?.current?.basedOnFundamentalOnly ? (
+            <span
+              title="Fundamental model (no direct market comparables)"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                color: "var(--atlas-text-muted)",
+                cursor: "help"
+              }}
+              aria-label="Fundamental model (no direct market comparables)"
+            >
+              <Calculator size={14} />
+            </span>
+          ) : null}
+        </div>
         {marketValue?.current?.range?.label && (
           <small style={{ color: "var(--atlas-text-muted)" }}>
             {marketValue.current.range.label}
@@ -872,6 +903,20 @@ function DevelopmentImpactDashboard({
           <strong style={{ fontSize: "1.1rem" }}>
             {marketValue?.projection?.peak?.value.label ?? "—"}
           </strong>
+          {marketValue?.projection?.peak?.basedOnFundamentalOnly ? (
+            <span
+              title="Fundamental model (no direct market comparables)"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                color: "var(--atlas-text-muted)",
+                cursor: "help"
+              }}
+              aria-label="Fundamental model (no direct market comparables)"
+            >
+              <Calculator size={14} />
+            </span>
+          ) : null}
           {totalGain?.label && (
             <span
               style={{
