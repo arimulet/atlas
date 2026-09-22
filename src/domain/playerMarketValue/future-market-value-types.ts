@@ -49,6 +49,7 @@ export interface FutureMarketValuePoint {
   cumulativeTrainingWeeks: number | null;
   confidence: Confidence;
   milestone?: DevelopmentMilestoneType | null;
+  basedOnFundamentalOnly?: boolean;
 }
 
 export interface FutureMarketValueMilestone {
