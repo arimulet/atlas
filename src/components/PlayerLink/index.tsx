@@ -73,7 +73,7 @@ export function PlayerStatusBadges({
                 : `Lastimado con venda: ${injury.days} días restantes`
             }
           >
-            {isSevere ? "🚑" : "🩹"}
+            {isSevere ? "✚" : "🩹"}
           </span>
         ) : null}
       </span>
