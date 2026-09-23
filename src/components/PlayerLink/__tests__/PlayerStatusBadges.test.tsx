@@ -71,7 +71,7 @@ describe("PlayerStatusBadges", () => {
     expect(redBadge.props.title).toBe("Tarjeta roja (Suspendido)");
   });
 
-  it("renders severe injury badge in injury slot with ambulance emoji and remaining days tooltip", () => {
+  it("renders severe injury badge in injury slot with Red Cross symbol and remaining days tooltip", () => {
     const element = PlayerStatusBadges({ injury: { days: 7, severe: true } });
     expect(element).not.toBeNull();
 
@@ -83,7 +83,7 @@ describe("PlayerStatusBadges", () => {
     expect(injuryBadge.props.className).toBe("atlas-injury-badge is-severe");
     expect(injuryBadge.props.title).toBe("Lesionado (grave): 7 días restantes");
     expect(injuryBadge.props["aria-label"]).toBe("Lesionado grave: 7 días restantes");
-    expect(injuryBadge.props.children).toBe("🚑");
+    expect(injuryBadge.props.children).toBe("✚");
   });
 
   it("renders non-severe/bruised injury badge in injury slot with bandage emoji and remaining days tooltip", () => {
