@@ -264,6 +264,7 @@ export interface PlayerTrainingRecommendationContext {
   trainingHistory: TrainingHistory | readonly TrainingHistory[];
   talent?: TalentEstimate | null;
   plannedSkill?: SkillTrainingCostSkill | null;
+  currentTrainingSkill?: SkillTrainingCostSkill | null;
 }
 
 export interface TrainingOptionEvaluation {
