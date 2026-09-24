@@ -61,7 +61,8 @@ export function calculatePlayerMarketSimilarity(
   const skillSimilarity = calculateSkillSimilarity(
     targetPlayer.skills,
     comparable.skills,
-    targetProfile
+    targetProfile,
+    config
   );
   const ageSimilarity = calculateComparableAgeSimilarity(targetPlayer.age ?? 0, comparable.age);
   const profileSimilarity = calculateProfileSimilarity(
@@ -316,7 +317,8 @@ export function transferKey(transfer: PlayerTransferRecord): string {
 function calculateSkillSimilarity(
   targetSkills: SkillSet,
   comparableSkills: SkillSet,
-  profile: DevelopmentProfile | null
+  profile: DevelopmentProfile | null,
+  config?: MarketCalibrationConfig
 ): number | null {
   const profileDef = profile && Object.hasOwn(DEVELOPMENT_PROFILES, profile) ? DEVELOPMENT_PROFILES[profile] : null;
   const relevantSkills = profileDef
@@ -339,8 +341,9 @@ function calculateSkillSimilarity(
     );
   if (known.length === 0) return null;
 
+  const maxPrimaryDiff = config?.maxPrimarySkillDifference ?? 2;
   const hasSeverePrimaryMismatch = known.some(
-    (item) => item.priority === "primary" && Math.abs(item.target - item.comparable) > 3
+    (item) => item.priority === "primary" && Math.abs(item.target - item.comparable) > maxPrimaryDiff
   );
   if (hasSeverePrimaryMismatch) return 0;
 
@@ -657,6 +660,9 @@ function resolveCalibrationConfig(options: FindMarketComparablesOptions): Market
     ...(options.maxAgeDifference === undefined
       ? {}
       : { maxAgeDifference: options.maxAgeDifference }),
+    ...(options.maxPrimarySkillDifference === undefined
+      ? {}
+      : { maxPrimarySkillDifference: options.maxPrimarySkillDifference }),
     ...(options.minimumTransferPrice === undefined
       ? {}
       : { minimumTransferPrice: options.minimumTransferPrice }),

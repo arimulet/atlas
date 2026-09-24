@@ -4,6 +4,7 @@ export const MARKET_CALIBRATION_CONFIG: MarketCalibrationConfig = {
   maxComparables: 10,
   minimumSimilarity: 0.75,
   maxAgeDifference: 0,
+  maxPrimarySkillDifference: 2,
   recencyHalfLifeDays: 180,
   minimumSamplesForMediumConfidence: 4,
   minimumSamplesForHighConfidence: 8,

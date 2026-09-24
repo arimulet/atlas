@@ -80,6 +80,7 @@ export interface FindMarketComparablesOptions {
   currencyNormalizer?: MarketCurrencyNormalizer;
   currencyRates?: Readonly<Record<string, number>>;
   calibrationConfig?: Partial<MarketCalibrationConfig>;
+  maxPrimarySkillDifference?: number;
   excludeTransferId?: string;
   excludePlayerId?: number;
 }
@@ -107,6 +108,7 @@ export interface MarketCalibrationConfig {
   maxComparables: number;
   minimumSimilarity: number;
   maxAgeDifference: number;
+  maxPrimarySkillDifference?: number;
   recencyHalfLifeDays: number;
   minimumSamplesForMediumConfidence: number;
   minimumSamplesForHighConfidence: number;
