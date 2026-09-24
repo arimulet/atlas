@@ -16,33 +16,13 @@ describe("Training intelligence with club training configuration", () => {
     playerId: 100,
     clubId: 1,
     name: "Witold Żubrowski",
-    surname: "Żubrowski",
+    countryId: null,
     age: 24,
     position: "DEF",
-    developmentPlan: {
-      position: "defender",
-      targetRating: 15,
-      targetLevel: 15,
-      targetSeasonWeek: 16,
-      targetSeason: 78,
-      priority: "high",
-      targetAge: 25,
-      focusSkills: ["defending"],
-      planGeneratedAt: new Date(),
-      status: "in_progress",
-      targetSkillLevels: { defending: 15 },
-      path: [
-        {
-          order: 1,
-          skill: "defending",
-          currentLevel: 13,
-          targetLevel: 15,
-          weeksRemaining: 4,
-          status: "in_progress",
-          efficiency: "optimal",
-          priorityScore: 1
-        }
-      ]
+    development: {
+      profile: "defender",
+      objective: "sportive",
+      targetLevels: { defender: 15 }
     },
     skills: {
       stamina: 8,
@@ -53,7 +33,12 @@ describe("Training intelligence with club training configuration", () => {
       technique: 8,
       playmaking: 5,
       striker: 3
-    }
+    },
+    marketValue: null,
+    wage: null,
+    cards: { yellow: 0, red: 0 },
+    injury: { days: null, severe: null },
+    currentGameWeek: 1204
   };
 
   const baseReport: PersistedPlayerTrainingWeek = {
@@ -63,11 +48,10 @@ describe("Training intelligence with club training configuration", () => {
     gameWeek: 1204,
     season: 78,
     seasonWeek: 7,
-    date: "2026-08-12",
+    date: new Date("2026-08-12"),
     type: "pace",
     kind: "formation",
     intensity: 100,
-    formation: "MID",
     age: 24,
     skills: {
       stamina: 8,
@@ -86,15 +70,22 @@ describe("Training intelligence with club training configuration", () => {
   const baseSnapshot: PersistedSnapshot = {
     id: "s1",
     clubId: 1,
+    schemaVersion: "1",
+    snapshotDate: new Date("2026-08-12"),
     gameWeek: 1204,
-    season: 78,
-    seasonWeek: 7,
-    date: new Date("2026-08-12"),
+    week: 7,
+    importedAt: new Date("2026-08-12"),
     players: [
       {
+        id: "sp1",
         playerId: 100,
         name: "Witold Żubrowski",
         age: 24,
+        wage: 0,
+        value: 0,
+        form: null,
+        availabilityStatus: "available",
+        observedPosition: "defender",
         training: {
           position: 2, // MID historical snapshot
           advanced: false
@@ -102,15 +93,16 @@ describe("Training intelligence with club training configuration", () => {
         skills: {
           stamina: 8,
           keeper: 1,
-          pace: 12,
-          defending: 13,
-          passing: 8,
-          technique: 8,
-          playmaking: 5,
+          pace: 17,
+          defender: 13,
+          passing: 13,
+          technique: 14,
+          playmaker: 5,
           striker: 3
         }
       }
-    ]
+    ],
+    juniors: []
   };
 
   const trainingConfiguration = {
