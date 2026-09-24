@@ -524,6 +524,28 @@ describe("Mongo repositories", () => {
     expect(override).toMatchObject({ role: "core", source: "manual" });
     expect(raw?.role).toBe("core");
   });
+
+  it("guarantees player position is never null and infers from skills", async () => {
+    const players = new MongoPlayerRepository();
+    const createdWithSkills = await players.resolveHistoricalIdentity({
+      playerId: 9901,
+      clubId: 1,
+      name: "Defender Player",
+      position: null,
+      skills: { defending: 15, pace: 10, stamina: 10 }
+    });
+    expect(createdWithSkills.position).toBe("DEF");
+
+    const rawDoc = await PlayerModel.findOne({ clubId: 1, playerId: 9901 }).lean();
+    expect(rawDoc?.position).toBe("DEF");
+
+    const createdWithoutPosition = await players.resolveHistoricalIdentity({
+      playerId: 9902,
+      clubId: 1,
+      name: "Default Player"
+    });
+    expect(createdWithoutPosition.position).toBe("MID");
+  });
 });
 
 function buildSnapshotInput(overrides: {

@@ -144,6 +144,49 @@ describe("SokkerJsonApiProvider", () => {
     ]);
   });
 
+  it("loads live players from training/players and maps formations correctly", async () => {
+    const mockFetch = vi
+      .fn()
+      .mockResolvedValueOnce(new Response("{}", { headers: { "set-cookie": "PHPSESSID=session" } }))
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            general: [
+              { id: 101, formation: { code: 1, name: "defender" } }
+            ],
+            advanced: [
+              { id: 102, formation: { code: 2, name: "midfielder" } },
+              { id: 103, formation: null }
+            ]
+          })
+        )
+      );
+    vi.stubGlobal("fetch", mockFetch);
+
+    const provider = new SokkerJsonApiProvider({ login: "user", password: "password" });
+    const livePlayers = await provider.getLivePlayers();
+
+    expect(livePlayers).toEqual([
+      { id: 101, formation: "DEF" },
+      { id: 102, formation: "MID" },
+      { id: 103, formation: null }
+    ]);
+    expect(mockFetch.mock.calls[1]?.[0]?.toString()).toBe(
+      "https://sokker.org/api/training/players"
+    );
+  });
+
+  it("throws directly when getLivePlayers fails without falling back", async () => {
+    const mockFetch = vi
+      .fn()
+      .mockResolvedValueOnce(new Response("{}", { headers: { "set-cookie": "PHPSESSID=session" } }))
+      .mockResolvedValueOnce(new Response("Not Found", { status: 404, statusText: "Not Found" }));
+    vi.stubGlobal("fetch", mockFetch);
+
+    const provider = new SokkerJsonApiProvider({ login: "user", password: "password" });
+    await expect(provider.getLivePlayers(6038)).rejects.toThrow("Sokker API request failed (404)");
+  });
+
   it("explains when neither current nor formations has numeric training configuration", async () => {
     const invalidCurrent = structuredClone(currentFixture) as SokkerApiCurrentDto;
     Reflect.deleteProperty(invalidCurrent.team, "training");

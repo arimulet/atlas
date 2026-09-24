@@ -21,7 +21,11 @@ import type {
   SokkerSyncPersistenceResult,
   ValidatedSokkerSyncPayload
 } from "./types.js";
-import { mapJuniorsToSnapshotJuniors, mapPlayersToSnapshotPlayers } from "./snapshot-mappers.js";
+import {
+  mapJuniorsToSnapshotJuniors,
+  mapPlayersToSnapshotPlayers,
+  inferPlayerFormationFromSkills
+} from "./snapshot-mappers.js";
 import { invalidateClubDashboardCache } from "../club/index.js";
 import { invalidateTrainingCache } from "../training/index.js";
 import { invalidateDiagnosticsCache } from "../diagnostics/index.js";
@@ -141,6 +145,18 @@ export class SokkerSyncPersistence {
     );
 
     for (const player of payload.players) {
+      const skills = {
+        stamina: player.skills.stamina,
+        pace: player.skills.pace,
+        technique: player.skills.technique,
+        passing: player.skills.passing,
+        keeper: player.skills.keeper,
+        defender: player.skills.defending,
+        playmaker: player.skills.playmaking,
+        striker: player.skills.striker
+      };
+      const position = player.formation ?? inferPlayerFormationFromSkills(skills);
+
       await persistStep("Player", `${teamId}/${player.id}`, () =>
         this.repositories.players.resolveHistoricalIdentity(
           {
@@ -150,7 +166,7 @@ export class SokkerSyncPersistence {
             countryId: player.country.code,
             countryName: player.country.name,
             age: player.age,
-            position: player.formation,
+            position,
             skills: { ...player.skills },
             marketValue: player.value.value,
             wage: player.wage.value,

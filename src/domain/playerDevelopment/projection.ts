@@ -1,4 +1,4 @@
-import { getSokkerSeason, WEEKS_PER_SOKKER_SEASON } from "../sokker/calendar.js";
+import { WEEKS_PER_SOKKER_SEASON } from "../sokker/calendar.js";
 import {
   calculateRequiredTrainingPoints,
   calculateWeeklyTrainingPointsByKind

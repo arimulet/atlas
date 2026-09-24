@@ -7,11 +7,7 @@ import type {
   PlayerDevelopmentTargetOverride
 } from "@atlas/domain";
 import { PositionBadge } from "@/components/PositionBadge";
-import {
-  developmentProfileOptions,
-  targetDefaultsForProfile,
-  type DevelopmentPlanViewModel
-} from "./development-plan-view-model";
+import { targetDefaultsForProfile, type DevelopmentPlanViewModel } from "./development-plan-view-model";
 
 const PROFILE_CONFIGS: Record<
   DevelopmentProfile,
@@ -224,10 +220,6 @@ export function EditDevelopmentTargetModal({
       </section>
     </div>
   );
-}
-
-function profileLabel(profile: DevelopmentProfile): string {
-  return profile.replaceAll("_", " ").replace(/\b\w/g, (character) => character.toUpperCase());
 }
 
 function skillLabel(skill: DevelopmentSkill): string {
