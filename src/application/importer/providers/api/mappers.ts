@@ -375,8 +375,10 @@ function mapSkillsChange(source: SokkerSkillsChangeApiDto): PlayerSkillsChangeDt
   };
 }
 
-function mapFormation(source: SokkerApiFormationDto | null): PlayerFormation | null {
-  if (source === null) {
+export function mapFormation(
+  source: SokkerApiFormationDto | number | string | null | undefined
+): PlayerFormation | null {
+  if (source === null || source === undefined) {
     return null;
   }
 
@@ -386,6 +388,24 @@ function mapFormation(source: SokkerApiFormationDto | null): PlayerFormation | n
     2: "MID",
     3: "ATT"
   };
+
+  if (typeof source === "number") {
+    const formation = formationByCode[source];
+    if (formation) return formation;
+    throw new Error(`Unsupported Sokker player formation code: ${source}.`);
+  }
+
+  if (typeof source === "string") {
+    const upper = source.trim().toUpperCase();
+    if (upper === "GK" || upper === "GOALKEEPER") return "GK";
+    if (upper === "DEF" || upper === "DEFENDER") return "DEF";
+    if (upper === "MID" || upper === "MIDFIELDER") return "MID";
+    if (upper === "ATT" || upper === "FORWARD" || upper === "STRIKER") return "ATT";
+    const num = Number(source);
+    if (!isNaN(num) && formationByCode[num]) return formationByCode[num];
+    throw new Error(`Unsupported Sokker player formation string: ${source}.`);
+  }
+
   const formation = formationByCode[source.code];
 
   if (!formation) {
@@ -394,6 +414,7 @@ function mapFormation(source: SokkerApiFormationDto | null): PlayerFormation | n
 
   return formation;
 }
+
 
 function mapTrainerAssignment(source: SokkerApiFormationDto): TrainerAssignment {
   const assignmentByCode: Record<number, { name: string; value: TrainerAssignment }> = {

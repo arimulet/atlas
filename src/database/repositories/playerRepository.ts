@@ -1,4 +1,5 @@
 import { Types, type ClientSession } from "mongoose";
+import { suggestDevelopmentProfile } from "@atlas/domain";
 import { PlayerModel } from "../models/player.js";
 import type {
   PersistedDevelopmentProfile,
@@ -11,6 +12,32 @@ import type {
 } from "./types.js";
 
 export type PlayerPosition = "GK" | "DEF" | "MID" | "ATT" | null;
+
+function inferPositionFromSkills(skills?: Record<string, number> | null): "GK" | "DEF" | "MID" | "ATT" {
+  if (!skills) return "MID";
+  try {
+    const profile = suggestDevelopmentProfile({
+      playerId: 0,
+      skills: {
+        stamina: skills.stamina ?? 0,
+        pace: skills.pace ?? 0,
+        technique: skills.technique ?? 0,
+        passing: skills.passing ?? 0,
+        keeper: skills.keeper ?? 0,
+        defender: skills.defending ?? skills.defender ?? 0,
+        playmaker: skills.playmaking ?? skills.playmaker ?? 0,
+        striker: skills.striker ?? 0
+      }
+    }).profile;
+    if (profile === "goalkeeper") return "GK";
+    if (profile === "defender") return "DEF";
+    if (profile === "midfielder") return "MID";
+    return "ATT";
+  } catch {
+    return "MID";
+  }
+}
+
 
 export interface ResolvePlayerIdentityInput {
   playerId: number;
@@ -33,12 +60,15 @@ export class MongoPlayerRepository {
     input: ResolvePlayerIdentityInput,
     session?: ClientSession
   ): Promise<PersistedPlayer> {
+    const effectivePosition = input.position ?? inferPositionFromSkills(input.skills);
     const $set: Record<string, unknown> = { name: input.name };
 
     if (input.countryId !== undefined) $set.countryId = input.countryId;
     if (input.countryName !== undefined) $set.countryName = input.countryName;
     if (input.age !== undefined) $set.age = input.age;
-    if (input.position !== undefined) $set.position = input.position;
+    if (effectivePosition !== undefined && effectivePosition !== null) {
+      $set.position = effectivePosition;
+    }
     if (input.skills !== undefined) $set.skills = input.skills;
     if (input.marketValue !== undefined) $set.marketValue = input.marketValue;
     if (input.wage !== undefined) $set.wage = input.wage;
@@ -50,7 +80,10 @@ export class MongoPlayerRepository {
       { clubId: input.clubId, playerId: input.playerId },
       {
         $set,
-        $setOnInsert: { clubId: input.clubId, playerId: input.playerId }
+        $setOnInsert: {
+          clubId: input.clubId,
+          playerId: input.playerId
+        }
       },
       { new: true, upsert: true, runValidators: true, session }
     );
@@ -242,7 +275,7 @@ function mapPlayer(player: {
     countryId: player.countryId ?? null,
     countryName: player.countryName ?? null,
     age: player.age ?? null,
-    position: player.position ?? null,
+    position: (player.position as PlayerPosition) ?? inferPositionFromSkills(player.skills),
     skills: player.skills ?? null,
     marketValue: player.marketValue ?? null,
     wage: player.wage ?? null,

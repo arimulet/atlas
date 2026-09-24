@@ -166,13 +166,15 @@ export async function getTrainingPageData(clubId: ClubId): Promise<TrainingPageD
       throw new Error(`Club not found: ${clubId}`);
     }
 
-    const [snapshots, history] = await Promise.all([
+    const [snapshots, history, persistedPlayers] = await Promise.all([
       snapshotRepository.findLatestNByClub(club.clubId, 2),
-      trainingWeekRepository.listByClub(club.clubId)
+      trainingWeekRepository.listByClub(club.clubId),
+      playerRepository.listByClub(club.clubId)
     ]);
     const latestSnapshot = snapshots.at(-1) ?? null;
     const previousSnapshot = snapshots.at(-2) ?? null;
     const latestByPlayer = new Map<number, (typeof history)[number]>();
+    const persistedPlayerById = new Map(persistedPlayers.map((player) => [player.playerId, player]));
 
     for (const report of history) {
       latestByPlayer.set(report.playerId, report);
@@ -201,7 +203,8 @@ export async function getTrainingPageData(clubId: ClubId): Promise<TrainingPageD
             player,
             previousPlayerValues.get(player.playerId) ?? null,
             latestByPlayer,
-            talentByPlayer.get(player.playerId) ?? null
+            talentByPlayer.get(player.playerId) ?? null,
+            persistedPlayerById.get(player.playerId) ?? null
           )
         ) ?? [],
       history
@@ -923,12 +926,26 @@ function toPersistedSkillsChange(
   };
 }
 
+function positionCodeToNumber(code: string | null | undefined): number | null {
+  if (!code) return null;
+  const upper = code.trim().toUpperCase();
+  if (upper === "GK" || upper === "GOALKEEPER") return 0;
+  if (upper === "DEF" || upper === "DEFENDER") return 1;
+  if (upper === "MID" || upper === "MIDFIELDER") return 2;
+  if (upper === "ATT" || upper === "STRIKER" || upper === "FORWARD") return 3;
+  return null;
+}
+
 function mapPlayer(
   player: PersistedPlayerSnapshot,
   previousValue: number | null,
   latestByPlayer: ReadonlyMap<number, TrainingPageData["history"][number]>,
-  talentEstimate: ReturnType<typeof estimateTalentFromTrainingHistory> | null
+  talentEstimate: ReturnType<typeof estimateTalentFromTrainingHistory> | null,
+  persistedPlayer?: PersistedPlayer | null
 ): TrainingPageData["players"][number] {
+  const currentPositionNumber = positionCodeToNumber(persistedPlayer?.position);
+  const trainingPosition = currentPositionNumber ?? player.training.position;
+
   return {
     id: player.id,
     playerId: player.playerId,
@@ -936,7 +953,10 @@ function mapPlayer(
     countryName: player.countryName,
     age: player.age,
     form: player.form,
-    training: player.training,
+    training: {
+      ...player.training,
+      position: trainingPosition
+    },
     value: player.value,
     valueChange: previousValue === null ? null : player.value - previousValue,
     latestReport: latestByPlayer.get(player.playerId) ?? null,
