@@ -112,10 +112,3 @@ function formationToPosition(formation: PlayerFormation | null, skills: SkillSet
   }
 }
 
-function positionForProfile(profile: DevelopmentProfile): number {
-  if (profile === "goalkeeper") return 0;
-  if (profile === "defender") return 1;
-  if (profile === "midfielder") return 2;
-  return 3;
-}
-

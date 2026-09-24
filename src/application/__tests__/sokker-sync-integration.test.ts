@@ -214,7 +214,7 @@ describe("Sokker sync end-to-end", () => {
 
     // 1. Snapshot maintains the position the player actually trained in (MID = 2)
     const snapshot = await SnapshotModel.findOne({ clubId: result.teamId, gameWeek: 1204 }).lean();
-    const snapshotGrace = snapshot?.players?.find((p: any) => p.playerId === 39409355);
+    const snapshotGrace = snapshot?.players?.find((player: { playerId: number }) => player.playerId === 39409355);
     expect(snapshotGrace?.training?.position).toBe(2);
 
     // 2. Player entity has the live configured position ("DEF")

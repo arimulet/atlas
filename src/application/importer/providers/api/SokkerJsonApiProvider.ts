@@ -111,7 +111,7 @@ export class SokkerJsonApiProvider implements SokkerDataProvider {
     return mapResource("training", () => mapTrainingApiToTrainingData(response.players));
   }
 
-  async getLivePlayers(teamId?: number): Promise<Array<{ id: number; formation: PlayerFormation | null }>> {
+  async getLivePlayers(_teamId?: number): Promise<Array<{ id: number; formation: PlayerFormation | null }>> {
     const response = await this.get<SokkerLivePlayersApiDto>("training/players");
 
     return mapResource("live players", () => {
