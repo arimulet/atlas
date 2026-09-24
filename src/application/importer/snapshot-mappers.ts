@@ -44,6 +44,8 @@ export function mapPlayersToSnapshotPlayers(
       striker: player.skills.striker
     };
 
+    const historicalTrainedFormation = latestTraining?.formation ?? player.formation;
+
     return {
       playerId: player.id,
       name: player.name.fullName,
@@ -51,7 +53,7 @@ export function mapPlayersToSnapshotPlayers(
       wage: player.wage.value,
       value: player.value.value,
       training: {
-        position: formationToPosition(player.formation, skills),
+        position: formationToPosition(historicalTrainedFormation, skills),
         advanced: latestTraining?.kind === "advanced"
       },
       form: player.skills.form,
@@ -78,8 +80,27 @@ export function mapJuniorsToSnapshotJuniors(juniors: readonly JuniorDto[]): Snap
   }));
 }
 
+export function formationForProfile(profile: DevelopmentProfile): PlayerFormation {
+  switch (profile) {
+    case "goalkeeper":
+      return "GK";
+    case "defender":
+      return "DEF";
+    case "midfielder":
+      return "MID";
+    case "forward":
+      return "ATT";
+  }
+}
+
+export function inferPlayerFormationFromSkills(skills: SkillSet): PlayerFormation {
+  const profile = suggestDevelopmentProfile({ playerId: 0, skills }).profile;
+  return formationForProfile(profile);
+}
+
 function formationToPosition(formation: PlayerFormation | null, skills: SkillSet): number {
-  switch (formation) {
+  const effective = formation ?? inferPlayerFormationFromSkills(skills);
+  switch (effective) {
     case "GK":
       return 0;
     case "DEF":
@@ -88,14 +109,6 @@ function formationToPosition(formation: PlayerFormation | null, skills: SkillSet
       return 2;
     case "ATT":
       return 3;
-    case null:
-      return positionForProfile(suggestDevelopmentProfile({ playerId: 0, skills }).profile);
   }
 }
 
-function positionForProfile(profile: DevelopmentProfile): number {
-  if (profile === "goalkeeper") return 0;
-  if (profile === "defender") return 1;
-  if (profile === "midfielder") return 2;
-  return 3;
-}

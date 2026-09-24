@@ -36,6 +36,7 @@ function createMockProvider() {
   );
   const getCurrent = vi.fn(async (): Promise<CurrentClubContextDto> => current);
   const getTraining = vi.fn(async (): Promise<TrainingDataDto> => training);
+  const getLivePlayers = vi.fn<SokkerDataProvider["getLivePlayers"]>(async () => []);
   const getTrainers = vi.fn(async () => trainers);
   const getJuniors = vi.fn(async () => juniors);
   const getJuniorsXml = vi.fn(async () => []);
@@ -56,6 +57,7 @@ function createMockProvider() {
     provider: {
       getCurrent,
       getTraining,
+      getLivePlayers,
       getTrainers,
       getJuniors,
       getJuniorsXml,
@@ -69,6 +71,7 @@ function createMockProvider() {
     } satisfies SokkerDataProvider,
     getCurrent,
     getTraining,
+    getLivePlayers,
     getTrainers,
     getJuniors,
     getJuniorsXml,
@@ -146,6 +149,7 @@ describe("SokkerSyncLoader", () => {
 
   it.each([
     ["training", "getTraining"],
+    ["live players", "getLivePlayers"],
     ["trainer", "getTrainers"],
     ["junior", "getJuniors"],
     ["training summary", "getTrainingSummary"]
@@ -166,4 +170,27 @@ describe("SokkerSyncLoader", () => {
       "Failed to fetch Sokker trainer data: Failed to map Sokker trainer response."
     );
   });
+
+  it("enriches players with live formations from getLivePlayers", async () => {
+    const mock = createMockProvider();
+    mock.getLivePlayers.mockResolvedValue([
+      { id: mock.training.players[0]!.id, formation: "DEF" }
+    ]);
+
+    const payload = await loadSokkerSyncPayload(mock.provider);
+
+    expect(payload.players[0]?.formation).toBe("DEF");
+  });
+
+  it("does not clobber player formation with null and falls back to skills inference", async () => {
+    const mock = createMockProvider();
+    mock.getLivePlayers.mockResolvedValue([
+      { id: mock.training.players[0]!.id, formation: null }
+    ]);
+
+    const payload = await loadSokkerSyncPayload(mock.provider);
+
+    expect(payload.players[0]?.formation).not.toBeNull();
+  });
 });
+

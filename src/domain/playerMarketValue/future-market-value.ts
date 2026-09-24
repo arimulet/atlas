@@ -72,6 +72,7 @@ export function projectPlayerMarketValue(
       valueGainFromPrevious,
       cumulativeTrainingWeeks: finiteOrNull(projectionStep.cumulativeWeeks),
       confidence: pointConfidence,
+      basedOnFundamentalOnly: !valuation.hasComparableEvidence,
       ...(milestone ? { milestone } : {})
     });
 

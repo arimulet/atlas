@@ -7,7 +7,7 @@ import mongoose from "mongoose";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { JuniorModel, SnapshotModel, SyncRunModel, TrainingWeekModel } from "@atlas/database";
+import { JuniorModel, PlayerModel, SnapshotModel, SyncRunModel, TrainingWeekModel } from "@atlas/database";
 import {
   MongoClubRepository,
   MongoPlayerRepository,
@@ -198,6 +198,40 @@ describe("Sokker sync end-to-end", () => {
     expect(await SyncRunModel.countDocuments({ teamId: 6038, status: "failed" })).toBe(1);
     expect(await SyncRunModel.countDocuments({ teamId: 6038, status: "completed" })).toBe(0);
   });
+
+  it("saves live configured position to player entity and UI while preserving historical trained position in snapshot", async () => {
+    const provider = createFixtureProvider();
+    // Live formation for player 39409355 (trained as MID in report) is now configured as DEF in Sokker
+    (provider.getLivePlayers as ReturnType<typeof vi.fn>).mockResolvedValue([
+      { id: 39409355, formation: "DEF" },
+      { id: 40098056, formation: null },
+      { id: 38643161, formation: "DEF" }
+    ]);
+
+    const payload = await loadSokkerSyncPayload(provider);
+    const validation = toValidatedPayload(payload);
+    const result = await new SokkerSyncPersistence().persist(validation);
+
+    // 1. Snapshot maintains the position the player actually trained in (MID = 2)
+    const snapshot = await SnapshotModel.findOne({ clubId: result.teamId, gameWeek: 1204 }).lean();
+    const snapshotGrace = snapshot?.players?.find((player: { playerId: number }) => player.playerId === 39409355);
+    expect(snapshotGrace?.training?.position).toBe(2);
+
+    // 2. Player entity has the live configured position ("DEF")
+    const playerEntity = await PlayerModel.findOne({ clubId: result.teamId, playerId: 39409355 }).lean();
+    expect(playerEntity?.position).toBe("DEF");
+
+    // 2b. Player entity with null live formation still has a valid non-null position inferred from skills
+    const playerAda = await PlayerModel.findOne({ clubId: result.teamId, playerId: 40098056 }).lean();
+    expect(playerAda?.position).not.toBeNull();
+    expect(["GK", "DEF", "MID", "ATT"]).toContain(playerAda?.position);
+
+    // 3. Training page view overlays the live configured position (DEF = 1)
+    const trainingPageData = await getTrainingPageData(result.clubId);
+    const viewGrace = trainingPageData.players.find((p) => p.playerId === 39409355);
+    expect(viewGrace?.training.position).toBe(1);
+    expect(viewGrace?.latestReport?.type).toBe("general");
+  });
 });
 
 function createFixtureProvider(): SokkerDataProvider {
@@ -237,6 +271,7 @@ function createFixtureProvider(): SokkerDataProvider {
       players: payload.players,
       trainingWeeks: payload.trainingWeeks
     })),
+    getLivePlayers: vi.fn(async () => payload.players.map((p) => ({ id: p.id, formation: p.formation }))),
     getTrainers: vi.fn(async () => payload.trainers),
     getJuniors: vi.fn(async () => payload.juniors),
     getJuniorsXml: vi.fn(async () => []),

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { mapPlayersToSnapshotPlayers } from "../importer/snapshot-mappers.js";
-import type { PlayerDto } from "../importer/types.js";
+import type { PlayerDto, PlayerTrainingWeekDto } from "../importer/types.js";
 
 describe("mapPlayersToSnapshotPlayers", () => {
   it("infers a field position from skills when a promoted player has no formation", () => {
@@ -35,6 +35,44 @@ describe("mapPlayersToSnapshotPlayers", () => {
     const [player] = mapPlayersToSnapshotPlayers([createPlayer({ formation: "GK" })], []);
 
     expect(player?.training.position).toBe(0);
+  });
+
+  it("preserves historical trained formation in snapshot even if player has a different live formation", () => {
+    const player = createPlayer({ id: 42, formation: "DEF" });
+    const trainingWeek: PlayerTrainingWeekDto = {
+      playerId: 42,
+      gameWeek: 1204,
+      season: 78,
+      seasonWeek: 7,
+      date: "2026-08-12",
+      trainedSkill: "playmaking",
+      kind: "formation",
+      intensity: 100,
+      formation: "MID",
+      age: 20,
+      skills: player.skills,
+      skillsChange: {
+        form: 0,
+        tacticalDiscipline: 0,
+        teamwork: 0,
+        experience: 0,
+        stamina: 0,
+        keeper: 0,
+        playmaking: 0,
+        passing: 0,
+        technique: 0,
+        defending: 0,
+        striker: 0,
+        pace: 0,
+        down: 0,
+        up: 0
+      },
+      skillChanges: []
+    };
+
+    const [snapshotPlayer] = mapPlayersToSnapshotPlayers([player], [trainingWeek]);
+
+    expect(snapshotPlayer?.training.position).toBe(2);
   });
 });
 

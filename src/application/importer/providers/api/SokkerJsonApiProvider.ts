@@ -2,6 +2,7 @@ import type { SokkerCredentials } from "../../types.js";
 import type {
   CurrentClubContextDto,
   JuniorDto,
+  PlayerFormation,
   TrainerDto,
   TrainingDataDto,
   TrainingSummaryDto,
@@ -12,12 +13,15 @@ import type {
   SokkerCurrentApiDto,
   SokkerJuniorsApiDto,
   SokkerApiTrainingFormationsDto,
+  SokkerLivePlayersApiDto,
+  SokkerLivePlayerItemApiDto,
   SokkerTrainersApiDto,
   SokkerTrainingApiDto,
   SokkerTrainingSummaryApiDto
 } from "./dtos.js";
 import {
   mapCurrentApiToCurrentClubContext,
+  mapFormation,
   mapJuniorsApiToJuniors,
   mapTrainingFormationsApiToTraining,
   mapTrainersApiToTrainers,
@@ -105,6 +109,28 @@ export class SokkerJsonApiProvider implements SokkerDataProvider {
     const response = await this.get<SokkerTrainingApiDto>("training");
 
     return mapResource("training", () => mapTrainingApiToTrainingData(response.players));
+  }
+
+  async getLivePlayers(_teamId?: number): Promise<Array<{ id: number; formation: PlayerFormation | null }>> {
+    const response = await this.get<SokkerLivePlayersApiDto>("training/players");
+
+    return mapResource("live players", () => {
+      let players: SokkerLivePlayerItemApiDto[] = [];
+      if (Array.isArray(response)) {
+        players = response;
+      } else if (response) {
+        if (response.general || response.advanced) {
+          players = [...(response.general ?? []), ...(response.advanced ?? [])];
+        } else if (response.players) {
+          players = response.players;
+        }
+      }
+
+      return players.map((p) => ({
+        id: p.id,
+        formation: mapFormation(p.formation ?? p.position ?? p.info?.formation ?? null)
+      }));
+    });
   }
 
   async getTrainers(): Promise<TrainerDto[]> {

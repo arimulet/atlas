@@ -187,6 +187,24 @@ export interface SokkerTrainingApiDto {
   players: SokkerApiTrainingPlayerDto[];
 }
 
+export interface SokkerLivePlayerItemApiDto {
+  id: number;
+  formation?: SokkerApiFormationDto | number | string | null;
+  position?: SokkerApiFormationDto | number | string | null;
+  info?: {
+    formation?: SokkerApiFormationDto | number | string | null;
+  } | null;
+}
+
+export interface SokkerApiTrainingPlayersDto {
+  general?: SokkerLivePlayerItemApiDto[];
+  advanced?: SokkerLivePlayerItemApiDto[];
+  players?: SokkerLivePlayerItemApiDto[];
+}
+
+export type SokkerLivePlayersApiDto = SokkerApiTrainingPlayersDto | SokkerLivePlayerItemApiDto[];
+
+
 export interface SokkerTrainerSkillApiDto {
   value: number;
   percent: number;

@@ -10,7 +10,8 @@ import {
   Sparkles,
   Star,
   TrendingDown,
-  TrendingUp
+  TrendingUp,
+  Calculator
 } from "lucide-react";
 import type { SquadPlanningBundle, SquadRole, TrainingPageData, TrainingReport } from "@atlas/web/app/types";
 import {
@@ -318,7 +319,23 @@ function TrainingPlayerRows({
           />
         ))}
         <td className="atlas-training-table__numeric atlas-training-table__market-value">
-          {marketValueViewModel?.current.expected.label ?? "—"}
+          <div style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem", justifyContent: "flex-end" }}>
+            <span>{marketValueViewModel?.current.expected.label ?? "—"}</span>
+            {marketValueViewModel?.current.basedOnFundamentalOnly ? (
+              <span
+                title="Fundamental model (no direct market comparables)"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  color: "var(--atlas-text-muted)",
+                  cursor: "help"
+                }}
+                aria-label="Fundamental model (no direct market comparables)"
+              >
+                <Calculator size={13} />
+              </span>
+            ) : null}
+          </div>
         </td>
         <td className="atlas-training-table__planning">
           {onSaveSquadRole ? (

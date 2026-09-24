@@ -66,7 +66,7 @@ export interface PlayerMarketValueViewModel {
     current: MarketValueAmount;
     nextSkillUp: ProjectionPointViewModel | null;
     targetCompletion: ProjectionPointViewModel | null;
-    peak: { value: MarketValueAmount; age: string; step: number; range: MarketValueRangeViewModel | null } | null;
+    peak: { value: MarketValueAmount; age: string; step: number; range: MarketValueRangeViewModel | null; basedOnFundamentalOnly?: boolean } | null;
     points: ProjectionPointViewModel[];
     confidence: ConfidenceViewModel;
   } | null;
@@ -90,6 +90,7 @@ export interface ProjectionPointViewModel {
   age: string;
   confidence: ConfidenceViewModel;
   milestone: string | null;
+  basedOnFundamentalOnly: boolean;
 }
 
 export interface TrainingValueViewModel {
@@ -363,7 +364,8 @@ function createProjectionViewModel(
           value: amount(projection.peak.value, currency),
           age: peakPoint?.age ?? formatAge(typeof projection.peak.age === "number" ? Math.floor(projection.peak.age) : null),
           step: projection.peak.step,
-          range: peakPoint?.range ?? null
+          range: peakPoint?.range ?? null,
+          basedOnFundamentalOnly: peakPoint?.basedOnFundamentalOnly ?? true
         }
       : null,
     points,
@@ -399,7 +401,8 @@ function createPointViewModel(
     weeks: point.cumulativeTrainingWeeks,
     age: projectedAge !== null ? `~${projectedAge}` : "—",
     confidence: confidence(point.confidence),
-    milestone: point.milestone ? milestoneLabel(point.milestone) : null
+    milestone: point.milestone ? milestoneLabel(point.milestone) : null,
+    basedOnFundamentalOnly: point.basedOnFundamentalOnly ?? true
   };
 }
 
