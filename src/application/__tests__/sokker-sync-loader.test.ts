@@ -36,7 +36,7 @@ function createMockProvider() {
   );
   const getCurrent = vi.fn(async (): Promise<CurrentClubContextDto> => current);
   const getTraining = vi.fn(async (): Promise<TrainingDataDto> => training);
-  const getLivePlayers = vi.fn(async () => []);
+  const getLivePlayers = vi.fn<SokkerDataProvider["getLivePlayers"]>(async () => []);
   const getTrainers = vi.fn(async () => trainers);
   const getJuniors = vi.fn(async () => juniors);
   const getJuniorsXml = vi.fn(async () => []);
