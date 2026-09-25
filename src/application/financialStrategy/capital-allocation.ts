@@ -19,13 +19,18 @@ import {
   type PersistedMarketTransfer,
   PlayerModel,
   MarketTransferCurrentModel,
-  MarketTransferModel
+  MarketTransferModel,
+  MongoClubRepository,
+  MongoCountryRepository
 } from "@atlas/database";
 import { getClubFinancialAssessment } from "./index.js";
 import { getSquadAssessment } from "../squadPlanning/index.js";
 import { getTrainingPageData } from "../training/index.js";
 import type { SquadAssessmentData } from "../squadPlanning/types.js";
 import type { ClubId } from "../types.js";
+
+const clubRepository = new MongoClubRepository();
+const countryRepository = new MongoCountryRepository();
 
 export async function getCapitalAllocationPlan(clubId: ClubId): Promise<CapitalAllocationPlan> {
   const context = await getCapitalAllocationContext(clubId);
@@ -44,11 +49,21 @@ export async function simulatePlayerAcquisitionApplication(
   clubId: ClubId,
   input: PlayerAcquisitionSimulationInput
 ): Promise<PlayerAcquisitionSimulationResult> {
-  const [context, training, transfers] = await Promise.all([
+  const clubIdStr = clubId.toString();
+  const club = await (
+    /^[0-9a-fA-F]{24}$/.test(clubIdStr)
+      ? clubRepository.findById(clubIdStr)
+      : clubRepository.findByClubId(Number(clubId))
+  ).catch(() => null);
+  const [context, training, transfers, clubCountry] = await Promise.all([
     getCapitalAllocationContext(clubId),
     getTrainingPageData(clubId).catch(() => null),
-    findFinalMarketTransfersUpToDate(new Date(), 50).catch(() => [])
+    findFinalMarketTransfersUpToDate(new Date()).catch(() => []),
+    club?.country ? countryRepository.getById(club.country).catch(() => null) : null
   ]);
+
+  const currencyRate = clubCountry?.currencyRate ?? 1;
+  const currencyName = clubCountry?.currencyName ?? club?.currency ?? "u$s";
 
   let enrichedInput: PlayerAcquisitionSimulationInput = { ...input };
 
@@ -105,19 +120,24 @@ export async function simulatePlayerAcquisitionApplication(
       squadPlayers: context.squadPlayers,
       trainingConfiguration: training?.configuration ?? null,
       activeAdvancedTraineeCount,
-      marketTransfers: transfers.map(mapPersistedToTransferRecord)
+      marketTransfers: transfers.map((t) => mapPersistedToTransferRecord(t, currencyName, currencyRate))
     },
     enrichedInput
   );
 }
 
-function mapPersistedToTransferRecord(transfer: PersistedMarketTransfer): PlayerTransferRecord {
+function mapPersistedToTransferRecord(
+  transfer: PersistedMarketTransfer,
+  currencyName: string = "u$s",
+  currencyRate: number = 1
+): PlayerTransferRecord {
   return {
     transferId: transfer.transferKey,
     playerId: transfer.playerId,
     transferDate: transfer.transferDate,
     gameWeek: transfer.gameWeek,
-    salePrice: transfer.salePrice,
+    salePrice: Math.round(transfer.salePrice / currencyRate),
+    currency: currencyName,
     age: transfer.age,
     skills: {
       stamina: transfer.skills.stamina ?? null,

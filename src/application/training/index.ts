@@ -69,6 +69,71 @@ function resolvePlayerPosition(
   return null;
 }
 
+function trainingCodeToCostSkill(code: number | null | undefined): SkillTrainingCostSkill | null {
+  if (code === null || code === undefined) return null;
+  switch (code) {
+    case 1:
+      return "stamina";
+    case 2:
+      return "keeper";
+    case 3:
+      return "playmaking";
+    case 4:
+      return "passing";
+    case 5:
+      return "technique";
+    case 6:
+      return "defending";
+    case 7:
+      return "scoring";
+    case 8:
+      return "pace";
+    default:
+      return null;
+  }
+}
+
+function resolveCurrentTrainingSkill(input: {
+  persistedPlayer?: PersistedPlayer | null;
+  snapshotPlayer?: PersistedPlayerSnapshot | null;
+  trainingConfiguration?: TrainingPageData["configuration"] | null;
+  fallbackSkill?: SkillTrainingCostSkill | null;
+}): SkillTrainingCostSkill | undefined {
+  if (input.trainingConfiguration) {
+    let positionCode: "GK" | "DEF" | "MID" | "ATT" | null = null;
+    const pos = input.persistedPlayer?.position?.trim().toUpperCase();
+    if (pos === "GK" || pos === "DEF" || pos === "MID" || pos === "ATT") {
+      positionCode = pos;
+    } else if (pos === "GOALKEEPER") {
+      positionCode = "GK";
+    } else if (pos === "DEFENDER") {
+      positionCode = "DEF";
+    } else if (pos === "MIDFIELDER" || pos === "WINGER") {
+      positionCode = "MID";
+    } else if (pos === "ATT" || pos === "FORWARD" || pos === "STRIKER") {
+      positionCode = "ATT";
+    }
+
+    if (!positionCode && input.snapshotPlayer?.training) {
+      const snapPos = input.snapshotPlayer.training.position;
+      if (snapPos === 0) positionCode = "GK";
+      else if (snapPos === 1) positionCode = "DEF";
+      else if (snapPos === 2) positionCode = "MID";
+      else if (snapPos === 3) positionCode = "ATT";
+    }
+
+    if (positionCode) {
+      const code = input.trainingConfiguration[positionCode];
+      const skill = trainingCodeToCostSkill(code);
+      if (skill) {
+        return skill;
+      }
+    }
+  }
+
+  return input.fallbackSkill ?? undefined;
+}
+
 function resolvePlannedSkill(input: {
   persistedPlayer?: PersistedPlayer;
   snapshotPlayer?: PersistedPlayerSnapshot;
@@ -258,7 +323,8 @@ export function buildTrainingRecommendationsFromLoadedData(
   reports: PersistedPlayerTrainingWeek[],
   snapshots: PersistedSnapshot[],
   persistedPlayers: PersistedPlayer[],
-  gameWeek?: number
+  gameWeek?: number,
+  trainingConfiguration?: TrainingPageData["configuration"] | null
 ): PlayerTrainingRecommendation[] {
   const persistedPlayerMap = new Map(persistedPlayers.map((p) => [p.playerId, p]));
   const histories = buildTrainingHistories(reports);
@@ -303,6 +369,12 @@ export function buildTrainingRecommendationsFromLoadedData(
         talent,
         history
       });
+      const currentTrainingSkill = resolveCurrentTrainingSkill({
+        persistedPlayer,
+        snapshotPlayer,
+        trainingConfiguration,
+        fallbackSkill: playerReport.training.skill
+      });
 
       return [
         {
@@ -315,7 +387,8 @@ export function buildTrainingRecommendationsFromLoadedData(
           weeklyReport: playerReport,
           trainingHistory: history,
           talent,
-          plannedSkill
+          plannedSkill,
+          currentTrainingSkill
         }
       ];
     })
@@ -337,7 +410,13 @@ export async function getTrainingRecommendations(
     snapshotRepository.listByClub(club.clubId),
     playerRepository.listByClub(club.clubId)
   ]);
-  return buildTrainingRecommendationsFromLoadedData(reports, snapshots, persistedPlayers, gameWeek);
+  return buildTrainingRecommendationsFromLoadedData(
+    reports,
+    snapshots,
+    persistedPlayers,
+    gameWeek,
+    club.training
+  );
 }
 
 export interface PrecomputedTrainingData {
@@ -345,6 +424,7 @@ export interface PrecomputedTrainingData {
   talentByPlayer?: Map<number, ReturnType<typeof estimateTalentFromTrainingHistory>>;
   weeklyReport?: WeeklyTrainingReport;
   recommendations?: PlayerTrainingRecommendation[];
+  trainingConfiguration?: TrainingPageData["configuration"] | null;
 }
 
 export function buildAdvancedTrainingOptimizationFromLoadedData(
@@ -430,6 +510,12 @@ export function buildAdvancedTrainingOptimizationFromLoadedData(
           talent,
           history
         });
+        const currentTrainingSkill = resolveCurrentTrainingSkill({
+          persistedPlayer,
+          snapshotPlayer,
+          trainingConfiguration: precomputed?.trainingConfiguration,
+          fallbackSkill: playerReport.training.skill
+        });
 
         return [
           {
@@ -442,7 +528,8 @@ export function buildAdvancedTrainingOptimizationFromLoadedData(
             weeklyReport: playerReport,
             trainingHistory: history,
             talent,
-            plannedSkill
+            plannedSkill,
+            currentTrainingSkill
           }
         ];
       })
@@ -487,7 +574,13 @@ export function buildAdvancedTrainingOptimizationFromLoadedData(
         trainingRecommendation: recommendationByPlayer.get(history.playerId),
         trainingHistory: history,
         currentTraining: {
-          skill: currentWeek.skill,
+          skill:
+            resolveCurrentTrainingSkill({
+              persistedPlayer,
+              snapshotPlayer,
+              trainingConfiguration: precomputed?.trainingConfiguration,
+              fallbackSkill: currentWeek.skill
+            }) ?? currentWeek.skill,
           kind: snapshotPlayer
             ? snapshotPlayer.training.advanced
               ? "advanced"
@@ -555,7 +648,14 @@ export async function getAdvancedTrainingOptimization(
     juniorRepository.listByClub(club.clubId),
     playerRepository.listByClub(club.clubId)
   ]);
-  return buildAdvancedTrainingOptimizationFromLoadedData(reports, snapshots, juniors, persistedPlayers, gameWeek);
+  return buildAdvancedTrainingOptimizationFromLoadedData(
+    reports,
+    snapshots,
+    juniors,
+    persistedPlayers,
+    gameWeek,
+    { trainingConfiguration: club.training }
+  );
 }
 
 export function buildWeeklyTrainingIntelligenceFromLoadedData(
@@ -563,7 +663,8 @@ export function buildWeeklyTrainingIntelligenceFromLoadedData(
   snapshots: PersistedSnapshot[],
   juniors: PersistedJunior[],
   persistedPlayers: PersistedPlayer[],
-  gameWeek?: number
+  gameWeek?: number,
+  trainingConfiguration?: TrainingPageData["configuration"] | null
 ): WeeklyTrainingIntelligence {
   const persistedPlayerMap = new Map(persistedPlayers.map((p) => [p.playerId, p]));
   const histories = buildTrainingHistories(reports);
@@ -608,6 +709,12 @@ export function buildWeeklyTrainingIntelligenceFromLoadedData(
         talent,
         history
       });
+      const currentTrainingSkill = resolveCurrentTrainingSkill({
+        persistedPlayer,
+        snapshotPlayer,
+        trainingConfiguration,
+        fallbackSkill: playerReport.training.skill
+      });
 
       return [
         {
@@ -620,7 +727,8 @@ export function buildWeeklyTrainingIntelligenceFromLoadedData(
           weeklyReport: playerReport,
           trainingHistory: history,
           talent,
-          plannedSkill
+          plannedSkill,
+          currentTrainingSkill
         }
       ];
     })
@@ -636,7 +744,8 @@ export function buildWeeklyTrainingIntelligenceFromLoadedData(
       histories,
       talentByPlayer,
       weeklyReport,
-      recommendations
+      recommendations,
+      trainingConfiguration
     }
   );
 
@@ -675,7 +784,9 @@ export async function getWeeklyTrainingIntelligence(
       reports,
       snapshots,
       juniors,
-      persistedPlayers
+      persistedPlayers,
+      undefined,
+      club.training
     );
 
     trainingIntelligenceCache.set(cacheKey, { data: result, timestamp: Date.now() });
@@ -744,6 +855,12 @@ export async function getWeeklyTrainingCalibration(
       talent,
       history
     });
+    const currentTrainingSkill = resolveCurrentTrainingSkill({
+      persistedPlayer,
+      snapshotPlayer,
+      trainingConfiguration: club.training,
+      fallbackSkill: report.training.skill
+    });
     return [
       {
         player: {
@@ -755,7 +872,8 @@ export async function getWeeklyTrainingCalibration(
         weeklyReport: report,
         trainingHistory: history,
         talent,
-        plannedSkill
+        plannedSkill,
+        currentTrainingSkill
       }
     ];
   });
@@ -765,18 +883,25 @@ export async function getWeeklyTrainingCalibration(
   );
   const advancedContexts = recommendationContexts.flatMap((context) => {
     const snapshotPlayer = latestSnapshotPlayerMap.get(context.player.playerId);
+    const persistedPlayer = persistedPlayerMap.get(context.player.playerId);
     const currentWeek = context.trainingHistory.weeks.find(
       (week) => week.week === weeklyReport.gameWeek
     );
     if (!currentWeek) {
       return [];
     }
+    const currentTrainingSkill = resolveCurrentTrainingSkill({
+      persistedPlayer,
+      snapshotPlayer,
+      trainingConfiguration: club.training,
+      fallbackSkill: currentWeek.skill
+    });
     return [
       {
         ...context,
         trainingRecommendation: recommendationByPlayer.get(context.player.playerId),
         currentTraining: {
-          skill: currentWeek.skill,
+          skill: currentTrainingSkill ?? currentWeek.skill,
           kind: snapshotPlayer
             ? snapshotPlayer.training.advanced
               ? ("advanced" as const)

@@ -59,8 +59,16 @@ export class MongoClubRepository {
   }
 
   async findById(id: string): Promise<PersistedClub | null> {
-    const club = await ClubModel.findById(id).lean();
-    return club ? mapClub(club) : null;
+    if (Types.ObjectId.isValid(id)) {
+      const club = await ClubModel.findById(id).lean();
+      if (club) return mapClub(club);
+    }
+    const num = Number(id);
+    if (Number.isFinite(num)) {
+      const club = await ClubModel.findOne({ clubId: num }).lean();
+      if (club) return mapClub(club);
+    }
+    return null;
   }
 
   async findByClubId(clubId: number): Promise<PersistedClub | null> {

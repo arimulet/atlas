@@ -60,6 +60,7 @@ function recommendationContext(input: {
   talent?: TalentEstimate | null;
   gameWeek?: number;
   plannedSkill?: SkillTrainingCostSkill | null;
+  currentTrainingSkill?: SkillTrainingCostSkill | null;
 }) {
   const history = createTrainingHistory(PLAYER_ID, input.weeks);
   const weeklyReport = buildWeeklyTrainingReport({
@@ -72,7 +73,8 @@ function recommendationContext(input: {
     weeklyReport,
     trainingHistory: history,
     talent: input.talent,
-    plannedSkill: input.plannedSkill
+    plannedSkill: input.plannedSkill,
+    currentTrainingSkill: input.currentTrainingSkill
   };
 }
 
@@ -419,6 +421,57 @@ describe("training recommendation engine", () => {
           skill: "defending"
         })
       );
+    });
+
+    it("recommends continue when current configured training skill matches planned skill even if historical weekly report trained another skill", () => {
+      const context = recommendationContext({
+        weeks: [
+          week({ gameWeek: 1200, skill: "pace", level: 10 }),
+          week({ gameWeek: 1201, skill: "pace", level: 10 })
+        ],
+        player: {
+          age: 23,
+          position: "defender",
+          skills: { defending: 13, pace: 10, passing: 8, technique: 7 }
+        },
+        talent: talent(),
+        plannedSkill: "defending",
+        currentTrainingSkill: "defending"
+      });
+
+      const recommendation = buildTrainingRecommendation(context);
+
+      expect(recommendation.status).toBe("continue");
+      expect(recommendation.recommendedSkill).toBeUndefined();
+      expect(recommendation.currentSkill).toBe("defending");
+      expect(recommendation.reasons).toContainEqual(
+        expect.objectContaining({
+          type: "aligned_with_development_plan",
+          skill: "defending"
+        })
+      );
+      expect(recommendation.reasons.some((r) => r.type === "development_plan_step")).toBe(false);
+    });
+
+    it("evaluates currentOption level from player skills when currentTrainingSkill differs from weeklyReport", () => {
+      const context = recommendationContext({
+        weeks: [
+          week({ gameWeek: 1201, skill: "pace", level: 10 })
+        ],
+        player: {
+          age: 23,
+          position: "defender",
+          skills: { defending: 14, pace: 10 }
+        },
+        talent: talent(),
+        plannedSkill: "defending",
+        currentTrainingSkill: "defending"
+      });
+
+      const recommendation = buildTrainingRecommendation(context);
+
+      expect(recommendation.currentOption.skill).toBe("defending");
+      expect(recommendation.currentOption.currentLevel).toBe(14);
     });
 
     it("recommends continue when the development plan is completed", () => {

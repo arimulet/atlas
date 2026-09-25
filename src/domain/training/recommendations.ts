@@ -44,15 +44,19 @@ export function buildTrainingRecommendation(
   context: PlayerTrainingRecommendationContext
 ): PlayerTrainingRecommendation {
   const history = historyForPlayer(context.trainingHistory, context.player.playerId);
-  const currentSkill = context.weeklyReport.training.skill;
+  const currentSkill = context.currentTrainingSkill ?? context.weeklyReport.training.skill;
   const expectedWeeklyTrainingPoints = calculateWeeklyTrainingPoints(
     context.weeklyReport.training.intensity
   );
   const talent = context.talent?.value ?? null;
+  const currentLevel =
+    context.currentTrainingSkill !== undefined && context.currentTrainingSkill !== null
+      ? levelForSkill(context.player.skills, currentSkill) ?? context.weeklyReport.skill.currentLevel
+      : context.weeklyReport.skill.currentLevel;
   const currentOption = evaluateOption({
     age: context.player.age,
     currentSkill,
-    currentLevel: context.weeklyReport.skill.currentLevel,
+    currentLevel,
     expectedWeeklyTrainingPoints,
     talent
   });
@@ -351,8 +355,8 @@ function continueReasons(
 ): TrainingRecommendationReason[] {
   const reasons: TrainingRecommendationReason[] = [];
 
-  if (report.skill.skillUp) {
-    reasons.push({ type: "recent_skill_up", skill: report.training.skill });
+  if (report.skill.skillUp && report.training.skill === currentOption.skill) {
+    reasons.push({ type: "recent_skill_up", skill: currentOption.skill });
   }
 
   if (
@@ -366,7 +370,7 @@ function continueReasons(
   }
 
   if (reasons.length === 0) {
-    reasons.push({ type: "stable_current_skill", skill: report.training.skill });
+    reasons.push({ type: "stable_current_skill", skill: currentOption.skill });
   }
 
   return reasons;
