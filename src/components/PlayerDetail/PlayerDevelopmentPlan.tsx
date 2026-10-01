@@ -138,7 +138,11 @@ export function PlayerDevelopmentPlan({
       ) : null}
       <DevelopmentImpactDashboard plan={plan} marketValue={marketValue} />
       {marketValue?.projection?.points && marketValue.projection.points.length > 0 && (
-        <MarketProjectionChart points={marketValue.projection.points} path={plan.path} />
+        <MarketProjectionChart
+          points={marketValue.projection.points}
+          path={plan.path}
+          currentMarketValue={marketValue.current}
+        />
       )}
       <TrainingAlignment plan={plan} />
       <Warnings plan={plan} />
@@ -941,32 +945,51 @@ function DevelopmentImpactDashboard({
 
 function MarketProjectionChart({
   points,
-  path
+  path,
+  currentMarketValue
 }: {
   points: import("@/app/view-models/market-value-view-model").ProjectionPointViewModel[];
   path: DevelopmentPlanPathRow[];
+  currentMarketValue?: import("@/app/view-models/market-value-view-model").PlayerMarketValueViewModel["current"] | null;
 }) {
   if (points.length === 0) return null;
 
   const currencySymbol = marketCurrencySymbol(points);
   const pathByStep = new Map(path.map((step) => [step.order, step]));
 
-  const data = points.map((point) => {
-    const trainingStep = pathByStep.get(point.step);
-    const trainedSkillLabel = trainingStep
-      ? `${skillLabel(trainingStep.skill)} ${trainingStep.fromLevel} → ${trainingStep.toLevel}`
-      : null;
+  const step0 = currentMarketValue
+    ? {
+        label: "Step 0 · Current",
+        tooltipLabel: "Step 0 · Current Value",
+        value: currentMarketValue.expected.value,
+        valueLabel: currentMarketValue.expected.label,
+        rangeLabel: currentMarketValue.range?.label ?? null,
+        timelineLabel: projectionTimelineLabel(points[0]?.age ?? "—", 0),
+        confidence: currentMarketValue.confidence?.label ?? "Medium confidence",
+        basedOnFundamentalOnly: currentMarketValue.basedOnFundamentalOnly ?? false
+      }
+    : null;
 
-    return {
-      label: trainingStep ? `Step ${point.step} · ${skillLabel(trainingStep.skill)}` : point.label,
-      tooltipLabel: trainedSkillLabel ? `${point.label} · ${trainedSkillLabel}` : point.label,
-      value: point.value.value,
-      valueLabel: point.value.label,
-      rangeLabel: point.range?.label ?? null,
-      timelineLabel: projectionTimelineLabel(point.age, point.weeks),
-      confidence: point.confidence.label
-    };
-  });
+  const data = [
+    ...(step0 ? [step0] : []),
+    ...points.map((point) => {
+      const trainingStep = pathByStep.get(point.step);
+      const trainedSkillLabel = trainingStep
+        ? `${skillLabel(trainingStep.skill)} ${trainingStep.fromLevel} → ${trainingStep.toLevel}`
+        : null;
+
+      return {
+        label: trainingStep ? `Step ${point.step} · ${skillLabel(trainingStep.skill)}` : point.label,
+        tooltipLabel: trainedSkillLabel ? `${point.label} · ${trainedSkillLabel}` : point.label,
+        value: point.value.value,
+        valueLabel: point.value.label,
+        rangeLabel: point.range?.label ?? null,
+        timelineLabel: projectionTimelineLabel(point.age, point.weeks),
+        confidence: point.confidence.label,
+        basedOnFundamentalOnly: point.basedOnFundamentalOnly ?? false
+      };
+    })
+  ];
 
   return (
     <div
@@ -1005,7 +1028,16 @@ function MarketProjectionChart({
                 border: "1px solid var(--atlas-border)",
                 borderRadius: "var(--atlas-radius-sm)"
               }}
-              formatter={(_value, _name, item) => [item.payload.valueLabel, "Estimated value"]}
+              formatter={(_value, _name, item) => {
+                const isFundamental = Boolean(item?.payload?.basedOnFundamentalOnly);
+                const valueLabel = isFundamental
+                  ? `${item.payload.valueLabel} 🧮`
+                  : item.payload.valueLabel;
+                const nameLabel = isFundamental
+                  ? "Estimated value (Fundamental model)"
+                  : "Estimated value";
+                return [valueLabel, nameLabel];
+              }}
               labelFormatter={(_label, payload) => {
                 const data = payload?.[0]?.payload;
                 if (data?.timelineLabel) {
