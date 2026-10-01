@@ -1,12 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { mockAuth, mockFetch, mockGetIdToken } = vi.hoisted(() => ({
+const { mockAuth, mockFetch, mockGetIdToken, mockWaitForAuthState } = vi.hoisted(() => ({
   mockAuth: { currentUser: null as { getIdToken: () => Promise<string> } | null },
   mockFetch: vi.fn(),
-  mockGetIdToken: vi.fn()
+  mockGetIdToken: vi.fn(),
+  mockWaitForAuthState: vi.fn().mockResolvedValue(undefined)
 }));
 
-vi.mock("./services/firebase", () => ({ auth: mockAuth }));
+vi.mock("./services/firebase", () => ({
+  auth: mockAuth,
+  waitForAuthState: mockWaitForAuthState
+}));
 
 import { fetchClubDashboard, invalidateClientApiCache, saveSquadRoleAssignment } from "./api";
 

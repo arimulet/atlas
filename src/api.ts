@@ -22,7 +22,7 @@ import type {
   SquadPlanningRecommendations,
   SquadRole
 } from "@atlas/domain";
-import { auth } from "./services/firebase";
+import { auth, waitForAuthState } from "./services/firebase";
 
 export interface FinancialStrategyData {
   financialAssessment: ClubFinancialAssessment;
@@ -90,8 +90,8 @@ async function fetchAuthenticated(
 
   if (!headers.has("Authorization")) {
     try {
-      if (typeof auth?.authStateReady === "function") {
-        await auth.authStateReady();
+      if (auth) {
+        await waitForAuthState(auth);
       }
       const user = auth?.currentUser;
 

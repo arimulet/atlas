@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
-import { getAuth, type Auth } from "firebase/auth";
+import { getAuth, onAuthStateChanged, type Auth, type Unsubscribe } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -31,3 +31,22 @@ function createFirebaseAuth(): Auth | null {
 // Firebase Auth is a browser-only dependency. Avoid initializing it while Next.js prerenders
 // pages so builds do not require client-side Firebase credentials.
 export const auth: Auth | null = createFirebaseAuth();
+
+export function waitForAuthState(firebaseAuth: Auth): Promise<void> {
+  return new Promise((resolve) => {
+    let unsubscribe: Unsubscribe = () => undefined;
+    let hasResolved = false;
+
+    const complete = () => {
+      hasResolved = true;
+      unsubscribe?.();
+      resolve();
+    };
+
+    unsubscribe = onAuthStateChanged(firebaseAuth, complete, complete);
+
+    if (hasResolved) {
+      unsubscribe();
+    }
+  });
+}
