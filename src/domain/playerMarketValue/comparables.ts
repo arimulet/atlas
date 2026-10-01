@@ -357,12 +357,13 @@ function calculateSkillSimilarity(
     0
   );
   const distance = known.reduce((total, item) => {
+    const diff = Math.abs(item.target - item.comparable);
     const curveDistance = Math.abs(
       calculateMarketSkillCurve(item.target) - calculateMarketSkillCurve(item.comparable)
     );
     const maxCurve = calculateMarketSkillCurve(VALID_MAXIMUM_SKILL);
     const priorityWeight = DEVELOPMENT_PRIORITY_WEIGHTS[item.priority];
-    const penaltyMultiplier = item.priority === "primary" ? 1.5 : 1;
+    const penaltyMultiplier = item.priority === "primary" ? (diff >= 2 ? 3.0 : 1.8) : 1;
     return (
       total + ((curveDistance * penaltyMultiplier) / Math.max(maxCurve, 1)) * priorityWeight
     );
@@ -673,6 +674,7 @@ function resolveCalibrationConfig(options: FindMarketComparablesOptions): Market
 
 function compareComparables(left: MarketComparable, right: MarketComparable): number {
   return (
+    right.normalizedSalePrice - left.normalizedSalePrice ||
     right.adjustedSimilarityScore - left.adjustedSimilarityScore ||
     right.similarityScore - left.similarityScore ||
     right.transfer.transferDate.getTime() - left.transfer.transferDate.getTime() ||
