@@ -34,7 +34,7 @@ export const auth: Auth | null = createFirebaseAuth();
 
 export function waitForAuthState(firebaseAuth: Auth): Promise<void> {
   return new Promise((resolve) => {
-    let unsubscribe: Unsubscribe | undefined;
+    let unsubscribe: Unsubscribe = () => undefined;
     let hasResolved = false;
 
     const complete = () => {

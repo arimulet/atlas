@@ -128,7 +128,7 @@ export async function simulatePlayerAcquisitionApplication(
 
 function mapPersistedToTransferRecord(
   transfer: PersistedMarketTransfer,
-  currencyName: string = "u$s",
+  _currencyName: string = "u$s",
   currencyRate: number = 4
 ): PlayerTransferRecord {
   const transferRate = currencyRate > 1 ? currencyRate : 4;
