@@ -356,7 +356,11 @@ function buildPlayerContext(
   };
   const plan = buildPlan(developmentPlayer, override);
   const talent = history ? estimateTalentFromTrainingHistory(history) : null;
-  const latestTraining = history?.weeks.at(-1);
+  const validLatestTraining = history?.weeks
+    .slice()
+    .reverse()
+    .find((w) => w.kind !== "missing" && typeof w.intensity === "number" && w.intensity > 0);
+  const latestTraining = validLatestTraining ?? history?.weeks.at(-1);
   const currentTrainingProgress = estimateCurrentTrainingProgress(
     history,
     player.age,
@@ -703,7 +707,10 @@ function buildProjection(input: {
   }
 
   const trainingKind = input.latestTraining?.kind === "advanced" ? "advanced" : "formation";
-  const expectedIntensity = input.latestTraining?.intensity ?? 100;
+  const expectedIntensity =
+    input.latestTraining?.intensity && input.latestTraining.intensity > 0
+      ? input.latestTraining.intensity
+      : 100;
   const talentValue = input.talent?.value ?? 1.0;
   const kindFactor = trainingKind === "advanced" ? 1.0 : 0.588235;
 
@@ -842,13 +849,14 @@ function mapMarketTransferToRecord(
   currencyName: string,
   currencyRate: number
 ): import("@atlas/domain").PlayerTransferRecord {
+  const transferRate = currencyRate > 1 ? currencyRate : 4;
   return {
     transferId: transfer.transferKey,
     playerId: transfer.playerId,
     transferDate: transfer.transferDate,
     gameWeek: transfer.gameWeek,
-    salePrice: Math.round(transfer.salePrice / currencyRate),
-    currency: currencyName,
+    salePrice: Math.round(transfer.salePrice / transferRate),
+    currency: "USD",
     age: transfer.age,
     skills: {
       stamina: transfer.skills.stamina ?? null,

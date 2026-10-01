@@ -128,13 +128,14 @@ function mapMarketTransferToRecord(
   currencyName: string,
   currencyRate: number
 ): PlayerTransferRecord {
+  const transferRate = currencyRate > 1 ? currencyRate : 4;
   return {
     transferId: transfer.transferKey,
     playerId: transfer.playerId,
     transferDate: transfer.transferDate,
     gameWeek: transfer.gameWeek,
-    salePrice: Math.round(transfer.salePrice / currencyRate),
-    currency: currencyName,
+    salePrice: Math.round(transfer.salePrice / transferRate),
+    currency: "USD",
     age: transfer.age,
     skills: {
       stamina: transfer.skills.stamina ?? null,

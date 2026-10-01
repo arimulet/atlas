@@ -43,12 +43,13 @@ export function calculatePlayerMarketSimilarity(
   precomputedTargetProfile?: DevelopmentProfile | null
 ): number {
   const targetPlayer = readPlayer(target);
+  const targetAge = typeof targetPlayer.age === "number" ? Math.floor(targetPlayer.age) : targetPlayer.age;
   const maxAgeDiff = config.maxAgeDifference ?? 0;
   if (
-    typeof targetPlayer.age === "number" &&
-    isValidAge(targetPlayer.age) &&
+    typeof targetAge === "number" &&
+    isValidAge(targetAge) &&
     isValidAge(comparable.age) &&
-    Math.abs(targetPlayer.age - comparable.age) > maxAgeDiff
+    Math.abs(targetAge - comparable.age) > maxAgeDiff
   ) {
     return 0;
   }
@@ -64,7 +65,7 @@ export function calculatePlayerMarketSimilarity(
     targetProfile,
     config
   );
-  const ageSimilarity = calculateComparableAgeSimilarity(targetPlayer.age ?? 0, comparable.age);
+  const ageSimilarity = calculateComparableAgeSimilarity(targetAge ?? 0, comparable.age);
   const profileSimilarity = calculateProfileSimilarity(
     targetProfile,
     comparableProfile,
@@ -86,7 +87,7 @@ export function calculatePlayerMarketSimilarity(
 
 export function calculateComparableAgeSimilarity(targetAge: number, comparableAge: number): number {
   if (!isValidAge(targetAge) || !isValidAge(comparableAge)) return 0;
-  return clamp(Math.exp(-Math.abs(targetAge - comparableAge) * 0.18), 0, 1);
+  return clamp(Math.exp(-Math.abs(Math.floor(targetAge) - Math.floor(comparableAge)) * 0.18), 0, 1);
 }
 
 export function calculateTransferRecencyWeight(
@@ -106,6 +107,7 @@ export function findMarketComparables(
 ): MarketComparable[] {
   const config = resolveCalibrationConfig(options);
   const targetPlayer = readPlayer(target);
+  const targetAge = typeof targetPlayer.age === "number" ? Math.floor(targetPlayer.age) : targetPlayer.age;
   const targetProfile = resolveProfile(targetPlayer, readContextProfile(target));
   const asOfDate =
     options.asOfDate ?? options.beforeDateExclusive ?? latestTransferDate(transfers) ?? new Date(0);
@@ -128,10 +130,10 @@ export function findMarketComparables(
       }
       const maxAgeDiff = options.maxAgeDifference ?? config.maxAgeDifference ?? 0;
       if (
-        typeof targetPlayer.age === "number" &&
-        isValidAge(targetPlayer.age) &&
+        typeof targetAge === "number" &&
+        isValidAge(targetAge) &&
         isValidAge(transfer.age) &&
-        Math.abs(transfer.age - targetPlayer.age) > maxAgeDiff
+        Math.abs(transfer.age - targetAge) > maxAgeDiff
       ) {
         return false;
       }
@@ -357,12 +359,13 @@ function calculateSkillSimilarity(
     0
   );
   const distance = known.reduce((total, item) => {
+    const diff = Math.abs(item.target - item.comparable);
     const curveDistance = Math.abs(
       calculateMarketSkillCurve(item.target) - calculateMarketSkillCurve(item.comparable)
     );
     const maxCurve = calculateMarketSkillCurve(VALID_MAXIMUM_SKILL);
     const priorityWeight = DEVELOPMENT_PRIORITY_WEIGHTS[item.priority];
-    const penaltyMultiplier = item.priority === "primary" ? 1.5 : 1;
+    const penaltyMultiplier = item.priority === "primary" ? (diff >= 2 ? 3.0 : 1.8) : 1;
     return (
       total + ((curveDistance * penaltyMultiplier) / Math.max(maxCurve, 1)) * priorityWeight
     );
@@ -673,6 +676,7 @@ function resolveCalibrationConfig(options: FindMarketComparablesOptions): Market
 
 function compareComparables(left: MarketComparable, right: MarketComparable): number {
   return (
+    right.normalizedSalePrice - left.normalizedSalePrice ||
     right.adjustedSimilarityScore - left.adjustedSimilarityScore ||
     right.similarityScore - left.similarityScore ||
     right.transfer.transferDate.getTime() - left.transfer.transferDate.getTime() ||
