@@ -24,7 +24,7 @@ function calculatePosition(p: YouthPlayerMatchPerformanceDto): "GK" | "DEF" | "M
       if (bestFull && !currentFull) return best;
       return current.rating > best.rating ? current : best;
     }, p.gk[0]!);
-    candidates.push({ pos: "GK", rating: bestGk.rating, minutes: bestGk.minutes });
+    if (bestGk.rating >= 20) candidates.push({ pos: "GK", rating: bestGk.rating, minutes: bestGk.minutes });
   }
 
   if (p.def && p.def.rating >= 20) candidates.push({ pos: "DEF", rating: p.def.rating, minutes: p.def.minutes });
