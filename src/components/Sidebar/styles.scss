@@ -12,6 +12,10 @@
     min-height: 0;
   }
 
+  &__group {
+    margin-bottom: 1.5rem;
+  }
+
   &__label {
     color: var(--atlas-text-muted);
     font-size: 0.66rem;

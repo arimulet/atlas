@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 export type MainViewId =
-  | "dashboard"
+  | "insights"
   | "squad"
   | "player-decisions"
   | "training"
@@ -28,7 +28,7 @@ interface HistoryState {
 }
 
 const mainPaths: Record<MainViewId, string> = {
-  dashboard: "/",
+  insights: "/insights",
   squad: "/squad",
   "player-decisions": "/player-decisions",
   training: "/squad",
@@ -66,11 +66,11 @@ export function getRoute(pathname: string): Route {
         playerId: decodeURIComponent(playerMatch[1])
       };
     } catch {
-      return dashboardRoute();
+      return squadRoute();
     }
   }
 
-  return dashboardRoute();
+  return squadRoute();
 }
 
 export function useRouter(initialUrl?: string): Router {
@@ -148,15 +148,11 @@ export function useRouter(initialUrl?: string): Router {
   return { goBack, navigate, route };
 }
 
-function dashboardRoute(): Route {
-  return { kind: "main", path: mainPaths.dashboard, view: "dashboard" };
+function squadRoute(): Route {
+  return { kind: "main", path: mainPaths.squad, view: "squad" };
 }
 
 function normalizePath(pathname: string): string {
-  if (pathname === "/") {
-    return mainPaths.dashboard;
-  }
-
   return pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
 }
 
