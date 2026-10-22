@@ -16,24 +16,12 @@ import { SidebarProps } from "./types";
 const ICON_SIZE = 20;
 const navigationGroups: NavigationGroup[] = [
   {
-    id: "general",
-    label: "General",
-    items: [
-      {
-        id: "dashboard",
-        label: "Dashboard",
-        icon: <LayoutDashboard size={ICON_SIZE} />,
-        path: pathForMainView("dashboard")
-      }
-    ]
-  },
-  {
-    id: "first-team",
-    label: "First Team",
+    id: "squad",
+    label: "Squad",
     items: [
       {
         id: "squad",
-        label: "Squad",
+        label: "First Team",
         icon: <Users size={ICON_SIZE} />,
         path: pathForMainView("squad")
       },
@@ -42,13 +30,7 @@ const navigationGroups: NavigationGroup[] = [
         label: "Player Decisions",
         icon: <UserCog size={ICON_SIZE} />,
         path: pathForMainView("player-decisions")
-      }
-    ]
-  },
-  {
-    id: "academy",
-    label: "Academy",
-    items: [
+      },
       {
         id: "youth",
         label: "Youth",
@@ -64,9 +46,15 @@ const navigationGroups: NavigationGroup[] = [
     ]
   },
   {
-    id: "admin",
-    label: "Administration",
+    id: "tools",
+    label: "Tools",
     items: [
+      {
+        id: "insights",
+        label: "Insights",
+        icon: <LayoutDashboard size={ICON_SIZE} />,
+        path: pathForMainView("insights")
+      },
       {
         id: "finances",
         label: "Finances",
@@ -78,13 +66,7 @@ const navigationGroups: NavigationGroup[] = [
         label: "Investment Simulator",
         icon: <Calculator size={ICON_SIZE} />,
         path: pathForMainView("investment-simulator")
-      }
-    ]
-  },
-  {
-    id: "system",
-    label: "System",
-    items: [
+      },
       {
         id: "diagnostics",
         label: "Diagnostics",
@@ -101,7 +83,7 @@ export function Sidebar({ activeView, diagnosticAlertCount, onViewChange }: Side
       <div className="atlas-sidebar__navigation">
         <nav aria-label="ATLAS modules">
           {navigationGroups.map((group) => (
-            <div key={group.id} className="atlas-sidebar__group" style={{ marginBottom: "1.5rem" }}>
+            <div key={group.id} className="atlas-sidebar__group">
               <p className="atlas-sidebar__label">{group.label}</p>
               {group.items.map((item) => (
                 <SidebarItem
