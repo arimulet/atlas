@@ -24,6 +24,15 @@ import type {
 } from "@atlas/domain";
 import { auth, waitForAuthState } from "./services/firebase";
 
+export interface ActiveClubInfo {
+  id: string;
+  clubId: number;
+  name: string;
+  country: number;
+  currency: string;
+  sokkerUsername: string | null;
+}
+
 export interface FinancialStrategyData {
   financialAssessment: ClubFinancialAssessment;
   capitalAllocation: CapitalAllocationPlan;
@@ -164,6 +173,13 @@ async function fetchAuthenticated(
 
   const entry = await inFlightPromise;
   return createResponseFromEntry(entry);
+}
+
+export async function fetchActiveClub(): Promise<ActiveClubInfo | null> {
+  const response = await fetchAuthenticated("/api/club/active");
+  if (!response.ok) return null;
+  const body = (await response.json()) as { club: ActiveClubInfo | null };
+  return body?.club ?? null;
 }
 
 export async function fetchClubDashboard(_clubId?: string): Promise<ClubDashboard> {
