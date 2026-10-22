@@ -9,6 +9,62 @@
   min-width: 0;
   padding: 0 var(--atlas-space-4);
 
+  &__brand-group {
+    align-items: center;
+    display: flex;
+    gap: 14px;
+    min-width: 0;
+  }
+
+  &__divider {
+    background: var(--atlas-border);
+    flex-shrink: 0;
+    height: 22px;
+    width: 1px;
+  }
+
+  .atlas-team-badge {
+    align-items: center;
+    display: inline-flex;
+    gap: 10px;
+    min-width: 0;
+    user-select: none;
+
+    &__logo {
+      display: block;
+      filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.4));
+      flex-shrink: 0;
+      height: 28px;
+      width: 24px;
+    }
+
+    &__name {
+      color: var(--atlas-text);
+      font-size: 1.05rem;
+      font-weight: 800;
+      letter-spacing: -0.015em;
+      line-height: 1.2;
+      max-width: 300px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 640px) {
+      gap: 7px;
+
+      &__name {
+        font-size: 0.92rem;
+        max-width: 150px;
+      }
+
+      &__logo {
+        height: 24px;
+        width: 20px;
+      }
+    }
+  }
+
   &__tools {
     align-items: center;
     display: flex;

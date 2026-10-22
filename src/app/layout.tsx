@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "@/styles/index.scss";
 import { BrowserTitle } from "@/components/BrowserTitle";
 import { AuthProvider } from "@/context/AuthContext";
+import { ClubProvider } from "@/context/ClubContext";
 import { PlayerCountryProvider } from "@/context/PlayerCountryContext";
 
 export const metadata: Metadata = {
@@ -23,7 +24,9 @@ export default function RootLayout({
       <body suppressHydrationWarning>
         <BrowserTitle />
         <AuthProvider>
-          <PlayerCountryProvider>{children}</PlayerCountryProvider>
+          <ClubProvider>
+            <PlayerCountryProvider>{children}</PlayerCountryProvider>
+          </ClubProvider>
         </AuthProvider>
       </body>
     </html>
