@@ -3,6 +3,7 @@ import { ArrowLeft, ArrowUp, ArrowDown, Ban, CircleDashed, Sparkles, ExternalLin
 import type { PlayerDetailProps } from "./types";
 import { ProjectionPanel } from "./ProjectionPanel";
 import { formatNumber } from "@/app/formatters";
+import { sokkerPlayerUrl } from "@/app/sokker-links";
 import { BrowserTitle } from "@/components/BrowserTitle";
 import { CountryNameFlag } from "@/components/CountryNameFlag";
 import { DiagnosticNotifications } from "@/components/Header/DiagnosticNotifications";
@@ -186,7 +187,7 @@ interface PlayerHeaderProps {
 }
 
 function PlayerHeader({ diagnostics, onBack, player }: PlayerHeaderProps) {
-  const externalUrl = `https://sokker.org/player/PID/${player.id}`;
+  const externalUrl = sokkerPlayerUrl(player.id);
 
   return (
     <header className="atlas-player-detail__header">

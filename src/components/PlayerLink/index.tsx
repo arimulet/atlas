@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 import { pathForPlayerDetail } from "@/app/routing";
+import { sokkerPlayerUrl } from "@/app/sokker-links";
 import { CountryNameFlag } from "@/components/CountryNameFlag";
 import {
   registerPlayerCountry,
@@ -119,7 +120,7 @@ export function PlayerLink({
 
   const contextCountry = usePlayerCountry(playerId);
   const resolvedCountry = countryName ?? contextCountry;
-  const externalUrl = `https://sokker.org/player/PID/${playerId}`;
+  const externalUrl = sokkerPlayerUrl(playerId);
   const shouldReserveSpace =
     alwaysReserveStatusSpace ?? (cards !== undefined || injury !== undefined);
 
