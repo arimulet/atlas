@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import {
   calculateLatestCompletedYouthSkillChanges,
   calculateProjectedPromotionAge,
+  calculateProjectedPromotionWeek,
   calculateYouthDevelopmentMetrics
 } from "./index.js";
 
@@ -83,6 +84,19 @@ describe("calculateProjectedPromotionAge", () => {
     expect(
       calculateProjectedPromotionAge({ age: 19, currentSeasonWeek: 10, weeksRemaining: 3 })
     ).toBe(19);
+  });
+});
+
+describe("calculateProjectedPromotionWeek", () => {
+  it.each([[7, 0, 7], [7, 1, 8], [13, 1, 1], [10, 30, 1]] as const)(
+    "projects week %i with %i weeks remaining", (week, remaining, expected) => {
+      expect(calculateProjectedPromotionWeek(week, remaining)).toBe(expected);
+    }
+  );
+
+  it("returns null for missing or invalid inputs", () => {
+    expect(calculateProjectedPromotionWeek(null, 1)).toBeNull();
+    expect(calculateProjectedPromotionWeek(1, -1)).toBeNull();
   });
 });
 function createSnapshot(gameWeek: number, skill: number): PersistedSnapshot {

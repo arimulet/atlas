@@ -4,18 +4,14 @@ import type {
   ClubDashboardDevelopmentPlayer,
   ClubDashboardYouthPipelinePlayer,
   DashboardStatus,
-  DiagnosticFinding,
   RealYouthAcademyPlayerPlan,
   Severity
 } from "@atlas/web/app/types";
 import type { DashboardProps } from "./types";
-import {
-  SquadPlanningSections,
-  planningConfidenceWarning
-} from "../Squad/SquadPlanningSections";
+import { ActionQueuePanel } from "./ActionQueuePanel";
+import { createActionQueueItems } from "./action-queue-view-model";
+import { SquadPlanningSections, planningConfidenceWarning } from "../Squad/SquadPlanningSections";
 import { createSquadPlanningViewModel } from "../Squad/squad-planning-view-model";
-
-import { AttentionIcon } from "@/components/AttentionIcon";
 import { CountryNameFlag } from "@/components/CountryNameFlag";
 import { PlayerLink } from "@/components/PlayerLink";
 import { registerPlayerCountries } from "@/context/PlayerCountryContext";
@@ -31,15 +27,6 @@ interface WatchPlayer {
   severity: Severity;
 }
 
-export interface AttentionItem {
-  id: string;
-  playerId: string | null;
-  name: string | null;
-  countryName?: string | null;
-  message: string;
-  severity: Severity;
-}
-
 const severityOrder: Record<Severity, number> = {
   high: 4,
   medium: 3,
@@ -50,22 +37,29 @@ const severityOrder: Record<Severity, number> = {
 export function Dashboard({
   dashboard,
   dashboardStatus,
+  onNavigateToView,
   onSelectPlayer,
   youthAcademy,
   squadPlanning,
   squadPlanningStatus,
-  financialStrategy,
-  diagnostic
+  financialStrategy
 }: DashboardProps) {
   if (squadPlanning?.assessment?.depthPlayers) {
     registerPlayerCountries(squadPlanning.assessment.depthPlayers);
   }
-  const attentionItems =
-    dashboard || diagnostic ? buildAttentionItems(dashboard, youthAcademy, diagnostic) : [];
+
   const watchPlayers = dashboard ? buildWatchPlayers(dashboard, youthAcademy) : [];
   const planningViewModel = useMemo(
     () => (squadPlanning ? createSquadPlanningViewModel(squadPlanning) : null),
     [squadPlanning]
+  );
+  const actionQueueItems = useMemo(
+    () =>
+      createActionQueueItems({
+        squadPlanning,
+        financialRecommendations: financialStrategy.viewModel?.recommendations ?? []
+      }),
+    [financialStrategy.viewModel?.recommendations, squadPlanning]
   );
 
   return (
@@ -74,10 +68,12 @@ export function Dashboard({
         <h1>Insights</h1>
       </header>
 
-      <AttentionPanel
-        items={attentionItems}
+      <ActionQueuePanel
+        financialStatus={financialStrategy.status}
+        items={actionQueueItems}
+        onNavigateToView={onNavigateToView}
         onSelectPlayer={onSelectPlayer}
-        status={dashboardStatus}
+        squadStatus={squadPlanningStatus}
       />
 
       {squadPlanningStatus === "loading" ? (
@@ -98,176 +94,12 @@ export function Dashboard({
         </>
       ) : null}
 
-      <FinancialStrategyAlerts
-        onSelectPlayer={onSelectPlayer}
-        financialStrategy={financialStrategy}
-      />
-
       <PlayersToWatchPanel
         onSelectPlayer={onSelectPlayer}
         players={watchPlayers}
         status={dashboardStatus}
       />
     </div>
-  );
-}
-
-function FinancialStrategyAlerts({
-  financialStrategy,
-  onSelectPlayer
-}: {
-  financialStrategy: DashboardProps["financialStrategy"];
-  onSelectPlayer: (playerId: string) => void;
-}) {
-  const alerts = financialStrategy.viewModel?.criticalRecommendations ?? [];
-  const hasMaterialPositionRisk = ["strained", "watch"].includes(
-    financialStrategy.viewModel?.position.status ?? "unknown"
-  );
-  if (financialStrategy.status !== "ready" || (alerts.length === 0 && !hasMaterialPositionRisk)) {
-    return null;
-  }
-
-  return (
-    <section
-      className="atlas-dashboard-panel atlas-dashboard-panel--financial"
-      aria-labelledby="financial-strategy-alerts-title"
-    >
-      <div className="atlas-dashboard-panel__heading">
-        <div>
-          <span className="atlas-dashboard-planning__eyebrow">Financial strategy</span>
-          <h2 id="financial-strategy-alerts-title" className="atlas-dashboard-panel__title">
-            Capital priorities
-          </h2>
-        </div>
-        <span className="atlas-dashboard-planning__quiet">
-          {alerts.length} {alerts.length === 1 ? "priority" : "priorities"}
-        </span>
-      </div>
-      {hasMaterialPositionRisk ? (
-        <div
-          className={
-            "atlas-dashboard-financial-alert is-" + financialStrategy.viewModel?.position.status
-          }
-          role="status"
-        >
-          <span>Financial position</span>
-          <strong>{financialStrategy.viewModel?.position.statusLabel}</strong>
-        </div>
-      ) : null}
-      {alerts.length === 0 ? (
-        <PanelMessage tone="success">No critical funding priorities detected.</PanelMessage>
-      ) : (
-        <div className="atlas-dashboard-financial-list">
-          {alerts.slice(0, 4).map((alert) => (
-            <article
-              className={"atlas-dashboard-recommendation is-" + alert.priority.toLowerCase()}
-              key={alert.id}
-            >
-              <div className="atlas-dashboard-recommendation__meta">
-                <span
-                  className={"atlas-dashboard-planning-badge is-" + alert.priority.toLowerCase()}
-                >
-                  {alert.priority}
-                </span>
-                <span>{alert.horizon}</span>
-                <span>{alert.confidence} confidence</span>
-              </div>
-              <h3>{alert.title}</h3>
-              <p>{alert.description}</p>
-              {alert.financialImpact.length > 0 ? (
-                <div className="atlas-dashboard-financial-impact">
-                  {alert.financialImpact.map((impact) => (
-                    <span key={impact}>{impact}</span>
-                  ))}
-                </div>
-              ) : null}
-              {alert.playerIds.length > 0 ? (
-                <div className="atlas-dashboard-recommendation__players">
-                  {alert.playerIds.map((playerId, index) => (
-                    <PlayerLink
-                      key={alert.id + "-" + playerId}
-                      playerId={String(playerId)}
-                      onSelectPlayer={onSelectPlayer}
-                    >
-                      {alert.playerNames[index] ?? "Player " + playerId}
-                    </PlayerLink>
-                  ))}
-                </div>
-              ) : null}
-              {alert.reasons.length > 0 || alert.risks.length > 0 ? (
-                <details>
-                  <summary>Why this matters</summary>
-                  <ul>
-                    {alert.reasons.map((reason) => (
-                      <li key={"reason-" + reason}>{reason}</li>
-                    ))}
-                    {alert.risks.map((risk) => (
-                      <li key={"risk-" + risk}>{risk}</li>
-                    ))}
-                  </ul>
-                </details>
-              ) : null}
-            </article>
-          ))}
-        </div>
-      )}
-    </section>
-  );
-}
-interface AttentionPanelProps {
-  items: AttentionItem[];
-  onSelectPlayer: (playerId: string) => void;
-  status: DashboardStatus;
-}
-
-function AttentionPanel({ items, onSelectPlayer, status }: AttentionPanelProps) {
-  return (
-    <section
-      className="atlas-dashboard-panel atlas-dashboard-panel--attention"
-      aria-labelledby="attention-title"
-    >
-      <PanelHeading id="attention-title" title="Attention" />
-      {status === "loading" ? <PanelMessage>Loading dashboard...</PanelMessage> : null}
-      {status === "error" ? (
-        <PanelMessage tone="error">Unable to load dashboard data.</PanelMessage>
-      ) : null}
-      {status === "idle" ? (
-        <PanelMessage>Import a club snapshot to populate the dashboard.</PanelMessage>
-      ) : null}
-      {status === "ready" && items.length === 0 ? (
-        <PanelMessage tone="success">
-          <Check size={14} className="inline-block align-middle" /> No critical issues detected
-        </PanelMessage>
-      ) : null}
-      {status === "ready" && items.length > 0 ? (
-        <ul className="atlas-dashboard-attention-list">
-          {items.map((item) => (
-            <li key={item.id} className={`atlas-dashboard-attention-item is-${item.severity}`}>
-              <AttentionIcon severity={item.severity} />
-              <span>
-                {item.name ? (
-                  <strong>
-                    {item.playerId ? (
-                      <PlayerLink playerId={item.playerId} onSelectPlayer={onSelectPlayer}>
-                        {item.name}
-                      </PlayerLink>
-                    ) : (
-                      <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
-                        {item.countryName ? <CountryNameFlag countryName={item.countryName} /> : null}
-                        <span>{item.name}</span>
-                      </span>
-                    )}
-                  </strong>
-                ) : null}
-                {item.name ? " — " : null}
-                {item.message}
-              </span>
-              <PriorityBadge severity={item.severity} />
-            </li>
-          ))}
-        </ul>
-      ) : null}
-    </section>
   );
 }
 
@@ -290,7 +122,8 @@ function PlayersToWatchPanel({ onSelectPlayer, players, status }: PlayersToWatch
       ) : null}
       {status === "ready" && players.length === 0 ? (
         <PanelMessage tone="success">
-          <Check size={14} className="inline-block align-middle" /> No players currently require attention
+          <Check size={14} className="inline-block align-middle" /> No players currently require
+          attention
         </PanelMessage>
       ) : null}
       {status === "ready" && players.length > 0 ? (
@@ -309,7 +142,9 @@ function PlayersToWatchPanel({ onSelectPlayer, players, status }: PlayersToWatch
                   </PlayerLink>
                 ) : (
                   <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
-                    {player.countryName ? <CountryNameFlag countryName={player.countryName} /> : null}
+                    {player.countryName ? (
+                      <CountryNameFlag countryName={player.countryName} />
+                    ) : null}
                     <span>{player.name}</span>
                   </span>
                 )}
@@ -358,148 +193,6 @@ function PriorityBadge({ severity }: PriorityBadgeProps) {
       {priorityFromSeverity(severity)}
     </span>
   );
-}
-
-export function buildAttentionItems(
-  dashboard: DashboardProps["dashboard"],
-  youthAcademy: DashboardProps["youthAcademy"],
-  diagnostic?: DashboardProps["diagnostic"]
-): AttentionItem[] {
-  const items: AttentionItem[] = [];
-
-  if (dashboard) {
-    for (const player of dashboard.developmentSummary.inferred.highlightedPlayers) {
-      if (player.signal === "improvement") {
-        continue;
-      }
-
-      items.push({
-        id: `development-${player.playerId ?? player.name}`,
-        playerId: player.playerId,
-        name: player.name,
-        message: developmentReason(player),
-        severity: player.severity
-      });
-    }
-
-    for (const player of dashboard.youthPipelineSummary.inferred.highlightedPlayers) {
-      if (player.signal === "standout_prospect") {
-        continue;
-      }
-
-      items.push({
-        id: `youth-pipeline-${player.playerId ?? player.name}`,
-        playerId: player.playerId,
-        name: player.name,
-        message: youthPipelineReason(player),
-        severity: player.severity
-      });
-    }
-  }
-
-  for (const player of youthAcademy?.derived.players ?? []) {
-    if (player.category !== "ready_for_promotion" && player.category !== "stagnation_risk") {
-      continue;
-    }
-
-    items.push({
-      id: `academy-${player.id}`,
-      playerId: null,
-      name: player.name,
-      countryName: player.countryName ?? null,
-      message: academyReason(player),
-      severity: player.severity
-    });
-  }
-
-  for (const finding of diagnostic?.findings ?? []) {
-    items.push(diagnosticAttentionItem(finding));
-  }
-
-  return items.sort(compareAttentionItems).slice(0, 5);
-}
-
-function diagnosticAttentionItem(finding: DiagnosticFinding): AttentionItem {
-  const parameters = finding.parameters ?? {};
-  const affectedPlayerId = finding.affectedPlayerIds[0] ?? null;
-
-  if (finding.code.startsWith("squad-balance.") && finding.code.endsWith(".deficit")) {
-    const currentCount = parameters.currentCount ?? 0;
-    const role = parameters.role ? String(parameters.role) : "position";
-    const minimum = parameters.minimum ?? 0;
-    return {
-      id: `diagnostic-${finding.code}`,
-      playerId: null,
-      name: "Squad",
-      message: `Only ${currentCount} ${role}(s); benchmark minimum is ${minimum}.`,
-      severity: finding.severity
-    };
-  }
-
-  if (finding.code === "economic-risk.high-wage-low-value-ratio") {
-    const playerName = parameters.playerName ? String(parameters.playerName) : "Player";
-    const wage =
-      typeof parameters.wage === "number"
-        ? parameters.wage.toLocaleString("en-US")
-        : String(parameters.wage ?? "—");
-    const value =
-      typeof parameters.value === "number"
-        ? parameters.value.toLocaleString("en-US")
-        : String(parameters.value ?? "—");
-    return {
-      id: `diagnostic-${finding.code}-${affectedPlayerId ?? playerName}`,
-      playerId: affectedPlayerId,
-      name: playerName,
-      message: `High wage (${wage}) relative to estimated value (${value}).`,
-      severity: finding.severity
-    };
-  }
-
-  if (finding.code === "asset-risk.senior-high-value") {
-    const playerName = parameters.playerName ? String(parameters.playerName) : "Player";
-    const value =
-      typeof parameters.value === "number"
-        ? parameters.value.toLocaleString("en-US")
-        : String(parameters.value ?? "—");
-    return {
-      id: `diagnostic-${finding.code}-${affectedPlayerId ?? playerName}`,
-      playerId: affectedPlayerId,
-      name: playerName,
-      message: `Senior age with high estimated value (${value}).`,
-      severity: finding.severity
-    };
-  }
-
-  if (finding.code === "training-potential.young-role-fit") {
-    const playerName = parameters.playerName ? String(parameters.playerName) : "Player";
-    return {
-      id: `diagnostic-${finding.code}-${affectedPlayerId ?? playerName}`,
-      playerId: affectedPlayerId,
-      name: playerName,
-      message: "Young player with good role fit.",
-      severity: finding.severity
-    };
-  }
-
-  if (finding.code === "follow-up.incomplete-player-data") {
-    const playerName = parameters.playerName ? String(parameters.playerName) : "Player";
-    return {
-      id: `diagnostic-${finding.code}-${affectedPlayerId ?? playerName}`,
-      playerId: affectedPlayerId,
-      name: playerName,
-      message: "Requires follow-up due to incomplete imported data.",
-      severity: finding.severity
-    };
-  }
-
-  const playerName = parameters.playerName ? String(parameters.playerName) : null;
-  return {
-    id: `diagnostic-${finding.code}-${affectedPlayerId ?? playerName ?? finding.category}`,
-    playerId: affectedPlayerId,
-    name: playerName ?? "Squad",
-    message: finding.code.replace(/[-_.]/g, " "),
-    severity: finding.severity
-  };
 }
 
 function buildWatchPlayers(
@@ -560,13 +253,6 @@ function addWatchPlayer(players: Map<string, WatchPlayer>, incoming: WatchPlayer
   if (severityOrder[incoming.severity] > severityOrder[existing.severity]) {
     existing.severity = incoming.severity;
   }
-}
-
-function compareAttentionItems(left: AttentionItem, right: AttentionItem) {
-  return (
-    severityOrder[right.severity] - severityOrder[left.severity] ||
-    (left.name ?? "").localeCompare(right.name ?? "")
-  );
 }
 
 function compareWatchPlayers(left: WatchPlayer, right: WatchPlayer) {

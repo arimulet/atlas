@@ -74,7 +74,10 @@ function SeasonSkillCell({ isLatestSeason, player, reports, allReports, skill }:
     <td className={isActiveSkill && isLatestSeason ? "is-active-skill" : undefined}>
       <div className="atlas-training-details__level-groups">
         {groupReportsBySkillLevel(reports, allReports, skill).map((group) => (
-          <div className="atlas-training-details__level-group" key={group.key}>
+          <div
+            className={`atlas-training-details__level-group${group.reports.length === 0 ? " is-ending" : ""}`}
+            key={group.key}
+          >
             <span
               className="atlas-training-details__level"
               title={skillLevelLabel(group.level ?? null) ?? undefined}

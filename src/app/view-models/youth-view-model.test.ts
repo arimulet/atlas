@@ -1,7 +1,23 @@
 import { describe, expect, it } from "vitest";
 
 import type { RealYouthAcademyPlanning } from "@atlas/web/app/types";
-import { createYouthPlayerRows } from "./youth-view-model";
+import { assessYouthPromotion, createYouthPlayerRows } from "./youth-view-model";
+
+describe("assessYouthPromotion", () => {
+  it.each([
+    [19, 13, 7, "excellent"], [19, 13, 8, "acceptable"],
+    [18, 9, 8, "late"], [19, 9, 8, "very-late"],
+    [16, 8, 1, "excellent"], [17, 11, 13, "excellent"],
+    [20, 12, 1, "late"]
+  ] as const)("assesses age %i level %i week %i", (age, level, week, expected) => {
+    expect(assessYouthPromotion(age, level, week)).toBe(expected);
+  });
+
+  it("does not assess missing or invalid data", () => {
+    expect(assessYouthPromotion(19, 13, null)).toBe("unknown");
+    expect(assessYouthPromotion(19, 13, 14)).toBe("unknown");
+  });
+});
 
 describe("youth view model", () => {
   it("maps observed youth fields without inventing position or progress", () => {
