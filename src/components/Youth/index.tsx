@@ -1,4 +1,5 @@
 import React from "react";
+import { createPortal } from "react-dom";
 import { ChevronDown, ChevronRight, ArrowUp, ArrowDown } from "lucide-react";
 import type { DashboardStatus, RealYouthAcademyPlanning } from "@atlas/web/app/types";
 import {
@@ -126,6 +127,24 @@ function YouthPlayerRows({
   onToggle: () => void; 
 }) {
   const skillChangeClass = changeClass(row.level?.change ?? null);
+  const [tooltipPosition, setTooltipPosition] = React.useState<{ top: number; left: number } | null>(null);
+
+  React.useEffect(() => {
+    if (!tooltipPosition) return;
+    const handleDismiss = () => setTooltipPosition(null);
+    window.addEventListener("scroll", handleDismiss, true);
+    window.addEventListener("resize", handleDismiss);
+    return () => {
+      window.removeEventListener("scroll", handleDismiss, true);
+      window.removeEventListener("resize", handleDismiss);
+    };
+  }, [tooltipPosition]);
+
+  const handleShowTooltip = (element: HTMLElement) => {
+    const bounds = element.getBoundingClientRect();
+    const top = bounds.bottom + 120 > window.innerHeight ? Math.max(8, bounds.top - 120) : bounds.bottom + 8;
+    setTooltipPosition({ top, left: Math.max(8, Math.min(bounds.right - 224, window.innerWidth - 232)) });
+  };
 
   return (
     <>
@@ -180,7 +199,36 @@ function YouthPlayerRows({
         <td title={row.expectedLevel !== null ? (skillLevelLabel(row.expectedLevel) ?? undefined) : undefined}>
           {formatLevelValue(row.expectedLevel)}
         </td>
-        <td className="atlas-youth-table__center">{row.expectedAge ?? "—"}</td>
+        <td className="atlas-youth-table__center">
+          <span className="atlas-youth-promotion-age">
+            <span className="atlas-youth-promotion-age__value">{row.expectedAge ?? "—"}</span>
+            {row.expectedWeek !== null ? <span className="atlas-youth-promotion-age__week">W{row.expectedWeek}</span> : null}
+            <span
+              className={`atlas-youth-promotion-age__indicator is-${row.promotionAssessment}`}
+              tabIndex={0}
+              aria-label={promotionAssessmentDescription(row)}
+              onMouseEnter={(event) => handleShowTooltip(event.currentTarget)}
+              onMouseLeave={() => setTooltipPosition(null)}
+              onFocus={(event) => handleShowTooltip(event.currentTarget)}
+              onBlur={() => setTooltipPosition(null)}
+            >
+              {tooltipPosition && createPortal(<span className="atlas-youth-promotion-age__tooltip" style={tooltipPosition} aria-hidden="true">
+                <span className="atlas-youth-promotion-age__tooltip-heading">
+                  <span className={`atlas-youth-promotion-age__tooltip-dot is-${row.promotionAssessment}`} />
+                  {promotionAssessmentLabel(row.promotionAssessment)}
+                </span>
+                {row.promotionAssessment !== "unknown" ? (
+                  <span className="atlas-youth-promotion-age__tooltip-details">
+                    <span>Promotion <strong>{row.expectedAge} years · W{row.expectedWeek}</strong></span>
+                    <span>Expected level <strong>{formatLevelValue(row.expectedLevel)}</strong></span>
+                  </span>
+                ) : (
+                  <span className="atlas-youth-promotion-age__tooltip-note">Age, week and expected level are required.</span>
+                )}
+              </span>, document.body)}
+            </span>
+          </span>
+        </td>
         <td className="atlas-youth-table__center">{row.initialWeeks ?? "—"}</td>
         <td className="atlas-youth-table__center">{formatLevelPops(row.levelPops)}</td>
         <td className="atlas-youth-table__center">{formatYouthTalent(row.talent)}</td>
@@ -201,6 +249,17 @@ function YouthPlayerRows({
 
 function formatLevel(level: YouthPlayerRow["level"]): string {
   return level === null ? "—" : formatLevelValue(level.value);
+}
+
+function promotionAssessmentLabel(assessment: YouthPlayerRow["promotionAssessment"]): string {
+  const labels = { excellent: "Excellent", acceptable: "Acceptable", late: "Late", "very-late": "Very late", unknown: "Insufficient data" };
+  return labels[assessment];
+}
+
+function promotionAssessmentDescription(row: YouthPlayerRow): string {
+  const label = promotionAssessmentLabel(row.promotionAssessment);
+  if (row.promotionAssessment === "unknown") return `${label}. Age, week and expected level are required.`;
+  return `${label}. Projected promotion: age ${row.expectedAge}, week ${row.expectedWeek}. Expected level: ${formatLevelValue(row.expectedLevel)}.`;
 }
 
 function formatLevelValue(level: number | null): string {
