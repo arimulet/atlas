@@ -173,13 +173,13 @@ export default function InsightsPage() {
       <Dashboard
         dashboard={dashboard}
         dashboardStatus={dashboardStatus}
+        onNavigateToView={handleViewChange}
         onSelectPlayer={handleSelectPlayer}
         youthAcademy={youthAcademy}
         youthStatus={youthStatus}
         squadPlanning={squadPlanning}
         squadPlanningStatus={squadPlanningStatus}
         financialStrategy={financialStrategy}
-        diagnostic={diagnostic}
       />
     </AppShell>
   );

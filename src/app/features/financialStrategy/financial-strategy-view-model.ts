@@ -63,7 +63,9 @@ export interface FinancialRecommendationViewModel {
   title: string;
   description: string;
   priority: string;
+  priorityRaw: FinancialStrategyRecommendation["priority"];
   horizon: string;
+  horizonRaw: FinancialStrategyRecommendation["horizon"];
   confidence: string;
   playerIds: number[];
   playerNames: string[];
@@ -301,7 +303,9 @@ function createRecommendationViewModel(
     title: recommendationTitle(recommendation.type, profile, names),
     description: recommendationDescription(recommendation.type, profile, names),
     priority: titleCase(recommendation.priority),
+    priorityRaw: recommendation.priority,
     horizon: horizonLabel(recommendation.horizon),
+    horizonRaw: recommendation.horizon,
     confidence: titleCase(recommendation.confidence),
     playerIds: recommendation.playerIds ?? [],
     playerNames: names,
@@ -327,9 +331,7 @@ function createAssetViewModel(
   );
   const protectedPlayerIds = new Set(
     data.strategyPlan.monetizationCandidates
-      .filter(
-        (c) => c.strategicProtection === "critical" || c.strategicProtection === "high"
-      )
+      .filter((c) => c.strategicProtection === "critical" || c.strategicProtection === "high")
       .map((c) => c.playerId)
   );
   const playerProfileMap = new Map(
@@ -369,7 +371,12 @@ function createAssetViewModel(
     })(),
     potentialLiquidity: money(allocation.potentialAssetLiquidity, currency),
     monetizable: allocation.monetizableAssets
-      .filter((asset) => asset.liquidityPotential !== "low" && asset.estimatedMarketValue !== null && !protectedPlayerIds.has(asset.playerId))
+      .filter(
+        (asset) =>
+          asset.liquidityPotential !== "low" &&
+          asset.estimatedMarketValue !== null &&
+          !protectedPlayerIds.has(asset.playerId)
+      )
       .sort((left, right) => (right.estimatedMarketValue ?? 0) - (left.estimatedMarketValue ?? 0))
       .map((asset) => ({
         playerId: asset.playerId,
@@ -693,4 +700,3 @@ function titleCase(value: string): string {
 export function profileDepthStatusLabel(status: ProfileDepthStatus): string {
   return titleCase(status);
 }
-
