@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import type { TrainingReport } from "@atlas/web/app/types";
 import { TrainingDetails } from "../TrainingDetails";
 import { TRAINABLE_SKILL_DEFINITIONS } from "@/app/view-models/player-skills";
@@ -76,5 +78,36 @@ describe("TrainingDetails", () => {
 
     expect(seasonCol.props.className).toBe("is-season");
     expect(skillCols).toHaveLength(8);
+  });
+
+  it("keeps each week's sessions in their level groups, including an ending level", () => {
+    const reports = [1, 2, 3, 4].map((week) => ({
+      ...mockHistory[0]!,
+      id: `report-${week}`,
+      gameWeek: 100 + week,
+      seasonWeek: week,
+      skills: {
+        ...mockHistory[0]!.skills,
+        pace: week >= 4 ? 12 : week >= 2 ? 11 : 10,
+        playmaking: 7
+      }
+    }));
+
+    const html = renderToStaticMarkup(createElement(TrainingDetails, {
+      history: reports,
+      player: { etaWeeks: null, nextSkillUp: null, progress: null, trainingType: null }
+    }));
+
+    const cells = [...html.matchAll(/<td[^>]*>(.*?)<\/td>/g)].map((match) => match[1] ?? "");
+    const pace = cells[1] ?? "";
+    const playmaking = cells[6] ?? "";
+    expect(pace).toContain("atlas-training-details__level-group is-ending");
+    expect(pace).toContain("L12");
+    expect(pace.match(/atlas-training-details__level-group(?: |")/g)).toHaveLength(3);
+    expect(playmaking.match(/atlas-training-details__level-group(?: |")/g)).toHaveLength(1);
+    for (const week of [1, 2, 3, 4]) {
+      expect(pace).toContain(`W${week}`);
+      expect(playmaking).toContain(`W${week}`);
+    }
   });
 });
