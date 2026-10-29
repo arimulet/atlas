@@ -74,6 +74,11 @@ export interface FindMarketComparablesOptions {
   beforeDateExclusive?: Date;
   maxComparables?: number;
   minimumSimilarity?: number;
+  /**
+   * Requires the comparable to share the target's development profile when it can be resolved.
+   * Defaults to true so market evidence remains position-specific.
+   */
+  requireMatchingProfile?: boolean;
   maxAgeDifference?: number;
   minimumTransferPrice?: number;
   baseCurrency?: string | null;
@@ -107,6 +112,7 @@ export interface MarketCalibrationFactor {
 export interface MarketCalibrationConfig {
   maxComparables: number;
   minimumSimilarity: number;
+  requireMatchingProfile: boolean;
   maxAgeDifference: number;
   maxPrimarySkillDifference?: number;
   recencyHalfLifeDays: number;
