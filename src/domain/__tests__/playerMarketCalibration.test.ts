@@ -195,6 +195,23 @@ describe("Player Market comparable calibration", () => {
     expect(relaxedComparables).toHaveLength(2);
   });
 
+  it("requires a matching development profile by default", () => {
+    const defender = transfer({ transferId: "defender" });
+    const midfielder = transfer({
+      transferId: "midfielder",
+      developmentProfile: "midfielder",
+      formation: "MID"
+    });
+
+    const strictComparables = findMarketComparables(player(), [defender, midfielder]);
+    const crossProfileComparables = findMarketComparables(player(), [defender, midfielder], {
+      requireMatchingProfile: false
+    });
+
+    expect(strictComparables.map((item) => item.transfer.transferId)).toEqual(["defender"]);
+    expect(crossProfileComparables).toHaveLength(2);
+  });
+
   it("ignores stamina (condición) in similarity and reported differences", () => {
     const target = player({ skills: { ...player().skills, stamina: 3 } });
     const compLowStamina = transfer({ skills: { ...player().skills, stamina: 3 } });

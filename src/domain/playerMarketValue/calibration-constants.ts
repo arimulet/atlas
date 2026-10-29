@@ -3,6 +3,7 @@ import type { MarketCalibrationConfig } from "./calibration-types.js";
 export const MARKET_CALIBRATION_CONFIG: MarketCalibrationConfig = {
   maxComparables: 5,
   minimumSimilarity: 0.75,
+  requireMatchingProfile: true,
   maxAgeDifference: 0,
   maxPrimarySkillDifference: 2,
   recencyHalfLifeDays: 180,

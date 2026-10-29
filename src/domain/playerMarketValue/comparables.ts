@@ -137,6 +137,13 @@ export function findMarketComparables(
       ) {
         return false;
       }
+      if (
+        config.requireMatchingProfile &&
+        targetProfile !== null &&
+        resolveTransferProfile(transfer) !== targetProfile
+      ) {
+        return false;
+      }
       return true;
     })
     .map((transfer): MarketComparable | null => {
@@ -660,6 +667,9 @@ function resolveCalibrationConfig(options: FindMarketComparablesOptions): Market
     ...(options.minimumSimilarity === undefined
       ? {}
       : { minimumSimilarity: options.minimumSimilarity }),
+    ...(options.requireMatchingProfile === undefined
+      ? {}
+      : { requireMatchingProfile: options.requireMatchingProfile }),
     ...(options.maxAgeDifference === undefined
       ? {}
       : { maxAgeDifference: options.maxAgeDifference }),
