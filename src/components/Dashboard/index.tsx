@@ -71,7 +71,7 @@ export function Dashboard({
   return (
     <div className="atlas-dashboard">
       <header className="atlas-dashboard__header">
-        <h1>Dashboard</h1>
+        <h1>Insights</h1>
       </header>
 
       <AttentionPanel
