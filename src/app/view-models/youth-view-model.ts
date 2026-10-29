@@ -19,6 +19,8 @@ export interface YouthPlayerRow {
   level: YouthLevelValue | null;
   expectedLevel: number | null;
   expectedAge: number | null;
+  expectedWeek: number | null;
+  promotionAssessment: YouthPromotionAssessment;
   initialWeeks: number | null;
   levelPops: number | null;
   talent: number | null;
@@ -28,6 +30,25 @@ export interface YouthPlayerRow {
   promotion: YouthPromotionLabel | null;
   status: YouthStatusLabel | null;
   history: import("@atlas/web/app/types").YouthSkillHistoryEntry[];
+}
+
+export type YouthPromotionAssessment = "excellent" | "acceptable" | "late" | "very-late" | "unknown";
+
+export function assessYouthPromotion(
+  age: number | null,
+  level: number | null,
+  week: number | null
+): YouthPromotionAssessment {
+  if (age === null || level === null || week === null || !Number.isInteger(age) ||
+      !Number.isInteger(level) || level < 0 || level > 17 ||
+      !Number.isInteger(week) || week < 1 || week > 13) return "unknown";
+
+  const excellentAge = level <= 8 ? 16 : level <= 10 ? 17 : level <= 12 ? 18 : 19;
+  const adjustedAge = age + (week >= 8 ? 0.5 : 0);
+  if (adjustedAge <= excellentAge) return "excellent";
+  if (adjustedAge <= excellentAge + 1) return "acceptable";
+  if (adjustedAge <= excellentAge + 2) return "late";
+  return "very-late";
 }
 
 export interface YouthPlayerAttention {
@@ -52,6 +73,8 @@ export function createYouthPlayerRows(planning: RealYouthAcademyPlanning | null)
           },
     expectedLevel: player.expectedLevel,
     expectedAge: player.projectedPromotionAge,
+    expectedWeek: player.projectedPromotionWeek ?? null,
+    promotionAssessment: assessYouthPromotion(player.projectedPromotionAge, player.expectedLevel, player.projectedPromotionWeek ?? null),
     initialWeeks: player.initialWeeks,
     levelPops: player.levelPops,
     talent: player.talent,

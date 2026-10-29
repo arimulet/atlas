@@ -366,6 +366,7 @@ function classifyYouthPlayer(
     weeksRemaining: player.weeksRemaining,
     weeksInAcademy,
     projectedPromotionAge,
+    projectedPromotionWeek: calculateProjectedPromotionWeek(currentSeasonWeek, player.weeksRemaining),
     skill: player.skill,
     skillChange: player.skillChange,
     levelPops: developmentMetrics.levelPops,
@@ -502,6 +503,19 @@ export function calculateProjectedPromotionAge(input: {
   );
 
   return input.age + seasonChanges;
+}
+
+export function calculateProjectedPromotionWeek(
+  currentSeasonWeek: number | null,
+  weeksRemaining: number | null
+): number | null {
+  if (
+    currentSeasonWeek === null || !Number.isInteger(currentSeasonWeek) ||
+    currentSeasonWeek < 1 || currentSeasonWeek > WEEKS_PER_SOKKER_SEASON ||
+    weeksRemaining === null || !Number.isInteger(weeksRemaining) || weeksRemaining < 0
+  ) return null;
+
+  return ((currentSeasonWeek - 1 + weeksRemaining) % WEEKS_PER_SOKKER_SEASON) + 1;
 }
 export * from "./types.js";
 export * from "./youthMatchPerformancesTypes.js";

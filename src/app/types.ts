@@ -682,6 +682,7 @@ export interface RealYouthAcademyPlayerPlan {
   weeksInAcademy: number | null;
   weeksRemaining: number | null;
   projectedPromotionAge: number | null;
+  projectedPromotionWeek?: number | null;
   skill: number | null;
   skillChange: number | null;
   levelPops: number | null;

@@ -665,6 +665,90 @@
   }
 }
 
+.atlas-youth-promotion-age {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+
+  &__value { font-weight: 700; }
+
+  &__week {
+    color: var(--atlas-text-muted);
+    font-size: 0.75em;
+  }
+
+  &__indicator {
+    position: relative;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: #9299a3;
+    cursor: help;
+
+    &.is-excellent { background: #22c55e; }
+    &.is-acceptable { background: #eab308; }
+    &.is-late { background: #f97316; }
+    &.is-very-late { background: #ef4444; }
+
+  }
+
+  &__tooltip {
+    position: fixed;
+    z-index: 1000;
+    width: 14rem;
+    padding: 0.8rem 0.9rem;
+    border: 1px solid #46515f;
+    border-radius: 0.6rem;
+    background: #202630;
+    box-shadow: 0 8px 24px rgb(0 0 0 / 30%);
+    color: #f5f7fa;
+    font-size: 0.75rem;
+    font-weight: normal;
+    line-height: 1.4;
+    text-align: left;
+    white-space: normal;
+    pointer-events: none;
+  }
+
+  &__tooltip-heading {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+  }
+
+  &__tooltip-dot {
+    width: 0.55rem;
+    height: 0.55rem;
+    flex: none;
+    border-radius: 50%;
+    background: #9299a3;
+    &.is-excellent { background: #22c55e; }
+    &.is-acceptable { background: #eab308; }
+    &.is-late { background: #f97316; }
+    &.is-very-late { background: #ef4444; }
+  }
+
+  &__tooltip-details {
+    display: grid;
+    gap: 0.45rem;
+    margin-top: 0.65rem;
+    padding-top: 0.65rem;
+    border-top: 1px solid #46515f;
+    color: #aeb9c7;
+
+    > span { display: flex; justify-content: space-between; gap: 0.75rem; }
+    strong { color: #f5f7fa; font-weight: 600; text-align: right; }
+  }
+
+  &__tooltip-note {
+    display: block;
+    margin-top: 0.45rem;
+    color: #aeb9c7;
+  }
+}
+
 // Youth Tabs
 .atlas-youth-tabs {
   display: flex;
