@@ -34,6 +34,7 @@ import {
   type DevelopmentPlanViewModel
 } from "./development-plan-view-model";
 import { EditDevelopmentTargetModal } from "./EditDevelopmentTargetModal";
+import { createMarketProjectionChartData } from "./market-projection-chart-data";
 
 interface PlayerDevelopmentPlanProps {
   plan: DevelopmentPlanViewModel | null;
@@ -646,50 +647,60 @@ function UnifiedTrainingPath({
                       <td>
                         <div
                           style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: "0.35rem",
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "flex-start",
+                            gap: "0.15rem",
                             whiteSpace: "nowrap"
                           }}
                         >
-                          <strong
-                            style={{
-                              fontSize: "0.88rem",
-                              fontWeight: 700,
-                              color: "var(--atlas-text)"
-                            }}
+                          <div
+                            style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem" }}
                           >
-                            {projPoint?.value.label ?? "—"}
-                          </strong>
-                          {projPoint?.basedOnFundamentalOnly ? (
-                            <span
-                              title="Fundamental model (no direct market comparables)"
+                            <strong
                               style={{
-                                display: "inline-flex",
-                                alignItems: "center",
-                                color: "var(--atlas-text-muted)",
-                                cursor: "help"
-                              }}
-                              aria-label="Fundamental model (no direct market comparables)"
-                            >
-                              <Calculator size={13} />
-                            </span>
-                          ) : null}
-                          {efficiencyStep?.valueGain ? (
-                            <span
-                              style={{
-                                fontSize: "0.82rem",
-                                fontWeight: 600,
-                                color:
-                                  efficiencyStep.valueGain.value > 0
-                                    ? "var(--atlas-success, #059669)"
-                                    : efficiencyStep.valueGain.value < 0
-                                      ? "var(--atlas-danger, #dc2626)"
-                                      : "var(--atlas-text-muted)"
+                                fontSize: "0.88rem",
+                                fontWeight: 700,
+                                color: "var(--atlas-text)"
                               }}
                             >
-                              ({efficiencyStep.valueGain.label})
-                            </span>
+                              {projPoint?.value.label ?? "—"}
+                            </strong>
+                            {projPoint?.basedOnFundamentalOnly ? (
+                              <span
+                                title="Fundamental model (no direct market comparables)"
+                                style={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  color: "var(--atlas-text-muted)",
+                                  cursor: "help"
+                                }}
+                                aria-label="Fundamental model (no direct market comparables)"
+                              >
+                                <Calculator size={13} />
+                              </span>
+                            ) : null}
+                            {efficiencyStep?.valueGain ? (
+                              <span
+                                style={{
+                                  fontSize: "0.82rem",
+                                  fontWeight: 600,
+                                  color:
+                                    efficiencyStep.valueGain.value > 0
+                                      ? "var(--atlas-success, #059669)"
+                                      : efficiencyStep.valueGain.value < 0
+                                        ? "var(--atlas-danger, #dc2626)"
+                                        : "var(--atlas-text-muted)"
+                                }}
+                              >
+                                ({efficiencyStep.valueGain.label})
+                              </span>
+                            ) : null}
+                          </div>
+                          {projPoint?.range ? (
+                            <small style={{ color: "var(--atlas-text-muted)", fontSize: "0.7rem" }}>
+                              Min {projPoint.range.low.label} · Max {projPoint.range.high.label}
+                            </small>
                           ) : null}
                         </div>
                       </td>
@@ -955,41 +966,12 @@ function MarketProjectionChart({
   if (points.length === 0) return null;
 
   const currencySymbol = marketCurrencySymbol(points);
-  const pathByStep = new Map(path.map((step) => [step.order, step]));
-
-  const step0 = currentMarketValue
-    ? {
-        label: "Step 0 · Current",
-        tooltipLabel: "Step 0 · Current Value",
-        value: currentMarketValue.expected.value,
-        valueLabel: currentMarketValue.expected.label,
-        rangeLabel: currentMarketValue.range?.label ?? null,
-        timelineLabel: projectionTimelineLabel(points[0]?.age ?? "—", 0),
-        confidence: currentMarketValue.confidence?.label ?? "Medium confidence",
-        basedOnFundamentalOnly: currentMarketValue.basedOnFundamentalOnly ?? false
-      }
-    : null;
-
-  const data = [
-    ...(step0 ? [step0] : []),
-    ...points.map((point) => {
-      const trainingStep = pathByStep.get(point.step);
-      const trainedSkillLabel = trainingStep
-        ? `${skillLabel(trainingStep.skill)} ${trainingStep.fromLevel} → ${trainingStep.toLevel}`
-        : null;
-
-      return {
-        label: trainingStep ? `Step ${point.step} · ${skillLabel(trainingStep.skill)}` : point.label,
-        tooltipLabel: trainedSkillLabel ? `${point.label} · ${trainedSkillLabel}` : point.label,
-        value: point.value.value,
-        valueLabel: point.value.label,
-        rangeLabel: point.range?.label ?? null,
-        timelineLabel: projectionTimelineLabel(point.age, point.weeks),
-        confidence: point.confidence.label,
-        basedOnFundamentalOnly: point.basedOnFundamentalOnly ?? false
-      };
-    })
-  ];
+  const data = createMarketProjectionChartData({
+    currentMarketValue,
+    formatSkill: skillLabel,
+    path,
+    points
+  });
 
   return (
     <div
@@ -1036,7 +1018,33 @@ function MarketProjectionChart({
                 const nameLabel = isFundamental
                   ? "Estimated value (Fundamental model)"
                   : "Estimated value";
-                return [valueLabel, nameLabel];
+                const minimumValueLabel = item.payload.minimumValueLabel;
+                const maximumValueLabel = item.payload.maximumValueLabel;
+
+                return [
+                  <span key="market-value-summary">
+                    <strong style={{ color: "var(--atlas-text)", fontSize: "0.85rem" }}>
+                      {valueLabel}
+                    </strong>
+                    {minimumValueLabel ? (
+                      <>
+                        <br />
+                        <span style={{ color: "var(--atlas-text-muted)", fontSize: "0.72rem" }}>
+                          Minimum transfer value: {minimumValueLabel}
+                        </span>
+                      </>
+                    ) : null}
+                    {maximumValueLabel ? (
+                      <>
+                        <br />
+                        <span style={{ color: "var(--atlas-text-muted)", fontSize: "0.72rem" }}>
+                          Maximum transfer value: {maximumValueLabel}
+                        </span>
+                      </>
+                    ) : null}
+                  </span>,
+                  nameLabel
+                ];
               }}
               labelFormatter={(_label, payload) => {
                 const data = payload?.[0]?.payload;
@@ -1046,6 +1054,30 @@ function MarketProjectionChart({
                 return data?.tooltipLabel ?? "";
               }}
               labelStyle={{ color: "var(--atlas-text)", fontWeight: 500, marginBottom: 4 }}
+            />
+            <Line
+              type="monotone"
+              dataKey="minimumValue"
+              name="Minimum estimated value"
+              stroke="var(--semantic-warning-text)"
+              strokeDasharray="5 5"
+              strokeWidth={2}
+              dot={false}
+              activeDot={false}
+              tooltipType="none"
+              isAnimationActive={false}
+            />
+            <Line
+              type="monotone"
+              dataKey="maximumValue"
+              name="Maximum estimated value"
+              stroke="var(--semantic-success-text)"
+              strokeDasharray="5 5"
+              strokeWidth={2}
+              dot={false}
+              activeDot={false}
+              tooltipType="none"
+              isAnimationActive={false}
             />
             <Line
               type="monotone"
@@ -1072,14 +1104,6 @@ function MarketProjectionChart({
       </div>
     </div>
   );
-}
-
-function projectionTimelineLabel(age: string, weeks: number | null): string {
-  const displayedAge = age === "—" ? "Age unavailable" : `Age ${age.replace(/^~/, "")}`;
-
-  if (weeks === null) return displayedAge;
-
-  return `${displayedAge} · ${weeks.toLocaleString("en-US", { maximumFractionDigits: 1 })} weeks`;
 }
 
 function marketCurrencySymbol(
