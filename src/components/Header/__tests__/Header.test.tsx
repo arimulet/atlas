@@ -58,7 +58,9 @@ describe("Header component", () => {
         name: "River Plate",
         country: 15,
         currency: "ARS",
-        sokkerUsername: "fueguinoloko"
+        sokkerUsername: "fueguinoloko",
+        gameWeek: 1204,
+        week: 7
       },
       loading: false,
       refreshClub: vi.fn()
@@ -69,8 +71,37 @@ describe("Header component", () => {
     expect(html).toContain("atlas-team-badge");
     expect(html).toContain("atlas-team-badge__logo");
     expect(html).toContain("River Plate");
+    expect(html).toContain("atlas-game-calendar");
+    expect(html).toContain("Season 78");
+    expect(html).toContain("Week 7");
+    expect(html).not.toContain('title="Season');
     expect(html).not.toContain("href=");
-    expect(html).not.toContain("target=\"_blank\"");
+    expect(html).not.toContain('target="_blank"');
     expect(html).not.toContain("https://sokker.org/es/app/team/");
+  });
+
+  it("does not render the game calendar without a valid game week", () => {
+    mockUseAuth.mockReturnValue({
+      user: { email: "user@example.com" },
+      logout: vi.fn()
+    });
+    mockUseClub.mockReturnValue({
+      club: {
+        id: "c-1",
+        clubId: 6038,
+        name: "River Plate",
+        country: 15,
+        currency: "ARS",
+        sokkerUsername: "fueguinoloko",
+        gameWeek: null,
+        week: null
+      },
+      loading: false,
+      refreshClub: vi.fn()
+    });
+
+    const html = renderToStaticMarkup(<Header onOpenSokkerImporter={vi.fn()} />);
+
+    expect(html).not.toContain("atlas-game-calendar");
   });
 });

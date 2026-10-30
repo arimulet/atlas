@@ -11,6 +11,8 @@ export interface ActiveClubResponse {
     country: number;
     currency: string;
     sokkerUsername: string | null;
+    gameWeek: number | null;
+    week: number | null;
   } | null;
 }
 
@@ -31,7 +33,9 @@ export async function GET() {
               name: fallback.name,
               country: fallback.country,
               currency: fallback.currency,
-              sokkerUsername: fallback.sokkerUsername ?? null
+              sokkerUsername: fallback.sokkerUsername ?? null,
+              gameWeek: fallback.gameWeek ?? null,
+              week: fallback.week ?? null
             }
           });
         }
@@ -47,6 +51,8 @@ export async function GET() {
       country: number;
       currency: string;
       sokkerUsername?: string | null;
+      gameWeek: number | null;
+      week: number | null;
     } | null = clubs && clubs.length > 0 && clubs[0] ? clubs[0] : null;
 
     if (!primary && process.env.NODE_ENV !== "production") {
@@ -58,7 +64,9 @@ export async function GET() {
           name: fallback.name,
           country: fallback.country,
           currency: fallback.currency,
-          sokkerUsername: fallback.sokkerUsername ?? null
+          sokkerUsername: fallback.sokkerUsername ?? null,
+          gameWeek: fallback.gameWeek ?? null,
+          week: fallback.week ?? null
         };
       }
     }
@@ -74,7 +82,9 @@ export async function GET() {
         name: primary.name,
         country: primary.country,
         currency: primary.currency,
-        sokkerUsername: primary.sokkerUsername ?? null
+        sokkerUsername: primary.sokkerUsername ?? null,
+        gameWeek: primary.gameWeek,
+        week: primary.week
       }
     });
   } catch (error) {
