@@ -31,6 +31,8 @@ export interface ActiveClubInfo {
   country: number;
   currency: string;
   sokkerUsername: string | null;
+  gameWeek: number | null;
+  week: number | null;
 }
 
 export interface FinancialStrategyData {
@@ -508,7 +510,6 @@ export async function fetchRealYouthAcademyPlanning(
 
   return body;
 }
-
 
 export async function syncSokker(
   payload: unknown,

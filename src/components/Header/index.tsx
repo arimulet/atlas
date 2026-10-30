@@ -1,4 +1,5 @@
 import { useId } from "react";
+import { getSokkerSeason, normalizeSeasonWeek } from "@atlas/domain";
 import { BrandLogo } from "@/components/BrandLogo";
 import { useAuth } from "@/context/AuthContext";
 import { useClub } from "@/context/ClubContext";
@@ -10,6 +11,7 @@ export function Header({ onOpenSokkerImporter }: HeaderProps) {
   const crestId = useId();
   const bgGradId = `crest-bg-${crestId.replace(/:/g, "")}`;
   const accentGradId = `crest-accent-${crestId.replace(/:/g, "")}`;
+  const calendar = club ? getClubCalendar(club.gameWeek) : null;
 
   return (
     <header className="atlas-header">
@@ -22,7 +24,7 @@ export function Header({ onOpenSokkerImporter }: HeaderProps) {
             <div
               className="atlas-team-badge"
               title={`${club.name} (#${club.clubId})`}
-              aria-label={`Equipo: ${club.name}`}
+              aria-label={`Team: ${club.name}`}
             >
               <svg
                 className="atlas-team-badge__logo"
@@ -82,6 +84,16 @@ export function Header({ onOpenSokkerImporter }: HeaderProps) {
               </svg>
               <span className="atlas-team-badge__name">{club.name}</span>
             </div>
+            {calendar ? (
+              <div
+                className="atlas-game-calendar"
+                aria-label={`Season ${calendar.season}, week ${calendar.week}`}
+              >
+                <span className="atlas-game-calendar__season">Season {calendar.season}</span>
+                <span className="atlas-game-calendar__divider" aria-hidden="true" />
+                <span className="atlas-game-calendar__week">Week {calendar.week}</span>
+              </div>
+            ) : null}
           </>
         )}
       </div>
@@ -120,4 +132,19 @@ export function Header({ onOpenSokkerImporter }: HeaderProps) {
       </div>
     </header>
   );
+}
+
+function getClubCalendar(gameWeek: number | null): { season: number; week: number } | null {
+  if (gameWeek === null) {
+    return null;
+  }
+
+  try {
+    return {
+      season: getSokkerSeason(gameWeek),
+      week: normalizeSeasonWeek(gameWeek)
+    };
+  } catch {
+    return null;
+  }
 }

@@ -65,6 +65,39 @@
     }
   }
 
+  .atlas-game-calendar {
+    align-items: center;
+    background: linear-gradient(135deg, rgb(32 67 55 / 82%), rgb(22 39 34 / 90%));
+    border: 1px solid rgb(85 211 154 / 34%);
+    border-radius: 999px;
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 5%);
+    color: var(--atlas-text);
+    display: inline-flex;
+    flex-shrink: 0;
+    font-size: 0.7rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: 800;
+    gap: 7px;
+    letter-spacing: 0.01em;
+    line-height: 1;
+    padding: 7px 10px;
+    white-space: nowrap;
+
+    &__season {
+      color: #b7f3d4;
+    }
+
+    &__week {
+      color: var(--atlas-text-secondary);
+    }
+
+    &__divider {
+      background: rgb(85 211 154 / 35%);
+      height: 12px;
+      width: 1px;
+    }
+  }
+
   &__tools {
     align-items: center;
     display: flex;
@@ -152,7 +185,10 @@
     gap: 5px;
     height: 30px;
     padding: 0 10px;
-    transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+    transition:
+      background 120ms ease,
+      border-color 120ms ease,
+      color 120ms ease;
 
     svg {
       fill: none;
@@ -172,6 +208,42 @@
 
     &:active {
       transform: translateY(1px);
+    }
+  }
+
+  @media (max-width: 860px) {
+    .atlas-user-email {
+      display: none;
+    }
+  }
+
+  @media (max-width: 700px) {
+    padding: 0 var(--atlas-space-3);
+
+    &__brand-group {
+      gap: 10px;
+    }
+
+    .atlas-import-button,
+    .atlas-logout-button {
+      padding: 0 8px;
+
+      span {
+        display: none;
+      }
+    }
+
+    .atlas-user-menu {
+      gap: 0;
+      margin-left: 0;
+      padding-left: 8px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .atlas-brand-logo__wordmark,
+    .atlas-team-badge__name {
+      display: none;
     }
   }
 }
