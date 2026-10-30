@@ -58,7 +58,9 @@ describe("GET /api/club/active", () => {
         name: "River Plate",
         country: 15,
         currency: "ARS",
-        sokkerUsername: "fueguinoloko"
+        sokkerUsername: "fueguinoloko",
+        gameWeek: 1204,
+        week: 7
       }
     ]);
 
@@ -72,7 +74,9 @@ describe("GET /api/club/active", () => {
       name: "River Plate",
       country: 15,
       currency: "ARS",
-      sokkerUsername: "fueguinoloko"
+      sokkerUsername: "fueguinoloko",
+      gameWeek: 1204,
+      week: 7
     });
   });
 
@@ -86,7 +90,9 @@ describe("GET /api/club/active", () => {
       name: "River Plate",
       country: 15,
       currency: "ARS",
-      sokkerUsername: "fueguinoloko"
+      sokkerUsername: "fueguinoloko",
+      gameWeek: 1204,
+      week: 7
     });
 
     const res = await GET();
