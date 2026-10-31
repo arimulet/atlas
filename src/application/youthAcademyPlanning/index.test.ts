@@ -62,7 +62,7 @@ describe("calculateYouthDevelopmentMetrics", () => {
     ).toEqual({ levelPops: 2, talent: 3, expectedLevel: 9 });
   });
 
-  it("does not project talent until a level pop has been observed", () => {
+  it("estimates the expected level with talent 4 until a level pop has been observed", () => {
     expect(
       calculateYouthDevelopmentMetrics({
         initialLevel: 6,
@@ -70,7 +70,26 @@ describe("calculateYouthDevelopmentMetrics", () => {
         currentLevel: 6,
         weeksRemaining: 4
       })
-    ).toEqual({ levelPops: 0, talent: null, expectedLevel: null });
+    ).toEqual({ levelPops: 0, talent: null, expectedLevel: 7 });
+  });
+
+  it("uses the assumed talent when the initial level is missing", () => {
+    expect(calculateYouthDevelopmentMetrics({ initialLevel: null, initialWeeks: null, currentLevel: 8, weeksRemaining: 8 }))
+      .toEqual({ levelPops: null, talent: null, expectedLevel: 10 });
+  });
+
+  it("does not invent an expected level without the current level or remaining weeks", () => {
+    expect(calculateYouthDevelopmentMetrics({ initialLevel: 6, initialWeeks: 10, currentLevel: null, weeksRemaining: 4 }).expectedLevel).toBeNull();
+    expect(calculateYouthDevelopmentMetrics({ initialLevel: 6, initialWeeks: 10, currentLevel: 6, weeksRemaining: null }).expectedLevel).toBeNull();
+  });
+
+  it("caps the estimated level at 17", () => {
+    expect(calculateYouthDevelopmentMetrics({ initialLevel: 16, initialWeeks: 30, currentLevel: 16, weeksRemaining: 20 }).expectedLevel).toBe(17);
+  });
+
+  it("estimates the level when the initial level is unavailable", () => {
+    expect(calculateYouthDevelopmentMetrics({ initialLevel: null, initialWeeks: null, currentLevel: 7, weeksRemaining: 8 }))
+      .toEqual({ levelPops: null, talent: null, expectedLevel: 9 });
   });
 });
 describe("calculateProjectedPromotionAge", () => {
