@@ -196,14 +196,14 @@ function YouthPlayerRows({
           </span>
         </td>
         <td className="atlas-youth-table__center">{row.weeksLeft ?? "—"}</td>
-        <td title={row.expectedLevel !== null ? (skillLevelLabel(row.expectedLevel) ?? undefined) : undefined}>
+        <td className={row.isExpectedLevelEstimated ? "atlas-youth-table__estimated-level" : undefined} title={row.isExpectedLevelEstimated ? "Estimated using assumed talent of 4 weeks per level." : row.expectedLevel !== null ? (skillLevelLabel(row.expectedLevel) ?? undefined) : undefined}>
           {formatLevelValue(row.expectedLevel)}
         </td>
         <td className="atlas-youth-table__center">
           <span className="atlas-youth-promotion-age">
             <span className="atlas-youth-promotion-age__value">{row.expectedAge ?? "—"}</span>
             {row.expectedWeek !== null ? <span className="atlas-youth-promotion-age__week">W{row.expectedWeek}</span> : null}
-            <span
+            {row.promotionAssessment !== "unknown" ? <span
               className={`atlas-youth-promotion-age__indicator is-${row.promotionAssessment}`}
               tabIndex={0}
               aria-label={promotionAssessmentDescription(row)}
@@ -217,16 +217,13 @@ function YouthPlayerRows({
                   <span className={`atlas-youth-promotion-age__tooltip-dot is-${row.promotionAssessment}`} />
                   {promotionAssessmentLabel(row.promotionAssessment)}
                 </span>
-                {row.promotionAssessment !== "unknown" ? (
-                  <span className="atlas-youth-promotion-age__tooltip-details">
+                <span className="atlas-youth-promotion-age__tooltip-details">
                     <span>Promotion <strong>{row.expectedAge} years · W{row.expectedWeek}</strong></span>
                     <span>Expected level <strong>{formatLevelValue(row.expectedLevel)}</strong></span>
-                  </span>
-                ) : (
-                  <span className="atlas-youth-promotion-age__tooltip-note">Age, week and expected level are required.</span>
-                )}
+                    {row.isExpectedLevelEstimated ? <span>Estimated with talent 4 weeks per level</span> : null}
+                </span>
               </span>, document.body)}
-            </span>
+            </span> : null}
           </span>
         </td>
         <td className="atlas-youth-table__center">{row.initialWeeks ?? "—"}</td>
@@ -259,7 +256,8 @@ function promotionAssessmentLabel(assessment: YouthPlayerRow["promotionAssessmen
 function promotionAssessmentDescription(row: YouthPlayerRow): string {
   const label = promotionAssessmentLabel(row.promotionAssessment);
   if (row.promotionAssessment === "unknown") return `${label}. Age, week and expected level are required.`;
-  return `${label}. Projected promotion: age ${row.expectedAge}, week ${row.expectedWeek}. Expected level: ${formatLevelValue(row.expectedLevel)}.`;
+  const estimate = row.isExpectedLevelEstimated ? " Estimated using assumed talent of 4 weeks per level." : "";
+  return `${label}. Projected promotion: age ${row.expectedAge}, week ${row.expectedWeek}. Expected level: ${formatLevelValue(row.expectedLevel)}.${estimate}`;
 }
 
 function formatLevelValue(level: number | null): string {
