@@ -665,6 +665,10 @@
   }
 }
 
+.atlas-youth .atlas-youth-table td.atlas-youth-table__estimated-level {
+  color: var(--atlas-text-muted, #aeb9c7);
+}
+
 .atlas-youth-promotion-age {
   display: inline-flex;
   align-items: center;

@@ -456,23 +456,29 @@ export function calculateYouthDevelopmentMetrics(input: {
   talent: number | null;
   expectedLevel: number | null;
 } {
-  if (input.initialLevel === null || input.currentLevel === null) {
+  if (input.currentLevel === null) {
     return { levelPops: null, talent: null, expectedLevel: null };
   }
 
-  const levelPops = input.currentLevel - input.initialLevel;
+  const levelPops = input.initialLevel === null ? null : Math.max(0, input.currentLevel - input.initialLevel);
 
   if (input.currentLevel >= 17) {
-    return { levelPops: Math.max(levelPops, 0), talent: null, expectedLevel: 17 };
+    return { levelPops, talent: null, expectedLevel: 17 };
   }
 
   if (
-    levelPops <= 0 ||
+    levelPops === null || levelPops <= 0 ||
     input.initialWeeks === null ||
     input.weeksRemaining === null ||
     input.initialWeeks <= input.weeksRemaining
   ) {
-    return { levelPops: Math.max(levelPops, 0), talent: null, expectedLevel: null };
+    return {
+      levelPops,
+      talent: null,
+      expectedLevel: input.weeksRemaining === null || input.weeksRemaining < 0
+        ? null
+        : Math.min(17, input.currentLevel + Math.floor(input.weeksRemaining / 4))
+    };
   }
 
   const talent = (input.initialWeeks - input.weeksRemaining) / levelPops;
