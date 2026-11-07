@@ -1078,6 +1078,7 @@ function mapPlayer(
     countryName: player.countryName,
     age: player.age,
     form: player.form,
+    skills: player.skills,
     training: {
       ...player.training,
       position: trainingPosition

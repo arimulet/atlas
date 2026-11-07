@@ -25,6 +25,7 @@ export interface TrainingPagePlayer {
   countryName?: string | null;
   age: number;
   form?: number | null;
+  skills?: PersistedPlayerSnapshot["skills"];
   training: PersistedPlayerSnapshot["training"];
   value: number;
   valueChange: number | null;

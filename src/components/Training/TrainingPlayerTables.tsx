@@ -508,7 +508,7 @@ function skillValue(
     return sourcePlayer?.form ?? (skills as Record<string, number | null | undefined> | undefined)?.form;
   }
   const key = trainingSkillKey(skill);
-  return skills?.[key] ?? skills?.[skill];
+  return skills?.[key] ?? skills?.[skill] ?? sourcePlayer?.skills?.[skill];
 }
 
 function trainingSkillKey(skill: string): string {
