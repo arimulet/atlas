@@ -275,6 +275,7 @@ export interface TrainingPagePlayer {
   countryName?: string | null;
   age: number;
   form?: number | null;
+  skills?: Record<string, number | null>;
   training: {
     position: number;
     advanced: boolean;
