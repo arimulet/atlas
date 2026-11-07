@@ -1,6 +1,7 @@
 import type {
   CurrentClubContextDto,
   JuniorDto,
+  PlayerDto,
   PlayerFormation,
   TrainerDto,
   TrainingDataDto,
@@ -13,16 +14,15 @@ import type {
  * Transport and external API details do not cross this interface. The
  * application layer depends on this contract rather than on Sokker's API.
  */
-import type {
-  JuniorMatchDto,
-  ActiveTransferDto,
-  FinalTransferDto
-} from "../types.js";
+import type { JuniorMatchDto, ActiveTransferDto, FinalTransferDto } from "../types.js";
 
 export interface SokkerDataProvider {
   getCurrent(): Promise<CurrentClubContextDto>;
   getTraining(): Promise<TrainingDataDto>;
-  getLivePlayers(teamId?: number): Promise<Array<{ id: number; formation: PlayerFormation | null }>>;
+  getLivePlayers(
+    teamId?: number
+  ): Promise<Array<{ id: number; formation: PlayerFormation | null }>>;
+  getPlayer(playerId: number): Promise<PlayerDto>;
   getTrainers(): Promise<TrainerDto[]>;
   getJuniors(): Promise<JuniorDto[]>;
   getJuniorsXml(): Promise<Array<{ id: number; formation: number | null }>>;
@@ -30,7 +30,7 @@ export interface SokkerDataProvider {
   getJuniorMatches(season: number): Promise<Omit<JuniorMatchDto, "playerStats">[]>;
   getMatchXml(matchId: number): Promise<string>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  getMatchLineup(matchId: number): Promise<{ homePlayers: any[], awayPlayers: any[] }>;
+  getMatchLineup(matchId: number): Promise<{ homePlayers: any[]; awayPlayers: any[] }>;
   getTransfers(limit: number, offset: number): Promise<ActiveTransferDto[]>;
   getTransferHistory(limit: number, offset: number): Promise<FinalTransferDto[]>;
   getPlayerTransferHistory(playerId: number): Promise<FinalTransferDto[]>;

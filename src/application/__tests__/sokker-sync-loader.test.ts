@@ -36,7 +36,16 @@ function createMockProvider() {
   );
   const getCurrent = vi.fn(async (): Promise<CurrentClubContextDto> => current);
   const getTraining = vi.fn(async (): Promise<TrainingDataDto> => training);
-  const getLivePlayers = vi.fn<SokkerDataProvider["getLivePlayers"]>(async () => []);
+  const getLivePlayers = vi.fn<SokkerDataProvider["getLivePlayers"]>(async () =>
+    training.players.map((player) => ({ id: player.id, formation: player.formation }))
+  );
+  const getPlayer = vi.fn<SokkerDataProvider["getPlayer"]>(async (playerId) => {
+    const player = training.players.find((candidate) => candidate.id === playerId);
+    if (!player) {
+      throw new Error(`Player ${playerId} not found.`);
+    }
+    return player;
+  });
   const getTrainers = vi.fn(async () => trainers);
   const getJuniors = vi.fn(async () => juniors);
   const getJuniorsXml = vi.fn(async () => []);
@@ -58,6 +67,7 @@ function createMockProvider() {
       getCurrent,
       getTraining,
       getLivePlayers,
+      getPlayer,
       getTrainers,
       getJuniors,
       getJuniorsXml,
@@ -72,6 +82,7 @@ function createMockProvider() {
     getCurrent,
     getTraining,
     getLivePlayers,
+    getPlayer,
     getTrainers,
     getJuniors,
     getJuniorsXml,
@@ -173,9 +184,7 @@ describe("SokkerSyncLoader", () => {
 
   it("enriches players with live formations from getLivePlayers", async () => {
     const mock = createMockProvider();
-    mock.getLivePlayers.mockResolvedValue([
-      { id: mock.training.players[0]!.id, formation: "DEF" }
-    ]);
+    mock.getLivePlayers.mockResolvedValue([{ id: mock.training.players[0]!.id, formation: "DEF" }]);
 
     const payload = await loadSokkerSyncPayload(mock.provider);
 
@@ -185,12 +194,87 @@ describe("SokkerSyncLoader", () => {
   it("does not clobber player formation with null and falls back to skills inference", async () => {
     const mock = createMockProvider();
     mock.getLivePlayers.mockResolvedValue([
-      { id: mock.training.players[0]!.id, formation: null }
+      { id: mock.training.players[0]!.id, formation: null },
+      ...mock.training.players
+        .slice(1)
+        .map((player) => ({ id: player.id, formation: player.formation }))
     ]);
 
     const payload = await loadSokkerSyncPayload(mock.provider);
 
     expect(payload.players[0]?.formation).not.toBeNull();
   });
-});
 
+  it("uses live players as the current snapshot roster while excluding players who left the club", async () => {
+    const mock = createMockProvider();
+    const soldPlayer = mock.training.players[2]!;
+    const boughtPlayer = {
+      ...mock.training.players[0]!,
+      id: 50000001,
+      teamId: mock.current.team.id,
+      name: { firstName: "New", lastName: "Signing", fullName: "New Signing" }
+    };
+    const boughtReport = { ...mock.training.trainingWeeks[0]!, playerId: boughtPlayer.id };
+
+    soldPlayer.teamId = 30931;
+    mock.training.players.push(boughtPlayer);
+    mock.training.trainingWeeks.push(boughtReport);
+    mock.getLivePlayers.mockResolvedValue(
+      mock.training.players
+        .filter((player) => player.id !== soldPlayer.id)
+        .map((player) => ({ id: player.id, formation: player.formation }))
+    );
+
+    const payload = await loadSokkerSyncPayload(mock.provider);
+
+    expect(payload.players.map((player) => player.id)).toEqual(
+      expect.arrayContaining([boughtPlayer.id])
+    );
+    expect(payload.players.map((player) => player.id)).not.toContain(soldPlayer.id);
+    expect(payload.trainingWeeks.map((trainingWeek) => trainingWeek.playerId)).not.toContain(
+      soldPlayer.id
+    );
+    expect(payload.excludedTrainingPlayerIds).toEqual([soldPlayer.id]);
+  });
+
+  it("excludes a dismissed player even when a stale training report still has the former team id", async () => {
+    const mock = createMockProvider();
+    const dismissedPlayer = mock.training.players[2]!;
+
+    mock.getLivePlayers.mockResolvedValue(
+      mock.training.players
+        .filter((player) => player.id !== dismissedPlayer.id)
+        .map((player) => ({ id: player.id, formation: player.formation }))
+    );
+
+    const payload = await loadSokkerSyncPayload(mock.provider);
+
+    expect(payload.players.map((player) => player.id)).not.toContain(dismissedPlayer.id);
+    expect(payload.trainingWeeks.map((trainingWeek) => trainingWeek.playerId)).not.toContain(
+      dismissedPlayer.id
+    );
+  });
+
+  it("hydrates current players without a training report for the snapshot", async () => {
+    const mock = createMockProvider();
+    const boughtPlayer = {
+      ...mock.training.players[0]!,
+      id: 50000001,
+      name: { firstName: "New", lastName: "Signing", fullName: "New Signing" }
+    };
+
+    mock.getLivePlayers.mockResolvedValue([
+      ...mock.training.players.map((player) => ({ id: player.id, formation: player.formation })),
+      { id: boughtPlayer.id, formation: "DEF" }
+    ]);
+    mock.getPlayer.mockResolvedValue(boughtPlayer);
+
+    const payload = await loadSokkerSyncPayload(mock.provider);
+
+    expect(payload.players.map((player) => player.id)).toContain(boughtPlayer.id);
+    expect(payload.trainingWeeks.map((trainingWeek) => trainingWeek.playerId)).not.toContain(
+      boughtPlayer.id
+    );
+    expect(payload.playersWithoutTrainingReportIds).toEqual([boughtPlayer.id]);
+  });
+});
