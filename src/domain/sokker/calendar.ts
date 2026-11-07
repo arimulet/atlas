@@ -1,4 +1,4 @@
-const SEASON_61_BASE_GAME_WEEK = 977;
+const SEASON_61_BASE_GAME_WEEK = 976;
 export const WEEKS_PER_SOKKER_SEASON = 13;
 
 export function calculateGameWeek(season: number, seasonWeek: number): number {
@@ -42,14 +42,14 @@ export function addSokkerWeeks(ageYYWW: number, weeksToAdd: number): number {
   const baseWeeks = Math.round((ageYYWW - years) * 100);
   const totalWeeksSinceBirth = years * WEEKS_PER_SOKKER_SEASON + baseWeeks;
   const newTotal = totalWeeksSinceBirth + weeksToAdd;
-  
+
   let newYears = Math.floor(newTotal / WEEKS_PER_SOKKER_SEASON);
   let newWeeks = newTotal % WEEKS_PER_SOKKER_SEASON;
-  
+
   if (Math.abs(newWeeks) < 1e-9 && newYears > 0) {
     newYears -= 1;
     newWeeks = WEEKS_PER_SOKKER_SEASON;
   }
-  
-  return newYears + (newWeeks / 100);
+
+  return newYears + newWeeks / 100;
 }
