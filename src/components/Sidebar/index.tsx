@@ -26,12 +26,6 @@ const navigationGroups: NavigationGroup[] = [
         path: pathForMainView("squad")
       },
       {
-        id: "player-decisions",
-        label: "Player Decisions",
-        icon: <UserCog size={ICON_SIZE} />,
-        path: pathForMainView("player-decisions")
-      },
-      {
         id: "youth",
         label: "Youth",
         icon: <GraduationCap size={ICON_SIZE} />,
@@ -42,6 +36,12 @@ const navigationGroups: NavigationGroup[] = [
         label: "Performances",
         icon: <LineChart size={ICON_SIZE} />,
         path: pathForMainView("youth-performances")
+      },
+      {
+        id: "player-decisions",
+        label: "Player Decisions",
+        icon: <UserCog size={ICON_SIZE} />,
+        path: pathForMainView("player-decisions")
       }
     ]
   },
