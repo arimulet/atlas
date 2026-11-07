@@ -108,7 +108,9 @@ export function createSquadPlayerRows(input: CreateSquadPlayerRowsInput): SquadP
 
   return (input.training?.players ?? []).map((player) => {
     const observedPlayer = input.development?.observed.players.find(
-      (candidate) => candidate.snapshotPlayerId === player.id
+      (candidate) =>
+        candidate.snapshotPlayerId === player.id ||
+        identifiersMatch(candidate.playerId, player.playerId)
     );
     const trainingPosition = trainingPositionCode(player.training.position);
     const trainedSkill = trainedSkillForPosition(

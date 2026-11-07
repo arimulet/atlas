@@ -42,7 +42,7 @@ describe("createSquadPlayerRows", () => {
           {
             playerId: "42",
             externalId: "42",
-            snapshotPlayerId: "snapshot-player-1",
+            snapshotPlayerId: "previous-snapshot-player-1",
             name: "Player One",
             age: 18,
             observedPosition: "midfielder",
@@ -69,6 +69,7 @@ describe("createSquadPlayerRows", () => {
       expect.objectContaining({
         countryName: "Argentina",
         form: 17,
+        skills: expect.objectContaining({ playmaker: 13 }),
         training: expect.objectContaining({ progress: 82 }),
         development: { talent: 3.4, nextSkillUp: 14, etaWeeks: 2 }
       })
