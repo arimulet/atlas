@@ -43,7 +43,14 @@ export class SokkerSyncValidator {
 
     validateCurrent(payload.current, issues);
     validatePlayers(payload.players, teamId, issues);
-    validateTrainingWeeks(payload.trainingWeeks, payload.players, payload.current, issues);
+    validateExcludedTrainingPlayers(payload.excludedTrainingPlayerIds, issues);
+    validateTrainingWeeks(
+      payload.trainingWeeks,
+      payload.players,
+      payload.current,
+      payload.playersWithoutTrainingReportIds,
+      issues
+    );
     validateTrainers(payload.trainers, teamId, issues);
     validateJuniors(payload.juniors, teamId, issues);
     validateSummary(payload.trainingSummary.weeks, issues);
@@ -55,6 +62,23 @@ export class SokkerSyncValidator {
 
     return validResult(payload, issues.warnings);
   }
+}
+
+function validateExcludedTrainingPlayers(
+  excludedTrainingPlayerIds: number[] | undefined,
+  issues: ValidationIssues
+): void {
+  if (!excludedTrainingPlayerIds || excludedTrainingPlayerIds.length === 0) {
+    return;
+  }
+
+  warning(
+    issues,
+    "EXCLUDED_STALE_TRAINING_PLAYERS",
+    `${excludedTrainingPlayerIds.length} historical training player(s) were excluded from the current roster snapshot.`,
+    "players",
+    { playerIds: excludedTrainingPlayerIds }
+  );
 }
 
 export function validateSokkerSyncPayload(payload: SokkerSyncPayload): SokkerSyncValidationResult {
@@ -162,6 +186,7 @@ function validateTrainingWeeks(
   trainingWeeks: PlayerTrainingWeekDto[],
   players: PlayerDto[],
   current: CurrentClubContextDto,
+  playersWithoutTrainingReportIds: number[] | undefined,
   issues: ValidationIssues
 ): void {
   const playerIds = new Set(players.map((player) => player.id));
@@ -222,6 +247,16 @@ function validateTrainingWeeks(
 
   for (const playerId of playerIds) {
     if (!trainingPlayerIds.has(playerId)) {
+      if (playersWithoutTrainingReportIds?.includes(playerId)) {
+        warning(
+          issues,
+          "PLAYER_WITHOUT_TRAINING_REPORT",
+          `Player ${playerId} is in the current roster but has no training report yet.`,
+          "trainingWeeks",
+          { playerId }
+        );
+        continue;
+      }
       fatal(
         issues,
         "MISSING_TRAINING_REPORT",
@@ -584,19 +619,19 @@ function validateTrainingSummaryChecksums(
   const missingCount = payload.trainingWeeks.filter((week) => week.kind === "missing").length;
 
   if (advancedCount !== summaryWeek.players.advancedTraining) {
-    fatal(
+    reportSummaryMismatch(
+      payload,
       issues,
       "SUMMARY_ADVANCED_MISMATCH",
-      `Training summary mismatch for week ${firstTrainingWeek.gameWeek}: expected ${advancedCount} advanced reports, summary reports ${summaryWeek.players.advancedTraining}.`,
-      "trainingSummary.weeks"
+      `Training summary mismatch for week ${firstTrainingWeek.gameWeek}: expected ${advancedCount} advanced reports, summary reports ${summaryWeek.players.advancedTraining}.`
     );
   }
   if (formationCount !== summaryWeek.players.formationTraining) {
-    fatal(
+    reportSummaryMismatch(
+      payload,
       issues,
       "SUMMARY_FORMATION_MISMATCH",
-      `Training summary mismatch for week ${firstTrainingWeek.gameWeek}: expected ${formationCount} formation reports, summary reports ${summaryWeek.players.formationTraining}.`,
-      "trainingSummary.weeks"
+      `Training summary mismatch for week ${firstTrainingWeek.gameWeek}: expected ${formationCount} formation reports, summary reports ${summaryWeek.players.formationTraining}.`
     );
   }
   if (advancedCount + formationCount + missingCount !== payload.trainingWeeks.length) {
@@ -610,13 +645,27 @@ function validateTrainingSummaryChecksums(
 
   const skillsUp = payload.trainingWeeks.reduce((total, week) => total + week.skillsChange.up, 0);
   if (skillsUp !== summaryWeek.players.skillsUp) {
-    fatal(
+    reportSummaryMismatch(
+      payload,
       issues,
       "SUMMARY_SKILL_UP_MISMATCH",
-      `Training summary mismatch for week ${firstTrainingWeek.gameWeek}: expected ${skillsUp} skill ups, summary reports ${summaryWeek.players.skillsUp}.`,
-      "trainingSummary.weeks"
+      `Training summary mismatch for week ${firstTrainingWeek.gameWeek}: expected ${skillsUp} skill ups, summary reports ${summaryWeek.players.skillsUp}.`
     );
   }
+}
+
+function reportSummaryMismatch(
+  payload: SokkerSyncPayload,
+  issues: ValidationIssues,
+  code: string,
+  message: string
+): void {
+  if (payload.excludedTrainingPlayerIds && payload.excludedTrainingPlayerIds.length > 0) {
+    warning(issues, code, message, "trainingSummary.weeks");
+    return;
+  }
+
+  fatal(issues, code, message, "trainingSummary.weeks");
 }
 
 function validateTeamId(

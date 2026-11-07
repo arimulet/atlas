@@ -15,6 +15,7 @@ import type {
   SokkerApiTrainingFormationsDto,
   SokkerLivePlayersApiDto,
   SokkerLivePlayerItemApiDto,
+  SokkerPlayerApiDto,
   SokkerTrainersApiDto,
   SokkerTrainingApiDto,
   SokkerTrainingSummaryApiDto
@@ -23,6 +24,7 @@ import {
   mapCurrentApiToCurrentClubContext,
   mapFormation,
   mapJuniorsApiToJuniors,
+  mapPlayerApiToPlayer,
   mapTrainingFormationsApiToTraining,
   mapTrainersApiToTrainers,
   mapTrainingApiToTrainingData,
@@ -91,9 +93,8 @@ export class SokkerJsonApiProvider implements SokkerDataProvider {
 
   async getCurrent(): Promise<CurrentClubContextDto> {
     const response = await this.get<SokkerCurrentApiDto>("current");
-    const formationsResponse = await this.get<SokkerApiTrainingFormationsDto>(
-      "training/formations"
-    );
+    const formationsResponse =
+      await this.get<SokkerApiTrainingFormationsDto>("training/formations");
 
     return mapResource("current", () => {
       const training = mapTrainingFormationsApiToTraining(formationsResponse);
@@ -111,7 +112,9 @@ export class SokkerJsonApiProvider implements SokkerDataProvider {
     return mapResource("training", () => mapTrainingApiToTrainingData(response.players));
   }
 
-  async getLivePlayers(_teamId?: number): Promise<Array<{ id: number; formation: PlayerFormation | null }>> {
+  async getLivePlayers(
+    _teamId?: number
+  ): Promise<Array<{ id: number; formation: PlayerFormation | null }>> {
     const response = await this.get<SokkerLivePlayersApiDto>("training/players");
 
     return mapResource("live players", () => {
@@ -131,6 +134,12 @@ export class SokkerJsonApiProvider implements SokkerDataProvider {
         formation: mapFormation(p.formation ?? p.position ?? p.info?.formation ?? null)
       }));
     });
+  }
+
+  async getPlayer(playerId: number): Promise<import("../../types.js").PlayerDto> {
+    const response = await this.get<SokkerPlayerApiDto>(`player/${playerId}`);
+
+    return mapResource("player", () => mapPlayerApiToPlayer(response.id, response.info));
   }
 
   async getTrainers(): Promise<TrainerDto[]> {
@@ -154,21 +163,30 @@ export class SokkerJsonApiProvider implements SokkerDataProvider {
   async getJuniorMatches(season: number): Promise<Omit<JuniorMatchDto, "playerStats">[]> {
     const current = await this.getCurrent();
     const teamId = current.team.id;
-    
+
     // The API ignores leagueType filters, so we fetch by season directly.
     // We make 2 requests (previous and current season) and filter locally.
     const [prevSeason, currentSeason] = await Promise.all([
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      this.get<{ matches: any[] }>(`team/${teamId}/match?filter[season]=${season - 1}&filter[limit]=100`),
+      this.get<{ matches: any[] }>(
+        `team/${teamId}/match?filter[season]=${season - 1}&filter[limit]=100`
+      ),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      this.get<{ matches: any[] }>(`team/${teamId}/match?filter[season]=${season}&filter[limit]=100`)
+      this.get<{ matches: any[] }>(
+        `team/${teamId}/match?filter[season]=${season}&filter[limit]=100`
+      )
     ]);
-    
+
     const allMatches = [...(prevSeason.matches || []), ...(currentSeason.matches || [])];
-    
+
     const juniorMatches = allMatches
-      .filter(m => m.league?.type?.name === "junior" || m.league?.type?.name === "junior_qualify" || m.league?.type === "junior")
-      .map(m => ({
+      .filter(
+        (m) =>
+          m.league?.type?.name === "junior" ||
+          m.league?.type?.name === "junior_qualify" ||
+          m.league?.type === "junior"
+      )
+      .map((m) => ({
         matchId: m.id,
         clubId: teamId,
         season: m.time?.gameDay?.season ?? current.calendar.season,
@@ -177,7 +195,7 @@ export class SokkerJsonApiProvider implements SokkerDataProvider {
         dateExpected: m.time?.time?.dateTime ?? m.time?.gameDay?.date?.date ?? "",
         isFinished: m.time?.wasPlayed ?? false
       }));
-      
+
     return juniorMatches;
   }
 
@@ -212,8 +230,8 @@ export class SokkerJsonApiProvider implements SokkerDataProvider {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async getMatchLineup(matchId: number): Promise<{ homePlayers: any[], awayPlayers: any[] }> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async getMatchLineup(matchId: number): Promise<{ homePlayers: any[]; awayPlayers: any[] }> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const response = await this.get<any>(`match/${matchId}/lineup`);
     return {
       homePlayers: response.homePlayers || [],
@@ -263,12 +281,17 @@ export class SokkerJsonApiProvider implements SokkerDataProvider {
     this.sessionCookie = readSessionCookie(response.headers.get("set-cookie"));
   }
 
-  async getTransfers(limit: number, offset: number): Promise<import("../../types.js").ActiveTransferDto[]> {
-    const response = await this.get<unknown>(`transfer?filter[offset]=${offset}&filter[limit]=${limit}&filter[sort][by]=deadline`);
+  async getTransfers(
+    limit: number,
+    offset: number
+  ): Promise<import("../../types.js").ActiveTransferDto[]> {
+    const response = await this.get<unknown>(
+      `transfer?filter[offset]=${offset}&filter[limit]=${limit}&filter[sort][by]=deadline`
+    );
     const { sokkerActiveTransfersResponseSchema } = await import("./transfer-dtos.js");
     const parsed = sokkerActiveTransfersResponseSchema.parse(response);
-    
-    return (parsed.transfers || []).map(t => {
+
+    return (parsed.transfers || []).map((t) => {
       let deadlineStr = new Date().toISOString();
       if (typeof t.deadline === "string") deadlineStr = t.deadline;
       else if (t.deadline?.date?.date) deadlineStr = t.deadline.date.date;
@@ -297,47 +320,56 @@ export class SokkerJsonApiProvider implements SokkerDataProvider {
     });
   }
 
-  async getTransferHistory(limit: number, offset: number): Promise<import("../../types.js").FinalTransferDto[]> {
-    const response = await this.get<unknown>(`transfer/history?filter[offset]=${offset}&filter[limit]=${limit}`);
+  async getTransferHistory(
+    limit: number,
+    offset: number
+  ): Promise<import("../../types.js").FinalTransferDto[]> {
+    const response = await this.get<unknown>(
+      `transfer/history?filter[offset]=${offset}&filter[limit]=${limit}`
+    );
     const { sokkerHistoryTransfersResponseSchema } = await import("./transfer-dtos.js");
     const parsed = sokkerHistoryTransfersResponseSchema.parse(response);
-    
-    return (parsed.transfers || []).map(t => {
-      let dateStr = new Date().toISOString();
-      if (typeof t.date === "string") dateStr = t.date;
-      else if (t.date?.date?.date) dateStr = t.date.date.date;
-      else if (t.date?.value) dateStr = t.date.value;
-      else if (t.date?.date) dateStr = t.date.date;
 
-      let salePrice = 0;
-      let currency = "PLN";
-      if (typeof t.price === "number") salePrice = t.price;
-      else if (t.price?.bid?.value) salePrice = t.price.bid.value;
-      else if (t.price?.value) salePrice = t.price.value;
-      
-      if (typeof t.price === "object" && t.price) {
-         if (t.price.currency) currency = t.price.currency;
-         else if (t.price.bid?.currency) currency = t.price.bid.currency;
-      }
-      
-      return {
-        transferKey: `transfer-${t.id || t.player?.id || Date.now()}`,
-        playerId: t.player?.id ?? 0,
-        name: t.player?.info?.name?.full ?? "Unknown",
-        transferDate: new Date(dateStr).toISOString(),
-        salePrice,
-        currency,
-        age: t.player?.info?.characteristics?.age ?? 0
-      };
-    }).filter(t => t.playerId !== 0);
+    return (parsed.transfers || [])
+      .map((t) => {
+        let dateStr = new Date().toISOString();
+        if (typeof t.date === "string") dateStr = t.date;
+        else if (t.date?.date?.date) dateStr = t.date.date.date;
+        else if (t.date?.value) dateStr = t.date.value;
+        else if (t.date?.date) dateStr = t.date.date;
+
+        let salePrice = 0;
+        let currency = "PLN";
+        if (typeof t.price === "number") salePrice = t.price;
+        else if (t.price?.bid?.value) salePrice = t.price.bid.value;
+        else if (t.price?.value) salePrice = t.price.value;
+
+        if (typeof t.price === "object" && t.price) {
+          if (t.price.currency) currency = t.price.currency;
+          else if (t.price.bid?.currency) currency = t.price.bid.currency;
+        }
+
+        return {
+          transferKey: `transfer-${t.id || t.player?.id || Date.now()}`,
+          playerId: t.player?.id ?? 0,
+          name: t.player?.info?.name?.full ?? "Unknown",
+          transferDate: new Date(dateStr).toISOString(),
+          salePrice,
+          currency,
+          age: t.player?.info?.characteristics?.age ?? 0
+        };
+      })
+      .filter((t) => t.playerId !== 0);
   }
 
-  async getPlayerTransferHistory(playerId: number): Promise<import("../../types.js").FinalTransferDto[]> {
+  async getPlayerTransferHistory(
+    playerId: number
+  ): Promise<import("../../types.js").FinalTransferDto[]> {
     const response = await this.get<unknown>(`player/${playerId}/transfer`);
     const { sokkerPlayerTransferHistoryResponseSchema } = await import("./transfer-dtos.js");
     const parsed = sokkerPlayerTransferHistoryResponseSchema.parse(response);
 
-    return (parsed.transfers || []).map(t => {
+    return (parsed.transfers || []).map((t) => {
       let dateStr = new Date().toISOString();
       if (t.date?.timestamp) {
         dateStr = new Date(t.date.timestamp * 1000).toISOString();

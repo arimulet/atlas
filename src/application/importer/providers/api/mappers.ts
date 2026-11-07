@@ -23,6 +23,7 @@ import type {
   SokkerApiTeamTrainingDto,
   SokkerApiTrainingFormationsDto,
   SokkerApiTrainingPlayerDto,
+  SokkerTrainingPlayerInfoApiDto,
   SokkerPlayerSkillsApiDto,
   SokkerPlayerStatsApiDto,
   SokkerSkillsChangeApiDto,
@@ -103,9 +104,7 @@ export function mapTrainingFormationsApiToTraining(
   source: SokkerApiTrainingFormationsDto | null
 ): SokkerApiTeamTrainingDto {
   if (source === null || !Array.isArray(source.formations)) {
-    throw new Error(
-      "Sokker training/formations response does not contain a formations array."
-    );
+    throw new Error("Sokker training/formations response does not contain a formations array.");
   }
 
   const training = {
@@ -136,10 +135,15 @@ function trainingValueForFormation(
 }
 
 export function mapTrainingPlayerApiToPlayer(source: SokkerApiTrainingPlayerDto): PlayerDto {
-  const player = source.player;
+  return mapPlayerApiToPlayer(source.id, source.player);
+}
 
+export function mapPlayerApiToPlayer(
+  id: number,
+  player: SokkerTrainingPlayerInfoApiDto
+): PlayerDto {
   return {
-    id: source.id,
+    id,
     teamId: player.team.id,
     name: mapName(player.name),
     country: mapCountry(player.country),
@@ -278,15 +282,15 @@ export function mapTrainersApiToTrainers(source: SokkerTrainerApiDto[]): Trainer
 }
 
 export function mapJuniorApiToJunior(source: SokkerJuniorApiDto): JuniorDto {
-    return {
-      id: source.id,
-      teamId: source.teamId,
-      name: mapName(source.fullName),
-      age: source.age,
-      currentLevel: source.skill,
-      weeksLeft: source.weeksLeft,
-      formation: null
-    };
+  return {
+    id: source.id,
+    teamId: source.teamId,
+    name: mapName(source.fullName),
+    age: source.age,
+    currentLevel: source.skill,
+    weeksLeft: source.weeksLeft,
+    formation: null
+  };
 }
 
 export function mapJuniorsApiToJuniors(source: SokkerJuniorApiDto[]): JuniorDto[] {
@@ -414,7 +418,6 @@ export function mapFormation(
 
   return formation;
 }
-
 
 function mapTrainerAssignment(source: SokkerApiFormationDto): TrainerAssignment {
   const assignmentByCode: Record<number, { name: string; value: TrainerAssignment }> = {

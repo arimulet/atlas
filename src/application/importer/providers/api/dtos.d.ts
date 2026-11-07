@@ -183,6 +183,11 @@ export interface SokkerApiTrainingPlayerDto {
   report: SokkerTrainingReportApiDto;
 }
 
+export interface SokkerPlayerApiDto {
+  id: number;
+  info: SokkerTrainingPlayerInfoApiDto;
+}
+
 export interface SokkerTrainingApiDto {
   players: SokkerApiTrainingPlayerDto[];
 }
@@ -203,7 +208,6 @@ export interface SokkerApiTrainingPlayersDto {
 }
 
 export type SokkerLivePlayersApiDto = SokkerApiTrainingPlayersDto | SokkerLivePlayerItemApiDto[];
-
 
 export interface SokkerTrainerSkillApiDto {
   value: number;
