@@ -215,6 +215,8 @@ export interface SokkerSyncPayload {
   current: CurrentClubContextDto;
   players: PlayerDto[];
   trainingWeeks: PlayerTrainingWeekDto[];
+  excludedTrainingPlayerIds?: number[];
+  playersWithoutTrainingReportIds?: number[];
   trainers: TrainerDto[];
   juniors: JuniorDto[];
   trainingSummary: TrainingSummaryDto;

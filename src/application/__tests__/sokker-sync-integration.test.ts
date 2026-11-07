@@ -7,7 +7,13 @@ import mongoose from "mongoose";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { JuniorModel, PlayerModel, SnapshotModel, SyncRunModel, TrainingWeekModel } from "@atlas/database";
+import {
+  JuniorModel,
+  PlayerModel,
+  SnapshotModel,
+  SyncRunModel,
+  TrainingWeekModel
+} from "@atlas/database";
 import {
   MongoClubRepository,
   MongoPlayerRepository,
@@ -37,21 +43,33 @@ import type {
   SokkerTrainingSummaryApiDto
 } from "../importer/providers/api/dtos.js";
 
-let mongo: MongoMemoryServer;
+let mongo: MongoMemoryServer | null = null;
+let usesExternalTestDatabase = false;
 
 describe("Sokker sync end-to-end", () => {
   beforeAll(async () => {
+    const testMongoUri = process.env.MONGODB_TEST_URI;
+    if (testMongoUri) {
+      usesExternalTestDatabase = true;
+      await mongoose.connect(testMongoUri);
+      return;
+    }
+
     mongo = await MongoMemoryServer.create();
     await mongoose.connect(mongo.getUri());
   });
 
   beforeEach(async () => {
+    if (usesExternalTestDatabase) {
+      return;
+    }
+
     await mongoose.connection.dropDatabase();
   });
 
   afterAll(async () => {
     await mongoose.disconnect();
-    await mongo.stop();
+    await mongo?.stop();
   });
 
   it("loads, validates and persists the real fixture shape end to end", async () => {
@@ -141,6 +159,80 @@ describe("Sokker sync end-to-end", () => {
     expect(await TrainingWeekModel.countDocuments({ clubId: 6038, gameWeek: 1205 })).toBe(0);
   });
 
+  it("replaces the current snapshot roster after a sale and new signings", async () => {
+    const initialProvider = createFixtureProvider();
+    const initialPayload = await loadSokkerSyncPayload(initialProvider);
+    const persistence = new SokkerSyncPersistence();
+
+    await persistence.persist(toValidatedPayload(initialPayload));
+
+    const soldPlayer = { ...initialPayload.players[2]!, teamId: 30931 };
+    const soldTrainingWeek = initialPayload.trainingWeeks.find(
+      (trainingWeek) => trainingWeek.playerId === soldPlayer.id
+    )!;
+    const newPlayers = initialPayload.players.slice(0, 2).map((player, index) => ({
+      ...player,
+      id: 50000001 + index,
+      name: {
+        firstName: "New",
+        lastName: `Signing ${index + 1}`,
+        fullName: `New Signing ${index + 1}`
+      }
+    }));
+    const newTrainingWeeks = newPlayers.map((player, index) => ({
+      ...initialPayload.trainingWeeks[index]!,
+      playerId: player.id
+    }));
+    const activePlayers = [
+      ...initialPayload.players.filter((player) => player.id !== soldPlayer.id),
+      ...newPlayers
+    ];
+    const activeTrainingWeeks = [
+      ...initialPayload.trainingWeeks.filter(
+        (trainingWeek) => trainingWeek.playerId !== soldPlayer.id
+      ),
+      ...newTrainingWeeks
+    ];
+    const trainingSummary = structuredClone(initialPayload.trainingSummary);
+    const reportSummary = trainingSummary.weeks.find(
+      (week) => week.gameWeek === activeTrainingWeeks[0]!.gameWeek
+    )!;
+    reportSummary.players.formationTraining = activeTrainingWeeks.filter(
+      (trainingWeek) => trainingWeek.kind === "formation"
+    ).length;
+    reportSummary.players.advancedTraining = activeTrainingWeeks.filter(
+      (trainingWeek) => trainingWeek.kind === "advanced"
+    ).length;
+    reportSummary.players.skillsUp = activeTrainingWeeks.reduce(
+      (total, trainingWeek) => total + trainingWeek.skillsChange.up,
+      0
+    );
+
+    const updatedProvider: SokkerDataProvider = {
+      ...initialProvider,
+      getTraining: vi.fn(async () => ({
+        players: [...activePlayers, soldPlayer],
+        trainingWeeks: [...activeTrainingWeeks, soldTrainingWeek]
+      })),
+      getLivePlayers: vi.fn(async () =>
+        activePlayers.map((player) => ({ id: player.id, formation: player.formation }))
+      ),
+      getTrainingSummary: vi.fn(async () => trainingSummary)
+    };
+
+    const updatedPayload = await loadSokkerSyncPayload(updatedProvider);
+    await persistence.persist(toValidatedPayload(updatedPayload));
+
+    const snapshot = await SnapshotModel.findOne({ clubId: 6038, gameWeek: 1204 }).lean();
+    const snapshotPlayerIds = snapshot?.players.map((player) => player.playerId) ?? [];
+
+    expect(snapshotPlayerIds).not.toContain(soldPlayer.id);
+    expect(snapshotPlayerIds).toEqual(
+      expect.arrayContaining(newPlayers.map((player) => player.id))
+    );
+    expect(snapshotPlayerIds).toHaveLength(activePlayers.length);
+  });
+
   it("aborts before persistence when the summary checksum is incompatible", async () => {
     const payload = await loadSokkerSyncPayload(createFixtureProvider());
     const reportWeek = payload.trainingWeeks[0]!.gameWeek;
@@ -214,15 +306,23 @@ describe("Sokker sync end-to-end", () => {
 
     // 1. Snapshot maintains the position the player actually trained in (MID = 2)
     const snapshot = await SnapshotModel.findOne({ clubId: result.teamId, gameWeek: 1204 }).lean();
-    const snapshotGrace = snapshot?.players?.find((player: { playerId: number }) => player.playerId === 39409355);
+    const snapshotGrace = snapshot?.players?.find(
+      (player: { playerId: number }) => player.playerId === 39409355
+    );
     expect(snapshotGrace?.training?.position).toBe(2);
 
     // 2. Player entity has the live configured position ("DEF")
-    const playerEntity = await PlayerModel.findOne({ clubId: result.teamId, playerId: 39409355 }).lean();
+    const playerEntity = await PlayerModel.findOne({
+      clubId: result.teamId,
+      playerId: 39409355
+    }).lean();
     expect(playerEntity?.position).toBe("DEF");
 
     // 2b. Player entity with null live formation still has a valid non-null position inferred from skills
-    const playerAda = await PlayerModel.findOne({ clubId: result.teamId, playerId: 40098056 }).lean();
+    const playerAda = await PlayerModel.findOne({
+      clubId: result.teamId,
+      playerId: 40098056
+    }).lean();
     expect(playerAda?.position).not.toBeNull();
     expect(["GK", "DEF", "MID", "ATT"]).toContain(playerAda?.position);
 
@@ -271,7 +371,16 @@ function createFixtureProvider(): SokkerDataProvider {
       players: payload.players,
       trainingWeeks: payload.trainingWeeks
     })),
-    getLivePlayers: vi.fn(async () => payload.players.map((p) => ({ id: p.id, formation: p.formation }))),
+    getLivePlayers: vi.fn(async () =>
+      payload.players.map((p) => ({ id: p.id, formation: p.formation }))
+    ),
+    getPlayer: vi.fn(async (playerId) => {
+      const player = payload.players.find((candidate) => candidate.id === playerId);
+      if (!player) {
+        throw new Error(`Player ${playerId} not found.`);
+      }
+      return player;
+    }),
     getTrainers: vi.fn(async () => payload.trainers),
     getJuniors: vi.fn(async () => payload.juniors),
     getJuniorsXml: vi.fn(async () => []),
