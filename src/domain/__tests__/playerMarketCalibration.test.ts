@@ -156,7 +156,37 @@ describe("Player Market comparable calibration", () => {
     expect(comparables.some((item) => item.transfer.transferId === "irrelevant")).toBe(false);
   });
 
-  it("uses weighted median and records price outliers", () => {
+  it("selects ten relevant sales without favoring expensive outliers", () => {
+    const recent = new Date("2026-08-01T00:00:00.000Z");
+    const transfers = Array.from({ length: 10 }, (_, index) =>
+      transfer({ transferId: `relevant-${index}`, transferDate: recent, salePrice: 500_000 })
+    );
+    transfers.push(
+      transfer({
+        transferId: "expensive-less-similar",
+        transferDate: recent,
+        salePrice: 50_000_000,
+        skills: { ...player().skills, defender: 11 }
+      })
+    );
+
+    const comparables = findMarketComparables(player(), transfers, { asOfDate: recent });
+
+    expect(comparables).toHaveLength(10);
+    expect(comparables.some((item) => item.transfer.transferId === "expensive-less-similar")).toBe(false);
+  });
+
+  it("prioritizes recent sales when similarity and quality are equal", () => {
+    const asOfDate = new Date("2026-08-01T00:00:00.000Z");
+    const comparables = findMarketComparables(player(), [
+      transfer({ transferId: "old", transferDate: new Date("2026-01-01"), salePrice: 8_000_000 }),
+      transfer({ transferId: "recent", transferDate: new Date("2026-07-01"), salePrice: 1_000_000 })
+    ], { asOfDate });
+
+    expect(comparables.map((item) => item.transfer.transferId)).toEqual(["recent", "old"]);
+  });
+
+  it("includes every selected sale in the weighted mean, even extreme prices", () => {
     const transfers = [2_200_000, 2_400_000, 2_500_000, 2_600_000, 8_900_000].map(
       (salePrice, index) => transfer({ transferId: `price-${index}`, salePrice })
     );
@@ -164,9 +194,9 @@ describe("Player Market comparable calibration", () => {
     const estimate = estimateComparableMarketValue(player(), transfers);
 
     expect(estimate.weightedMedian).toBeLessThan(3_000_000);
-    expect(estimate.outliers).toHaveLength(1);
-    expect(estimate.outliers[0]?.price).toBe(8_900_000);
-    expect(estimate.estimatedValue?.expected).toBeLessThan(3_000_000);
+    expect(estimate.outliers).toHaveLength(0);
+    expect(estimate.weightedAverage).toBe(3_720_000);
+    expect(estimate.estimatedValue?.expected).toBe(2_927_000);
   });
 
   it("adjusts a comparable price through the fundamental target/comparable ratio", () => {
@@ -553,7 +583,7 @@ describe("Player Market comparable calibration", () => {
     expect(estimate.outliers).toHaveLength(0);
   });
 
-  it("prunes a single extreme rogue sale even in a small sample (<= 5)", () => {
+  it("retains an extreme sale when it meets the similarity requirements", () => {
     const multiSkillTarget = player({
       age: 17,
       profile: "defender",
@@ -578,9 +608,34 @@ describe("Player Market comparable calibration", () => {
     );
 
     const estimate = estimateComparableMarketValue(multiSkillTarget, rogueTransfers);
-    expect(estimate.outliers).toHaveLength(1);
-    expect(estimate.outliers[0]?.transferId).toBe("talent-4");
-    expect(estimate.estimatedValue?.expected).toBeLessThan(150_000);
+    expect(estimate.outliers).toHaveLength(0);
+    expect(estimate.comparables).toHaveLength(5);
+    expect(estimate.weightedAverage).toBe(10_081_000);
+    expect(estimate.estimatedValue?.expected).toBeGreaterThan(3_000_000);
+  });
+
+  it("fills ten places after excluding dissimilar transfers and includes nominal sales", () => {
+    const asOfDate = new Date("2026-08-01T00:00:00.000Z");
+    const valid = Array.from({ length: 11 }, (_, index) =>
+      transfer({
+        transferId: `valid-${index}`,
+        transferDate: asOfDate,
+        salePrice: index === 0 ? 1 : 1_000_000 + index
+      })
+    );
+    const invalid = transfer({
+      transferId: "wrong-skills",
+      transferDate: asOfDate,
+      salePrice: 50_000_000,
+      skills: { ...player().skills, defender: 5 }
+    });
+
+    const estimate = estimateComparableMarketValue(player(), [invalid, ...valid], { asOfDate });
+
+    expect(estimate.sampleSize).toBe(10);
+    expect(estimate.comparables.some((item) => item.transfer.transferId === "wrong-skills")).toBe(false);
+    expect(estimate.comparables.some((item) => item.transfer.transferId === "valid-0")).toBe(true);
+    expect(estimate.outliers).toEqual([]);
   });
 });
 

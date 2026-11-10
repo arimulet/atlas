@@ -1,7 +1,7 @@
 import type { MarketCalibrationConfig } from "./calibration-types.js";
 
 export const MARKET_CALIBRATION_CONFIG: MarketCalibrationConfig = {
-  maxComparables: 5,
+  maxComparables: 10,
   minimumSimilarity: 0.75,
   requireMatchingProfile: true,
   maxAgeDifference: 0,
@@ -24,7 +24,7 @@ export const MARKET_CALIBRATION_CONFIG: MarketCalibrationConfig = {
   currencyRates: {},
   outlierMadMultiplier: 3,
   outlierRelativeTolerance: 0.35,
-  minimumTransferPrice: 2000
+  minimumTransferPrice: 0
 };
 
 export const MAX_MARKET_COMPARABLES = MARKET_CALIBRATION_CONFIG.maxComparables;

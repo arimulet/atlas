@@ -59,7 +59,7 @@ describe("Header component", () => {
         country: 15,
         currency: "ARS",
         sokkerUsername: "fueguinoloko",
-        gameWeek: 1204,
+        gameWeek: 1216,
         week: 7
       },
       loading: false,
@@ -72,7 +72,7 @@ describe("Header component", () => {
     expect(html).toContain("atlas-team-badge__logo");
     expect(html).toContain("River Plate");
     expect(html).toContain("atlas-game-calendar");
-    expect(html).toContain("Season 78");
+    expect(html).toContain("Season 79");
     expect(html).toContain("Week 7");
     expect(html).not.toContain('title="Season');
     expect(html).not.toContain("href=");
