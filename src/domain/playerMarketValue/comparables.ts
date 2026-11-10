@@ -17,7 +17,6 @@ import type { SkillKey, SkillSet } from "../types.js";
 import { MARKET_CALIBRATION_CONFIG } from "./calibration-constants.js";
 import type {
   ComparableDifference,
-  ComparableMarketOutlier,
   ComparableMarketEstimate,
   FindMarketComparablesOptions,
   MarketCalibrationConfig,
@@ -230,37 +229,20 @@ export function estimateComparableMarketValue(
     };
   }
 
-  const outlierResult = detectPriceOutliers(selected, config);
-  const usable = selected.filter(
-    (comparable) => !outlierResult.outlierKeys.has(transferKey(comparable.transfer))
-  );
-  const values = usable.length > 0 ? usable : selected;
-  const weightedAverage = calculateWeightedAverage(values);
-  const weightedMedian = calculateWeightedMedian(values);
+  const weightedAverage = calculateWeightedAverage(selected);
+  const weightedMedian = calculateWeightedMedian(selected);
   const expected = roundMoney(weightedMedian * 0.65 + weightedAverage * 0.35);
-  const priceDispersion = calculatePriceDispersion(values);
-  const confidence = calculateComparableConfidence(values, priceDispersion, config);
+  const priceDispersion = calculatePriceDispersion(selected);
+  const confidence = calculateComparableConfidence(selected, priceDispersion, config);
   const estimatedValue = createComparableRange(expected, confidence, priceDispersion, config);
-  const outliers = outlierResult.outliers;
-  const comparables = selected.map((comparable) => {
-    const outlier = outlierResult.outlierKeys.has(transferKey(comparable.transfer))
-      ? outliers.find(
-          (item) =>
-            item.transferId === comparable.transfer.transferId ||
-            (item.transferId === undefined && item.price === comparable.adjustedSalePrice)
-        )
-      : undefined;
-    return outlier ? { ...comparable, outlier } : comparable;
-  });
-
   return {
-    comparables,
+    comparables: selected,
     estimatedValue,
     weightedAverage,
     weightedMedian,
     sampleSize: selected.length,
     confidence,
-    outliers,
+    outliers: [],
     priceDispersion
   };
 }
@@ -548,42 +530,6 @@ function calculateComparableConfidence(
   return "low";
 }
 
-function detectPriceOutliers(
-  comparables: readonly MarketComparable[],
-  config: MarketCalibrationConfig
-): { outlierKeys: Set<string>; outliers: ComparableMarketOutlier[] } {
-  if (comparables.length < 4) {
-    return { outlierKeys: new Set(), outliers: [] };
-  }
-  const median = calculateMedian(comparables.map((item) => item.adjustedSalePrice));
-  const deviations = comparables.map((item) => Math.abs(item.adjustedSalePrice - median));
-  const mad = calculateMedian(deviations);
-  const tolerance = Math.max(
-    mad * config.outlierMadMultiplier,
-    median * config.outlierRelativeTolerance
-  );
-  const outlierComparables = comparables.filter(
-    (item) => Math.abs(item.adjustedSalePrice - median) > tolerance
-  );
-  // If more than 1 outlier is detected in a small sample (<= 5), or if outliers exceed 30% of a larger sample,
-  // the data represents broad market price dispersion, not isolated rogue sales.
-  if (
-    (comparables.length <= 5 && outlierComparables.length > 1) ||
-    outlierComparables.length > Math.floor(comparables.length * 0.3)
-  ) {
-    return { outlierKeys: new Set(), outliers: [] };
-  }
-  const outliers = outlierComparables.map((item): ComparableMarketOutlier => ({
-    ...(item.transfer.transferId ? { transferId: item.transfer.transferId } : {}),
-    price: item.adjustedSalePrice,
-    reason: "robust_price_deviation"
-  }));
-  return {
-    outlierKeys: new Set(outlierComparables.map((item) => transferKey(item.transfer))),
-    outliers
-  };
-}
-
 function calculateWeightedAverage(comparables: readonly MarketComparable[]): number {
   const totalWeight = comparables.reduce((total, item) => total + item.adjustedSimilarityScore, 0);
   if (totalWeight <= 0) return 0;
@@ -686,7 +632,6 @@ function resolveCalibrationConfig(options: FindMarketComparablesOptions): Market
 
 function compareComparables(left: MarketComparable, right: MarketComparable): number {
   return (
-    right.normalizedSalePrice - left.normalizedSalePrice ||
     right.adjustedSimilarityScore - left.adjustedSimilarityScore ||
     right.similarityScore - left.similarityScore ||
     right.transfer.transferDate.getTime() - left.transfer.transferDate.getTime() ||

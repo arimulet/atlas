@@ -56,9 +56,8 @@ export function calculateMarketCalibrationFactor(
     );
   if (ratios.length === 0) return null;
 
-  const usableRatios = removeRatioOutliers(ratios, config);
-  const expected = weightedMedianRatio(usableRatios);
-  const dispersion = ratioDispersion(usableRatios);
+  const expected = weightedMedianRatio(ratios);
+  const dispersion = ratioDispersion(ratios);
   const confidence = calibrationFactorConfidence(comparableEstimate, dispersion, config);
   const spread = clamp(
     config.rangeSpreadByConfidence[confidence] + Math.min(dispersion, 0.5) * 0.2,
@@ -412,21 +411,6 @@ function estimateTransferFundamental(
     { player: playerFromTransferRecord(transfer) },
     fundamentalConfig
   );
-}
-
-function removeRatioOutliers(
-  ratios: readonly { ratio: number; weight: number }[],
-  config: MarketCalibrationConfig
-): { ratio: number; weight: number }[] {
-  if (ratios.length < 4) return [...ratios];
-  const center = median(ratios.map((item) => item.ratio));
-  const mad = median(ratios.map((item) => Math.abs(item.ratio - center)));
-  const tolerance = Math.max(
-    mad * config.outlierMadMultiplier,
-    Math.max(center, 1) * config.outlierRelativeTolerance
-  );
-  const filtered = ratios.filter((item) => Math.abs(item.ratio - center) <= tolerance);
-  return filtered.length > 0 ? filtered : [...ratios];
 }
 
 function weightedMedianRatio(ratios: readonly { ratio: number; weight: number }[]): number {
