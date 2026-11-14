@@ -22,8 +22,10 @@ vi.mock("@/lib/session", () => ({
 
 vi.mock("@atlas/application", () => ({
   createSokkerDataProvider: (...args: unknown[]) => mockCreateSokkerDataProvider(...args),
-  loadSokkerSyncPayload: (...args: unknown[]) => mockLoadSokkerSyncPayload(...args),
-  validateSokkerSyncPayload: (...args: unknown[]) => mockValidateSokkerSyncPayload(...args),
+  loadValidatedSokkerSyncPayload: async (...args: unknown[]) => {
+    await mockLoadSokkerSyncPayload(...args);
+    return mockValidateSokkerSyncPayload();
+  },
   persistSokkerSync: (...args: unknown[]) => mockPersistSokkerSync(...args)
 }));
 
@@ -32,6 +34,43 @@ import { POST } from "./route";
 describe("POST /api/imports/sokker-sync", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  it("returns the integrity diagnostic without invoking persistence on rejection", async () => {
+    const diagnostic = {
+      visibleWeek: 9,
+      sourceWeekId: 1217,
+      summaryCount: 12,
+      parsedCount: 11,
+      attempt: 3,
+      discardedReportReasons: []
+    };
+    mockEnsureMongoDbConnection.mockResolvedValue(undefined);
+    mockGetAuthenticatedUserServer.mockResolvedValue({ uid: "user-1" });
+    mockValidateSokkerSyncPayload.mockReturnValue({
+      status: "invalid",
+      warnings: [],
+      errors: [
+        {
+          code: "SUMMARY_FORMATION_MISMATCH",
+          path: "trainingSummary.weeks",
+          message: "Retry the complete import; no changes were saved.",
+          details: diagnostic
+        }
+      ]
+    });
+
+    const response = await POST(
+      new NextRequest("http://localhost/api/imports/sokker-sync", {
+        method: "POST",
+        body: JSON.stringify({ login: "test", password: "test" })
+      })
+    );
+    const body = await response.json();
+
+    expect(body.importResult.status).toBe("rejected");
+    expect(body.diagnostic).toEqual(diagnostic);
+    expect(mockPersistSokkerSync).not.toHaveBeenCalled();
   });
 
   it("calls ensureMongoDbConnection before loading and persisting payload", async () => {

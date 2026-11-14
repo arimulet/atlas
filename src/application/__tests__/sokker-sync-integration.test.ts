@@ -3,6 +3,7 @@ import juniorsFixture from "../../test-fixtures/fixtures/sokker-json-api/juniors
 import summaryFixture from "../../test-fixtures/fixtures/sokker-json-api/training-summary.fixture.json" with { type: "json" };
 import trainersFixture from "../../test-fixtures/fixtures/sokker-json-api/trainers.fixture.json" with { type: "json" };
 import trainingFixture from "../../test-fixtures/fixtures/sokker-json-api/training.fixture.json" with { type: "json" };
+import week1217Fixture from "../../test-fixtures/fixtures/sokker-json-api/training-week-1217.fixture.json";
 import mongoose from "mongoose";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
@@ -47,6 +48,43 @@ let mongo: MongoMemoryServer | null = null;
 let usesExternalTestDatabase = false;
 
 describe("Sokker sync end-to-end", () => {
+  it("reimports week 1217 without duplicates or changes to earlier weeks", async () => {
+    const provider = createFixtureProvider();
+    const current = await provider.getCurrent();
+    current.calendar = { season: 79, gameWeek: 1218, seasonWeek: 9, date: "2026-11-14" };
+    const training = mapTrainingApiToTrainingData(
+      week1217Fixture.explicit.players,
+      new Map(week1217Fixture.knownReportSkills.map((r) => [r.playerId, r.skills])),
+      1217
+    );
+    training.players.forEach((player) => {
+      player.teamId = current.team.id;
+    });
+    provider.getCurrent = vi.fn(async () => current);
+    provider.getTraining = vi.fn(async () => training);
+    provider.getTrainingSummary = vi.fn(async () =>
+      mapTrainingSummaryApiToTrainingSummary({ weeks: [week1217Fixture.summary] })
+    );
+    provider.getLivePlayers = vi.fn(async () =>
+      training.players
+        .filter((player) => player.id !== 40378797)
+        .map((player) => ({ id: player.id, formation: player.formation }))
+    );
+    const persistence = new SokkerSyncPersistence();
+    const payload = await loadSokkerSyncPayload(provider);
+    await persistence.persist(toValidatedPayload(payload));
+    const saved = await TrainingWeekModel.findOne({ gameWeek: 1217 }).lean();
+    const previous = await TrainingWeekModel.create({ ...saved, _id: undefined, gameWeek: 1216 });
+    const previousBefore = await TrainingWeekModel.findById(previous._id).lean();
+
+    await persistence.persist(toValidatedPayload(await loadSokkerSyncPayload(provider)));
+
+    expect(await TrainingWeekModel.countDocuments({ gameWeek: 1217 })).toBe(24);
+    expect(await TrainingWeekModel.countDocuments({ gameWeek: 1217, kind: "formation" })).toBe(12);
+    expect(await SnapshotModel.countDocuments({ gameWeek: 1217 })).toBe(1);
+    expect(await TrainingWeekModel.findById(previous._id).lean()).toEqual(previousBefore);
+  });
+
   beforeAll(async () => {
     const testMongoUri = process.env.MONGODB_TEST_URI;
     if (testMongoUri) {

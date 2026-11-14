@@ -1,0 +1,6358 @@
+{
+  "captureDate": "2026-11-14",
+  "currentCalendar": {
+    "season": 79,
+    "week": 1218,
+    "seasonWeek": 9,
+    "day": 0,
+    "date": {
+      "value": "2026-11-14",
+      "timestamp": 1794643200
+    }
+  },
+  "latest": {
+    "players": [
+      {
+        "id": 38766221,
+        "player": {
+          "name": {
+            "name": "Player",
+            "surname": "38766221",
+            "full": "Player 38766221"
+          },
+          "formation": null,
+          "number": null,
+          "team": {
+            "id": 1
+          },
+          "country": {
+            "code": 32,
+            "name": "Argentina"
+          },
+          "value": {
+            "value": 450000,
+            "currency": "ARS"
+          },
+          "previousValue": null,
+          "wage": {
+            "value": 12000,
+            "currency": "ARS"
+          },
+          "characteristics": {
+            "age": 20,
+            "height": 180,
+            "weight": 75,
+            "bmi": 23.1
+          },
+          "skills": {
+            "form": 10,
+            "tacticalDiscipline": 8,
+            "teamwork": 7,
+            "experience": 6,
+            "stamina": 8,
+            "keeper": 1,
+            "playmaking": 9,
+            "passing": 10,
+            "technique": 9,
+            "defending": 5,
+            "striker": 4,
+            "pace": 11
+          },
+          "stats": null,
+          "nationalStats": null,
+          "face": null,
+          "youthTeamId": 0,
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "nationalSharing": false,
+          "nationalCallUp": false,
+          "nationalType": "none"
+        },
+        "report": {
+          "week": 1217,
+          "day": {
+            "season": 79,
+            "week": 1217,
+            "seasonWeek": 8,
+            "day": 5,
+            "date": {
+              "value": "2026-11-12",
+              "timestamp": 1794470400
+            }
+          },
+          "skills": {
+            "form": 15,
+            "tacticalDiscipline": 14,
+            "teamwork": 11,
+            "experience": 18,
+            "stamina": 11,
+            "keeper": 0,
+            "playmaking": 8,
+            "passing": 11,
+            "technique": 16,
+            "defending": 7,
+            "striker": 17,
+            "pace": 16
+          },
+          "skillsChange": {
+            "form": -1,
+            "tacticalDiscipline": -2,
+            "teamwork": -3,
+            "experience": 0,
+            "stamina": 0,
+            "keeper": 0,
+            "playmaking": 0,
+            "passing": 0,
+            "technique": 0,
+            "defending": 0,
+            "striker": 0,
+            "pace": 0,
+            "down": 0,
+            "up": 0
+          },
+          "type": {
+            "code": 5,
+            "name": "technique"
+          },
+          "kind": {
+            "code": 3,
+            "name": "missing"
+          },
+          "playerValue": {
+            "value": 1980750,
+            "currency": "u$s"
+          },
+          "games": {
+            "minutesOfficial": 0,
+            "minutesFriendly": 0,
+            "minutesNational": 0
+          },
+          "intensity": 0,
+          "formation": {
+            "code": 3,
+            "name": "ATT"
+          },
+          "injury": {
+            "daysRemaining": 3,
+            "severe": false
+          },
+          "age": 32
+        }
+      },
+      {
+        "id": 38898392,
+        "player": {
+          "name": {
+            "name": "Player",
+            "surname": "38898392",
+            "full": "Player 38898392"
+          },
+          "formation": null,
+          "number": null,
+          "team": {
+            "id": 1
+          },
+          "country": {
+            "code": 32,
+            "name": "Argentina"
+          },
+          "value": {
+            "value": 450000,
+            "currency": "ARS"
+          },
+          "previousValue": null,
+          "wage": {
+            "value": 12000,
+            "currency": "ARS"
+          },
+          "characteristics": {
+            "age": 20,
+            "height": 180,
+            "weight": 75,
+            "bmi": 23.1
+          },
+          "skills": {
+            "form": 10,
+            "tacticalDiscipline": 8,
+            "teamwork": 7,
+            "experience": 6,
+            "stamina": 8,
+            "keeper": 1,
+            "playmaking": 9,
+            "passing": 10,
+            "technique": 9,
+            "defending": 5,
+            "striker": 4,
+            "pace": 11
+          },
+          "stats": null,
+          "nationalStats": null,
+          "face": null,
+          "youthTeamId": 0,
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "nationalSharing": false,
+          "nationalCallUp": false,
+          "nationalType": "none"
+        },
+        "report": {
+          "week": 1217,
+          "day": {
+            "season": 79,
+            "week": 1217,
+            "seasonWeek": 8,
+            "day": 5,
+            "date": {
+              "value": "2026-11-12",
+              "timestamp": 1794470400
+            }
+          },
+          "skills": {
+            "form": 7,
+            "tacticalDiscipline": 15,
+            "teamwork": 13,
+            "experience": 17,
+            "stamina": 11,
+            "keeper": 0,
+            "playmaking": 8,
+            "passing": 7,
+            "technique": 9,
+            "defending": 15,
+            "striker": 7,
+            "pace": 15
+          },
+          "skillsChange": {
+            "form": -2,
+            "tacticalDiscipline": 0,
+            "teamwork": 0,
+            "experience": 0,
+            "stamina": 0,
+            "keeper": 0,
+            "playmaking": 0,
+            "passing": 0,
+            "technique": 0,
+            "defending": 0,
+            "striker": 0,
+            "pace": 0,
+            "down": 0,
+            "up": 0
+          },
+          "type": {
+            "code": 8,
+            "name": "pace"
+          },
+          "kind": {
+            "code": 2,
+            "name": "formation"
+          },
+          "playerValue": {
+            "value": 688500,
+            "currency": "u$s"
+          },
+          "games": {
+            "minutesOfficial": 135,
+            "minutesFriendly": 0,
+            "minutesNational": 0
+          },
+          "intensity": 96,
+          "formation": {
+            "code": 1,
+            "name": "DEF"
+          },
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "age": 30
+        }
+      },
+      {
+        "id": 38934265,
+        "player": {
+          "name": {
+            "name": "Player",
+            "surname": "38934265",
+            "full": "Player 38934265"
+          },
+          "formation": null,
+          "number": null,
+          "team": {
+            "id": 1
+          },
+          "country": {
+            "code": 32,
+            "name": "Argentina"
+          },
+          "value": {
+            "value": 450000,
+            "currency": "ARS"
+          },
+          "previousValue": null,
+          "wage": {
+            "value": 12000,
+            "currency": "ARS"
+          },
+          "characteristics": {
+            "age": 20,
+            "height": 180,
+            "weight": 75,
+            "bmi": 23.1
+          },
+          "skills": {
+            "form": 10,
+            "tacticalDiscipline": 8,
+            "teamwork": 7,
+            "experience": 6,
+            "stamina": 8,
+            "keeper": 1,
+            "playmaking": 9,
+            "passing": 10,
+            "technique": 9,
+            "defending": 5,
+            "striker": 4,
+            "pace": 11
+          },
+          "stats": null,
+          "nationalStats": null,
+          "face": null,
+          "youthTeamId": 0,
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "nationalSharing": false,
+          "nationalCallUp": false,
+          "nationalType": "none"
+        },
+        "report": {
+          "week": 1217,
+          "day": {
+            "season": 79,
+            "week": 1217,
+            "seasonWeek": 8,
+            "day": 5,
+            "date": {
+              "value": "2026-11-12",
+              "timestamp": 1794470400
+            }
+          },
+          "skills": {
+            "form": 17,
+            "tacticalDiscipline": 15,
+            "teamwork": 13,
+            "experience": 17,
+            "stamina": 11,
+            "keeper": 0,
+            "playmaking": 11,
+            "passing": 9,
+            "technique": 15,
+            "defending": 9,
+            "striker": 16,
+            "pace": 15
+          },
+          "skillsChange": {
+            "form": 1,
+            "tacticalDiscipline": 0,
+            "teamwork": 0,
+            "experience": 0,
+            "stamina": 0,
+            "keeper": 0,
+            "playmaking": 0,
+            "passing": 0,
+            "technique": 0,
+            "defending": 0,
+            "striker": 0,
+            "pace": 0,
+            "down": 0,
+            "up": 0
+          },
+          "type": {
+            "code": 5,
+            "name": "technique"
+          },
+          "kind": {
+            "code": 2,
+            "name": "formation"
+          },
+          "playerValue": {
+            "value": 1637750,
+            "currency": "u$s"
+          },
+          "games": {
+            "minutesOfficial": 180,
+            "minutesFriendly": 0,
+            "minutesNational": 0
+          },
+          "intensity": 100,
+          "formation": {
+            "code": 3,
+            "name": "ATT"
+          },
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "age": 30
+        }
+      },
+      {
+        "id": 38971999,
+        "player": {
+          "name": {
+            "name": "Player",
+            "surname": "38971999",
+            "full": "Player 38971999"
+          },
+          "formation": null,
+          "number": null,
+          "team": {
+            "id": 1
+          },
+          "country": {
+            "code": 32,
+            "name": "Argentina"
+          },
+          "value": {
+            "value": 450000,
+            "currency": "ARS"
+          },
+          "previousValue": null,
+          "wage": {
+            "value": 12000,
+            "currency": "ARS"
+          },
+          "characteristics": {
+            "age": 20,
+            "height": 180,
+            "weight": 75,
+            "bmi": 23.1
+          },
+          "skills": {
+            "form": 10,
+            "tacticalDiscipline": 8,
+            "teamwork": 7,
+            "experience": 6,
+            "stamina": 8,
+            "keeper": 1,
+            "playmaking": 9,
+            "passing": 10,
+            "technique": 9,
+            "defending": 5,
+            "striker": 4,
+            "pace": 11
+          },
+          "stats": null,
+          "nationalStats": null,
+          "face": null,
+          "youthTeamId": 0,
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "nationalSharing": false,
+          "nationalCallUp": false,
+          "nationalType": "none"
+        },
+        "report": {
+          "week": 1217,
+          "day": {
+            "season": 79,
+            "week": 1217,
+            "seasonWeek": 8,
+            "day": 5,
+            "date": {
+              "value": "2026-11-12",
+              "timestamp": 1794470400
+            }
+          },
+          "skills": {
+            "form": 6,
+            "tacticalDiscipline": 14,
+            "teamwork": 12,
+            "experience": 16,
+            "stamina": 11,
+            "keeper": 0,
+            "playmaking": 11,
+            "passing": 11,
+            "technique": 16,
+            "defending": 18,
+            "striker": 6,
+            "pace": 17
+          },
+          "skillsChange": {
+            "form": 0,
+            "tacticalDiscipline": 0,
+            "teamwork": 1,
+            "experience": 0,
+            "stamina": 0,
+            "keeper": 0,
+            "playmaking": 0,
+            "passing": 0,
+            "technique": 0,
+            "defending": 0,
+            "striker": 0,
+            "pace": 0,
+            "down": 0,
+            "up": 0
+          },
+          "type": {
+            "code": 8,
+            "name": "pace"
+          },
+          "kind": {
+            "code": 2,
+            "name": "formation"
+          },
+          "playerValue": {
+            "value": 1790500,
+            "currency": "u$s"
+          },
+          "games": {
+            "minutesOfficial": 90,
+            "minutesFriendly": 0,
+            "minutesNational": 0
+          },
+          "intensity": 93,
+          "formation": {
+            "code": 1,
+            "name": "DEF"
+          },
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "age": 30
+        }
+      },
+      {
+        "id": 38988040,
+        "player": {
+          "name": {
+            "name": "Player",
+            "surname": "38988040",
+            "full": "Player 38988040"
+          },
+          "formation": null,
+          "number": null,
+          "team": {
+            "id": 1
+          },
+          "country": {
+            "code": 32,
+            "name": "Argentina"
+          },
+          "value": {
+            "value": 450000,
+            "currency": "ARS"
+          },
+          "previousValue": null,
+          "wage": {
+            "value": 12000,
+            "currency": "ARS"
+          },
+          "characteristics": {
+            "age": 20,
+            "height": 180,
+            "weight": 75,
+            "bmi": 23.1
+          },
+          "skills": {
+            "form": 10,
+            "tacticalDiscipline": 8,
+            "teamwork": 7,
+            "experience": 6,
+            "stamina": 8,
+            "keeper": 1,
+            "playmaking": 9,
+            "passing": 10,
+            "technique": 9,
+            "defending": 5,
+            "striker": 4,
+            "pace": 11
+          },
+          "stats": null,
+          "nationalStats": null,
+          "face": null,
+          "youthTeamId": 0,
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "nationalSharing": false,
+          "nationalCallUp": false,
+          "nationalType": "none"
+        },
+        "report": {
+          "week": 1217,
+          "day": {
+            "season": 79,
+            "week": 1217,
+            "seasonWeek": 8,
+            "day": 5,
+            "date": {
+              "value": "2026-11-12",
+              "timestamp": 1794470400
+            }
+          },
+          "skills": {
+            "form": 5,
+            "tacticalDiscipline": 9,
+            "teamwork": 1,
+            "experience": 16,
+            "stamina": 11,
+            "keeper": 1,
+            "playmaking": 12,
+            "passing": 13,
+            "technique": 15,
+            "defending": 9,
+            "striker": 8,
+            "pace": 12
+          },
+          "skillsChange": {
+            "form": -2,
+            "tacticalDiscipline": 1,
+            "teamwork": 1,
+            "experience": 0,
+            "stamina": 0,
+            "keeper": 0,
+            "playmaking": 0,
+            "passing": 0,
+            "technique": 0,
+            "defending": 0,
+            "striker": 0,
+            "pace": 0,
+            "down": 0,
+            "up": 0
+          },
+          "type": {
+            "code": 4,
+            "name": "passing"
+          },
+          "kind": {
+            "code": 2,
+            "name": "formation"
+          },
+          "playerValue": {
+            "value": 762500,
+            "currency": "u$s"
+          },
+          "games": {
+            "minutesOfficial": 50,
+            "minutesFriendly": 0,
+            "minutesNational": 0
+          },
+          "intensity": 51,
+          "formation": {
+            "code": 2,
+            "name": "MID"
+          },
+          "injury": {
+            "daysRemaining": 9,
+            "severe": true
+          },
+          "age": 29
+        }
+      },
+      {
+        "id": 38990550,
+        "player": {
+          "name": {
+            "name": "Player",
+            "surname": "38990550",
+            "full": "Player 38990550"
+          },
+          "formation": null,
+          "number": null,
+          "team": {
+            "id": 1
+          },
+          "country": {
+            "code": 32,
+            "name": "Argentina"
+          },
+          "value": {
+            "value": 450000,
+            "currency": "ARS"
+          },
+          "previousValue": null,
+          "wage": {
+            "value": 12000,
+            "currency": "ARS"
+          },
+          "characteristics": {
+            "age": 20,
+            "height": 180,
+            "weight": 75,
+            "bmi": 23.1
+          },
+          "skills": {
+            "form": 10,
+            "tacticalDiscipline": 8,
+            "teamwork": 7,
+            "experience": 6,
+            "stamina": 8,
+            "keeper": 1,
+            "playmaking": 9,
+            "passing": 10,
+            "technique": 9,
+            "defending": 5,
+            "striker": 4,
+            "pace": 11
+          },
+          "stats": null,
+          "nationalStats": null,
+          "face": null,
+          "youthTeamId": 0,
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "nationalSharing": false,
+          "nationalCallUp": false,
+          "nationalType": "none"
+        },
+        "report": {
+          "week": 1217,
+          "day": {
+            "season": 79,
+            "week": 1217,
+            "seasonWeek": 8,
+            "day": 5,
+            "date": {
+              "value": "2026-11-12",
+              "timestamp": 1794470400
+            }
+          },
+          "skills": {
+            "form": 8,
+            "tacticalDiscipline": 15,
+            "teamwork": 13,
+            "experience": 17,
+            "stamina": 11,
+            "keeper": 0,
+            "playmaking": 14,
+            "passing": 14,
+            "technique": 12,
+            "defending": 10,
+            "striker": 9,
+            "pace": 16
+          },
+          "skillsChange": {
+            "form": 1,
+            "tacticalDiscipline": 0,
+            "teamwork": 0,
+            "experience": 0,
+            "stamina": 0,
+            "keeper": 0,
+            "playmaking": 0,
+            "passing": 0,
+            "technique": 0,
+            "defending": 0,
+            "striker": 0,
+            "pace": 0,
+            "down": 0,
+            "up": 0
+          },
+          "type": {
+            "code": 4,
+            "name": "passing"
+          },
+          "kind": {
+            "code": 2,
+            "name": "formation"
+          },
+          "playerValue": {
+            "value": 1112500,
+            "currency": "u$s"
+          },
+          "games": {
+            "minutesOfficial": 270,
+            "minutesFriendly": 0,
+            "minutesNational": 0
+          },
+          "intensity": 100,
+          "formation": {
+            "code": 2,
+            "name": "MID"
+          },
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "age": 29
+        }
+      },
+      {
+        "id": 38999620,
+        "player": {
+          "name": {
+            "name": "Player",
+            "surname": "38999620",
+            "full": "Player 38999620"
+          },
+          "formation": null,
+          "number": null,
+          "team": {
+            "id": 1
+          },
+          "country": {
+            "code": 32,
+            "name": "Argentina"
+          },
+          "value": {
+            "value": 450000,
+            "currency": "ARS"
+          },
+          "previousValue": null,
+          "wage": {
+            "value": 12000,
+            "currency": "ARS"
+          },
+          "characteristics": {
+            "age": 20,
+            "height": 180,
+            "weight": 75,
+            "bmi": 23.1
+          },
+          "skills": {
+            "form": 10,
+            "tacticalDiscipline": 8,
+            "teamwork": 7,
+            "experience": 6,
+            "stamina": 8,
+            "keeper": 1,
+            "playmaking": 9,
+            "passing": 10,
+            "technique": 9,
+            "defending": 5,
+            "striker": 4,
+            "pace": 11
+          },
+          "stats": null,
+          "nationalStats": null,
+          "face": null,
+          "youthTeamId": 0,
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "nationalSharing": false,
+          "nationalCallUp": false,
+          "nationalType": "none"
+        },
+        "report": {
+          "week": 1217,
+          "day": {
+            "season": 79,
+            "week": 1217,
+            "seasonWeek": 8,
+            "day": 5,
+            "date": {
+              "value": "2026-11-12",
+              "timestamp": 1794470400
+            }
+          },
+          "skills": {
+            "form": 14,
+            "tacticalDiscipline": 13,
+            "teamwork": 8,
+            "experience": 17,
+            "stamina": 11,
+            "keeper": 2,
+            "playmaking": 14,
+            "passing": 15,
+            "technique": 17,
+            "defending": 8,
+            "striker": 8,
+            "pace": 16
+          },
+          "skillsChange": {
+            "form": -4,
+            "tacticalDiscipline": -1,
+            "teamwork": -2,
+            "experience": 0,
+            "stamina": 0,
+            "keeper": 0,
+            "playmaking": 0,
+            "passing": 0,
+            "technique": 0,
+            "defending": 0,
+            "striker": 0,
+            "pace": 0,
+            "down": 0,
+            "up": 0
+          },
+          "type": {
+            "code": 4,
+            "name": "passing"
+          },
+          "kind": {
+            "code": 3,
+            "name": "missing"
+          },
+          "playerValue": {
+            "value": 1891000,
+            "currency": "u$s"
+          },
+          "games": {
+            "minutesOfficial": 0,
+            "minutesFriendly": 0,
+            "minutesNational": 0
+          },
+          "intensity": 0,
+          "formation": {
+            "code": 2,
+            "name": "MID"
+          },
+          "injury": {
+            "daysRemaining": 4,
+            "severe": false
+          },
+          "age": 32
+        }
+      },
+      {
+        "id": 39022070,
+        "player": {
+          "name": {
+            "name": "Player",
+            "surname": "39022070",
+            "full": "Player 39022070"
+          },
+          "formation": null,
+          "number": null,
+          "team": {
+            "id": 1
+          },
+          "country": {
+            "code": 32,
+            "name": "Argentina"
+          },
+          "value": {
+            "value": 450000,
+            "currency": "ARS"
+          },
+          "previousValue": null,
+          "wage": {
+            "value": 12000,
+            "currency": "ARS"
+          },
+          "characteristics": {
+            "age": 20,
+            "height": 180,
+            "weight": 75,
+            "bmi": 23.1
+          },
+          "skills": {
+            "form": 10,
+            "tacticalDiscipline": 8,
+            "teamwork": 7,
+            "experience": 6,
+            "stamina": 8,
+            "keeper": 1,
+            "playmaking": 9,
+            "passing": 10,
+            "technique": 9,
+            "defending": 5,
+            "striker": 4,
+            "pace": 11
+          },
+          "stats": null,
+          "nationalStats": null,
+          "face": null,
+          "youthTeamId": 0,
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "nationalSharing": false,
+          "nationalCallUp": false,
+          "nationalType": "none"
+        },
+        "report": {
+          "week": 1217,
+          "day": {
+            "season": 79,
+            "week": 1217,
+            "seasonWeek": 8,
+            "day": 5,
+            "date": {
+              "value": "2026-11-12",
+              "timestamp": 1794470400
+            }
+          },
+          "skills": {
+            "form": 18,
+            "tacticalDiscipline": 13,
+            "teamwork": 14,
+            "experience": 12,
+            "stamina": 11,
+            "keeper": 16,
+            "playmaking": 7,
+            "passing": 8,
+            "technique": 6,
+            "defending": 7,
+            "striker": 6,
+            "pace": 11
+          },
+          "skillsChange": {
+            "form": 0,
+            "tacticalDiscipline": 1,
+            "teamwork": 1,
+            "experience": 0,
+            "stamina": 0,
+            "keeper": 0,
+            "playmaking": 0,
+            "passing": 0,
+            "technique": 0,
+            "defending": 0,
+            "striker": 0,
+            "pace": 0,
+            "down": 0,
+            "up": 0
+          },
+          "type": {
+            "code": 2,
+            "name": "keeper"
+          },
+          "kind": {
+            "code": 2,
+            "name": "formation"
+          },
+          "playerValue": {
+            "value": 2418250,
+            "currency": "u$s"
+          },
+          "games": {
+            "minutesOfficial": 180,
+            "minutesFriendly": 0,
+            "minutesNational": 0
+          },
+          "intensity": 100,
+          "formation": {
+            "code": 0,
+            "name": "GK"
+          },
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "age": 31
+        }
+      },
+      {
+        "id": 39059641,
+        "player": {
+          "name": {
+            "name": "Player",
+            "surname": "39059641",
+            "full": "Player 39059641"
+          },
+          "formation": null,
+          "number": null,
+          "team": {
+            "id": 1
+          },
+          "country": {
+            "code": 32,
+            "name": "Argentina"
+          },
+          "value": {
+            "value": 450000,
+            "currency": "ARS"
+          },
+          "previousValue": null,
+          "wage": {
+            "value": 12000,
+            "currency": "ARS"
+          },
+          "characteristics": {
+            "age": 20,
+            "height": 180,
+            "weight": 75,
+            "bmi": 23.1
+          },
+          "skills": {
+            "form": 10,
+            "tacticalDiscipline": 8,
+            "teamwork": 7,
+            "experience": 6,
+            "stamina": 8,
+            "keeper": 1,
+            "playmaking": 9,
+            "passing": 10,
+            "technique": 9,
+            "defending": 5,
+            "striker": 4,
+            "pace": 11
+          },
+          "stats": null,
+          "nationalStats": null,
+          "face": null,
+          "youthTeamId": 0,
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "nationalSharing": false,
+          "nationalCallUp": false,
+          "nationalType": "none"
+        },
+        "report": {
+          "week": 1217,
+          "day": {
+            "season": 79,
+            "week": 1217,
+            "seasonWeek": 8,
+            "day": 5,
+            "date": {
+              "value": "2026-11-12",
+              "timestamp": 1794470400
+            }
+          },
+          "skills": {
+            "form": 11,
+            "tacticalDiscipline": 15,
+            "teamwork": 14,
+            "experience": 15,
+            "stamina": 11,
+            "keeper": 0,
+            "playmaking": 11,
+            "passing": 9,
+            "technique": 10,
+            "defending": 14,
+            "striker": 8,
+            "pace": 14
+          },
+          "skillsChange": {
+            "form": 2,
+            "tacticalDiscipline": 1,
+            "teamwork": 0,
+            "experience": 0,
+            "stamina": 0,
+            "keeper": 0,
+            "playmaking": 0,
+            "passing": 0,
+            "technique": 0,
+            "defending": 0,
+            "striker": 0,
+            "pace": 0,
+            "down": 0,
+            "up": 0
+          },
+          "type": {
+            "code": 8,
+            "name": "pace"
+          },
+          "kind": {
+            "code": 2,
+            "name": "formation"
+          },
+          "playerValue": {
+            "value": 779750,
+            "currency": "u$s"
+          },
+          "games": {
+            "minutesOfficial": 180,
+            "minutesFriendly": 0,
+            "minutesNational": 0
+          },
+          "intensity": 100,
+          "formation": {
+            "code": 1,
+            "name": "DEF"
+          },
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "age": 28
+        }
+      },
+      {
+        "id": 39126555,
+        "player": {
+          "name": {
+            "name": "Player",
+            "surname": "39126555",
+            "full": "Player 39126555"
+          },
+          "formation": null,
+          "number": null,
+          "team": {
+            "id": 1
+          },
+          "country": {
+            "code": 32,
+            "name": "Argentina"
+          },
+          "value": {
+            "value": 450000,
+            "currency": "ARS"
+          },
+          "previousValue": null,
+          "wage": {
+            "value": 12000,
+            "currency": "ARS"
+          },
+          "characteristics": {
+            "age": 20,
+            "height": 180,
+            "weight": 75,
+            "bmi": 23.1
+          },
+          "skills": {
+            "form": 10,
+            "tacticalDiscipline": 8,
+            "teamwork": 7,
+            "experience": 6,
+            "stamina": 8,
+            "keeper": 1,
+            "playmaking": 9,
+            "passing": 10,
+            "technique": 9,
+            "defending": 5,
+            "striker": 4,
+            "pace": 11
+          },
+          "stats": null,
+          "nationalStats": null,
+          "face": null,
+          "youthTeamId": 0,
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "nationalSharing": false,
+          "nationalCallUp": false,
+          "nationalType": "none"
+        },
+        "report": {
+          "week": 1217,
+          "day": {
+            "season": 79,
+            "week": 1217,
+            "seasonWeek": 8,
+            "day": 5,
+            "date": {
+              "value": "2026-11-12",
+              "timestamp": 1794470400
+            }
+          },
+          "skills": {
+            "form": 17,
+            "tacticalDiscipline": 16,
+            "teamwork": 15,
+            "experience": 17,
+            "stamina": 11,
+            "keeper": 0,
+            "playmaking": 14,
+            "passing": 14,
+            "technique": 14,
+            "defending": 8,
+            "striker": 9,
+            "pace": 16
+          },
+          "skillsChange": {
+            "form": -1,
+            "tacticalDiscipline": 0,
+            "teamwork": 1,
+            "experience": 0,
+            "stamina": 0,
+            "keeper": 0,
+            "playmaking": 0,
+            "passing": 0,
+            "technique": 0,
+            "defending": 0,
+            "striker": 0,
+            "pace": 0,
+            "down": 0,
+            "up": 0
+          },
+          "type": {
+            "code": 4,
+            "name": "passing"
+          },
+          "kind": {
+            "code": 2,
+            "name": "formation"
+          },
+          "playerValue": {
+            "value": 1600750,
+            "currency": "u$s"
+          },
+          "games": {
+            "minutesOfficial": 196,
+            "minutesFriendly": 0,
+            "minutesNational": 0
+          },
+          "intensity": 100,
+          "formation": {
+            "code": 2,
+            "name": "MID"
+          },
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "age": 28
+        }
+      },
+      {
+        "id": 39691693,
+        "player": {
+          "name": {
+            "name": "Player",
+            "surname": "39691693",
+            "full": "Player 39691693"
+          },
+          "formation": null,
+          "number": null,
+          "team": {
+            "id": 1
+          },
+          "country": {
+            "code": 32,
+            "name": "Argentina"
+          },
+          "value": {
+            "value": 450000,
+            "currency": "ARS"
+          },
+          "previousValue": null,
+          "wage": {
+            "value": 12000,
+            "currency": "ARS"
+          },
+          "characteristics": {
+            "age": 20,
+            "height": 180,
+            "weight": 75,
+            "bmi": 23.1
+          },
+          "skills": {
+            "form": 10,
+            "tacticalDiscipline": 8,
+            "teamwork": 7,
+            "experience": 6,
+            "stamina": 8,
+            "keeper": 1,
+            "playmaking": 9,
+            "passing": 10,
+            "technique": 9,
+            "defending": 5,
+            "striker": 4,
+            "pace": 11
+          },
+          "stats": null,
+          "nationalStats": null,
+          "face": null,
+          "youthTeamId": 0,
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "nationalSharing": false,
+          "nationalCallUp": false,
+          "nationalType": "none"
+        },
+        "report": {
+          "week": 1217,
+          "day": {
+            "season": 79,
+            "week": 1217,
+            "seasonWeek": 8,
+            "day": 5,
+            "date": {
+              "value": "2026-11-12",
+              "timestamp": 1794470400
+            }
+          },
+          "skills": {
+            "form": 7,
+            "tacticalDiscipline": 6,
+            "teamwork": 3,
+            "experience": 8,
+            "stamina": 11,
+            "keeper": 0,
+            "playmaking": 9,
+            "passing": 6,
+            "technique": 9,
+            "defending": 15,
+            "striker": 8,
+            "pace": 15
+          },
+          "skillsChange": {
+            "form": -2,
+            "tacticalDiscipline": 2,
+            "teamwork": 3,
+            "experience": 0,
+            "stamina": 0,
+            "keeper": 0,
+            "playmaking": 1,
+            "passing": 0,
+            "technique": 0,
+            "defending": 0,
+            "striker": 0,
+            "pace": 0,
+            "down": 0,
+            "up": 1
+          },
+          "type": {
+            "code": 8,
+            "name": "pace"
+          },
+          "kind": {
+            "code": 2,
+            "name": "formation"
+          },
+          "playerValue": {
+            "value": 714250,
+            "currency": "u$s"
+          },
+          "games": {
+            "minutesOfficial": 90,
+            "minutesFriendly": 0,
+            "minutesNational": 0
+          },
+          "intensity": 93,
+          "formation": {
+            "code": 1,
+            "name": "DEF"
+          },
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "age": 26
+        }
+      },
+      {
+        "id": 39739044,
+        "player": {
+          "name": {
+            "name": "Player",
+            "surname": "39739044",
+            "full": "Player 39739044"
+          },
+          "formation": null,
+          "number": null,
+          "team": {
+            "id": 1
+          },
+          "country": {
+            "code": 32,
+            "name": "Argentina"
+          },
+          "value": {
+            "value": 450000,
+            "currency": "ARS"
+          },
+          "previousValue": null,
+          "wage": {
+            "value": 12000,
+            "currency": "ARS"
+          },
+          "characteristics": {
+            "age": 20,
+            "height": 180,
+            "weight": 75,
+            "bmi": 23.1
+          },
+          "skills": {
+            "form": 10,
+            "tacticalDiscipline": 8,
+            "teamwork": 7,
+            "experience": 6,
+            "stamina": 8,
+            "keeper": 1,
+            "playmaking": 9,
+            "passing": 10,
+            "technique": 9,
+            "defending": 5,
+            "striker": 4,
+            "pace": 11
+          },
+          "stats": null,
+          "nationalStats": null,
+          "face": null,
+          "youthTeamId": 0,
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "nationalSharing": false,
+          "nationalCallUp": false,
+          "nationalType": "none"
+        },
+        "report": {
+          "week": 1217,
+          "day": {
+            "season": 79,
+            "week": 1217,
+            "seasonWeek": 8,
+            "day": 5,
+            "date": {
+              "value": "2026-11-12",
+              "timestamp": 1794470400
+            }
+          },
+          "skills": {
+            "form": 10,
+            "tacticalDiscipline": 15,
+            "teamwork": 17,
+            "experience": 13,
+            "stamina": 6,
+            "keeper": 15,
+            "playmaking": 3,
+            "passing": 4,
+            "technique": 2,
+            "defending": 2,
+            "striker": 2,
+            "pace": 14
+          },
+          "skillsChange": {
+            "form": 0,
+            "tacticalDiscipline": 0,
+            "teamwork": 1,
+            "experience": 0,
+            "stamina": 0,
+            "keeper": 0,
+            "playmaking": 0,
+            "passing": 0,
+            "technique": 0,
+            "defending": 0,
+            "striker": 0,
+            "pace": 0,
+            "down": 0,
+            "up": 0
+          },
+          "type": {
+            "code": 2,
+            "name": "keeper"
+          },
+          "kind": {
+            "code": 2,
+            "name": "formation"
+          },
+          "playerValue": {
+            "value": 1613250,
+            "currency": "u$s"
+          },
+          "games": {
+            "minutesOfficial": 90,
+            "minutesFriendly": 90,
+            "minutesNational": 0
+          },
+          "intensity": 98,
+          "formation": {
+            "code": 0,
+            "name": "GK"
+          },
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "age": 25
+        }
+      },
+      {
+        "id": 39811507,
+        "player": {
+          "name": {
+            "name": "Player",
+            "surname": "39811507",
+            "full": "Player 39811507"
+          },
+          "formation": null,
+          "number": null,
+          "team": {
+            "id": 1
+          },
+          "country": {
+            "code": 32,
+            "name": "Argentina"
+          },
+          "value": {
+            "value": 450000,
+            "currency": "ARS"
+          },
+          "previousValue": null,
+          "wage": {
+            "value": 12000,
+            "currency": "ARS"
+          },
+          "characteristics": {
+            "age": 20,
+            "height": 180,
+            "weight": 75,
+            "bmi": 23.1
+          },
+          "skills": {
+            "form": 10,
+            "tacticalDiscipline": 8,
+            "teamwork": 7,
+            "experience": 6,
+            "stamina": 8,
+            "keeper": 1,
+            "playmaking": 9,
+            "passing": 10,
+            "technique": 9,
+            "defending": 5,
+            "striker": 4,
+            "pace": 11
+          },
+          "stats": null,
+          "nationalStats": null,
+          "face": null,
+          "youthTeamId": 0,
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "nationalSharing": false,
+          "nationalCallUp": false,
+          "nationalType": "none"
+        },
+        "report": {
+          "week": 1217,
+          "day": {
+            "season": 79,
+            "week": 1217,
+            "seasonWeek": 8,
+            "day": 5,
+            "date": {
+              "value": "2026-11-12",
+              "timestamp": 1794470400
+            }
+          },
+          "skills": {
+            "form": 15,
+            "tacticalDiscipline": 12,
+            "teamwork": 18,
+            "experience": 7,
+            "stamina": 8,
+            "keeper": 1,
+            "playmaking": 8,
+            "passing": 8,
+            "technique": 8,
+            "defending": 16,
+            "striker": 5,
+            "pace": 15
+          },
+          "skillsChange": {
+            "form": 2,
+            "tacticalDiscipline": 0,
+            "teamwork": 0,
+            "experience": 0,
+            "stamina": 0,
+            "keeper": 0,
+            "playmaking": 0,
+            "passing": 0,
+            "technique": 0,
+            "defending": 0,
+            "striker": 0,
+            "pace": 0,
+            "down": 0,
+            "up": 0
+          },
+          "type": {
+            "code": 8,
+            "name": "pace"
+          },
+          "kind": {
+            "code": 1,
+            "name": "individual"
+          },
+          "playerValue": {
+            "value": 966000,
+            "currency": "u$s"
+          },
+          "games": {
+            "minutesOfficial": 225,
+            "minutesFriendly": 0,
+            "minutesNational": 0
+          },
+          "intensity": 100,
+          "formation": {
+            "code": 1,
+            "name": "DEF"
+          },
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "age": 22
+        }
+      },
+      {
+        "id": 39827649,
+        "player": {
+          "name": {
+            "name": "Player",
+            "surname": "39827649",
+            "full": "Player 39827649"
+          },
+          "formation": null,
+          "number": null,
+          "team": {
+            "id": 1
+          },
+          "country": {
+            "code": 32,
+            "name": "Argentina"
+          },
+          "value": {
+            "value": 450000,
+            "currency": "ARS"
+          },
+          "previousValue": null,
+          "wage": {
+            "value": 12000,
+            "currency": "ARS"
+          },
+          "characteristics": {
+            "age": 20,
+            "height": 180,
+            "weight": 75,
+            "bmi": 23.1
+          },
+          "skills": {
+            "form": 10,
+            "tacticalDiscipline": 8,
+            "teamwork": 7,
+            "experience": 6,
+            "stamina": 8,
+            "keeper": 1,
+            "playmaking": 9,
+            "passing": 10,
+            "technique": 9,
+            "defending": 5,
+            "striker": 4,
+            "pace": 11
+          },
+          "stats": null,
+          "nationalStats": null,
+          "face": null,
+          "youthTeamId": 0,
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "nationalSharing": false,
+          "nationalCallUp": false,
+          "nationalType": "none"
+        },
+        "report": {
+          "week": 1217,
+          "day": {
+            "season": 79,
+            "week": 1217,
+            "seasonWeek": 8,
+            "day": 5,
+            "date": {
+              "value": "2026-11-12",
+              "timestamp": 1794470400
+            }
+          },
+          "skills": {
+            "form": 0,
+            "tacticalDiscipline": 5,
+            "teamwork": 2,
+            "experience": 8,
+            "stamina": 11,
+            "keeper": 1,
+            "playmaking": 6,
+            "passing": 6,
+            "technique": 6,
+            "defending": 14,
+            "striker": 9,
+            "pace": 15
+          },
+          "skillsChange": {
+            "form": -1,
+            "tacticalDiscipline": 1,
+            "teamwork": 2,
+            "experience": 0,
+            "stamina": 0,
+            "keeper": 0,
+            "playmaking": 0,
+            "passing": 0,
+            "technique": 0,
+            "defending": 0,
+            "striker": 0,
+            "pace": 0,
+            "down": 0,
+            "up": 0
+          },
+          "type": {
+            "code": 8,
+            "name": "pace"
+          },
+          "kind": {
+            "code": 2,
+            "name": "formation"
+          },
+          "playerValue": {
+            "value": 463500,
+            "currency": "u$s"
+          },
+          "games": {
+            "minutesOfficial": 46,
+            "minutesFriendly": 90,
+            "minutesNational": 0
+          },
+          "intensity": 94,
+          "formation": {
+            "code": 1,
+            "name": "DEF"
+          },
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "age": 26
+        }
+      },
+      {
+        "id": 40098056,
+        "player": {
+          "name": {
+            "name": "Player",
+            "surname": "40098056",
+            "full": "Player 40098056"
+          },
+          "formation": null,
+          "number": null,
+          "team": {
+            "id": 1
+          },
+          "country": {
+            "code": 32,
+            "name": "Argentina"
+          },
+          "value": {
+            "value": 450000,
+            "currency": "ARS"
+          },
+          "previousValue": null,
+          "wage": {
+            "value": 12000,
+            "currency": "ARS"
+          },
+          "characteristics": {
+            "age": 20,
+            "height": 180,
+            "weight": 75,
+            "bmi": 23.1
+          },
+          "skills": {
+            "form": 10,
+            "tacticalDiscipline": 8,
+            "teamwork": 7,
+            "experience": 6,
+            "stamina": 8,
+            "keeper": 1,
+            "playmaking": 9,
+            "passing": 10,
+            "technique": 9,
+            "defending": 5,
+            "striker": 4,
+            "pace": 11
+          },
+          "stats": null,
+          "nationalStats": null,
+          "face": null,
+          "youthTeamId": 0,
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "nationalSharing": false,
+          "nationalCallUp": false,
+          "nationalType": "none"
+        },
+        "report": {
+          "week": 1217,
+          "day": {
+            "season": 79,
+            "week": 1217,
+            "seasonWeek": 8,
+            "day": 5,
+            "date": {
+              "value": "2026-11-12",
+              "timestamp": 1794470400
+            }
+          },
+          "skills": {
+            "form": 16,
+            "tacticalDiscipline": 11,
+            "teamwork": 18,
+            "experience": 4,
+            "stamina": 10,
+            "keeper": 1,
+            "playmaking": 6,
+            "passing": 11,
+            "technique": 10,
+            "defending": 8,
+            "striker": 12,
+            "pace": 12
+          },
+          "skillsChange": {
+            "form": 4,
+            "tacticalDiscipline": 0,
+            "teamwork": 0,
+            "experience": 0,
+            "stamina": 1,
+            "keeper": 0,
+            "playmaking": 0,
+            "passing": 0,
+            "technique": 1,
+            "defending": 0,
+            "striker": 0,
+            "pace": 0,
+            "down": 0,
+            "up": 2
+          },
+          "type": {
+            "code": 5,
+            "name": "technique"
+          },
+          "kind": {
+            "code": 1,
+            "name": "individual"
+          },
+          "playerValue": {
+            "value": 466500,
+            "currency": "u$s"
+          },
+          "games": {
+            "minutesOfficial": 110,
+            "minutesFriendly": 90,
+            "minutesNational": 0
+          },
+          "intensity": 99,
+          "formation": {
+            "code": 3,
+            "name": "ATT"
+          },
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "age": 21
+        }
+      },
+      {
+        "id": 40117724,
+        "player": {
+          "name": {
+            "name": "Player",
+            "surname": "40117724",
+            "full": "Player 40117724"
+          },
+          "formation": null,
+          "number": null,
+          "team": {
+            "id": 1
+          },
+          "country": {
+            "code": 32,
+            "name": "Argentina"
+          },
+          "value": {
+            "value": 450000,
+            "currency": "ARS"
+          },
+          "previousValue": null,
+          "wage": {
+            "value": 12000,
+            "currency": "ARS"
+          },
+          "characteristics": {
+            "age": 20,
+            "height": 180,
+            "weight": 75,
+            "bmi": 23.1
+          },
+          "skills": {
+            "form": 10,
+            "tacticalDiscipline": 8,
+            "teamwork": 7,
+            "experience": 6,
+            "stamina": 8,
+            "keeper": 1,
+            "playmaking": 9,
+            "passing": 10,
+            "technique": 9,
+            "defending": 5,
+            "striker": 4,
+            "pace": 11
+          },
+          "stats": null,
+          "nationalStats": null,
+          "face": null,
+          "youthTeamId": 0,
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "nationalSharing": false,
+          "nationalCallUp": false,
+          "nationalType": "none"
+        },
+        "report": {
+          "week": 1217,
+          "day": {
+            "season": 79,
+            "week": 1217,
+            "seasonWeek": 8,
+            "day": 5,
+            "date": {
+              "value": "2026-11-12",
+              "timestamp": 1794470400
+            }
+          },
+          "skills": {
+            "form": 5,
+            "tacticalDiscipline": 12,
+            "teamwork": 18,
+            "experience": 6,
+            "stamina": 10,
+            "keeper": 2,
+            "playmaking": 12,
+            "passing": 10,
+            "technique": 13,
+            "defending": 6,
+            "striker": 9,
+            "pace": 10
+          },
+          "skillsChange": {
+            "form": 0,
+            "tacticalDiscipline": 0,
+            "teamwork": 0,
+            "experience": 0,
+            "stamina": 0,
+            "keeper": 0,
+            "playmaking": 0,
+            "passing": 0,
+            "technique": 0,
+            "defending": 0,
+            "striker": 0,
+            "pace": 0,
+            "down": 0,
+            "up": 0
+          },
+          "type": {
+            "code": 4,
+            "name": "passing"
+          },
+          "kind": {
+            "code": 1,
+            "name": "individual"
+          },
+          "playerValue": {
+            "value": 383000,
+            "currency": "u$s"
+          },
+          "games": {
+            "minutesOfficial": 180,
+            "minutesFriendly": 46,
+            "minutesNational": 0
+          },
+          "intensity": 100,
+          "formation": {
+            "code": 2,
+            "name": "MID"
+          },
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "age": 21
+        }
+      },
+      {
+        "id": 40198173,
+        "player": {
+          "name": {
+            "name": "Player",
+            "surname": "40198173",
+            "full": "Player 40198173"
+          },
+          "formation": null,
+          "number": null,
+          "team": {
+            "id": 1
+          },
+          "country": {
+            "code": 32,
+            "name": "Argentina"
+          },
+          "value": {
+            "value": 450000,
+            "currency": "ARS"
+          },
+          "previousValue": null,
+          "wage": {
+            "value": 12000,
+            "currency": "ARS"
+          },
+          "characteristics": {
+            "age": 20,
+            "height": 180,
+            "weight": 75,
+            "bmi": 23.1
+          },
+          "skills": {
+            "form": 10,
+            "tacticalDiscipline": 8,
+            "teamwork": 7,
+            "experience": 6,
+            "stamina": 8,
+            "keeper": 1,
+            "playmaking": 9,
+            "passing": 10,
+            "technique": 9,
+            "defending": 5,
+            "striker": 4,
+            "pace": 11
+          },
+          "stats": null,
+          "nationalStats": null,
+          "face": null,
+          "youthTeamId": 0,
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "nationalSharing": false,
+          "nationalCallUp": false,
+          "nationalType": "none"
+        },
+        "report": {
+          "week": 1217,
+          "day": {
+            "season": 79,
+            "week": 1217,
+            "seasonWeek": 8,
+            "day": 5,
+            "date": {
+              "value": "2026-11-12",
+              "timestamp": 1794470400
+            }
+          },
+          "skills": {
+            "form": 1,
+            "tacticalDiscipline": 10,
+            "teamwork": 18,
+            "experience": 2,
+            "stamina": 4,
+            "keeper": 3,
+            "playmaking": 8,
+            "passing": 6,
+            "technique": 7,
+            "defending": 12,
+            "striker": 5,
+            "pace": 12
+          },
+          "skillsChange": {
+            "form": 1,
+            "tacticalDiscipline": 0,
+            "teamwork": 0,
+            "experience": 0,
+            "stamina": 0,
+            "keeper": 0,
+            "playmaking": 0,
+            "passing": 0,
+            "technique": 0,
+            "defending": 1,
+            "striker": 1,
+            "pace": 0,
+            "down": 0,
+            "up": 2
+          },
+          "type": {
+            "code": 8,
+            "name": "pace"
+          },
+          "kind": {
+            "code": 1,
+            "name": "individual"
+          },
+          "playerValue": {
+            "value": 196000,
+            "currency": "u$s"
+          },
+          "games": {
+            "minutesOfficial": 136,
+            "minutesFriendly": 90,
+            "minutesNational": 0
+          },
+          "intensity": 100,
+          "formation": {
+            "code": 1,
+            "name": "DEF"
+          },
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "age": 20
+        }
+      },
+      {
+        "id": 40224679,
+        "player": {
+          "name": {
+            "name": "Player",
+            "surname": "40224679",
+            "full": "Player 40224679"
+          },
+          "formation": null,
+          "number": null,
+          "team": {
+            "id": 1
+          },
+          "country": {
+            "code": 32,
+            "name": "Argentina"
+          },
+          "value": {
+            "value": 450000,
+            "currency": "ARS"
+          },
+          "previousValue": null,
+          "wage": {
+            "value": 12000,
+            "currency": "ARS"
+          },
+          "characteristics": {
+            "age": 20,
+            "height": 180,
+            "weight": 75,
+            "bmi": 23.1
+          },
+          "skills": {
+            "form": 10,
+            "tacticalDiscipline": 8,
+            "teamwork": 7,
+            "experience": 6,
+            "stamina": 8,
+            "keeper": 1,
+            "playmaking": 9,
+            "passing": 10,
+            "technique": 9,
+            "defending": 5,
+            "striker": 4,
+            "pace": 11
+          },
+          "stats": null,
+          "nationalStats": null,
+          "face": null,
+          "youthTeamId": 0,
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "nationalSharing": false,
+          "nationalCallUp": false,
+          "nationalType": "none"
+        },
+        "report": {
+          "week": 1217,
+          "day": {
+            "season": 79,
+            "week": 1217,
+            "seasonWeek": 8,
+            "day": 5,
+            "date": {
+              "value": "2026-11-12",
+              "timestamp": 1794470400
+            }
+          },
+          "skills": {
+            "form": 9,
+            "tacticalDiscipline": 11,
+            "teamwork": 18,
+            "experience": 4,
+            "stamina": 3,
+            "keeper": 0,
+            "playmaking": 3,
+            "passing": 1,
+            "technique": 8,
+            "defending": 4,
+            "striker": 8,
+            "pace": 7
+          },
+          "skillsChange": {
+            "form": 3,
+            "tacticalDiscipline": 0,
+            "teamwork": 0,
+            "experience": 0,
+            "stamina": 0,
+            "keeper": 0,
+            "playmaking": 0,
+            "passing": 0,
+            "technique": 0,
+            "defending": 0,
+            "striker": 0,
+            "pace": 0,
+            "down": 0,
+            "up": 0
+          },
+          "type": {
+            "code": 5,
+            "name": "technique"
+          },
+          "kind": {
+            "code": 1,
+            "name": "individual"
+          },
+          "playerValue": {
+            "value": 77000,
+            "currency": "u$s"
+          },
+          "games": {
+            "minutesOfficial": 135,
+            "minutesFriendly": 90,
+            "minutesNational": 0
+          },
+          "intensity": 100,
+          "formation": {
+            "code": 3,
+            "name": "ATT"
+          },
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "age": 18
+        }
+      },
+      {
+        "id": 40234239,
+        "player": {
+          "name": {
+            "name": "Player",
+            "surname": "40234239",
+            "full": "Player 40234239"
+          },
+          "formation": null,
+          "number": null,
+          "team": {
+            "id": 1
+          },
+          "country": {
+            "code": 32,
+            "name": "Argentina"
+          },
+          "value": {
+            "value": 450000,
+            "currency": "ARS"
+          },
+          "previousValue": null,
+          "wage": {
+            "value": 12000,
+            "currency": "ARS"
+          },
+          "characteristics": {
+            "age": 20,
+            "height": 180,
+            "weight": 75,
+            "bmi": 23.1
+          },
+          "skills": {
+            "form": 10,
+            "tacticalDiscipline": 8,
+            "teamwork": 7,
+            "experience": 6,
+            "stamina": 8,
+            "keeper": 1,
+            "playmaking": 9,
+            "passing": 10,
+            "technique": 9,
+            "defending": 5,
+            "striker": 4,
+            "pace": 11
+          },
+          "stats": null,
+          "nationalStats": null,
+          "face": null,
+          "youthTeamId": 0,
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "nationalSharing": false,
+          "nationalCallUp": false,
+          "nationalType": "none"
+        },
+        "report": {
+          "week": 1217,
+          "day": {
+            "season": 79,
+            "week": 1217,
+            "seasonWeek": 8,
+            "day": 5,
+            "date": {
+              "value": "2026-11-12",
+              "timestamp": 1794470400
+            }
+          },
+          "skills": {
+            "form": 1,
+            "tacticalDiscipline": 11,
+            "teamwork": 18,
+            "experience": 4,
+            "stamina": 6,
+            "keeper": 0,
+            "playmaking": 8,
+            "passing": 4,
+            "technique": 8,
+            "defending": 11,
+            "striker": 3,
+            "pace": 8
+          },
+          "skillsChange": {
+            "form": 0,
+            "tacticalDiscipline": 0,
+            "teamwork": 0,
+            "experience": 0,
+            "stamina": 0,
+            "keeper": 0,
+            "playmaking": 0,
+            "passing": 0,
+            "technique": 0,
+            "defending": 0,
+            "striker": 0,
+            "pace": 0,
+            "down": 0,
+            "up": 0
+          },
+          "type": {
+            "code": 8,
+            "name": "pace"
+          },
+          "kind": {
+            "code": 1,
+            "name": "individual"
+          },
+          "playerValue": {
+            "value": 118750,
+            "currency": "u$s"
+          },
+          "games": {
+            "minutesOfficial": 90,
+            "minutesFriendly": 90,
+            "minutesNational": 0
+          },
+          "intensity": 99,
+          "formation": {
+            "code": 1,
+            "name": "DEF"
+          },
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "age": 18
+        }
+      },
+      {
+        "id": 40267008,
+        "player": {
+          "name": {
+            "name": "Player",
+            "surname": "40267008",
+            "full": "Player 40267008"
+          },
+          "formation": null,
+          "number": null,
+          "team": {
+            "id": 1
+          },
+          "country": {
+            "code": 32,
+            "name": "Argentina"
+          },
+          "value": {
+            "value": 450000,
+            "currency": "ARS"
+          },
+          "previousValue": null,
+          "wage": {
+            "value": 12000,
+            "currency": "ARS"
+          },
+          "characteristics": {
+            "age": 20,
+            "height": 180,
+            "weight": 75,
+            "bmi": 23.1
+          },
+          "skills": {
+            "form": 10,
+            "tacticalDiscipline": 8,
+            "teamwork": 7,
+            "experience": 6,
+            "stamina": 8,
+            "keeper": 1,
+            "playmaking": 9,
+            "passing": 10,
+            "technique": 9,
+            "defending": 5,
+            "striker": 4,
+            "pace": 11
+          },
+          "stats": null,
+          "nationalStats": null,
+          "face": null,
+          "youthTeamId": 0,
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "nationalSharing": false,
+          "nationalCallUp": false,
+          "nationalType": "none"
+        },
+        "report": {
+          "week": 1217,
+          "day": {
+            "season": 79,
+            "week": 1217,
+            "seasonWeek": 8,
+            "day": 5,
+            "date": {
+              "value": "2026-11-12",
+              "timestamp": 1794470400
+            }
+          },
+          "skills": {
+            "form": 11,
+            "tacticalDiscipline": 10,
+            "teamwork": 18,
+            "experience": 2,
+            "stamina": 1,
+            "keeper": 0,
+            "playmaking": 1,
+            "passing": 3,
+            "technique": 5,
+            "defending": 4,
+            "striker": 7,
+            "pace": 7
+          },
+          "skillsChange": {
+            "form": -2,
+            "tacticalDiscipline": 0,
+            "teamwork": 0,
+            "experience": 0,
+            "stamina": 0,
+            "keeper": 0,
+            "playmaking": 0,
+            "passing": 0,
+            "technique": 0,
+            "defending": 0,
+            "striker": 0,
+            "pace": 0,
+            "down": 0,
+            "up": 0
+          },
+          "type": {
+            "code": 5,
+            "name": "technique"
+          },
+          "kind": {
+            "code": 1,
+            "name": "individual"
+          },
+          "playerValue": {
+            "value": 57500,
+            "currency": "u$s"
+          },
+          "games": {
+            "minutesOfficial": 117,
+            "minutesFriendly": 90,
+            "minutesNational": 0
+          },
+          "intensity": 100,
+          "formation": {
+            "code": 3,
+            "name": "ATT"
+          },
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "age": 17
+        }
+      },
+      {
+        "id": 40294836,
+        "player": {
+          "name": {
+            "name": "Player",
+            "surname": "40294836",
+            "full": "Player 40294836"
+          },
+          "formation": null,
+          "number": null,
+          "team": {
+            "id": 1
+          },
+          "country": {
+            "code": 32,
+            "name": "Argentina"
+          },
+          "value": {
+            "value": 450000,
+            "currency": "ARS"
+          },
+          "previousValue": null,
+          "wage": {
+            "value": 12000,
+            "currency": "ARS"
+          },
+          "characteristics": {
+            "age": 20,
+            "height": 180,
+            "weight": 75,
+            "bmi": 23.1
+          },
+          "skills": {
+            "form": 10,
+            "tacticalDiscipline": 8,
+            "teamwork": 7,
+            "experience": 6,
+            "stamina": 8,
+            "keeper": 1,
+            "playmaking": 9,
+            "passing": 10,
+            "technique": 9,
+            "defending": 5,
+            "striker": 4,
+            "pace": 11
+          },
+          "stats": null,
+          "nationalStats": null,
+          "face": null,
+          "youthTeamId": 0,
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "nationalSharing": false,
+          "nationalCallUp": false,
+          "nationalType": "none"
+        },
+        "report": {
+          "week": 1217,
+          "day": {
+            "season": 79,
+            "week": 1217,
+            "seasonWeek": 8,
+            "day": 5,
+            "date": {
+              "value": "2026-11-12",
+              "timestamp": 1794470400
+            }
+          },
+          "skills": {
+            "form": 16,
+            "tacticalDiscipline": 9,
+            "teamwork": 18,
+            "experience": 1,
+            "stamina": 2,
+            "keeper": 0,
+            "playmaking": 1,
+            "passing": 5,
+            "technique": 4,
+            "defending": 7,
+            "striker": 4,
+            "pace": 8
+          },
+          "skillsChange": {
+            "form": 0,
+            "tacticalDiscipline": 0,
+            "teamwork": 1,
+            "experience": 0,
+            "stamina": 0,
+            "keeper": 0,
+            "playmaking": 0,
+            "passing": 0,
+            "technique": 0,
+            "defending": 0,
+            "striker": 0,
+            "pace": 0,
+            "down": 0,
+            "up": 0
+          },
+          "type": {
+            "code": 8,
+            "name": "pace"
+          },
+          "kind": {
+            "code": 1,
+            "name": "individual"
+          },
+          "playerValue": {
+            "value": 73750,
+            "currency": "u$s"
+          },
+          "games": {
+            "minutesOfficial": 90,
+            "minutesFriendly": 90,
+            "minutesNational": 0
+          },
+          "intensity": 99,
+          "formation": {
+            "code": 1,
+            "name": "DEF"
+          },
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "age": 17
+        }
+      },
+      {
+        "id": 40312124,
+        "player": {
+          "name": {
+            "name": "Player",
+            "surname": "40312124",
+            "full": "Player 40312124"
+          },
+          "formation": null,
+          "number": null,
+          "team": {
+            "id": 1
+          },
+          "country": {
+            "code": 32,
+            "name": "Argentina"
+          },
+          "value": {
+            "value": 450000,
+            "currency": "ARS"
+          },
+          "previousValue": null,
+          "wage": {
+            "value": 12000,
+            "currency": "ARS"
+          },
+          "characteristics": {
+            "age": 20,
+            "height": 180,
+            "weight": 75,
+            "bmi": 23.1
+          },
+          "skills": {
+            "form": 10,
+            "tacticalDiscipline": 8,
+            "teamwork": 7,
+            "experience": 6,
+            "stamina": 8,
+            "keeper": 1,
+            "playmaking": 9,
+            "passing": 10,
+            "technique": 9,
+            "defending": 5,
+            "striker": 4,
+            "pace": 11
+          },
+          "stats": null,
+          "nationalStats": null,
+          "face": null,
+          "youthTeamId": 0,
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "nationalSharing": false,
+          "nationalCallUp": false,
+          "nationalType": "none"
+        },
+        "report": {
+          "week": 1217,
+          "day": {
+            "season": 79,
+            "week": 1217,
+            "seasonWeek": 8,
+            "day": 5,
+            "date": {
+              "value": "2026-11-12",
+              "timestamp": 1794470400
+            }
+          },
+          "skills": {
+            "form": 9,
+            "tacticalDiscipline": 11,
+            "teamwork": 18,
+            "experience": 4,
+            "stamina": 3,
+            "keeper": 0,
+            "playmaking": 8,
+            "passing": 11,
+            "technique": 8,
+            "defending": 5,
+            "striker": 5,
+            "pace": 11
+          },
+          "skillsChange": {
+            "form": 0,
+            "tacticalDiscipline": 0,
+            "teamwork": 1,
+            "experience": 0,
+            "stamina": 0,
+            "keeper": 0,
+            "playmaking": 0,
+            "passing": 1,
+            "technique": 0,
+            "defending": 0,
+            "striker": 0,
+            "pace": 0,
+            "down": 0,
+            "up": 1
+          },
+          "type": {
+            "code": 4,
+            "name": "passing"
+          },
+          "kind": {
+            "code": 1,
+            "name": "individual"
+          },
+          "playerValue": {
+            "value": 212250,
+            "currency": "u$s"
+          },
+          "games": {
+            "minutesOfficial": 120,
+            "minutesFriendly": 90,
+            "minutesNational": 0
+          },
+          "intensity": 100,
+          "formation": {
+            "code": 2,
+            "name": "MID"
+          },
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "age": 19
+        }
+      },
+      {
+        "id": 40379849,
+        "player": {
+          "name": {
+            "name": "Player",
+            "surname": "40379849",
+            "full": "Player 40379849"
+          },
+          "formation": null,
+          "number": null,
+          "team": {
+            "id": 1
+          },
+          "country": {
+            "code": 32,
+            "name": "Argentina"
+          },
+          "value": {
+            "value": 450000,
+            "currency": "ARS"
+          },
+          "previousValue": null,
+          "wage": {
+            "value": 12000,
+            "currency": "ARS"
+          },
+          "characteristics": {
+            "age": 20,
+            "height": 180,
+            "weight": 75,
+            "bmi": 23.1
+          },
+          "skills": {
+            "form": 10,
+            "tacticalDiscipline": 8,
+            "teamwork": 7,
+            "experience": 6,
+            "stamina": 8,
+            "keeper": 1,
+            "playmaking": 9,
+            "passing": 10,
+            "technique": 9,
+            "defending": 5,
+            "striker": 4,
+            "pace": 11
+          },
+          "stats": null,
+          "nationalStats": null,
+          "face": null,
+          "youthTeamId": 0,
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "nationalSharing": false,
+          "nationalCallUp": false,
+          "nationalType": "none"
+        },
+        "report": {
+          "week": 1217,
+          "day": {
+            "season": 79,
+            "week": 1217,
+            "seasonWeek": 8,
+            "day": 5,
+            "date": {
+              "value": "2026-11-12",
+              "timestamp": 1794470400
+            }
+          },
+          "skills": {
+            "form": 9,
+            "tacticalDiscipline": 3,
+            "teamwork": 5,
+            "experience": 1,
+            "stamina": 1,
+            "keeper": 0,
+            "playmaking": 5,
+            "passing": 2,
+            "technique": 3,
+            "defending": 5,
+            "striker": 1,
+            "pace": 3
+          },
+          "skillsChange": {
+            "form": -1,
+            "tacticalDiscipline": 3,
+            "teamwork": 5,
+            "experience": 0,
+            "stamina": 0,
+            "keeper": 0,
+            "playmaking": 0,
+            "passing": 0,
+            "technique": 0,
+            "defending": 0,
+            "striker": 0,
+            "pace": 0,
+            "down": 0,
+            "up": 0
+          },
+          "type": {
+            "code": 4,
+            "name": "passing"
+          },
+          "kind": {
+            "code": 1,
+            "name": "individual"
+          },
+          "playerValue": {
+            "value": 22750,
+            "currency": "u$s"
+          },
+          "games": {
+            "minutesOfficial": 136,
+            "minutesFriendly": 45,
+            "minutesNational": 0
+          },
+          "intensity": 99,
+          "formation": {
+            "code": 2,
+            "name": "MID"
+          },
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "age": 16
+        }
+      },
+      {
+        "id": 40396901,
+        "player": {
+          "name": {
+            "name": "Player",
+            "surname": "40396901",
+            "full": "Player 40396901"
+          },
+          "formation": null,
+          "number": null,
+          "team": {
+            "id": 1
+          },
+          "country": {
+            "code": 32,
+            "name": "Argentina"
+          },
+          "value": {
+            "value": 450000,
+            "currency": "ARS"
+          },
+          "previousValue": null,
+          "wage": {
+            "value": 12000,
+            "currency": "ARS"
+          },
+          "characteristics": {
+            "age": 20,
+            "height": 180,
+            "weight": 75,
+            "bmi": 23.1
+          },
+          "skills": {
+            "form": 10,
+            "tacticalDiscipline": 8,
+            "teamwork": 7,
+            "experience": 6,
+            "stamina": 8,
+            "keeper": 1,
+            "playmaking": 9,
+            "passing": 10,
+            "technique": 9,
+            "defending": 5,
+            "striker": 4,
+            "pace": 11
+          },
+          "stats": null,
+          "nationalStats": null,
+          "face": null,
+          "youthTeamId": 0,
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "nationalSharing": false,
+          "nationalCallUp": false,
+          "nationalType": "none"
+        },
+        "report": {
+          "week": 1217,
+          "day": {
+            "season": 79,
+            "week": 1217,
+            "seasonWeek": 8,
+            "day": 5,
+            "date": {
+              "value": "2026-11-12",
+              "timestamp": 1794470400
+            }
+          },
+          "skills": {
+            "form": 9,
+            "tacticalDiscipline": 0,
+            "teamwork": 0,
+            "experience": 0,
+            "stamina": 1,
+            "keeper": 0,
+            "playmaking": 3,
+            "passing": 9,
+            "technique": 2,
+            "defending": 4,
+            "striker": 7,
+            "pace": 0
+          },
+          "skillsChange": {
+            "form": 0,
+            "tacticalDiscipline": 0,
+            "teamwork": 0,
+            "experience": 0,
+            "stamina": 0,
+            "keeper": 0,
+            "playmaking": 0,
+            "passing": 0,
+            "technique": 0,
+            "defending": 0,
+            "striker": 0,
+            "pace": 0,
+            "down": 0,
+            "up": 0
+          },
+          "type": {
+            "code": 0,
+            "name": "general"
+          },
+          "kind": {
+            "code": 3,
+            "name": "missing"
+          },
+          "playerValue": {
+            "value": 58500,
+            "currency": "u$s"
+          },
+          "games": {
+            "minutesOfficial": 0,
+            "minutesFriendly": 0,
+            "minutesNational": 0
+          },
+          "intensity": 0,
+          "formation": null,
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "age": 19
+        }
+      },
+      {
+        "id": 40396902,
+        "player": {
+          "name": {
+            "name": "Player",
+            "surname": "40396902",
+            "full": "Player 40396902"
+          },
+          "formation": null,
+          "number": null,
+          "team": {
+            "id": 1
+          },
+          "country": {
+            "code": 32,
+            "name": "Argentina"
+          },
+          "value": {
+            "value": 450000,
+            "currency": "ARS"
+          },
+          "previousValue": null,
+          "wage": {
+            "value": 12000,
+            "currency": "ARS"
+          },
+          "characteristics": {
+            "age": 20,
+            "height": 180,
+            "weight": 75,
+            "bmi": 23.1
+          },
+          "skills": {
+            "form": 10,
+            "tacticalDiscipline": 8,
+            "teamwork": 7,
+            "experience": 6,
+            "stamina": 8,
+            "keeper": 1,
+            "playmaking": 9,
+            "passing": 10,
+            "technique": 9,
+            "defending": 5,
+            "striker": 4,
+            "pace": 11
+          },
+          "stats": null,
+          "nationalStats": null,
+          "face": null,
+          "youthTeamId": 0,
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "nationalSharing": false,
+          "nationalCallUp": false,
+          "nationalType": "none"
+        },
+        "report": {
+          "week": 1217,
+          "day": {
+            "season": 79,
+            "week": 1217,
+            "seasonWeek": 8,
+            "day": 5,
+            "date": {
+              "value": "2026-11-12",
+              "timestamp": 1794470400
+            }
+          },
+          "skills": {
+            "form": 9,
+            "tacticalDiscipline": 0,
+            "teamwork": 0,
+            "experience": 0,
+            "stamina": 3,
+            "keeper": 1,
+            "playmaking": 1,
+            "passing": 6,
+            "technique": 1,
+            "defending": 4,
+            "striker": 3,
+            "pace": 4
+          },
+          "skillsChange": {
+            "form": 0,
+            "tacticalDiscipline": 0,
+            "teamwork": 0,
+            "experience": 0,
+            "stamina": 0,
+            "keeper": 0,
+            "playmaking": 0,
+            "passing": 0,
+            "technique": 0,
+            "defending": 0,
+            "striker": 0,
+            "pace": 0,
+            "down": 0,
+            "up": 0
+          },
+          "type": {
+            "code": 0,
+            "name": "general"
+          },
+          "kind": {
+            "code": 3,
+            "name": "missing"
+          },
+          "playerValue": {
+            "value": 24750,
+            "currency": "u$s"
+          },
+          "games": {
+            "minutesOfficial": 0,
+            "minutesFriendly": 0,
+            "minutesNational": 0
+          },
+          "intensity": 0,
+          "formation": null,
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "age": 16
+        }
+      }
+    ]
+  },
+  "explicit": {
+    "players": [
+      {
+        "id": 38766221,
+        "player": {
+          "name": {
+            "name": "Player",
+            "surname": "38766221",
+            "full": "Player 38766221"
+          },
+          "formation": null,
+          "number": null,
+          "team": {
+            "id": 1
+          },
+          "country": {
+            "code": 32,
+            "name": "Argentina"
+          },
+          "value": {
+            "value": 450000,
+            "currency": "ARS"
+          },
+          "previousValue": null,
+          "wage": {
+            "value": 12000,
+            "currency": "ARS"
+          },
+          "characteristics": {
+            "age": 20,
+            "height": 180,
+            "weight": 75,
+            "bmi": 23.1
+          },
+          "skills": {
+            "form": 10,
+            "tacticalDiscipline": 8,
+            "teamwork": 7,
+            "experience": 6,
+            "stamina": 8,
+            "keeper": 1,
+            "playmaking": 9,
+            "passing": 10,
+            "technique": 9,
+            "defending": 5,
+            "striker": 4,
+            "pace": 11
+          },
+          "stats": null,
+          "nationalStats": null,
+          "face": null,
+          "youthTeamId": 0,
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "nationalSharing": false,
+          "nationalCallUp": false,
+          "nationalType": "none"
+        },
+        "report": {
+          "week": 1217,
+          "day": {
+            "season": 79,
+            "week": 1217,
+            "seasonWeek": 8,
+            "day": 5,
+            "date": {
+              "value": "2026-11-12",
+              "timestamp": 1794470400
+            }
+          },
+          "skills": {
+            "form": 15,
+            "tacticalDiscipline": 14,
+            "teamwork": 11,
+            "experience": 18,
+            "stamina": 11,
+            "keeper": 0,
+            "playmaking": 8,
+            "passing": 11,
+            "technique": 16,
+            "defending": 7,
+            "striker": 17,
+            "pace": 16
+          },
+          "skillsChange": {
+            "form": -1,
+            "tacticalDiscipline": -2,
+            "teamwork": -3,
+            "experience": 0,
+            "stamina": 0,
+            "keeper": 0,
+            "playmaking": 0,
+            "passing": 0,
+            "technique": 0,
+            "defending": 0,
+            "striker": 0,
+            "pace": 0,
+            "down": 0,
+            "up": 0
+          },
+          "type": {
+            "code": 5,
+            "name": "technique"
+          },
+          "kind": {
+            "code": 3,
+            "name": "missing"
+          },
+          "playerValue": {
+            "value": 1980750,
+            "currency": "u$s"
+          },
+          "games": {
+            "minutesOfficial": 0,
+            "minutesFriendly": 0,
+            "minutesNational": 0
+          },
+          "intensity": 0,
+          "formation": {
+            "code": 3,
+            "name": "ATT"
+          },
+          "injury": {
+            "daysRemaining": 3,
+            "severe": false
+          },
+          "age": 32
+        }
+      },
+      {
+        "id": 38898392,
+        "player": {
+          "name": {
+            "name": "Player",
+            "surname": "38898392",
+            "full": "Player 38898392"
+          },
+          "formation": null,
+          "number": null,
+          "team": {
+            "id": 1
+          },
+          "country": {
+            "code": 32,
+            "name": "Argentina"
+          },
+          "value": {
+            "value": 450000,
+            "currency": "ARS"
+          },
+          "previousValue": null,
+          "wage": {
+            "value": 12000,
+            "currency": "ARS"
+          },
+          "characteristics": {
+            "age": 20,
+            "height": 180,
+            "weight": 75,
+            "bmi": 23.1
+          },
+          "skills": {
+            "form": 10,
+            "tacticalDiscipline": 8,
+            "teamwork": 7,
+            "experience": 6,
+            "stamina": 8,
+            "keeper": 1,
+            "playmaking": 9,
+            "passing": 10,
+            "technique": 9,
+            "defending": 5,
+            "striker": 4,
+            "pace": 11
+          },
+          "stats": null,
+          "nationalStats": null,
+          "face": null,
+          "youthTeamId": 0,
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "nationalSharing": false,
+          "nationalCallUp": false,
+          "nationalType": "none"
+        },
+        "report": {
+          "week": 1217,
+          "day": {
+            "season": 79,
+            "week": 1217,
+            "seasonWeek": 8,
+            "day": 5,
+            "date": {
+              "value": "2026-11-12",
+              "timestamp": 1794470400
+            }
+          },
+          "skills": {
+            "form": 7,
+            "tacticalDiscipline": 15,
+            "teamwork": 13,
+            "experience": 17,
+            "stamina": 11,
+            "keeper": 0,
+            "playmaking": 8,
+            "passing": 7,
+            "technique": 9,
+            "defending": 15,
+            "striker": 7,
+            "pace": 15
+          },
+          "skillsChange": {
+            "form": -2,
+            "tacticalDiscipline": 0,
+            "teamwork": 0,
+            "experience": 0,
+            "stamina": 0,
+            "keeper": 0,
+            "playmaking": 0,
+            "passing": 0,
+            "technique": 0,
+            "defending": 0,
+            "striker": 0,
+            "pace": 0,
+            "down": 0,
+            "up": 0
+          },
+          "type": {
+            "code": 8,
+            "name": "pace"
+          },
+          "kind": {
+            "code": 2,
+            "name": "formation"
+          },
+          "playerValue": {
+            "value": 688500,
+            "currency": "u$s"
+          },
+          "games": {
+            "minutesOfficial": 135,
+            "minutesFriendly": 0,
+            "minutesNational": 0
+          },
+          "intensity": 96,
+          "formation": {
+            "code": 1,
+            "name": "DEF"
+          },
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "age": 30
+        }
+      },
+      {
+        "id": 38934265,
+        "player": {
+          "name": {
+            "name": "Player",
+            "surname": "38934265",
+            "full": "Player 38934265"
+          },
+          "formation": null,
+          "number": null,
+          "team": {
+            "id": 1
+          },
+          "country": {
+            "code": 32,
+            "name": "Argentina"
+          },
+          "value": {
+            "value": 450000,
+            "currency": "ARS"
+          },
+          "previousValue": null,
+          "wage": {
+            "value": 12000,
+            "currency": "ARS"
+          },
+          "characteristics": {
+            "age": 20,
+            "height": 180,
+            "weight": 75,
+            "bmi": 23.1
+          },
+          "skills": {
+            "form": 10,
+            "tacticalDiscipline": 8,
+            "teamwork": 7,
+            "experience": 6,
+            "stamina": 8,
+            "keeper": 1,
+            "playmaking": 9,
+            "passing": 10,
+            "technique": 9,
+            "defending": 5,
+            "striker": 4,
+            "pace": 11
+          },
+          "stats": null,
+          "nationalStats": null,
+          "face": null,
+          "youthTeamId": 0,
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "nationalSharing": false,
+          "nationalCallUp": false,
+          "nationalType": "none"
+        },
+        "report": {
+          "week": 1217,
+          "day": {
+            "season": 79,
+            "week": 1217,
+            "seasonWeek": 8,
+            "day": 5,
+            "date": {
+              "value": "2026-11-12",
+              "timestamp": 1794470400
+            }
+          },
+          "skills": {
+            "form": 17,
+            "tacticalDiscipline": 15,
+            "teamwork": 13,
+            "experience": 17,
+            "stamina": 11,
+            "keeper": 0,
+            "playmaking": 11,
+            "passing": 9,
+            "technique": 15,
+            "defending": 9,
+            "striker": 16,
+            "pace": 15
+          },
+          "skillsChange": {
+            "form": 1,
+            "tacticalDiscipline": 0,
+            "teamwork": 0,
+            "experience": 0,
+            "stamina": 0,
+            "keeper": 0,
+            "playmaking": 0,
+            "passing": 0,
+            "technique": 0,
+            "defending": 0,
+            "striker": 0,
+            "pace": 0,
+            "down": 0,
+            "up": 0
+          },
+          "type": {
+            "code": 5,
+            "name": "technique"
+          },
+          "kind": {
+            "code": 2,
+            "name": "formation"
+          },
+          "playerValue": {
+            "value": 1637750,
+            "currency": "u$s"
+          },
+          "games": {
+            "minutesOfficial": 180,
+            "minutesFriendly": 0,
+            "minutesNational": 0
+          },
+          "intensity": 100,
+          "formation": {
+            "code": 3,
+            "name": "ATT"
+          },
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "age": 30
+        }
+      },
+      {
+        "id": 38971999,
+        "player": {
+          "name": {
+            "name": "Player",
+            "surname": "38971999",
+            "full": "Player 38971999"
+          },
+          "formation": null,
+          "number": null,
+          "team": {
+            "id": 1
+          },
+          "country": {
+            "code": 32,
+            "name": "Argentina"
+          },
+          "value": {
+            "value": 450000,
+            "currency": "ARS"
+          },
+          "previousValue": null,
+          "wage": {
+            "value": 12000,
+            "currency": "ARS"
+          },
+          "characteristics": {
+            "age": 20,
+            "height": 180,
+            "weight": 75,
+            "bmi": 23.1
+          },
+          "skills": {
+            "form": 10,
+            "tacticalDiscipline": 8,
+            "teamwork": 7,
+            "experience": 6,
+            "stamina": 8,
+            "keeper": 1,
+            "playmaking": 9,
+            "passing": 10,
+            "technique": 9,
+            "defending": 5,
+            "striker": 4,
+            "pace": 11
+          },
+          "stats": null,
+          "nationalStats": null,
+          "face": null,
+          "youthTeamId": 0,
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "nationalSharing": false,
+          "nationalCallUp": false,
+          "nationalType": "none"
+        },
+        "report": {
+          "week": 1217,
+          "day": {
+            "season": 79,
+            "week": 1217,
+            "seasonWeek": 8,
+            "day": 5,
+            "date": {
+              "value": "2026-11-12",
+              "timestamp": 1794470400
+            }
+          },
+          "skills": {
+            "form": 6,
+            "tacticalDiscipline": 14,
+            "teamwork": 12,
+            "experience": 16,
+            "stamina": 11,
+            "keeper": 0,
+            "playmaking": 11,
+            "passing": 11,
+            "technique": 16,
+            "defending": 18,
+            "striker": 6,
+            "pace": 17
+          },
+          "skillsChange": {
+            "form": 0,
+            "tacticalDiscipline": 0,
+            "teamwork": 1,
+            "experience": 0,
+            "stamina": 0,
+            "keeper": 0,
+            "playmaking": 0,
+            "passing": 0,
+            "technique": 0,
+            "defending": 0,
+            "striker": 0,
+            "pace": 0,
+            "down": 0,
+            "up": 0
+          },
+          "type": {
+            "code": 8,
+            "name": "pace"
+          },
+          "kind": {
+            "code": 2,
+            "name": "formation"
+          },
+          "playerValue": {
+            "value": 1790500,
+            "currency": "u$s"
+          },
+          "games": {
+            "minutesOfficial": 90,
+            "minutesFriendly": 0,
+            "minutesNational": 0
+          },
+          "intensity": 93,
+          "formation": {
+            "code": 1,
+            "name": "DEF"
+          },
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "age": 30
+        }
+      },
+      {
+        "id": 38988040,
+        "player": {
+          "name": {
+            "name": "Player",
+            "surname": "38988040",
+            "full": "Player 38988040"
+          },
+          "formation": null,
+          "number": null,
+          "team": {
+            "id": 1
+          },
+          "country": {
+            "code": 32,
+            "name": "Argentina"
+          },
+          "value": {
+            "value": 450000,
+            "currency": "ARS"
+          },
+          "previousValue": null,
+          "wage": {
+            "value": 12000,
+            "currency": "ARS"
+          },
+          "characteristics": {
+            "age": 20,
+            "height": 180,
+            "weight": 75,
+            "bmi": 23.1
+          },
+          "skills": {
+            "form": 10,
+            "tacticalDiscipline": 8,
+            "teamwork": 7,
+            "experience": 6,
+            "stamina": 8,
+            "keeper": 1,
+            "playmaking": 9,
+            "passing": 10,
+            "technique": 9,
+            "defending": 5,
+            "striker": 4,
+            "pace": 11
+          },
+          "stats": null,
+          "nationalStats": null,
+          "face": null,
+          "youthTeamId": 0,
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "nationalSharing": false,
+          "nationalCallUp": false,
+          "nationalType": "none"
+        },
+        "report": {
+          "week": 1217,
+          "day": {
+            "season": 79,
+            "week": 1217,
+            "seasonWeek": 8,
+            "day": 5,
+            "date": {
+              "value": "2026-11-12",
+              "timestamp": 1794470400
+            }
+          },
+          "skills": {
+            "form": 5,
+            "tacticalDiscipline": 9,
+            "teamwork": 1,
+            "experience": 16,
+            "stamina": 11,
+            "keeper": 1,
+            "playmaking": 12,
+            "passing": 13,
+            "technique": 15,
+            "defending": 9,
+            "striker": 8,
+            "pace": 12
+          },
+          "skillsChange": {
+            "form": -2,
+            "tacticalDiscipline": 1,
+            "teamwork": 1,
+            "experience": 0,
+            "stamina": 0,
+            "keeper": 0,
+            "playmaking": 0,
+            "passing": 0,
+            "technique": 0,
+            "defending": 0,
+            "striker": 0,
+            "pace": 0,
+            "down": 0,
+            "up": 0
+          },
+          "type": {
+            "code": 4,
+            "name": "passing"
+          },
+          "kind": {
+            "code": 2,
+            "name": "formation"
+          },
+          "playerValue": {
+            "value": 762500,
+            "currency": "u$s"
+          },
+          "games": {
+            "minutesOfficial": 50,
+            "minutesFriendly": 0,
+            "minutesNational": 0
+          },
+          "intensity": 51,
+          "formation": {
+            "code": 2,
+            "name": "MID"
+          },
+          "injury": {
+            "daysRemaining": 9,
+            "severe": true
+          },
+          "age": 29
+        }
+      },
+      {
+        "id": 38990550,
+        "player": {
+          "name": {
+            "name": "Player",
+            "surname": "38990550",
+            "full": "Player 38990550"
+          },
+          "formation": null,
+          "number": null,
+          "team": {
+            "id": 1
+          },
+          "country": {
+            "code": 32,
+            "name": "Argentina"
+          },
+          "value": {
+            "value": 450000,
+            "currency": "ARS"
+          },
+          "previousValue": null,
+          "wage": {
+            "value": 12000,
+            "currency": "ARS"
+          },
+          "characteristics": {
+            "age": 20,
+            "height": 180,
+            "weight": 75,
+            "bmi": 23.1
+          },
+          "skills": {
+            "form": 10,
+            "tacticalDiscipline": 8,
+            "teamwork": 7,
+            "experience": 6,
+            "stamina": 8,
+            "keeper": 1,
+            "playmaking": 9,
+            "passing": 10,
+            "technique": 9,
+            "defending": 5,
+            "striker": 4,
+            "pace": 11
+          },
+          "stats": null,
+          "nationalStats": null,
+          "face": null,
+          "youthTeamId": 0,
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "nationalSharing": false,
+          "nationalCallUp": false,
+          "nationalType": "none"
+        },
+        "report": {
+          "week": 1217,
+          "day": {
+            "season": 79,
+            "week": 1217,
+            "seasonWeek": 8,
+            "day": 5,
+            "date": {
+              "value": "2026-11-12",
+              "timestamp": 1794470400
+            }
+          },
+          "skills": {
+            "form": 8,
+            "tacticalDiscipline": 15,
+            "teamwork": 13,
+            "experience": 17,
+            "stamina": 11,
+            "keeper": 0,
+            "playmaking": 14,
+            "passing": 14,
+            "technique": 12,
+            "defending": 10,
+            "striker": 9,
+            "pace": 16
+          },
+          "skillsChange": {
+            "form": 1,
+            "tacticalDiscipline": 0,
+            "teamwork": 0,
+            "experience": 0,
+            "stamina": 0,
+            "keeper": 0,
+            "playmaking": 0,
+            "passing": 0,
+            "technique": 0,
+            "defending": 0,
+            "striker": 0,
+            "pace": 0,
+            "down": 0,
+            "up": 0
+          },
+          "type": {
+            "code": 4,
+            "name": "passing"
+          },
+          "kind": {
+            "code": 2,
+            "name": "formation"
+          },
+          "playerValue": {
+            "value": 1112500,
+            "currency": "u$s"
+          },
+          "games": {
+            "minutesOfficial": 270,
+            "minutesFriendly": 0,
+            "minutesNational": 0
+          },
+          "intensity": 100,
+          "formation": {
+            "code": 2,
+            "name": "MID"
+          },
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "age": 29
+        }
+      },
+      {
+        "id": 38999620,
+        "player": {
+          "name": {
+            "name": "Player",
+            "surname": "38999620",
+            "full": "Player 38999620"
+          },
+          "formation": null,
+          "number": null,
+          "team": {
+            "id": 1
+          },
+          "country": {
+            "code": 32,
+            "name": "Argentina"
+          },
+          "value": {
+            "value": 450000,
+            "currency": "ARS"
+          },
+          "previousValue": null,
+          "wage": {
+            "value": 12000,
+            "currency": "ARS"
+          },
+          "characteristics": {
+            "age": 20,
+            "height": 180,
+            "weight": 75,
+            "bmi": 23.1
+          },
+          "skills": {
+            "form": 10,
+            "tacticalDiscipline": 8,
+            "teamwork": 7,
+            "experience": 6,
+            "stamina": 8,
+            "keeper": 1,
+            "playmaking": 9,
+            "passing": 10,
+            "technique": 9,
+            "defending": 5,
+            "striker": 4,
+            "pace": 11
+          },
+          "stats": null,
+          "nationalStats": null,
+          "face": null,
+          "youthTeamId": 0,
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "nationalSharing": false,
+          "nationalCallUp": false,
+          "nationalType": "none"
+        },
+        "report": {
+          "week": 1217,
+          "day": {
+            "season": 79,
+            "week": 1217,
+            "seasonWeek": 8,
+            "day": 5,
+            "date": {
+              "value": "2026-11-12",
+              "timestamp": 1794470400
+            }
+          },
+          "skills": {
+            "form": 14,
+            "tacticalDiscipline": 13,
+            "teamwork": 8,
+            "experience": 17,
+            "stamina": 11,
+            "keeper": 2,
+            "playmaking": 14,
+            "passing": 15,
+            "technique": 17,
+            "defending": 8,
+            "striker": 8,
+            "pace": 16
+          },
+          "skillsChange": {
+            "form": -4,
+            "tacticalDiscipline": -1,
+            "teamwork": -2,
+            "experience": 0,
+            "stamina": 0,
+            "keeper": 0,
+            "playmaking": 0,
+            "passing": 0,
+            "technique": 0,
+            "defending": 0,
+            "striker": 0,
+            "pace": 0,
+            "down": 0,
+            "up": 0
+          },
+          "type": {
+            "code": 4,
+            "name": "passing"
+          },
+          "kind": {
+            "code": 3,
+            "name": "missing"
+          },
+          "playerValue": {
+            "value": 1891000,
+            "currency": "u$s"
+          },
+          "games": {
+            "minutesOfficial": 0,
+            "minutesFriendly": 0,
+            "minutesNational": 0
+          },
+          "intensity": 0,
+          "formation": {
+            "code": 2,
+            "name": "MID"
+          },
+          "injury": {
+            "daysRemaining": 4,
+            "severe": false
+          },
+          "age": 32
+        }
+      },
+      {
+        "id": 39022070,
+        "player": {
+          "name": {
+            "name": "Player",
+            "surname": "39022070",
+            "full": "Player 39022070"
+          },
+          "formation": null,
+          "number": null,
+          "team": {
+            "id": 1
+          },
+          "country": {
+            "code": 32,
+            "name": "Argentina"
+          },
+          "value": {
+            "value": 450000,
+            "currency": "ARS"
+          },
+          "previousValue": null,
+          "wage": {
+            "value": 12000,
+            "currency": "ARS"
+          },
+          "characteristics": {
+            "age": 20,
+            "height": 180,
+            "weight": 75,
+            "bmi": 23.1
+          },
+          "skills": {
+            "form": 10,
+            "tacticalDiscipline": 8,
+            "teamwork": 7,
+            "experience": 6,
+            "stamina": 8,
+            "keeper": 1,
+            "playmaking": 9,
+            "passing": 10,
+            "technique": 9,
+            "defending": 5,
+            "striker": 4,
+            "pace": 11
+          },
+          "stats": null,
+          "nationalStats": null,
+          "face": null,
+          "youthTeamId": 0,
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "nationalSharing": false,
+          "nationalCallUp": false,
+          "nationalType": "none"
+        },
+        "report": {
+          "week": 1217,
+          "day": {
+            "season": 79,
+            "week": 1217,
+            "seasonWeek": 8,
+            "day": 5,
+            "date": {
+              "value": "2026-11-12",
+              "timestamp": 1794470400
+            }
+          },
+          "skills": {
+            "form": 18,
+            "tacticalDiscipline": 13,
+            "teamwork": 14,
+            "experience": 12,
+            "stamina": 11,
+            "keeper": 16,
+            "playmaking": 7,
+            "passing": 8,
+            "technique": 6,
+            "defending": 7,
+            "striker": 6,
+            "pace": 11
+          },
+          "skillsChange": {
+            "form": 0,
+            "tacticalDiscipline": 1,
+            "teamwork": 1,
+            "experience": 0,
+            "stamina": 0,
+            "keeper": 0,
+            "playmaking": 0,
+            "passing": 0,
+            "technique": 0,
+            "defending": 0,
+            "striker": 0,
+            "pace": 0,
+            "down": 0,
+            "up": 0
+          },
+          "type": {
+            "code": 2,
+            "name": "keeper"
+          },
+          "kind": {
+            "code": 2,
+            "name": "formation"
+          },
+          "playerValue": {
+            "value": 2418250,
+            "currency": "u$s"
+          },
+          "games": {
+            "minutesOfficial": 180,
+            "minutesFriendly": 0,
+            "minutesNational": 0
+          },
+          "intensity": 100,
+          "formation": {
+            "code": 0,
+            "name": "GK"
+          },
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "age": 31
+        }
+      },
+      {
+        "id": 39059641,
+        "player": {
+          "name": {
+            "name": "Player",
+            "surname": "39059641",
+            "full": "Player 39059641"
+          },
+          "formation": null,
+          "number": null,
+          "team": {
+            "id": 1
+          },
+          "country": {
+            "code": 32,
+            "name": "Argentina"
+          },
+          "value": {
+            "value": 450000,
+            "currency": "ARS"
+          },
+          "previousValue": null,
+          "wage": {
+            "value": 12000,
+            "currency": "ARS"
+          },
+          "characteristics": {
+            "age": 20,
+            "height": 180,
+            "weight": 75,
+            "bmi": 23.1
+          },
+          "skills": {
+            "form": 10,
+            "tacticalDiscipline": 8,
+            "teamwork": 7,
+            "experience": 6,
+            "stamina": 8,
+            "keeper": 1,
+            "playmaking": 9,
+            "passing": 10,
+            "technique": 9,
+            "defending": 5,
+            "striker": 4,
+            "pace": 11
+          },
+          "stats": null,
+          "nationalStats": null,
+          "face": null,
+          "youthTeamId": 0,
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "nationalSharing": false,
+          "nationalCallUp": false,
+          "nationalType": "none"
+        },
+        "report": {
+          "week": 1217,
+          "day": {
+            "season": 79,
+            "week": 1217,
+            "seasonWeek": 8,
+            "day": 5,
+            "date": {
+              "value": "2026-11-12",
+              "timestamp": 1794470400
+            }
+          },
+          "skills": {
+            "form": 11,
+            "tacticalDiscipline": 15,
+            "teamwork": 14,
+            "experience": 15,
+            "stamina": 11,
+            "keeper": 0,
+            "playmaking": 11,
+            "passing": 9,
+            "technique": 10,
+            "defending": 14,
+            "striker": 8,
+            "pace": 14
+          },
+          "skillsChange": {
+            "form": 2,
+            "tacticalDiscipline": 1,
+            "teamwork": 0,
+            "experience": 0,
+            "stamina": 0,
+            "keeper": 0,
+            "playmaking": 0,
+            "passing": 0,
+            "technique": 0,
+            "defending": 0,
+            "striker": 0,
+            "pace": 0,
+            "down": 0,
+            "up": 0
+          },
+          "type": {
+            "code": 8,
+            "name": "pace"
+          },
+          "kind": {
+            "code": 2,
+            "name": "formation"
+          },
+          "playerValue": {
+            "value": 779750,
+            "currency": "u$s"
+          },
+          "games": {
+            "minutesOfficial": 180,
+            "minutesFriendly": 0,
+            "minutesNational": 0
+          },
+          "intensity": 100,
+          "formation": {
+            "code": 1,
+            "name": "DEF"
+          },
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "age": 28
+        }
+      },
+      {
+        "id": 39126555,
+        "player": {
+          "name": {
+            "name": "Player",
+            "surname": "39126555",
+            "full": "Player 39126555"
+          },
+          "formation": null,
+          "number": null,
+          "team": {
+            "id": 1
+          },
+          "country": {
+            "code": 32,
+            "name": "Argentina"
+          },
+          "value": {
+            "value": 450000,
+            "currency": "ARS"
+          },
+          "previousValue": null,
+          "wage": {
+            "value": 12000,
+            "currency": "ARS"
+          },
+          "characteristics": {
+            "age": 20,
+            "height": 180,
+            "weight": 75,
+            "bmi": 23.1
+          },
+          "skills": {
+            "form": 10,
+            "tacticalDiscipline": 8,
+            "teamwork": 7,
+            "experience": 6,
+            "stamina": 8,
+            "keeper": 1,
+            "playmaking": 9,
+            "passing": 10,
+            "technique": 9,
+            "defending": 5,
+            "striker": 4,
+            "pace": 11
+          },
+          "stats": null,
+          "nationalStats": null,
+          "face": null,
+          "youthTeamId": 0,
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "nationalSharing": false,
+          "nationalCallUp": false,
+          "nationalType": "none"
+        },
+        "report": {
+          "week": 1217,
+          "day": {
+            "season": 79,
+            "week": 1217,
+            "seasonWeek": 8,
+            "day": 5,
+            "date": {
+              "value": "2026-11-12",
+              "timestamp": 1794470400
+            }
+          },
+          "skills": {
+            "form": 17,
+            "tacticalDiscipline": 16,
+            "teamwork": 15,
+            "experience": 17,
+            "stamina": 11,
+            "keeper": 0,
+            "playmaking": 14,
+            "passing": 14,
+            "technique": 14,
+            "defending": 8,
+            "striker": 9,
+            "pace": 16
+          },
+          "skillsChange": {
+            "form": -1,
+            "tacticalDiscipline": 0,
+            "teamwork": 1,
+            "experience": 0,
+            "stamina": 0,
+            "keeper": 0,
+            "playmaking": 0,
+            "passing": 0,
+            "technique": 0,
+            "defending": 0,
+            "striker": 0,
+            "pace": 0,
+            "down": 0,
+            "up": 0
+          },
+          "type": {
+            "code": 4,
+            "name": "passing"
+          },
+          "kind": {
+            "code": 2,
+            "name": "formation"
+          },
+          "playerValue": {
+            "value": 1600750,
+            "currency": "u$s"
+          },
+          "games": {
+            "minutesOfficial": 196,
+            "minutesFriendly": 0,
+            "minutesNational": 0
+          },
+          "intensity": 100,
+          "formation": {
+            "code": 2,
+            "name": "MID"
+          },
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "age": 28
+        }
+      },
+      {
+        "id": 39691693,
+        "player": {
+          "name": {
+            "name": "Player",
+            "surname": "39691693",
+            "full": "Player 39691693"
+          },
+          "formation": null,
+          "number": null,
+          "team": {
+            "id": 1
+          },
+          "country": {
+            "code": 32,
+            "name": "Argentina"
+          },
+          "value": {
+            "value": 450000,
+            "currency": "ARS"
+          },
+          "previousValue": null,
+          "wage": {
+            "value": 12000,
+            "currency": "ARS"
+          },
+          "characteristics": {
+            "age": 20,
+            "height": 180,
+            "weight": 75,
+            "bmi": 23.1
+          },
+          "skills": {
+            "form": 10,
+            "tacticalDiscipline": 8,
+            "teamwork": 7,
+            "experience": 6,
+            "stamina": 8,
+            "keeper": 1,
+            "playmaking": 9,
+            "passing": 10,
+            "technique": 9,
+            "defending": 5,
+            "striker": 4,
+            "pace": 11
+          },
+          "stats": null,
+          "nationalStats": null,
+          "face": null,
+          "youthTeamId": 0,
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "nationalSharing": false,
+          "nationalCallUp": false,
+          "nationalType": "none"
+        },
+        "report": {
+          "week": 1217,
+          "day": {
+            "season": 79,
+            "week": 1217,
+            "seasonWeek": 8,
+            "day": 5,
+            "date": {
+              "value": "2026-11-12",
+              "timestamp": 1794470400
+            }
+          },
+          "skills": {
+            "form": 7,
+            "tacticalDiscipline": 6,
+            "teamwork": 3,
+            "experience": 8,
+            "stamina": 11,
+            "keeper": 0,
+            "playmaking": 9,
+            "passing": 6,
+            "technique": 9,
+            "defending": 15,
+            "striker": 8,
+            "pace": 15
+          },
+          "skillsChange": {
+            "form": -2,
+            "tacticalDiscipline": 2,
+            "teamwork": 3,
+            "experience": 0,
+            "stamina": 0,
+            "keeper": 0,
+            "playmaking": 1,
+            "passing": 0,
+            "technique": 0,
+            "defending": 0,
+            "striker": 0,
+            "pace": 0,
+            "down": 0,
+            "up": 1
+          },
+          "type": {
+            "code": 8,
+            "name": "pace"
+          },
+          "kind": {
+            "code": 2,
+            "name": "formation"
+          },
+          "playerValue": {
+            "value": 714250,
+            "currency": "u$s"
+          },
+          "games": {
+            "minutesOfficial": 90,
+            "minutesFriendly": 0,
+            "minutesNational": 0
+          },
+          "intensity": 93,
+          "formation": {
+            "code": 1,
+            "name": "DEF"
+          },
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "age": 26
+        }
+      },
+      {
+        "id": 39739044,
+        "player": {
+          "name": {
+            "name": "Player",
+            "surname": "39739044",
+            "full": "Player 39739044"
+          },
+          "formation": null,
+          "number": null,
+          "team": {
+            "id": 1
+          },
+          "country": {
+            "code": 32,
+            "name": "Argentina"
+          },
+          "value": {
+            "value": 450000,
+            "currency": "ARS"
+          },
+          "previousValue": null,
+          "wage": {
+            "value": 12000,
+            "currency": "ARS"
+          },
+          "characteristics": {
+            "age": 20,
+            "height": 180,
+            "weight": 75,
+            "bmi": 23.1
+          },
+          "skills": {
+            "form": 10,
+            "tacticalDiscipline": 8,
+            "teamwork": 7,
+            "experience": 6,
+            "stamina": 8,
+            "keeper": 1,
+            "playmaking": 9,
+            "passing": 10,
+            "technique": 9,
+            "defending": 5,
+            "striker": 4,
+            "pace": 11
+          },
+          "stats": null,
+          "nationalStats": null,
+          "face": null,
+          "youthTeamId": 0,
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "nationalSharing": false,
+          "nationalCallUp": false,
+          "nationalType": "none"
+        },
+        "report": {
+          "week": 1217,
+          "day": {
+            "season": 79,
+            "week": 1217,
+            "seasonWeek": 8,
+            "day": 5,
+            "date": {
+              "value": "2026-11-12",
+              "timestamp": 1794470400
+            }
+          },
+          "skills": {
+            "form": 10,
+            "tacticalDiscipline": 15,
+            "teamwork": 17,
+            "experience": 13,
+            "stamina": 6,
+            "keeper": 15,
+            "playmaking": 3,
+            "passing": 4,
+            "technique": 2,
+            "defending": 2,
+            "striker": 2,
+            "pace": 14
+          },
+          "skillsChange": {
+            "form": 0,
+            "tacticalDiscipline": 0,
+            "teamwork": 1,
+            "experience": 0,
+            "stamina": 0,
+            "keeper": 0,
+            "playmaking": 0,
+            "passing": 0,
+            "technique": 0,
+            "defending": 0,
+            "striker": 0,
+            "pace": 0,
+            "down": 0,
+            "up": 0
+          },
+          "type": {
+            "code": 2,
+            "name": "keeper"
+          },
+          "kind": {
+            "code": 2,
+            "name": "formation"
+          },
+          "playerValue": {
+            "value": 1613250,
+            "currency": "u$s"
+          },
+          "games": {
+            "minutesOfficial": 90,
+            "minutesFriendly": 90,
+            "minutesNational": 0
+          },
+          "intensity": 98,
+          "formation": {
+            "code": 0,
+            "name": "GK"
+          },
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "age": 25
+        }
+      },
+      {
+        "id": 39811507,
+        "player": {
+          "name": {
+            "name": "Player",
+            "surname": "39811507",
+            "full": "Player 39811507"
+          },
+          "formation": null,
+          "number": null,
+          "team": {
+            "id": 1
+          },
+          "country": {
+            "code": 32,
+            "name": "Argentina"
+          },
+          "value": {
+            "value": 450000,
+            "currency": "ARS"
+          },
+          "previousValue": null,
+          "wage": {
+            "value": 12000,
+            "currency": "ARS"
+          },
+          "characteristics": {
+            "age": 20,
+            "height": 180,
+            "weight": 75,
+            "bmi": 23.1
+          },
+          "skills": {
+            "form": 10,
+            "tacticalDiscipline": 8,
+            "teamwork": 7,
+            "experience": 6,
+            "stamina": 8,
+            "keeper": 1,
+            "playmaking": 9,
+            "passing": 10,
+            "technique": 9,
+            "defending": 5,
+            "striker": 4,
+            "pace": 11
+          },
+          "stats": null,
+          "nationalStats": null,
+          "face": null,
+          "youthTeamId": 0,
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "nationalSharing": false,
+          "nationalCallUp": false,
+          "nationalType": "none"
+        },
+        "report": {
+          "week": 1217,
+          "day": {
+            "season": 79,
+            "week": 1217,
+            "seasonWeek": 8,
+            "day": 5,
+            "date": {
+              "value": "2026-11-12",
+              "timestamp": 1794470400
+            }
+          },
+          "skills": {
+            "form": 15,
+            "tacticalDiscipline": 12,
+            "teamwork": 18,
+            "experience": 7,
+            "stamina": 8,
+            "keeper": 1,
+            "playmaking": 8,
+            "passing": 8,
+            "technique": 8,
+            "defending": 16,
+            "striker": 5,
+            "pace": 15
+          },
+          "skillsChange": {
+            "form": 2,
+            "tacticalDiscipline": 0,
+            "teamwork": 0,
+            "experience": 0,
+            "stamina": 0,
+            "keeper": 0,
+            "playmaking": 0,
+            "passing": 0,
+            "technique": 0,
+            "defending": 0,
+            "striker": 0,
+            "pace": 0,
+            "down": 0,
+            "up": 0
+          },
+          "type": {
+            "code": 8,
+            "name": "pace"
+          },
+          "kind": {
+            "code": 1,
+            "name": "individual"
+          },
+          "playerValue": {
+            "value": 966000,
+            "currency": "u$s"
+          },
+          "games": {
+            "minutesOfficial": 225,
+            "minutesFriendly": 0,
+            "minutesNational": 0
+          },
+          "intensity": 100,
+          "formation": {
+            "code": 1,
+            "name": "DEF"
+          },
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "age": 22
+        }
+      },
+      {
+        "id": 39827649,
+        "player": {
+          "name": {
+            "name": "Player",
+            "surname": "39827649",
+            "full": "Player 39827649"
+          },
+          "formation": null,
+          "number": null,
+          "team": {
+            "id": 1
+          },
+          "country": {
+            "code": 32,
+            "name": "Argentina"
+          },
+          "value": {
+            "value": 450000,
+            "currency": "ARS"
+          },
+          "previousValue": null,
+          "wage": {
+            "value": 12000,
+            "currency": "ARS"
+          },
+          "characteristics": {
+            "age": 20,
+            "height": 180,
+            "weight": 75,
+            "bmi": 23.1
+          },
+          "skills": {
+            "form": 10,
+            "tacticalDiscipline": 8,
+            "teamwork": 7,
+            "experience": 6,
+            "stamina": 8,
+            "keeper": 1,
+            "playmaking": 9,
+            "passing": 10,
+            "technique": 9,
+            "defending": 5,
+            "striker": 4,
+            "pace": 11
+          },
+          "stats": null,
+          "nationalStats": null,
+          "face": null,
+          "youthTeamId": 0,
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "nationalSharing": false,
+          "nationalCallUp": false,
+          "nationalType": "none"
+        },
+        "report": {
+          "week": 1217,
+          "day": {
+            "season": 79,
+            "week": 1217,
+            "seasonWeek": 8,
+            "day": 5,
+            "date": {
+              "value": "2026-11-12",
+              "timestamp": 1794470400
+            }
+          },
+          "skills": {
+            "form": 0,
+            "tacticalDiscipline": 5,
+            "teamwork": 2,
+            "experience": 8,
+            "stamina": 11,
+            "keeper": 1,
+            "playmaking": 6,
+            "passing": 6,
+            "technique": 6,
+            "defending": 14,
+            "striker": 9,
+            "pace": 15
+          },
+          "skillsChange": {
+            "form": -1,
+            "tacticalDiscipline": 1,
+            "teamwork": 2,
+            "experience": 0,
+            "stamina": 0,
+            "keeper": 0,
+            "playmaking": 0,
+            "passing": 0,
+            "technique": 0,
+            "defending": 0,
+            "striker": 0,
+            "pace": 0,
+            "down": 0,
+            "up": 0
+          },
+          "type": {
+            "code": 8,
+            "name": "pace"
+          },
+          "kind": {
+            "code": 2,
+            "name": "formation"
+          },
+          "playerValue": {
+            "value": 463500,
+            "currency": "u$s"
+          },
+          "games": {
+            "minutesOfficial": 46,
+            "minutesFriendly": 90,
+            "minutesNational": 0
+          },
+          "intensity": 94,
+          "formation": {
+            "code": 1,
+            "name": "DEF"
+          },
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "age": 26
+        }
+      },
+      {
+        "id": 40098056,
+        "player": {
+          "name": {
+            "name": "Player",
+            "surname": "40098056",
+            "full": "Player 40098056"
+          },
+          "formation": null,
+          "number": null,
+          "team": {
+            "id": 1
+          },
+          "country": {
+            "code": 32,
+            "name": "Argentina"
+          },
+          "value": {
+            "value": 450000,
+            "currency": "ARS"
+          },
+          "previousValue": null,
+          "wage": {
+            "value": 12000,
+            "currency": "ARS"
+          },
+          "characteristics": {
+            "age": 20,
+            "height": 180,
+            "weight": 75,
+            "bmi": 23.1
+          },
+          "skills": {
+            "form": 10,
+            "tacticalDiscipline": 8,
+            "teamwork": 7,
+            "experience": 6,
+            "stamina": 8,
+            "keeper": 1,
+            "playmaking": 9,
+            "passing": 10,
+            "technique": 9,
+            "defending": 5,
+            "striker": 4,
+            "pace": 11
+          },
+          "stats": null,
+          "nationalStats": null,
+          "face": null,
+          "youthTeamId": 0,
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "nationalSharing": false,
+          "nationalCallUp": false,
+          "nationalType": "none"
+        },
+        "report": {
+          "week": 1217,
+          "day": {
+            "season": 79,
+            "week": 1217,
+            "seasonWeek": 8,
+            "day": 5,
+            "date": {
+              "value": "2026-11-12",
+              "timestamp": 1794470400
+            }
+          },
+          "skills": {
+            "form": 16,
+            "tacticalDiscipline": 11,
+            "teamwork": 18,
+            "experience": 4,
+            "stamina": 10,
+            "keeper": 1,
+            "playmaking": 6,
+            "passing": 11,
+            "technique": 10,
+            "defending": 8,
+            "striker": 12,
+            "pace": 12
+          },
+          "skillsChange": {
+            "form": 4,
+            "tacticalDiscipline": 0,
+            "teamwork": 0,
+            "experience": 0,
+            "stamina": 1,
+            "keeper": 0,
+            "playmaking": 0,
+            "passing": 0,
+            "technique": 1,
+            "defending": 0,
+            "striker": 0,
+            "pace": 0,
+            "down": 0,
+            "up": 2
+          },
+          "type": {
+            "code": 5,
+            "name": "technique"
+          },
+          "kind": {
+            "code": 1,
+            "name": "individual"
+          },
+          "playerValue": {
+            "value": 466500,
+            "currency": "u$s"
+          },
+          "games": {
+            "minutesOfficial": 110,
+            "minutesFriendly": 90,
+            "minutesNational": 0
+          },
+          "intensity": 99,
+          "formation": {
+            "code": 3,
+            "name": "ATT"
+          },
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "age": 21
+        }
+      },
+      {
+        "id": 40117724,
+        "player": {
+          "name": {
+            "name": "Player",
+            "surname": "40117724",
+            "full": "Player 40117724"
+          },
+          "formation": null,
+          "number": null,
+          "team": {
+            "id": 1
+          },
+          "country": {
+            "code": 32,
+            "name": "Argentina"
+          },
+          "value": {
+            "value": 450000,
+            "currency": "ARS"
+          },
+          "previousValue": null,
+          "wage": {
+            "value": 12000,
+            "currency": "ARS"
+          },
+          "characteristics": {
+            "age": 20,
+            "height": 180,
+            "weight": 75,
+            "bmi": 23.1
+          },
+          "skills": {
+            "form": 10,
+            "tacticalDiscipline": 8,
+            "teamwork": 7,
+            "experience": 6,
+            "stamina": 8,
+            "keeper": 1,
+            "playmaking": 9,
+            "passing": 10,
+            "technique": 9,
+            "defending": 5,
+            "striker": 4,
+            "pace": 11
+          },
+          "stats": null,
+          "nationalStats": null,
+          "face": null,
+          "youthTeamId": 0,
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "nationalSharing": false,
+          "nationalCallUp": false,
+          "nationalType": "none"
+        },
+        "report": {
+          "week": 1217,
+          "day": {
+            "season": 79,
+            "week": 1217,
+            "seasonWeek": 8,
+            "day": 5,
+            "date": {
+              "value": "2026-11-12",
+              "timestamp": 1794470400
+            }
+          },
+          "skills": {
+            "form": 5,
+            "tacticalDiscipline": 12,
+            "teamwork": 18,
+            "experience": 6,
+            "stamina": 10,
+            "keeper": 2,
+            "playmaking": 12,
+            "passing": 10,
+            "technique": 13,
+            "defending": 6,
+            "striker": 9,
+            "pace": 10
+          },
+          "skillsChange": {
+            "form": 0,
+            "tacticalDiscipline": 0,
+            "teamwork": 0,
+            "experience": 0,
+            "stamina": 0,
+            "keeper": 0,
+            "playmaking": 0,
+            "passing": 0,
+            "technique": 0,
+            "defending": 0,
+            "striker": 0,
+            "pace": 0,
+            "down": 0,
+            "up": 0
+          },
+          "type": {
+            "code": 4,
+            "name": "passing"
+          },
+          "kind": {
+            "code": 1,
+            "name": "individual"
+          },
+          "playerValue": {
+            "value": 383000,
+            "currency": "u$s"
+          },
+          "games": {
+            "minutesOfficial": 180,
+            "minutesFriendly": 46,
+            "minutesNational": 0
+          },
+          "intensity": 100,
+          "formation": {
+            "code": 2,
+            "name": "MID"
+          },
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "age": 21
+        }
+      },
+      {
+        "id": 40198173,
+        "player": {
+          "name": {
+            "name": "Player",
+            "surname": "40198173",
+            "full": "Player 40198173"
+          },
+          "formation": null,
+          "number": null,
+          "team": {
+            "id": 1
+          },
+          "country": {
+            "code": 32,
+            "name": "Argentina"
+          },
+          "value": {
+            "value": 450000,
+            "currency": "ARS"
+          },
+          "previousValue": null,
+          "wage": {
+            "value": 12000,
+            "currency": "ARS"
+          },
+          "characteristics": {
+            "age": 20,
+            "height": 180,
+            "weight": 75,
+            "bmi": 23.1
+          },
+          "skills": {
+            "form": 10,
+            "tacticalDiscipline": 8,
+            "teamwork": 7,
+            "experience": 6,
+            "stamina": 8,
+            "keeper": 1,
+            "playmaking": 9,
+            "passing": 10,
+            "technique": 9,
+            "defending": 5,
+            "striker": 4,
+            "pace": 11
+          },
+          "stats": null,
+          "nationalStats": null,
+          "face": null,
+          "youthTeamId": 0,
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "nationalSharing": false,
+          "nationalCallUp": false,
+          "nationalType": "none"
+        },
+        "report": {
+          "week": 1217,
+          "day": {
+            "season": 79,
+            "week": 1217,
+            "seasonWeek": 8,
+            "day": 5,
+            "date": {
+              "value": "2026-11-12",
+              "timestamp": 1794470400
+            }
+          },
+          "skills": {
+            "form": 1,
+            "tacticalDiscipline": 10,
+            "teamwork": 18,
+            "experience": 2,
+            "stamina": 4,
+            "keeper": 3,
+            "playmaking": 8,
+            "passing": 6,
+            "technique": 7,
+            "defending": 12,
+            "striker": 5,
+            "pace": 12
+          },
+          "skillsChange": {
+            "form": 1,
+            "tacticalDiscipline": 0,
+            "teamwork": 0,
+            "experience": 0,
+            "stamina": 0,
+            "keeper": 0,
+            "playmaking": 0,
+            "passing": 0,
+            "technique": 0,
+            "defending": 1,
+            "striker": 1,
+            "pace": 0,
+            "down": 0,
+            "up": 2
+          },
+          "type": {
+            "code": 8,
+            "name": "pace"
+          },
+          "kind": {
+            "code": 1,
+            "name": "individual"
+          },
+          "playerValue": {
+            "value": 196000,
+            "currency": "u$s"
+          },
+          "games": {
+            "minutesOfficial": 136,
+            "minutesFriendly": 90,
+            "minutesNational": 0
+          },
+          "intensity": 100,
+          "formation": {
+            "code": 1,
+            "name": "DEF"
+          },
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "age": 20
+        }
+      },
+      {
+        "id": 40224679,
+        "player": {
+          "name": {
+            "name": "Player",
+            "surname": "40224679",
+            "full": "Player 40224679"
+          },
+          "formation": null,
+          "number": null,
+          "team": {
+            "id": 1
+          },
+          "country": {
+            "code": 32,
+            "name": "Argentina"
+          },
+          "value": {
+            "value": 450000,
+            "currency": "ARS"
+          },
+          "previousValue": null,
+          "wage": {
+            "value": 12000,
+            "currency": "ARS"
+          },
+          "characteristics": {
+            "age": 20,
+            "height": 180,
+            "weight": 75,
+            "bmi": 23.1
+          },
+          "skills": {
+            "form": 10,
+            "tacticalDiscipline": 8,
+            "teamwork": 7,
+            "experience": 6,
+            "stamina": 8,
+            "keeper": 1,
+            "playmaking": 9,
+            "passing": 10,
+            "technique": 9,
+            "defending": 5,
+            "striker": 4,
+            "pace": 11
+          },
+          "stats": null,
+          "nationalStats": null,
+          "face": null,
+          "youthTeamId": 0,
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "nationalSharing": false,
+          "nationalCallUp": false,
+          "nationalType": "none"
+        },
+        "report": {
+          "week": 1217,
+          "day": {
+            "season": 79,
+            "week": 1217,
+            "seasonWeek": 8,
+            "day": 5,
+            "date": {
+              "value": "2026-11-12",
+              "timestamp": 1794470400
+            }
+          },
+          "skills": {
+            "form": 9,
+            "tacticalDiscipline": 11,
+            "teamwork": 18,
+            "experience": 4,
+            "stamina": 3,
+            "keeper": 0,
+            "playmaking": 3,
+            "passing": 1,
+            "technique": 8,
+            "defending": 4,
+            "striker": 8,
+            "pace": 7
+          },
+          "skillsChange": {
+            "form": 3,
+            "tacticalDiscipline": 0,
+            "teamwork": 0,
+            "experience": 0,
+            "stamina": 0,
+            "keeper": 0,
+            "playmaking": 0,
+            "passing": 0,
+            "technique": 0,
+            "defending": 0,
+            "striker": 0,
+            "pace": 0,
+            "down": 0,
+            "up": 0
+          },
+          "type": {
+            "code": 5,
+            "name": "technique"
+          },
+          "kind": {
+            "code": 1,
+            "name": "individual"
+          },
+          "playerValue": {
+            "value": 77000,
+            "currency": "u$s"
+          },
+          "games": {
+            "minutesOfficial": 135,
+            "minutesFriendly": 90,
+            "minutesNational": 0
+          },
+          "intensity": 100,
+          "formation": {
+            "code": 3,
+            "name": "ATT"
+          },
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "age": 18
+        }
+      },
+      {
+        "id": 40234239,
+        "player": {
+          "name": {
+            "name": "Player",
+            "surname": "40234239",
+            "full": "Player 40234239"
+          },
+          "formation": null,
+          "number": null,
+          "team": {
+            "id": 1
+          },
+          "country": {
+            "code": 32,
+            "name": "Argentina"
+          },
+          "value": {
+            "value": 450000,
+            "currency": "ARS"
+          },
+          "previousValue": null,
+          "wage": {
+            "value": 12000,
+            "currency": "ARS"
+          },
+          "characteristics": {
+            "age": 20,
+            "height": 180,
+            "weight": 75,
+            "bmi": 23.1
+          },
+          "skills": {
+            "form": 10,
+            "tacticalDiscipline": 8,
+            "teamwork": 7,
+            "experience": 6,
+            "stamina": 8,
+            "keeper": 1,
+            "playmaking": 9,
+            "passing": 10,
+            "technique": 9,
+            "defending": 5,
+            "striker": 4,
+            "pace": 11
+          },
+          "stats": null,
+          "nationalStats": null,
+          "face": null,
+          "youthTeamId": 0,
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "nationalSharing": false,
+          "nationalCallUp": false,
+          "nationalType": "none"
+        },
+        "report": {
+          "week": 1217,
+          "day": {
+            "season": 79,
+            "week": 1217,
+            "seasonWeek": 8,
+            "day": 5,
+            "date": {
+              "value": "2026-11-12",
+              "timestamp": 1794470400
+            }
+          },
+          "skills": {
+            "form": 1,
+            "tacticalDiscipline": 11,
+            "teamwork": 18,
+            "experience": 4,
+            "stamina": 6,
+            "keeper": 0,
+            "playmaking": 8,
+            "passing": 4,
+            "technique": 8,
+            "defending": 11,
+            "striker": 3,
+            "pace": 8
+          },
+          "skillsChange": {
+            "form": 0,
+            "tacticalDiscipline": 0,
+            "teamwork": 0,
+            "experience": 0,
+            "stamina": 0,
+            "keeper": 0,
+            "playmaking": 0,
+            "passing": 0,
+            "technique": 0,
+            "defending": 0,
+            "striker": 0,
+            "pace": 0,
+            "down": 0,
+            "up": 0
+          },
+          "type": {
+            "code": 8,
+            "name": "pace"
+          },
+          "kind": {
+            "code": 1,
+            "name": "individual"
+          },
+          "playerValue": {
+            "value": 118750,
+            "currency": "u$s"
+          },
+          "games": {
+            "minutesOfficial": 90,
+            "minutesFriendly": 90,
+            "minutesNational": 0
+          },
+          "intensity": 99,
+          "formation": {
+            "code": 1,
+            "name": "DEF"
+          },
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "age": 18
+        }
+      },
+      {
+        "id": 40267008,
+        "player": {
+          "name": {
+            "name": "Player",
+            "surname": "40267008",
+            "full": "Player 40267008"
+          },
+          "formation": null,
+          "number": null,
+          "team": {
+            "id": 1
+          },
+          "country": {
+            "code": 32,
+            "name": "Argentina"
+          },
+          "value": {
+            "value": 450000,
+            "currency": "ARS"
+          },
+          "previousValue": null,
+          "wage": {
+            "value": 12000,
+            "currency": "ARS"
+          },
+          "characteristics": {
+            "age": 20,
+            "height": 180,
+            "weight": 75,
+            "bmi": 23.1
+          },
+          "skills": {
+            "form": 10,
+            "tacticalDiscipline": 8,
+            "teamwork": 7,
+            "experience": 6,
+            "stamina": 8,
+            "keeper": 1,
+            "playmaking": 9,
+            "passing": 10,
+            "technique": 9,
+            "defending": 5,
+            "striker": 4,
+            "pace": 11
+          },
+          "stats": null,
+          "nationalStats": null,
+          "face": null,
+          "youthTeamId": 0,
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "nationalSharing": false,
+          "nationalCallUp": false,
+          "nationalType": "none"
+        },
+        "report": {
+          "week": 1217,
+          "day": {
+            "season": 79,
+            "week": 1217,
+            "seasonWeek": 8,
+            "day": 5,
+            "date": {
+              "value": "2026-11-12",
+              "timestamp": 1794470400
+            }
+          },
+          "skills": {
+            "form": 11,
+            "tacticalDiscipline": 10,
+            "teamwork": 18,
+            "experience": 2,
+            "stamina": 1,
+            "keeper": 0,
+            "playmaking": 1,
+            "passing": 3,
+            "technique": 5,
+            "defending": 4,
+            "striker": 7,
+            "pace": 7
+          },
+          "skillsChange": {
+            "form": -2,
+            "tacticalDiscipline": 0,
+            "teamwork": 0,
+            "experience": 0,
+            "stamina": 0,
+            "keeper": 0,
+            "playmaking": 0,
+            "passing": 0,
+            "technique": 0,
+            "defending": 0,
+            "striker": 0,
+            "pace": 0,
+            "down": 0,
+            "up": 0
+          },
+          "type": {
+            "code": 5,
+            "name": "technique"
+          },
+          "kind": {
+            "code": 1,
+            "name": "individual"
+          },
+          "playerValue": {
+            "value": 57500,
+            "currency": "u$s"
+          },
+          "games": {
+            "minutesOfficial": 117,
+            "minutesFriendly": 90,
+            "minutesNational": 0
+          },
+          "intensity": 100,
+          "formation": {
+            "code": 3,
+            "name": "ATT"
+          },
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "age": 17
+        }
+      },
+      {
+        "id": 40294836,
+        "player": {
+          "name": {
+            "name": "Player",
+            "surname": "40294836",
+            "full": "Player 40294836"
+          },
+          "formation": null,
+          "number": null,
+          "team": {
+            "id": 1
+          },
+          "country": {
+            "code": 32,
+            "name": "Argentina"
+          },
+          "value": {
+            "value": 450000,
+            "currency": "ARS"
+          },
+          "previousValue": null,
+          "wage": {
+            "value": 12000,
+            "currency": "ARS"
+          },
+          "characteristics": {
+            "age": 20,
+            "height": 180,
+            "weight": 75,
+            "bmi": 23.1
+          },
+          "skills": {
+            "form": 10,
+            "tacticalDiscipline": 8,
+            "teamwork": 7,
+            "experience": 6,
+            "stamina": 8,
+            "keeper": 1,
+            "playmaking": 9,
+            "passing": 10,
+            "technique": 9,
+            "defending": 5,
+            "striker": 4,
+            "pace": 11
+          },
+          "stats": null,
+          "nationalStats": null,
+          "face": null,
+          "youthTeamId": 0,
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "nationalSharing": false,
+          "nationalCallUp": false,
+          "nationalType": "none"
+        },
+        "report": {
+          "week": 1217,
+          "day": {
+            "season": 79,
+            "week": 1217,
+            "seasonWeek": 8,
+            "day": 5,
+            "date": {
+              "value": "2026-11-12",
+              "timestamp": 1794470400
+            }
+          },
+          "skills": {
+            "form": 16,
+            "tacticalDiscipline": 9,
+            "teamwork": 18,
+            "experience": 1,
+            "stamina": 2,
+            "keeper": 0,
+            "playmaking": 1,
+            "passing": 5,
+            "technique": 4,
+            "defending": 7,
+            "striker": 4,
+            "pace": 8
+          },
+          "skillsChange": {
+            "form": 0,
+            "tacticalDiscipline": 0,
+            "teamwork": 1,
+            "experience": 0,
+            "stamina": 0,
+            "keeper": 0,
+            "playmaking": 0,
+            "passing": 0,
+            "technique": 0,
+            "defending": 0,
+            "striker": 0,
+            "pace": 0,
+            "down": 0,
+            "up": 0
+          },
+          "type": {
+            "code": 8,
+            "name": "pace"
+          },
+          "kind": {
+            "code": 1,
+            "name": "individual"
+          },
+          "playerValue": {
+            "value": 73750,
+            "currency": "u$s"
+          },
+          "games": {
+            "minutesOfficial": 90,
+            "minutesFriendly": 90,
+            "minutesNational": 0
+          },
+          "intensity": 99,
+          "formation": {
+            "code": 1,
+            "name": "DEF"
+          },
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "age": 17
+        }
+      },
+      {
+        "id": 40312124,
+        "player": {
+          "name": {
+            "name": "Player",
+            "surname": "40312124",
+            "full": "Player 40312124"
+          },
+          "formation": null,
+          "number": null,
+          "team": {
+            "id": 1
+          },
+          "country": {
+            "code": 32,
+            "name": "Argentina"
+          },
+          "value": {
+            "value": 450000,
+            "currency": "ARS"
+          },
+          "previousValue": null,
+          "wage": {
+            "value": 12000,
+            "currency": "ARS"
+          },
+          "characteristics": {
+            "age": 20,
+            "height": 180,
+            "weight": 75,
+            "bmi": 23.1
+          },
+          "skills": {
+            "form": 10,
+            "tacticalDiscipline": 8,
+            "teamwork": 7,
+            "experience": 6,
+            "stamina": 8,
+            "keeper": 1,
+            "playmaking": 9,
+            "passing": 10,
+            "technique": 9,
+            "defending": 5,
+            "striker": 4,
+            "pace": 11
+          },
+          "stats": null,
+          "nationalStats": null,
+          "face": null,
+          "youthTeamId": 0,
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "nationalSharing": false,
+          "nationalCallUp": false,
+          "nationalType": "none"
+        },
+        "report": {
+          "week": 1217,
+          "day": {
+            "season": 79,
+            "week": 1217,
+            "seasonWeek": 8,
+            "day": 5,
+            "date": {
+              "value": "2026-11-12",
+              "timestamp": 1794470400
+            }
+          },
+          "skills": {
+            "form": 9,
+            "tacticalDiscipline": 11,
+            "teamwork": 18,
+            "experience": 4,
+            "stamina": 3,
+            "keeper": 0,
+            "playmaking": 8,
+            "passing": 11,
+            "technique": 8,
+            "defending": 5,
+            "striker": 5,
+            "pace": 11
+          },
+          "skillsChange": {
+            "form": 0,
+            "tacticalDiscipline": 0,
+            "teamwork": 1,
+            "experience": 0,
+            "stamina": 0,
+            "keeper": 0,
+            "playmaking": 0,
+            "passing": 1,
+            "technique": 0,
+            "defending": 0,
+            "striker": 0,
+            "pace": 0,
+            "down": 0,
+            "up": 1
+          },
+          "type": {
+            "code": 4,
+            "name": "passing"
+          },
+          "kind": {
+            "code": 1,
+            "name": "individual"
+          },
+          "playerValue": {
+            "value": 212250,
+            "currency": "u$s"
+          },
+          "games": {
+            "minutesOfficial": 120,
+            "minutesFriendly": 90,
+            "minutesNational": 0
+          },
+          "intensity": 100,
+          "formation": {
+            "code": 2,
+            "name": "MID"
+          },
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "age": 19
+        }
+      },
+      {
+        "id": 40378797,
+        "player": {
+          "name": {
+            "name": "Player",
+            "surname": "40378797",
+            "full": "Player 40378797"
+          },
+          "formation": null,
+          "number": null,
+          "team": {
+            "id": 1
+          },
+          "country": {
+            "code": 32,
+            "name": "Argentina"
+          },
+          "value": {
+            "value": 450000,
+            "currency": "ARS"
+          },
+          "previousValue": null,
+          "wage": {
+            "value": 12000,
+            "currency": "ARS"
+          },
+          "characteristics": {
+            "age": 20,
+            "height": 180,
+            "weight": 75,
+            "bmi": 23.1
+          },
+          "skills": {
+            "form": 10,
+            "tacticalDiscipline": 8,
+            "teamwork": 7,
+            "experience": 6
+          },
+          "stats": null,
+          "nationalStats": null,
+          "face": null,
+          "youthTeamId": 0,
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "nationalSharing": false,
+          "nationalCallUp": false,
+          "nationalType": "none"
+        },
+        "report": {
+          "week": 1217,
+          "day": {
+            "season": 79,
+            "week": 1217,
+            "seasonWeek": 8,
+            "day": 5,
+            "date": {
+              "value": "2026-11-12",
+              "timestamp": 1794470400
+            }
+          },
+          "skills": {
+            "form": 11,
+            "tacticalDiscipline": 0,
+            "teamwork": 0,
+            "experience": 0
+          },
+          "skillsChange": {
+            "form": 0,
+            "tacticalDiscipline": 0,
+            "teamwork": 0,
+            "experience": 0,
+            "stamina": 0,
+            "keeper": 0,
+            "playmaking": 0,
+            "passing": 0,
+            "technique": 0,
+            "defending": 0,
+            "striker": 0,
+            "pace": 0,
+            "down": 0,
+            "up": 0
+          },
+          "type": {
+            "code": 4,
+            "name": "passing"
+          },
+          "kind": {
+            "code": 2,
+            "name": "formation"
+          },
+          "playerValue": {
+            "value": 23500,
+            "currency": "u$s"
+          },
+          "games": {
+            "minutesOfficial": 0,
+            "minutesFriendly": 90,
+            "minutesNational": 0
+          },
+          "intensity": 70,
+          "formation": {
+            "code": 2,
+            "name": "MID"
+          },
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "age": 17
+        }
+      },
+      {
+        "id": 40379849,
+        "player": {
+          "name": {
+            "name": "Player",
+            "surname": "40379849",
+            "full": "Player 40379849"
+          },
+          "formation": null,
+          "number": null,
+          "team": {
+            "id": 1
+          },
+          "country": {
+            "code": 32,
+            "name": "Argentina"
+          },
+          "value": {
+            "value": 450000,
+            "currency": "ARS"
+          },
+          "previousValue": null,
+          "wage": {
+            "value": 12000,
+            "currency": "ARS"
+          },
+          "characteristics": {
+            "age": 20,
+            "height": 180,
+            "weight": 75,
+            "bmi": 23.1
+          },
+          "skills": {
+            "form": 10,
+            "tacticalDiscipline": 8,
+            "teamwork": 7,
+            "experience": 6,
+            "stamina": 8,
+            "keeper": 1,
+            "playmaking": 9,
+            "passing": 10,
+            "technique": 9,
+            "defending": 5,
+            "striker": 4,
+            "pace": 11
+          },
+          "stats": null,
+          "nationalStats": null,
+          "face": null,
+          "youthTeamId": 0,
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "nationalSharing": false,
+          "nationalCallUp": false,
+          "nationalType": "none"
+        },
+        "report": {
+          "week": 1217,
+          "day": {
+            "season": 79,
+            "week": 1217,
+            "seasonWeek": 8,
+            "day": 5,
+            "date": {
+              "value": "2026-11-12",
+              "timestamp": 1794470400
+            }
+          },
+          "skills": {
+            "form": 9,
+            "tacticalDiscipline": 3,
+            "teamwork": 5,
+            "experience": 1,
+            "stamina": 1,
+            "keeper": 0,
+            "playmaking": 5,
+            "passing": 2,
+            "technique": 3,
+            "defending": 5,
+            "striker": 1,
+            "pace": 3
+          },
+          "skillsChange": {
+            "form": -1,
+            "tacticalDiscipline": 3,
+            "teamwork": 5,
+            "experience": 0,
+            "stamina": 0,
+            "keeper": 0,
+            "playmaking": 0,
+            "passing": 0,
+            "technique": 0,
+            "defending": 0,
+            "striker": 0,
+            "pace": 0,
+            "down": 0,
+            "up": 0
+          },
+          "type": {
+            "code": 4,
+            "name": "passing"
+          },
+          "kind": {
+            "code": 1,
+            "name": "individual"
+          },
+          "playerValue": {
+            "value": 22750,
+            "currency": "u$s"
+          },
+          "games": {
+            "minutesOfficial": 136,
+            "minutesFriendly": 45,
+            "minutesNational": 0
+          },
+          "intensity": 99,
+          "formation": {
+            "code": 2,
+            "name": "MID"
+          },
+          "injury": {
+            "daysRemaining": 0,
+            "severe": false
+          },
+          "age": 16
+        }
+      }
+    ]
+  },
+  "summary": {
+    "gameDay": {
+      "season": 79,
+      "week": 1217,
+      "seasonWeek": 8,
+      "day": 5,
+      "date": {
+        "value": "2026-11-12",
+        "timestamp": 1794470400
+      }
+    },
+    "week": 1217,
+    "stats": {
+      "general": 12,
+      "advanced": 10,
+      "skillsUp": 6
+    },
+    "juniors": {
+      "number": 22,
+      "skillsUp": 8
+    }
+  },
+  "knownReportSkills": [
+    {
+      "playerId": 40378797,
+      "sourceWeekId": 1217,
+      "skills": {
+        "stamina": 1,
+        "keeper": 0,
+        "playmaking": 1,
+        "passing": 5,
+        "technique": 1,
+        "defending": 4,
+        "striker": 2,
+        "pace": 5
+      }
+    }
+  ]
+}

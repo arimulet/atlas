@@ -49,12 +49,26 @@ export class SokkerSyncValidator {
       payload.players,
       payload.current,
       payload.playersWithoutTrainingReportIds,
+      payload.excludedTrainingPlayerIds,
       issues
     );
     validateTrainers(payload.trainers, teamId, issues);
     validateJuniors(payload.juniors, teamId, issues);
     validateSummary(payload.trainingSummary.weeks, issues);
     validateTrainingSummaryChecksums(payload, issues);
+    if (
+      payload.trainingReportDiagnostics?.discardedReportReasons.some(
+        (report) => report.reason !== "duplicate"
+      )
+    ) {
+      fatal(
+        issues,
+        "INVALID_SOURCE_TRAINING_REPORT",
+        "Sokker returned invalid or conflicting reports. Retry the complete import; no changes were saved.",
+        "trainingWeeks",
+        getTrainingMismatchDiagnostic(payload)
+      );
+    }
 
     if (issues.errors.length > 0) {
       return invalidResult(issues);
@@ -187,6 +201,7 @@ function validateTrainingWeeks(
   players: PlayerDto[],
   current: CurrentClubContextDto,
   playersWithoutTrainingReportIds: number[] | undefined,
+  historicalPlayerIds: number[] | undefined,
   issues: ValidationIssues
 ): void {
   const playerIds = new Set(players.map((player) => player.id));
@@ -215,7 +230,10 @@ function validateTrainingWeeks(
     }
     trainingPlayerIds.add(trainingWeek.playerId);
 
-    if (!playerIds.has(trainingWeek.playerId)) {
+    if (
+      !playerIds.has(trainingWeek.playerId) &&
+      !historicalPlayerIds?.includes(trainingWeek.playerId)
+    ) {
       fatal(
         issues,
         "MISSING_PLAYER_FOR_TRAINING",
@@ -597,18 +615,27 @@ function validateTrainingSummaryChecksums(
   issues: ValidationIssues
 ): void {
   const firstTrainingWeek = payload.trainingWeeks[0];
-  if (firstTrainingWeek === undefined) {
+  const sourceWeekId = payload.requestedTrainingWeekId ?? firstTrainingWeek?.gameWeek;
+  if (sourceWeekId === undefined) {
     return;
   }
 
-  const summaryWeek = payload.trainingSummary.weeks.find(
-    (week) => week.gameWeek === firstTrainingWeek.gameWeek
-  );
+  if (payload.trainingWeeks.some((week) => week.gameWeek !== sourceWeekId)) {
+    fatal(
+      issues,
+      "UNEXPECTED_TRAINING_WEEK",
+      "Sokker returned reports for a different source week. Retry the complete import; no changes were saved.",
+      "trainingWeeks",
+      getTrainingMismatchDiagnostic(payload)
+    );
+  }
+
+  const summaryWeek = payload.trainingSummary.weeks.find((week) => week.gameWeek === sourceWeekId);
   if (summaryWeek === undefined) {
     fatal(
       issues,
       "SUMMARY_WEEK_NOT_FOUND",
-      `Training summary does not contain the report week ${firstTrainingWeek.gameWeek}.`,
+      `Training summary does not contain the report week ${sourceWeekId}.`,
       "trainingSummary.weeks"
     );
     return;
@@ -623,7 +650,7 @@ function validateTrainingSummaryChecksums(
       payload,
       issues,
       "SUMMARY_ADVANCED_MISMATCH",
-      `Training summary mismatch for week ${firstTrainingWeek.gameWeek}: expected ${advancedCount} advanced reports, summary reports ${summaryWeek.players.advancedTraining}.`
+      `Training summary mismatch for week ${sourceWeekId}: parsed ${advancedCount} advanced reports, summary reports ${summaryWeek.players.advancedTraining}.`
     );
   }
   if (formationCount !== summaryWeek.players.formationTraining) {
@@ -631,7 +658,7 @@ function validateTrainingSummaryChecksums(
       payload,
       issues,
       "SUMMARY_FORMATION_MISMATCH",
-      `Training summary mismatch for week ${firstTrainingWeek.gameWeek}: expected ${formationCount} formation reports, summary reports ${summaryWeek.players.formationTraining}.`
+      `Training summary mismatch for week ${sourceWeekId}: parsed ${formationCount} formation reports, summary reports ${summaryWeek.players.formationTraining}.`
     );
   }
   if (advancedCount + formationCount + missingCount !== payload.trainingWeeks.length) {
@@ -649,7 +676,7 @@ function validateTrainingSummaryChecksums(
       payload,
       issues,
       "SUMMARY_SKILL_UP_MISMATCH",
-      `Training summary mismatch for week ${firstTrainingWeek.gameWeek}: expected ${skillsUp} skill ups, summary reports ${summaryWeek.players.skillsUp}.`
+      `Training summary mismatch for week ${sourceWeekId}: parsed ${skillsUp} skill ups, summary reports ${summaryWeek.players.skillsUp}.`
     );
   }
 }
@@ -660,12 +687,35 @@ function reportSummaryMismatch(
   code: string,
   message: string
 ): void {
-  if (payload.excludedTrainingPlayerIds && payload.excludedTrainingPlayerIds.length > 0) {
-    warning(issues, code, message, "trainingSummary.weeks");
-    return;
-  }
+  fatal(
+    issues,
+    code,
+    `${message} Retry the complete import after Sokker finishes publishing the week; no changes were saved.`,
+    "trainingSummary.weeks",
+    getTrainingMismatchDiagnostic(payload)
+  );
+}
 
-  fatal(issues, code, message, "trainingSummary.weeks");
+export function getTrainingMismatchDiagnostic(payload: SokkerSyncPayload): Record<string, unknown> {
+  const sourceWeekId =
+    payload.requestedTrainingWeekId ?? payload.trainingWeeks[0]?.gameWeek ?? null;
+  const summary = payload.trainingSummary.weeks.find((week) => week.gameWeek === sourceWeekId);
+  return {
+    visibleWeek: payload.current.calendar.seasonWeek,
+    sourceWeekId,
+    reportSeasonWeek: summary?.seasonWeek ?? null,
+    summaryCount: summary?.players.formationTraining ?? null,
+    parsedCount: payload.trainingWeeks.filter(
+      (week) => week.gameWeek === sourceWeekId && week.kind === "formation"
+    ).length,
+    receivedCount: payload.trainingReportDiagnostics?.receivedCount ?? payload.trainingWeeks.length,
+    acceptedCount: payload.trainingWeeks.length,
+    acceptedReportIds:
+      payload.trainingReportDiagnostics?.acceptedReportIds ??
+      payload.trainingWeeks.map((week) => `${week.playerId}/${week.gameWeek}`),
+    discardedReportReasons: payload.trainingReportDiagnostics?.discardedReportReasons ?? [],
+    attempt: 1
+  };
 }
 
 function validateTeamId(
