@@ -11,6 +11,19 @@ import type {
 } from "./types.js";
 
 export class MongoTrainingWeekRepository {
+  async getSkillsByWeek(
+    clubId: number,
+    gameWeek: number
+  ): Promise<ReadonlyMap<number, PersistedPlayerSkills>> {
+    const reports = await TrainingWeekModel.find(
+      { clubId, gameWeek },
+      { playerId: 1, skills: 1 }
+    ).lean();
+    return new Map(
+      reports.map((report) => [report.playerId, report.skills as PersistedPlayerSkills])
+    );
+  }
+
   async save(
     input: SavePlayerTrainingWeekInput,
     session?: ClientSession

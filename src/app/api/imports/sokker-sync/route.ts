@@ -1,12 +1,13 @@
 import { NextRequest } from "next/server";
 import {
   createSokkerDataProvider,
-  loadSokkerSyncPayload,
-  validateSokkerSyncPayload,
+  loadValidatedSokkerSyncPayload,
   persistSokkerSync
 } from "@atlas/application";
 import { ensureMongoDbConnection, jsonResponse } from "@/lib/api-helper";
 import { getAuthenticatedUserServer } from "@/lib/session";
+
+export const maxDuration = 300;
 
 export async function POST(request: NextRequest) {
   try {
@@ -36,8 +37,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const credentials = { login: body.login ?? "", password: body.password ?? "" };
     const provider = createSokkerDataProvider(credentials);
-    const loadedPayload = await loadSokkerSyncPayload(provider);
-    const validation = validateSokkerSyncPayload(loadedPayload);
+    const validation = await loadValidatedSokkerSyncPayload(provider);
 
     if (validation.status === "invalid") {
       return jsonResponse({
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
           importedPlayerCount: 0
         },
         summary: null,
-        diagnostic: null
+        diagnostic: validation.errors.find((issue) => issue.details)?.details ?? null
       });
     }
 
@@ -86,9 +86,7 @@ export async function POST(request: NextRequest) {
     return jsonResponse({
       importResult: {
         status: "rejected",
-        errors: [
-          { path: "api", message: error instanceof Error ? error.message : String(error) }
-        ],
+        errors: [{ path: "api", message: error instanceof Error ? error.message : String(error) }],
         warnings: [],
         clubId: null,
         importedPlayerCount: 0

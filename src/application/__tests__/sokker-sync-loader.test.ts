@@ -231,7 +231,7 @@ describe("SokkerSyncLoader", () => {
       expect.arrayContaining([boughtPlayer.id])
     );
     expect(payload.players.map((player) => player.id)).not.toContain(soldPlayer.id);
-    expect(payload.trainingWeeks.map((trainingWeek) => trainingWeek.playerId)).not.toContain(
+    expect(payload.trainingWeeks.map((trainingWeek) => trainingWeek.playerId)).toContain(
       soldPlayer.id
     );
     expect(payload.excludedTrainingPlayerIds).toEqual([soldPlayer.id]);
@@ -250,7 +250,7 @@ describe("SokkerSyncLoader", () => {
     const payload = await loadSokkerSyncPayload(mock.provider);
 
     expect(payload.players.map((player) => player.id)).not.toContain(dismissedPlayer.id);
-    expect(payload.trainingWeeks.map((trainingWeek) => trainingWeek.playerId)).not.toContain(
+    expect(payload.trainingWeeks.map((trainingWeek) => trainingWeek.playerId)).toContain(
       dismissedPlayer.id
     );
   });

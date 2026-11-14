@@ -249,20 +249,12 @@ describe("SokkerSyncValidator", () => {
     expectFatal(skillsUpPayload, "SUMMARY_SKILL_UP_MISMATCH");
   });
 
-  it("keeps summary mismatches as warnings when historical players were excluded", () => {
+  it("rejects summary mismatches even when historical players left the roster", () => {
     const payload = createPayload();
     payload.excludedTrainingPlayerIds = [99];
     payload.trainingSummary.weeks[0]!.players.formationTraining = 0;
 
-    const result = validateSokkerSyncPayload(payload);
-
-    expect(result.status).toBe("valid");
-    if (result.status === "valid") {
-      expect(result.warnings.map((warning) => warning.code)).toEqual([
-        "EXCLUDED_STALE_TRAINING_PLAYERS",
-        "SUMMARY_FORMATION_MISMATCH"
-      ]);
-    }
+    expectFatal(payload, "SUMMARY_FORMATION_MISMATCH");
   });
 
   it("requires the historical report week in the summary but not the current week", () => {
