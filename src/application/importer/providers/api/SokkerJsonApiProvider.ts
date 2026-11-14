@@ -1,6 +1,7 @@
 import type { SokkerCredentials } from "../../types.js";
 import type {
   CurrentClubContextDto,
+  HistoricalTrainingSkills,
   JuniorDto,
   PlayerFormation,
   TrainerDto,
@@ -106,10 +107,16 @@ export class SokkerJsonApiProvider implements SokkerDataProvider {
     });
   }
 
-  async getTraining(): Promise<TrainingDataDto> {
-    const response = await this.get<SokkerTrainingApiDto>("training");
+  async getTraining(
+    sourceWeekId?: number,
+    knownSkills?: ReadonlyMap<number, HistoricalTrainingSkills>
+  ): Promise<TrainingDataDto> {
+    const path = sourceWeekId === undefined ? "training" : `training?week=${sourceWeekId}`;
+    const response = await this.get<SokkerTrainingApiDto>(path);
 
-    return mapResource("training", () => mapTrainingApiToTrainingData(response.players));
+    return mapResource("training", () =>
+      mapTrainingApiToTrainingData(response.players, knownSkills, sourceWeekId)
+    );
   }
 
   async getLivePlayers(

@@ -1,23 +1,40 @@
-import type { PlayerFormation, SokkerSyncPayload } from "./types.js";
+import type { PlayerFormation, SokkerSyncPayload, TrainingSkillsResolver } from "./types.js";
 import type { SokkerDataProvider } from "./providers/SokkerDataProvider.js";
 import { inferPlayerFormationFromSkills } from "./snapshot-mappers.js";
 
 export class SokkerSyncLoader {
-  constructor(private readonly provider: SokkerDataProvider) {}
+  constructor(
+    private readonly provider: SokkerDataProvider,
+    private readonly resolveSkills?: TrainingSkillsResolver
+  ) {}
 
   async load(): Promise<SokkerSyncPayload> {
     const current = await this.loadResource("current", () => this.provider.getCurrent());
-    const [training, livePlayers, trainers, juniors, trainingSummary, juniorMatchesRaw] =
-      await Promise.all([
-        this.loadResource("training", () => this.provider.getTraining()),
-        this.loadResource("live players", () => this.provider.getLivePlayers(current.team.id)),
-        this.loadResource("trainer", () => this.provider.getTrainers()),
-        this.loadResource("junior", () => this.provider.getJuniors()),
-        this.loadResource("training summary", () => this.provider.getTrainingSummary()),
-        this.loadResource("junior matches", () =>
-          this.provider.getJuniorMatches(current.calendar.season)
-        )
-      ]);
+    const trainingSummary = await this.loadResource("training summary", () =>
+      this.provider.getTrainingSummary()
+    );
+    const requestedTrainingWeekId = trainingSummary.weeks
+      .filter(
+        (week) =>
+          week.gameWeek <= current.calendar.gameWeek &&
+          week.players.formationTraining + week.players.advancedTraining > 0
+      )
+      .sort((a, b) => b.gameWeek - a.gameWeek)[0]?.gameWeek;
+    const knownSkills =
+      requestedTrainingWeekId === undefined
+        ? undefined
+        : await this.resolveSkills?.(current.team.id, requestedTrainingWeekId);
+    const [training, livePlayers, trainers, juniors, juniorMatchesRaw] = await Promise.all([
+      this.loadResource("training", () =>
+        this.provider.getTraining(requestedTrainingWeekId, knownSkills)
+      ),
+      this.loadResource("live players", () => this.provider.getLivePlayers(current.team.id)),
+      this.loadResource("trainer", () => this.provider.getTrainers()),
+      this.loadResource("junior", () => this.provider.getJuniors()),
+      this.loadResource("junior matches", () =>
+        this.provider.getJuniorMatches(current.calendar.season)
+      )
+    ]);
 
     // Enrich juniors with formation from XML (0 = GK, 1 = field). Fails gracefully if XML is unavailable.
     let juniorsWithFormation = juniors;
@@ -79,9 +96,13 @@ export class SokkerSyncLoader {
         .filter((player) => player.teamId === currentTeamId && livePlayerIds.has(player.id))
         .map((player) => player.id)
     );
-    const excludedTrainingPlayerIds = training.players
-      .filter((player) => !currentTrainingPlayerIds.has(player.id))
-      .map((player) => player.id);
+    const excludedTrainingPlayerIds = [
+      ...new Set(
+        training.trainingWeeks
+          .filter((report) => !currentTrainingPlayerIds.has(report.playerId))
+          .map((report) => report.playerId)
+      )
+    ];
     const playersWithLiveFormation = rosterCandidates
       .filter((player) => currentTrainingPlayerIds.has(player.id))
       .map((player) => {
@@ -104,9 +125,8 @@ export class SokkerSyncLoader {
           formation: liveFormation
         };
       });
-    const trainingWeeks = training.trainingWeeks.filter((trainingWeek) =>
-      currentTrainingPlayerIds.has(trainingWeek.playerId)
-    );
+    // Historical reports belong to the requested week, including players who have since left.
+    const trainingWeeks = training.trainingWeeks;
     const playersWithoutTrainingReportIds = playersWithLiveFormation
       .filter((player) => !trainingPlayerIds.has(player.id))
       .map((player) => player.id);
@@ -115,6 +135,8 @@ export class SokkerSyncLoader {
       current,
       players: playersWithLiveFormation,
       trainingWeeks,
+      requestedTrainingWeekId,
+      trainingReportDiagnostics: training.reportDiagnostics,
       excludedTrainingPlayerIds,
       playersWithoutTrainingReportIds,
       trainers,
@@ -139,7 +161,8 @@ export class SokkerSyncLoader {
 }
 
 export async function loadSokkerSyncPayload(
-  provider: SokkerDataProvider
+  provider: SokkerDataProvider,
+  resolveSkills?: TrainingSkillsResolver
 ): Promise<SokkerSyncPayload> {
-  return new SokkerSyncLoader(provider).load();
+  return new SokkerSyncLoader(provider, resolveSkills).load();
 }

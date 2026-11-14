@@ -122,6 +122,32 @@ export interface PlayerTrainingWeekDto {
 export interface TrainingDataDto {
   players: PlayerDto[];
   trainingWeeks: PlayerTrainingWeekDto[];
+  reportDiagnostics?: TrainingReportDiagnostics;
+}
+
+export type HistoricalTrainingSkills = Partial<
+  Pick<
+    PlayerSkillsDto,
+    "stamina" | "keeper" | "playmaking" | "passing" | "technique" | "defending" | "striker" | "pace"
+  >
+>;
+
+export type TrainingSkillsResolver = (
+  teamId: number,
+  sourceWeekId: number
+) => Promise<ReadonlyMap<number, HistoricalTrainingSkills>>;
+
+export interface DiscardedTrainingReport {
+  playerId: number | null;
+  sourceWeekId: number | null;
+  reason: "duplicate" | "invalid_report" | "conflicting_duplicate";
+  fields?: string[];
+}
+
+export interface TrainingReportDiagnostics {
+  receivedCount: number;
+  acceptedReportIds: string[];
+  discardedReportReasons: DiscardedTrainingReport[];
 }
 
 export type TrainerAssignment = "HEAD" | "ASSISTANT" | "YOUTH";
@@ -215,6 +241,8 @@ export interface SokkerSyncPayload {
   current: CurrentClubContextDto;
   players: PlayerDto[];
   trainingWeeks: PlayerTrainingWeekDto[];
+  trainingReportDiagnostics?: TrainingReportDiagnostics;
+  requestedTrainingWeekId?: number;
   excludedTrainingPlayerIds?: number[];
   playersWithoutTrainingReportIds?: number[];
   trainers: TrainerDto[];

@@ -4,4 +4,5 @@ export * from "./snapshot-mappers.js";
 export * from "./sokker-sync-loader.js";
 export * from "./sokker-sync-persistence.js";
 export * from "./sokker-sync-validator.js";
+export * from "./sokker-sync-retry.js";
 export * from "./providers/index.js";

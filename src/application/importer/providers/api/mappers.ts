@@ -1,6 +1,9 @@
 import { deriveSkillChanges } from "@atlas/domain";
+import { z } from "zod";
+import { trainingPlayerSchema } from "./training-schema.js";
 import type {
   CurrentClubContextDto,
+  HistoricalTrainingSkills,
   JuniorDto,
   PlayerDto,
   PlayerFormation,
@@ -171,7 +174,7 @@ export function mapTrainingApiToPlayers(source: SokkerApiTrainingPlayerDto[]): P
 }
 
 export function mapTrainingPlayerApiToTrainingWeek(
-  source: SokkerApiTrainingPlayerDto
+  source: Pick<SokkerApiTrainingPlayerDto, "id" | "report">
 ): PlayerTrainingWeekDto {
   const report = source.report;
   const skills = mapPlayerSkills(report.skills);
@@ -201,17 +204,124 @@ export function mapTrainingApiToTrainingWeeks(
 }
 
 export function mapTrainingApiToTrainingData(
-  source: SokkerApiTrainingPlayerDto[]
+  source: unknown,
+  knownSkills?: ReadonlyMap<number, HistoricalTrainingSkills>,
+  requestedSourceWeekId?: number
 ): TrainingDataDto {
   const players: PlayerDto[] = [];
   const trainingWeeks: PlayerTrainingWeekDto[] = [];
+  const reportDiagnostics: NonNullable<TrainingDataDto["reportDiagnostics"]> = {
+    receivedCount: 0,
+    acceptedReportIds: [],
+    discardedReportReasons: []
+  };
+  const reportsById = new Map<string, PlayerTrainingWeekDto>();
+  const playersById = new Set<number>();
+  const entries = source == null ? [] : Array.isArray(source) ? source : [source];
 
-  for (const item of source) {
-    players.push(mapTrainingPlayerApiToPlayer(item));
-    trainingWeeks.push(mapTrainingPlayerApiToTrainingWeek(item));
+  for (const entry of entries) {
+    const item = z
+      .object({
+        id: z.number().int().positive(),
+        player: z.object({}).passthrough(),
+        report: z.unknown().optional(),
+        reports: z.unknown().optional()
+      })
+      .safeParse(entry);
+    const rawReports = item.success
+      ? [item.data.report, item.data.reports].flatMap((value) =>
+          value == null ? [] : Array.isArray(value) ? value : [value]
+        )
+      : [null];
+    // An absent report is a rejected source entry, never a fabricated training week.
+    if (rawReports.length === 0) rawReports.push(null);
+    for (const rawReport of rawReports) {
+      reportDiagnostics.receivedCount += 1;
+      const report = z
+        .object({ week: z.number().int().positive() })
+        .passthrough()
+        .safeParse(rawReport);
+      const playerId = item.success ? item.data.id : null;
+      const sourceWeekId = report.success ? report.data.week : null;
+      try {
+        if (!item.success || !report.success) throw new Error("Invalid report shape");
+        const cachedSkills =
+          requestedSourceWeekId === report.data.week ? knownSkills?.get(item.data.id) : undefined;
+        const rawSkills = z.object({}).catchall(z.unknown()).safeParse(report.data.skills);
+        // Fill only omitted fields from factual reports of the exact same source week.
+        const skills = rawSkills.success
+          ? { ...cachedSkills, ...rawSkills.data }
+          : report.data.skills;
+        const normalizedReport = trainingPlayerSchema.shape.report.parse({
+          ...report.data,
+          skills
+        });
+        const normalizedPlayer = trainingPlayerSchema.shape.player.safeParse(item.data.player);
+        if (!normalizedPlayer.success) {
+          const profileSkills = z
+            .record(z.string(), z.unknown())
+            .safeParse(item.data.player.skills);
+          const isRedactedProfile =
+            profileSkills.success &&
+            normalizedPlayer.error.issues.every(
+              (issue) =>
+                issue.path[0] === "skills" &&
+                typeof issue.path[1] === "string" &&
+                [
+                  "stamina",
+                  "keeper",
+                  "playmaking",
+                  "passing",
+                  "technique",
+                  "defending",
+                  "striker",
+                  "pace"
+                ].includes(issue.path[1]) &&
+                !Object.hasOwn(profileSkills.data, issue.path[1])
+            );
+          if (!isRedactedProfile) throw normalizedPlayer.error;
+        }
+        const player = normalizedPlayer.success
+          ? mapPlayerApiToPlayer(item.data.id, normalizedPlayer.data)
+          : null;
+        const week = mapTrainingPlayerApiToTrainingWeek({
+          id: item.data.id,
+          report: normalizedReport
+        });
+        const key = `${week.playerId}/${week.gameWeek}`;
+        const previous = reportsById.get(key);
+        if (previous) {
+          reportDiagnostics.discardedReportReasons.push({
+            playerId,
+            sourceWeekId,
+            reason:
+              JSON.stringify(previous) === JSON.stringify(week)
+                ? "duplicate"
+                : "conflicting_duplicate"
+          });
+          continue;
+        }
+        reportsById.set(key, week);
+        trainingWeeks.push(week);
+        reportDiagnostics.acceptedReportIds.push(key);
+        if (player && !playersById.has(player.id)) {
+          playersById.add(player.id);
+          players.push(player);
+        }
+      } catch (error) {
+        reportDiagnostics.discardedReportReasons.push({
+          playerId,
+          sourceWeekId,
+          reason: "invalid_report",
+          ...(error instanceof z.ZodError
+            ? { fields: error.issues.map((issue) => issue.path.join(".")) }
+            : {})
+        });
+      }
+    }
   }
 
-  return { players, trainingWeeks };
+  return { players, trainingWeeks, reportDiagnostics };
 }
 
 export function mapTrainingKind(
