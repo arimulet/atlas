@@ -41,6 +41,13 @@ export interface CurrentClubContextDto {
 
 export type PlayerFormation = "GK" | "DEF" | "MID" | "ATT";
 
+export interface LiveTrainingPlayerDto {
+  id: number;
+  formation: PlayerFormation | null;
+  /** Current advanced-training assignment from Sokker, when the source provides it. */
+  advanced?: boolean;
+}
+
 export interface PlayerNameDto {
   firstName: string;
   lastName: string;
@@ -90,6 +97,8 @@ export interface PlayerDto {
   bmi: number;
   skills: PlayerSkillsDto;
   formation: PlayerFormation | null;
+  /** Current advanced-training assignment, independent from the last completed session. */
+  advancedTraining?: boolean;
   injury: {
     daysRemaining: number;
     severe: boolean;

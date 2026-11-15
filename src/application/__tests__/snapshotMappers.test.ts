@@ -74,6 +74,44 @@ describe("mapPlayersToSnapshotPlayers", () => {
 
     expect(snapshotPlayer?.training.position).toBe(2);
   });
+
+  it("uses the live advanced-training assignment before a new training report exists", () => {
+    const player = createPlayer({ id: 42, advancedTraining: true });
+    const historicalWeek: PlayerTrainingWeekDto = {
+      playerId: 42,
+      gameWeek: 1204,
+      season: 78,
+      seasonWeek: 7,
+      date: "2026-08-12",
+      trainedSkill: "playmaking",
+      kind: "formation",
+      intensity: 100,
+      formation: "MID",
+      age: 20,
+      skills: player.skills,
+      skillsChange: {
+        form: 0,
+        tacticalDiscipline: 0,
+        teamwork: 0,
+        experience: 0,
+        stamina: 0,
+        keeper: 0,
+        playmaking: 0,
+        passing: 0,
+        technique: 0,
+        defending: 0,
+        striker: 0,
+        pace: 0,
+        down: 0,
+        up: 0
+      },
+      skillChanges: []
+    };
+
+    const [snapshotPlayer] = mapPlayersToSnapshotPlayers([player], [historicalWeek]);
+
+    expect(snapshotPlayer?.training.advanced).toBe(true);
+  });
 });
 
 function createPlayer(overrides: Partial<PlayerDto> = {}): PlayerDto {

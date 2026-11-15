@@ -203,8 +203,7 @@ export function createPlayerDetailViewModel(
     skill: trainedSkillDefinition?.key ?? null,
     talentEstimate,
     age: player.age,
-    trainingKind:
-      player.latestReport?.kind ?? (player.training?.advanced ? "advanced" : "formation")
+    trainingKind: player.training.advanced ? "advanced" : "formation"
   });
   const nextSkillUp = trainingProjection?.nextSkillUp;
   const importantSkills = importantSkillsForPlayer(

@@ -1,4 +1,4 @@
-import type { PlayerFormation, SokkerSyncPayload, TrainingSkillsResolver } from "./types.js";
+import type { SokkerSyncPayload, TrainingSkillsResolver } from "./types.js";
 import type { SokkerDataProvider } from "./providers/SokkerDataProvider.js";
 import { inferPlayerFormationFromSkills } from "./snapshot-mappers.js";
 
@@ -71,13 +71,8 @@ export class SokkerSyncLoader {
         })
     );
 
-    const liveFormationById = new Map<number, PlayerFormation>(
-      livePlayers
-        .filter(
-          (p): p is { id: number; formation: PlayerFormation } =>
-            p.formation !== null && p.formation !== undefined
-        )
-        .map((p) => [p.id, p.formation])
+    const liveTrainingByPlayerId = new Map(
+      livePlayers.map((player) => [player.id, player] as const)
     );
     const livePlayerIds = new Set(livePlayers.map((player) => player.id));
     const currentTeamId = current.team.id;
@@ -116,13 +111,13 @@ export class SokkerSyncLoader {
           playmaker: player.skills.playmaking,
           striker: player.skills.striker
         };
+        const liveTraining = liveTrainingByPlayerId.get(player.id);
         const liveFormation =
-          liveFormationById.get(player.id) ??
-          player.formation ??
-          inferPlayerFormationFromSkills(skills);
+          liveTraining?.formation ?? player.formation ?? inferPlayerFormationFromSkills(skills);
         return {
           ...player,
-          formation: liveFormation
+          formation: liveFormation,
+          advancedTraining: liveTraining?.advanced
         };
       });
     // Historical reports belong to the requested week, including players who have since left.
