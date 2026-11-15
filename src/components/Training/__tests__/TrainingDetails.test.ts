@@ -110,4 +110,34 @@ describe("TrainingDetails", () => {
       expect(playmaking).toContain(`W${week}`);
     }
   });
+
+  it.each([
+    { kind: "advanced" as const, intensity: 80, direct: 80, residual: 80 },
+    { kind: "formation" as const, intensity: 80, direct: 40, residual: 80 },
+    { kind: "missing" as const, intensity: 80, direct: null, residual: null },
+    { kind: "advanced" as const, intensity: 0, direct: null, residual: null }
+  ])("shows available training values for $kind at intensity $intensity", ({
+    kind,
+    intensity,
+    direct,
+    residual
+  }) => {
+    const history = [{ ...mockHistory[0]!, kind, intensity }];
+
+    const html = renderToStaticMarkup(createElement(TrainingDetails, {
+      history,
+      player: { etaWeeks: null, nextSkillUp: null, progress: null, trainingType: null }
+    }));
+
+    const cells = [...html.matchAll(/<td[^>]*>(.*?)<\/td>/g)].map((match) => match[1] ?? "");
+    expect(cells).toHaveLength(8);
+    cells.forEach((cell, index) => {
+      const expected = index === 1 ? direct : residual;
+      if (expected === null) {
+        expect(cell).not.toContain("<strong>");
+      } else {
+        expect(cell).toContain(`<strong>${expected}</strong>`);
+      }
+    });
+  });
 });
