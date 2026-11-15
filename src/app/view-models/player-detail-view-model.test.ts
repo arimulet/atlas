@@ -60,7 +60,7 @@ describe("createPlayerDetailViewModel", () => {
           seasonWeek: 10,
           date: "2026-07-31",
           type: "general",
-          kind: "missing",
+          kind: "formation",
           intensity: 0,
           age: 20,
           skills: { playmaking: 11 },
@@ -157,7 +157,7 @@ describe("createPlayerDetailViewModel", () => {
       lastWeekChange: { direction: "down", levelDelta: 1 }
     });
     const history = viewModel?.trainingHistory ?? [];
-    expect(history.map((row) => row.seasonWeek)).toEqual([12, 11, 10]);
+    expect(history.map((row) => row.seasonWeek)).toEqual([12, 11]);
     expect(history[0]!).toMatchObject({
       season: 17,
       type: "Playmaking",
@@ -177,13 +177,12 @@ describe("createPlayerDetailViewModel", () => {
     expect(history[1]!.skills.find((skill) => skill.key === "playmaker")).toMatchObject({
       value: 12,
       levelLabel: "outstanding",
-      change: { direction: "up", levelDelta: 1 }
+      change: null
     });
     expect(history[1]!.skills.find((skill) => skill.key === "defender")).toMatchObject({
       value: 8,
       change: null
     });
-    expect(history[2]!).toMatchObject({ kind: "missing", type: "General" });
   });
 
   it("matches a professional id when the API returns it as a number", () => {

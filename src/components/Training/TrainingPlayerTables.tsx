@@ -29,6 +29,7 @@ import { SquadPlanningRoleControl } from "@/components/Squad/SquadPlanningRoleCo
 import { TrainingDetails } from "./TrainingDetails";
 import { PLAYER_SKILL_DEFINITIONS, type PlayerSkillKey } from "@/app/view-models/player-skills";
 import { skillLevelLabel } from "@/app/view-models/skill-level-label";
+import { isProcessedTrainingReport } from "@/app/training-history";
 import {
   createTrainingPlayerRows,
   TRAINING_POSITIONS,
@@ -71,6 +72,7 @@ export function TrainingPlayerTables({
 }: TrainingPlayerTablesProps) {
   const rows = createTrainingPlayerRows(players, diagnostic, projectionSummaries);
   const playerById = new Map(players.map((player) => [String(player.playerId), player]));
+  const processedHistory = history.filter(isProcessedTrainingReport);
 
   return (
     <div className="atlas-training-position-sections">
@@ -104,7 +106,7 @@ export function TrainingPlayerTables({
             </div>
             <TrainingPositionTable
               currency={currency}
-              history={history}
+              history={processedHistory}
               onSaveSquadRole={onSaveSquadRole}
               onSelectPlayer={onSelectPlayer}
               playerById={playerById}

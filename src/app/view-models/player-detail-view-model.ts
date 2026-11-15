@@ -1,4 +1,5 @@
 import { formatTrainingPriority } from "../formatters";
+import { isProcessedTrainingReport } from "../training-history";
 import {
   calculateRequiredTrainingPoints,
   calculateWeeklyTrainingPointsByKind,
@@ -340,7 +341,9 @@ function createTrainingHistoryRows(
   playerId: string | null
 ): PlayerDetailViewModel["trainingHistory"] {
   const reports = (training?.history ?? [])
-    .filter((report) => identifiersMatch(report.playerId, playerId))
+    .filter(
+      (report) => identifiersMatch(report.playerId, playerId) && isProcessedTrainingReport(report)
+    )
     .sort((left, right) => right.gameWeek - left.gameWeek);
 
   return reports.map((report, index) => {
