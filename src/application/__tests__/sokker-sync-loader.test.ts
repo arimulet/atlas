@@ -184,11 +184,14 @@ describe("SokkerSyncLoader", () => {
 
   it("enriches players with live formations from getLivePlayers", async () => {
     const mock = createMockProvider();
-    mock.getLivePlayers.mockResolvedValue([{ id: mock.training.players[0]!.id, formation: "DEF" }]);
+    mock.getLivePlayers.mockResolvedValue([
+      { id: mock.training.players[0]!.id, formation: "DEF", advanced: true }
+    ]);
 
     const payload = await loadSokkerSyncPayload(mock.provider);
 
     expect(payload.players[0]?.formation).toBe("DEF");
+    expect(payload.players[0]?.advancedTraining).toBe(true);
   });
 
   it("does not clobber player formation with null and falls back to skills inference", async () => {

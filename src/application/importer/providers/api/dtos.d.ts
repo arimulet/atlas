@@ -196,6 +196,7 @@ export interface SokkerLivePlayerItemApiDto {
   id: number;
   formation?: SokkerApiFormationDto | number | string | null;
   position?: SokkerApiFormationDto | number | string | null;
+  advanced?: boolean | null;
   info?: {
     formation?: SokkerApiFormationDto | number | string | null;
   } | null;

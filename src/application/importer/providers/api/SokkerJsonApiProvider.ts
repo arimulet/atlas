@@ -121,24 +121,36 @@ export class SokkerJsonApiProvider implements SokkerDataProvider {
 
   async getLivePlayers(
     _teamId?: number
-  ): Promise<Array<{ id: number; formation: PlayerFormation | null }>> {
+  ): Promise<Array<{ id: number; formation: PlayerFormation | null; advanced?: boolean }>> {
     const response = await this.get<SokkerLivePlayersApiDto>("training/players");
 
     return mapResource("live players", () => {
-      let players: SokkerLivePlayerItemApiDto[] = [];
+      let players: Array<{ player: SokkerLivePlayerItemApiDto; advanced?: boolean }> = [];
       if (Array.isArray(response)) {
-        players = response;
+        players = response.map((player) => ({
+          player,
+          advanced: player.advanced === true ? true : undefined
+        }));
       } else if (response) {
         if (response.general || response.advanced) {
-          players = [...(response.general ?? []), ...(response.advanced ?? [])];
+          players = [
+            ...(response.general ?? []).map((player) => ({ player, advanced: false })),
+            ...(response.advanced ?? []).map((player) => ({ player, advanced: true }))
+          ];
         } else if (response.players) {
-          players = response.players;
+          players = response.players.map((player) => ({
+            player,
+            advanced: player.advanced === true ? true : undefined
+          }));
         }
       }
 
-      return players.map((p) => ({
-        id: p.id,
-        formation: mapFormation(p.formation ?? p.position ?? p.info?.formation ?? null)
+      return players.map(({ player, advanced }) => ({
+        id: player.id,
+        formation: mapFormation(
+          player.formation ?? player.position ?? player.info?.formation ?? null
+        ),
+        advanced
       }));
     });
   }

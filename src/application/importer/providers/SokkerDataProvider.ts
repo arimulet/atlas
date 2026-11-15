@@ -2,8 +2,8 @@ import type {
   CurrentClubContextDto,
   HistoricalTrainingSkills,
   JuniorDto,
+  LiveTrainingPlayerDto,
   PlayerDto,
-  PlayerFormation,
   TrainerDto,
   TrainingDataDto,
   TrainingSummaryDto
@@ -23,9 +23,7 @@ export interface SokkerDataProvider {
     sourceWeekId?: number,
     knownSkills?: ReadonlyMap<number, HistoricalTrainingSkills>
   ): Promise<TrainingDataDto>;
-  getLivePlayers(
-    teamId?: number
-  ): Promise<Array<{ id: number; formation: PlayerFormation | null }>>;
+  getLivePlayers(teamId?: number): Promise<LiveTrainingPlayerDto[]>;
   getPlayer(playerId: number): Promise<PlayerDto>;
   getTrainers(): Promise<TrainerDto[]>;
   getJuniors(): Promise<JuniorDto[]>;

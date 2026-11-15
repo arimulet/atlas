@@ -108,22 +108,24 @@ function TrainingSessionMark({
   isDirectTraining: boolean;
   report: TrainingReport;
 }) {
-  const effectiveness = isDirectTraining ? effectivePoints(report) : report.intensity;
+  const effectiveness =
+    report.kind === "missing" ? 0 : isDirectTraining ? effectivePoints(report) : report.intensity;
   const state = effectiveness <= 0 ? "idle" : isDirectTraining ? report.kind : "residual";
   const percentage = effectiveness <= 0 ? 100 : Math.max(0, Math.min(100, effectiveness));
-  const description = isDirectTraining
-    ? `Week ${report.seasonWeek} · ${formatEffectiveness(report)} effective training points`
-    : state === "residual"
-      ? `Week ${report.seasonWeek} · residual training from ${report.type}`
-      : `Week ${report.seasonWeek} · no training`;
+  const description =
+    state === "idle"
+      ? `Week ${report.seasonWeek} · no training`
+      : isDirectTraining
+        ? `Week ${report.seasonWeek} · ${formatEffectiveness(report)} effective training points`
+        : `Week ${report.seasonWeek} · residual training from ${report.type} · session intensity ${formatNumber(report.intensity)}`;
 
   return (
     <span className={`atlas-training-details__session is-${state}`} title={description}>
       <small>W{report.seasonWeek}</small>
-      <span aria-hidden="true" className="atlas-training-details__session-bar">
-        <span style={{ width: `${percentage}%` }} />
+      <span className="atlas-training-details__session-bar">
+        <span aria-hidden="true" style={{ width: `${percentage}%` }} />
+        {state !== "idle" ? <strong>{formatNumber(effectiveness)}</strong> : null}
       </span>
-      {isDirectTraining && state !== "idle" ? <strong>{formatEffectiveness(report)}</strong> : null}
     </span>
   );
 }
