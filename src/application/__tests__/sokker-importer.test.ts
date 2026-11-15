@@ -151,9 +151,7 @@ describe("SokkerJsonApiProvider", () => {
       .mockResolvedValueOnce(
         new Response(
           JSON.stringify({
-            general: [
-              { id: 101, formation: { code: 1, name: "defender" } }
-            ],
+            general: [{ id: 101, formation: { code: 1, name: "defender" } }],
             advanced: [
               { id: 102, formation: { code: 2, name: "midfielder" } },
               { id: 103, formation: null }
@@ -167,9 +165,9 @@ describe("SokkerJsonApiProvider", () => {
     const livePlayers = await provider.getLivePlayers();
 
     expect(livePlayers).toEqual([
-      { id: 101, formation: "DEF" },
-      { id: 102, formation: "MID" },
-      { id: 103, formation: null }
+      { id: 101, formation: "DEF", advanced: false },
+      { id: 102, formation: "MID", advanced: true },
+      { id: 103, formation: null, advanced: true }
     ]);
     expect(mockFetch.mock.calls[1]?.[0]?.toString()).toBe(
       "https://sokker.org/api/training/players"

@@ -381,6 +381,7 @@ function buildPlayerContext(
     trainingPath,
     talent,
     latestTraining,
+    isAdvancedTraining: player.training.advanced,
     currentTrainingProgress,
     currentGameWeek,
     currentDate
@@ -698,6 +699,7 @@ function buildProjection(input: {
   trainingPath: ReturnType<typeof generatePlayerTrainingPath>;
   talent: ReturnType<typeof estimateTalentFromTrainingHistory> | null;
   latestTraining: TrainingHistory["weeks"][number] | undefined;
+  isAdvancedTraining: boolean;
   currentTrainingProgress: DevelopmentCurrentSkillProgress | undefined;
   currentGameWeek: number | null;
   currentDate: Date;
@@ -706,7 +708,7 @@ function buildProjection(input: {
     return null;
   }
 
-  const trainingKind = input.latestTraining?.kind === "advanced" ? "advanced" : "formation";
+  const trainingKind = input.isAdvancedTraining ? "advanced" : "formation";
   const expectedIntensity =
     input.latestTraining?.intensity && input.latestTraining.intensity > 0
       ? input.latestTraining.intensity
@@ -873,4 +875,3 @@ function mapMarketTransferToRecord(
     developmentProfile: (transfer.profile as import("@atlas/domain").DevelopmentProfile) ?? null
   };
 }
-

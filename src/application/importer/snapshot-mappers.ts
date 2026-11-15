@@ -54,7 +54,7 @@ export function mapPlayersToSnapshotPlayers(
       value: player.value.value,
       training: {
         position: formationToPosition(historicalTrainedFormation, skills),
-        advanced: latestTraining?.kind === "advanced"
+        advanced: player.advancedTraining ?? latestTraining?.kind === "advanced"
       },
       form: player.skills.form,
       availabilityStatus: player.injury.daysRemaining > 0 ? "injured" : "available",
