@@ -76,6 +76,7 @@ export interface TrainingPathStep {
   priority: DevelopmentPriority;
   estimatedTrainingPoints: number;
   developmentValue: number;
+  developmentReturnScore?: number;
   reason: TrainingPathReason[];
 }
 
@@ -98,5 +99,6 @@ export interface PlayerTrainingPath {
     estimatedTrainingPoints: number;
   };
   completed: boolean;
+  stoppedByHorizon?: boolean;
   confidence: Confidence;
 }

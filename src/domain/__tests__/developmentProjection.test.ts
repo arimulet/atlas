@@ -401,6 +401,23 @@ describe("Development Projection & Timeline", () => {
     expect(projection.completion.estimatedWeeks).toBeNull();
   });
 
+  it("identifies when the generated path was stopped by the trajectory horizon", () => {
+    const currentPlayer = player({ age: 30 });
+    const currentTarget = target([{ skill: "defender", targetLevel: 13, priority: "primary" }]);
+    const path = generatePlayerTrainingPath({ player: currentPlayer, target: currentTarget });
+
+    const projection = projectDevelopment({
+      player: currentPlayer,
+      target: currentTarget,
+      path,
+      currentGameWeek: 1204,
+      currentDate: new Date("2026-08-05T00:00:00.000Z")
+    });
+
+    expect(projection.projectionStatus).toBe("partial");
+    expect(projection.warnings).toContain("trajectory_horizon_reached");
+  });
+
   it("marks invalid training points unavailable without Infinity or NaN", () => {
     const projection = projectDevelopment({
       ...projectionContext([

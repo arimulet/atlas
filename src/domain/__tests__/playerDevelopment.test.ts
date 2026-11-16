@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildIdealDevelopmentTarget,
-  buildOperationalDevelopmentTarget,
   calculateDevelopmentGap,
   isDevelopmentTargetCompleted,
   PlayerDevelopmentPlanner,
@@ -135,13 +134,15 @@ describe("Player Development Plan", () => {
     expect(target.targetSkills.find((skill) => skill.skill === "defender")?.targetLevel).toBe(17);
   });
 
-  it("keeps feasible skill-ups when their return score is below the high-return badge threshold", () => {
+  it("uses the ideal target as the complete development target", () => {
     const currentPlayer = player({ age: 20 });
-    const idealTarget = buildIdealDevelopmentTarget(currentPlayer, "defender");
+    const plan = new PlayerDevelopmentPlanner().createPlan(currentPlayer, { profile: "defender" });
 
-    const target = buildOperationalDevelopmentTarget(currentPlayer, idealTarget, { horizonAge: 32 });
-
-    expect(calculateDevelopmentGap(currentPlayer, target).totalGap).toBeGreaterThan(0);
+    expect(plan.target.targetSkills).toEqual(
+      buildIdealDevelopmentTarget(currentPlayer, "defender").targetSkills
+    );
+    expect(calculateDevelopmentGap(currentPlayer, plan.target).totalGap).toBeGreaterThan(8);
+    expect(plan).not.toHaveProperty("idealTarget");
   });
 
   it("preserves manual levels while deriving priorities from the profile", () => {

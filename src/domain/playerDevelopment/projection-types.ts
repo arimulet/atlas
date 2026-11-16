@@ -27,6 +27,7 @@ export type DevelopmentProjectionWarning =
   | "advanced_training_assumed"
   | "intensity_assumed"
   | "projection_horizon_exceeded"
+  | "trajectory_horizon_reached"
   | "invalid_training_points"
   | "path_incomplete"
   | "continuous_training_not_assumed";

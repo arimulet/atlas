@@ -2,10 +2,12 @@ import { describe, expect, it } from "vitest";
 
 import {
   DEVELOPMENT_PRIORITY_WEIGHTS,
+  DEFAULT_DEVELOPMENT_TRAJECTORY_MAX_WEEKS,
   MAX_DEVELOPMENT_PATH_STEPS,
   createDevelopmentSimulationState,
   generateNextTrainingCandidates,
   generatePlayerTrainingPath,
+  resolveDevelopmentTrajectoryHorizonWeeks,
   selectBestTrainingCandidate,
   type DevelopmentPlayer,
   type DevelopmentSimulationState,
@@ -88,6 +90,27 @@ describe("Training Path Generator", () => {
       [12, 13],
       [13, 14]
     ]);
+    expect(path.steps.every((step) => typeof step.developmentReturnScore === "number")).toBe(true);
+  });
+
+  it("limits the trajectory to the smaller of fourteen seasons and age thirty", () => {
+    expect(resolveDevelopmentTrajectoryHorizonWeeks(16)).toBe(
+      DEFAULT_DEVELOPMENT_TRAJECTORY_MAX_WEEKS
+    );
+    expect(resolveDevelopmentTrajectoryHorizonWeeks(22)).toBe(104);
+    expect(resolveDevelopmentTrajectoryHorizonWeeks(30)).toBe(0);
+  });
+
+  it("marks the path as horizon-limited when the target cannot advance before age thirty", () => {
+    const path = generatePlayerTrainingPath(
+      context([{ skill: "defender", targetLevel: 13, priority: "primary" }], {
+        player: player({ age: 30 })
+      })
+    );
+
+    expect(path.steps).toEqual([]);
+    expect(path.completed).toBe(false);
+    expect(path.stoppedByHorizon).toBe(true);
   });
 
   it("interleaves candidates from multiple target skills dynamically", () => {

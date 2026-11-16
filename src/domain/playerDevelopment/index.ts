@@ -5,12 +5,6 @@ import {
   DEVELOPMENT_PROFILE_SIGNATURE_BONUSES,
   DEVELOPMENT_PROFILE_SIGNATURE_SKILLS
 } from "./profiles.js";
-import {
-  createDevelopmentSimulationState,
-  generateNextTrainingCandidates,
-  selectBestTrainingCandidate,
-  MAX_DEVELOPMENT_PATH_STEPS
-} from "./training-path.js";
 import type {
   DevelopmentObjective,
   DevelopmentPlayer,
@@ -31,6 +25,7 @@ export * from "./training-path-types.js";
 export * from "./training-path.js";
 export * from "./projection-types.js";
 export * from "./projection.js";
+export * from "./trajectory-horizon.js";
 
 const FORMATION_PROFILE_AFFINITY: Readonly<
   Record<Formation, Partial<Record<DevelopmentProfile, number>>>
@@ -172,15 +167,22 @@ export function buildIdealDevelopmentTarget(
   player: DevelopmentPlayer,
   profile: DevelopmentProfile,
   objective: DevelopmentObjective = "sportive",
-  source: "automatic" | "manual" = "automatic"
+  override: PlayerDevelopmentTargetOverride = {}
 ): PlayerDevelopmentTarget {
   const definition = DEVELOPMENT_PROFILES[profile];
   const targetSkills = definition.relevantSkills.map(({ skill, priority, defaultTargetLevel }) => {
+    const requestedTarget = override.targetLevels?.[skill];
+    const currentLevel = readSkill(player, skill) ?? 0;
+
     return {
       skill,
-      targetLevel: defaultTargetLevel,
+      targetLevel:
+        requestedTarget === undefined ? defaultTargetLevel : Math.max(currentLevel, requestedTarget),
       priority,
-      reasons: [{ type: "primary_skill" } as const] // We can refine this later
+      reasons:
+        requestedTarget === undefined
+          ? [{ type: "primary_skill" as const }]
+          : [{ type: "manual_override" as const }]
     };
   });
 
@@ -189,85 +191,6 @@ export function buildIdealDevelopmentTarget(
     profile,
     objective,
     targetSkills,
-    source
-  };
-}
-
-export function buildOperationalDevelopmentTarget(
-  player: DevelopmentPlayer,
-  idealTarget: PlayerDevelopmentTarget,
-  options: { horizonAge: number; cycleHorizonWeeks?: number; cycleMaxSteps?: number },
-  override: PlayerDevelopmentTargetOverride = {}
-): PlayerDevelopmentTarget {
-  const resolvedObjective = override.objective ?? idealTarget.objective ?? "sportive";
-  const context = {
-    player: {
-      ...player,
-      age: player.age ?? 18
-    },
-    target: {
-      ...idealTarget,
-      objective: resolvedObjective
-    }
-  };
-
-  const state = createDevelopmentSimulationState(context);
-  const operationalTargetSkills = idealTarget.targetSkills.map((skill) => ({
-    skill: skill.skill,
-    targetLevel: state.skills[skill.skill] ?? 0,
-    priority: skill.priority,
-    reasons: [] as import("./types.js").DevelopmentTargetReason[]
-  }));
-
-  while (state.stepsCompleted < MAX_DEVELOPMENT_PATH_STEPS) {
-    if (options.cycleHorizonWeeks && state.estimatedElapsedWeeks >= options.cycleHorizonWeeks) {
-      break;
-    }
-    if (options.cycleMaxSteps && state.stepsCompleted >= options.cycleMaxSteps) {
-      break;
-    }
-
-    const candidates = generateNextTrainingCandidates(context, state);
-    const validCandidates = candidates.filter(
-      (candidate) => candidate.estimatedAgeAtStep < options.horizonAge
-    );
-
-    const best = selectBestTrainingCandidate(validCandidates, state.lastSkill);
-    if (!best) break;
-
-    state.skills[best.skill] = best.toLevel;
-    state.accumulatedTrainingPoints += best.requiredTrainingPoints;
-    state.estimatedElapsedWeeks += best.estimatedWeeks;
-    state.estimatedAge = best.estimatedAgeAtStep;
-    state.stepsCompleted += 1;
-    state.lastSkill = best.skill;
-
-    const targetSkill = operationalTargetSkills.find((s) => s.skill === best.skill);
-    if (targetSkill) {
-      targetSkill.targetLevel = best.toLevel;
-      targetSkill.reasons = [
-        ...(targetSkill.priority === "primary" ? [{ type: "primary_skill" as const }] : []),
-        { type: "within_development_horizon", age: best.estimatedAgeAtStep },
-        { type: "positive_marginal_return", score: best.developmentReturnScore }
-      ];
-    }
-  }
-
-  if (override.targetLevels && Object.keys(override.targetLevels).length > 0) {
-    for (const skill of operationalTargetSkills) {
-      const requestedTarget = override.targetLevels[skill.skill];
-      if (requestedTarget !== undefined) {
-        skill.targetLevel = Math.max(player.skills[skill.skill] ?? 0, requestedTarget);
-        skill.reasons = [{ type: "manual_override" }];
-      }
-    }
-  }
-
-  return {
-    playerId: player.playerId,
-    profile: idealTarget.profile,
-    objective: resolvedObjective,
-    targetSkills: operationalTargetSkills,
     source: hasManualOverride(override) ? "manual" : "automatic"
   };
 }
@@ -319,20 +242,11 @@ export function isDevelopmentTargetCompleted(gap: PlayerDevelopmentGap): boolean
 
 export interface PlayerDevelopmentPlan {
   suggestion: DevelopmentProfileSuggestion;
-  idealTarget: PlayerDevelopmentTarget;
   target: PlayerDevelopmentTarget;
   gap: PlayerDevelopmentGap;
 }
 
 export class PlayerDevelopmentPlanner {
-  constructor(
-    private readonly config: { developmentHorizonAge: number; cycleHorizonWeeks: number; cycleMaxSteps?: number } = {
-      developmentHorizonAge: 32,
-      cycleHorizonWeeks: 48,
-      cycleMaxSteps: 8
-    }
-  ) {}
-
   suggest(player: DevelopmentPlayer): DevelopmentProfileSuggestion {
     return suggestDevelopmentProfile(player);
   }
@@ -343,22 +257,7 @@ export class PlayerDevelopmentPlanner {
     override: PlayerDevelopmentTargetOverride = {}
   ): PlayerDevelopmentTarget {
     const objective = override.objective ?? "sportive";
-    const ideal = buildIdealDevelopmentTarget(
-      player,
-      profile,
-      objective,
-      hasManualOverride(override) ? "manual" : "automatic"
-    );
-    return buildOperationalDevelopmentTarget(
-      player,
-      ideal,
-      {
-        horizonAge: this.config.developmentHorizonAge,
-        cycleHorizonWeeks: this.config.cycleHorizonWeeks,
-        cycleMaxSteps: this.config.cycleMaxSteps
-      },
-      override
-    );
+    return buildIdealDevelopmentTarget(player, profile, objective, override);
   }
 
   calculateGap(player: DevelopmentPlayer, target: PlayerDevelopmentTarget): PlayerDevelopmentGap {
@@ -372,24 +271,9 @@ export class PlayerDevelopmentPlanner {
     const suggestion = suggestDevelopmentProfile(player);
     const profile = override.profile ?? suggestion.profile;
     const objective = override.objective ?? "sportive";
-    const idealTarget = buildIdealDevelopmentTarget(
-      player,
-      profile,
-      objective,
-      hasManualOverride(override) ? "manual" : "automatic"
-    );
-    const target = buildOperationalDevelopmentTarget(
-      player,
-      idealTarget,
-      {
-        horizonAge: this.config.developmentHorizonAge,
-        cycleHorizonWeeks: this.config.cycleHorizonWeeks,
-        cycleMaxSteps: this.config.cycleMaxSteps
-      },
-      override
-    );
+    const target = buildIdealDevelopmentTarget(player, profile, objective, override);
 
-    return { suggestion, idealTarget, target, gap: calculateDevelopmentGap(player, target) };
+    return { suggestion, target, gap: calculateDevelopmentGap(player, target) };
   }
 }
 

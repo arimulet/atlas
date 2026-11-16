@@ -508,6 +508,11 @@ export function mapDevelopmentProjectionWarning(
         title: "Target exceeds projection horizon",
         description: "The complete target is not viable within the modeled career horizon."
       };
+    case "trajectory_horizon_reached":
+      return {
+        title: "Target exceeds development horizon",
+        description: "The ideal target cannot be completed within fourteen seasons or before age thirty."
+      };
     case "invalid_training_points":
       return {
         title: "Training points unavailable",

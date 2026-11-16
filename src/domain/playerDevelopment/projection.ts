@@ -6,6 +6,10 @@ import {
 import { DEFAULT_TALENT_FOR_RELATIVE_COMPARISON, MAX_SKILL_LEVEL } from "../training/constants.js";
 import type { Confidence } from "../types.js";
 import { toTrainingDomainSkill, validateDevelopmentTarget } from "./training-path.js";
+import {
+  DEFAULT_DEVELOPMENT_TRAJECTORY_MAX_WEEKS,
+  resolveDevelopmentTrajectoryHorizonWeeks
+} from "./trajectory-horizon.js";
 import type { PlayerTrainingPath } from "./training-path-types.js";
 import type { DevelopmentSkill, PlayerDevelopmentTarget } from "./types.js";
 import type {
@@ -19,7 +23,7 @@ import type {
   PlayerDevelopmentProjection
 } from "./projection-types.js";
 
-export const MAX_DEVELOPMENT_PROJECTION_WEEKS = 520;
+export const MAX_DEVELOPMENT_PROJECTION_WEEKS = DEFAULT_DEVELOPMENT_TRAJECTORY_MAX_WEEKS;
 export const DEVELOPMENT_PROJECTION_LONG_TERM_WEEKS = 26;
 export const DEVELOPMENT_PROJECTION_MEDIUM_TERM_WEEKS = 8;
 export const DEVELOPMENT_PROJECTION_WEEKS_PER_YEAR = WEEKS_PER_SOKKER_SEASON;
@@ -50,7 +54,8 @@ export function projectDevelopment(
   const steps: DevelopmentProjectionStep[] = [];
   const milestones: DevelopmentProjectionMilestone[] = [];
   const state = createTimelineState(context);
-  const maxProjectionWeeks = context.maxProjectionWeeks ?? MAX_DEVELOPMENT_PROJECTION_WEEKS;
+  const maxProjectionWeeks =
+    context.maxProjectionWeeks ?? resolveDevelopmentTrajectoryHorizonWeeks(context.player.age);
   let projectionStatus: DevelopmentProjectionStatus = "projected";
   let firstStep = true;
 
@@ -205,7 +210,9 @@ export function projectDevelopment(
   if (projectionStatus === "projected" && (!completed || !context.path.completed)) {
     projectionStatus = "partial";
     if (!context.path.completed) {
-      warnings.add("path_incomplete");
+      warnings.add(
+        context.path.stoppedByHorizon ? "trajectory_horizon_reached" : "path_incomplete"
+      );
     }
   }
 

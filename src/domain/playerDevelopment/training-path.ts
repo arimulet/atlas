@@ -6,6 +6,10 @@ import {
 import { DEFAULT_TALENT_FOR_RELATIVE_COMPARISON, MAX_SKILL_LEVEL } from "../training/constants.js";
 import { WEEKS_PER_SOKKER_SEASON } from "../sokker/calendar.js";
 import { DEVELOPMENT_PRIORITY_WEIGHTS, DEVELOPMENT_PROFILES } from "./profiles.js";
+import {
+  DEFAULT_DEVELOPMENT_TRAJECTORY_MAX_AGE,
+  resolveDevelopmentTrajectoryHorizonWeeks
+} from "./trajectory-horizon.js";
 import type { DevelopmentPriority, DevelopmentSkill, PlayerDevelopmentTarget } from "./types.js";
 import type {
   DevelopmentMilestone,
@@ -171,12 +175,22 @@ export function generatePlayerTrainingPath(context: TrainingPathContext): Player
   const state = createDevelopmentSimulationState(context);
   const steps: TrainingPathStep[] = [];
   const milestones: DevelopmentMilestone[] = [];
+  const maximumTrajectoryWeeks = resolveDevelopmentTrajectoryHorizonWeeks(context.player.age);
+  let stoppedByHorizon = false;
 
   while (state.stepsCompleted < MAX_DEVELOPMENT_PATH_STEPS) {
     const candidates = generateNextTrainingCandidates(context, state);
-    const candidate = selectBestTrainingCandidate(candidates, state.lastSkill);
+    const candidatesWithinHorizon = candidates.filter(
+      (candidate) =>
+        state.estimatedElapsedWeeks + candidate.estimatedWeeks <= maximumTrajectoryWeeks &&
+        candidate.estimatedAgeAtStep <= DEFAULT_DEVELOPMENT_TRAJECTORY_MAX_AGE
+    );
+    const candidate = selectBestTrainingCandidate(candidatesWithinHorizon, state.lastSkill);
 
-    if (!candidate) break;
+    if (!candidate) {
+      stoppedByHorizon = candidates.length > 0 && candidatesWithinHorizon.length === 0;
+      break;
+    }
 
     steps.push({
       order: steps.length + 1,
@@ -186,6 +200,7 @@ export function generatePlayerTrainingPath(context: TrainingPathContext): Player
       priority: candidate.targetPriority,
       estimatedTrainingPoints: candidate.requiredTrainingPoints,
       developmentValue: candidate.developmentValue,
+      developmentReturnScore: candidate.developmentReturnScore,
       reason: candidate.reason
     });
 
@@ -211,6 +226,7 @@ export function generatePlayerTrainingPath(context: TrainingPathContext): Player
       estimatedTrainingPoints: state.accumulatedTrainingPoints
     },
     completed,
+    stoppedByHorizon,
     confidence: pathConfidence(context, completed, steps.length > 0)
   };
 }
