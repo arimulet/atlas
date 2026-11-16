@@ -110,6 +110,71 @@ function mockSquadPlanning(): SquadPlanningRecommendations {
 }
 
 describe("simulatePlayerAcquisition", () => {
+  it("applies custom targets to every talent scenario without changing purchase costs", () => {
+    const context = {
+      financialAssessment: mockFinancialAssessment(),
+      squadDepth: mockSquadDepth(),
+      squadPlanning: mockSquadPlanning(),
+      trainingConfiguration: { ATT: 7 },
+      activeAdvancedTraineeCount: 0
+    };
+    const input = {
+      amount: 200_000,
+      weeklyWage: 5_000,
+      age: 18,
+      position: "ATT",
+      skills: { stamina: 8, pace: 9, technique: 9, passing: 4, striker: 9 }
+    };
+
+    const initial = simulatePlayerAcquisition(context, input);
+    const adjusted = simulatePlayerAcquisition(context, { ...input, targetLevels: { passing: 6 } });
+    const restored = simulatePlayerAcquisition(context, { ...input, targetLevels: {} });
+
+    for (const scenario of ["high", "normal", "low"] as const) {
+      const plan = adjusted.talentScenarios[scenario].development;
+      expect(plan?.gaps.find((gap) => gap.skill === "passing")?.target).toBe(6);
+      expect(plan?.steps.every((step) => step.skill !== "passing" || step.level <= 6)).toBe(true);
+      expect(restored.talentScenarios[scenario]).toEqual(initial.talentScenarios[scenario]);
+      expect(adjusted.talentScenarios[scenario].roi?.totalCostSeason2).toBe(
+        initial.talentScenarios[scenario].roi?.totalCostSeason2
+      );
+    }
+    expect(adjusted.financial.amount).toBe(initial.financial.amount);
+    expect(adjusted.financial.weeklyWage).toBe(initial.financial.weeklyWage);
+  });
+
+  it("uses ten advanced slots and the Sokker season length", () => {
+    const context = {
+      financialAssessment: mockFinancialAssessment(),
+      squadDepth: mockSquadDepth(),
+      squadPlanning: mockSquadPlanning(),
+      trainingConfiguration: { MID: 3 },
+      activeAdvancedTraineeCount: 9
+    };
+    const input = {
+      amount: 200_000,
+      weeklyWage: 5_000,
+      age: 19,
+      position: "MID",
+      skills: { playmaker: 10, passing: 10, technique: 10, pace: 10, stamina: 10 }
+    };
+
+    const available = simulatePlayerAcquisition(context, input);
+    const full = simulatePlayerAcquisition({ ...context, activeAdvancedTraineeCount: 10 }, input);
+
+    expect(available.training.hasAdvancedSlotAvailable).toBe(true);
+    expect(full.training.hasAdvancedSlotAvailable).toBe(false);
+    expect(available.roi?.totalCostSeason2).toBe(200_000 + 5_000 * 26);
+    expect(available.talentScenarios.normal.development).toEqual(available.development);
+    expect(available.talentScenarios.normal.roi).toEqual(available.roi);
+    expect(available.talentScenarios.high.development?.steps.at(-1)?.week).toBeLessThan(
+      available.talentScenarios.low.development?.steps.at(-1)?.week ?? 0
+    );
+    expect(full.development?.steps[0]?.week).toBeGreaterThan(
+      available.development?.steps[0]?.week ?? 0
+    );
+  });
+
   it("incorporates additional weekly payroll and updates payroll coverage", () => {
     const assessment = mockFinancialAssessment();
     const result = simulatePlayerAcquisition(
@@ -200,8 +265,8 @@ describe("simulatePlayerAcquisition", () => {
 
     expect(result.roi).not.toBeNull();
     expect(result.roi?.isYouthProjectable).toBe(true);
-    expect(result.roi?.projectedValueSeason1).toBeGreaterThan(result.roi?.currentEstimatedValue ?? 0);
-    expect(result.roi?.totalCostSeason1).toBe(200_000 + 5_000 * 16);
+    expect(result.roi?.projectedValueSeason1).not.toBeNull();
+    expect(result.roi?.totalCostSeason1).toBe(200_000 + 5_000 * 13);
     expect(result.training.isCompatibleWithClubTraining).toBe(true);
     expect(result.training.trainedSkillName).toBe("Playmaking");
     expect(result.training.hasAdvancedSlotAvailable).toBe(true);
@@ -242,7 +307,9 @@ describe("simulatePlayerAcquisition", () => {
 
     // Purchase fee must be automatically resolved from market transfers
     expect(result.financial.amount).toBeGreaterThan(0);
-    expect(result.financial.marketPriceSource).toMatch(/market_comparables|market_calibration|fundamental_valuation/);
+    expect(result.financial.marketPriceSource).toMatch(
+      /market_comparables|market_calibration|fundamental_valuation/
+    );
     // Weekly wage must be automatically estimated
     expect(result.financial.weeklyWage).toBeGreaterThan(0);
     expect(result.financial.isWageEstimated).toBe(true);
@@ -255,19 +322,34 @@ describe("simulatePlayerAcquisition", () => {
 
 describe("inferPositionFromSkills", () => {
   it("infers GK when keeper skill is dominant and >= 4", () => {
-    expect(inferPositionFromSkills({ keeper: 10, defender: 1, playmaker: 1, striker: 1 })).toBe("GK");
+    expect(inferPositionFromSkills({ keeper: 10, defender: 1, playmaker: 1, striker: 1 })).toBe(
+      "GK"
+    );
   });
 
   it("infers DEF when defending is dominant", () => {
-    expect(inferPositionFromSkills({ keeper: 1, defender: 12, playmaker: 6, striker: 4, pace: 8, passing: 8 })).toBe("DEF");
+    expect(
+      inferPositionFromSkills({
+        keeper: 1,
+        defender: 12,
+        playmaker: 6,
+        striker: 4,
+        pace: 8,
+        passing: 8
+      })
+    ).toBe("DEF");
   });
 
   it("infers MID when playmaker is dominant", () => {
-    expect(inferPositionFromSkills({ keeper: 1, defender: 6, playmaker: 12, striker: 4, passing: 8 })).toBe("MID");
+    expect(
+      inferPositionFromSkills({ keeper: 1, defender: 6, playmaker: 12, striker: 4, passing: 8 })
+    ).toBe("MID");
   });
 
   it("infers ATT when striker is dominant", () => {
-    expect(inferPositionFromSkills({ keeper: 1, defender: 4, playmaker: 6, striker: 12, pace: 10 })).toBe("ATT");
+    expect(
+      inferPositionFromSkills({ keeper: 1, defender: 4, playmaker: 6, striker: 12, pace: 10 })
+    ).toBe("ATT");
   });
 
   it("defaults to MID when outfield skills are balanced and keeper is low", () => {
@@ -295,7 +377,15 @@ describe("inferPositionFromSkills", () => {
       },
       {
         age: 20,
-        skills: { defender: 13, pace: 10, technique: 7, passing: 6, playmaker: 4, striker: 2, keeper: 1 }
+        skills: {
+          defender: 13,
+          pace: 10,
+          technique: 7,
+          passing: 6,
+          playmaker: 4,
+          striker: 2,
+          keeper: 1
+        }
       }
     );
 

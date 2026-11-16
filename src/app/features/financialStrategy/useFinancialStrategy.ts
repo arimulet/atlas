@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   fetchAcquisitionSimulation,
   fetchFinancialStrategy,
@@ -27,6 +27,7 @@ export interface UseFinancialStrategyInput {
 }
 
 export interface FinancialStrategyState {
+  currentGameWeek: number | null;
   data: FinancialStrategyData | null;
   viewModel: FinancialStrategyViewModel | null;
   investmentSafety: InvestmentSafetyAssessment | null;
@@ -39,6 +40,9 @@ export interface FinancialStrategyState {
   simulateInvestment: (amount: number) => Promise<void>;
   simulateAcquisition: (
     input: PlayerAcquisitionSimulationInput
+  ) => Promise<PlayerAcquisitionSimulationResult>;
+  recalculateAcquisitionTargets: (
+    targetLevels: NonNullable<PlayerAcquisitionSimulationInput["targetLevels"]>
   ) => Promise<PlayerAcquisitionSimulationResult>;
   lookupPlayer: (playerId: number) => Promise<PlayerLookupResult>;
 }
@@ -58,6 +62,7 @@ export function useFinancialStrategy({
   const [acquisitionResultRaw, setAcquisitionResultRaw] =
     useState<PlayerAcquisitionSimulationResult | null>(null);
   const [isSimulatingAcquisition, setIsSimulatingAcquisition] = useState(false);
+  const lastAcquisitionInput = useRef<PlayerAcquisitionSimulationInput | null>(null);
 
   useEffect(() => {
     let isCurrent = true;
@@ -110,6 +115,7 @@ export function useFinancialStrategy({
       setIsSimulatingAcquisition(true);
       try {
         const result = await fetchAcquisitionSimulation(input);
+        lastAcquisitionInput.current = input;
         setAcquisitionResultRaw(result);
         return result;
       } finally {
@@ -119,12 +125,19 @@ export function useFinancialStrategy({
     []
   );
 
-  const handleLookupPlayer = useCallback(
-    async (playerId: number): Promise<PlayerLookupResult> => {
-      return lookupPlayer(playerId);
+  const recalculateAcquisitionTargets = useCallback(
+    (targetLevels: NonNullable<PlayerAcquisitionSimulationInput["targetLevels"]>) => {
+      if (!lastAcquisitionInput.current) {
+        return Promise.reject(new Error("Run a simulation before changing targets."));
+      }
+      return simulateAcquisition({ ...lastAcquisitionInput.current, targetLevels });
     },
-    []
+    [simulateAcquisition]
   );
+
+  const handleLookupPlayer = useCallback(async (playerId: number): Promise<PlayerLookupResult> => {
+    return lookupPlayer(playerId);
+  }, []);
 
   const viewModel = useMemo(
     () => (data ? createFinancialStrategyViewModel(data, currency, squadPlanning) : null),
@@ -140,6 +153,7 @@ export function useFinancialStrategy({
   );
 
   return {
+    currentGameWeek: squadPlanning?.assessment.currentGameWeek ?? null,
     data,
     viewModel,
     investmentSafety,
@@ -151,6 +165,7 @@ export function useFinancialStrategy({
     error,
     simulateInvestment,
     simulateAcquisition,
+    recalculateAcquisitionTargets,
     lookupPlayer: handleLookupPlayer
   };
 }

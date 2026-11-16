@@ -270,13 +270,13 @@
 
       &:hover {
         background: rgba(241, 96, 96, 0.18);
-        border-color: var(--position-gk-bg, #F16060);
+        border-color: var(--position-gk-bg, #f16060);
         color: #ffffff;
       }
 
       &.is-active {
-        background: var(--position-gk-bg, #F16060);
-        border-color: var(--position-gk-bg, #F16060);
+        background: var(--position-gk-bg, #f16060);
+        border-color: var(--position-gk-bg, #f16060);
         color: #ffffff;
         box-shadow: 0 0 10px rgba(241, 96, 96, 0.4);
       }
@@ -289,13 +289,13 @@
 
       &:hover {
         background: rgba(101, 83, 226, 0.18);
-        border-color: var(--position-def-bg, #6553E2);
+        border-color: var(--position-def-bg, #6553e2);
         color: #ffffff;
       }
 
       &.is-active {
-        background: var(--position-def-bg, #6553E2);
-        border-color: var(--position-def-bg, #6553E2);
+        background: var(--position-def-bg, #6553e2);
+        border-color: var(--position-def-bg, #6553e2);
         color: #ffffff;
         box-shadow: 0 0 10px rgba(101, 83, 226, 0.4);
       }
@@ -308,13 +308,13 @@
 
       &:hover {
         background: rgba(57, 125, 235, 0.18);
-        border-color: var(--position-mid-bg, #397DEB);
+        border-color: var(--position-mid-bg, #397deb);
         color: #ffffff;
       }
 
       &.is-active {
-        background: var(--position-mid-bg, #397DEB);
-        border-color: var(--position-mid-bg, #397DEB);
+        background: var(--position-mid-bg, #397deb);
+        border-color: var(--position-mid-bg, #397deb);
         color: #ffffff;
         box-shadow: 0 0 10px rgba(57, 125, 235, 0.4);
       }
@@ -327,13 +327,13 @@
 
       &:hover {
         background: rgba(141, 50, 180, 0.18);
-        border-color: var(--position-att-bg, #8D32B4);
+        border-color: var(--position-att-bg, #8d32b4);
         color: #ffffff;
       }
 
       &.is-active {
-        background: var(--position-att-bg, #8D32B4);
-        border-color: var(--position-att-bg, #8D32B4);
+        background: var(--position-att-bg, #8d32b4);
+        border-color: var(--position-att-bg, #8d32b4);
         color: #ffffff;
         box-shadow: 0 0 10px rgba(141, 50, 180, 0.4);
       }
@@ -615,14 +615,348 @@
   .atlas-finances-simulator-results {
     display: grid;
     gap: 14px;
+    grid-template-columns: minmax(0, 1fr);
     margin-top: 16px;
+    min-width: 0;
   }
 
+  .atlas-finances-simulator-fit-grid {
+    display: grid;
+    gap: 14px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    min-width: 0;
+
+    @media (max-width: 768px) {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  .atlas-finances-simulator-overview-grid {
+    display: grid;
+    gap: 14px;
+    grid-template-columns: minmax(0, 1fr);
+    min-width: 0;
+
+    &.has-resale {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .atlas-finances-metric-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    @media (max-width: 900px) {
+      &.has-resale {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    @media (max-width: 480px) {
+      .atlas-finances-metric-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+  }
+
+  .atlas-acquisition-resale-grid {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-bottom: 12px;
+
+    @media (max-width: 480px) {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  .atlas-acquisition-resale-margin {
+    border-top: 1px solid var(--atlas-border);
+    display: grid;
+    gap: 4px;
+    margin-top: 8px;
+    padding-top: 8px;
+
+  }
+
+  .atlas-finances-simulator-result-card.is-resale .atlas-acquisition-resale-margin {
+    .is-profit { color: var(--semantic-success-text); font-weight: 700; }
+    .is-loss { color: var(--semantic-error-text); font-weight: 700; }
+  }
+
+  .atlas-acquisition-table-wrap {
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: auto;
+  }
+
+  .atlas-acquisition-target-skills {
+    margin: 12px 0 18px;
+    background: color-mix(in srgb, var(--atlas-accent) 7%, var(--atlas-surface));
+    border: 1px solid color-mix(in srgb, var(--atlas-accent) 25%, var(--atlas-border));
+    border-radius: var(--atlas-radius-sm);
+    padding: 14px;
+
+    h4 { margin: 0 0 10px; }
+    dl { margin: 0; }
+    dd { margin: 0; }
+    .atlas-finances-simulator-sokker-label {
+      align-items: center;
+      display: inline-flex;
+      flex-shrink: 0;
+    }
+  }
+
+  .atlas-acquisition-skill-name {
+    display: inline-block;
+  }
+
+  .atlas-acquisition-priority {
+    align-items: center;
+    display: inline-flex;
+    flex: 0 0 14px;
+    margin-right: 8px;
+    position: relative;
+    vertical-align: middle;
+
+    &::after {
+      background: var(--atlas-surface);
+      border: 1px solid var(--atlas-border);
+      border-radius: var(--atlas-radius-sm);
+      bottom: calc(100% + 6px);
+      color: var(--atlas-text);
+      content: attr(data-tooltip);
+      font: 600 0.72rem/1.3 sans-serif;
+      left: 50%;
+      opacity: 0;
+      padding: 5px 8px;
+      pointer-events: none;
+      position: absolute;
+      transform: translateX(-50%);
+      visibility: hidden;
+      white-space: nowrap;
+      z-index: 5;
+    }
+
+    &:hover::after,
+    &:focus-visible::after {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    &:focus-visible {
+      outline: 2px solid currentColor;
+      outline-offset: 3px;
+    }
+
+    &.is-primary { color: var(--semantic-warning-text); }
+    &.is-secondary { color: var(--atlas-accent); }
+    &.is-supporting { color: var(--semantic-info-text-dark); }
+  }
+
+  .atlas-acquisition-priority-placeholder {
+    display: inline-block;
+    flex: 0 0 14px;
+    margin-right: 8px;
+  }
+
+  .atlas-acquisition-target-remaining {
+    color: var(--semantic-success-text);
+    margin-left: 8px;
+  }
+
+  .atlas-acquisition-target-control {
+    align-items: center;
+    display: inline-flex;
+    gap: 6px;
+
+    input {
+      background: var(--atlas-surface);
+      border: 1px solid color-mix(in srgb, var(--atlas-accent) 42%, var(--atlas-border));
+      border-radius: var(--atlas-radius-sm);
+      color: var(--atlas-text);
+      font: inherit;
+      padding: 3px 4px;
+      text-align: center;
+      width: 52px;
+    }
+
+    input:focus-visible {
+      outline: 2px solid var(--atlas-accent);
+      outline-offset: 2px;
+    }
+  }
+
+  .atlas-acquisition-target-actions {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 14px;
+    margin-top: 14px;
+
+    button {
+      background: var(--atlas-accent);
+      border: 0;
+      border-radius: var(--atlas-radius-sm);
+      color: #10241c;
+      cursor: pointer;
+      font-weight: 700;
+      padding: 8px 12px;
+    }
+
+    button:disabled { cursor: wait; opacity: 0.6; }
+    .atlas-acquisition-target-reset {
+      background: transparent;
+      border: 1px solid color-mix(in srgb, var(--atlas-accent) 45%, var(--atlas-border));
+      color: var(--atlas-accent);
+    }
+
+    .atlas-acquisition-target-reset:hover:not(:disabled) {
+      background: color-mix(in srgb, var(--atlas-accent) 12%, transparent);
+    }
+
+    button:focus-visible { outline: 2px solid var(--atlas-accent); outline-offset: 3px; }
+    small { color: var(--atlas-text-secondary); }
+  }
+
+  .atlas-acquisition-talent-selector {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 20px;
+    justify-content: space-between;
+    margin: 18px 0 12px;
+    font-size: 0.8rem;
+
+    &__heading {
+      display: grid;
+      gap: 3px;
+      color: var(--atlas-text);
+      font-weight: 700;
+    }
+
+    small {
+      color: var(--atlas-text-secondary);
+      font-weight: 400;
+    }
+
+    &__group {
+      background: var(--atlas-surface);
+      border: 1px solid var(--atlas-border);
+      border-radius: 9px;
+      display: inline-flex;
+      gap: 3px;
+      max-width: 100%;
+      min-width: 0;
+      padding: 4px;
+    }
+
+    &__button {
+      --talent-color: var(--semantic-info-text);
+      align-items: center;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      color: var(--atlas-text-secondary);
+      cursor: pointer;
+      display: inline-flex;
+      font: inherit;
+      font-weight: 700;
+      gap: 7px;
+      justify-content: center;
+      min-height: 34px;
+      min-width: 0;
+      padding: 6px 12px;
+      transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+
+      &.is-high { --talent-color: var(--semantic-success-text); }
+      &.is-low { --talent-color: var(--semantic-warning-text); }
+
+      &:hover {
+        background: var(--atlas-surface-hover);
+        color: var(--atlas-text);
+      }
+
+      &[aria-pressed="true"] {
+        background: color-mix(in srgb, var(--talent-color) 14%, var(--atlas-surface));
+        border-color: color-mix(in srgb, var(--talent-color) 48%, transparent);
+        color: var(--talent-color);
+      }
+
+      &:focus-visible {
+        outline: 2px solid var(--atlas-accent);
+        outline-offset: 2px;
+      }
+    }
+
+    &__dot {
+      background: var(--talent-color);
+      border-radius: 50%;
+      height: 7px;
+      width: 7px;
+    }
+  }
+  .atlas-acquisition-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 0.8rem;
+  }
+  .atlas-acquisition-table th,
+  .atlas-acquisition-table td {
+    padding: 8px;
+    border-bottom: 1px solid var(--atlas-border);
+  }
+
+  .atlas-acquisition-skill-trigger {
+    align-items: center;
+    background: transparent;
+    border: 0;
+    color: var(--atlas-accent);
+    cursor: pointer;
+    display: inline-flex;
+    justify-content: center;
+    min-height: 32px;
+    min-width: 32px;
+  }
+
+  .atlas-acquisition-skill-trigger:focus-visible {
+    outline: 2px solid var(--atlas-accent);
+    outline-offset: 2px;
+  }
   .atlas-finances-simulator-result-card {
     background: var(--atlas-surface-hover);
     border: 1px solid var(--atlas-border);
     border-radius: var(--atlas-radius-sm);
+    min-width: 0;
+    overflow-wrap: anywhere;
     padding: 14px 16px;
+  }
+
+  .atlas-finances-simulator-result-card:is(.is-financial, .is-squad, .is-training, .is-overview, .is-resale, .is-development) {
+    --result-accent: var(--atlas-accent);
+    background: color-mix(in srgb, var(--result-accent) 8%, var(--atlas-surface));
+    border-color: color-mix(in srgb, var(--result-accent) 30%, var(--atlas-border));
+    border-left: 3px solid var(--result-accent);
+
+    .atlas-finances-simulator-result-header h3 { color: var(--result-accent); }
+    .atlas-finances-metric {
+      background: color-mix(in srgb, var(--result-accent) 10%, var(--atlas-surface));
+      border: 1px solid color-mix(in srgb, var(--result-accent) 18%, var(--atlas-border));
+    }
+    .atlas-finances-metric span { color: var(--atlas-text-secondary); }
+  }
+
+  .atlas-finances-simulator-result-card:is(.is-squad, .is-resale) { --result-accent: var(--semantic-info-text); }
+  .atlas-finances-simulator-result-card.is-training { --result-accent: var(--semantic-warning-text); }
+  .atlas-finances-simulator-result-card.is-overview { --result-accent: var(--trace-purple-text); }
+  .atlas-finances-simulator-result-card.is-development { --result-accent: var(--atlas-accent); }
+
+  .atlas-finances-simulator-results .atlas-acquisition-table {
+    thead { background: color-mix(in srgb, var(--result-accent, var(--atlas-accent)) 16%, var(--atlas-surface)); }
+    thead th { color: var(--atlas-text); }
+    tbody tr:nth-child(even) { background: color-mix(in srgb, var(--result-accent, var(--atlas-accent)) 6%, transparent); }
+    .is-profit { color: var(--semantic-success-text); font-weight: 700; }
+    .is-loss { color: var(--semantic-error-text); font-weight: 700; }
   }
 
   .atlas-finances-simulator-result-card.is-roi {
@@ -632,6 +966,8 @@
   .atlas-finances-simulator-result-header {
     align-items: center;
     display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
     justify-content: space-between;
     margin-bottom: 12px;
   }
@@ -962,7 +1298,9 @@
     flex-direction: column;
     gap: 6px;
     padding: 10px 12px;
-    transition: border-color 0.15s ease, background-color 0.15s ease;
+    transition:
+      border-color 0.15s ease,
+      background-color 0.15s ease;
 
     &:hover {
       background: color-mix(in srgb, var(--atlas-surface-hover) 65%, transparent);
@@ -1146,7 +1484,9 @@
       pointer-events: none;
       position: absolute;
       transform: translateX(-50%);
-      transition: opacity 0.15s ease, visibility 0.15s ease;
+      transition:
+        opacity 0.15s ease,
+        visibility 0.15s ease;
       visibility: hidden;
       z-index: 101;
     }
@@ -1171,7 +1511,10 @@
       position: absolute;
       text-align: left;
       transform: translate(-50%, 4px);
-      transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s ease;
+      transition:
+        opacity 0.15s ease,
+        transform 0.15s ease,
+        visibility 0.15s ease;
       visibility: hidden;
       white-space: normal;
       width: max-content;
@@ -1283,7 +1626,9 @@
       pointer-events: none;
       position: absolute;
       right: 4px;
-      transition: opacity 0.15s ease, visibility 0.15s ease;
+      transition:
+        opacity 0.15s ease,
+        visibility 0.15s ease;
       visibility: hidden;
       z-index: 101;
     }
@@ -1308,7 +1653,10 @@
       right: 0;
       text-align: left;
       transform: translateY(4px);
-      transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s ease;
+      transition:
+        opacity 0.15s ease,
+        transform 0.15s ease,
+        visibility 0.15s ease;
       visibility: hidden;
       white-space: normal;
       width: max-content;
@@ -1532,5 +1880,59 @@
     .atlas-finances-simulator input {
       width: auto;
     }
+  }
+}
+
+.atlas-acquisition-skill-tooltip {
+  background: var(--atlas-surface);
+  border: 1px solid var(--atlas-border);
+  border-radius: var(--atlas-radius-sm);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 30%);
+  color: var(--atlas-text);
+  font-size: 0.78rem;
+  max-width: calc(100vw - 16px);
+  padding: 12px;
+  pointer-events: none;
+  position: fixed;
+  width: 600px;
+  z-index: 1000;
+
+  &__grid {
+    border-top: 1px solid var(--atlas-border);
+    display: grid;
+    gap: 8px 36px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: 8px;
+    padding-top: 8px;
+
+    @media (max-width: 480px) {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  dl {
+    display: grid;
+    gap: 5px;
+    margin: 0;
+    min-width: 0;
+  }
+
+  dl div {
+    display: flex;
+    gap: 12px;
+    justify-content: space-between;
+    font-family: var(--atlas-font-mono, monospace);
+    padding: 2px 0;
+  }
+
+  dt {
+    color: var(--atlas-text-muted);
+  }
+
+  dd {
+    color: var(--atlas-text);
+    font-weight: 600;
+    margin: 0;
+    text-align: right;
   }
 }

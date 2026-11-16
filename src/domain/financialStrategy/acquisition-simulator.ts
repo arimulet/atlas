@@ -1,3 +1,10 @@
+import {
+  buildAcquisitionDevelopmentPlan,
+  type AcquisitionTalentScenario,
+  type AcquisitionDevelopmentPlan
+} from "./acquisition-development.js";
+import { ADVANCED_TRAINING_SLOT_COUNT } from "../training/constants.js";
+import { WEEKS_PER_SOKKER_SEASON } from "../sokker/calendar.js";
 import type { SkillSet } from "../types.js";
 import type { ClubFinancialAssessment, FinancialPositionStatus } from "./types.js";
 import type { CapitalAllocationReason, InvestmentSafetyAssessment } from "./capital-types.js";
@@ -10,6 +17,12 @@ import { calibratePlayerMarketValue } from "../playerMarketValue/calibration.js"
 import type { PlayerTransferRecord } from "../playerMarketValue/calibration-types.js";
 
 export interface PlayerAcquisitionSimulationInput {
+  targetLevels?: Partial<
+    Record<
+      "keeper" | "defender" | "playmaker" | "striker" | "pace" | "technique" | "passing",
+      number
+    >
+  >;
   amount?: number | null;
   weeklyWage?: number | null;
   age?: number | null;
@@ -20,6 +33,7 @@ export interface PlayerAcquisitionSimulationInput {
 }
 
 export interface AcquisitionSimulationContext {
+  currentGameWeek?: number | null;
   financialAssessment: ClubFinancialAssessment;
   squadDepth: SquadDepthAnalysis;
   squadPlanning: SquadPlanningRecommendations;
@@ -29,13 +43,15 @@ export interface AcquisitionSimulationContext {
   marketTransfers?: readonly PlayerTransferRecord[];
 }
 
-export type AcquisitionRoiVerdict = "high_upside" | "moderate_upside" | "break_even" | "loss" | "not_applicable";
+export type AcquisitionRoiVerdict =
+  "high_upside" | "moderate_upside" | "break_even" | "loss" | "not_applicable";
 
 export interface AcquisitionRoiAssessment {
   isYouthProjectable: boolean;
   currentEstimatedValue: number | null;
   projectedValueSeason1: number | null;
   projectedValueSeason2: number | null;
+  proposedValueSeason2: number | null;
   totalCostSeason1: number | null;
   totalCostSeason2: number | null;
   netMarginSeason1: number | null;
@@ -59,8 +75,12 @@ export interface PlayerAcquisitionSimulationResult {
   financial: {
     amount: number;
     weeklyWage: number;
-    marketPriceSource: "market_comparables" | "market_calibration" | "fundamental_valuation" | "user_specified";
+    marketPriceSource:
+      "market_comparables" | "market_calibration" | "fundamental_valuation" | "user_specified";
     comparableCount: number;
+    comparableConfidence: "high" | "medium" | "low" | null;
+    comparablePriceLow: number | null;
+    comparablePriceHigh: number | null;
     isWageEstimated: boolean;
     postInvestmentCash: number | null;
     postInvestmentStatus: FinancialPositionStatus;
@@ -91,6 +111,11 @@ export interface PlayerAcquisitionSimulationResult {
     headline: string;
     description: string;
   };
+  talentScenarios: Record<
+    AcquisitionTalentScenario,
+    { development: AcquisitionDevelopmentPlan | null; roi: AcquisitionRoiAssessment | null }
+  >;
+  development: AcquisitionDevelopmentPlan | null;
   roi: AcquisitionRoiAssessment | null;
 }
 
@@ -152,7 +177,9 @@ export function estimatePlayerWeeklyWage(
   return Math.round(base);
 }
 
-export function inferPositionFromSkills(skills: Record<string, number>): "GK" | "DEF" | "MID" | "ATT" {
+export function inferPositionFromSkills(
+  skills: Record<string, number>
+): "GK" | "DEF" | "MID" | "ATT" {
   const gk = skills.keeper ?? 0;
   const def = skills.defender ?? (skills as Record<string, number>).defending ?? 0;
   const mid = skills.playmaker ?? (skills as Record<string, number>).playmaking ?? 0;
@@ -211,8 +238,12 @@ export function simulatePlayerAcquisition(
 
   // 1. Resolve Purchase Price from Market Transfers
   let resolvedAmount = 0;
-  let marketPriceSource: PlayerAcquisitionSimulationResult["financial"]["marketPriceSource"] = "market_calibration";
+  let marketPriceSource: PlayerAcquisitionSimulationResult["financial"]["marketPriceSource"] =
+    "market_calibration";
   let comparableCount = 0;
+  let comparableConfidence: "high" | "medium" | "low" | null = null;
+  let comparablePriceLow: number | null = null;
+  let comparablePriceHigh: number | null = null;
 
   if (input.amount !== undefined && input.amount !== null && Number(input.amount) > 0) {
     resolvedAmount = Math.max(0, Number(input.amount));
@@ -241,6 +272,9 @@ export function simulatePlayerAcquisition(
         resolvedAmount = calibration.comparableEstimate.weightedMedian;
         marketPriceSource = "market_comparables";
         comparableCount = calibration.comparableEstimate.sampleSize;
+        comparableConfidence = calibration.comparableEstimate.confidence;
+        comparablePriceLow = calibration.comparableEstimate.priceDispersion.low;
+        comparablePriceHigh = calibration.comparableEstimate.priceDispersion.high;
       } else if (calibration.calibratedValue && calibration.calibratedValue.expected > 0) {
         resolvedAmount = calibration.calibratedValue.expected;
         marketPriceSource = "market_calibration";
@@ -275,7 +309,8 @@ export function simulatePlayerAcquisition(
 
   const currentWeeklyPayroll = context.financialAssessment.payroll.totalWeekly;
   const projectedWeeklyPayroll = currentWeeklyPayroll + resolvedWage;
-  const currentPayrollCoverageWeeks = context.financialAssessment.position.metrics.payrollCoverageWeeks;
+  const currentPayrollCoverageWeeks =
+    context.financialAssessment.position.metrics.payrollCoverageWeeks;
 
   const accumulatedWage4Weeks = resolvedWage * 4;
   const accumulatedWage8Weeks = resolvedWage * 8;
@@ -328,7 +363,11 @@ export function simulatePlayerAcquisition(
     fitVerdict = "high_need";
     fitHeadline = "Priority reinforcement needed";
     fitDescription = `The ${targetProfile ?? "position"} position has a deficit in the squad. This signing addresses an urgent depth need.`;
-  } else if (normalizedAge !== null && normalizedAge <= 21 && profileDepth?.succession.coverageStatus === "missing") {
+  } else if (
+    normalizedAge !== null &&
+    normalizedAge <= 21 &&
+    profileDepth?.succession.coverageStatus === "missing"
+  ) {
     fitVerdict = "successor_need";
     fitHeadline = "Key generational successor";
     fitDescription = `The position lacked a designated young successor. This signing secures future succession.`;
@@ -347,25 +386,29 @@ export function simulatePlayerAcquisition(
   }
 
   // 3. Training
-  const positionKey = normalizedPosition && ["GK", "DEF", "MID", "ATT"].includes(normalizedPosition)
-    ? normalizedPosition
-    : null;
+  const positionKey =
+    normalizedPosition && ["GK", "DEF", "MID", "ATT"].includes(normalizedPosition)
+      ? normalizedPosition
+      : null;
 
-  const trainingPriorityCode = positionKey && context.trainingConfiguration
-    ? context.trainingConfiguration[positionKey]
-    : null;
+  const trainingPriorityCode =
+    positionKey && context.trainingConfiguration
+      ? context.trainingConfiguration[positionKey]
+      : null;
 
   const trainedSkillName = trainingPriorityCode
-    ? TRAINING_PRIORITY_NAMES[trainingPriorityCode] ?? `Skill #${trainingPriorityCode}`
+    ? (TRAINING_PRIORITY_NAMES[trainingPriorityCode] ?? `Skill #${trainingPriorityCode}`)
     : null;
 
   const trainedSkillKey = trainingPriorityCode
-    ? TRAINING_CODE_TO_SKILL_KEY[trainingPriorityCode] ?? null
-    : (positionKey ? POSITION_DEFAULT_TRAINING_SKILL[positionKey] ?? null : null);
+    ? (TRAINING_CODE_TO_SKILL_KEY[trainingPriorityCode] ?? null)
+    : positionKey
+      ? (POSITION_DEFAULT_TRAINING_SKILL[positionKey] ?? null)
+      : null;
 
   const isCompatibleWithClubTraining = Boolean(trainingPriorityCode && trainingPriorityCode > 0);
   const activeAdvancedSlotsCount = context.activeAdvancedTraineeCount ?? 0;
-  const hasAdvancedSlotAvailable = activeAdvancedSlotsCount < 2;
+  const hasAdvancedSlotAvailable = activeAdvancedSlotsCount < ADVANCED_TRAINING_SLOT_COUNT;
 
   let trainHeadline = "Training not configured";
   let trainDescription = "No training assigned for this position in current club settings.";
@@ -377,7 +420,7 @@ export function simulatePlayerAcquisition(
         trainDescription = `The player will benefit from ${trainedSkillName} training and an advanced slot is available in the club.`;
       } else {
         trainHeadline = `Will train ${trainedSkillName} (No advanced slot)`;
-        trainDescription = `Will benefit from ${trainedSkillName} training, but both club advanced slots are currently occupied. Will compete with existing talent.`;
+        trainDescription = `Will benefit from ${trainedSkillName} training, but all club advanced slots are currently occupied. Will compete with existing talent.`;
       }
     } else {
       trainHeadline = `Will train ${trainedSkillName} (Senior player)`;
@@ -385,97 +428,123 @@ export function simulatePlayerAcquisition(
     }
   }
 
-  // 4. ROI & Retorno (Juveniles <= 21)
-  const isYouthProjectable = normalizedAge !== null && normalizedAge <= 21;
-  let roiResult: PlayerAcquisitionSimulationResult["roi"] = null;
-
-  if (isYouthProjectable) {
-    const mockPlayerInput = {
+  const buildTalentScenario = (talentScenario: AcquisitionTalentScenario) => {
+    const development = buildAcquisitionDevelopmentPlan({
       playerId: input.playerId ?? 999999,
-      age: normalizedAge!,
-      skills: normalizedSkills as SkillSet,
-      wage: resolvedWage
-    };
-
-    let currentVal = estimateSafeMarketValue(mockPlayerInput);
-    if (currentVal === null || currentVal <= 0) {
-      currentVal = resolvedAmount > 0 ? resolvedAmount : 50000;
-    }
-
-    const skillToBoost = trainedSkillKey ?? "technique";
-
-    // Proyección a 1 temporada (16 semanas): +2 en habilidad entrenada, edad +1
-    const skillsS1 = {
-      ...normalizedSkills,
-      [skillToBoost]: (normalizedSkills[skillToBoost] ?? 5) + 2
-    };
-    let valS1 = estimateSafeMarketValue({
-      ...mockPlayerInput,
-      age: normalizedAge! + 1,
-      skills: skillsS1 as SkillSet
+      age: normalizedAge,
+      profile: targetProfile,
+      skills: normalizedSkills,
+      trainingSkill: isCompatibleWithClubTraining ? trainedSkillKey : null,
+      hasAdvancedSlot: hasAdvancedSlotAvailable,
+      currentGameWeek: context.currentGameWeek,
+      targetLevels: input.targetLevels,
+      talentScenario
     });
-    if (valS1 === null || valS1 <= currentVal) {
-      valS1 = Math.round(currentVal * 1.55);
+
+    // 4. ROI & Retorno (Juveniles <= 21)
+    const isYouthProjectable = normalizedAge !== null && normalizedAge <= 21;
+    let roiResult: PlayerAcquisitionSimulationResult["roi"] = null;
+
+    if (isYouthProjectable) {
+      const mockPlayerInput = {
+        playerId: input.playerId ?? 999999,
+        age: normalizedAge!,
+        skills: normalizedSkills as SkillSet,
+        wage: resolvedWage
+      };
+
+      let currentVal = estimateSafeMarketValue(mockPlayerInput);
+      if (currentVal === null || currentVal <= 0) {
+        currentVal = resolvedAmount > 0 ? resolvedAmount : 50000;
+      }
+
+      const projectSkills = (weeks: number) => {
+        const skills = { ...normalizedSkills };
+        for (const step of development?.currentTrainingSteps ?? []) {
+          if (step.week <= weeks) skills[step.skill] = step.level;
+        }
+        return skills as SkillSet;
+      };
+      const valS1 = estimateSafeMarketValue({
+        ...mockPlayerInput,
+        age: normalizedAge! + 1,
+        skills: projectSkills(WEEKS_PER_SOKKER_SEASON)
+      });
+      const valS2 = estimateSafeMarketValue({
+        ...mockPlayerInput,
+        age: normalizedAge! + 2,
+        skills: projectSkills(WEEKS_PER_SOKKER_SEASON * 2)
+      });
+      if (valS1 !== null && valS2 !== null) {
+        const proposedSkills = { ...normalizedSkills };
+        for (const step of development?.steps ?? []) {
+          if (step.week <= WEEKS_PER_SOKKER_SEASON * 2) proposedSkills[step.skill] = step.level;
+        }
+        const proposedValueSeason2 = development
+          ? estimateSafeMarketValue({
+              ...mockPlayerInput,
+              age: normalizedAge! + 2,
+              skills: proposedSkills as SkillSet
+            })
+          : null;
+        const wageWeekly = resolvedWage;
+        const totalCostS1 = resolvedAmount + wageWeekly * WEEKS_PER_SOKKER_SEASON;
+        const totalCostS2 = resolvedAmount + wageWeekly * WEEKS_PER_SOKKER_SEASON * 2;
+
+        const netMarginS1 = valS1 - totalCostS1;
+        const netMarginS2 = valS2 - totalCostS2;
+
+        const roiPercentS1 = totalCostS1 > 0 ? Math.round((netMarginS1 / totalCostS1) * 100) : 0;
+        const roiPercentS2 = totalCostS2 > 0 ? Math.round((netMarginS2 / totalCostS2) * 100) : 0;
+
+        let verdict: AcquisitionRoiVerdict = "break_even";
+        let roiHeadline = "Break-even investment";
+        let roiDescription =
+          "Projected value generated will roughly cover transfer fee and accumulated wages.";
+
+        if (roiPercentS1 >= 50 || roiPercentS2 >= 75) {
+          verdict = "high_upside";
+          roiHeadline = "High projected upside";
+          roiDescription =
+            "Excellent potential trading return. Resale value is expected to comfortably surpass purchase fee and wages.";
+        } else if (netMarginS1 > 0 || netMarginS2 > 0) {
+          verdict = "moderate_upside";
+          roiHeadline = "Moderate positive return";
+          roiDescription = "Resale yields a net profit after amortizing purchase fee and wages.";
+        } else {
+          verdict = "loss";
+          roiHeadline = "Negative return / Deficit expected";
+          roiDescription =
+            "Accumulated purchase fee and wages exceed projected market value after training.";
+        }
+
+        roiResult = {
+          isYouthProjectable: true,
+          currentEstimatedValue: currentVal,
+          projectedValueSeason1: valS1,
+          projectedValueSeason2: valS2,
+          proposedValueSeason2,
+          totalCostSeason1: totalCostS1,
+          totalCostSeason2: totalCostS2,
+          netMarginSeason1: netMarginS1,
+          netMarginSeason2: netMarginS2,
+          roiPercentSeason1: roiPercentS1,
+          roiPercentSeason2: roiPercentS2,
+          verdict,
+          headline: roiHeadline,
+          description: roiDescription
+        };
+      }
     }
 
-    // Proyección a 2 temporadas (32 semanas): +4 en habilidad entrenada, edad +2
-    const skillsS2 = {
-      ...normalizedSkills,
-      [skillToBoost]: (normalizedSkills[skillToBoost] ?? 5) + 4
-    };
-    let valS2 = estimateSafeMarketValue({
-      ...mockPlayerInput,
-      age: normalizedAge! + 2,
-      skills: skillsS2 as SkillSet
-    });
-    if (valS2 === null || valS2 <= valS1) {
-      valS2 = Math.round(valS1 * 1.45);
-    }
-
-    const wageWeekly = resolvedWage;
-    const totalCostS1 = resolvedAmount + wageWeekly * 16;
-    const totalCostS2 = resolvedAmount + wageWeekly * 32;
-
-    const netMarginS1 = valS1 - totalCostS1;
-    const netMarginS2 = valS2 - totalCostS2;
-
-    const roiPercentS1 = totalCostS1 > 0 ? Math.round((netMarginS1 / totalCostS1) * 100) : 0;
-    const roiPercentS2 = totalCostS2 > 0 ? Math.round((netMarginS2 / totalCostS2) * 100) : 0;
-
-    let verdict: AcquisitionRoiVerdict = "break_even";
-    let roiHeadline = "Break-even investment";
-    let roiDescription = "Projected value generated will roughly cover transfer fee and accumulated wages.";
-
-    if (roiPercentS1 >= 50 || roiPercentS2 >= 75) {
-      verdict = "high_upside";
-      roiHeadline = "High projected upside";
-      roiDescription = "Excellent potential trading return. Resale value is expected to comfortably surpass purchase fee and wages.";
-    } else if (netMarginS1 > 0 || netMarginS2 > 0) {
-      verdict = "moderate_upside";
-      roiHeadline = "Moderate positive return";
-      roiDescription = "Resale yields a net profit after amortizing purchase fee and wages.";
-    } else {
-      verdict = "loss";
-      roiHeadline = "Negative return / Deficit expected";
-      roiDescription = "Accumulated purchase fee and wages exceed projected market value after training.";
-    }
-
-    roiResult = {
-      isYouthProjectable: true,
-      currentEstimatedValue: currentVal,
-      projectedValueSeason1: valS1,
-      projectedValueSeason2: valS2,
-      totalCostSeason1: totalCostS1,
-      totalCostSeason2: totalCostS2,
-      netMarginSeason1: netMarginS1,
-      netMarginSeason2: netMarginS2,
-      roiPercentSeason1: roiPercentS1,
-      roiPercentSeason2: roiPercentS2,
-      verdict,
-      headline: roiHeadline,
-      description: roiDescription
-    };
-  }
+    return { development, roi: roiResult };
+  };
+  const talentScenarios = {
+    high: buildTalentScenario("high"),
+    normal: buildTalentScenario("normal"),
+    low: buildTalentScenario("low")
+  };
+  const { development, roi: roiResult } = talentScenarios.normal;
 
   return {
     input: {
@@ -491,6 +560,9 @@ export function simulatePlayerAcquisition(
       weeklyWage: resolvedWage,
       marketPriceSource,
       comparableCount,
+      comparableConfidence,
+      comparablePriceLow,
+      comparablePriceHigh,
       isWageEstimated,
       postInvestmentCash: financialSafety.postInvestmentCash,
       postInvestmentStatus: financialSafety.postInvestmentStatus,
@@ -521,11 +593,15 @@ export function simulatePlayerAcquisition(
       headline: trainHeadline,
       description: trainDescription
     },
+    talentScenarios,
+    development,
     roi: roiResult
   };
 }
 
-function estimateSafeMarketValue(playerInput: Parameters<typeof estimatePlayerMarketValue>[0]["player"]): number | null {
+function estimateSafeMarketValue(
+  playerInput: Parameters<typeof estimatePlayerMarketValue>[0]["player"]
+): number | null {
   try {
     const result = estimatePlayerMarketValue({ player: playerInput });
     return result.estimatedValue?.expected ?? null;
@@ -541,13 +617,28 @@ function calculatePositionScore(position: string | null, skills: Record<string, 
     return (skills.keeper ?? 0) * 0.7 + (skills.pace ?? 0) * 0.15 + (skills.passing ?? 0) * 0.15;
   }
   if (p === "DEF") {
-    return (skills.defender ?? 0) * 0.5 + (skills.pace ?? 0) * 0.2 + (skills.technique ?? 0) * 0.15 + (skills.passing ?? 0) * 0.15;
+    return (
+      (skills.defender ?? 0) * 0.5 +
+      (skills.pace ?? 0) * 0.2 +
+      (skills.technique ?? 0) * 0.15 +
+      (skills.passing ?? 0) * 0.15
+    );
   }
   if (p === "MID") {
-    return (skills.playmaker ?? 0) * 0.45 + (skills.passing ?? 0) * 0.25 + (skills.technique ?? 0) * 0.2 + (skills.pace ?? 0) * 0.1;
+    return (
+      (skills.playmaker ?? 0) * 0.45 +
+      (skills.passing ?? 0) * 0.25 +
+      (skills.technique ?? 0) * 0.2 +
+      (skills.pace ?? 0) * 0.1
+    );
   }
   if (p === "ATT") {
-    return (skills.striker ?? 0) * 0.5 + (skills.pace ?? 0) * 0.25 + (skills.technique ?? 0) * 0.15 + (skills.passing ?? 0) * 0.1;
+    return (
+      (skills.striker ?? 0) * 0.5 +
+      (skills.pace ?? 0) * 0.25 +
+      (skills.technique ?? 0) * 0.15 +
+      (skills.passing ?? 0) * 0.1
+    );
   }
   return 0;
 }
