@@ -100,7 +100,8 @@ export function createSquadPlayerRows(input: CreateSquadPlayerRowsInput): SquadP
   const trainingRows = createTrainingPlayerRows(
     input.training?.players ?? [],
     input.trainingStatus === "ready" ? input.trainingDiagnostic : null,
-    input.projectionSummaries
+    input.projectionSummaries,
+    input.training?.history
   );
   const trainingRowsByPlayerId = new Map(
     trainingRows.map((trainingRow) => [trainingRow.playerId, trainingRow])

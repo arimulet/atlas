@@ -1,5 +1,6 @@
-import type { DiagnosticFinding, TrainingPageData, TrainingPagePlayer } from "@atlas/web/app/types";
+import type { DiagnosticFinding, TrainingPageData, TrainingPagePlayer, TrainingReport } from "@atlas/web/app/types";
 import type { PlayerTrainingProjectionSummary } from "./player-detail-view-model";
+import { latestCompletedTrainingReports, recordedTrainingSkillChanges } from "../training-history";
 
 export type TrainingStatusLabel = "Critical" | "Attention" | "Training prospect" | "Info";
 
@@ -37,8 +38,15 @@ export type TrainingPositionCode = (typeof TRAINING_POSITIONS)[number]["code"];
 export function createTrainingPlayerRows(
   players: TrainingPagePlayer[],
   diagnostic: TrainingDiagnostic | null,
-  projectionSummaries?: ReadonlyMap<string, PlayerTrainingProjectionSummary>
+  projectionSummaries?: ReadonlyMap<string, PlayerTrainingProjectionSummary>,
+  history?: readonly TrainingReport[]
 ): TrainingPlayerRow[] {
+  const reports = history?.length
+    ? history
+    : players.flatMap((player) => player.latestReport ? [player.latestReport] : []);
+  const latestCompletedByPlayer = new Map(
+    latestCompletedTrainingReports(reports).map((report) => [String(report.playerId), report])
+  );
   return players.map((player) => {
     const playerId = String(player.playerId);
     const projectionSummary = projectionSummaries?.get(playerId);
@@ -53,7 +61,7 @@ export function createTrainingPlayerRows(
       trainingType: player.latestReport?.type ?? null,
       trainingKind: player.latestReport?.kind ?? null,
       intensity: player.latestReport?.intensity ?? null,
-      skillChanges: visibleSkillChanges(player.latestReport),
+      skillChanges: recordedTrainingSkillChanges(latestCompletedByPlayer.get(playerId)),
       progress: projectionSummary?.progress ?? null,
       talent: projectionSummary?.talent ?? null,
       nextSkillUp: projectionSummary?.nextSkillUp ?? null,
@@ -61,19 +69,6 @@ export function createTrainingPlayerRows(
       status: trainingStatusForPlayer(player, diagnostic)
     };
   });
-}
-
-function visibleSkillChanges(
-  report: TrainingPagePlayer["latestReport"]
-): Array<{ skill: string; delta: number }> {
-  if (!report) {
-    return [];
-  }
-
-  return (report.skillChanges ?? []).map((change) => ({
-    skill: change.skill,
-    delta: change.delta
-  }));
 }
 
 export function trainingStatusForPlayer(
