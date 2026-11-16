@@ -70,7 +70,7 @@ export function TrainingPlayerTables({
   squadPlanning,
   onSaveSquadRole
 }: TrainingPlayerTablesProps) {
-  const rows = createTrainingPlayerRows(players, diagnostic, projectionSummaries);
+  const rows = createTrainingPlayerRows(players, diagnostic, projectionSummaries, history);
   const playerById = new Map(players.map((player) => [String(player.playerId), player]));
   const processedHistory = history.filter(isProcessedTrainingReport);
 
@@ -405,7 +405,7 @@ function SkillCell({
   skill: PlayerSkillKey;
   value: number | undefined | null;
 }) {
-  const changeClass = change === null ? "" : change > 0 ? " is-skill-up" : " is-skill-down";
+  const changeClass = change === null || change === 0 ? "" : change > 0 ? " is-skill-up" : " is-skill-down";
   const importantClass = isImportant ? " is-position-skill" : "";
   const levelLabel = skillLevelLabel(value ?? null);
   const tooltipText =

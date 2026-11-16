@@ -185,6 +185,21 @@ describe("RecentTrainingProgressModal", () => {
     expect(downChange[1].props.children).toEqual(["stamina", " ", -1]);
   });
 
+  it("ignores an upcoming report and displays the last completed week's changes", () => {
+    const future = { ...mockHistory[0]!, gameWeek: 106, date: "2099-01-01", skillChanges: [], skillsChange: {} };
+
+    const element = RecentTrainingProgressModal({
+      history: [...mockHistory, future],
+      isOpen: true,
+      onClose: vi.fn(),
+      players: mockPlayers
+    });
+
+    const section = element!.props.children;
+    const [, list] = section.props.children;
+    expect(list.props.children).toHaveLength(2);
+  });
+
   it("calls onClose and onSelectPlayer when player is selected via PlayerLink callback", () => {
     const onClose = vi.fn();
     const onSelectPlayer = vi.fn();

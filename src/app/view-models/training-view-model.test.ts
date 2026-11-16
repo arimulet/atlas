@@ -3,6 +3,36 @@ import { describe, expect, it } from "vitest";
 import { createTrainingPlayerRows, trainingStatusForPlayer } from "./training-view-model";
 
 describe("createTrainingPlayerRows", () => {
+  it("combines recorded changes with derived changes without treating counters as skills", () => {
+    const players = [{
+      id: "player-1",
+      playerId: 42,
+      name: "Player One",
+      age: 20,
+      training: { position: 1, advanced: true },
+      latestReport: {
+        playerId: 42,
+        gameWeek: 1200,
+        seasonWeek: 2,
+        date: "2026-01-01",
+        type: "pace",
+        kind: "advanced" as const,
+        intensity: 100,
+        age: 20,
+        skills: { pace: 12 },
+        skillsChange: { pace: 1, defending: -1, passing: 0, up: 1, down: 1 },
+        skillChanges: [{ skill: "pace", before: 11, after: 12, delta: 1, direction: "up" as const }]
+      }
+    }];
+
+    const [row] = createTrainingPlayerRows(players, null);
+
+    expect(row?.skillChanges).toEqual([
+      { skill: "pace", delta: 1 },
+      { skill: "defending", delta: -1 }
+    ]);
+  });
+
   it("maps the prepared Player Detail projection summary without deriving values", () => {
     const rows = createTrainingPlayerRows(
       [

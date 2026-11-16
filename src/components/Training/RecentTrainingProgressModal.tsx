@@ -1,6 +1,7 @@
 import { X } from "lucide-react";
 import type { TrainingPageData, TrainingReport } from "@atlas/web/app/types";
 import { PlayerLink } from "@/components/PlayerLink";
+import { latestCompletedTrainingReports, recordedTrainingSkillChanges } from "@/app/training-history";
 
 interface RecentTrainingProgressModalProps {
   history: TrainingReport[];
@@ -19,17 +20,8 @@ export function RecentTrainingProgressModal({
 }: RecentTrainingProgressModalProps) {
   if (!isOpen) return null;
 
-  const latestGameWeek = history.reduce<number | null>(
-    (latest, report) => Math.max(latest ?? report.gameWeek, report.gameWeek),
-    null
-  );
-
   const playerById = new Map(players.map((player) => [String(player.playerId), player]));
-
-  const reportsForWeek =
-    latestGameWeek === null
-      ? []
-      : history.filter((report) => report.gameWeek === latestGameWeek);
+  const reportsForWeek = latestCompletedTrainingReports(history);
 
   const playerChangesMap = new Map<
     string,
@@ -43,7 +35,7 @@ export function RecentTrainingProgressModal({
   >();
 
   for (const report of reportsForWeek) {
-    const rawChanges = (report.skillChanges ?? []).filter((change) => change.delta !== 0);
+    const rawChanges = recordedTrainingSkillChanges(report);
     if (rawChanges.length === 0) continue;
 
     const id = String(report.playerId);
