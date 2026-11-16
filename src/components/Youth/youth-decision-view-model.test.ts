@@ -35,6 +35,10 @@ describe("youth decision presentation model", () => {
       title: "Target exceeds projection horizon",
       description: "The complete target is not viable within the modeled career horizon."
     });
+    expect(mapDevelopmentProjectionWarning("trajectory_horizon_reached")).toEqual({
+      title: "Target exceeds development horizon",
+      description: "The ideal target cannot be completed within fourteen seasons or before age thirty."
+    });
   });
   it("keeps prospect quality and club fit as separate presentation labels", () => {
     const planning = createPlanning([

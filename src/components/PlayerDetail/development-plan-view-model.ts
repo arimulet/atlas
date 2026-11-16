@@ -77,7 +77,6 @@ export interface DevelopmentPlanViewModel {
   };
   assumptions: DevelopmentTrainingAssumptions;
   warnings: Array<{ code: DevelopmentProjectionWarning; label: string }>;
-  idealTargets: DevelopmentPlanTargetRow[];
   targets: DevelopmentPlanTargetRow[];
   path: DevelopmentPlanPathRow[];
   milestones: DevelopmentPlanMilestoneRow[];
@@ -155,24 +154,19 @@ function mapPlan(input: {
 }): DevelopmentPlanViewModel {
   const projectionByOrder = new Map(input.projection.steps.map((step) => [step.order, step]));
   const baseGameWeek = input.projection.generatedAtGameWeek;
-  const extractMarginalReturn = (reasons?: import("@atlas/domain").DevelopmentTargetReason[]) => {
-    const reason = reasons?.find((r): r is { type: "positive_marginal_return"; score: number } => r.type === "positive_marginal_return");
-    return reason && typeof reason.score === "number" ? reason.score : null;
-  };
-  const idealTargets = input.plan.idealTarget.targetSkills.map((skill) => ({
-    skill: skill.skill,
-    currentLevel: input.plan.gap.skills.find(s => s.skill === skill.skill)?.currentLevel ?? 0,
-    targetLevel: skill.targetLevel,
-    remaining: Math.max(0, skill.targetLevel - (input.plan.gap.skills.find(s => s.skill === skill.skill)?.currentLevel ?? 0)),
-    priority: skill.priority,
-    status: (input.plan.gap.skills.find(s => s.skill === skill.skill)?.currentLevel ?? 0) >= skill.targetLevel
-      ? ("complete" as const)
-      : ("in_progress" as const),
-    reasons: skill.reasons?.map(targetReasonLabel) ?? [],
-    marginalReturn: extractMarginalReturn(skill.reasons)
-  }));
+  const terminalStepBySkill = new Map(
+    input.path.steps
+      .filter((step) =>
+        input.plan.target.targetSkills.some(
+          (target) => target.skill === step.skill && target.targetLevel === step.toLevel
+        )
+      )
+      .map((step) => [step.skill, step])
+  );
   const targets = input.plan.gap.skills.map((skill) => {
     const targetSkill = input.plan.target.targetSkills.find(s => s.skill === skill.skill);
+    const terminalStep = terminalStepBySkill.get(skill.skill);
+
     return {
       skill: skill.skill,
       currentLevel: skill.currentLevel,
@@ -183,7 +177,7 @@ function mapPlan(input: {
         ? ("complete" as const)
         : ("in_progress" as const),
       reasons: targetSkill?.reasons?.map(targetReasonLabel) ?? [],
-      marginalReturn: extractMarginalReturn(targetSkill?.reasons)
+      marginalReturn: terminalStep?.developmentReturnScore ?? null
     };
   });
   const path = input.path.steps.map((step) => {
@@ -275,7 +269,6 @@ function mapPlan(input: {
           code !== "unknown_current_sublevel"
       )
       .map((code) => ({ code, label: warningLabel(code) })),
-    idealTargets,
     targets,
     path,
     milestones,
@@ -411,6 +404,8 @@ function warningLabel(code: DevelopmentProjectionWarning): string {
     advanced_training_assumed: "Advanced training assumed.",
     intensity_assumed: "Expected intensity is an assumption.",
     projection_horizon_exceeded: "Timeline available only within the projection horizon.",
+    trajectory_horizon_reached:
+      "The ideal target cannot be completed within 14 seasons or before age 30.",
     invalid_training_points: "Training model could not calculate valid points.",
     path_incomplete: "The generated path does not complete the target.",
     continuous_training_not_assumed: "Continuous training is not assumed."
