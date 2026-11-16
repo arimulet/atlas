@@ -50,7 +50,7 @@ describe("estimateCurrentTrainingProgress", () => {
       )
     ]);
     const talent: TalentEstimate = {
-      value: 1,
+      value: 5.6,
       confidence: "high",
       evidenceCount: 2,
       evidences: []
@@ -59,8 +59,11 @@ describe("estimateCurrentTrainingProgress", () => {
     const progress = estimateCurrentTrainingProgress(history, 21, talent, 1218);
 
     expect(progress).toMatchObject({
-      skill: "passing",
-      accumulatedPoints: 200
+      skill: "passing"
     });
+    expect(progress?.accumulatedPoints).toBeCloseTo(394.24);
+    expect(
+      Math.ceil((progress?.remainingToNextLevel ?? 0) / (35.2 * talent.value!))
+    ).toBe(2);
   });
 });

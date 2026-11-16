@@ -99,6 +99,7 @@ export interface SquadAssessmentOptions {
 const inFlightSquadAssessments = new Map<string, Promise<SquadAssessmentData>>();
 const squadAssessmentCache = new Map<string, { data: SquadAssessmentData; timestamp: number }>();
 const SQUAD_ASSESSMENT_CACHE_TTL_MS = 60 * 1000;
+const DEVELOPMENT_PROJECTED_WEEKLY_POINTS = 35.2;
 
 export function invalidateSquadAssessmentCache(clubId?: ClubId): void {
   if (clubId !== undefined) {
@@ -665,6 +666,7 @@ export function estimateCurrentTrainingProgress(
             (c) => c.direction === "up" && isMatchingSkill(c.skill, currentSkill)
           )
         )?.week ?? 0;
+    const talentValue = talent?.value ?? 1.0;
     const accumulatedPoints = weeks
       .filter(
         (week) =>
@@ -674,16 +676,25 @@ export function estimateCurrentTrainingProgress(
           week.intensity > 0 &&
           week.skill === currentSkill
       )
-      .reduce((sum, w) => sum + (w.trainingPoints ?? 0), 0);
+      .reduce(
+        (sum, week) =>
+          sum +
+          calculateProjectedWeeklyTrainingPoints({
+            talent: talentValue,
+            intensity: week.intensity,
+            trainingKind: week.kind === "advanced" ? "advanced" : "formation"
+          }),
+        0
+      );
 
-    let remainingToNextLevel = report?.trainingPoints.remainingToNextLevel ?? null;
-    let estimatedProgress = report?.trainingPoints.estimatedProgress ?? null;
+    let remainingToNextLevel: number | null = null;
+    let estimatedProgress: number | null = null;
 
-    if (remainingToNextLevel === null && playerAge !== null && currentSkill) {
-      const currentLevel = weeks.at(-1)?.skillLevelAfter ?? 10;
+    if (playerAge !== null) {
+      const currentLevel = latestProcessedWeek.skillLevelAfter;
       try {
         const required = calculateRequiredTrainingPoints({
-          talent: talent?.value ?? 1.0,
+          talent: talentValue,
           age: playerAge,
           skill: currentSkill,
           targetSkillLevel: currentLevel + 1
@@ -694,6 +705,9 @@ export function estimateCurrentTrainingProgress(
         // fallback
       }
     }
+
+    remainingToNextLevel ??= report?.trainingPoints.remainingToNextLevel ?? null;
+    estimatedProgress ??= report?.trainingPoints.estimatedProgress ?? null;
 
     return {
       skill: currentSkill,
@@ -730,9 +744,11 @@ function buildProjection(input: {
       ? input.latestTraining.intensity
       : 100;
   const talentValue = input.talent?.value ?? 1.0;
-  const kindFactor = trainingKind === "advanced" ? 1.0 : 0.588235;
-
-  const expectedWeeklyTrainingPoints = 35.2 * kindFactor * (expectedIntensity / 100) * talentValue;
+  const expectedWeeklyTrainingPoints = calculateProjectedWeeklyTrainingPoints({
+    talent: talentValue,
+    intensity: expectedIntensity,
+    trainingKind
+  });
 
   try {
     return projectDevelopment({
@@ -753,6 +769,21 @@ function buildProjection(input: {
   } catch {
     return null;
   }
+}
+
+function calculateProjectedWeeklyTrainingPoints(input: {
+  talent: number;
+  intensity: number;
+  trainingKind: "advanced" | "formation";
+}): number {
+  const kindFactor = input.trainingKind === "advanced" ? 1.0 : 0.588235;
+
+  return (
+    DEVELOPMENT_PROJECTED_WEEKLY_POINTS *
+    kindFactor *
+    (input.intensity / 100) *
+    input.talent
+  );
 }
 
 function buildPlan(player: DevelopmentPlayer, override: PlayerDevelopmentTargetOverride) {
