@@ -186,6 +186,7 @@ export function createAcquisitionSimulationViewModel(
   if (!result) return null;
   return {
     ...result,
+    currency,
     financial: {
       ...result.financial,
       amountFormatted: money(result.financial.amount, currency),

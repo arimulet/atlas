@@ -5,6 +5,7 @@ import { useState } from "react";
 import { CheckCircle2, Info, Search, Sliders } from "lucide-react";
 import { formatMoney } from "@/app/formatters";
 import { formatSokkerSkill, skillLevelLabelEn } from "@/app/view-models/skill-level-label";
+import { DevelopmentResults } from "./DevelopmentResults";
 import { PositionBadge } from "@/components/PositionBadge";
 import { inferPositionFromSkills } from "@atlas/domain";
 import type { FinancialStrategyState } from "@/app/features/financialStrategy/useFinancialStrategy";
@@ -177,7 +178,10 @@ export function InvestmentSimulator({
   const result = financialStrategy.acquisitionResult;
 
   return (
-    <Section title="Acquisition & Investment Simulator" className="atlas-finances-simulator-section">
+    <Section
+      title="Acquisition & Investment Simulator"
+      className="atlas-finances-simulator-section"
+    >
       <div className="atlas-finances-simulator-tabs">
         <button
           type="button"
@@ -240,7 +244,9 @@ export function InvestmentSimulator({
               <div className="atlas-finances-simulator-loaded-card">
                 <div className="atlas-finances-simulator-loaded-header">
                   <div className="atlas-finances-simulator-loaded-identity">
-                    <strong className="atlas-finances-simulator-loaded-name">{loadedPlayer.name}</strong>
+                    <strong className="atlas-finances-simulator-loaded-name">
+                      {loadedPlayer.name}
+                    </strong>
                     <span className="atlas-finances-simulator-loaded-age">
                       {loadedPlayer.age ? `${loadedPlayer.age} y/o` : "Age n/a"}
                     </span>
@@ -250,10 +256,25 @@ export function InvestmentSimulator({
                   </div>
                   <div className="atlas-finances-simulator-loaded-meta">
                     {loadedPlayer.wage ? (
-                      <span>Wage: {formatMoney({ amount: loadedPlayer.wage, currency: null, isComplete: true })}/wk</span>
+                      <span>
+                        Wage:{" "}
+                        {formatMoney({
+                          amount: loadedPlayer.wage,
+                          currency: null,
+                          isComplete: true
+                        })}
+                        /wk
+                      </span>
                     ) : null}
                     {loadedPlayer.marketValue ? (
-                      <span>Market: {formatMoney({ amount: loadedPlayer.marketValue, currency: null, isComplete: true })}</span>
+                      <span>
+                        Market:{" "}
+                        {formatMoney({
+                          amount: loadedPlayer.marketValue,
+                          currency: null,
+                          isComplete: true
+                        })}
+                      </span>
                     ) : null}
                   </div>
                 </div>
@@ -265,7 +286,9 @@ export function InvestmentSimulator({
                         const val = loadedPlayer.skills[s.key] ?? 0;
                         return (
                           <div className="atlas-finances-simulator-sokker-row" key={s.key}>
-                            <span className="atlas-finances-simulator-sokker-label">{s.label}:</span>
+                            <span className="atlas-finances-simulator-sokker-label">
+                              {s.label}:
+                            </span>
                             <span className="atlas-finances-simulator-sokker-val">
                               {formatSokkerSkill(val)}
                             </span>
@@ -328,7 +351,9 @@ export function InvestmentSimulator({
                                 onChange={(e) => handleSkillChange(key, e.target.value)}
                                 className="atlas-finances-simulator-skill-number-input"
                               />
-                              <span className="atlas-finances-simulator-skill-level-label">({levelLabel})</span>
+                              <span className="atlas-finances-simulator-skill-level-label">
+                                ({levelLabel})
+                              </span>
                             </dd>
                           </div>
                         );
@@ -358,155 +383,113 @@ export function InvestmentSimulator({
       {result ? (
         <div className="atlas-finances-simulator-results">
           {/* Card 1: Financial Feasibility */}
-          <div className="atlas-finances-simulator-result-card">
-            <div className="atlas-finances-simulator-result-header">
-              <h3>1. Financial Feasibility</h3>
-              <span className={`atlas-finances-simulator-chip is-${result.financial.safety}`}>
-                {result.financial.safetyFormatted}
-              </span>
-            </div>
-            <MetricGrid
-              metrics={[
-                [
-                  "Estimated Transfer Fee",
-                  result.financial.amountFormatted,
-                  result.financial.marketPriceSource === "market_comparables"
-                    ? `Derived from ${result.financial.comparableCount} market transfers`
-                    : result.financial.marketPriceSource === "market_calibration"
-                    ? "Calibrated against market transfers"
-                    : result.financial.marketPriceSource === "user_specified"
-                    ? "Specified investment fee"
-                    : "Fundamental market valuation"
-                ],
-                [
-                  "Projected Weekly Payroll",
-                  result.financial.projectedWeeklyPayrollFormatted,
-                  result.financial.weeklyWageFormatted
-                    ? `+${result.financial.weeklyWageFormatted}/wk added (${result.financial.isWageEstimated ? "est." : "known"})`
-                    : "No wage increase"
-                ],
-                [
-                  "Post-deal cash",
-                  result.financial.postInvestmentCashFormatted,
-                  "Remaining treasury"
-                ],
-                [
-                  "Payroll coverage",
-                  result.financial.postInvestmentPayrollCoverageWeeksFormatted,
-                  `Before: ${result.financial.currentPayrollCoverageWeeksFormatted}`
-                ],
-                [
-                  "Investment safety",
-                  result.financial.safetyFormatted,
-                  "Risk classification"
-                ]
-              ]}
-            />
-          </div>
-
-          {/* Card 2: Squad Fit & Depth */}
-          <div className="atlas-finances-simulator-result-card">
-            <div className="atlas-finances-simulator-result-header">
-              <h3>2. Squad Fit & Depth</h3>
-              <span
-                className={`atlas-squad-planning-badge is-${result.squadFit.projectedHierarchy}`}
-              >
-                {result.squadFit.projectedHierarchy === "starter"
-                  ? "Projected Starter"
-                  : result.squadFit.projectedHierarchy === "rotation"
-                  ? "Rotation"
-                  : "Reserve / Depth"}
-              </span>
-            </div>
-            <div className="atlas-finances-simulator-fit-body">
-              <strong className="atlas-finances-simulator-fit-title">
-                {result.squadFit.headline}
-              </strong>
-              <p>{result.squadFit.description}</p>
-            </div>
-          </div>
-
-          {/* Card 3: Training Integration */}
-          <div className="atlas-finances-simulator-result-card">
-            <div className="atlas-finances-simulator-result-header">
-              <h3>3. Training Integration</h3>
-              <span
-                className={`atlas-finances-simulator-chip${
-                  result.training.isCompatibleWithClubTraining ? " is-active" : " is-inactive"
-                }`}
-              >
-                {result.training.isCompatibleWithClubTraining ? "Compatible" : "No training"}
-              </span>
-            </div>
-            <div className="atlas-finances-simulator-fit-body">
-              <strong className="atlas-finances-simulator-fit-title">
-                {result.training.headline}
-              </strong>
-              <p>{result.training.description}</p>
-            </div>
-          </div>
-
-          {/* Card 4: Youth ROI (<= 21 y/o) */}
-          {result.roi?.isYouthProjectable ? (
-            <div className="atlas-finances-simulator-result-card is-roi">
+          {result.financial.marketPriceSource === "market_comparables" ? (
+            <div className="atlas-finances-simulator-result-card is-financial">
               <div className="atlas-finances-simulator-result-header">
-                <h3>4. Youth ROI & Resale Projection</h3>
-                <span className={`atlas-finances-simulator-chip is-${result.roi.verdict}`}>
-                  {result.roi.verdict === "high_upside"
-                    ? "High Upside"
-                    : result.roi.verdict === "moderate_upside"
-                    ? "Positive Return"
-                    : result.roi.verdict === "break_even"
-                    ? "Break-even"
-                    : "Deficit / Loss"}
+                <h3>1. Financial Feasibility</h3>
+                <span className={`atlas-finances-simulator-chip is-${result.financial.safety}`}>
+                  {result.financial.safetyFormatted}
+                </span>
+              </div>
+              <MetricGrid
+                metrics={[
+                  [
+                    "Estimated Transfer Fee",
+                    result.financial.amountFormatted,
+                    result.financial.marketPriceSource === "market_comparables"
+                      ? `Derived from ${result.financial.comparableCount} market transfers`
+                      : result.financial.marketPriceSource === "market_calibration"
+                        ? "Calibrated against market transfers"
+                        : result.financial.marketPriceSource === "user_specified"
+                          ? "Specified investment fee"
+                          : "Fundamental market valuation"
+                  ],
+                  [
+                    "Projected Weekly Payroll",
+                    result.financial.projectedWeeklyPayrollFormatted,
+                    result.financial.weeklyWageFormatted
+                      ? `+${result.financial.weeklyWageFormatted}/wk added (${result.financial.isWageEstimated ? "est." : "known"})`
+                      : "No wage increase"
+                  ],
+                  [
+                    "Post-deal cash",
+                    result.financial.postInvestmentCashFormatted,
+                    "Remaining treasury"
+                  ],
+                  [
+                    "Payroll coverage",
+                    result.financial.postInvestmentPayrollCoverageWeeksFormatted,
+                    `Before: ${result.financial.currentPayrollCoverageWeeksFormatted}`
+                  ],
+                  ["Investment safety", result.financial.safetyFormatted, "Risk classification"]
+                ]}
+              />
+            </div>
+          ) : (
+            <div className="atlas-finances-simulator-result-card is-financial">
+              <div className="atlas-finances-simulator-result-header">
+                <h3>1. Financial Feasibility</h3>
+              </div>
+              <p className="atlas-finances-panel__note">
+                Financial impact unavailable without comparable transfer prices.
+              </p>
+            </div>
+          )}
+
+          <div className="atlas-finances-simulator-fit-grid">
+            {/* Card 2: Squad Fit & Depth */}
+            <div className="atlas-finances-simulator-result-card is-squad">
+              <div className="atlas-finances-simulator-result-header">
+                <h3>2. Squad Fit & Depth</h3>
+                <span
+                  className={`atlas-squad-planning-badge is-${result.squadFit.projectedHierarchy}`}
+                >
+                  {result.squadFit.projectedHierarchy === "starter"
+                    ? "Projected Starter"
+                    : result.squadFit.projectedHierarchy === "rotation"
+                      ? "Rotation"
+                      : "Reserve / Depth"}
                 </span>
               </div>
               <div className="atlas-finances-simulator-fit-body">
                 <strong className="atlas-finances-simulator-fit-title">
-                  {result.roi.headline}
+                  {result.squadFit.headline}
                 </strong>
-                <p>{result.roi.description}</p>
-              </div>
-              <div className="atlas-finances-simulator-roi-grid">
-                <div className="atlas-finances-simulator-roi-col">
-                  <span>After 1 Season (16 wks)</span>
-                  <strong>{result.roi.projectedValueSeason1Formatted}</strong>
-                  <small>Total cost: {result.roi.totalCostSeason1Formatted}</small>
-                  <em
-                    className={
-                      result.roi.netMarginSeason1 && result.roi.netMarginSeason1 > 0
-                        ? "is-profit"
-                        : "is-loss"
-                    }
-                  >
-                    Net: {result.roi.netMarginSeason1Formatted} (
-                    {(result.roi.roiPercentSeason1 ?? 0) > 0 ? "+" : ""}
-                    {result.roi.roiPercentSeason1}%)
-                  </em>
-                </div>
-                <div className="atlas-finances-simulator-roi-col">
-                  <span>After 2 Seasons (32 wks)</span>
-                  <strong>{result.roi.projectedValueSeason2Formatted}</strong>
-                  <small>Total cost: {result.roi.totalCostSeason2Formatted}</small>
-                  <em
-                    className={
-                      result.roi.netMarginSeason2 && result.roi.netMarginSeason2 > 0
-                        ? "is-profit"
-                        : "is-loss"
-                    }
-                  >
-                    Net: {result.roi.netMarginSeason2Formatted} (
-                    {(result.roi.roiPercentSeason2 ?? 0) > 0 ? "+" : ""}
-                    {result.roi.roiPercentSeason2}%)
-                  </em>
-                </div>
+                <p>{result.squadFit.description}</p>
               </div>
             </div>
-          ) : null}
+
+            {/* Card 3: Training Integration */}
+            <div className="atlas-finances-simulator-result-card is-training">
+              <div className="atlas-finances-simulator-result-header">
+                <h3>3. Training Integration</h3>
+                <span
+                  className={`atlas-finances-simulator-chip${
+                    result.training.isCompatibleWithClubTraining ? " is-active" : " is-inactive"
+                  }`}
+                >
+                  {result.training.isCompatibleWithClubTraining ? "Compatible" : "No training"}
+                </span>
+              </div>
+              <div className="atlas-finances-simulator-fit-body">
+                <strong className="atlas-finances-simulator-fit-title">
+                  {result.training.headline}
+                </strong>
+                <p>{result.training.description}</p>
+              </div>
+            </div>
+          </div>
+          <DevelopmentResults
+            result={result}
+            currentGameWeek={financialStrategy.currentGameWeek}
+            onRecalculateTargets={financialStrategy.recalculateAcquisitionTargets}
+            isRecalculating={financialStrategy.isSimulatingAcquisition}
+          />
         </div>
       ) : (
         <p className="atlas-finances-panel__note">
-          Multidimensional acquisition simulation: evaluates cash reserves, weekly payroll, squad depth deficits, training slots, and future resale value without modifying real club data.
+          Multidimensional acquisition simulation: evaluates cash reserves, weekly payroll, squad
+          depth deficits, training slots, and future resale value without modifying real club data.
         </p>
       )}
     </Section>

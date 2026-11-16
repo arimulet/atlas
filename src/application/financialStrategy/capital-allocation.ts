@@ -118,6 +118,7 @@ export async function simulatePlayerAcquisitionApplication(
       squadDepth: context.depthAnalysis,
       squadPlanning: context.squadPlanning,
       squadPlayers: context.squadPlayers,
+      currentGameWeek: context.currentGameWeek,
       trainingConfiguration: training?.configuration ?? null,
       activeAdvancedTraineeCount,
       marketTransfers: transfers.map((t) => mapPersistedToTransferRecord(t, currencyName, currencyRate))
@@ -173,6 +174,7 @@ export async function getCapitalAllocationContext(
   });
   return {
     financialAssessment,
+    currentGameWeek: squadAssessment.currentGameWeek,
     squadPlanning,
     depthAnalysis,
     playerMarketValues: buildPlayerMarketValues(squadAssessment),

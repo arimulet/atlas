@@ -157,6 +157,7 @@ export interface CapitalAllocationPlan {
 }
 
 export interface CapitalAllocationContext {
+  currentGameWeek?: number | null;
   financialAssessment: ClubFinancialAssessment;
   squadPlanning: SquadPlanningRecommendations;
   depthAnalysis: SquadDepthAnalysis;
