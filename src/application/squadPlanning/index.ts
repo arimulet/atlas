@@ -623,7 +623,7 @@ function toMarketValuePlayer(context: SquadPlayerContext): PlayerMarketValuePlay
   };
 }
 
-function estimateCurrentTrainingProgress(
+export function estimateCurrentTrainingProgress(
   history: TrainingHistory | null,
   playerAge: number | null,
   talent: ReturnType<typeof estimateTalentFromTrainingHistory> | null,
@@ -632,9 +632,17 @@ function estimateCurrentTrainingProgress(
   if (!history || currentGameWeek === null) return undefined;
 
   try {
+    const latestProcessedWeek = [...history.weeks]
+      .filter(
+        (week) => week.week <= currentGameWeek && week.kind !== "missing" && week.intensity > 0
+      )
+      .sort((left, right) => left.week - right.week)
+      .at(-1);
+    if (!latestProcessedWeek) return undefined;
+
     const report = buildWeeklyTrainingReport({
       players: [{ history, talent: talent?.value }],
-      gameWeek: currentGameWeek
+      gameWeek: latestProcessedWeek.week
     }).players[0];
 
     const currentSkill = report?.training.skill;
@@ -649,15 +657,23 @@ function estimateCurrentTrainingProgress(
     };
 
     const weeks = [...history.weeks].sort((a, b) => a.week - b.week);
-    const lastPopWeek = [...weeks]
-      .reverse()
-      .find((w) =>
-        w.skillChanges?.some(
-          (c) => c.direction === "up" && isMatchingSkill(c.skill, currentSkill)
-        )
-      )?.week ?? 0;
+    const lastPopWeek =
+      [...weeks]
+        .reverse()
+        .find((w) =>
+          w.skillChanges?.some(
+            (c) => c.direction === "up" && isMatchingSkill(c.skill, currentSkill)
+          )
+        )?.week ?? 0;
     const accumulatedPoints = weeks
-      .filter((w) => w.week > lastPopWeek && w.kind !== "missing")
+      .filter(
+        (week) =>
+          week.week > lastPopWeek &&
+          week.week <= latestProcessedWeek.week &&
+          week.kind !== "missing" &&
+          week.intensity > 0 &&
+          week.skill === currentSkill
+      )
       .reduce((sum, w) => sum + (w.trainingPoints ?? 0), 0);
 
     let remainingToNextLevel = report?.trainingPoints.remainingToNextLevel ?? null;
