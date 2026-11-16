@@ -48,12 +48,6 @@ function createPlayer(): PlayerDetailViewModel {
         source: "automatic",
         targetSkills: [{ skill: "defender", targetLevel: 11, priority: "primary", reasons: [] }]
       },
-      idealTarget: {
-        playerId: 7,
-        profile: "defender",
-        source: "automatic",
-        targetSkills: [{ skill: "defender", targetLevel: 11, priority: "primary", reasons: [] }]
-      },
       gap: {
         playerId: 7,
         profile: "defender",
@@ -83,6 +77,7 @@ function createPlayer(): PlayerDetailViewModel {
           priority: "primary",
           estimatedTrainingPoints: 1000,
           developmentValue: 1,
+          developmentReturnScore: 0.42,
           reason: []
         }
       ],
@@ -178,6 +173,8 @@ describe("createDevelopmentPlanViewModel", () => {
 
     expect(plan).not.toBeNull();
     expect(plan?.profile.source).toBe("automatic");
+    expect(plan?.targets).toHaveLength(1);
+    expect(plan?.targets[0]?.marginalReturn).toBe(0.42);
   });
 
 

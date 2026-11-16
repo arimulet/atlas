@@ -35,6 +35,11 @@ import {
 } from "./development-plan-view-model";
 import { EditDevelopmentTargetModal } from "./EditDevelopmentTargetModal";
 import { createMarketProjectionChartData } from "./market-projection-chart-data";
+import {
+  hasHiddenDevelopmentPathSteps,
+  INITIAL_VISIBLE_DEVELOPMENT_PATH_STEPS,
+  visibleDevelopmentPath
+} from "./development-path-visibility";
 
 interface PlayerDevelopmentPlanProps {
   plan: DevelopmentPlanViewModel | null;
@@ -154,11 +159,7 @@ export function PlayerDevelopmentPlan({
         milestones={plan.milestones}
       />
       {!plan.completed ? (
-        <SkillTargets
-          targets={plan.targets}
-          idealTargets={plan.idealTargets}
-          title="Operative & Ideal Targets"
-        />
+        <SkillTargets targets={plan.targets} title="Ideal Target" />
       ) : null}
       {isEditorOpen ? (
         <EditDevelopmentTargetModal
@@ -210,11 +211,9 @@ function Warnings({ plan }: { plan: DevelopmentPlanViewModel }) {
 
 function SkillTargets({
   targets,
-  idealTargets,
   title
 }: {
   targets: DevelopmentPlanTargetRow[];
-  idealTargets: DevelopmentPlanTargetRow[];
   title: string;
 }) {
   return (
@@ -225,7 +224,6 @@ function SkillTargets({
             <tr>
               <th scope="col">Skill</th>
               <th scope="col">Current</th>
-              <th scope="col">Operative Target</th>
               <th scope="col">Ideal Target</th>
               <th scope="col">Status</th>
               <th scope="col">
@@ -248,10 +246,8 @@ function SkillTargets({
           </thead>
           <tbody>
             {targets.map((target) => {
-              const ideal = idealTargets.find((t) => t.skill === target.skill);
               const currentLevelLabel = skillLevelLabel(target.currentLevel);
-              const operativeLevelLabel = skillLevelLabel(target.targetLevel);
-              const idealLevelLabel = ideal ? skillLevelLabel(ideal.targetLevel) : null;
+              const targetLevelLabel = skillLevelLabel(target.targetLevel);
 
               return (
                 <tr key={target.skill}>
@@ -275,29 +271,13 @@ function SkillTargets({
                   </td>
                   <td
                     title={
-                      operativeLevelLabel
-                        ? `${target.targetLevel} - ${operativeLevelLabel}`
+                      targetLevelLabel
+                        ? `${target.targetLevel} - ${targetLevelLabel}`
                         : undefined
                     }
                   >
                     <strong style={{ fontSize: "0.88rem" }}>{target.targetLevel}</strong>{" "}
                     <small className="atlas-text-muted">({target.remaining} left)</small>
-                  </td>
-                  <td
-                    title={
-                      idealLevelLabel && ideal
-                        ? `${ideal.targetLevel} - ${idealLevelLabel}`
-                        : undefined
-                    }
-                  >
-                    {ideal ? (
-                      <>
-                        <strong style={{ fontSize: "0.88rem" }}>{ideal.targetLevel}</strong>{" "}
-                        <small className="atlas-text-muted">({ideal.remaining} left)</small>
-                      </>
-                    ) : (
-                      "—"
-                    )}
                   </td>
                   <td>
                     <StatusBadgeForTarget status={target.status} />
@@ -490,7 +470,9 @@ function UnifiedTrainingPath({
     import("@/app/view-models/market-value-view-model").PlayerMarketValueViewModel | null;
   milestones: import("./development-plan-view-model").DevelopmentPlanMilestoneRow[];
 }) {
-  const visiblePath = path;
+  const [isExpanded, setIsExpanded] = useState(false);
+  const hasHiddenSteps = hasHiddenDevelopmentPathSteps(path);
+  const visiblePath = visibleDevelopmentPath(path, isExpanded);
   const initialMilestones = milestones.filter((m) => m.step === 0);
 
   return (
@@ -710,6 +692,18 @@ function UnifiedTrainingPath({
               })}
             </tbody>
           </table>
+          ) : null}
+          {hasHiddenSteps ? (
+            <button
+              className="atlas-player-development-plan__show-more"
+              type="button"
+              aria-expanded={isExpanded}
+              onClick={() => setIsExpanded((value) => !value)}
+            >
+              {isExpanded
+                ? "Show less"
+                : `Show more (${path.length - INITIAL_VISIBLE_DEVELOPMENT_PATH_STEPS} remaining)`}
+            </button>
           ) : null}
         </div>
       )}

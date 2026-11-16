@@ -48,7 +48,6 @@ function plan(): PlayerDevelopmentPlan {
       confidence: "high",
       reasons: []
     },
-    idealTarget: target,
     target,
     gap: {
       playerId: player.playerId,
