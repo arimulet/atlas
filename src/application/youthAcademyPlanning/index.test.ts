@@ -9,6 +9,32 @@ import {
 } from "./index.js";
 
 describe("calculateLatestCompletedYouthSkillChanges", () => {
+  it("compares the latest academy week with the previous week when multiple game weeks share it", () => {
+    const previous = { ...createSnapshot(16, 7), gameWeek: 1216, week: 8, snapshotDate: new Date("2026-11-09"), importedAt: new Date("2026-11-10") };
+    const first = { ...createSnapshot(17, 8), gameWeek: 1217, week: 9, snapshotDate: new Date("2026-11-14"), importedAt: new Date("2026-11-14") };
+    const latest = { ...createSnapshot(18, 8), gameWeek: 1218, week: 9, snapshotDate: new Date("2026-11-15"), importedAt: new Date("2026-11-15") };
+
+    const changes = calculateLatestCompletedYouthSkillChanges([previous, latest, first]);
+
+    expect(changes).toEqual(new Map([[101, 1]]));
+  });
+
+  it("compares weeks across the season boundary", () => {
+    const previous = { ...createSnapshot(12, 5), week: 13, snapshotDate: new Date("2026-11-01") };
+    const latest = { ...createSnapshot(13, 6), week: 1, snapshotDate: new Date("2026-11-08") };
+
+    expect(calculateLatestCompletedYouthSkillChanges([previous, latest])).toEqual(new Map([[101, 1]]));
+  });
+
+  it("does not report a weekly change if a season week is missing or too old", () => {
+    const latest = { ...createSnapshot(20, 8), week: 9, snapshotDate: new Date("2026-11-15") };
+    const missingWeek = { ...createSnapshot(19, 7), week: 7, snapshotDate: new Date("2026-11-02") };
+    const staleWeek = { ...createSnapshot(18, 7), week: 8, snapshotDate: new Date("2026-10-01") };
+
+    expect(calculateLatestCompletedYouthSkillChanges([latest, missingWeek])).toEqual(new Map());
+    expect(calculateLatestCompletedYouthSkillChanges([latest, staleWeek])).toEqual(new Map());
+  });
+
   it("compares the two most recent game weeks", () => {
     const changes = calculateLatestCompletedYouthSkillChanges([
       createSnapshot(24, 6),
