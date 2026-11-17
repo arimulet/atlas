@@ -392,6 +392,24 @@ function isHighLevel(skill: number | null): boolean {
 export function calculateLatestCompletedYouthSkillChanges(
   snapshots: readonly PersistedSnapshot[]
 ): Map<number, number> {
+  const datedSnapshots = [...snapshots].sort((a, b) => {
+    const dateDifference = b.snapshotDate.getTime() - a.snapshotDate.getTime();
+    return dateDifference || b.importedAt.getTime() - a.importedAt.getTime();
+  });
+  const latest = datedSnapshots[0];
+  if (latest && isValidYouthSeasonWeek(latest.week)) {
+    const previousWeek = latest.week === 1 ? WEEKS_PER_SOKKER_SEASON : latest.week - 1;
+    const previous = datedSnapshots.find((snapshot) =>
+      isValidYouthSeasonWeek(snapshot.week) && snapshot.week !== latest.week
+    );
+    const maxIntervalMs = 14 * 24 * 60 * 60 * 1000;
+    if (!previous || previous.week !== previousWeek ||
+        latest.snapshotDate.getTime() - previous.snapshotDate.getTime() > maxIntervalMs) {
+      return new Map();
+    }
+    return compareYouthSnapshotSkills(latest, previous);
+  }
+
   const latestSnapshotByGameWeek = new Map<number, PersistedSnapshot>();
 
   for (const snapshot of snapshots) {
@@ -421,12 +439,23 @@ export function calculateLatestCompletedYouthSkillChanges(
     return new Map();
   }
 
+  return compareYouthSnapshotSkills(latestCompletedTraining, previousCompletedTraining);
+}
+
+function isValidYouthSeasonWeek(week: number | null): week is number {
+  return week !== null && Number.isInteger(week) && week >= 1 && week <= WEEKS_PER_SOKKER_SEASON;
+}
+
+function compareYouthSnapshotSkills(
+  latest: PersistedSnapshot,
+  previous: PersistedSnapshot
+): Map<number, number> {
   const previousSkillByJuniorId = new Map(
-    previousCompletedTraining.juniors.map((junior) => [junior.playerId, junior.skill] as const)
+    previous.juniors.map((junior) => [junior.playerId, junior.skill] as const)
   );
 
   return new Map(
-    latestCompletedTraining.juniors.flatMap((junior) => {
+    latest.juniors.flatMap((junior) => {
       const previousSkill = previousSkillByJuniorId.get(junior.playerId);
 
       if (junior.skill === null || previousSkill === null || previousSkill === undefined) {
