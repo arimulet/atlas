@@ -1,4 +1,3 @@
-import { calculateWeeklyTrainingPointsByKind } from "@atlas/domain";
 import type { TrainingReport } from "@atlas/web/app/types";
 import { formatEta, formatNumber, formatPercentage } from "@/app/formatters";
 import { TRAINABLE_SKILL_DEFINITIONS, type PlayerSkillKey } from "@/app/view-models/player-skills";
@@ -108,15 +107,14 @@ function TrainingSessionMark({
   isDirectTraining: boolean;
   report: TrainingReport;
 }) {
-  const effectiveness =
-    report.kind === "missing" ? 0 : isDirectTraining ? effectivePoints(report) : report.intensity;
-  const state = effectiveness <= 0 ? "idle" : isDirectTraining ? report.kind : "residual";
-  const percentage = effectiveness <= 0 ? 100 : Math.max(0, Math.min(100, effectiveness));
+  const intensity = report.kind === "missing" ? 0 : report.intensity;
+  const state = intensity <= 0 ? "idle" : isDirectTraining ? report.kind : "residual";
+  const percentage = intensity <= 0 ? 100 : Math.max(0, Math.min(100, intensity));
   const description =
     state === "idle"
       ? `Week ${report.seasonWeek} · no training`
       : isDirectTraining
-        ? `Week ${report.seasonWeek} · ${formatEffectiveness(report)} effective training points`
+        ? `Week ${report.seasonWeek} · ${report.kind} training · session intensity ${formatNumber(intensity)}`
         : `Week ${report.seasonWeek} · residual training from ${report.type} · session intensity ${formatNumber(report.intensity)}`;
 
   return (
@@ -124,7 +122,7 @@ function TrainingSessionMark({
       <small>W{report.seasonWeek}</small>
       <span className="atlas-training-details__session-bar">
         <span aria-hidden="true" style={{ width: `${percentage}%` }} />
-        {state !== "idle" ? <strong>{formatNumber(effectiveness)}</strong> : null}
+        {state !== "idle" ? <strong>{formatNumber(intensity)}</strong> : null}
       </span>
     </span>
   );
@@ -210,15 +208,6 @@ function groupReportsBySkillLevel(
   }
 
   return groups;
-}
-function formatEffectiveness(report: TrainingReport): string {
-  return formatNumber(effectivePoints(report));
-}
-
-function effectivePoints(report: TrainingReport): number {
-  if (report.kind === "missing") return 0;
-
-  return calculateWeeklyTrainingPointsByKind({ intensity: report.intensity, kind: report.kind });
 }
 function skillLevel(report: TrainingReport, skill: PlayerSkillKey): number | undefined {
   const trainingSkill =
