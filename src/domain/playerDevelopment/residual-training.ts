@@ -29,6 +29,7 @@ export interface HistoricalSkillProgress {
 export function estimateHistoricalSkillProgress(input: {
   history: TrainingHistory | null;
   currentGameWeek: number;
+  allowKeeperResidual: boolean;
   weeklyDirectPoints: (week: TrainingWeek) => number;
   weeklyReferencePoints: (week: TrainingWeek) => number;
 }): Partial<Record<DevelopmentSkill, HistoricalSkillProgress>> {
@@ -52,6 +53,8 @@ export function estimateHistoricalSkillProgress(input: {
       const trainedSkill = week.type === "general" ? null : week.type === "striker" ? "scoring" : week.type;
       const points = trainedSkill === TRAINING_SKILL[skill]
         ? input.weeklyDirectPoints(week)
+        : skill === "keeper" && !input.allowKeeperResidual
+          ? 0
         : input.weeklyReferencePoints(week) * (skill === "stamina" ? RESIDUAL_STAMINA_FACTOR : RESIDUAL_TRAINING_FACTOR);
       return total + (Number.isFinite(points) && points > 0 ? points : 0);
     }, 0);
