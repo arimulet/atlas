@@ -94,6 +94,8 @@ export interface PlayerDetailViewModel {
     position: string | null;
     trainedSkill: string | null;
   };
+  planningRole?: import("@atlas/domain").SquadRole | null;
+  lifecycle?: import("@atlas/domain").PlayerLifecycleStage | null;
   talent: {
     estimated: number | null;
     confidence?: "unknown" | "low" | "medium" | "high";
@@ -254,6 +256,8 @@ export function createPlayerDetailViewModel(
       position: trainingPositionCode(player.training.position),
       trainedSkill: trainedSkill === null ? null : formatTrainingPriority(trainedSkill)
     },
+    planningRole: marketPlayer?.role ?? null,
+    lifecycle: marketPlayer?.lifecycle ?? null,
     talent: {
       estimated: talentEstimate?.value ?? null,
       confidence: talentEstimate?.confidence,

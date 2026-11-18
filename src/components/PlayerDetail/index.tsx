@@ -90,7 +90,7 @@ function PlayerDetailContent({
     <div className="atlas-player-detail">
       <BrowserTitle pageName={viewModel.player.name} />
       <PlayerHeader diagnostics={viewModel.diagnostics} player={viewModel.player} onBack={onBack} />
-      <PlayerPersonalInfoPanel player={viewModel.player} training={viewModel.training} />
+      <PlayerPersonalInfoPanel player={viewModel.player} training={viewModel.training} planningRole={viewModel.planningRole} lifecycle={viewModel.lifecycle} />
       <div className="atlas-player-detail__summary-grid">
         <SkillsPanel skills={viewModel.skills} />
         <ProjectionPanel
