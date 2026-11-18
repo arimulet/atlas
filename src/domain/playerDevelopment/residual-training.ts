@@ -2,6 +2,15 @@ import type { TrainingHistory, TrainingWeek, SkillTrainingCostSkill } from "../t
 import type { DevelopmentSkill } from "./types.js";
 import type { PlayerSkill } from "../training/types.js";
 
+/** Shared calibration for squad development and acquisition projections. */
+export function calculateProjectedWeeklyTrainingPoints(input: {
+  talent: number;
+  intensity: number;
+  trainingKind: "advanced" | "formation";
+}): number {
+  return 35.2 * (input.trainingKind === "advanced" ? 1 : 0.588235) * (input.intensity / 100) * input.talent;
+}
+
 /** Provisional estimates based on Sokker Asistente, not official Sokker rates. */
 export const RESIDUAL_TRAINING_FACTOR = 0.15;
 export const RESIDUAL_STAMINA_FACTOR = 0.05;

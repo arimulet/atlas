@@ -24,6 +24,7 @@ import {
   buildWeeklyTrainingReport,
   estimateTalentFromTrainingHistory,
   estimateHistoricalSkillProgress,
+  calculateProjectedWeeklyTrainingPoints,
   calculateRequiredTrainingPoints,
   calculateGameWeek,
   getSokkerSeason,
@@ -100,7 +101,6 @@ export interface SquadAssessmentOptions {
 const inFlightSquadAssessments = new Map<string, Promise<SquadAssessmentData>>();
 const squadAssessmentCache = new Map<string, { data: SquadAssessmentData; timestamp: number }>();
 const SQUAD_ASSESSMENT_CACHE_TTL_MS = 60 * 1000;
-const DEVELOPMENT_PROJECTED_WEEKLY_POINTS = 35.2;
 
 export function invalidateSquadAssessmentCache(clubId?: ClubId): void {
   if (clubId !== undefined) {
@@ -380,11 +380,13 @@ function buildPlayerContext(
     currentGameWeek,
     allowKeeperResidual: developmentPlayer.formation === "GK",
     weeklyDirectPoints: (week) => calculateProjectedWeeklyTrainingPoints({
-      talent: talentValue, intensity: week.intensity,
+      talent: talentValue,
+      intensity: week.intensity,
       trainingKind: week.kind === "advanced" ? "advanced" : "formation"
     }),
     weeklyReferencePoints: (week) => calculateProjectedWeeklyTrainingPoints({
-      talent: talentValue, intensity: week.intensity, trainingKind: "advanced"
+      talent: talentValue,
+      intensity: week.intensity, trainingKind: "advanced"
     })
   });
   const trainingPath = generatePlayerTrainingPath({
@@ -394,7 +396,8 @@ function buildPlayerContext(
     talent,
     trainingHistory: history ? [history] : undefined,
     expectedWeeklyTrainingPoints: calculateProjectedWeeklyTrainingPoints({
-      talent: talentValue, intensity, trainingKind: player.training.advanced ? "advanced" : "formation"
+      talent: talentValue,
+      intensity, trainingKind: player.training.advanced ? "advanced" : "formation"
     }),
     residualTraining: { referenceWeeklyPoints, progress: historicalProgress }
   });
@@ -619,7 +622,8 @@ function createScenarioProjection(
     };
     const intensity = context.projection.assumptions.expectedIntensity;
     const expectedWeeklyTrainingPoints = calculateProjectedWeeklyTrainingPoints({
-      talent: context.talent?.value ?? 1, intensity, trainingKind
+      talent: context.talent?.value ?? 1,
+      intensity, trainingKind
     });
     const path = generatePlayerTrainingPath({
       player, target: context.developmentPlan.target, talent: context.talent,
@@ -728,7 +732,7 @@ export function estimateCurrentTrainingProgress(
       const currentLevel = latestProcessedWeek.skillLevelAfter;
       try {
         const required = calculateRequiredTrainingPoints({
-          talent: talentValue,
+          talent: talent?.value ?? 1,
           age: playerAge,
           skill: currentSkill,
           targetSkillLevel: currentLevel + 1
@@ -777,9 +781,8 @@ function buildProjection(input: {
     input.latestTraining?.intensity && input.latestTraining.intensity > 0
       ? input.latestTraining.intensity
       : 100;
-  const talentValue = input.talent?.value ?? 1.0;
   const expectedWeeklyTrainingPoints = calculateProjectedWeeklyTrainingPoints({
-    talent: talentValue,
+    talent: input.talent?.value ?? 1,
     intensity: expectedIntensity,
     trainingKind
   });
@@ -803,21 +806,6 @@ function buildProjection(input: {
   } catch {
     return null;
   }
-}
-
-function calculateProjectedWeeklyTrainingPoints(input: {
-  talent: number;
-  intensity: number;
-  trainingKind: "advanced" | "formation";
-}): number {
-  const kindFactor = input.trainingKind === "advanced" ? 1.0 : 0.588235;
-
-  return (
-    DEVELOPMENT_PROJECTED_WEEKLY_POINTS *
-    kindFactor *
-    (input.intensity / 100) *
-    input.talent
-  );
 }
 
 function buildPlan(player: DevelopmentPlayer, override: PlayerDevelopmentTargetOverride) {

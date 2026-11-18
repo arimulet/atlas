@@ -6,9 +6,7 @@ import {
   fetchClubDashboard,
   fetchClubDiagnostic,
   fetchPlayerDevelopment,
-  fetchSquadDepthAnalysis,
   fetchSquadPlanning,
-  fetchSquadPlanningRecommendations,
   fetchTrainingPageData,
   resetSquadRoleAssignment,
   saveSquadRoleAssignment,
@@ -38,7 +36,7 @@ export default function SquadPage() {
   const [currency, setCurrency] = useState<string | null>(null);
   const [playerDevelopment, setPlayerDevelopment] = useState<PlayerDevelopment | null>(null);
   const [squadPlanningStatus, setSquadPlanningStatus] = useState<DashboardStatus>("idle");
-  const [squadPlanning, setSquadPlanning] = useState<SquadPlanningBundle | null>(null);
+  const [squadPlanning, setSquadPlanning] = useState<Pick<SquadPlanningBundle, "assessment"> | null>(null);
   const [trainingStatus, setTrainingStatus] = useState<DashboardStatus>("idle");
   const [training, setTraining] = useState<TrainingPageData | null>(null);
   const [trainingDiagnostic, setTrainingDiagnostic] = useState<ImportResponse["diagnostic"]>(null);
@@ -46,12 +44,8 @@ export default function SquadPage() {
   const loadSquadPlanningData = useCallback(async (): Promise<boolean> => {
     setSquadPlanningStatus("loading");
     try {
-      const [assessment, depth, recommendations] = await Promise.all([
-        fetchSquadPlanning(),
-        fetchSquadDepthAnalysis(),
-        fetchSquadPlanningRecommendations()
-      ]);
-      setSquadPlanning({ assessment, depth, recommendations });
+      const assessment = await fetchSquadPlanning();
+      setSquadPlanning({ assessment });
       setSquadPlanningStatus("ready");
       return true;
     } catch {
@@ -63,6 +57,7 @@ export default function SquadPage() {
 
   const loadSquadData = useCallback(async () => {
     setTrainingStatus("loading");
+    void loadSquadPlanningData();
     try {
       const [dash, dev, train, diag] = await Promise.all([
         fetchClubDashboard(),
@@ -83,8 +78,6 @@ export default function SquadPage() {
       setTrainingDiagnostic(null);
       setTrainingStatus("error");
     }
-
-    void loadSquadPlanningData();
   }, [loadSquadPlanningData]);
 
   useEffect(() => {
