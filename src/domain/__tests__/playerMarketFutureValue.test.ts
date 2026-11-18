@@ -191,6 +191,17 @@ function context(overrides: Partial<FutureMarketValueContext> = {}): FutureMarke
 }
 
 describe("future player market value", () => {
+  it("includes residual skill-ups in projected market value states", () => {
+    const input = context();
+    input.projection.steps[0]!.residualChanges = [
+      { skill: "technique", fromLevel: 10, toLevel: 11, weekOffset: 1 }
+    ];
+
+    const result = projectPlayerMarketValue(input);
+
+    expect(result.points.map((point) => point.skills.technique)).toEqual([11, 11, 11]);
+    expect(player.skills.technique).toBe(10);
+  });
   it("reconstructs immutable future states and accumulates skill-ups", () => {
     const result = projectPlayerMarketValue(context());
 

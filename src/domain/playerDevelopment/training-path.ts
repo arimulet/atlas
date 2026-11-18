@@ -6,6 +6,7 @@ import {
 import { DEFAULT_TALENT_FOR_RELATIVE_COMPARISON, MAX_SKILL_LEVEL } from "../training/constants.js";
 import { WEEKS_PER_SOKKER_SEASON } from "../sokker/calendar.js";
 import { DEVELOPMENT_PRIORITY_WEIGHTS, DEVELOPMENT_PROFILES } from "./profiles.js";
+import { RESIDUAL_STAMINA_FACTOR, RESIDUAL_TRAINING_FACTOR, RESIDUAL_TRAINING_SKILLS } from "./residual-training.js";
 import {
   DEFAULT_DEVELOPMENT_TRAJECTORY_MAX_AGE,
   resolveDevelopmentTrajectoryHorizonWeeks
@@ -65,13 +66,31 @@ export function createDevelopmentSimulationState(
   for (const targetSkill of context.target.targetSkills) {
     skills[targetSkill.skill] = currentSkillLevel(context.player, targetSkill.skill);
   }
+  if (context.residualTraining) {
+    for (const skill of RESIDUAL_TRAINING_SKILLS) {
+      const value = context.player.skills[skill];
+      if (typeof value === "number" && Number.isFinite(value)) skills[skill] = value;
+    }
+  }
 
   return {
     skills,
     accumulatedTrainingPoints: 0,
     stepsCompleted: 0,
     estimatedElapsedWeeks: 0,
-    estimatedAge: context.player.age
+    estimatedAge: context.player.age,
+    skillProgress: context.residualTraining
+      ? Object.fromEntries(RESIDUAL_TRAINING_SKILLS.flatMap((skill) => {
+          const level = skills[skill];
+          const progress = context.residualTraining?.progress[skill];
+          if (level === undefined || !progress || level >= (skill === "stamina" ? 11 : MAX_SKILL_LEVEL)) return [];
+          const required = calculateRequiredTrainingPoints({
+            talent: usableTalent(context) ?? DEFAULT_TALENT_FOR_RELATIVE_COMPARISON,
+            age: context.player.age, skill: toTrainingDomainSkill(skill), targetSkillLevel: level + 1
+          }).requiredTrainingPoints;
+          return [[skill, Math.max(0, Math.min(progress.accumulatedPoints, required - 1))]];
+        }))
+      : undefined
   };
 }
 
@@ -94,12 +113,15 @@ export function generateNextTrainingCandidates(
     }
 
     const trainingSkill = toTrainingDomainSkill(targetSkill.skill);
-    const requiredTrainingPoints = calculateRequiredTrainingPoints({
+    const fullLevelPoints = calculateRequiredTrainingPoints({
       talent: talent ?? DEFAULT_TALENT_FOR_RELATIVE_COMPARISON,
       age: state.estimatedAge,
       skill: trainingSkill,
       targetSkillLevel: toLevel
     }).requiredTrainingPoints;
+    const requiredTrainingPoints = context.residualTraining
+      ? Math.max(1, fullLevelPoints - Math.min(state.skillProgress?.[targetSkill.skill] ?? 0, fullLevelPoints - 1))
+      : fullLevelPoints;
     const breakdown = calculateDevelopmentReturnScoreBreakdown({
       age: state.estimatedAge,
       talent,
@@ -192,6 +214,47 @@ export function generatePlayerTrainingPath(context: TrainingPathContext): Player
       break;
     }
 
+    const residualChanges: NonNullable<TrainingPathStep["residualChanges"]> = [];
+    const skillLevelBefore = { ...state.skills };
+    const skillProgressBefore = { ...state.skillProgress };
+    let simulatedWeeks = candidate.estimatedWeeks;
+    if (context.residualTraining) {
+      simulatedWeeks = 0;
+      while ((state.skills[candidate.skill] ?? 0) < candidate.toLevel && state.estimatedElapsedWeeks + simulatedWeeks < maximumTrajectoryWeeks) {
+        const week = ++simulatedWeeks;
+        const age = context.player.age + (state.estimatedElapsedWeeks + week - 1) / DEVELOPMENT_PATH_WEEKS_PER_YEAR;
+        for (const skill of RESIDUAL_TRAINING_SKILLS) {
+          const level = state.skills[skill];
+          if (level === undefined) continue;
+          const maxLevel = skill === "stamina" ? 11 : MAX_SKILL_LEVEL;
+          if (level >= maxLevel) continue;
+          const points = skill === candidate.skill
+            ? candidate.expectedWeeklyTrainingPoints
+            : context.residualTraining.referenceWeeklyPoints * (skill === "stamina" ? RESIDUAL_STAMINA_FACTOR : RESIDUAL_TRAINING_FACTOR);
+          let accumulated = (state.skillProgress?.[skill] ?? 0) + points;
+          let currentLevel = level;
+          while (currentLevel < maxLevel) {
+            const required = calculateRequiredTrainingPoints({
+              talent: usableTalent(context) ?? DEFAULT_TALENT_FOR_RELATIVE_COMPARISON,
+              age, skill: toTrainingDomainSkill(skill), targetSkillLevel: currentLevel + 1
+            }).requiredTrainingPoints;
+            if (accumulated < required) break;
+            accumulated = Math.max(0, accumulated - required);
+            currentLevel += 1;
+            if (skill !== candidate.skill) residualChanges.push({ skill, fromLevel: currentLevel - 1, toLevel: currentLevel, weekOffset: week });
+            if (skill === candidate.skill) break;
+          }
+          state.skills[skill] = currentLevel;
+          state.skillProgress![skill] = accumulated;
+        }
+      }
+      if ((state.skills[candidate.skill] ?? 0) < candidate.toLevel) {
+        state.skills = skillLevelBefore;
+        state.skillProgress = skillProgressBefore;
+        stoppedByHorizon = true;
+        break;
+      }
+    }
     steps.push({
       order: steps.length + 1,
       skill: candidate.skill,
@@ -201,17 +264,24 @@ export function generatePlayerTrainingPath(context: TrainingPathContext): Player
       estimatedTrainingPoints: candidate.requiredTrainingPoints,
       developmentValue: candidate.developmentValue,
       developmentReturnScore: candidate.developmentReturnScore,
-      reason: candidate.reason
+      reason: candidate.reason,
+      ...(context.residualTraining ? { residualChanges, simulatedWeeks } : {})
     });
 
     state.skills[candidate.skill] = candidate.toLevel;
     state.accumulatedTrainingPoints += candidate.requiredTrainingPoints;
-    state.estimatedElapsedWeeks += candidate.estimatedWeeks;
-    state.estimatedAge = candidate.estimatedAgeAtStep;
+    state.estimatedElapsedWeeks += simulatedWeeks;
+    state.estimatedAge = context.player.age + state.estimatedElapsedWeeks / DEVELOPMENT_PATH_WEEKS_PER_YEAR;
     state.stepsCompleted += 1;
     state.lastSkill = candidate.skill;
 
     addMilestones({ context, state, milestones, step: steps.length, skill: candidate.skill });
+    for (const change of residualChanges) {
+      const targetSkill = context.target.targetSkills.find((item) => item.skill === change.skill);
+      if (targetSkill && (skillLevelBefore[change.skill] ?? 0) < targetSkill.targetLevel && change.toLevel === targetSkill.targetLevel) {
+        addMilestones({ context, state, milestones, step: steps.length, skill: change.skill });
+      }
+    }
   }
 
   const completed = isTargetComplete(context.target, state);
@@ -227,6 +297,7 @@ export function generatePlayerTrainingPath(context: TrainingPathContext): Player
     },
     completed,
     stoppedByHorizon,
+    ...(context.residualTraining ? { residualTraining: context.residualTraining } : {}),
     confidence: pathConfidence(context, completed, steps.length > 0)
   };
 }

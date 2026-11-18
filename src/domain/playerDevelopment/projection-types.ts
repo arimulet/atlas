@@ -61,6 +61,7 @@ export interface DevelopmentProjectionStep {
   estimatedDate: Date | null;
   estimatedAge: number | null;
   confidence: Confidence;
+  residualChanges?: import("./training-path-types.js").TrainingPathStep["residualChanges"];
 }
 
 export type DevelopmentProjectionMilestoneType =

@@ -173,17 +173,17 @@ describe("createDevelopmentPlanViewModel", () => {
     ];
     const initialStep = player.trainingPath!.steps[0]!;
     player.trainingPath!.steps = [
-      initialStep,
-      { ...initialStep, order: 2, skill: "pace", fromLevel: 9, toLevel: 10 },
+      { ...initialStep, residualChanges: [{ skill: "pace", fromLevel: 9, toLevel: 10, weekOffset: 1 }] },
+      { ...initialStep, order: 2, skill: "pace", fromLevel: 10, toLevel: 11 },
       { ...initialStep, order: 3, fromLevel: 11, toLevel: 12 }
     ];
 
     const plan = createDevelopmentPlanViewModel({ player, training: null });
 
     expect(plan?.path.map((step) => step.projectedSkills)).toEqual([
-      { defender: 11, pace: 9 },
       { defender: 11, pace: 10 },
-      { defender: 12, pace: 10 }
+      { defender: 11, pace: 11 },
+      { defender: 12, pace: 11 }
     ]);
     expect(player.skills[0]?.value).toBe(10);
   });
