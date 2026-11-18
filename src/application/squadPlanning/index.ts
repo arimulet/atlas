@@ -378,6 +378,7 @@ function buildPlayerContext(
   const historicalProgress = currentGameWeek === null ? {} : estimateHistoricalSkillProgress({
     history,
     currentGameWeek,
+    allowKeeperResidual: developmentPlayer.formation === "GK",
     weeklyDirectPoints: (week) => calculateProjectedWeeklyTrainingPoints({
       talent: talentValue, intensity: week.intensity,
       trainingKind: week.kind === "advanced" ? "advanced" : "formation"

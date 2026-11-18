@@ -105,6 +105,7 @@ export function generateNextTrainingCandidates(
   const expectedWeeklyTrainingPoints = weeklyTrainingPoints(context);
   const talent = usableTalent(context);
   const candidates = context.target.targetSkills.flatMap((targetSkill) => {
+    if (context.residualTraining && targetSkill.skill === "keeper" && context.player.formation !== "GK") return [];
     const fromLevel = state.skills[targetSkill.skill] ?? 0;
     const toLevel = fromLevel + 1;
 
@@ -224,6 +225,7 @@ export function generatePlayerTrainingPath(context: TrainingPathContext): Player
         const week = ++simulatedWeeks;
         const age = context.player.age + (state.estimatedElapsedWeeks + week - 1) / DEVELOPMENT_PATH_WEEKS_PER_YEAR;
         for (const skill of RESIDUAL_TRAINING_SKILLS) {
+          if (skill === "keeper" && context.player.formation !== "GK") continue;
           const level = state.skills[skill];
           if (level === undefined) continue;
           const maxLevel = skill === "stamina" ? 11 : MAX_SKILL_LEVEL;
