@@ -165,6 +165,48 @@ function createTraining(): NonNullable<
 }
 
 describe("createDevelopmentPlanViewModel", () => {
+  it("accumulates projected skill levels without changing the current skills", () => {
+    const player = createPlayer();
+    player.skills = [
+      { key: "defender", value: 10, label: "Defending", levelLabel: null, isImportant: true, lastWeekChange: null },
+      { key: "pace", value: 9, label: "Pace", levelLabel: null, isImportant: true, lastWeekChange: null }
+    ];
+    const initialStep = player.trainingPath!.steps[0]!;
+    player.trainingPath!.steps = [
+      initialStep,
+      { ...initialStep, order: 2, skill: "pace", fromLevel: 9, toLevel: 10 },
+      { ...initialStep, order: 3, fromLevel: 11, toLevel: 12 }
+    ];
+
+    const plan = createDevelopmentPlanViewModel({ player, training: null });
+
+    expect(plan?.path.map((step) => step.projectedSkills)).toEqual([
+      { defender: 11, pace: 9 },
+      { defender: 11, pace: 10 },
+      { defender: 12, pace: 10 }
+    ]);
+    expect(player.skills[0]?.value).toBe(10);
+  });
+  it("uses the last projected step as the plan end when the target is not reached", () => {
+    const player = createPlayer();
+    player.developmentProjection!.projectionStatus = "partial";
+    player.developmentProjection!.completion = {
+      estimatedWeeks: null, estimatedGameWeek: null, estimatedDate: null, estimatedAge: null
+    };
+
+    const plan = createDevelopmentPlanViewModel({ player, training: null });
+
+    expect(plan?.completion).toMatchObject({ estimatedWeeks: 9, estimatedGameWeek: 1209, isPartial: true });
+  });
+
+  it("does not display the trajectory horizon warning", () => {
+    const player = createPlayer();
+    player.developmentProjection!.warnings = ["trajectory_horizon_reached", "path_incomplete"];
+
+    const plan = createDevelopmentPlanViewModel({ player, training: null });
+
+    expect(plan?.warnings.map((warning) => warning.code)).toEqual(["path_incomplete"]);
+  });
   it("maps the automatic target, progress, next step and assumptions", () => {
     const player = createPlayer();
     const training = createTraining();

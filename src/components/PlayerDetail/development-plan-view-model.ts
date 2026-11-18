@@ -35,6 +35,7 @@ export interface DevelopmentPlanPathRow {
   isCurrent: boolean;
   hasUnknownSublevel?: boolean;
   reasons: string[];
+  projectedSkills?: Record<string, number>;
 }
 
 export interface DevelopmentPlanMilestoneRow {
@@ -74,6 +75,7 @@ export interface DevelopmentPlanViewModel {
     estimatedDate: Date | null;
     estimatedAge: number | null;
     confidence: "low" | "medium" | "high";
+    isPartial: boolean;
   };
   assumptions: DevelopmentTrainingAssumptions;
   warnings: Array<{ code: DevelopmentProjectionWarning; label: string }>;
@@ -141,6 +143,7 @@ export function createDevelopmentPlanViewModel(
     path: trainingPath,
     projection: developmentProjection,
     playerAge: input.player.player.age,
+    currentSkills: input.player.skills,
     latestReport
   });
 }
@@ -150,6 +153,7 @@ function mapPlan(input: {
   path: import("@atlas/domain").PlayerTrainingPath;
   projection: import("@atlas/domain").PlayerDevelopmentProjection;
   playerAge: number;
+  currentSkills: PlayerDetailViewModel["skills"];
   latestReport: NonNullable<TrainingPagePlayer["latestReport"]> | null;
 }): DevelopmentPlanViewModel {
   const projectionByOrder = new Map(input.projection.steps.map((step) => [step.order, step]));
@@ -180,8 +184,12 @@ function mapPlan(input: {
       marginalReturn: terminalStep?.developmentReturnScore ?? null
     };
   });
+  const skillState: Record<string, number> = Object.fromEntries(
+    input.currentSkills.flatMap((skill) => skill.value === null ? [] : [[skill.key, skill.value]])
+  );
   const path = input.path.steps.map((step) => {
     const projectionStep = projectionByOrder.get(step.order);
+    skillState[step.skill] = step.toLevel;
 
       return {
         order: step.order,
@@ -200,6 +208,7 @@ function mapPlan(input: {
         ),
         confidence: projectionStep?.confidence ?? null,
         isCurrent: step.order === 1,
+        projectedSkills: { ...skillState },
         hasUnknownSublevel: step.order === 1 && input.projection.warnings.includes("unknown_current_sublevel"),
         reasons: step.reason.map(reasonLabel)
       };
@@ -227,6 +236,10 @@ function mapPlan(input: {
   }));
   const plannedSkill = path[0]?.skill ?? null;
   const currentSkill = developmentSkillForTrainingType(input.latestReport?.type);
+  const lastProjectedStep = input.projection.steps.at(-1);
+  const isPartial = input.projection.completion.estimatedWeeks === null && lastProjectedStep !== undefined;
+  const endGameWeek = isPartial ? lastProjectedStep.estimatedGameWeek : input.projection.completion.estimatedGameWeek;
+  const endAge = isPartial ? lastProjectedStep.estimatedAge : input.projection.completion.estimatedAge;
 
   return {
     profile: {
@@ -249,13 +262,17 @@ function mapPlan(input: {
     nextStep: path[0] ?? null,
     completion: {
       ...input.projection.completion,
-      estimatedAge: getProjectedAge(
+      estimatedWeeks: isPartial ? lastProjectedStep.cumulativeWeeks : input.projection.completion.estimatedWeeks,
+      estimatedGameWeek: endGameWeek,
+      estimatedDate: isPartial ? lastProjectedStep.estimatedDate : input.projection.completion.estimatedDate,
+      estimatedAge: endGameWeek === null && endAge === null ? null : getProjectedAge(
         input.playerAge,
         baseGameWeek,
-        input.projection.completion.estimatedGameWeek,
-        input.projection.completion.estimatedAge
+        endGameWeek,
+        endAge
       ),
-      confidence: input.projection.confidence
+      confidence: input.projection.confidence,
+      isPartial
     },
     assumptions: input.projection.assumptions,
     warnings: input.projection.warnings
@@ -266,6 +283,7 @@ function mapPlan(input: {
           code !== "formation_training_assumed" &&
           code !== "low_talent_confidence" &&
           code !== "long_term_projection" &&
+          code !== "trajectory_horizon_reached" &&
           code !== "unknown_current_sublevel"
       )
       .map((code) => ({ code, label: warningLabel(code) })),
@@ -404,8 +422,7 @@ function warningLabel(code: DevelopmentProjectionWarning): string {
     advanced_training_assumed: "Advanced training assumed.",
     intensity_assumed: "Expected intensity is an assumption.",
     projection_horizon_exceeded: "Timeline available only within the projection horizon.",
-    trajectory_horizon_reached:
-      "The ideal target cannot be completed within 14 seasons or before age 30.",
+    trajectory_horizon_reached: "",
     invalid_training_points: "Training model could not calculate valid points.",
     path_incomplete: "The generated path does not complete the target.",
     continuous_training_not_assumed: "Continuous training is not assumed."

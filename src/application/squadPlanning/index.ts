@@ -219,6 +219,9 @@ async function computeSquadAssessment(
       age: context?.age ?? null,
       sokkerValue: context?.sokkerValue ?? null,
       developmentPlan: context?.developmentPlan ?? null,
+      configuredDevelopmentObjective: overrides.has(playerAssessment.playerId)
+        ? overrides.get(playerAssessment.playerId)?.objective ?? "sportive"
+        : null,
       trainingPath: context?.trainingPath ?? null,
       developmentTarget: context?.developmentTarget ?? null,
       projection: context?.projection ?? null,

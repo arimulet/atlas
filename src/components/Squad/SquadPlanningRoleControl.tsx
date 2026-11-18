@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { SquadDepthPlayer, SquadRole } from "@atlas/domain";
+import { DevelopmentObjectiveIcon } from "./DevelopmentObjectiveIcon";
 import {
   describeManualRoleConflict,
   roleOptionLabel,
@@ -76,6 +77,7 @@ export function SquadPlanningRoleControl({
           <span className="atlas-squad-planning-cell__lifecycle">
             {lifecycleLabel(planningPlayer.lifecycle)}
           </span>
+          <DevelopmentObjectiveIcon objective={planningPlayer.configuredDevelopmentObjective} />
         </div>
         {!isEditorOpen ? (
           <button

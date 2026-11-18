@@ -2,6 +2,7 @@ import type { Confidence, SkillSet } from "../types.js";
 import type { Formation } from "../playerDevelopment/index.js";
 import type {
   DevelopmentProfile,
+  DevelopmentObjective,
   PlayerDevelopmentPlan,
   PlayerDevelopmentProjection,
   PlayerDevelopmentTarget,
@@ -104,6 +105,7 @@ export interface SquadDepthAnalysis {
 }
 
 export interface SquadDepthPlayer extends SquadPlayerAssessment {
+  configuredDevelopmentObjective?: DevelopmentObjective | null;
   skills?: SkillSet;
   playerName?: string;
   countryName?: string | null;

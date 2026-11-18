@@ -35,6 +35,7 @@ import {
 } from "./development-plan-view-model";
 import { EditDevelopmentTargetModal } from "./EditDevelopmentTargetModal";
 import { createMarketProjectionChartData } from "./market-projection-chart-data";
+import { ProjectedSkillsTooltip } from "@/components/InvestmentSimulator/ProjectedSkillsTooltip";
 import {
   hasHiddenDevelopmentPathSteps,
   INITIAL_VISIBLE_DEVELOPMENT_PATH_STEPS,
@@ -549,6 +550,11 @@ function UnifiedTrainingPath({
                     <th scope="row">
                       <div style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem" }}>
                         <b>{step.order}</b>
+                        <ProjectedSkillsTooltip
+                          skills={step.projectedSkills ?? {}}
+                          week={step.cumulativeWeeks ?? 0}
+                          calendarLabel={`step ${step.order}`}
+                        />
                         {stepMilestones.map((m) => {
                           const config = getMilestoneConfig(m.type);
                           const Icon = config.icon;
@@ -882,7 +888,7 @@ function DevelopmentImpactDashboard({
             gap: "4px"
           }}
         >
-          <Clock size={14} /> Time to Target
+          <Clock size={14} /> {plan.completion.isPartial ? "Time to Plan End" : "Time to Target"}
         </span>
         <strong style={{ fontSize: "1.1rem" }}>
           {plan.completion.estimatedWeeks !== null
