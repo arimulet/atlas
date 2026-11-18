@@ -91,7 +91,7 @@ export function projectDevelopment(
         !skillsWithProgressApplied.has(pathStep.skill) &&
         progressForSkill(context.currentTrainingProgress, pathStep.skill) !== null;
 
-      const requiredTrainingPoints = calculateStepTrainingPoints({
+      const requiredTrainingPoints = pathStep.simulatedWeeks !== undefined ? pathStep.estimatedTrainingPoints : calculateStepTrainingPoints({
         context,
         assumptions,
         state,
@@ -133,10 +133,10 @@ export function projectDevelopment(
         }
       }
 
-      const estimatedWeeks =
+      const estimatedWeeks = pathStep.simulatedWeeks ?? (
         expectedWeeklyPoints > 0 && Number.isFinite(expectedWeeklyPoints)
           ? Math.ceil(requiredTrainingPoints / expectedWeeklyPoints)
-          : Number.NaN;
+          : Number.NaN);
       const nextCumulativeWeeks = state.elapsedWeeks + estimatedWeeks;
 
       if (
@@ -159,7 +159,7 @@ export function projectDevelopment(
       const estimatedDate = addWeeks(context.currentDate, cumulativeWeeks);
       const estimatedGameWeek = gameWeekAt(context.currentGameWeek, cumulativeWeeks);
       const estimatedAge = projectAge(context, estimatedDate, cumulativeWeeks);
-      const confidence = calculateStepConfidence({
+      let confidence = calculateStepConfidence({
         context,
         cumulativeWeeks,
         firstStep,
@@ -170,6 +170,7 @@ export function projectDevelopment(
         currentProgressConfidence: progressForSkill(context.currentTrainingProgress, pathStep.skill)
           ?.confidence
       });
+      if (pathStep.residualChanges) confidence = minimumConfidence(confidence, "low");
 
       steps.push({
         order: pathStep.order,
@@ -182,10 +183,12 @@ export function projectDevelopment(
         estimatedGameWeek,
         estimatedDate,
         estimatedAge,
-        confidence
+        confidence,
+        ...(pathStep.residualChanges ? { residualChanges: pathStep.residualChanges } : {})
       });
 
       state.skills[pathStep.skill] = pathStep.toLevel;
+      for (const change of pathStep.residualChanges ?? []) state.skills[change.skill] = change.toLevel;
       state.elapsedWeeks = cumulativeWeeks;
       state.estimatedDate = estimatedDate;
       state.estimatedGameWeek = estimatedGameWeek;

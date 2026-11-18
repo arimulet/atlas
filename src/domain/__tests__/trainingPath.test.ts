@@ -5,8 +5,10 @@ import {
   DEFAULT_DEVELOPMENT_TRAJECTORY_MAX_WEEKS,
   MAX_DEVELOPMENT_PATH_STEPS,
   createDevelopmentSimulationState,
+  calculateRequiredTrainingPoints,
   generateNextTrainingCandidates,
   generatePlayerTrainingPath,
+  projectDevelopment,
   resolveDevelopmentTrajectoryHorizonWeeks,
   selectBestTrainingCandidate,
   type DevelopmentPlayer,
@@ -81,6 +83,66 @@ function candidate(overrides: Partial<TrainingPathCandidate> = {}): TrainingPath
 }
 
 describe("Training Path Generator", () => {
+  it("only projects keeper residual for players assigned to GK", () => {
+    const keeperPoints = calculateRequiredTrainingPoints({ talent: 1, age: 18, skill: "keeper", targetSkillLevel: 2 }).requiredTrainingPoints;
+    const targets = [{ skill: "defender" as const, targetLevel: 13, priority: "primary" as const }];
+    const residualTraining = {
+      referenceWeeklyPoints: 100,
+      progress: { keeper: { accumulatedPoints: keeperPoints - 1, hasKnownBaseline: true, hasHistoryGaps: false } }
+    };
+    const fieldPlayer = generatePlayerTrainingPath(context(targets, { player: player({ formation: "DEF" }), residualTraining }));
+    const goalkeeper = generatePlayerTrainingPath(context(targets, { player: player({ formation: "GK" }), residualTraining }));
+
+    expect(fieldPlayer.steps.flatMap((step) => step.residualChanges ?? []).some((change) => change.skill === "keeper")).toBe(false);
+    expect(goalkeeper.steps.flatMap((step) => step.residualChanges ?? [])).toContainEqual({ skill: "keeper", fromLevel: 1, toLevel: 2, weekOffset: 1 });
+  });
+
+  it("does not train keeper directly when the configured formation is not GK", () => {
+    const targets = [{ skill: "keeper" as const, targetLevel: 2, priority: "primary" as const }];
+    const residualTraining = { referenceWeeklyPoints: 100, progress: {} };
+    const fieldPlayer = generatePlayerTrainingPath(context(targets, { player: player({ formation: "DEF" }), residualTraining }));
+    const goalkeeper = generatePlayerTrainingPath(context(targets, { player: player({ formation: "GK" }), residualTraining }));
+
+    expect(fieldPlayer.steps).toHaveLength(0);
+    expect(fieldPlayer.completed).toBe(false);
+    expect(goalkeeper.steps[0]?.skill).toBe("keeper");
+    expect(goalkeeper.completed).toBe(true);
+  });
+  it("applies a residual skill-up to the trajectory and projection without a redundant step", () => {
+    const points = calculateRequiredTrainingPoints({ talent: 1, age: 18, skill: "passing", targetSkillLevel: 8 }).requiredTrainingPoints;
+    const pathContext = context([
+      { skill: "defender", targetLevel: 13, priority: "primary" },
+      { skill: "passing", targetLevel: 8, priority: "supporting" }
+    ], {
+      residualTraining: {
+        referenceWeeklyPoints: 100,
+        progress: { passing: { accumulatedPoints: points - 1, hasKnownBaseline: true, hasHistoryGaps: false } }
+      }
+    });
+
+    const path = generatePlayerTrainingPath(pathContext);
+    const projection = projectDevelopment({
+      player: pathContext.player, target: pathContext.target, path,
+      currentGameWeek: 1204, currentDate: new Date("2026-08-05T00:00:00Z")
+    });
+
+    expect(path.steps).toHaveLength(1);
+    expect(path.steps[0]?.residualChanges).toContainEqual({ skill: "passing", fromLevel: 7, toLevel: 8, weekOffset: 1 });
+    expect(path.completed).toBe(true);
+    expect(projection.projectionStatus).toBe("projected");
+    expect(projection.steps[0]?.residualChanges).toEqual(path.steps[0]?.residualChanges);
+    expect(projection.steps[0]?.estimatedWeeks).toBe(path.steps[0]?.simulatedWeeks);
+  });
+
+  it("uses the selected training speed while accumulating the same residual reference", () => {
+    const targets = [{ skill: "defender" as const, targetLevel: 14, priority: "primary" as const }];
+    const residualTraining = { referenceWeeklyPoints: 100, progress: {} };
+    const advanced = generatePlayerTrainingPath(context(targets, { expectedWeeklyTrainingPoints: 100, residualTraining }));
+    const formation = generatePlayerTrainingPath(context(targets, { expectedWeeklyTrainingPoints: 50, residualTraining }));
+
+    const totalWeeks = (path: typeof advanced) => path.steps.reduce((total, step) => total + (step.simulatedWeeks ?? 0), 0);
+    expect(totalWeeks(formation)).toBeGreaterThan(totalWeeks(advanced));
+  });
   it("generates one skill-up at a time for a single-skill target", () => {
     const path = generatePlayerTrainingPath(
       context([{ skill: "defender", targetLevel: 14, priority: "primary" }])

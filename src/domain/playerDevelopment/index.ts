@@ -26,6 +26,7 @@ export * from "./training-path.js";
 export * from "./projection-types.js";
 export * from "./projection.js";
 export * from "./trajectory-horizon.js";
+export * from "./residual-training.js";
 
 const FORMATION_PROFILE_AFFINITY: Readonly<
   Record<Formation, Partial<Record<DevelopmentProfile, number>>>

@@ -23,6 +23,7 @@ import {
   projectDevelopment,
   buildWeeklyTrainingReport,
   estimateTalentFromTrainingHistory,
+  estimateHistoricalSkillProgress,
   calculateRequiredTrainingPoints,
   calculateGameWeek,
   getSokkerSeason,
@@ -363,7 +364,7 @@ function buildPlayerContext(
   const validLatestTraining = history?.weeks
     .slice()
     .reverse()
-    .find((w) => w.kind !== "missing" && typeof w.intensity === "number" && w.intensity > 0);
+    .find((w) => (currentGameWeek === null || w.week <= currentGameWeek) && w.kind !== "missing" && typeof w.intensity === "number" && w.intensity > 0);
   const latestTraining = validLatestTraining ?? history?.weeks.at(-1);
   const currentTrainingProgress = estimateCurrentTrainingProgress(
     history,
@@ -371,12 +372,31 @@ function buildPlayerContext(
     talent,
     currentGameWeek
   );
+  const talentValue = talent?.value ?? 1;
+  const intensity = validLatestTraining?.intensity ?? 100;
+  const referenceWeeklyPoints = calculateProjectedWeeklyTrainingPoints({ talent: talentValue, intensity, trainingKind: "advanced" });
+  const historicalProgress = currentGameWeek === null ? {} : estimateHistoricalSkillProgress({
+    history,
+    currentGameWeek,
+    allowKeeperResidual: developmentPlayer.formation === "GK",
+    weeklyDirectPoints: (week) => calculateProjectedWeeklyTrainingPoints({
+      talent: talentValue, intensity: week.intensity,
+      trainingKind: week.kind === "advanced" ? "advanced" : "formation"
+    }),
+    weeklyReferencePoints: (week) => calculateProjectedWeeklyTrainingPoints({
+      talent: talentValue, intensity: week.intensity, trainingKind: "advanced"
+    })
+  });
   const trainingPath = generatePlayerTrainingPath({
     player: { ...developmentPlayer, age: player.age ?? 16 },
     target: plan.target,
     developmentGap: plan.gap,
     talent,
-    trainingHistory: history ? [history] : undefined
+    trainingHistory: history ? [history] : undefined,
+    expectedWeeklyTrainingPoints: calculateProjectedWeeklyTrainingPoints({
+      talent: talentValue, intensity, trainingKind: player.training.advanced ? "advanced" : "formation"
+    }),
+    residualTraining: { referenceWeeklyPoints, progress: historicalProgress }
   });
   const projection = buildProjection({
     player,
@@ -524,8 +544,8 @@ function createMarketTrainingComparison(
     formationInput = {
       player,
       developmentPlan: context.developmentPlan,
-      path: context.trainingPath,
-      projection: formationProjection,
+      path: formationProjection.path,
+      projection: formationProjection.projection,
       currentMarketValue: current,
       talent: context.talent ?? null,
       transfers
@@ -537,8 +557,8 @@ function createMarketTrainingComparison(
     advancedInput = {
       player,
       developmentPlan: context.developmentPlan,
-      path: context.trainingPath,
-      projection: advancedProjection,
+      path: advancedProjection.path,
+      projection: advancedProjection.projection,
       currentMarketValue: current,
       talent: context.talent ?? null,
       transfers
@@ -550,8 +570,8 @@ function createMarketTrainingComparison(
     advancedInput = {
       player,
       developmentPlan: context.developmentPlan,
-      path: context.trainingPath,
-      projection: advancedProjection,
+      path: advancedProjection.path,
+      projection: advancedProjection.projection,
       currentMarketValue: current,
       talent: context.talent ?? null,
       transfers
@@ -559,8 +579,8 @@ function createMarketTrainingComparison(
     formationInput = {
       player,
       developmentPlan: context.developmentPlan,
-      path: context.trainingPath,
-      projection: formationProjection,
+      path: formationProjection.path,
+      projection: formationProjection.projection,
       currentMarketValue: current,
       talent: context.talent ?? null,
       transfers
@@ -581,7 +601,7 @@ function createMarketTrainingComparison(
 function createScenarioProjection(
   context: SquadPlayerContext,
   trainingKind: "advanced" | "formation"
-): ReturnType<typeof projectDevelopment> | null {
+): { path: ReturnType<typeof generatePlayerTrainingPath>; projection: ReturnType<typeof projectDevelopment> } | null {
   if (
     !context.developmentPlan ||
     !context.trainingPath ||
@@ -590,25 +610,36 @@ function createScenarioProjection(
   )
     return null;
   try {
-    return projectDevelopment({
-      player: {
+    const player = {
         playerId: context.playerId,
         age: context.age,
         skills: context.skills,
         formation: context.formation ?? null,
         observedPosition: context.observedPosition ?? null
-      },
+    };
+    const intensity = context.projection.assumptions.expectedIntensity;
+    const expectedWeeklyTrainingPoints = calculateProjectedWeeklyTrainingPoints({
+      talent: context.talent?.value ?? 1, intensity, trainingKind
+    });
+    const path = generatePlayerTrainingPath({
+      player, target: context.developmentPlan.target, talent: context.talent,
+      expectedWeeklyTrainingPoints, residualTraining: context.trainingPath.residualTraining
+    });
+    const projection = projectDevelopment({
+      player,
       target: context.developmentPlan.target,
-      path: context.trainingPath,
+      path,
       currentGameWeek: context.projection.generatedAtGameWeek,
       currentDate: context.projection.generatedAtDate,
       talent: context.talent ?? null,
+      expectedWeeklyTrainingPoints,
       trainingAssumptions: {
         trainingKind,
         expectedIntensity: context.projection.assumptions.expectedIntensity,
         assumeContinuousTraining: context.projection.assumptions.assumeContinuousTraining
       }
     });
+    return { path, projection };
   } catch (error) { console.error("MarketValue error for player:", context.playerId, error);
     return null;
   }

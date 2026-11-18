@@ -36,6 +36,7 @@ export interface DevelopmentPlanPathRow {
   hasUnknownSublevel?: boolean;
   reasons: string[];
   projectedSkills?: Record<string, number>;
+  residualChanges?: NonNullable<PlayerTrainingPath["steps"][number]["residualChanges"]>;
 }
 
 export interface DevelopmentPlanMilestoneRow {
@@ -190,6 +191,7 @@ function mapPlan(input: {
   const path = input.path.steps.map((step) => {
     const projectionStep = projectionByOrder.get(step.order);
     skillState[step.skill] = step.toLevel;
+    for (const change of step.residualChanges ?? []) skillState[change.skill] = change.toLevel;
 
       return {
         order: step.order,
@@ -209,6 +211,7 @@ function mapPlan(input: {
         confidence: projectionStep?.confidence ?? null,
         isCurrent: step.order === 1,
         projectedSkills: { ...skillState },
+        residualChanges: step.residualChanges,
         hasUnknownSublevel: step.order === 1 && input.projection.warnings.includes("unknown_current_sublevel"),
         reasons: step.reason.map(reasonLabel)
       };
