@@ -13,7 +13,7 @@ import {
   TrendingUp,
   Calculator
 } from "lucide-react";
-import type { SquadPlanningBundle, SquadRole, TrainingPageData, TrainingReport } from "@atlas/web/app/types";
+import type { DashboardStatus, SquadPlanningBundle, SquadRole, TrainingPageData, TrainingReport } from "@atlas/web/app/types";
 import {
   formatEta,
   formatNumber,
@@ -55,7 +55,8 @@ interface TrainingPlayerTablesProps {
   players: TrainingPageData["players"];
   projectionSummaries: TrainingProps["projectionSummaries"];
   recommendations: ReadonlyMap<string, string>;
-  squadPlanning?: SquadPlanningBundle | null;
+  squadPlanning?: Pick<SquadPlanningBundle, "assessment"> | null;
+  squadPlanningStatus?: DashboardStatus;
   onSaveSquadRole?: (playerId: string, role: SquadRole | null) => Promise<void>;
 }
 
@@ -69,6 +70,7 @@ export function TrainingPlayerTables({
   projectionSummaries,
   recommendations,
   squadPlanning,
+  squadPlanningStatus,
   onSaveSquadRole
 }: TrainingPlayerTablesProps) {
   const rows = createTrainingPlayerRows(players, diagnostic, projectionSummaries, history);
@@ -115,6 +117,7 @@ export function TrainingPlayerTables({
               position={position.code}
               recommendations={recommendations}
               squadPlanning={squadPlanning}
+              squadPlanningStatus={squadPlanningStatus}
             />
           </section>
         );
@@ -132,7 +135,8 @@ interface TrainingPositionTableProps {
   players: TrainingPlayerRow[];
   position: TrainingPositionCode;
   recommendations: ReadonlyMap<string, string>;
-  squadPlanning?: SquadPlanningBundle | null;
+  squadPlanning?: Pick<SquadPlanningBundle, "assessment"> | null;
+  squadPlanningStatus?: DashboardStatus;
 }
 
 function TrainingPositionTable({
@@ -144,7 +148,8 @@ function TrainingPositionTable({
   players,
   position,
   recommendations,
-  squadPlanning
+  squadPlanning,
+  squadPlanningStatus
 }: TrainingPositionTableProps) {
   const [expandedPlayerId, setExpandedPlayerId] = useState<string | null>(null);
 
@@ -210,6 +215,7 @@ function TrainingPositionTable({
                 recommendation={recommendations.get(player.playerId) ?? ""}
                 sourcePlayer={playerById.get(player.playerId) ?? null}
                 squadPlanning={squadPlanning}
+                squadPlanningStatus={squadPlanningStatus}
               />
             ))
           ) : (
@@ -236,7 +242,8 @@ interface TrainingPlayerRowsProps {
   player: TrainingPlayerRow;
   position: TrainingPositionCode;
   sourcePlayer: TrainingPageData["players"][number] | null;
-  squadPlanning?: SquadPlanningBundle | null;
+  squadPlanning?: Pick<SquadPlanningBundle, "assessment"> | null;
+  squadPlanningStatus?: DashboardStatus;
 }
 
 function TrainingPlayerRows({
@@ -250,7 +257,8 @@ function TrainingPlayerRows({
   player,
   position,
   sourcePlayer,
-  squadPlanning
+  squadPlanning,
+  squadPlanningStatus
 }: TrainingPlayerRowsProps) {
   const changes = new Map(
     player.skillChanges.map((change) => [trainingSkillKey(change.skill), change.delta])
@@ -323,7 +331,7 @@ function TrainingPlayerRows({
         ))}
         <td className="atlas-training-table__numeric atlas-training-table__market-value">
           <div style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem", justifyContent: "flex-end" }}>
-            <span>{marketValueViewModel?.current.expected.label ?? "—"}</span>
+            <span>{marketValueViewModel?.current.expected.label ?? (squadPlanningStatus === "loading" ? "Loading…" : "—")}</span>
             {marketValueViewModel?.current.basedOnFundamentalOnly ? (
               <span
                 title="Fundamental model (no direct market comparables)"
@@ -341,7 +349,9 @@ function TrainingPlayerRows({
           </div>
         </td>
         <td className="atlas-training-table__planning">
-          {onSaveSquadRole ? (
+          {!depthPlayer && squadPlanningStatus === "loading" ? (
+            <span>Loading…</span>
+          ) : onSaveSquadRole ? (
             <SquadPlanningRoleControl
               onSaveSquadRole={onSaveSquadRole}
               playerId={player.playerId}

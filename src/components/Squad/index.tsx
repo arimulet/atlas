@@ -23,7 +23,7 @@ export function Squad({
   onSelectPlayer,
   projectionSummaries,
   squadPlanning,
-  squadPlanningStatus: _squadPlanningStatus,
+  squadPlanningStatus,
   training,
   trainingDiagnostic,
   trainingStatus
@@ -68,7 +68,7 @@ export function Squad({
       </header>
 
       <div className="atlas-squad__overview">
-        <SquadMarketSummary summary={marketSummary} />
+        <SquadMarketSummary status={squadPlanningStatus} summary={marketSummary} />
         <TrainingConfiguration configuration={training?.configuration ?? null} />
       </div>
 
@@ -84,6 +84,7 @@ export function Squad({
           projectionSummaries={projectionSummaries}
           recommendations={recommendations}
           squadPlanning={squadPlanning}
+          squadPlanningStatus={squadPlanningStatus}
         />
       ) : trainingStatus === "loading" ? (
         <SquadMessage>Loading squad...</SquadMessage>
@@ -105,8 +106,10 @@ export function Squad({
 }
 
 function SquadMarketSummary({
+  status,
   summary
 }: {
+  status: SquadProps["squadPlanningStatus"];
   summary: ReturnType<typeof createSquadMarketValueSummary>;
 }) {
   return (
@@ -121,11 +124,15 @@ function SquadMarketSummary({
             Squad asset overview
           </h2>
         </div>
-        <span>
+        {status === "ready" ? <span>
           {summary.coverage.valued}/{summary.coverage.total} players valued
-        </span>
+        </span> : null}
       </div>
-      <div className="atlas-squad-market-summary__metrics">
+      {status === "loading" || status === "idle" ? (
+        <p role="status">Calculating market values…</p>
+      ) : status === "error" ? (
+        <p role="alert">Unable to load market values.</p>
+      ) : <div className="atlas-squad-market-summary__metrics">
         <SummaryMetric label="Current squad value" value={summary.currentTotal.label} />
         <SummaryMetric label="Projected at targets" value={summary.projectedTotal.label} />
         <SummaryMetric
@@ -136,7 +143,7 @@ function SquadMarketSummary({
           label="Comparable-backed"
           value={`${summary.coverage.comparableBacked} players`}
         />
-      </div>
+      </div>}
     </section>
   );
 }

@@ -15,7 +15,7 @@ export interface SquadProps {
   onSelectPlayer: (playerId: string) => void;
   onSaveSquadRole: (playerId: string, role: SquadRole | null) => Promise<void>;
   projectionSummaries?: ReadonlyMap<string, PlayerTrainingProjectionSummary>;
-  squadPlanning: SquadPlanningBundle | null;
+  squadPlanning: Pick<SquadPlanningBundle, "assessment"> | null;
   squadPlanningStatus: DashboardStatus;
   training: TrainingPageData | null;
   trainingDiagnostic: TrainingDiagnostic | null;
