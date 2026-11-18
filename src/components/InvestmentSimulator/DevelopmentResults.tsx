@@ -200,7 +200,14 @@ export function DevelopmentResults({
                           <td>
                             {step.age ?? "—"} y/o · {calendarLabel ?? "season week unavailable"}
                           </td>
-                          <th scope="row">{step.skill}</th>
+                          <th scope="row">
+                            {step.skill}
+                            {step.residualChanges.length > 0 && (
+                              <div className="atlas-finances-panel__note">
+                                General: {step.residualChanges.map((change) => `${change.skill} ${change.level}`).join(", ")}
+                              </div>
+                            )}
+                          </th>
                           <td>{step.level}</td>
                           <td>
                             <ProjectedSkillsTooltip
