@@ -113,7 +113,8 @@ describe("TrainingDetails", () => {
 
   it.each([
     { kind: "advanced" as const, intensity: 80, direct: 80, residual: 80 },
-    { kind: "formation" as const, intensity: 80, direct: 40, residual: 80 },
+    { kind: "formation" as const, intensity: 80, direct: 80, residual: 80 },
+    { kind: "formation" as const, intensity: 100, direct: 100, residual: 100 },
     { kind: "missing" as const, intensity: 80, direct: null, residual: null },
     { kind: "advanced" as const, intensity: 0, direct: null, residual: null }
   ])("shows available training values for $kind at intensity $intensity", ({
@@ -137,6 +138,8 @@ describe("TrainingDetails", () => {
         expect(cell).not.toContain("<strong>");
       } else {
         expect(cell).toContain(`<strong>${expected}</strong>`);
+        expect(cell).toContain(`width:${expected}%`);
+        expect(cell).toContain(`session intensity ${intensity}`);
       }
     });
   });
