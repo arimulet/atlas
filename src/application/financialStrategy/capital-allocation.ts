@@ -16,10 +16,10 @@ import {
 } from "@atlas/domain";
 import {
   findFinalMarketTransfersUpToDate,
+  findLatestFinalMarketTransferByPlayerId,
   type PersistedMarketTransfer,
   PlayerModel,
   MarketTransferCurrentModel,
-  MarketTransferModel,
   MongoClubRepository,
   MongoCountryRepository
 } from "@atlas/database";
@@ -73,7 +73,7 @@ export async function simulatePlayerAcquisitionApplication(
     const [playerDoc, currentTransferDoc, histTransferDoc] = await Promise.all([
       PlayerModel.findOne({ playerId }).lean().catch(() => null),
       MarketTransferCurrentModel.findOne({ playerId }).lean().catch(() => null),
-      MarketTransferModel.findOne({ playerId }).sort({ transferDate: -1 }).lean().catch(() => null)
+      findLatestFinalMarketTransferByPlayerId(playerId).catch(() => null)
     ]);
 
     const rawSkills = ((playerDoc?.skills ?? currentTransferDoc?.player.skills ?? histTransferDoc?.skills ?? {}) as Record<string, number>);

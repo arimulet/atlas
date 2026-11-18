@@ -7,6 +7,7 @@ import {
   cleanupStaleMarketTransferCurrents,
   deleteMarketTransferCurrent,
   promoteToFinalMarketTransfer,
+  rebuildFinalMarketTransfersCache,
   getLastSuccessfulMarketTransferSyncRun,
   MongoCountryRepository
 } from "@atlas/database";
@@ -174,10 +175,12 @@ export async function runMarketTransferSyncJob(
       }
     }
 
+    await rebuildFinalMarketTransfersCache();
     await finishMarketTransferSyncRun(runId, counts);
     console.log(`[MarketTransferSync] Job completed successfully for runId ${runId}. Summary:`, counts);
     return { runId, success: true };
   } catch (error) {
+    await rebuildFinalMarketTransfersCache();
     const rawMsg = error instanceof Error ? error.message : String(error);
     let parsedReason: unknown = rawMsg;
     try {

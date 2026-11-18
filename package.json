@@ -17,6 +17,7 @@
     "training:calibrate": "tsx scripts/training-calibrate.ts"
   },
   "dependencies": {
+    "@upstash/redis": "^1.41.0",
     "fast-xml-parser": "^5.11.1",
     "firebase": "^12.19.0",
     "i18n-iso-countries": "^7.14.0",

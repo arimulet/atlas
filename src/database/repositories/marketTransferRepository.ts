@@ -2,6 +2,7 @@ import { suggestDevelopmentProfile } from "@atlas/domain";
 import { MarketTransferModel } from "../models/marketTransfer.js";
 import { MarketTransferCurrentModel } from "../models/marketTransferCurrent.js";
 import { MarketTransferSyncRunModel } from "../models/marketTransferSyncRun.js";
+import { getMarketTransferCache } from "./market-transfer-cache.js";
 import type {
   PersistedMarketTransfer,
   PersistedMarketTransferCurrent,
@@ -184,16 +185,8 @@ export async function deleteMarketTransferCurrent(playerId: number): Promise<voi
   await MarketTransferCurrentModel.deleteOne({ playerId });
 }
 
-let finalTransfersCache: {
-  maxTransferDateTime: number;
-  timestamp: number;
-  data: PersistedMarketTransfer[];
-} | null = null;
-
-const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
-
 export function invalidateFinalMarketTransfersCache(): void {
-  finalTransfersCache = null;
+  getMarketTransferCache()?.clearLocal();
 }
 
 const MARKET_TRANSFER_PROFILES: readonly string[] = [
@@ -255,16 +248,8 @@ export async function findFinalMarketTransfersUpToDate(
   maxTransferDate: Date,
   limitPerProfile?: number
 ): Promise<PersistedMarketTransfer[]> {
-  const now = Date.now();
-  const maxTime = maxTransferDate.getTime();
-
-  if (
-    finalTransfersCache &&
-    Math.abs(finalTransfersCache.maxTransferDateTime - maxTime) < 60000 &&
-    now - finalTransfersCache.timestamp < CACHE_TTL_MS
-  ) {
-    return finalTransfersCache.data;
-  }
+  const cached = await getMarketTransferCache()?.read();
+  if (cached) return filterCachedTransfers(cached, maxTransferDate, limitPerProfile);
 
   let data: PersistedMarketTransfer[];
 
@@ -299,12 +284,36 @@ export async function findFinalMarketTransfersUpToDate(
     data = docs as unknown as PersistedMarketTransfer[];
   }
 
-  finalTransfersCache = {
-    maxTransferDateTime: maxTime,
-    timestamp: now,
-    data
-  };
-
   return data;
+}
+
+export async function findLatestFinalMarketTransferByPlayerId(
+  playerId: number
+): Promise<PersistedMarketTransfer | null> {
+  const cached = await getMarketTransferCache()?.read();
+  if (cached) return cached.find((transfer) => transfer.playerId === playerId) ?? null;
+
+  const transfer = await MarketTransferModel.findOne({ playerId }).sort({ transferDate: -1 }).lean();
+  return transfer as unknown as PersistedMarketTransfer | null;
+}
+
+export function filterCachedTransfers(
+  transfers: readonly PersistedMarketTransfer[], maxTransferDate: Date, limitPerProfile?: number
+): PersistedMarketTransfer[] {
+  const eligible = transfers.filter((transfer) => transfer.transferDate <= maxTransferDate);
+  if (typeof limitPerProfile !== "number" || limitPerProfile <= 0) return eligible;
+  const limited = MARKET_TRANSFER_PROFILES.flatMap((profile) =>
+    eligible.filter((transfer) => transfer.profile === profile).slice(0, limitPerProfile)
+  );
+  return limited.length ? limited : eligible.slice(0, limitPerProfile * MARKET_TRANSFER_PROFILES.length);
+}
+
+export async function rebuildFinalMarketTransfersCache(): Promise<boolean> {
+  const sharedCache = getMarketTransferCache();
+  if (!sharedCache) return false;
+  return sharedCache.rebuild(async () => {
+    const transfers = await MarketTransferModel.find({}).sort({ transferDate: -1 }).lean();
+    return transfers as unknown as PersistedMarketTransfer[];
+  });
 }
 
