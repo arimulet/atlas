@@ -26,6 +26,7 @@ import { PositionBadge } from "@/components/PositionBadge";
 import { isSquadSkillRequiredForPosition } from "@/app/view-models/squad-view-model";
 import { createPlayerMarketValueViewModel, formatMarketMoney } from "@/app/view-models/market-value-view-model";
 import { SquadPlanningRoleControl } from "@/components/Squad/SquadPlanningRoleControl";
+import { DevelopmentObjectiveIcon } from "@/components/Squad/DevelopmentObjectiveIcon";
 import { TrainingDetails } from "./TrainingDetails";
 import { PLAYER_SKILL_DEFINITIONS, type PlayerSkillKey } from "@/app/view-models/player-skills";
 import { skillLevelLabel } from "@/app/view-models/skill-level-label";
@@ -348,9 +349,12 @@ function TrainingPlayerRows({
               planningPlayer={depthPlayer}
             />
           ) : depthPlayer ? (
-            <span className={`atlas-squad-planning-badge is-${depthPlayer.role}`}>
-              {depthPlayer.role}
-            </span>
+            <div className="atlas-squad-planning-cell__summary">
+              <span className={`atlas-squad-planning-badge is-${depthPlayer.role}`}>
+                {depthPlayer.role}
+              </span>
+              <DevelopmentObjectiveIcon objective={depthPlayer.configuredDevelopmentObjective} />
+            </div>
           ) : (
             "—"
           )}
