@@ -602,6 +602,11 @@ function UnifiedTrainingPath({
                           </span>
                         ) : null}
                       </div>
+                      {step.residualChanges?.length ? (
+                        <div className="atlas-text-muted" style={{ fontSize: "0.7rem" }}>
+                          Estimated general training: {step.residualChanges.map((change) => `${skillLabel(change.skill)} ${change.fromLevel} → ${change.toLevel}`).join(", ")}
+                        </div>
+                      ) : null}
                     </td>
                     <td>
                       <div

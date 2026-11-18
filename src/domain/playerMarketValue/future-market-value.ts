@@ -338,10 +338,12 @@ function createMarketValueContext(
 }
 
 function applyProjectionStep(skills: SkillSet, step: DevelopmentProjectionStep): SkillSet {
-  return {
+  const nextSkills = {
     ...skills,
     [step.skill]: clampSkill(step.toLevel)
   };
+  for (const change of step.residualChanges ?? []) nextSkills[change.skill] = clampSkill(change.toLevel);
+  return nextSkills;
 }
 
 function stateFromProjectionStep(

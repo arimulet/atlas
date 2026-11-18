@@ -8,6 +8,7 @@ import type {
   PlayerDevelopmentTarget
 } from "./types.js";
 import type { TalentEstimate, TrainingHistory } from "../training/types.js";
+import type { HistoricalSkillProgress } from "./residual-training.js";
 
 export interface TrainingPathPlayer extends DevelopmentPlayer {
   age: number;
@@ -20,6 +21,10 @@ export interface TrainingPathContext {
   talent?: TalentEstimate | null;
   trainingHistory?: readonly TrainingHistory[];
   expectedWeeklyTrainingPoints?: number;
+  residualTraining?: {
+    referenceWeeklyPoints: number;
+    progress: Partial<Record<DevelopmentSkill, HistoricalSkillProgress>>;
+  };
 }
 
 export interface DevelopmentSimulationState {
@@ -29,6 +34,7 @@ export interface DevelopmentSimulationState {
   estimatedElapsedWeeks: number;
   estimatedAge: number;
   lastSkill?: DevelopmentSkill;
+  skillProgress?: Partial<Record<DevelopmentSkill, number>>;
 }
 
 export type TrainingPathReason =
@@ -78,6 +84,8 @@ export interface TrainingPathStep {
   developmentValue: number;
   developmentReturnScore?: number;
   reason: TrainingPathReason[];
+  residualChanges?: Array<{ skill: DevelopmentSkill; fromLevel: number; toLevel: number; weekOffset: number }>;
+  simulatedWeeks?: number;
 }
 
 export type DevelopmentMilestoneType =
@@ -100,5 +108,6 @@ export interface PlayerTrainingPath {
   };
   completed: boolean;
   stoppedByHorizon?: boolean;
+  residualTraining?: TrainingPathContext["residualTraining"];
   confidence: Confidence;
 }
