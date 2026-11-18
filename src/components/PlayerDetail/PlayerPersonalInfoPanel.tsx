@@ -1,15 +1,18 @@
 import type { ReactNode } from "react";
-import { CircleDashed, Sparkles } from "lucide-react";
 import type { PlayerDetailViewModel } from "@/app/view-models/player-detail-view-model";
 import { CountryNameFlag } from "@/components/CountryNameFlag";
 import { PositionBadge } from "@/components/PositionBadge";
+import { PlanningRoleIcon } from "@/components/Squad/PlanningRoleIcon";
+import { lifecycleLabel } from "@/components/Squad/squad-planning-view-model";
 
 interface PlayerPersonalInfoPanelProps {
   player: PlayerDetailViewModel["player"];
   training: PlayerDetailViewModel["training"];
+  planningRole: PlayerDetailViewModel["planningRole"];
+  lifecycle: PlayerDetailViewModel["lifecycle"];
 }
 
-export function PlayerPersonalInfoPanel({ player, training }: PlayerPersonalInfoPanelProps) {
+export function PlayerPersonalInfoPanel({ player, training, planningRole, lifecycle }: PlayerPersonalInfoPanelProps) {
   return (
     <section
       className="atlas-player-detail-panel atlas-player-personal-info"
@@ -63,17 +66,15 @@ export function PlayerPersonalInfoPanel({ player, training }: PlayerPersonalInfo
           }
         />
         <InfoFact
-          label="Training"
+          label="Planning Role"
           value={
-            <span className="atlas-player-personal-info__training">
-              <span aria-hidden="true" title={trainingKindLabel(training.trainingKind)}>
-                {trainingKindIcon(training.trainingKind)}
+            planningRole ? (
+              <span className="atlas-player-personal-info__training">
+                <PlanningRoleIcon role={planningRole} />
+                <span>{planningRole.charAt(0).toUpperCase() + planningRole.slice(1)}</span>
+                {lifecycle ? <span className="atlas-text-muted">{lifecycleLabel(lifecycle)}</span> : null}
               </span>
-              <span>{training.trainedSkill ?? "—"}</span>
-              {training.intensity !== null && training.intensity > 0 ? (
-                <strong>{training.intensity}%</strong>
-              ) : null}
-            </span>
+            ) : lifecycle ? lifecycleLabel(lifecycle) : "—"
           }
         />
       </dl>
@@ -93,19 +94,6 @@ function InfoFact({ label, value }: InfoFactProps) {
       <dd>{value}</dd>
     </div>
   );
-}
-
-function trainingKindIcon(kind: PlayerDetailViewModel["training"]["trainingKind"]): ReactNode {
-  if (kind === "advanced") return <Sparkles size={12} style={{ color: "var(--atlas-success, #059669)" }} />;
-  if (kind === "formation") return <CircleDashed size={12} />;
-  return "—";
-}
-
-function trainingKindLabel(kind: PlayerDetailViewModel["training"]["trainingKind"]): string {
-  if (kind === "advanced") return "Advanced";
-  if (kind === "formation") return "Formation";
-  if (kind === "missing") return "Missing training";
-  return "Training type unavailable";
 }
 
 function positionLabel(position: string | null): string {

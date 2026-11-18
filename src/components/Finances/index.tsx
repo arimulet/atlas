@@ -8,16 +8,15 @@ import {
   Info,
   Layers,
   Lock,
-  RefreshCw,
   Shield,
-  Sparkles,
-  TrendingUp,
-  ArrowRightLeft
+  TrendingUp
 } from "lucide-react";
 import { formatMoney } from "@/app/formatters";
 import { PlayerLink } from "@/components/PlayerLink";
 import { PositionBadge } from "@/components/PositionBadge";
 import { StatusBadge } from "@/components/StatusBadge";
+import { PlanningRoleIcon } from "@/components/Squad/PlanningRoleIcon";
+import type { SquadRole } from "@atlas/domain";
 import { registerPlayerCountries } from "@/context/PlayerCountryContext";
 import type { FinancesProps } from "./types";
 import type { FinancialStrategyState } from "@/app/features/financialStrategy/useFinancialStrategy";
@@ -408,22 +407,16 @@ function getProtectedReasonTooltip(reason: string, rawReason?: string): string {
 function AssetRoleIcon({ role, rawRole }: { role: string; rawRole?: string }) {
   const tooltip = getRoleTooltip(role, rawRole);
   const normalized = (rawRole ?? role).toLowerCase();
-  let icon = <Crown size={12} />;
   let modifier = "core";
   if (normalized.includes("rotation")) {
-    icon = <RefreshCw size={11} />;
     modifier = "rotation";
   } else if (normalized.includes("depth")) {
-    icon = <Layers size={11} />;
     modifier = "depth";
   } else if (normalized.includes("prospect")) {
-    icon = <Sparkles size={11} />;
     modifier = "prospect";
   } else if (normalized.includes("develop")) {
-    icon = <TrendingUp size={11} />;
     modifier = "developing";
   } else if (normalized.includes("transition")) {
-    icon = <ArrowRightLeft size={11} />;
     modifier = "transition";
   }
   return (
@@ -433,7 +426,7 @@ function AssetRoleIcon({ role, rawRole }: { role: string; rawRole?: string }) {
       aria-label={tooltip}
       role="img"
     >
-      {icon}
+      <PlanningRoleIcon role={modifier as SquadRole} />
     </span>
   );
 }
