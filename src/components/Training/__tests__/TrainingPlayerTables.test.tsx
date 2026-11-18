@@ -5,6 +5,20 @@ import type { TrainingPageData } from "@atlas/web/app/types";
 import { TrainingPlayerTables } from "../TrainingPlayerTables";
 
 describe("TrainingPlayerTables", () => {
+  it("shows pending planning and market values while rendering the player", () => {
+    const players: TrainingPageData["players"] = [{
+      id: "player-1", playerId: 42, name: "Player One", age: 20,
+      skills: { pace: 12 }, training: { position: 1, advanced: true }
+    }];
+
+    const html = renderToStaticMarkup(<TrainingPlayerTables configuration={null} diagnostic={null}
+      history={[]} onSelectPlayer={vi.fn()} onSaveSquadRole={vi.fn()} players={players}
+      projectionSummaries={undefined} recommendations={new Map()} squadPlanningStatus="loading" />);
+
+    expect(html).toContain("Player One");
+    expect(html.match(/Loading…/g)).toHaveLength(2);
+  });
+
   it("shows changes from the last completed week instead of a future report", () => {
     const completed = {
       playerId: 42, gameWeek: 1200, seasonWeek: 2, date: "2026-01-01",
