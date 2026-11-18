@@ -1,6 +1,6 @@
 import { PlayerModel } from "@/database/models/player";
 import { MarketTransferCurrentModel } from "@/database/models/marketTransferCurrent";
-import { MarketTransferModel } from "@/database/models/marketTransfer";
+import { findLatestFinalMarketTransferByPlayerId } from "@atlas/database";
 import { ensureMongoDbConnection, handleApiError, jsonResponse } from "@/lib/api-helper";
 import { inferPositionFromSkills } from "@atlas/domain";
 import { NextRequest } from "next/server";
@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 3. Buscar en MarketTransferModel (transferencias históricas cerradas)
-    const historicalDoc = await MarketTransferModel.findOne({ playerId }).sort({ transferDate: -1 }).lean();
+    const historicalDoc = await findLatestFinalMarketTransferByPlayerId(playerId);
     if (historicalDoc) {
       const skills = normalizeSkills((historicalDoc.skills as Record<string, number>) ?? {});
       const position = inferPositionFromSkills(skills);
