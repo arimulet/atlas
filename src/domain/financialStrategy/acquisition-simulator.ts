@@ -1,5 +1,6 @@
 import {
   buildAcquisitionDevelopmentPlan,
+  projectAcquisitionSkills,
   type AcquisitionTalentScenario,
   type AcquisitionDevelopmentPlan
 } from "./acquisition-development.js";
@@ -459,11 +460,7 @@ export function simulatePlayerAcquisition(
       }
 
       const projectSkills = (weeks: number) => {
-        const skills = { ...normalizedSkills };
-        for (const step of development?.currentTrainingSteps ?? []) {
-          if (step.week <= weeks) skills[step.skill] = step.level;
-        }
-        return skills as SkillSet;
+        return projectAcquisitionSkills(normalizedSkills, development?.currentTrainingSteps ?? [], weeks) as SkillSet;
       };
       const valS1 = estimateSafeMarketValue({
         ...mockPlayerInput,
@@ -476,10 +473,9 @@ export function simulatePlayerAcquisition(
         skills: projectSkills(WEEKS_PER_SOKKER_SEASON * 2)
       });
       if (valS1 !== null && valS2 !== null) {
-        const proposedSkills = { ...normalizedSkills };
-        for (const step of development?.steps ?? []) {
-          if (step.week <= WEEKS_PER_SOKKER_SEASON * 2) proposedSkills[step.skill] = step.level;
-        }
+        const proposedSkills = projectAcquisitionSkills(
+          normalizedSkills, development?.steps ?? [], WEEKS_PER_SOKKER_SEASON * 2
+        );
         const proposedValueSeason2 = development
           ? estimateSafeMarketValue({
               ...mockPlayerInput,

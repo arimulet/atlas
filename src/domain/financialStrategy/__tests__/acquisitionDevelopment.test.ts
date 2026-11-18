@@ -1,8 +1,45 @@
 import { describe, expect, it } from "vitest";
-import { buildAcquisitionDevelopmentPlan } from "../acquisition-development.js";
+import { buildAcquisitionDevelopmentPlan, projectAcquisitionSkills } from "../acquisition-development.js";
 import { calculateGameWeek, getSokkerSeason, normalizeSeasonWeek } from "../../sokker/calendar.js";
 
 describe("buildAcquisitionDevelopmentPlan", () => {
+  it("advances age with season transitions for the investment simulator example", () => {
+    const currentGameWeek = calculateGameWeek(61, 9);
+    const plan = buildAcquisitionDevelopmentPlan({
+      playerId: 1,
+      age: 18,
+      profile: "defender",
+      skills: {
+        stamina: 5,
+        pace: 10,
+        technique: 7,
+        passing: 8,
+        keeper: 0,
+        defender: 9,
+        playmaker: 8,
+        striker: 6
+      },
+      trainingSkill: "defender",
+      hasAdvancedSlot: true,
+      talentScenario: "normal",
+      currentGameWeek
+    });
+
+    expect(plan?.steps.length).toBeGreaterThan(5);
+    for (const step of plan?.steps ?? []) {
+      expect(step.age).toBe(
+        18 + getSokkerSeason(currentGameWeek + step.week) - getSokkerSeason(currentGameWeek)
+      );
+      expect(step.seasonWeek).toBe(normalizeSeasonWeek(currentGameWeek + step.week));
+    }
+    const firstNewSeason = plan?.steps.find((step) => step.season === 62);
+    expect(firstNewSeason?.age).toBe(19);
+    expect(plan?.steps.some((step) => step.season === 61 && step.age === 18)).toBe(true);
+    if (plan?.coreWeek != null && plan.coreWeek > 0) {
+      expect(plan.coreAge).toBe(18 + getSokkerSeason(currentGameWeek + plan.coreWeek) - getSokkerSeason(currentGameWeek));
+    }
+  });
+
   it("recalculates a lower supporting target without reducing primary goals or training stamina", () => {
     const input = {
       playerId: 1,
@@ -20,9 +57,8 @@ describe("buildAcquisitionDevelopmentPlan", () => {
     expect(adjusted?.gaps.find((item) => item.skill === "passing")?.target).toBe(6);
     expect(adjusted?.gaps.find((item) => item.skill === "striker")?.target).toBe(17);
     expect(adjusted?.steps[0]?.skill).not.toBe("passing");
-    expect(
-      adjusted?.steps.filter((step) => step.skill === "passing").map((step) => step.level)
-    ).toEqual([5, 6]);
+    expect(adjusted?.steps.some((step) => step.skill === "passing" && step.level > 6)).toBe(false);
+    expect(adjusted?.steps.flatMap((step) => step.residualChanges).some((change) => change.skill === "passing" && change.level >= 6)).toBe(true);
     expect(adjusted?.steps.some((step) => step.skill === "stamina")).toBe(false);
     expect(adjusted?.steps.at(-1)?.week).toBeLessThan(original?.steps.at(-1)?.week ?? 0);
   });
@@ -46,6 +82,9 @@ describe("buildAcquisitionDevelopmentPlan", () => {
     expect(first?.season).toBe(getSokkerSeason(currentGameWeek + first!.week));
     expect(first?.seasonWeek).toBe(normalizeSeasonWeek(currentGameWeek + first!.week));
     expect(withoutCalendar?.steps[0]?.seasonWeek).toBeNull();
+    expect(withoutCalendar?.steps[0]?.age).toBe(
+      19 + Math.floor(withoutCalendar!.steps[0]!.week / 13)
+    );
   });
 
   it("projects faster improvement for high talent and slower improvement for low talent", () => {
@@ -137,8 +176,18 @@ describe("buildAcquisitionDevelopmentPlan", () => {
     expect(plan?.steps.every((step) => step.skill !== "stamina")).toBe(true);
     expect(plan?.coreWeek).toBeGreaterThan(0);
     expect(plan?.coreWeek).toBe(reference?.coreWeek);
-    expect(plan?.assumptions).toContain("stamina reaches the required level");
+    expect(plan?.assumptions).toContain("stamina meets its requirement");
     expect(input.skills.stamina).toBe(3);
+  });
+
+  it("applies general training before a direct milestone at the requested horizon", () => {
+    const steps = [{
+      skill: "defender" as const, level: 10, week: 8,
+      residualChanges: [{ skill: "pace" as const, level: 9, week: 4 }]
+    }];
+    expect(projectAcquisitionSkills({ defender: 9, pace: 8 }, steps, 3)).toEqual({ defender: 9, pace: 8 });
+    expect(projectAcquisitionSkills({ defender: 9, pace: 8 }, steps, 4)).toEqual({ defender: 9, pace: 9 });
+    expect(projectAcquisitionSkills({ defender: 9, pace: 8 }, steps, 8)).toEqual({ defender: 10, pace: 9 });
   });
 
   it("keeps the actual role separate when other Core skills are ready but stamina is low", () => {

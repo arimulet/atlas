@@ -1,5 +1,6 @@
 import {
   DEVELOPMENT_PROFILES,
+  calculateProjectedWeeklyTrainingPoints,
   generatePlayerTrainingPath,
   projectDevelopment
 } from "../playerDevelopment/index.js";
@@ -7,7 +8,8 @@ import type {
   DevelopmentProfile,
   DevelopmentPriority,
   DevelopmentSkill,
-  PlayerDevelopmentTarget
+  PlayerDevelopmentTarget,
+  Formation
 } from "../playerDevelopment/index.js";
 import { assessSquadRole, SQUAD_PLANNING_CONFIG } from "../squadPlanning/index.js";
 import {
@@ -25,6 +27,28 @@ export const ACQUISITION_TALENT_FACTORS: Readonly<Record<AcquisitionTalentScenar
   low: DEFAULT_TALENT_FOR_RELATIVE_COMPARISON * 1.2
 };
 
+export interface AcquisitionSkillStep {
+  skill: DevelopmentSkill;
+  level: number;
+  week: number;
+  residualChanges: Array<{ skill: DevelopmentSkill; level: number; week: number }>;
+}
+
+export function projectAcquisitionSkills(
+  initialSkills: Record<string, number>,
+  steps: readonly AcquisitionSkillStep[],
+  weeks: number
+): Record<string, number> {
+  const skills = { ...initialSkills };
+  for (const step of steps) {
+    for (const change of step.residualChanges) {
+      if (change.week <= weeks) skills[change.skill] = change.level;
+    }
+    if (step.week <= weeks) skills[step.skill] = step.level;
+  }
+  return skills;
+}
+
 export interface AcquisitionDevelopmentPlan {
   gaps: Array<{
     skill: DevelopmentSkill;
@@ -35,15 +59,12 @@ export interface AcquisitionDevelopmentPlan {
   currentRole: string;
   coreWeek: number | null;
   coreAge: number | null;
-  steps: Array<{
-    skill: DevelopmentSkill;
-    level: number;
-    week: number;
+  steps: Array<AcquisitionSkillStep & {
     age: number | null;
     season: number | null;
     seasonWeek: number | null;
   }>;
-  currentTrainingSteps: Array<{ skill: DevelopmentSkill; level: number; week: number }>;
+  currentTrainingSteps: AcquisitionSkillStep[];
   assumptions: string;
 }
 
@@ -110,17 +131,52 @@ export function buildAcquisitionDevelopmentPlan(input: {
     evidenceCount: 0,
     evidences: []
   };
+  let currentSeason: number | null = null;
+  let currentSeasonWeek: number | null = null;
+  if (input.currentGameWeek != null) {
+    try {
+      currentSeason = getSokkerSeason(input.currentGameWeek);
+      currentSeasonWeek = normalizeSeasonWeek(input.currentGameWeek);
+    } catch {
+      // A snapshot outside the supported calendar has no reliable season anchor.
+    }
+  }
+  const formations: Record<DevelopmentProfile, Formation> = {
+    goalkeeper: "GK", defender: "DEF", midfielder: "MID", forward: "ATT"
+  };
+  const trainingKind = input.hasAdvancedSlot ? "advanced" : "formation";
+  // Talent changes the required points; the weekly rate uses the neutral calibration.
+  const referenceWeeklyPoints = calculateProjectedWeeklyTrainingPoints({
+    talent: DEFAULT_TALENT_FOR_RELATIVE_COMPARISON, intensity: 100, trainingKind: "advanced"
+  });
+  const expectedWeeklyTrainingPoints = calculateProjectedWeeklyTrainingPoints({
+    talent: DEFAULT_TALENT_FOR_RELATIVE_COMPARISON, intensity: 100, trainingKind
+  });
+  const trainingPlayer = {
+    formation: formations[profile],
+    ...player,
+    age:
+      input.age +
+      (currentSeasonWeek === null ? 0 : (currentSeasonWeek - 1) / WEEKS_PER_SOKKER_SEASON)
+  };
   const makeProjection = (selectedTarget: PlayerDevelopmentTarget) => {
-    const path = generatePlayerTrainingPath({ player, target: selectedTarget, talent });
+    const path = generatePlayerTrainingPath({
+      player: trainingPlayer,
+      target: selectedTarget,
+      talent,
+      expectedWeeklyTrainingPoints,
+      residualTraining: { referenceWeeklyPoints, progress: {} }
+    });
     return projectDevelopment({
-      player,
+      player: trainingPlayer,
       target: selectedTarget,
       path,
       talent,
       currentGameWeek: 1,
       currentDate: new Date(0),
+      expectedWeeklyTrainingPoints,
       trainingAssumptions: {
-        trainingKind: input.hasAdvancedSlot ? "advanced" : "formation",
+        trainingKind,
         expectedIntensity: 100,
         assumeContinuousTraining: true
       }
@@ -141,28 +197,47 @@ export function buildAcquisitionDevelopmentPlan(input: {
   const isProjectedCoreNow = projectedRole(input.age) === "core";
   let coreWeek: number | null = isProjectedCoreNow ? 0 : null;
   let coreAge: number | null = isProjectedCoreNow ? input.age : null;
+  const ageAtWeek = (week: number) =>
+    currentSeason !== null && input.currentGameWeek != null
+      ? input.age! + getSokkerSeason(input.currentGameWeek + week) - currentSeason
+      : input.age! + Math.floor(week / WEEKS_PER_SOKKER_SEASON);
   const steps = projection.steps.flatMap((step) => {
     if (step.cumulativeWeeks === null) return [];
-    skillState[step.skill] = step.toLevel;
-    const age = input.age! + Math.floor(step.cumulativeWeeks / WEEKS_PER_SOKKER_SEASON);
-    if (coreWeek === null && projectedRole(age) === "core") {
-      coreWeek = step.cumulativeWeeks;
-      coreAge = age;
+    const residualChanges = (step.residualChanges ?? []).map((change) => ({
+      skill: change.skill,
+      level: change.toLevel,
+      week: step.cumulativeWeeks! - (step.estimatedWeeks ?? 0) + change.weekOffset
+    }));
+    for (const change of residualChanges) {
+      skillState[change.skill] = change.level;
+      const changeAge = ageAtWeek(change.week);
+      if (coreWeek === null && projectedRole(changeAge) === "core") {
+        coreWeek = change.week;
+        coreAge = changeAge;
+      }
     }
+    skillState[step.skill] = step.toLevel;
+    let age = input.age! + Math.floor(step.cumulativeWeeks / WEEKS_PER_SOKKER_SEASON);
     let season: number | null = null;
     let seasonWeek: number | null = null;
-    if (input.currentGameWeek != null) {
+    if (input.currentGameWeek != null && currentSeason !== null) {
       try {
         const gameWeek = input.currentGameWeek + step.cumulativeWeeks;
         season = getSokkerSeason(gameWeek);
         seasonWeek = normalizeSeasonWeek(gameWeek);
+        age = input.age! + season - currentSeason;
       } catch {
         // Older or invalid snapshots cannot be mapped to the supported calendar.
       }
     }
+    if (coreWeek === null && projectedRole(age) === "core") {
+      coreWeek = step.cumulativeWeeks;
+      coreAge = age;
+    }
     return [
       {
         skill: step.skill,
+        residualChanges,
         level: step.toLevel,
         week: step.cumulativeWeeks,
         age,
@@ -185,8 +260,14 @@ export function buildAcquisitionDevelopmentPlan(input: {
       currentProjection?.steps.flatMap((step) =>
         step.cumulativeWeeks === null
           ? []
-          : [{ skill: step.skill, level: step.toLevel, week: step.cumulativeWeeks }]
+          : [{
+              skill: step.skill, level: step.toLevel, week: step.cumulativeWeeks,
+              residualChanges: (step.residualChanges ?? []).map((change) => ({
+                skill: change.skill, level: change.toLevel,
+                week: step.cumulativeWeeks! - (step.estimatedWeeks ?? 0) + change.weekOffset
+              }))
+            }]
       ) ?? [],
-    assumptions: `Estimates assume ${talentScenario} talent as a hypothetical scenario, continuous training at full effectiveness and no initial sublevel progress. The Core projection assumes stamina reaches the required level through regular training; its actual growth is not estimated. Stamina is not a dedicated training step. The proposed plan requires changes of focus; a free advanced slot must be assigned. Core status is not a guarantee of selection.`
+    assumptions: `Estimates assume ${talentScenario} talent as a hypothetical scenario, continuous training at full effectiveness and no initial sublevel progress. General training increases other skills, including stamina. The Core projection assumes stamina meets its requirement even if projected growth falls short. Stamina is not a dedicated training step. The proposed plan requires changes of focus; a free advanced slot must be assigned. Core status is not a guarantee of selection.`
   };
 }
