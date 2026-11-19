@@ -4,7 +4,7 @@ import {
   type AcquisitionTalentScenario,
   type AcquisitionDevelopmentPlan
 } from "./acquisition-development.js";
-import { ADVANCED_TRAINING_SLOT_COUNT } from "../training/constants.js";
+import { ADVANCED_TRAINING_SLOT_COUNT, MAX_STAMINA_LEVEL } from "../training/constants.js";
 import { WEEKS_PER_SOKKER_SEASON } from "../sokker/calendar.js";
 import type { SkillSet } from "../types.js";
 import type { ClubFinancialAssessment, FinancialPositionStatus } from "./types.js";
@@ -230,7 +230,7 @@ export function simulatePlayerAcquisition(
   if (input.skills) {
     for (const [k, v] of Object.entries(input.skills)) {
       if (typeof v === "number" && Number.isFinite(v)) {
-        normalizedSkills[k] = Math.max(0, Math.min(20, v));
+        normalizedSkills[k] = Math.max(0, Math.min(k === "stamina" ? MAX_STAMINA_LEVEL : 20, v));
       }
     }
   }

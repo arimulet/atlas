@@ -1,6 +1,6 @@
 import { Award, Star, TrendingUp } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
-import { formatSokkerSkill } from "@/app/view-models/skill-level-label";
+import { formatSokkerSkill, skillLevelLabelEn } from "@/app/view-models/skill-level-label";
 import type { PlayerAcquisitionSimulationInput } from "@atlas/domain";
 import { ACQUISITION_POSITION_PROFILES, buildAcquisitionTargetGaps, type AcquisitionPosition } from "../../domain/financialStrategy/acquisition-targets";
 
@@ -110,6 +110,7 @@ export function DevelopmentTargetSkills({
         {position !== appliedPosition && <small>Position change not yet applied</small>}
       </div>
       {!displaySkills && <p className="atlas-finances-panel__message is-error" role="alert">Required skills for this position are unavailable.</p>}
+      <div className="atlas-acquisition-target-layout">
       <div className="atlas-finances-simulator-sokker-grid">
         {SKILL_COLUMNS.map((column) => (
           <dl className="atlas-finances-simulator-sokker-col" key={column[0]}>
@@ -161,11 +162,16 @@ export function DevelopmentTargetSkills({
                           }
                         />
                         <span>
-                          {draft[skill] === "" ? "—" : formatSokkerSkill(Number(draft[skill]))}
+                          {draft[skill] === "" ? "—" : skillLevelLabelEn(Number(draft[skill])) ?? "—"}
                         </span>
                       </span>
                     ) : target ? (
-                      formatSokkerSkill(target.target)
+                      <span className="atlas-acquisition-target-control">
+                        <span className="atlas-acquisition-target-readonly" aria-label={`stamina target ${target.target}`}>
+                          {target.target}
+                        </span>
+                        <span>{skillLevelLabelEn(target.target) ?? formatSokkerSkill(target.target)}</span>
+                      </span>
                     ) : (
                       "—"
                     )}
@@ -195,6 +201,7 @@ export function DevelopmentTargetSkills({
           Changes apply when you recalculate. Set targets at or above the current level. Lower primary targets may leave Core unreached.
           Stamina is not trained separately.
         </small>
+      </div>
       </div>
       {error ? (
         <p className="atlas-finances-panel__message is-error" role="alert">

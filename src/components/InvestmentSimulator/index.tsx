@@ -8,6 +8,7 @@ import { formatSokkerSkill, skillLevelLabelEn } from "@/app/view-models/skill-le
 import { DevelopmentResults } from "./DevelopmentResults";
 import { PositionBadge } from "@/components/PositionBadge";
 import { inferPositionFromSkills } from "@atlas/domain";
+import { MAX_SKILL_LEVEL, MAX_STAMINA_LEVEL } from "../../domain/training/constants";
 import type { FinancialStrategyState } from "@/app/features/financialStrategy/useFinancialStrategy";
 
 const SOKKER_SKILL_COLUMNS = [
@@ -133,7 +134,8 @@ export function InvestmentSimulator({
   };
 
   const handleSkillChange = (key: string, value: string) => {
-    const num = Math.max(0, Math.min(18, Number(value) || 0));
+    const maximum = key === "stamina" ? MAX_STAMINA_LEVEL : MAX_SKILL_LEVEL;
+    const num = Math.max(0, Math.min(maximum, Number(value) || 0));
     setSkills((prev) => ({ ...prev, [key]: num }));
   };
 
@@ -332,7 +334,7 @@ export function InvestmentSimulator({
               </div>
 
               <div className="atlas-finances-simulator-manual-skills-col">
-                <span className="atlas-finances-simulator-skills-title">Skills (0 to 18)</span>
+                <span className="atlas-finances-simulator-skills-title">Skills (0 to 18; stamina 0 to 11)</span>
                 <div className="atlas-finances-simulator-skills-columns">
                   {MANUAL_SKILL_COLUMNS.map((col, colIdx) => (
                     <dl key={colIdx} className="atlas-finances-simulator-skills-list">
@@ -346,7 +348,7 @@ export function InvestmentSimulator({
                               <input
                                 type="number"
                                 min="0"
-                                max="18"
+                                max={key === "stamina" ? MAX_STAMINA_LEVEL : MAX_SKILL_LEVEL}
                                 value={val}
                                 onChange={(e) => handleSkillChange(key, e.target.value)}
                                 className="atlas-finances-simulator-skill-number-input"

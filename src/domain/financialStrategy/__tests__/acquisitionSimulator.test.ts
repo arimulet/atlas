@@ -110,6 +110,20 @@ function mockSquadPlanning(): SquadPlanningRecommendations {
 }
 
 describe("simulatePlayerAcquisition", () => {
+  it("caps stamina at 11 while preserving higher levels in other skills", () => {
+    const context = {
+      financialAssessment: mockFinancialAssessment(),
+      squadDepth: mockSquadDepth(),
+      squadPlanning: mockSquadPlanning()
+    };
+    const skills = { stamina: 18, pace: 17, technique: 14, passing: 13, defender: 15 };
+    const result = simulatePlayerAcquisition(context, { age: 18, position: "DEF", skills });
+
+    expect(result.input.skills.stamina).toBe(11);
+    expect(result.input.skills.pace).toBe(17);
+    expect(result.development?.gaps.find((gap) => gap.skill === "stamina")?.current).toBe(11);
+    expect(skills.stamina).toBe(18);
+  });
   it("uses the target position for development and squad training without changing the player or price", () => {
     const context = {
       financialAssessment: mockFinancialAssessment(),
