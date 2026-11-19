@@ -3,7 +3,7 @@ import {
   calculateRequiredTrainingPoints,
   calculateWeeklyTrainingPoints
 } from "../training/index.js";
-import { DEFAULT_TALENT_FOR_RELATIVE_COMPARISON, MAX_SKILL_LEVEL } from "../training/constants.js";
+import { DEFAULT_TALENT_FOR_RELATIVE_COMPARISON, MAX_SKILL_LEVEL, MAX_STAMINA_LEVEL } from "../training/constants.js";
 import { WEEKS_PER_SOKKER_SEASON } from "../sokker/calendar.js";
 import { DEVELOPMENT_PRIORITY_WEIGHTS, DEVELOPMENT_PROFILES } from "./profiles.js";
 import { RESIDUAL_STAMINA_FACTOR, RESIDUAL_TRAINING_FACTOR, RESIDUAL_TRAINING_SKILLS } from "./residual-training.js";
@@ -83,7 +83,7 @@ export function createDevelopmentSimulationState(
       ? Object.fromEntries(RESIDUAL_TRAINING_SKILLS.flatMap((skill) => {
           const level = skills[skill];
           const progress = context.residualTraining?.progress[skill];
-          if (level === undefined || !progress || level >= (skill === "stamina" ? 11 : MAX_SKILL_LEVEL)) return [];
+          if (level === undefined || !progress || level >= (skill === "stamina" ? MAX_STAMINA_LEVEL : MAX_SKILL_LEVEL)) return [];
           const required = calculateRequiredTrainingPoints({
             talent: usableTalent(context) ?? DEFAULT_TALENT_FOR_RELATIVE_COMPARISON,
             age: context.player.age, skill: toTrainingDomainSkill(skill), targetSkillLevel: level + 1
@@ -228,7 +228,7 @@ export function generatePlayerTrainingPath(context: TrainingPathContext): Player
           if (skill === "keeper" && context.player.formation !== "GK") continue;
           const level = state.skills[skill];
           if (level === undefined) continue;
-          const maxLevel = skill === "stamina" ? 11 : MAX_SKILL_LEVEL;
+          const maxLevel = skill === "stamina" ? MAX_STAMINA_LEVEL : MAX_SKILL_LEVEL;
           if (level >= maxLevel) continue;
           const points = skill === candidate.skill
             ? candidate.expectedWeeklyTrainingPoints

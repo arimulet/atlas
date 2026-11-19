@@ -1,6 +1,7 @@
 import { DEVELOPMENT_PROFILES } from "../playerDevelopment/profiles.js";
 import type { DevelopmentPriority, DevelopmentProfile, DevelopmentSkill } from "../playerDevelopment/types.js";
 import { SQUAD_PLANNING_CONFIG } from "../squadPlanning/constants.js";
+import { MAX_SKILL_LEVEL, MAX_STAMINA_LEVEL } from "../training/constants.js";
 
 export type AcquisitionPosition = "GK" | "DEF" | "MID" | "ATT";
 export const ACQUISITION_POSITION_PROFILES: Readonly<Record<AcquisitionPosition, DevelopmentProfile>> = {
@@ -22,7 +23,8 @@ export function buildAcquisitionTargetGaps(
   const relevant = DEVELOPMENT_PROFILES[profile].relevantSkills;
   if ([...relevant.map((item) => item.skill), "stamina"].some((skill) => {
     const value = skills[skill];
-    return value === undefined || !Number.isInteger(value) || value < 0 || value > 18;
+    return value === undefined || !Number.isInteger(value) || value < 0 ||
+      value > (skill === "stamina" ? MAX_STAMINA_LEVEL : MAX_SKILL_LEVEL);
   })) return null;
   return [
     ...relevant.map((item) => ({
