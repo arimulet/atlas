@@ -19,4 +19,9 @@ describe("acquisition target defaults", () => {
     expect(defaults?.find((gap) => gap.skill === "passing")?.target).toBe(13);
     expect(buildAcquisitionTargetGaps("goalkeeper", { ...skills, keeper: undefined } as unknown as Record<string, number>)).toBeNull();
   });
+
+  it("rejects stamina above its maximum when building targets directly", () => {
+    expect(buildAcquisitionTargetGaps("forward", { ...skills, stamina: 11 })).not.toBeNull();
+    expect(buildAcquisitionTargetGaps("forward", { ...skills, stamina: 12 })).toBeNull();
+  });
 });

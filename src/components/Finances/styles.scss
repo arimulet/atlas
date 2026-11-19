@@ -699,6 +699,16 @@
     h4 { margin: 0 0 10px; }
     dl { margin: 0; }
     dd { margin: 0; }
+    .atlas-finances-simulator-sokker-grid {
+      max-width: 760px;
+    }
+    .atlas-finances-simulator-sokker-row {
+      align-items: center;
+      display: grid;
+      gap: 8px;
+      grid-template-columns: calc(22px + 10ch) minmax(0, 1fr);
+      justify-content: start;
+    }
     .atlas-finances-simulator-sokker-label {
       align-items: center;
       display: inline-flex;
@@ -814,7 +824,9 @@
       padding: 3px 4px;
       text-align: center;
       width: 52px;
+      flex: 0 0 52px;
     }
+
 
     input:focus-visible {
       outline: 2px solid var(--atlas-accent);
@@ -822,12 +834,28 @@
     }
   }
 
+  .atlas-acquisition-target-readonly {
+    box-sizing: border-box;
+    color: var(--atlas-text);
+    flex: 0 0 52px;
+    text-align: center;
+  }
+
+  .atlas-acquisition-target-layout {
+    align-items: start;
+    display: grid;
+    gap: 16px 24px;
+    grid-template-columns: minmax(0, 760px) minmax(180px, 1fr);
+
+    @media (max-width: 900px) { grid-template-columns: minmax(0, 1fr); }
+  }
+
   .atlas-acquisition-target-actions {
     align-items: center;
     display: flex;
     flex-wrap: wrap;
     gap: 10px 14px;
-    margin-top: 14px;
+    margin-top: 0;
 
     button {
       background: var(--atlas-accent);
