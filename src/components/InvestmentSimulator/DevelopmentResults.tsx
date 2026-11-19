@@ -5,12 +5,29 @@ import { DevelopmentTargetSkills } from "./DevelopmentTargetSkills";
 import { ProjectedSkillsTooltip } from "./ProjectedSkillsTooltip";
 import { buildProjectedSkillSnapshots } from "./projected-skills";
 import { getMilestoneSeasonWeek } from "./milestone-calendar";
-import { ACQUISITION_POSITION_PROFILES, type AcquisitionPosition } from "../../domain/financialStrategy/acquisition-targets";
+import {
+  ACQUISITION_POSITION_PROFILES,
+  type AcquisitionPosition
+} from "../../domain/financialStrategy/acquisition-targets";
 
 type Result = NonNullable<FinancialStrategyState["acquisitionResult"]>;
 
 function formatAmount(amount: number | null, currency: string | null): string {
   return amount === null ? "—" : formatMoney({ amount, currency, isComplete: true });
+}
+
+function MetricGrid({ metrics }: { metrics: Array<[string, string, string]> }) {
+  return (
+    <div className="atlas-finances-metric-grid">
+      {metrics.map(([label, value, meta]) => (
+        <div className="atlas-finances-metric" key={label}>
+          <span>{label}</span>
+          <strong>{value}</strong>
+          <small>{meta}</small>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 function MarginAmount({ amount, currency }: { amount: number | null; currency: string | null }) {
@@ -48,30 +65,82 @@ export function DevelopmentResults({
       : result.financial.amount + result.financial.weeklyWage * plan.coreWeek;
   return (
     <>
+      <div className="atlas-finances-simulator-fit-grid">
+        {result.financial.marketPriceSource === "market_comparables" ? (
+          <div className="atlas-finances-simulator-result-card is-financial">
+            <div className="atlas-finances-simulator-result-header">
+              <h3>Financial Feasibility</h3>
+              <span className={`atlas-finances-simulator-chip is-${result.financial.safety}`}>
+                {result.financial.safetyFormatted}
+              </span>
+            </div>
+            <MetricGrid
+              metrics={[
+                [
+                  "Estimated Transfer Fee",
+                  result.financial.amountFormatted,
+                  result.financial.marketPriceSource === "market_comparables"
+                    ? `Derived from ${result.financial.comparableCount} market transfers`
+                    : result.financial.marketPriceSource === "market_calibration"
+                      ? "Calibrated against market transfers"
+                      : result.financial.marketPriceSource === "user_specified"
+                        ? "Specified investment fee"
+                        : "Fundamental market valuation"
+                ],
+                [
+                  "Projected Weekly Payroll",
+                  result.financial.projectedWeeklyPayrollFormatted,
+                  result.financial.weeklyWageFormatted
+                    ? `+${result.financial.weeklyWageFormatted}/wk added (${result.financial.isWageEstimated ? "est." : "known"})`
+                    : "No wage increase"
+                ],
+                [
+                  "Post-deal cash",
+                  result.financial.postInvestmentCashFormatted,
+                  "Remaining treasury"
+                ],
+                ["Investment safety", result.financial.safetyFormatted, "Risk classification"]
+              ]}
+            />
+          </div>
+        ) : (
+          <div className="atlas-finances-simulator-result-card is-financial">
+            <div className="atlas-finances-simulator-result-header">
+              <h3>Financial Feasibility</h3>
+            </div>
+            <p className="atlas-finances-panel__note">
+              Financial impact unavailable without comparable transfer prices.
+            </p>
+          </div>
+        )}
+
+        <div className="atlas-finances-simulator-result-card is-squad">
+          <div className="atlas-finances-simulator-result-header">
+            <h3>Squad Fit & Depth</h3>
+            <span className={`atlas-squad-planning-badge is-${result.squadFit.projectedHierarchy}`}>
+              {result.squadFit.projectedHierarchy === "starter"
+                ? "Projected Starter"
+                : result.squadFit.projectedHierarchy === "rotation"
+                  ? "Rotation"
+                  : "Reserve / Depth"}
+            </span>
+          </div>
+          <div className="atlas-finances-simulator-fit-body">
+            <strong className="atlas-finances-simulator-fit-title">
+              {result.squadFit.headline}
+            </strong>
+            <p>{result.squadFit.description}</p>
+          </div>
+        </div>
+      </div>
       <div
-        className={`atlas-finances-simulator-overview-grid${hasComparablePrice && roi ? " has-resale" : ""}`}
+        className={`atlas-finances-simulator-fit-grid${hasComparablePrice && roi ? "" : " is-single"}`}
       >
         <div className="atlas-finances-simulator-result-card is-overview">
           <div className="atlas-finances-simulator-result-header">
             <h3>Decision overview</h3>
           </div>
           <div className="atlas-finances-metric-grid">
-            <div className="atlas-finances-metric">
-              <span>Purchase estimate</span>
-              <strong>
-                {hasComparablePrice ? result.financial.amountFormatted : "Unavailable"}
-              </strong>
-              <small>
-                {result.financial.marketPriceSource === "market_comparables"
-                  ? `${result.financial.comparableCount} comparable transfers · ${result.financial.comparableConfidence} confidence · ${money(result.financial.comparablePriceLow)} – ${money(result.financial.comparablePriceHigh)}`
-                  : "Low confidence: no comparable transfer estimate available"}
-              </small>
-            </div>
-            <div className="atlas-finances-metric">
-              <span>Weekly wage</span>
-              <strong>{result.financial.weeklyWageFormatted}</strong>
-              <small>{result.financial.isWageEstimated ? "Estimated" : "Known wage"}</small>
-            </div>
             <div className="atlas-finances-metric">
               <span>Path to Core</span>
               <strong>
@@ -148,7 +217,11 @@ export function DevelopmentResults({
             <DevelopmentTargetSkills
               skills={result.talentScenarios.normal.development?.gaps ?? plan.gaps}
               playerSkills={result.input.skills}
-              appliedPosition={(Object.entries(ACQUISITION_POSITION_PROFILES).find(([, profile]) => profile === result.squadFit.targetProfile)?.[0] ?? "MID") as AcquisitionPosition}
+              appliedPosition={
+                (Object.entries(ACQUISITION_POSITION_PROFILES).find(
+                  ([, profile]) => profile === result.squadFit.targetProfile
+                )?.[0] ?? "MID") as AcquisitionPosition
+              }
               onRecalculate={onRecalculateTargets}
               isRecalculating={isRecalculating}
             />
@@ -207,7 +280,10 @@ export function DevelopmentResults({
                             {step.skill}
                             {step.residualChanges.length > 0 && (
                               <div className="atlas-finances-panel__note">
-                                General: {step.residualChanges.map((change) => `${change.skill} ${change.level}`).join(", ")}
+                                General:{" "}
+                                {step.residualChanges
+                                  .map((change) => `${change.skill} ${change.level}`)
+                                  .join(", ")}
                               </div>
                             )}
                           </th>

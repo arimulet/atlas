@@ -41,19 +41,6 @@ const MANUAL_SKILL_COLUMNS = [
   ]
 ] as const;
 
-function MetricGrid({ metrics }: { metrics: Array<[string, string, string]> }) {
-  return (
-    <div className="atlas-finances-metric-grid">
-      {metrics.map(([label, value, meta]) => (
-        <div className="atlas-finances-metric" key={label}>
-          <span>{label}</span>
-          <strong>{value}</strong>
-          <small>{meta}</small>
-        </div>
-      ))}
-    </div>
-  );
-}
 
 function Section({
   title,
@@ -384,103 +371,6 @@ export function InvestmentSimulator({
 
       {result ? (
         <div className="atlas-finances-simulator-results">
-          {/* Card 1: Financial Feasibility */}
-          {result.financial.marketPriceSource === "market_comparables" ? (
-            <div className="atlas-finances-simulator-result-card is-financial">
-              <div className="atlas-finances-simulator-result-header">
-                <h3>1. Financial Feasibility</h3>
-                <span className={`atlas-finances-simulator-chip is-${result.financial.safety}`}>
-                  {result.financial.safetyFormatted}
-                </span>
-              </div>
-              <MetricGrid
-                metrics={[
-                  [
-                    "Estimated Transfer Fee",
-                    result.financial.amountFormatted,
-                    result.financial.marketPriceSource === "market_comparables"
-                      ? `Derived from ${result.financial.comparableCount} market transfers`
-                      : result.financial.marketPriceSource === "market_calibration"
-                        ? "Calibrated against market transfers"
-                        : result.financial.marketPriceSource === "user_specified"
-                          ? "Specified investment fee"
-                          : "Fundamental market valuation"
-                  ],
-                  [
-                    "Projected Weekly Payroll",
-                    result.financial.projectedWeeklyPayrollFormatted,
-                    result.financial.weeklyWageFormatted
-                      ? `+${result.financial.weeklyWageFormatted}/wk added (${result.financial.isWageEstimated ? "est." : "known"})`
-                      : "No wage increase"
-                  ],
-                  [
-                    "Post-deal cash",
-                    result.financial.postInvestmentCashFormatted,
-                    "Remaining treasury"
-                  ],
-                  [
-                    "Payroll coverage",
-                    result.financial.postInvestmentPayrollCoverageWeeksFormatted,
-                    `Before: ${result.financial.currentPayrollCoverageWeeksFormatted}`
-                  ],
-                  ["Investment safety", result.financial.safetyFormatted, "Risk classification"]
-                ]}
-              />
-            </div>
-          ) : (
-            <div className="atlas-finances-simulator-result-card is-financial">
-              <div className="atlas-finances-simulator-result-header">
-                <h3>1. Financial Feasibility</h3>
-              </div>
-              <p className="atlas-finances-panel__note">
-                Financial impact unavailable without comparable transfer prices.
-              </p>
-            </div>
-          )}
-
-          <div className="atlas-finances-simulator-fit-grid">
-            {/* Card 2: Squad Fit & Depth */}
-            <div className="atlas-finances-simulator-result-card is-squad">
-              <div className="atlas-finances-simulator-result-header">
-                <h3>2. Squad Fit & Depth</h3>
-                <span
-                  className={`atlas-squad-planning-badge is-${result.squadFit.projectedHierarchy}`}
-                >
-                  {result.squadFit.projectedHierarchy === "starter"
-                    ? "Projected Starter"
-                    : result.squadFit.projectedHierarchy === "rotation"
-                      ? "Rotation"
-                      : "Reserve / Depth"}
-                </span>
-              </div>
-              <div className="atlas-finances-simulator-fit-body">
-                <strong className="atlas-finances-simulator-fit-title">
-                  {result.squadFit.headline}
-                </strong>
-                <p>{result.squadFit.description}</p>
-              </div>
-            </div>
-
-            {/* Card 3: Training Integration */}
-            <div className="atlas-finances-simulator-result-card is-training">
-              <div className="atlas-finances-simulator-result-header">
-                <h3>3. Training Integration</h3>
-                <span
-                  className={`atlas-finances-simulator-chip${
-                    result.training.isCompatibleWithClubTraining ? " is-active" : " is-inactive"
-                  }`}
-                >
-                  {result.training.isCompatibleWithClubTraining ? "Compatible" : "No training"}
-                </span>
-              </div>
-              <div className="atlas-finances-simulator-fit-body">
-                <strong className="atlas-finances-simulator-fit-title">
-                  {result.training.headline}
-                </strong>
-                <p>{result.training.description}</p>
-              </div>
-            </div>
-          </div>
           <DevelopmentResults
             result={result}
             currentGameWeek={financialStrategy.currentGameWeek}
