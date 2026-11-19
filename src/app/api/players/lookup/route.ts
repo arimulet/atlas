@@ -1,102 +1,47 @@
-import { PlayerModel } from "@/database/models/player";
-import { MarketTransferCurrentModel } from "@/database/models/marketTransferCurrent";
-import { findLatestFinalMarketTransferByPlayerId } from "@atlas/database";
-import { ensureMongoDbConnection, handleApiError, jsonResponse } from "@/lib/api-helper";
+import { createSokkerDataProvider } from "@atlas/application";
 import { inferPositionFromSkills } from "@atlas/domain";
+import { jsonResponse } from "@/lib/api-helper";
+import { getAuthenticatedUserServer } from "@/lib/session";
 import { NextRequest } from "next/server";
+import { z } from "zod";
 
-function normalizeSkills(raw: Record<string, number | null | undefined>): Record<string, number> {
-  const normalized: Record<string, number> = {
-    stamina: raw.stamina ?? 0,
-    pace: raw.pace ?? 0,
-    technique: raw.technique ?? 0,
-    passing: raw.passing ?? 0,
-    keeper: raw.keeper ?? 0,
-    defender: raw.defender ?? (raw as Record<string, number>).defending ?? 0,
-    playmaker: raw.playmaker ?? (raw as Record<string, number>).playmaking ?? 0,
-    striker: raw.striker ?? (raw as Record<string, number>).scoring ?? 0
-  };
-  if (typeof raw.form === "number") {
-    normalized.form = raw.form;
+const lookupSchema = z.object({
+  playerId: z.number().int().positive()
+});
+
+export async function POST(request: NextRequest) {
+  if (!(await getAuthenticatedUserServer())) {
+    return jsonResponse({ error: "Authentication required." }, 401);
   }
-  return normalized;
-}
+  const parsed = lookupSchema.safeParse(await request.json().catch(() => null));
+  if (!parsed.success) return jsonResponse({ error: "Enter a valid player ID." }, 400);
 
-export async function GET(request: NextRequest) {
+  const login = process.env.SOKKER_MARKET_LOGIN;
+  const password = process.env.SOKKER_MARKET_PASSWORD;
+  if (!login || !password) {
+    return jsonResponse({ error: "Sokker credentials are not configured on the server." }, 503);
+  }
+
   try {
-    await ensureMongoDbConnection();
-    const { searchParams } = new URL(request.url);
-    const playerIdRaw = searchParams.get("playerId");
-    const playerId = Number(playerIdRaw);
-
-    if (!playerIdRaw || !Number.isFinite(playerId) || playerId <= 0) {
-      return jsonResponse({ error: "Invalid playerId provided." }, 400);
+    const { playerId } = parsed.data;
+    const player = await createSokkerDataProvider({ login, password }).getPlayer(playerId);
+    const raw = player.skills;
+    const skills = {
+      stamina: raw.stamina, pace: raw.pace, technique: raw.technique, passing: raw.passing,
+      keeper: raw.keeper, defender: raw.defending, playmaker: raw.playmaking, striker: raw.striker
+    };
+    if (Object.values(skills).some((value) => typeof value !== "number" || !Number.isFinite(value))) {
+      return jsonResponse({ found: false, message: "Sokker did not provide all skills for this player. Enter the available skills manually." });
     }
-
-    // 1. Buscar en PlayerModel
-    const playerDoc = await PlayerModel.findOne({ playerId }).lean();
-    if (playerDoc) {
-      const skills = normalizeSkills((playerDoc.skills as Record<string, number>) ?? {});
-      return jsonResponse({
-        found: true,
-        source: "club_player",
-        player: {
-          playerId: playerDoc.playerId,
-          name: playerDoc.name,
-          age: playerDoc.age ?? null,
-          position: playerDoc.position ?? inferPositionFromSkills(skills),
-          skills,
-          wage: playerDoc.wage ?? null,
-          marketValue: playerDoc.marketValue ?? null
-        }
-      });
-    }
-
-    // 2. Buscar en MarketTransferCurrentModel (mercado de transferencias activo)
-    const transferDoc = await MarketTransferCurrentModel.findOne({ playerId }).lean();
-    if (transferDoc) {
-      const skills = normalizeSkills((transferDoc.player.skills as Record<string, number>) ?? {});
-      const position = inferPositionFromSkills(skills);
-      return jsonResponse({
-        found: true,
-        source: "transfer_market",
-        player: {
-          playerId: transferDoc.playerId,
-          name: transferDoc.player.name,
-          age: transferDoc.player.age ?? null,
-          position,
-          skills,
-          wage: null,
-          marketValue: null
-        }
-      });
-    }
-
-    // 3. Buscar en MarketTransferModel (transferencias históricas cerradas)
-    const historicalDoc = await findLatestFinalMarketTransferByPlayerId(playerId);
-    if (historicalDoc) {
-      const skills = normalizeSkills((historicalDoc.skills as Record<string, number>) ?? {});
-      const position = inferPositionFromSkills(skills);
-      return jsonResponse({
-        found: true,
-        source: "market_transfer_history",
-        player: {
-          playerId: historicalDoc.playerId,
-          name: historicalDoc.name,
-          age: historicalDoc.age ?? null,
-          position,
-          skills,
-          wage: null,
-          marketValue: historicalDoc.salePrice ?? null
-        }
-      });
-    }
-
     return jsonResponse({
-      found: false,
-      message: "Player not found in local records. You can enter their skills in the Manual Skill Entry tab."
+      found: true, source: "sokker",
+      player: {
+        playerId: player.id, name: player.name.fullName, age: player.age,
+        position: inferPositionFromSkills(skills), skills,
+        wage: player.wage.value, marketValue: player.value.value
+      }
     });
-  } catch (error) {
-    return handleApiError(error);
+  } catch {
+    return jsonResponse({ error: "Unable to retrieve complete player data from Sokker. Check the player ID and whether the player is accessible." }, 502);
   }
 }

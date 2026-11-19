@@ -232,7 +232,7 @@ export async function fetchInvestmentSafety(
 
 export interface PlayerLookupResult {
   found: boolean;
-  source?: "club_player" | "transfer_market";
+  source?: "sokker";
   message?: string;
   player?: {
     playerId: number;
@@ -246,13 +246,14 @@ export interface PlayerLookupResult {
 }
 
 export async function lookupPlayer(playerId: number): Promise<PlayerLookupResult> {
-  const response = await fetchAuthenticated(
-    `/api/players/lookup?playerId=${encodeURIComponent(playerId)}`
-  );
-  const body = (await response.json()) as PlayerLookupResult;
+  const response = await fetchAuthenticated("/api/players/lookup", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ playerId })
+  });
+  const body = (await response.json()) as PlayerLookupResult & { error?: string };
 
   if (!response.ok || !body) {
-    throw new Error("Player lookup API returned an unexpected response.");
+    throw new Error(body?.error ?? "Unable to retrieve the player from Sokker.");
   }
 
   return body;
