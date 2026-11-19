@@ -16,8 +16,10 @@ import type { DevelopmentProfile } from "../playerDevelopment/types.js";
 import { estimatePlayerMarketValue } from "../playerMarketValue/index.js";
 import { calibratePlayerMarketValue } from "../playerMarketValue/calibration.js";
 import type { PlayerTransferRecord } from "../playerMarketValue/calibration-types.js";
+import { ACQUISITION_POSITION_PROFILES, type AcquisitionPosition } from "./acquisition-targets.js";
 
 export interface PlayerAcquisitionSimulationInput {
+  targetPosition?: AcquisitionPosition;
   targetLevels?: Partial<
     Record<
       "keeper" | "defender" | "playmaker" | "striker" | "pace" | "technique" | "passing",
@@ -235,7 +237,9 @@ export function simulatePlayerAcquisition(
   const normalizedPosition: "GK" | "DEF" | "MID" | "ATT" = input.position
     ? (input.position.toUpperCase() as "GK" | "DEF" | "MID" | "ATT")
     : inferPositionFromSkills(normalizedSkills);
-  const targetProfile = POSITION_TO_PROFILE[normalizedPosition] ?? null;
+  const targetPosition = input.targetPosition ?? normalizedPosition;
+  const targetProfile = POSITION_TO_PROFILE[targetPosition] ?? null;
+  const originalProfile = ACQUISITION_POSITION_PROFILES[normalizedPosition] ?? null;
 
   // 1. Resolve Purchase Price from Market Transfers
   let resolvedAmount = 0;
@@ -259,7 +263,7 @@ export function simulatePlayerAcquisition(
             skills: normalizedSkills as SkillSet,
             position: (normalizedPosition as "GK" | "DEF" | "MID" | "ATT") ?? undefined
           },
-          developmentProfile: targetProfile ?? undefined
+          developmentProfile: originalProfile ?? undefined
         },
         context.marketTransfers ?? []
       );
@@ -334,14 +338,14 @@ export function simulatePlayerAcquisition(
     ? squadPlayers.filter((p) => p.profile === targetProfile)
     : [];
 
-  const candidateScore = calculatePositionScore(normalizedPosition, normalizedSkills);
+  const candidateScore = calculatePositionScore(targetPosition, normalizedSkills);
   let projectedHierarchy: "starter" | "rotation" | "depth" = "rotation";
 
   if (sameProfilePlayers.length === 0) {
     projectedHierarchy = "starter";
   } else {
     const sortedScores = sameProfilePlayers
-      .map((p) => calculatePositionScore(normalizedPosition, p.skills as Record<string, number>))
+      .map((p) => calculatePositionScore(targetPosition, p.skills as Record<string, number>))
       .sort((a, b) => b - a);
 
     const topStarterScore = sortedScores[0] ?? 0;
@@ -388,8 +392,8 @@ export function simulatePlayerAcquisition(
 
   // 3. Training
   const positionKey =
-    normalizedPosition && ["GK", "DEF", "MID", "ATT"].includes(normalizedPosition)
-      ? normalizedPosition
+    targetPosition && ["GK", "DEF", "MID", "ATT"].includes(targetPosition)
+      ? targetPosition
       : null;
 
   const trainingPriorityCode =

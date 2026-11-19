@@ -2,6 +2,7 @@ import { Award, Star, TrendingUp } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
 import { formatSokkerSkill } from "@/app/view-models/skill-level-label";
 import type { PlayerAcquisitionSimulationInput } from "@atlas/domain";
+import { ACQUISITION_POSITION_PROFILES, buildAcquisitionTargetGaps, type AcquisitionPosition } from "../../domain/financialStrategy/acquisition-targets";
 
 interface TargetSkill {
   skill: string;
@@ -29,25 +30,42 @@ function createDraft(skills: readonly TargetSkill[]): Record<string, string> {
 
 export function DevelopmentTargetSkills({
   skills,
+  playerSkills,
+  appliedPosition,
   onRecalculate,
   isRecalculating
 }: {
   skills: readonly TargetSkill[];
-  onRecalculate: (targetLevels: TargetLevels) => Promise<unknown>;
+  playerSkills: Record<string, number>;
+  appliedPosition: AcquisitionPosition;
+  onRecalculate: (targetLevels: TargetLevels, targetPosition: AcquisitionPosition) => Promise<unknown>;
   isRecalculating: boolean;
 }) {
   const [draft, setDraft] = useState(() => createDraft(skills));
+  const [position, setPosition] = useState<AcquisitionPosition>(appliedPosition);
+  const [displaySkills, setDisplaySkills] = useState<readonly TargetSkill[] | null>(skills);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setDraft(createDraft(skills));
+    setPosition(appliedPosition);
+    setDisplaySkills(skills);
     setError(null);
-  }, [skills]);
+  }, [skills, appliedPosition]);
+
+  const loadPositionDefaults = (nextPosition: AcquisitionPosition) => {
+    const defaults = buildAcquisitionTargetGaps(ACQUISITION_POSITION_PROFILES[nextPosition], playerSkills);
+    setPosition(nextPosition);
+    setDisplaySkills(defaults);
+    setDraft(defaults ? createDraft(defaults) : {});
+    setError(null);
+  };
 
   const handleApply = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!displaySkills) return;
     const targetLevels: TargetLevels = {};
-    for (const skill of skills) {
+    for (const skill of displaySkills) {
       if (skill.skill === "stamina") continue;
       const value = Number(draft[skill.skill]);
       if (!draft[skill.skill] || !Number.isInteger(value) || value < skill.current || value > 18) {
@@ -68,29 +86,35 @@ export function DevelopmentTargetSkills({
     }
     setError(null);
     try {
-      await onRecalculate(targetLevels);
+      await onRecalculate(targetLevels, position);
     } catch {
       setError("Unable to recalculate the plan. Please try again.");
     }
   };
 
-  const handleReset = async () => {
-    setError(null);
-    try {
-      await onRecalculate({});
-    } catch {
-      setError("Unable to restore default targets. Please try again.");
-    }
-  };
+  const handleReset = () => loadPositionDefaults(position);
 
   return (
     <form className="atlas-acquisition-target-skills" onSubmit={handleApply}>
       <h4>Target skills</h4>
+      <div className="atlas-acquisition-target-position">
+        <span id="target-position-label">Target position</span>
+        <div role="group" aria-labelledby="target-position-label">
+          {(["GK", "DEF", "MID", "ATT"] as const).map((item) => (
+            <button key={item} type="button" aria-pressed={position === item}
+              disabled={isRecalculating} onClick={() => { if (item !== position) loadPositionDefaults(item); }}>
+              {item}
+            </button>
+          ))}
+        </div>
+        {position !== appliedPosition && <small>Position change not yet applied</small>}
+      </div>
+      {!displaySkills && <p className="atlas-finances-panel__message is-error" role="alert">Required skills for this position are unavailable.</p>}
       <div className="atlas-finances-simulator-sokker-grid">
         {SKILL_COLUMNS.map((column) => (
           <dl className="atlas-finances-simulator-sokker-col" key={column[0]}>
             {column.map((skill) => {
-              const target = skills.find((item) => item.skill === skill);
+              const target = displaySkills?.find((item) => item.skill === skill);
               const Icon = target ? PRIORITY_ICONS[target.priority] : null;
               const draftValue =
                 draft[skill] === undefined || draft[skill] === "" ? null : Number(draft[skill]);
@@ -156,7 +180,7 @@ export function DevelopmentTargetSkills({
         ))}
       </div>
       <div className="atlas-acquisition-target-actions">
-        <button type="submit" disabled={isRecalculating}>
+        <button type="submit" disabled={isRecalculating || !displaySkills}>
           {isRecalculating ? "Recalculating…" : "Recalculate plan"}
         </button>
         <button
@@ -168,7 +192,7 @@ export function DevelopmentTargetSkills({
           Reset targets
         </button>
         <small>
-          Set targets at or above the current level. Lower primary targets may leave Core unreached.
+          Changes apply when you recalculate. Set targets at or above the current level. Lower primary targets may leave Core unreached.
           Stamina is not trained separately.
         </small>
       </div>

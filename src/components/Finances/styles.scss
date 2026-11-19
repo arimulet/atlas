@@ -710,6 +710,42 @@
     display: inline-block;
   }
 
+  .atlas-acquisition-target-position {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    margin: 0 0 14px;
+
+    > span { color: var(--atlas-text-secondary); font-size: 0.8rem; font-weight: 600; }
+    > div {
+      background: var(--atlas-surface);
+      border: 1px solid var(--atlas-border);
+      border-radius: var(--atlas-radius-sm);
+      display: inline-flex;
+      gap: 3px;
+      padding: 3px;
+    }
+    button {
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: var(--atlas-radius-sm);
+      color: var(--atlas-text-secondary);
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 5px 9px;
+    }
+    button[aria-pressed="true"] {
+      background: color-mix(in srgb, var(--atlas-accent) 18%, var(--atlas-surface));
+      border-color: color-mix(in srgb, var(--atlas-accent) 55%, var(--atlas-border));
+      color: var(--atlas-accent);
+    }
+    button:focus-visible { outline: 2px solid var(--atlas-accent); outline-offset: 2px; }
+    button:disabled { cursor: wait; opacity: 0.6; }
+    small { color: var(--semantic-warning-text); }
+  }
+
   .atlas-acquisition-priority {
     align-items: center;
     display: inline-flex;

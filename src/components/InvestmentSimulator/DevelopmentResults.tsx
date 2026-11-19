@@ -5,6 +5,7 @@ import { DevelopmentTargetSkills } from "./DevelopmentTargetSkills";
 import { ProjectedSkillsTooltip } from "./ProjectedSkillsTooltip";
 import { buildProjectedSkillSnapshots } from "./projected-skills";
 import { getMilestoneSeasonWeek } from "./milestone-calendar";
+import { ACQUISITION_POSITION_PROFILES, type AcquisitionPosition } from "../../domain/financialStrategy/acquisition-targets";
 
 type Result = NonNullable<FinancialStrategyState["acquisitionResult"]>;
 
@@ -146,6 +147,8 @@ export function DevelopmentResults({
             </p>
             <DevelopmentTargetSkills
               skills={result.talentScenarios.normal.development?.gaps ?? plan.gaps}
+              playerSkills={result.input.skills}
+              appliedPosition={(Object.entries(ACQUISITION_POSITION_PROFILES).find(([, profile]) => profile === result.squadFit.targetProfile)?.[0] ?? "MID") as AcquisitionPosition}
               onRecalculate={onRecalculateTargets}
               isRecalculating={isRecalculating}
             />
