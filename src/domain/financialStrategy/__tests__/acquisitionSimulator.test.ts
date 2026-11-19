@@ -110,6 +110,34 @@ function mockSquadPlanning(): SquadPlanningRecommendations {
 }
 
 describe("simulatePlayerAcquisition", () => {
+  it("uses the target position for development and squad training without changing the player or price", () => {
+    const context = {
+      financialAssessment: mockFinancialAssessment(),
+      squadDepth: mockSquadDepth(),
+      squadPlanning: mockSquadPlanning(),
+      trainingConfiguration: { MID: 3, ATT: 7 },
+      activeAdvancedTraineeCount: 0
+    };
+    const input = {
+      age: 18, position: "MID", weeklyWage: 5000,
+      skills: { stamina: 8, pace: 9, technique: 9, passing: 6, keeper: 1, defender: 4, playmaker: 10, striker: 9 }
+    };
+    const original = simulatePlayerAcquisition(context, input);
+    const forward = simulatePlayerAcquisition(context, { ...input, targetPosition: "ATT", targetLevels: { passing: 8 } });
+
+    expect(original.squadFit.targetProfile).toBe("midfielder");
+    expect(forward.squadFit.targetProfile).toBe("forward");
+    expect(forward.training.trainedSkillName).not.toBe(original.training.trainedSkillName);
+    expect(forward.input.position).toBe("MID");
+    expect(forward.input.skills).toEqual(input.skills);
+    expect(forward.financial).toEqual(original.financial);
+    for (const scenario of ["high", "normal", "low"] as const) {
+      const gaps = forward.talentScenarios[scenario].development?.gaps ?? [];
+      expect(gaps.find((gap) => gap.skill === "striker")?.priority).toBe("primary");
+      expect(gaps.find((gap) => gap.skill === "passing")?.target).toBe(8);
+      expect(gaps.some((gap) => gap.skill === "playmaker")).toBe(false);
+    }
+  });
   it("applies custom targets to every talent scenario without changing purchase costs", () => {
     const context = {
       financialAssessment: mockFinancialAssessment(),

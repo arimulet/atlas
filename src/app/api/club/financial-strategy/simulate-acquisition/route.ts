@@ -5,6 +5,7 @@ import { getEffectiveClubId, handleApiError, jsonResponse } from "@/lib/api-help
 
 const simulateAcquisitionInputSchema = z
   .object({
+    targetPosition: z.enum(["GK", "DEF", "MID", "ATT"]).optional(),
     targetLevels: z
       .partialRecord(
         z.enum(["keeper", "defender", "playmaker", "striker", "pace", "technique", "passing"]),
@@ -23,6 +24,7 @@ const simulateAcquisitionInputSchema = z
     playerId: z.number().optional().nullable()
   })
   .transform((data) => ({
+    targetPosition: data.targetPosition,
     targetLevels: data.targetLevels,
     amount: data.amount ?? data.estimatedPrice ?? null,
     weeklyWage: data.weeklyWage ?? data.wage ?? null,
