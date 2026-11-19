@@ -98,23 +98,21 @@ export function InvestmentSimulator({
 
   const handleSearchPlayer = async () => {
     const id = Number(playerIdInput);
-    if (!Number.isFinite(id) || id <= 0) return;
+    if (!Number.isInteger(id) || id <= 0) return;
     setIsSearchingPlayer(true);
     setLookupMessage(null);
     try {
       const res = await financialStrategy.lookupPlayer(id);
       if (res.found && res.player) {
         setLoadedPlayer(res.player);
-        setLookupMessage(
-          `Player loaded: ${res.player.name} (${res.source === "club_player" ? "Squad" : "Transfer Market"})`
-        );
+        setLookupMessage(`Player loaded from Sokker: ${res.player.name}`);
       } else {
         setLoadedPlayer(null);
-        setLookupMessage(res.message || "Player not found in local records.");
+        setLookupMessage(res.message || "Player not found in Sokker.");
       }
-    } catch {
+    } catch (error) {
       setLoadedPlayer(null);
-      setLookupMessage("Error querying player.");
+      setLookupMessage(error instanceof Error ? error.message : "Error querying Sokker.");
     } finally {
       setIsSearchingPlayer(false);
     }
@@ -131,21 +129,8 @@ export function InvestmentSimulator({
       const id = Number(playerIdInput);
       if (!Number.isFinite(id) || id <= 0) return;
 
-      let player = loadedPlayer;
-      if (!player) {
-        setIsSearchingPlayer(true);
-        try {
-          const res = await financialStrategy.lookupPlayer(id);
-          if (res.found && res.player) {
-            player = res.player;
-            setLoadedPlayer(res.player);
-          }
-        } catch {
-          // ignore lookup error and try simulation with ID
-        } finally {
-          setIsSearchingPlayer(false);
-        }
-      }
+      const player = loadedPlayer;
+      if (!player || player.playerId !== id) return;
 
       void financialStrategy.simulateAcquisition({
         playerId: id,
@@ -200,7 +185,7 @@ export function InvestmentSimulator({
                     min="1"
                     placeholder="e.g. 345678"
                     value={playerIdInput}
-                    onChange={(e) => setPlayerIdInput(e.target.value)}
+                    onChange={(e) => { setPlayerIdInput(e.target.value); setLoadedPlayer(null); setLookupMessage(null); }}
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
                         e.preventDefault();
@@ -218,6 +203,7 @@ export function InvestmentSimulator({
                 </div>
               </label>
             </div>
+
 
             {lookupMessage ? (
               <p
@@ -295,7 +281,7 @@ export function InvestmentSimulator({
                 type="button"
                 className="atlas-finances-simulator-submit-btn"
                 onClick={handleSimulate}
-                disabled={financialStrategy.isSimulatingAcquisition || !playerIdInput}
+                disabled={financialStrategy.isSimulatingAcquisition || !loadedPlayer || loadedPlayer.playerId !== Number(playerIdInput)}
               >
                 {financialStrategy.isSimulatingAcquisition
                   ? "Simulating impact..."
