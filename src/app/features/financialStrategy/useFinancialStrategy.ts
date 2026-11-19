@@ -42,7 +42,8 @@ export interface FinancialStrategyState {
     input: PlayerAcquisitionSimulationInput
   ) => Promise<PlayerAcquisitionSimulationResult>;
   recalculateAcquisitionTargets: (
-    targetLevels: NonNullable<PlayerAcquisitionSimulationInput["targetLevels"]>
+    targetLevels: NonNullable<PlayerAcquisitionSimulationInput["targetLevels"]>,
+    targetPosition: NonNullable<PlayerAcquisitionSimulationInput["targetPosition"]>
   ) => Promise<PlayerAcquisitionSimulationResult>;
   lookupPlayer: (playerId: number) => Promise<PlayerLookupResult>;
 }
@@ -126,11 +127,11 @@ export function useFinancialStrategy({
   );
 
   const recalculateAcquisitionTargets = useCallback(
-    (targetLevels: NonNullable<PlayerAcquisitionSimulationInput["targetLevels"]>) => {
+    (targetLevels: NonNullable<PlayerAcquisitionSimulationInput["targetLevels"]>, targetPosition: NonNullable<PlayerAcquisitionSimulationInput["targetPosition"]>) => {
       if (!lastAcquisitionInput.current) {
         return Promise.reject(new Error("Run a simulation before changing targets."));
       }
-      return simulateAcquisition({ ...lastAcquisitionInput.current, targetLevels });
+      return simulateAcquisition({ ...lastAcquisitionInput.current, targetLevels, targetPosition });
     },
     [simulateAcquisition]
   );

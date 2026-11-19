@@ -1,5 +1,4 @@
 import {
-  DEVELOPMENT_PROFILES,
   calculateProjectedWeeklyTrainingPoints,
   generatePlayerTrainingPath,
   projectDevelopment
@@ -18,6 +17,7 @@ import {
   WEEKS_PER_SOKKER_SEASON
 } from "../sokker/calendar.js";
 import { DEFAULT_TALENT_FOR_RELATIVE_COMPARISON } from "../training/constants.js";
+import { buildAcquisitionTargetGaps } from "./acquisition-targets.js";
 
 export type AcquisitionTalentScenario = "high" | "normal" | "low";
 
@@ -81,35 +81,9 @@ export function buildAcquisitionDevelopmentPlan(input: {
 }): AcquisitionDevelopmentPlan | null {
   if (input.age === null || input.profile === null) return null;
   const profile = input.profile;
-  const relevant = DEVELOPMENT_PROFILES[profile].relevantSkills;
-  const requiredSkills: DevelopmentSkill[] = [
-    ...new Set([...relevant.map((item) => item.skill), "stamina" as const])
-  ];
-  if (
-    requiredSkills.some((skill) => {
-      const value = input.skills[skill];
-      return value === undefined || !Number.isInteger(value) || value < 0 || value > 18;
-    })
-  )
-    return null;
+  const gaps = buildAcquisitionTargetGaps(profile, input.skills, input.targetLevels);
+  if (!gaps) return null;
   const player = { playerId: input.playerId, age: input.age, skills: input.skills, profile };
-  const gaps = relevant.map((item) => ({
-    skill: item.skill,
-    priority: item.priority,
-    current: input.skills[item.skill] ?? 0,
-    target:
-      input.targetLevels?.[item.skill] !== undefined
-        ? Math.max(input.skills[item.skill] ?? 0, input.targetLevels[item.skill]!)
-        : item.priority === "primary"
-          ? SQUAD_PLANNING_CONFIG.corePrimarySkillMinimum
-          : item.defaultTargetLevel
-  }));
-  gaps.push({
-    skill: "stamina",
-    priority: "supporting",
-    current: input.skills.stamina ?? 0,
-    target: SQUAD_PLANNING_CONFIG.coreStaminaMinimum
-  });
   const target: PlayerDevelopmentTarget = {
     playerId: input.playerId,
     profile,
