@@ -387,6 +387,17 @@
     gap: 12px;
     margin-top: 10px;
     padding: 12px 16px;
+
+    .atlas-finances-simulator-sokker-grid {
+      max-width: 560px;
+    }
+
+    .atlas-finances-simulator-sokker-row {
+      display: grid;
+      gap: 8px;
+      grid-template-columns: 10ch minmax(0, 1fr);
+      justify-content: start;
+    }
   }
 
   .atlas-finances-simulator-loaded-header {

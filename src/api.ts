@@ -241,7 +241,9 @@ export interface PlayerLookupResult {
     position: string | null;
     skills: Record<string, number>;
     wage: number | null;
+    wageCurrency: string | null;
     marketValue: number | null;
+    marketValueCurrency: string | null;
   };
 }
 
