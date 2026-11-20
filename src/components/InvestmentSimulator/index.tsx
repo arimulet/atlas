@@ -63,9 +63,11 @@ function Section({
 }
 
 export function InvestmentSimulator({
-  financialStrategy
+  financialStrategy,
+  currency
 }: {
   financialStrategy: FinancialStrategyState;
+  currency: string | null;
 }) {
   const [tab, setTab] = useState<"id" | "manual">("id");
   const [playerIdInput, setPlayerIdInput] = useState("");
@@ -77,7 +79,9 @@ export function InvestmentSimulator({
     position: string | null;
     skills: Record<string, number>;
     wage: number | null;
+    wageCurrency: string | null;
     marketValue: number | null;
+    marketValueCurrency: string | null;
   } | null>(null);
   const [lookupMessage, setLookupMessage] = useState<string | null>(null);
 
@@ -230,27 +234,23 @@ export function InvestmentSimulator({
                     ) : null}
                   </div>
                   <div className="atlas-finances-simulator-loaded-meta">
-                    {loadedPlayer.wage ? (
-                      <span>
+                    <span>
                         Wage:{" "}
-                        {formatMoney({
+                        {formatMoney(loadedPlayer.wage === null ? null : {
                           amount: loadedPlayer.wage,
-                          currency: null,
+                          currency: loadedPlayer.wageCurrency || currency,
                           isComplete: true
                         })}
-                        /wk
+                        {loadedPlayer.wage === null ? "" : "/wk"}
                       </span>
-                    ) : null}
-                    {loadedPlayer.marketValue ? (
                       <span>
-                        Market:{" "}
-                        {formatMoney({
+                        Value:{" "}
+                        {formatMoney(loadedPlayer.marketValue === null ? null : {
                           amount: loadedPlayer.marketValue,
-                          currency: null,
+                          currency: loadedPlayer.marketValueCurrency || currency,
                           isComplete: true
                         })}
                       </span>
-                    ) : null}
                   </div>
                 </div>
 
