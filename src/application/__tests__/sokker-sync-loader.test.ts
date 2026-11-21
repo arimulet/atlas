@@ -25,6 +25,7 @@ import type {
   SokkerTrainingApiDto,
   SokkerTrainingSummaryApiDto
 } from "../importer/providers/api/dtos.js";
+import { DEFAULT_SOKKER_STADIUM } from "@/domain/stadium/mockData.js";
 
 function createMockProvider() {
   const current = mapCurrentApiToCurrentClubContext(currentFixture as SokkerApiCurrentDto);
@@ -56,6 +57,8 @@ function createMockProvider() {
   const getTransfers = vi.fn(async () => []);
   const getTransferHistory = vi.fn(async () => []);
   const getPlayerTransferHistory = vi.fn(async () => []);
+  const arena = { ...DEFAULT_SOKKER_STADIUM };
+  const getArena = vi.fn(async () => arena);
 
   return {
     current,
@@ -63,8 +66,10 @@ function createMockProvider() {
     trainers,
     juniors,
     trainingSummary,
+    arena,
     provider: {
       getCurrent,
+      getArena,
       getTraining,
       getLivePlayers,
       getPlayer,
@@ -80,6 +85,7 @@ function createMockProvider() {
       getPlayerTransferHistory
     } satisfies SokkerDataProvider,
     getCurrent,
+    getArena,
     getTraining,
     getLivePlayers,
     getPlayer,
@@ -128,6 +134,7 @@ describe("SokkerSyncLoader", () => {
     expect(payload.juniors).toHaveLength(2);
     expect(payload.trainingSummary.weeks).toHaveLength(2);
     expect(payload.trainingWeeks[0]?.gameWeek).toBe(1204);
+    expect(payload.arena).toEqual(mock.arena);
     expect(payload).not.toHaveProperty("player");
     expect(payload).not.toHaveProperty("report");
     expect(payload).not.toHaveProperty("info");
@@ -140,6 +147,8 @@ describe("SokkerSyncLoader", () => {
 
     expect(mock.getCurrent).toHaveBeenCalledTimes(1);
     expect(mock.getTraining).toHaveBeenCalledTimes(1);
+    expect(mock.getArena).toHaveBeenCalledTimes(1);
+    expect(mock.getArena).toHaveBeenCalledWith(mock.current.team.id);
     expect(mock.getTrainers).toHaveBeenCalledTimes(1);
     expect(mock.getJuniors).toHaveBeenCalledTimes(1);
     expect(mock.getTrainingSummary).toHaveBeenCalledTimes(1);

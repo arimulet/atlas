@@ -85,25 +85,25 @@ export function Stadium({ initialData = DEFAULT_SOKKER_STADIUM }: StadiumProps) 
         key={loc}
         className={`atlas-stadium__sector-cell ${isSelected ? "atlas-stadium__sector-cell--selected" : ""}`}
         onClick={() => handleOpenEditor(loc)}
-        title={`Clic para editar ${info.label}`}
+        title={`Click to edit ${info.label}`}
       >
         <div className="atlas-stadium__sector-cell-header">
           <span className="sector-code">{info.code}</span>
           <div className="sector-badges">
             <span className="badge-type">{STAND_TYPE_LABELS[stand.type]}</span>
-            {stand.roof && <span className="badge-roof">Techo</span>}
+            {stand.roof && <span className="badge-roof">Roof</span>}
           </div>
         </div>
 
         <div className="atlas-stadium__sector-cell-body">
           <span className="sector-name">{info.label}</span>
-          <span className="sector-capacity">{stand.size.toLocaleString("es-ES")}</span>
+          <span className="sector-capacity">{stand.size.toLocaleString("en-US")}</span>
         </div>
 
         <div className="atlas-stadium__sector-cell-footer">
-          <span className="ticket-label">Precio: {stand.ticketPrice ? `${stand.ticketPrice.value} ${stand.ticketPrice.currency}` : "-"}</span>
+          <span className="ticket-label">Price: {stand.ticketPrice ? `${stand.ticketPrice.value} ${stand.ticketPrice.currency}` : "-"}</span>
           <span className="ticket-val" style={{ display: "inline-flex", alignItems: "center", gap: "3px" }}>
-            <Edit3 size={13} /> Editar
+            <Edit3 size={13} /> Edit
           </span>
         </div>
       </div>
@@ -129,10 +129,10 @@ export function Stadium({ initialData = DEFAULT_SOKKER_STADIUM }: StadiumProps) 
           />
         </div>
 
-        {/* Información a la derecha */}
+        {/* Information on the right */}
         <aside className="atlas-stadium__info-card">
           <div className="atlas-stadium__info-card-header">
-            <h3>Información</h3>
+            <h3>Information</h3>
           </div>
 
           <div className="atlas-stadium__info-card-metrics">
@@ -141,7 +141,7 @@ export function Stadium({ initialData = DEFAULT_SOKKER_STADIUM }: StadiumProps) 
                 <Maximize2 size={22} />
               </div>
               <div className="metric-text">
-                <span>Dimensiones</span>
+                <span>Dimensions</span>
                 <strong>{stadiumData.pitch.length} × {stadiumData.pitch.width} m</strong>
               </div>
             </div>
@@ -151,22 +151,22 @@ export function Stadium({ initialData = DEFAULT_SOKKER_STADIUM }: StadiumProps) 
                 <Users size={22} />
               </div>
               <div className="metric-text">
-                <span>Capacidad Total</span>
-                <strong>{totalSeats.toLocaleString("es-ES")} lugares</strong>
+                <span>Total Capacity</span>
+                <strong>{totalSeats.toLocaleString("en-US")} seats</strong>
               </div>
             </div>
           </div>
         </aside>
       </div>
 
-      {/* Bottom Section: Formato de secciones de Sokker (Matriz 3x3) */}
+      {/* Bottom Section: Sokker section layout (3x3 Matrix) */}
       <section className="atlas-stadium__sectors-section">
         <div className="atlas-stadium__sectors-header">
-          <h2>Sectores del estadio</h2>
+          <h2>Stadium Sectors</h2>
           <span>
             {selectedStand
-              ? `Sector seleccionado: ${STAND_LOCATION_INFO[selectedStand].label} (${STAND_LOCATION_INFO[selectedStand].code})`
-              : "Haz clic en cualquier sector para editarlo y ver los cambios en 3D"}
+              ? `Selected sector: ${STAND_LOCATION_INFO[selectedStand].label} (${STAND_LOCATION_INFO[selectedStand].code})`
+              : "Click any sector to edit it and preview changes in 3D"}
           </span>
         </div>
 
@@ -175,9 +175,9 @@ export function Stadium({ initialData = DEFAULT_SOKKER_STADIUM }: StadiumProps) 
             if (item === "pitch") {
               return (
                 <div key="center-pitch" className="atlas-stadium__pitch-center-cell">
-                  <span className="pitch-title">Campo de Juego</span>
+                  <span className="pitch-title">Pitch</span>
                   <span className="pitch-dims">{stadiumData.pitch.length} × {stadiumData.pitch.width} m</span>
-                  <span className="pitch-total">{totalSeats.toLocaleString("es-ES")} espectadores</span>
+                  <span className="pitch-total">{totalSeats.toLocaleString("en-US")} spectators</span>
                 </div>
               );
             }

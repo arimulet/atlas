@@ -1,4 +1,4 @@
-import { deriveSkillChanges } from "@atlas/domain";
+import { deriveSkillChanges, type StadiumData, type StandLocation, type StandType } from "@atlas/domain";
 import { z } from "zod";
 import { trainingPlayerSchema } from "./training-schema.js";
 import type {
@@ -561,5 +561,46 @@ function mapTrainerSkill(source: SokkerTrainerSkillApiDto): TrainerSkillDto {
   return {
     level: source.value,
     effectivenessPercent: source.percent
+  };
+}
+
+export function mapSokkerArenaToStadiumData(raw: any): StadiumData {
+  const arena = raw?.arena ?? raw;
+  return {
+    name: String(arena?.name || "Estadio"),
+    seats: Number(arena?.seats || 0),
+    seatsInProgress: Number(arena?.seatsInProgress || 0),
+    weather: arena?.weather !== undefined ? Number(arena.weather) : undefined,
+    pitch: {
+      length: Number(arena?.pitch?.length ?? 105),
+      width: Number(arena?.pitch?.width ?? 68),
+      mow: Number(arena?.pitch?.mow ?? 1),
+      condition: Number(arena?.pitch?.condition ?? 100),
+      grassType: arena?.pitch?.grassType !== undefined ? Number(arena.pitch.grassType) : undefined,
+      maintenance: arena?.pitch?.maintenance !== undefined ? Number(arena.pitch.maintenance) : undefined,
+      logo: arena?.pitch?.logo
+        ? {
+            size: Number(arena.pitch.logo.size ?? 0),
+            x: Number(arena.pitch.logo.x ?? 0),
+            y: Number(arena.pitch.logo.y ?? 0)
+          }
+        : undefined
+    },
+    stands: Array.isArray(arena?.stands)
+      ? arena.stands.map((s: any) => ({
+          location: Number(s.location) as StandLocation,
+          type: Number(s.type) as StandType,
+          size: Number(s.size || 0),
+          roof: Boolean(s.roof),
+          ticketPrice: s.ticketPrice
+            ? {
+                currency: String(s.ticketPrice.currency || ""),
+                value: Number(s.ticketPrice.value || 0)
+              }
+            : undefined,
+          inConstruction: Boolean(s.inConstruction),
+          constructionDays: Number(s.constructionDays || 0)
+        }))
+      : []
   };
 }

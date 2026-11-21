@@ -1,3 +1,5 @@
+import type { StadiumData } from "@atlas/domain";
+
 export type PersistedDevelopmentProfile =
   "goalkeeper" | "defender" | "midfielder" | "forward";
 
@@ -56,6 +58,7 @@ export interface SaveClubInput {
   currency: string;
   budget?: number | null;
   staff?: PersistedClubStaffMember[];
+  arena?: StadiumData | null;
 }
 
 export interface PersistedClub {
@@ -74,6 +77,7 @@ export interface PersistedClub {
   name: string;
   budget: number | null;
   staff: PersistedClubStaffMember[];
+  arena?: StadiumData | null;
   gameWeek: number | null;
   week: number | null;
   lastSnapshotDate: Date | null;

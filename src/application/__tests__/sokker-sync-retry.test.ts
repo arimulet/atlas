@@ -12,6 +12,7 @@ import {
 import type { SokkerDataProvider } from "../importer/providers/SokkerDataProvider.js";
 import type { SokkerApiCurrentDto } from "../importer/providers/api/dtos.js";
 import { SokkerJsonApiProvider } from "../importer/providers/api/SokkerJsonApiProvider.js";
+import { DEFAULT_SOKKER_STADIUM } from "@/domain/stadium/mockData.js";
 
 function createMockProvider() {
   const current = mapCurrentApiToCurrentClubContext(currentFixture as SokkerApiCurrentDto);
@@ -30,6 +31,7 @@ function createMockProvider() {
   );
   const provider: SokkerDataProvider = {
     getCurrent: mockGetCurrent,
+    getArena: vi.fn(async () => DEFAULT_SOKKER_STADIUM),
     getTraining: mockGetTraining,
     getTrainingSummary: mockGetTrainingSummary,
     getLivePlayers: vi.fn(async () =>

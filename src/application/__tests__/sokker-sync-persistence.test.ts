@@ -36,6 +36,8 @@ import type {
   SokkerTrainingApiDto
 } from "../importer/providers/api/dtos.js";
 
+import { DEFAULT_SOKKER_STADIUM } from "@/domain/stadium/mockData.js";
+
 let mongo: MongoMemoryServer;
 
 describe("SokkerSyncPersistence", () => {
@@ -81,6 +83,9 @@ describe("SokkerSyncPersistence", () => {
     expect(club).not.toHaveProperty("settings.currency");
     expect(club?.training).toEqual({ GK: 2, DEF: 6, MID: 8, ATT: 7 });
     expect(club?.staff).toHaveLength(3);
+    expect(club?.arena?.name).toBe("Monumental");
+    expect(club?.arena?.seats).toBe(64000);
+    expect(club?.arena?.stands).toHaveLength(8);
     expect(snapshot?.juniors).toHaveLength(2);
     expect(await JuniorModel.countDocuments({ clubId: 6038 })).toBe(2);
     expect(await JuniorModel.findOne({ clubId: 6038, juniorId: 501 }).lean()).toMatchObject({
@@ -248,7 +253,8 @@ function createPayload(): SokkerSyncPayload {
         }
       ]
     },
-    juniorMatches: []
+    juniorMatches: [],
+    arena: DEFAULT_SOKKER_STADIUM
   };
 }
 

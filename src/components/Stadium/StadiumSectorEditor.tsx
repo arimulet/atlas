@@ -82,7 +82,7 @@ export function StadiumSectorEditor({
             <span className="atlas-sector-editor__code">{info.code}</span>
             <div>
               <h3>{info.label}</h3>
-              <p>Personalizar capacidad, asientos y cubierta</p>
+              <p>Customize capacity, stand type, and roof</p>
             </div>
           </div>
 
@@ -90,8 +90,8 @@ export function StadiumSectorEditor({
             type="button"
             className="atlas-sector-editor__close"
             onClick={onClose}
-            aria-label="Cerrar editor sin guardar"
-            title="Cancelar"
+            aria-label="Close editor without saving"
+            title="Cancel"
           >
             <X size={20} />
           </button>
@@ -99,11 +99,11 @@ export function StadiumSectorEditor({
 
         {/* Editor Body */}
         <div className="atlas-sector-editor__body">
-          {/* 1. Capacidad */}
+          {/* 1. Capacity */}
           <div className="atlas-sector-editor__group">
             <label className="atlas-sector-editor__label">
               <Users size={16} />
-              <span>Capacidad de Espectadores</span>
+              <span>Spectator Capacity</span>
             </label>
 
             <div className="atlas-sector-editor__stepper">
@@ -111,15 +111,15 @@ export function StadiumSectorEditor({
                 type="button"
                 className="step-btn"
                 onClick={() => handleCapacityStep(-1000)}
-                title="Restar 1.000 lugares"
+                title="Subtract 1,000 seats"
               >
-                -1.000
+                -1,000
               </button>
               <button
                 type="button"
                 className="step-btn"
                 onClick={() => handleCapacityStep(-500)}
-                title="Restar 500 lugares"
+                title="Subtract 500 seats"
               >
                 -500
               </button>
@@ -134,14 +134,14 @@ export function StadiumSectorEditor({
                   onChange={(e) => handleCapacityInput(e.target.value)}
                   className="capacity-input"
                 />
-                <span className="unit-label">lugares</span>
+                <span className="unit-label">seats</span>
               </div>
 
               <button
                 type="button"
                 className="step-btn"
                 onClick={() => handleCapacityStep(500)}
-                title="Sumar 500 lugares"
+                title="Add 500 seats"
               >
                 +500
               </button>
@@ -149,13 +149,13 @@ export function StadiumSectorEditor({
                 type="button"
                 className="step-btn"
                 onClick={() => handleCapacityStep(1000)}
-                title="Sumar 1.000 lugares"
+                title="Add 1,000 seats"
               >
-                +1.000
+                +1,000
               </button>
             </div>
 
-            {/* Slider de ajuste rápido */}
+            {/* Quick adjust slider */}
             <input
               type="range"
               min={0}
@@ -167,10 +167,10 @@ export function StadiumSectorEditor({
             />
           </div>
 
-          {/* 2. Tipo de Asiento */}
+          {/* 2. Stand Type */}
           <div className="atlas-sector-editor__group">
             <label className="atlas-sector-editor__label">
-              <span>Tipo de Grada / Asiento</span>
+              <span>Stand / Seat Type</span>
             </label>
 
             <div className="atlas-sector-editor__type-pills">
@@ -191,11 +191,11 @@ export function StadiumSectorEditor({
             </div>
           </div>
 
-          {/* 3. Techado */}
+          {/* 3. Roof */}
           <div className="atlas-sector-editor__group">
             <label className="atlas-sector-editor__label">
               <Layers size={16} />
-              <span>Cubierta / Techo</span>
+              <span>Roof / Canopy</span>
             </label>
 
             <label className="atlas-sector-editor__checkbox-card">
@@ -205,8 +205,8 @@ export function StadiumSectorEditor({
                 onChange={handleRoofToggle}
               />
               <div className="checkbox-info">
-                <strong>Sector techado con cubierta</strong>
-                <span>Instala la estructura voladiza superior con pilares metálicos</span>
+                <strong>Covered stand with roof</strong>
+                <span>Installs a cantilevered roof structure with metal pillars</span>
               </div>
             </label>
           </div>
@@ -219,14 +219,14 @@ export function StadiumSectorEditor({
             className="atlas-sector-editor__cancel-btn"
             onClick={onClose}
           >
-            Cancelar
+            Cancel
           </button>
           <button
             type="button"
             className="atlas-sector-editor__done-btn"
             onClick={handleApply}
           >
-            Listo
+            Done
           </button>
         </div>
       </div>

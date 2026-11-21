@@ -1,6 +1,7 @@
 import { Types, type ClientSession } from "mongoose";
 import { ClubModel } from "../models/club.js";
 import type { PersistedClub, PersistedClubStaffMember, SaveClubInput } from "./types.js";
+import type { StadiumData } from "@atlas/domain";
 
 export type ClubId = string | number;
 
@@ -42,6 +43,10 @@ export class MongoClubRepository {
 
     if (input.sokkerUsername !== undefined) {
       $set.sokkerUsername = input.sokkerUsername;
+    }
+
+    if (input.arena !== undefined) {
+      $set.arena = input.arena;
     }
 
     const $setOnInsert: Record<string, unknown> = { clubId: input.clubId };
@@ -138,6 +143,7 @@ function mapClub(club: {
     preferences?: Array<{ key: string; value: string; updatedAt: Date }>;
   } | null;
   budget?: number | null;
+  arena?: any;
 }): PersistedClub {
   return {
     id: club._id.toString(),
@@ -149,6 +155,7 @@ function mapClub(club: {
     currency: club.currency ?? "UNK",
     budget: club.budget ?? null,
     staff: club.staff ?? [],
+    arena: club.arena ? mapPersistedArena(club.arena) : null,
     training: requireNumericTraining(club.training),
     gameWeek: club.gameWeek ?? null,
     week: club.week ?? null,
@@ -195,5 +202,45 @@ function requireNumericTraining(
     DEF,
     MID,
     ATT
+  };
+}
+
+function mapPersistedArena(arena: any): StadiumData {
+  return {
+    name: arena.name,
+    seats: arena.seats,
+    seatsInProgress: arena.seatsInProgress ?? 0,
+    weather: arena.weather ?? undefined,
+    pitch: {
+      length: arena.pitch.length,
+      width: arena.pitch.width,
+      mow: arena.pitch.mow,
+      condition: arena.pitch.condition,
+      grassType: arena.pitch.grassType ?? undefined,
+      maintenance: arena.pitch.maintenance ?? undefined,
+      logo: arena.pitch.logo
+        ? {
+            size: arena.pitch.logo.size,
+            x: arena.pitch.logo.x,
+            y: arena.pitch.logo.y
+          }
+        : undefined
+    },
+    stands: Array.isArray(arena.stands)
+      ? arena.stands.map((s: any) => ({
+          location: s.location,
+          type: s.type,
+          size: s.size,
+          roof: s.roof,
+          ticketPrice: s.ticketPrice
+            ? {
+                currency: s.ticketPrice.currency,
+                value: s.ticketPrice.value
+              }
+            : undefined,
+          inConstruction: s.inConstruction ?? false,
+          constructionDays: s.constructionDays ?? 0
+        }))
+      : []
   };
 }
