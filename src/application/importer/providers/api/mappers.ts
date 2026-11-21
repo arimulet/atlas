@@ -566,10 +566,9 @@ function mapTrainerSkill(source: SokkerTrainerSkillApiDto): TrainerSkillDto {
   };
 }
 
-export function mapSokkerArenaToStadiumData(
-  raw: SokkerArenaApiDto | { arena?: SokkerArenaApiDto } | Record<string, unknown>
-): StadiumData {
-  const source = (raw && "arena" in raw && raw.arena ? raw.arena : raw) as Partial<SokkerArenaApiDto>;
+export function mapSokkerArenaToStadiumData(raw: unknown): StadiumData {
+  const obj = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
+  const source = (obj.arena && typeof obj.arena === "object" ? obj.arena : obj) as Partial<SokkerArenaApiDto>;
   return {
     name: String(source.name || "Estadio"),
     seats: Number(source.seats || 0),
