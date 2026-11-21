@@ -656,15 +656,15 @@ export function StadiumCanvas3D({
         roughness: 0.3
       });
 
-      // Rear support structure: Thinner and neutral dark gray
+      // Rear support structure: Ultra-thin and light gray
       const rearFrameMat = new THREE.MeshStandardMaterial({
-        color: "#383838",
-        metalness: 0.3,
-        roughness: 0.5
+        color: "#9ca3af",
+        metalness: 0.35,
+        roughness: 0.4
       });
 
       const postRadius = 0.08;
-      const rearRadius = 0.03;
+      const rearRadius = 0.018; // Significantly thinner than the 0.08 front posts
       const postHeight = 2.44;
       const goalWidthM = 7.32;
       const goalDepthM = 2.0;
