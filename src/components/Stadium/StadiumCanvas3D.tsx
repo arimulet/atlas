@@ -450,11 +450,15 @@ export function StadiumCanvas3D({
     fillLight.position.set(-90, 100, -80);
     scene.add(fillLight);
 
-    // --- Pitch Dimensions ---
+    // --- Pitch Dimensions & Canvas Constants ---
     const pitchLength = stadium.pitch.length || 95;
     const pitchWidth = stadium.pitch.width || 72;
+    const PITCH_CANVAS_WIDTH = 2048;
+    const PITCH_CANVAS_HEIGHT = 1536;
+    const PITCH_PAD_X = 70;
+    const PITCH_PAD_Y = 70;
 
-    // Ground Plane
+    // Ground Plane (Exterior terrain outside the stadium)
     const groundGeo = new THREE.PlaneGeometry(360, 320);
     const groundMat = new THREE.MeshStandardMaterial({
       color: "#080c14",
@@ -466,23 +470,75 @@ export function StadiumCanvas3D({
     ground.receiveShadow = true;
     scene.add(ground);
 
-    // Apron surrounding pitch
-    const apronGeo = new THREE.PlaneGeometry(pitchLength + 16, pitchWidth + 14);
-    const apronMat = new THREE.MeshStandardMaterial({
-      color: "#1e293b",
-      roughness: 0.85
+    // Octagonal Grass Field extending to cover the inner border/base of the stands
+    const n = pitchLength / 2 + ND;
+    const r = pitchWidth / 2 + TD;
+    const i = RD;
+
+    // Extend 0.5m under the stand front wall to guarantee seamless coverage without z-fighting
+    const nGrass = n + 0.5;
+    const rGrass = r + 0.5;
+
+    const octPoly = [
+      { x: -nGrass + i, z: -rGrass },     // v0 (North-West)
+      { x:  nGrass - i, z: -rGrass },     // v1 (North-East)
+      { x:  nGrass,     z: -rGrass + i }, // v2 (East-North)
+      { x:  nGrass,     z:  rGrass - i }, // v3 (East-South)
+      { x:  nGrass - i, z:  rGrass },     // v4 (South-East)
+      { x: -nGrass + i, z:  rGrass },     // v5 (South-West)
+      { x: -nGrass,     z:  rGrass - i }, // v6 (West-South)
+      { x: -nGrass,     z: -rGrass + i }  // v7 (West-North)
+    ];
+
+    const grassPositions: number[] = [];
+    const grassNormals: number[] = [];
+    const grassUvs: number[] = [];
+
+    for (let k = 0; k < octPoly.length; k++) {
+      const p1 = octPoly[k]!;
+      const p2 = octPoly[(k + 1) % octPoly.length]!;
+
+      grassPositions.push(
+        0, 0, 0,
+        p2.x, 0, p2.z,
+        p1.x, 0, p1.z
+      );
+
+      grassNormals.push(
+        0, 1, 0,
+        0, 1, 0,
+        0, 1, 0
+      );
+
+      grassUvs.push(
+        0.5, 0.5,
+        p2.x / (2 * nGrass) + 0.5, p2.z / (2 * rGrass) + 0.5,
+        p1.x / (2 * nGrass) + 0.5, p1.z / (2 * rGrass) + 0.5
+      );
+    }
+
+    const grassGeo = new THREE.BufferGeometry();
+    grassGeo.setAttribute("position", new THREE.Float32BufferAttribute(grassPositions, 3));
+    grassGeo.setAttribute("normal", new THREE.Float32BufferAttribute(grassNormals, 3));
+    grassGeo.setAttribute("uv", new THREE.Float32BufferAttribute(grassUvs, 2));
+
+    const grassMat = new THREE.MeshStandardMaterial({
+      color: "#15803d",
+      roughness: 0.7,
+      metalness: 0.05,
+      side: THREE.DoubleSide
     });
-    const apron = new THREE.Mesh(apronGeo, apronMat);
-    apron.rotation.x = -Math.PI / 2;
-    apron.position.y = -0.05;
-    apron.receiveShadow = true;
-    scene.add(apron);
+
+    const grassMesh = new THREE.Mesh(grassGeo, grassMat);
+    grassMesh.position.y = 0;
+    grassMesh.receiveShadow = true;
+    scene.add(grassMesh);
 
     // Dynamic High-Res Pitch Canvas Texture
     function createPitchTexture(): THREE.CanvasTexture {
       const cv = document.createElement("canvas");
-      cv.width = 2048;
-      cv.height = 1536;
+      cv.width = PITCH_CANVAS_WIDTH;
+      cv.height = PITCH_CANVAS_HEIGHT;
       const ctx = cv.getContext("2d");
       if (!ctx) return new THREE.CanvasTexture(cv);
 
@@ -498,8 +554,8 @@ export function StadiumCanvas3D({
         }
       }
 
-      const padX = 70;
-      const padY = 70;
+      const padX = PITCH_PAD_X;
+      const padY = PITCH_PAD_Y;
       const pw = cv.width - padX * 2;
       const ph = cv.height - padY * 2;
       const midX = cv.width / 2;
@@ -573,6 +629,7 @@ export function StadiumCanvas3D({
 
       const tex = new THREE.CanvasTexture(cv);
       tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      tex.colorSpace = THREE.SRGBColorSpace;
       return tex;
     }
 
@@ -584,7 +641,7 @@ export function StadiumCanvas3D({
     });
     const pitchMesh = new THREE.Mesh(pitchGeo, pitchMat);
     pitchMesh.rotation.x = -Math.PI / 2;
-    pitchMesh.position.y = 0;
+    pitchMesh.position.y = 0.005; // Slightly above grassMesh to prevent z-fighting
     pitchMesh.receiveShadow = true;
     scene.add(pitchMesh);
 
@@ -727,8 +784,11 @@ export function StadiumCanvas3D({
       return goalGroup;
     }
 
-    scene.add(createGoal(-pitchLength / 2, true));
-    scene.add(createGoal(pitchLength / 2, false));
+    // Align goals exactly with the boundary white goal line, projecting strictly outwards (from line to outside)
+    const goalLineX = ((PITCH_CANVAS_WIDTH / 2 - PITCH_PAD_X) / PITCH_CANVAS_WIDTH) * pitchLength;
+    const goalPostRadius = 0.08;
+    scene.add(createGoal(-goalLineX - goalPostRadius, true));
+    scene.add(createGoal(goalLineX + goalPostRadius, false));
 
     // --- Generate 8 Stands with Exact Sokker Octagon Edge Engine ---
     const edgeMap = getStadiumEdges(pitchLength, pitchWidth);
