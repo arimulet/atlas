@@ -17,7 +17,9 @@ import type {
   TrainerSkillsDto,
   TrainingDataDto,
   TrainingSummaryDto,
-  TrainingType
+  TrainingType,
+  SokkerArenaApiDto,
+  SokkerArenaStandDto
 } from "../../types.js";
 import type {
   SokkerApiCurrentDto,
@@ -564,30 +566,32 @@ function mapTrainerSkill(source: SokkerTrainerSkillApiDto): TrainerSkillDto {
   };
 }
 
-export function mapSokkerArenaToStadiumData(raw: any): StadiumData {
-  const arena = raw?.arena ?? raw;
+export function mapSokkerArenaToStadiumData(
+  raw: SokkerArenaApiDto | { arena?: SokkerArenaApiDto } | Record<string, unknown>
+): StadiumData {
+  const source = (raw && "arena" in raw && raw.arena ? raw.arena : raw) as Partial<SokkerArenaApiDto>;
   return {
-    name: String(arena?.name || "Estadio"),
-    seats: Number(arena?.seats || 0),
-    seatsInProgress: Number(arena?.seatsInProgress || 0),
-    weather: arena?.weather !== undefined ? Number(arena.weather) : undefined,
+    name: String(source.name || "Estadio"),
+    seats: Number(source.seats || 0),
+    seatsInProgress: Number(source.seatsInProgress || 0),
+    weather: source.weather !== undefined ? Number(source.weather) : undefined,
     pitch: {
-      length: Number(arena?.pitch?.length ?? 105),
-      width: Number(arena?.pitch?.width ?? 68),
-      mow: Number(arena?.pitch?.mow ?? 1),
-      condition: Number(arena?.pitch?.condition ?? 100),
-      grassType: arena?.pitch?.grassType !== undefined ? Number(arena.pitch.grassType) : undefined,
-      maintenance: arena?.pitch?.maintenance !== undefined ? Number(arena.pitch.maintenance) : undefined,
-      logo: arena?.pitch?.logo
+      length: Number(source.pitch?.length ?? 105),
+      width: Number(source.pitch?.width ?? 68),
+      mow: Number(source.pitch?.mow ?? 1),
+      condition: Number(source.pitch?.condition ?? 100),
+      grassType: source.pitch?.grassType !== undefined ? Number(source.pitch.grassType) : undefined,
+      maintenance: source.pitch?.maintenance !== undefined ? Number(source.pitch.maintenance) : undefined,
+      logo: source.pitch?.logo
         ? {
-            size: Number(arena.pitch.logo.size ?? 0),
-            x: Number(arena.pitch.logo.x ?? 0),
-            y: Number(arena.pitch.logo.y ?? 0)
+            size: Number(source.pitch.logo.size ?? 0),
+            x: Number(source.pitch.logo.x ?? 0),
+            y: Number(source.pitch.logo.y ?? 0)
           }
         : undefined
     },
-    stands: Array.isArray(arena?.stands)
-      ? arena.stands.map((s: any) => ({
+    stands: Array.isArray(source.stands)
+      ? source.stands.map((s: SokkerArenaStandDto) => ({
           location: Number(s.location) as StandLocation,
           type: Number(s.type) as StandType,
           size: Number(s.size || 0),

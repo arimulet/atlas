@@ -1,7 +1,7 @@
 import { Types, type ClientSession } from "mongoose";
 import { ClubModel } from "../models/club.js";
 import type { PersistedClub, PersistedClubStaffMember, SaveClubInput } from "./types.js";
-import type { StadiumData } from "@atlas/domain";
+import type { StadiumData, StandLocation, StandType } from "@atlas/domain";
 
 export type ClubId = string | number;
 
@@ -10,6 +10,38 @@ export interface UpdateClubManualProfileInput {
   week?: number | null;
   assumptions?: Array<{ key: string; value: string }>;
   preferences?: Array<{ key: string; value: string }>;
+}
+
+interface PersistedArenaRaw {
+  name: string;
+  seats: number;
+  seatsInProgress?: number | null;
+  weather?: number | null;
+  pitch: {
+    length: number;
+    width: number;
+    mow: number;
+    condition: number;
+    grassType?: number | null;
+    maintenance?: number | null;
+    logo?: {
+      size?: number | null;
+      x?: number | null;
+      y?: number | null;
+    } | null;
+  };
+  stands: Array<{
+    location: number;
+    type: number;
+    size: number;
+    roof: boolean;
+    ticketPrice?: {
+      currency?: string | null;
+      value?: number | null;
+    } | null;
+    inConstruction?: boolean | null;
+    constructionDays?: number | null;
+  }>;
 }
 
 export class MongoClubRepository {
@@ -143,7 +175,7 @@ function mapClub(club: {
     preferences?: Array<{ key: string; value: string; updatedAt: Date }>;
   } | null;
   budget?: number | null;
-  arena?: any;
+  arena?: PersistedArenaRaw | null;
 }): PersistedClub {
   return {
     id: club._id.toString(),
@@ -205,7 +237,7 @@ function requireNumericTraining(
   };
 }
 
-function mapPersistedArena(arena: any): StadiumData {
+function mapPersistedArena(arena: PersistedArenaRaw): StadiumData {
   return {
     name: arena.name,
     seats: arena.seats,
@@ -220,22 +252,22 @@ function mapPersistedArena(arena: any): StadiumData {
       maintenance: arena.pitch.maintenance ?? undefined,
       logo: arena.pitch.logo
         ? {
-            size: arena.pitch.logo.size,
-            x: arena.pitch.logo.x,
-            y: arena.pitch.logo.y
+            size: arena.pitch.logo.size ?? 0,
+            x: arena.pitch.logo.x ?? 0,
+            y: arena.pitch.logo.y ?? 0
           }
         : undefined
     },
     stands: Array.isArray(arena.stands)
-      ? arena.stands.map((s: any) => ({
-          location: s.location,
-          type: s.type,
+      ? arena.stands.map((s) => ({
+          location: s.location as StandLocation,
+          type: s.type as StandType,
           size: s.size,
           roof: s.roof,
           ticketPrice: s.ticketPrice
             ? {
-                currency: s.ticketPrice.currency,
-                value: s.ticketPrice.value
+                currency: s.ticketPrice.currency ?? "",
+                value: s.ticketPrice.value ?? 0
               }
             : undefined,
           inConstruction: s.inConstruction ?? false,
