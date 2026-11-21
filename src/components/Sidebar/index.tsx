@@ -43,12 +43,6 @@ const navigationGroups: NavigationGroup[] = [
         label: "Player Decisions",
         icon: <UserCog size={ICON_SIZE} />,
         path: pathForMainView("player-decisions")
-      },
-      {
-        id: "stadium",
-        label: "Stadium",
-        icon: <Landmark size={ICON_SIZE} />,
-        path: pathForMainView("stadium")
       }
     ]
   },
@@ -73,6 +67,12 @@ const navigationGroups: NavigationGroup[] = [
         label: "Investment Simulator",
         icon: <Calculator size={ICON_SIZE} />,
         path: pathForMainView("investment-simulator")
+      },
+      {
+        id: "stadium",
+        label: "Stadium",
+        icon: <Landmark size={ICON_SIZE} />,
+        path: pathForMainView("stadium")
       },
       {
         id: "diagnostics",
