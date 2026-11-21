@@ -46,9 +46,9 @@ describe("Stadium Domain & Default Sokker Data", () => {
       expect(STAND_LOCATION_INFO[loc as keyof typeof STAND_LOCATION_INFO].code).toBeTruthy();
     }
 
-    expect(STAND_TYPE_LABELS[1]).toContain("Populares");
-    expect(STAND_TYPE_LABELS[2]).toContain("Gradas");
-    expect(STAND_TYPE_LABELS[3]).toContain("Butacas");
+    expect(STAND_TYPE_LABELS[1]).toContain("Terraces");
+    expect(STAND_TYPE_LABELS[2]).toContain("Benches");
+    expect(STAND_TYPE_LABELS[3]).toContain("Seats");
   });
 
   it("updates stand properties and recalculates total capacity dynamically", () => {

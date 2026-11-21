@@ -138,7 +138,8 @@ export class SokkerSyncPersistence {
           currency: payload.current.budget.currency,
           budget: payload.current.budget.value,
           training: payload.current.training,
-          staff: payload.trainers.map(mapTrainerToStaff)
+          staff: payload.trainers.map(mapTrainerToStaff),
+          arena: payload.arena ?? undefined
         },
         session
       )

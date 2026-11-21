@@ -76,7 +76,8 @@ describe("GET /api/club/active", () => {
       currency: "ARS",
       sokkerUsername: "fueguinoloko",
       gameWeek: 1204,
-      week: 7
+      week: 7,
+      arena: null
     });
   });
 

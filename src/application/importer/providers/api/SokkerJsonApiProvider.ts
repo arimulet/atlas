@@ -10,6 +10,7 @@ import type {
   JuniorMatchDto
 } from "../../types.js";
 import type { SokkerDataProvider } from "../SokkerDataProvider.js";
+import type { StadiumData } from "@atlas/domain";
 import type {
   SokkerCurrentApiDto,
   SokkerJuniorsApiDto,
@@ -29,7 +30,8 @@ import {
   mapTrainingFormationsApiToTraining,
   mapTrainersApiToTrainers,
   mapTrainingApiToTrainingData,
-  mapTrainingSummaryApiToTrainingSummary
+  mapTrainingSummaryApiToTrainingSummary,
+  mapSokkerArenaToStadiumData
 } from "./mappers.js";
 
 export class SokkerJsonApiProvider implements SokkerDataProvider {
@@ -105,6 +107,11 @@ export class SokkerJsonApiProvider implements SokkerDataProvider {
         team: { ...response.team, training }
       });
     });
+  }
+
+  async getArena(teamId: number): Promise<StadiumData> {
+    const response = await this.get<unknown>(`team/${teamId}/arena`);
+    return mapResource("arena", () => mapSokkerArenaToStadiumData(response));
   }
 
   async getTraining(

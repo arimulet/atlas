@@ -38,6 +38,51 @@ const clubTrainingSchema = new Schema(
   { _id: false }
 );
 
+const clubStandSchema = new Schema(
+  {
+    location: { type: Number, required: true, min: 1, max: 8 },
+    type: { type: Number, required: true, min: 1, max: 3 },
+    size: { type: Number, required: true, min: 0 },
+    roof: { type: Boolean, required: true },
+    ticketPrice: {
+      currency: { type: String, default: null },
+      value: { type: Number, default: null }
+    },
+    inConstruction: { type: Boolean, default: false },
+    constructionDays: { type: Number, default: 0 }
+  },
+  { _id: false }
+);
+
+const clubPitchSchema = new Schema(
+  {
+    length: { type: Number, required: true },
+    width: { type: Number, required: true },
+    mow: { type: Number, required: true },
+    condition: { type: Number, required: true },
+    grassType: { type: Number, default: null },
+    maintenance: { type: Number, default: null },
+    logo: {
+      size: { type: Number, default: null },
+      x: { type: Number, default: null },
+      y: { type: Number, default: null }
+    }
+  },
+  { _id: false }
+);
+
+const clubArenaSchema = new Schema(
+  {
+    name: { type: String, required: true, trim: true },
+    seats: { type: Number, required: true },
+    seatsInProgress: { type: Number, default: 0 },
+    weather: { type: Number, default: null },
+    pitch: { type: clubPitchSchema, required: true },
+    stands: { type: [clubStandSchema], required: true }
+  },
+  { _id: false }
+);
+
 const clubSchema = new Schema(
   {
     clubId: { type: Number, required: true },
@@ -51,6 +96,7 @@ const clubSchema = new Schema(
     budget: { type: Number, default: null },
     currency: { type: String, required: true, trim: true },
     staff: { type: [staffTrainerSchema], default: [] },
+    arena: { type: clubArenaSchema, default: null },
     lastSnapshotDate: { type: Date, default: null },
     observedAt: { type: Date, default: null },
     settings: {

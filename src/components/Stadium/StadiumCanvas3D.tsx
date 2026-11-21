@@ -1073,51 +1073,51 @@ export function StadiumCanvas3D({
         <button
           type="button"
           onClick={() => setCameraView("iso")}
-          title="Vista Diagonal / Isométrica"
+          title="Diagonal / Isometric View"
           style={toolBtnStyle}
         >
-          <Compass size={16} /> Isométrica
+          <Compass size={16} /> Isometric
         </button>
         <button
           type="button"
           onClick={() => setCameraView("side")}
-          title="Vista Lateral (Tribuna)"
+          title="Side View (Main Stand)"
           style={toolBtnStyle}
         >
-          <Eye size={16} /> Lateral
+          <Eye size={16} /> Side
         </button>
         <button
           type="button"
           onClick={() => setCameraView("goal")}
-          title="Vista Detrás del Arco"
+          title="Behind the Goal View"
           style={toolBtnStyle}
         >
-          <Eye size={16} /> Arco
+          <Eye size={16} /> Goal
         </button>
         <button
           type="button"
           onClick={() => setCameraView("top")}
-          title="Vista Cenital / Aérea"
+          title="Top / Aerial View"
           style={toolBtnStyle}
         >
-          <Eye size={16} /> Aérea
+          <Eye size={16} /> Top
         </button>
         <button
           type="button"
           onClick={() => setActiveRoofView(!activeRoofView)}
-          title="Mostrar / Ocultar Techos"
+          title="Toggle Roofs"
           style={{
             ...toolBtnStyle,
             backgroundColor: activeRoofView ? "rgba(59, 130, 246, 0.3)" : "transparent",
             borderColor: activeRoofView ? "#3b82f6" : "rgba(255, 255, 255, 0.15)"
           }}
         >
-          <Layers size={16} /> {activeRoofView ? "Techos ON" : "Techos OFF"}
+          <Layers size={16} /> {activeRoofView ? "Roofs ON" : "Roofs OFF"}
         </button>
         <button
           type="button"
           onClick={handleReset}
-          title="Restablecer valores y cámara originales"
+          title="Reset original camera and stadium values"
           style={toolBtnStyle}
         >
           <RotateCcw size={16} /> Reset
@@ -1138,7 +1138,7 @@ export function StadiumCanvas3D({
         border: "1px solid rgba(255, 255, 255, 0.08)",
         pointerEvents: "none"
       }}>
-        <span>🖱️ Arrastrar para rotar 360° · Rueda para zoom · Clic en grada para inspeccionar</span>
+        <span>🖱️ Drag to rotate 360° · Scroll to zoom · Click on stand to inspect</span>
       </div>
     </div>
   );

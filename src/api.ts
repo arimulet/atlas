@@ -20,7 +20,8 @@ import type {
   PlayerDevelopmentTargetOverride,
   SquadDepthAnalysis,
   SquadPlanningRecommendations,
-  SquadRole
+  SquadRole,
+  StadiumData
 } from "@atlas/domain";
 import { auth, waitForAuthState } from "./services/firebase";
 
@@ -33,6 +34,7 @@ export interface ActiveClubInfo {
   sokkerUsername: string | null;
   gameWeek: number | null;
   week: number | null;
+  arena?: StadiumData | null;
 }
 
 export interface FinancialStrategyData {
