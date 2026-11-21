@@ -648,74 +648,86 @@ export function StadiumCanvas3D({
     // --- 3D Goals ---
     function createGoal(xPos: number, isLeft: boolean) {
       const goalGroup = new THREE.Group();
-      const postMat = new THREE.MeshStandardMaterial({
+
+      // Front frame material: Bright white, thick
+      const frontPostMat = new THREE.MeshStandardMaterial({
         color: "#ffffff",
-        metalness: 0.2,
+        metalness: 0.15,
         roughness: 0.3
       });
 
+      // Rear support structure: Thinner and darker
+      const rearFrameMat = new THREE.MeshStandardMaterial({
+        color: "#334155",
+        metalness: 0.5,
+        roughness: 0.4
+      });
+
       const postRadius = 0.08;
+      const rearRadius = 0.03;
       const postHeight = 2.44;
       const goalWidthM = 7.32;
       const goalDepthM = 2.0;
       const halfWidth = goalWidthM / 2;
-      const dirX = isLeft ? -1 : 1; // Se proyecta hacia afuera/atrás de la línea de cal
+      const dirX = isLeft ? -1 : 1; // Projects outwards/behind the goal line
 
-      // 1. Marco frontal recto: 2 postes verticales + 1 travesaño horizontal
+      // 1. Marco frontal recto: 2 postes verticales + 1 travesaño horizontal (gruesos y blancos)
       const postGeo = new THREE.CylinderGeometry(postRadius, postRadius, postHeight, 16);
 
-      const postLeft = new THREE.Mesh(postGeo, postMat);
+      const postLeft = new THREE.Mesh(postGeo, frontPostMat);
       postLeft.position.set(0, postHeight / 2, -halfWidth);
       postLeft.castShadow = true;
 
-      const postRight = new THREE.Mesh(postGeo, postMat);
+      const postRight = new THREE.Mesh(postGeo, frontPostMat);
       postRight.position.set(0, postHeight / 2, halfWidth);
       postRight.castShadow = true;
 
       const crossbarGeo = new THREE.CylinderGeometry(postRadius, postRadius, goalWidthM + postRadius * 2, 16);
-      const crossbar = new THREE.Mesh(crossbarGeo, postMat);
+      const crossbar = new THREE.Mesh(crossbarGeo, frontPostMat);
       crossbar.rotation.x = Math.PI / 2;
       crossbar.position.set(0, postHeight, 0);
       crossbar.castShadow = true;
 
       goalGroup.add(postLeft, postRight, crossbar);
 
-      // 2. Estructura trasera recta (sin palos diagonales cruzados)
-      const depthBarGeo = new THREE.CylinderGeometry(postRadius * 0.75, postRadius * 0.75, goalDepthM, 12);
+      // 2. Estructura trasera que va hacia afuera del campo (más finos y más oscuros)
+      const depthBarGeo = new THREE.CylinderGeometry(rearRadius, rearRadius, goalDepthM, 12);
+      const rearCrossbarGeo = new THREE.CylinderGeometry(rearRadius, rearRadius, goalWidthM + rearRadius * 2, 12);
+      const rearPostGeo = new THREE.CylinderGeometry(rearRadius, rearRadius, postHeight, 12);
 
       // Barras superiores de profundidad (izquierda y derecha)
-      const topBarLeft = new THREE.Mesh(depthBarGeo, postMat);
+      const topBarLeft = new THREE.Mesh(depthBarGeo, rearFrameMat);
       topBarLeft.rotation.z = Math.PI / 2;
       topBarLeft.position.set(dirX * (goalDepthM / 2), postHeight, -halfWidth);
 
-      const topBarRight = new THREE.Mesh(depthBarGeo, postMat);
+      const topBarRight = new THREE.Mesh(depthBarGeo, rearFrameMat);
       topBarRight.rotation.z = Math.PI / 2;
       topBarRight.position.set(dirX * (goalDepthM / 2), postHeight, halfWidth);
 
       // Travesaño superior trasero
-      const backTopBar = new THREE.Mesh(crossbarGeo, postMat);
+      const backTopBar = new THREE.Mesh(rearCrossbarGeo, rearFrameMat);
       backTopBar.rotation.x = Math.PI / 2;
       backTopBar.position.set(dirX * goalDepthM, postHeight, 0);
 
       // Barras inferiores de suelo (izquierda y derecha)
-      const groundBarLeft = new THREE.Mesh(depthBarGeo, postMat);
+      const groundBarLeft = new THREE.Mesh(depthBarGeo, rearFrameMat);
       groundBarLeft.rotation.z = Math.PI / 2;
-      groundBarLeft.position.set(dirX * (goalDepthM / 2), postRadius, -halfWidth);
+      groundBarLeft.position.set(dirX * (goalDepthM / 2), rearRadius, -halfWidth);
 
-      const groundBarRight = new THREE.Mesh(depthBarGeo, postMat);
+      const groundBarRight = new THREE.Mesh(depthBarGeo, rearFrameMat);
       groundBarRight.rotation.z = Math.PI / 2;
-      groundBarRight.position.set(dirX * (goalDepthM / 2), postRadius, halfWidth);
+      groundBarRight.position.set(dirX * (goalDepthM / 2), rearRadius, halfWidth);
 
       // Travesaño inferior trasero de suelo
-      const backGroundBar = new THREE.Mesh(crossbarGeo, postMat);
+      const backGroundBar = new THREE.Mesh(rearCrossbarGeo, rearFrameMat);
       backGroundBar.rotation.x = Math.PI / 2;
-      backGroundBar.position.set(dirX * goalDepthM, postRadius, 0);
+      backGroundBar.position.set(dirX * goalDepthM, rearRadius, 0);
 
       // Postes verticales traseros de apoyo
-      const backPostLeft = new THREE.Mesh(postGeo, postMat);
+      const backPostLeft = new THREE.Mesh(rearPostGeo, rearFrameMat);
       backPostLeft.position.set(dirX * goalDepthM, postHeight / 2, -halfWidth);
 
-      const backPostRight = new THREE.Mesh(postGeo, postMat);
+      const backPostRight = new THREE.Mesh(rearPostGeo, rearFrameMat);
       backPostRight.position.set(dirX * goalDepthM, postHeight / 2, halfWidth);
 
       goalGroup.add(
@@ -724,20 +736,21 @@ export function StadiumCanvas3D({
         backPostLeft, backPostRight
       );
 
-      // 3. Red de portería cuadrangular (cubriendo fondo, techo y laterales; abierta hacia la cancha)
+      // 3. Red de portería cuadrangular (más blanca y con cuadrícula fina realista)
       const netTexCanvas = document.createElement("canvas");
       netTexCanvas.width = 64;
       netTexCanvas.height = 64;
       const netCtx = netTexCanvas.getContext("2d");
       if (netCtx) {
         netCtx.clearRect(0, 0, 64, 64);
-        netCtx.strokeStyle = "rgba(255, 255, 255, 0.75)";
-        netCtx.lineWidth = 4;
-        netCtx.strokeRect(2, 2, 60, 60);
+        netCtx.strokeStyle = "#ffffff";
+        netCtx.lineWidth = 6;
+        netCtx.strokeRect(0, 0, 64, 64);
       }
       const netBaseTex = new THREE.CanvasTexture(netTexCanvas);
       netBaseTex.wrapS = THREE.RepeatWrapping;
       netBaseTex.wrapT = THREE.RepeatWrapping;
+      netBaseTex.colorSpace = THREE.SRGBColorSpace;
 
       const createNetPlaneMat = (repeatX: number, repeatY: number) => {
         const tex = netBaseTex.clone();
@@ -745,36 +758,39 @@ export function StadiumCanvas3D({
         tex.needsUpdate = true;
         return new THREE.MeshStandardMaterial({
           map: tex,
+          color: "#ffffff",
+          emissive: new THREE.Color("#ffffff"),
+          emissiveIntensity: 0.15,
           transparent: true,
-          opacity: 0.7,
+          opacity: 0.9,
           side: THREE.DoubleSide,
           depthWrite: false,
-          roughness: 0.8
+          roughness: 0.3
         });
       };
 
-      // Cara trasera (fondo de la red)
+      // Cara trasera (fondo de la red: 7.32m x 2.44m con cuadrados de ~12cm)
       const backNetGeo = new THREE.PlaneGeometry(goalWidthM, postHeight);
-      const backNetMesh = new THREE.Mesh(backNetGeo, createNetPlaneMat(16, 6));
+      const backNetMesh = new THREE.Mesh(backNetGeo, createNetPlaneMat(60, 20));
       backNetMesh.position.set(dirX * goalDepthM, postHeight / 2, 0);
       backNetMesh.rotation.y = Math.PI / 2;
       goalGroup.add(backNetMesh);
 
-      // Cara superior (techo de la red)
+      // Cara superior (techo de la red: 2.0m x 7.32m con cuadrados de ~12cm)
       const topNetGeo = new THREE.PlaneGeometry(goalDepthM, goalWidthM);
-      const topNetMesh = new THREE.Mesh(topNetGeo, createNetPlaneMat(5, 16));
+      const topNetMesh = new THREE.Mesh(topNetGeo, createNetPlaneMat(16, 60));
       topNetMesh.position.set(dirX * (goalDepthM / 2), postHeight, 0);
       topNetMesh.rotation.x = Math.PI / 2;
       goalGroup.add(topNetMesh);
 
-      // Cara lateral izquierda
+      // Cara lateral izquierda (2.0m x 2.44m con cuadrados de ~12cm)
       const sideNetGeo = new THREE.PlaneGeometry(goalDepthM, postHeight);
-      const leftNetMesh = new THREE.Mesh(sideNetGeo, createNetPlaneMat(5, 6));
+      const leftNetMesh = new THREE.Mesh(sideNetGeo, createNetPlaneMat(16, 20));
       leftNetMesh.position.set(dirX * (goalDepthM / 2), postHeight / 2, -halfWidth);
       goalGroup.add(leftNetMesh);
 
-      // Cara lateral derecha
-      const rightNetMesh = new THREE.Mesh(sideNetGeo, createNetPlaneMat(5, 6));
+      // Cara lateral derecha (2.0m x 2.44m con cuadrados de ~12cm)
+      const rightNetMesh = new THREE.Mesh(sideNetGeo, createNetPlaneMat(16, 20));
       rightNetMesh.position.set(dirX * (goalDepthM / 2), postHeight / 2, halfWidth);
       goalGroup.add(rightNetMesh);
 
