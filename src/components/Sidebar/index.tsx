@@ -6,7 +6,8 @@ import {
   CircleDollarSign,
   Activity,
   LineChart,
-  Calculator
+  Calculator,
+  Landmark
 } from "lucide-react";
 import { pathForMainView } from "@/app/routing";
 import type { NavigationGroup } from "@/app/types";
@@ -42,6 +43,12 @@ const navigationGroups: NavigationGroup[] = [
         label: "Player Decisions",
         icon: <UserCog size={ICON_SIZE} />,
         path: pathForMainView("player-decisions")
+      },
+      {
+        id: "stadium",
+        label: "Stadium",
+        icon: <Landmark size={ICON_SIZE} />,
+        path: pathForMainView("stadium")
       }
     ]
   },

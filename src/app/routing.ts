@@ -9,7 +9,8 @@ export type MainViewId =
   | "youth-performances"
   | "finances"
   | "investment-simulator"
-  | "diagnostics";
+  | "diagnostics"
+  | "stadium";
 
 export type Route =
   | { kind: "main"; view: MainViewId; path: string }
@@ -36,7 +37,8 @@ const mainPaths: Record<MainViewId, string> = {
   "youth-performances": "/youth/performances",
   finances: "/finances",
   "investment-simulator": "/investment-simulator",
-  diagnostics: "/diagnostics"
+  diagnostics: "/diagnostics",
+  stadium: "/stadium"
 };
 
 export function pathForMainView(view: MainViewId): string {
