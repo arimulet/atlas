@@ -1,5 +1,6 @@
 import { ClubModel } from "@atlas/database";
 import { getUserClubs } from "@atlas/application";
+import type { StadiumData } from "@atlas/domain";
 import { ensureMongoDbConnection, handleApiError, jsonResponse } from "@/lib/api-helper";
 import { getAuthenticatedUserServer } from "@/lib/session";
 
@@ -13,6 +14,7 @@ export interface ActiveClubResponse {
     sokkerUsername: string | null;
     gameWeek: number | null;
     week: number | null;
+    arena?: StadiumData | null;
   } | null;
 }
 
@@ -35,7 +37,8 @@ export async function GET() {
               currency: fallback.currency,
               sokkerUsername: fallback.sokkerUsername ?? null,
               gameWeek: fallback.gameWeek ?? null,
-              week: fallback.week ?? null
+              week: fallback.week ?? null,
+              arena: (fallback.arena as StadiumData | null) ?? null
             }
           });
         }
@@ -53,6 +56,7 @@ export async function GET() {
       sokkerUsername?: string | null;
       gameWeek: number | null;
       week: number | null;
+      arena?: StadiumData | null;
     } | null = clubs && clubs.length > 0 && clubs[0] ? clubs[0] : null;
 
     if (!primary && process.env.NODE_ENV !== "production") {
@@ -66,7 +70,8 @@ export async function GET() {
           currency: fallback.currency,
           sokkerUsername: fallback.sokkerUsername ?? null,
           gameWeek: fallback.gameWeek ?? null,
-          week: fallback.week ?? null
+          week: fallback.week ?? null,
+          arena: (fallback.arena as StadiumData | null) ?? null
         };
       }
     }
@@ -84,7 +89,8 @@ export async function GET() {
         currency: primary.currency,
         sokkerUsername: primary.sokkerUsername ?? null,
         gameWeek: primary.gameWeek,
-        week: primary.week
+        week: primary.week,
+        arena: primary.arena ?? null
       }
     });
   } catch (error) {

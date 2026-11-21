@@ -143,7 +143,7 @@ export default function InvestmentSimulatorPage() {
             Financial Strategy is temporarily unavailable. Simulation will use default benchmarks.
           </p>
         ) : null}
-        <InvestmentSimulator financialStrategy={financialStrategy} />
+        <InvestmentSimulator financialStrategy={financialStrategy} currency={dashboard?.club?.currency ?? null} />
       </div>
     </AppShell>
   );

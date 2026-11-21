@@ -1,4 +1,4 @@
-import { deriveSkillChanges } from "@atlas/domain";
+import { deriveSkillChanges, type StadiumData, type StandLocation, type StandType } from "@atlas/domain";
 import { z } from "zod";
 import { trainingPlayerSchema } from "./training-schema.js";
 import type {
@@ -17,7 +17,9 @@ import type {
   TrainerSkillsDto,
   TrainingDataDto,
   TrainingSummaryDto,
-  TrainingType
+  TrainingType,
+  SokkerArenaApiDto,
+  SokkerArenaStandDto
 } from "../../types.js";
 import type {
   SokkerApiCurrentDto,
@@ -561,5 +563,47 @@ function mapTrainerSkill(source: SokkerTrainerSkillApiDto): TrainerSkillDto {
   return {
     level: source.value,
     effectivenessPercent: source.percent
+  };
+}
+
+export function mapSokkerArenaToStadiumData(raw: unknown): StadiumData {
+  const obj = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
+  const source = (obj.arena && typeof obj.arena === "object" ? obj.arena : obj) as Partial<SokkerArenaApiDto>;
+  return {
+    name: String(source.name || "Estadio"),
+    seats: Number(source.seats || 0),
+    seatsInProgress: Number(source.seatsInProgress || 0),
+    weather: source.weather !== undefined ? Number(source.weather) : undefined,
+    pitch: {
+      length: Number(source.pitch?.length ?? 105),
+      width: Number(source.pitch?.width ?? 68),
+      mow: Number(source.pitch?.mow ?? 1),
+      condition: Number(source.pitch?.condition ?? 100),
+      grassType: source.pitch?.grassType !== undefined ? Number(source.pitch.grassType) : undefined,
+      maintenance: source.pitch?.maintenance !== undefined ? Number(source.pitch.maintenance) : undefined,
+      logo: source.pitch?.logo
+        ? {
+            size: Number(source.pitch.logo.size ?? 0),
+            x: Number(source.pitch.logo.x ?? 0),
+            y: Number(source.pitch.logo.y ?? 0)
+          }
+        : undefined
+    },
+    stands: Array.isArray(source.stands)
+      ? source.stands.map((s: SokkerArenaStandDto) => ({
+          location: Number(s.location) as StandLocation,
+          type: Number(s.type) as StandType,
+          size: Number(s.size || 0),
+          roof: Boolean(s.roof),
+          ticketPrice: s.ticketPrice
+            ? {
+                currency: String(s.ticketPrice.currency || ""),
+                value: Number(s.ticketPrice.value || 0)
+              }
+            : undefined,
+          inConstruction: Boolean(s.inConstruction),
+          constructionDays: Number(s.constructionDays || 0)
+        }))
+      : []
   };
 }

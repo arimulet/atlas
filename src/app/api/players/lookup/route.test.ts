@@ -24,19 +24,29 @@ describe("live Sokker player lookup", () => {
     mocks.getPlayer.mockResolvedValue({
       id: 123, name: { fullName: "Player" }, age: 18,
       skills: { stamina: 8, pace: 9, technique: 8, passing: 7, keeper: 1, defending: 5, playmaking: 10, striker: 6 },
-      wage: { value: 1000 }, value: { value: 30000 }
+      wage: { value: 1000, currency: "u$s" }, value: { value: 30000, currency: "u$s" }
     });
     const response = await POST(request({ playerId: 123 }));
     expect(response.status).toBe(200);
     expect(mocks.createProvider).toHaveBeenCalledWith({ login: "service-user", password: "secret" });
     expect(mocks.getPlayer).toHaveBeenCalledWith(123);
-    expect(await response.json()).toMatchObject({ found: true, source: "sokker", player: { playerId: 123, skills: { playmaker: 10 } } });
+    expect(await response.json()).toMatchObject({ found: true, source: "sokker", player: { playerId: 123, skills: { playmaker: 10 }, wage: 1000, wageCurrency: "u$s", marketValue: 30000, marketValueCurrency: "u$s" } });
   });
 
   it("does not invent skills that Sokker does not provide", async () => {
     mocks.getPlayer.mockResolvedValue({ id: 123, skills: { stamina: 8 } });
     const response = await POST(request({ playerId: 123 }));
     expect(await response.json()).toMatchObject({ found: false });
+  });
+
+  it("preserves zero amounts and leaves missing money unavailable", async () => {
+    mocks.getPlayer.mockResolvedValue({
+      id: 123, name: { fullName: "Player" }, age: 18,
+      skills: { stamina: 8, pace: 9, technique: 8, passing: 7, keeper: 1, defending: 5, playmaking: 10, striker: 6 },
+      wage: { value: 0, currency: "u$s" }, value: null
+    });
+    const response = await POST(request({ playerId: 123 }));
+    expect(await response.json()).toMatchObject({ player: { wage: 0, wageCurrency: "u$s", marketValue: null, marketValueCurrency: null } });
   });
 
   it("does not query Sokker without an authenticated user or valid player ID", async () => {

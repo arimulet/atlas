@@ -8,6 +8,7 @@ const pageNameByPath: Record<string, string> = {
   "/investment-simulator": "Investment Simulator",
   "/player-decisions": "Player Decisions",
   "/squad": "Squad",
+  "/stadium": "Stadium",
   "/youth": "Youth",
   "/youth/performances": "Academy Performances"
 };

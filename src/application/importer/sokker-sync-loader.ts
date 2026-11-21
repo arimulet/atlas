@@ -24,7 +24,7 @@ export class SokkerSyncLoader {
       requestedTrainingWeekId === undefined
         ? undefined
         : await this.resolveSkills?.(current.team.id, requestedTrainingWeekId);
-    const [training, livePlayers, trainers, juniors, juniorMatchesRaw] = await Promise.all([
+    const [training, livePlayers, trainers, juniors, juniorMatchesRaw, arena] = await Promise.all([
       this.loadResource("training", () =>
         this.provider.getTraining(requestedTrainingWeekId, knownSkills)
       ),
@@ -33,7 +33,11 @@ export class SokkerSyncLoader {
       this.loadResource("junior", () => this.provider.getJuniors()),
       this.loadResource("junior matches", () =>
         this.provider.getJuniorMatches(current.calendar.season)
-      )
+      ),
+      this.loadResource("arena", () => this.provider.getArena(current.team.id)).catch((err) => {
+        console.warn(`Failed to fetch arena for team ${current.team.id}:`, err);
+        return null;
+      })
     ]);
 
     // Enrich juniors with formation from XML (0 = GK, 1 = field). Fails gracefully if XML is unavailable.
@@ -137,7 +141,8 @@ export class SokkerSyncLoader {
       trainers,
       juniors: juniorsWithFormation,
       trainingSummary,
-      juniorMatches
+      juniorMatches,
+      arena
     };
   }
 

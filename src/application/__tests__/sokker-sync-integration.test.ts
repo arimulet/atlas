@@ -43,6 +43,7 @@ import type {
   SokkerTrainingApiDto,
   SokkerTrainingSummaryApiDto
 } from "../importer/providers/api/dtos.js";
+import { DEFAULT_SOKKER_STADIUM } from "@/domain/stadium/mockData.js";
 
 let mongo: MongoMemoryServer | null = null;
 let usesExternalTestDatabase = false;
@@ -400,11 +401,13 @@ function createFixtureProvider(): SokkerDataProvider {
     trainers,
     juniors,
     trainingSummary: { weeks: [reportSummary, ...summary.weeks] },
-    juniorMatches: []
+    juniorMatches: [],
+    arena: DEFAULT_SOKKER_STADIUM
   };
 
   return {
     getCurrent: vi.fn(async () => payload.current),
+    getArena: vi.fn(async () => DEFAULT_SOKKER_STADIUM),
     getTraining: vi.fn(async () => ({
       players: payload.players,
       trainingWeeks: payload.trainingWeeks

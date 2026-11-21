@@ -38,7 +38,8 @@ export async function POST(request: NextRequest) {
       player: {
         playerId: player.id, name: player.name.fullName, age: player.age,
         position: inferPositionFromSkills(skills), skills,
-        wage: player.wage.value, marketValue: player.value.value
+        wage: player.wage?.value ?? null, wageCurrency: player.wage?.currency ?? null,
+        marketValue: player.value?.value ?? null, marketValueCurrency: player.value?.currency ?? null
       }
     });
   } catch {

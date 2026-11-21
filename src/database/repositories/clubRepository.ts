@@ -1,6 +1,7 @@
 import { Types, type ClientSession } from "mongoose";
 import { ClubModel } from "../models/club.js";
 import type { PersistedClub, PersistedClubStaffMember, SaveClubInput } from "./types.js";
+import type { StadiumData, StandLocation, StandType } from "@atlas/domain";
 
 export type ClubId = string | number;
 
@@ -9,6 +10,38 @@ export interface UpdateClubManualProfileInput {
   week?: number | null;
   assumptions?: Array<{ key: string; value: string }>;
   preferences?: Array<{ key: string; value: string }>;
+}
+
+interface PersistedArenaRaw {
+  name: string;
+  seats: number;
+  seatsInProgress?: number | null;
+  weather?: number | null;
+  pitch: {
+    length: number;
+    width: number;
+    mow: number;
+    condition: number;
+    grassType?: number | null;
+    maintenance?: number | null;
+    logo?: {
+      size?: number | null;
+      x?: number | null;
+      y?: number | null;
+    } | null;
+  };
+  stands: Array<{
+    location: number;
+    type: number;
+    size: number;
+    roof: boolean;
+    ticketPrice?: {
+      currency?: string | null;
+      value?: number | null;
+    } | null;
+    inConstruction?: boolean | null;
+    constructionDays?: number | null;
+  }>;
 }
 
 export class MongoClubRepository {
@@ -42,6 +75,10 @@ export class MongoClubRepository {
 
     if (input.sokkerUsername !== undefined) {
       $set.sokkerUsername = input.sokkerUsername;
+    }
+
+    if (input.arena !== undefined) {
+      $set.arena = input.arena;
     }
 
     const $setOnInsert: Record<string, unknown> = { clubId: input.clubId };
@@ -138,6 +175,7 @@ function mapClub(club: {
     preferences?: Array<{ key: string; value: string; updatedAt: Date }>;
   } | null;
   budget?: number | null;
+  arena?: PersistedArenaRaw | null;
 }): PersistedClub {
   return {
     id: club._id.toString(),
@@ -149,6 +187,7 @@ function mapClub(club: {
     currency: club.currency ?? "UNK",
     budget: club.budget ?? null,
     staff: club.staff ?? [],
+    arena: club.arena ? mapPersistedArena(club.arena) : null,
     training: requireNumericTraining(club.training),
     gameWeek: club.gameWeek ?? null,
     week: club.week ?? null,
@@ -195,5 +234,45 @@ function requireNumericTraining(
     DEF,
     MID,
     ATT
+  };
+}
+
+function mapPersistedArena(arena: PersistedArenaRaw): StadiumData {
+  return {
+    name: arena.name,
+    seats: arena.seats,
+    seatsInProgress: arena.seatsInProgress ?? 0,
+    weather: arena.weather ?? undefined,
+    pitch: {
+      length: arena.pitch.length,
+      width: arena.pitch.width,
+      mow: arena.pitch.mow,
+      condition: arena.pitch.condition,
+      grassType: arena.pitch.grassType ?? undefined,
+      maintenance: arena.pitch.maintenance ?? undefined,
+      logo: arena.pitch.logo
+        ? {
+            size: arena.pitch.logo.size ?? 0,
+            x: arena.pitch.logo.x ?? 0,
+            y: arena.pitch.logo.y ?? 0
+          }
+        : undefined
+    },
+    stands: Array.isArray(arena.stands)
+      ? arena.stands.map((s) => ({
+          location: s.location as StandLocation,
+          type: s.type as StandType,
+          size: s.size,
+          roof: s.roof,
+          ticketPrice: s.ticketPrice
+            ? {
+                currency: s.ticketPrice.currency ?? "",
+                value: s.ticketPrice.value ?? 0
+              }
+            : undefined,
+          inConstruction: s.inConstruction ?? false,
+          constructionDays: s.constructionDays ?? 0
+        }))
+      : []
   };
 }

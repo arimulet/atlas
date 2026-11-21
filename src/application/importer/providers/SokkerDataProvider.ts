@@ -16,9 +16,11 @@ import type {
  * application layer depends on this contract rather than on Sokker's API.
  */
 import type { JuniorMatchDto, ActiveTransferDto, FinalTransferDto } from "../types.js";
+import type { StadiumData } from "@atlas/domain";
 
 export interface SokkerDataProvider {
   getCurrent(): Promise<CurrentClubContextDto>;
+  getArena(teamId: number): Promise<StadiumData>;
   getTraining(
     sourceWeekId?: number,
     knownSkills?: ReadonlyMap<number, HistoricalTrainingSkills>

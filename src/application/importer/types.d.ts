@@ -1,4 +1,4 @@
-import type { SkillChange, TrainingKind, TrainingType } from "@atlas/domain";
+import type { SkillChange, TrainingKind, TrainingType, StadiumData } from "@atlas/domain";
 
 export type { TrainingKind, TrainingType } from "@atlas/domain";
 
@@ -246,6 +246,42 @@ export interface JuniorMatchDto {
   playerStats: JuniorMatchPlayerStatsDto[];
 }
 
+export interface SokkerArenaStandDto {
+  location: number;
+  type: number;
+  size: number;
+  roof: boolean;
+  ticketPrice?: {
+    currency: string;
+    value: number;
+  };
+  inConstruction?: boolean;
+  constructionDays?: number;
+}
+
+export interface SokkerArenaPitchDto {
+  length: number;
+  width: number;
+  mow: number;
+  condition: number;
+  grassType?: number;
+  maintenance?: number;
+  logo?: {
+    size: number;
+    x: number;
+    y: number;
+  };
+}
+
+export interface SokkerArenaApiDto {
+  name: string;
+  seats: number;
+  seatsInProgress?: number;
+  weather?: number;
+  pitch: SokkerArenaPitchDto;
+  stands: SokkerArenaStandDto[];
+}
+
 export interface SokkerSyncPayload {
   current: CurrentClubContextDto;
   players: PlayerDto[];
@@ -258,6 +294,7 @@ export interface SokkerSyncPayload {
   juniors: JuniorDto[];
   trainingSummary: TrainingSummaryDto;
   juniorMatches: JuniorMatchDto[];
+  arena?: StadiumData | null;
 }
 
 export interface SokkerSyncValidationIssue {
