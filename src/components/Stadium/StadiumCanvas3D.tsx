@@ -552,7 +552,7 @@ export function StadiumCanvas3D({
       const midY = cv.height / 2;
 
       ctx.strokeStyle = "#ffffff";
-      ctx.lineWidth = 8;
+      ctx.lineWidth = 2.2;
       ctx.fillStyle = "#ffffff";
 
       // Boundary touchlines & goal lines
@@ -570,7 +570,7 @@ export function StadiumCanvas3D({
       ctx.arc(midX, midY, centerR, 0, Math.PI * 2);
       ctx.stroke();
       ctx.beginPath();
-      ctx.arc(midX, midY, 6, 0, Math.PI * 2);
+      ctx.arc(midX, midY, 2.5, 0, Math.PI * 2);
       ctx.fill();
 
       // Penalty areas
@@ -586,7 +586,7 @@ export function StadiumCanvas3D({
       ctx.strokeRect(padX, goalY, goalDepth, goalWidth);
       const leftPenX = padX + (11 / pitchLength) * pw;
       ctx.beginPath();
-      ctx.arc(leftPenX, midY, 6, 0, Math.PI * 2);
+      ctx.arc(leftPenX, midY, 2.5, 0, Math.PI * 2);
       ctx.fill();
       ctx.beginPath();
       ctx.arc(leftPenX, midY, centerR, -0.92, 0.92);
@@ -597,7 +597,7 @@ export function StadiumCanvas3D({
       ctx.strokeRect(padX + pw - goalDepth, goalY, goalDepth, goalWidth);
       const rightPenX = padX + pw - (11 / pitchLength) * pw;
       ctx.beginPath();
-      ctx.arc(rightPenX, midY, 6, 0, Math.PI * 2);
+      ctx.arc(rightPenX, midY, 2.5, 0, Math.PI * 2);
       ctx.fill();
       ctx.beginPath();
       ctx.arc(rightPenX, midY, centerR, Math.PI - 0.92, Math.PI + 0.92);
