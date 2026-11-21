@@ -656,11 +656,11 @@ export function StadiumCanvas3D({
         roughness: 0.3
       });
 
-      // Rear support structure: Thinner and darker
+      // Rear support structure: Thinner and neutral dark gray
       const rearFrameMat = new THREE.MeshStandardMaterial({
-        color: "#334155",
-        metalness: 0.5,
-        roughness: 0.4
+        color: "#383838",
+        metalness: 0.3,
+        roughness: 0.5
       });
 
       const postRadius = 0.08;
