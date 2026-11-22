@@ -3,12 +3,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  fetchClubDashboard,
   fetchRealYouthAcademyPlanning,
   syncSokker
 } from "@/api";
 import type {
-  ClubDashboard,
   RealYouthAcademyPlanning
 } from "@/app/types";
 import { AppShell } from "@/components/AppShell";
@@ -16,28 +14,23 @@ import { YouthPerformances } from "@/components/Youth/YouthPerformances";
 import type { SokkerImportCredentials } from "@/components/SokkerImporterForm/types";
 import { pathForMainView } from "@/app/routing";
 import { useAuth } from "@/context/AuthContext";
+import { useClub } from "@/context/ClubContext";
 import { AuthScreen } from "@/components/Auth/AuthScreen";
 
 export default function YouthPerformancesPage() {
   const { user, loading: authLoading } = useAuth();
+  const { club, refreshClub } = useClub();
   const router = useRouter();
 
   const [isSokkerImportOpen, setIsSokkerImportOpen] = useState(false);
-  const [dashboard, setDashboard] = useState<ClubDashboard | null>(null);
   const [youthAcademy, setYouthAcademy] = useState<RealYouthAcademyPlanning | null>(null);
 
   const loadData = useCallback(async () => {
     try {
-      const [dash, youth] = await Promise.all([
-        fetchClubDashboard(),
-        fetchRealYouthAcademyPlanning()
-      ]);
-
-      setDashboard(dash);
+      const youth = await fetchRealYouthAcademyPlanning();
       setYouthAcademy(youth);
       return true;
     } catch {
-      setDashboard(null);
       setYouthAcademy(null);
       return false;
     }
@@ -45,7 +38,6 @@ export default function YouthPerformancesPage() {
 
   useEffect(() => {
     if (!user) {
-      setDashboard(null);
       setYouthAcademy(null);
       return;
     }
@@ -53,9 +45,7 @@ export default function YouthPerformancesPage() {
     void loadData();
   }, [user, loadData]);
 
-  const clubId =
-    dashboard?.club?.id ??
-    (dashboard?.club?.clubId ? String(dashboard.club.clubId) : null);
+  const clubId = club?.id ?? (club?.clubId ? String(club.clubId) : null);
 
   const handleSokkerImport = useCallback(
     async (credentials: SokkerImportCredentials) => {
@@ -71,13 +61,13 @@ export default function YouthPerformancesPage() {
       }
 
       if (body.importResult.clubId) {
-        await loadData();
+        await Promise.all([loadData(), refreshClub()]);
         setIsSokkerImportOpen(false);
       }
 
       return body;
     },
-    [user, loadData]
+    [user, loadData, refreshClub]
   );
 
   const handleViewChange = useCallback(

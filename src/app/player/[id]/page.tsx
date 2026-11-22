@@ -3,7 +3,6 @@
 import { use, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  fetchClubDashboard,
   fetchClubDiagnostic,
   fetchPlayerDevelopment,
   fetchSquadDepthAnalysis,
@@ -24,16 +23,18 @@ import { PlayerDetail } from "@/components/PlayerDetail";
 import type { SokkerImportCredentials } from "@/components/SokkerImporterForm/types";
 import { pathForMainView } from "@/app/routing";
 import { useAuth } from "@/context/AuthContext";
+import { useClub } from "@/context/ClubContext";
 import { AuthScreen } from "@/components/Auth/AuthScreen";
 
 export default function PlayerDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const { user, loading: authLoading } = useAuth();
+  const { club, refreshClub } = useClub();
   const router = useRouter();
 
   const [isSokkerImportOpen, setIsSokkerImportOpen] = useState(false);
-  const [currency, setCurrency] = useState<string | null>(null);
-  const [clubId, setClubId] = useState<string | null>(null);
+  const currency = club?.currency ?? null;
+  const clubId = club?.id ?? (club?.clubId ? String(club.clubId) : null);
   const [playerDevelopment, setPlayerDevelopment] = useState<PlayerDevelopment | null>(null);
   const [squadPlanning, setSquadPlanning] = useState<SquadPlanningBundle | null>(null);
   const [trainingStatus, setTrainingStatus] = useState<DashboardStatus>("idle");
@@ -43,8 +44,7 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
   const loadPlayerData = useCallback(async () => {
     setTrainingStatus("loading");
     try {
-      const [dash, dev, train, diag, assessment, depth, recommendations] = await Promise.all([
-        fetchClubDashboard(),
+      const [dev, train, diag, assessment, depth, recommendations] = await Promise.all([
         fetchPlayerDevelopment(),
         fetchTrainingPageData(),
         fetchClubDiagnostic(),
@@ -53,16 +53,12 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
         fetchSquadPlanningRecommendations()
       ]);
 
-      setClubId(dash.club?.id ?? (dash.club?.clubId ? String(dash.club.clubId) : null));
-      setCurrency(dash.club?.currency ?? null);
       setPlayerDevelopment(dev);
       setTraining(train);
       setTrainingDiagnostic(diag);
       setSquadPlanning({ assessment, depth, recommendations });
       setTrainingStatus("ready");
     } catch {
-      setClubId(null);
-      setCurrency(null);
       setPlayerDevelopment(null);
       setTraining(null);
       setTrainingDiagnostic(null);
@@ -73,8 +69,6 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
 
   useEffect(() => {
     if (!user) {
-      setClubId(null);
-      setCurrency(null);
       setPlayerDevelopment(null);
       setTraining(null);
       setTrainingDiagnostic(null);
@@ -108,13 +102,13 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
       }
 
       if (body.importResult.clubId) {
-        await loadPlayerData();
+        await Promise.all([loadPlayerData(), refreshClub()]);
         setIsSokkerImportOpen(false);
       }
 
       return body;
     },
-    [user, loadPlayerData]
+    [user, loadPlayerData, refreshClub]
   );
 
   const handleViewChange = useCallback(
