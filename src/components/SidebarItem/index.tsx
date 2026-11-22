@@ -5,6 +5,7 @@ export function SidebarItem({ badgeCount, item, isActive, onSelect }: SidebarIte
   return (
     <Link
       href={item.path}
+      prefetch={false}
       className={`atlas-sidebar-item${isActive ? " is-active" : ""}`}
       aria-current={isActive ? "page" : undefined}
       onClick={(event) => {

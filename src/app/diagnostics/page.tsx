@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  fetchClubDashboard,
   fetchClubDiagnostic,
   fetchPlayerDevelopment,
   fetchRealYouthAcademyPlanning,
@@ -48,8 +47,7 @@ export default function DiagnosticsPage() {
     setTrainingStatus("loading");
 
     try {
-      const [, youth, pipeline, train, diag, dev] = await Promise.all([
-        fetchClubDashboard(),
+      const [youth, pipeline, train, diag, dev] = await Promise.all([
         fetchRealYouthAcademyPlanning(),
         fetchYouthPipelinePlanning(),
         fetchTrainingPageData(),

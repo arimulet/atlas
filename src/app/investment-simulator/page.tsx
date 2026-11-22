@@ -3,14 +3,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  fetchClubDashboard,
   fetchSquadDepthAnalysis,
   fetchSquadPlanning,
   fetchSquadPlanningRecommendations,
   syncSokker
 } from "@/api";
 import type {
-  ClubDashboard,
   DashboardStatus,
   SquadPlanningBundle
 } from "@/app/types";
@@ -19,34 +17,32 @@ import { InvestmentSimulator } from "@/components/InvestmentSimulator";
 import type { SokkerImportCredentials } from "@/components/SokkerImporterForm/types";
 import { pathForMainView } from "@/app/routing";
 import { useAuth } from "@/context/AuthContext";
+import { useClub } from "@/context/ClubContext";
 import { AuthScreen } from "@/components/Auth/AuthScreen";
 import { useFinancialStrategy } from "@/app/features/financialStrategy/useFinancialStrategy";
 
 export default function InvestmentSimulatorPage() {
   const { user, loading: authLoading } = useAuth();
+  const { club, refreshClub } = useClub();
   const router = useRouter();
 
   const [isSokkerImportOpen, setIsSokkerImportOpen] = useState(false);
   const [status, setStatus] = useState<DashboardStatus>("idle");
-  const [dashboard, setDashboard] = useState<ClubDashboard | null>(null);
   const [squadPlanning, setSquadPlanning] = useState<SquadPlanningBundle | null>(null);
 
   const loadSimulatorData = useCallback(async () => {
     setStatus("loading");
     try {
-      const [dash, assessment, depth, recommendations] = await Promise.all([
-        fetchClubDashboard(),
+      const [assessment, depth, recommendations] = await Promise.all([
         fetchSquadPlanning(),
         fetchSquadDepthAnalysis(),
         fetchSquadPlanningRecommendations()
       ]);
 
-      setDashboard(dash);
       setSquadPlanning({ assessment, depth, recommendations });
       setStatus("ready");
       return true;
     } catch {
-      setDashboard(null);
       setSquadPlanning(null);
       setStatus("error");
       return false;
@@ -55,7 +51,6 @@ export default function InvestmentSimulatorPage() {
 
   useEffect(() => {
     if (!user) {
-      setDashboard(null);
       setSquadPlanning(null);
       setStatus("idle");
       return;
@@ -64,13 +59,12 @@ export default function InvestmentSimulatorPage() {
     void loadSimulatorData();
   }, [user, loadSimulatorData]);
 
-  const clubId =
-    dashboard?.club?.id ??
-    (dashboard?.club?.clubId ? String(dashboard.club.clubId) : null);
+  const clubId = club?.id ?? (club?.clubId ? String(club.clubId) : null);
+  const currency = club?.currency ?? null;
 
   const financialStrategy = useFinancialStrategy({
     clubId,
-    currency: dashboard?.club?.currency ?? null,
+    currency,
     squadPlanning
   });
 
@@ -88,16 +82,13 @@ export default function InvestmentSimulatorPage() {
       }
 
       if (body.importResult.clubId) {
-        const loaded = await loadSimulatorData();
-        if (!loaded) {
-          throw new Error("Data updated, but unable to reload simulator.");
-        }
+        await Promise.all([loadSimulatorData(), refreshClub()]);
         setIsSokkerImportOpen(false);
       }
 
       return body;
     },
-    [user, loadSimulatorData]
+    [user, loadSimulatorData, refreshClub]
   );
 
   const handleViewChange = useCallback(
@@ -143,7 +134,7 @@ export default function InvestmentSimulatorPage() {
             Financial Strategy is temporarily unavailable. Simulation will use default benchmarks.
           </p>
         ) : null}
-        <InvestmentSimulator financialStrategy={financialStrategy} currency={dashboard?.club?.currency ?? null} />
+        <InvestmentSimulator financialStrategy={financialStrategy} currency={currency} />
       </div>
     </AppShell>
   );

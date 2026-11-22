@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  fetchClubDashboard,
   fetchClubDiagnostic,
   fetchPlayerDevelopment,
   fetchSquadPlanning,
@@ -26,14 +25,16 @@ import { createPlayerTrainingProjectionSummaries } from "@/app/view-models/playe
 import type { SokkerImportCredentials } from "@/components/SokkerImporterForm/types";
 import { pathForMainView, pathForPlayerDetail } from "@/app/routing";
 import { useAuth } from "@/context/AuthContext";
+import { useClub } from "@/context/ClubContext";
 import { AuthScreen } from "@/components/Auth/AuthScreen";
 
 export default function SquadPage() {
   const { user, loading: authLoading } = useAuth();
+  const { club } = useClub();
   const router = useRouter();
 
   const [isSokkerImportOpen, setIsSokkerImportOpen] = useState(false);
-  const [currency, setCurrency] = useState<string | null>(null);
+  const currency = club?.currency ?? null;
   const [playerDevelopment, setPlayerDevelopment] = useState<PlayerDevelopment | null>(null);
   const [squadPlanningStatus, setSquadPlanningStatus] = useState<DashboardStatus>("idle");
   const [squadPlanning, setSquadPlanning] = useState<Pick<SquadPlanningBundle, "assessment"> | null>(null);
@@ -58,21 +59,20 @@ export default function SquadPage() {
   const loadSquadData = useCallback(async () => {
     setTrainingStatus("loading");
     void loadSquadPlanningData();
+    void fetchClubDiagnostic()
+      .then((diag) => setTrainingDiagnostic(diag))
+      .catch(() => setTrainingDiagnostic(null));
+
     try {
-      const [dash, dev, train, diag] = await Promise.all([
-        fetchClubDashboard(),
+      const [dev, train] = await Promise.all([
         fetchPlayerDevelopment(),
-        fetchTrainingPageData(),
-        fetchClubDiagnostic()
+        fetchTrainingPageData()
       ]);
 
-      setCurrency(dash.club?.currency ?? null);
       setPlayerDevelopment(dev);
       setTraining(train);
-      setTrainingDiagnostic(diag);
       setTrainingStatus("ready");
     } catch {
-      setCurrency(null);
       setPlayerDevelopment(null);
       setTraining(null);
       setTrainingDiagnostic(null);
@@ -82,7 +82,6 @@ export default function SquadPage() {
 
   useEffect(() => {
     if (!user) {
-      setCurrency(null);
       setPlayerDevelopment(null);
       setSquadPlanning(null);
       setSquadPlanningStatus("idle");
@@ -196,7 +195,7 @@ export default function SquadPage() {
       onSokkerImport={handleSokkerImport}
     >
       <Squad
-        clubId={playerDevelopment?.clubId ?? null}
+        clubId={club?.id ?? playerDevelopment?.clubId ?? null}
         currency={currency}
         development={playerDevelopment}
         onSelectPlayer={handleSelectPlayer}
