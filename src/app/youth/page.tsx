@@ -3,12 +3,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  fetchClubDashboard,
   fetchRealYouthAcademyPlanning,
   syncSokker
 } from "@/api";
 import type {
-  ClubDashboard,
   DashboardStatus,
   RealYouthAcademyPlanning
 } from "@/app/types";
@@ -17,31 +15,27 @@ import { Youth } from "@/components/Youth";
 import type { SokkerImportCredentials } from "@/components/SokkerImporterForm/types";
 import { pathForMainView } from "@/app/routing";
 import { useAuth } from "@/context/AuthContext";
+import { useClub } from "@/context/ClubContext";
 import { AuthScreen } from "@/components/Auth/AuthScreen";
 
 export default function YouthPage() {
   const { user, loading: authLoading } = useAuth();
+  const { club, refreshClub } = useClub();
   const router = useRouter();
 
   const [isSokkerImportOpen, setIsSokkerImportOpen] = useState(false);
-  const [dashboard, setDashboard] = useState<ClubDashboard | null>(null);
   const [youthStatus, setYouthStatus] = useState<DashboardStatus>("idle");
   const [youthAcademy, setYouthAcademy] = useState<RealYouthAcademyPlanning | null>(null);
 
   const loadYouthData = useCallback(async () => {
     setYouthStatus("loading");
     try {
-      const [dash, youth] = await Promise.all([
-        fetchClubDashboard(),
-        fetchRealYouthAcademyPlanning()
-      ]);
+      const youth = await fetchRealYouthAcademyPlanning();
 
-      setDashboard(dash);
       setYouthAcademy(youth);
       setYouthStatus("ready");
       return true;
     } catch {
-      setDashboard(null);
       setYouthAcademy(null);
       setYouthStatus("error");
       return false;
@@ -50,7 +44,6 @@ export default function YouthPage() {
 
   useEffect(() => {
     if (!user) {
-      setDashboard(null);
       setYouthAcademy(null);
       setYouthStatus("idle");
       return;
@@ -59,10 +52,8 @@ export default function YouthPage() {
     void loadYouthData();
   }, [user, loadYouthData]);
 
-  const clubId =
-    dashboard?.club?.id ??
-    (dashboard?.club?.clubId ? String(dashboard.club.clubId) : null);
-  const currency = dashboard?.club?.currency ?? null;
+  const clubId = club?.id ?? (club?.clubId ? String(club.clubId) : null);
+  const currency = club?.currency ?? null;
 
   const handleSokkerImport = useCallback(
     async (credentials: SokkerImportCredentials) => {
@@ -78,13 +69,13 @@ export default function YouthPage() {
       }
 
       if (body.importResult.clubId) {
-        await loadYouthData();
+        await Promise.all([loadYouthData(), refreshClub()]);
         setIsSokkerImportOpen(false);
       }
 
       return body;
     },
-    [user, loadYouthData]
+    [user, loadYouthData, refreshClub]
   );
 
   const handleViewChange = useCallback(
