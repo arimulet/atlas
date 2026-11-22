@@ -46,4 +46,21 @@ describe("ClubContext", () => {
     expect(html).toContain("no-club");
     expect(html).toContain("idle");
   });
+
+  it("provides hydrateClub in context", () => {
+    let contextValue: ReturnType<typeof useClub> | null = null;
+    function Inspector() {
+      contextValue = useClub();
+      return null;
+    }
+
+    renderToStaticMarkup(
+      <ClubProvider>
+        <Inspector />
+      </ClubProvider>
+    );
+
+    const captured = contextValue as ReturnType<typeof useClub> | null;
+    expect(typeof captured?.hydrateClub).toBe("function");
+  });
 });

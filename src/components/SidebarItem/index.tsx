@@ -1,27 +1,13 @@
-import Link from "next/link";
 import { SidebarItemProps } from "./types";
 
 export function SidebarItem({ badgeCount, item, isActive, onSelect }: SidebarItemProps) {
   return (
-    <Link
+    <a
       href={item.path}
-      prefetch={false}
       className={`atlas-sidebar-item${isActive ? " is-active" : ""}`}
       aria-current={isActive ? "page" : undefined}
-      onClick={(event) => {
-        if (
-          event.defaultPrevented ||
-          event.button !== 0 ||
-          event.metaKey ||
-          event.ctrlKey ||
-          event.shiftKey ||
-          event.altKey
-        ) {
-          return;
-        }
-
-        event.preventDefault();
-        onSelect(item.id);
+      onClick={() => {
+        onSelect?.(item.id);
       }}
     >
       <span className="atlas-sidebar-item__icon" aria-hidden="true">
@@ -33,6 +19,6 @@ export function SidebarItem({ badgeCount, item, isActive, onSelect }: SidebarIte
           {badgeCount}
         </span>
       ) : null}
-    </Link>
+    </a>
   );
 }

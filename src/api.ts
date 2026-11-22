@@ -80,26 +80,11 @@ function createResponseFromEntry(entry: ClientCacheEntry): Response {
   });
 }
 
-async function fetchAuthenticated(
-  input: RequestInfo | URL,
-  init: RequestInit = {}
-): Promise<Response> {
-  const method = (init.method || "GET").toUpperCase();
-  const isGet = method === "GET";
-  const cacheKey = typeof input === "string" ? input : input.toString();
-
-  // If this is a mutation (POST, PUT, DELETE, PATCH), invalidate cached GET responses in client context
-  if (!isGet) {
-    invalidateClientApiCache();
-  } else if (isClientContext) {
-    // Check in-memory cache for GET requests in client context
-    const cached = clientCache.get(cacheKey);
-    if (cached && Date.now() - cached.timestamp < CLIENT_CACHE_TTL_MS) {
-      return createResponseFromEntry(cached);
-    }
-  }
-
-  const headers = new Headers(init.headers);
+async function resolveAuthAndHeaders(
+  initHeaders: HeadersInit | undefined,
+  input: RequestInfo | URL
+): Promise<{ headers: Headers; url: RequestInfo | URL }> {
+  const headers = new Headers(initHeaders);
 
   if (!headers.has("Authorization")) {
     try {
@@ -145,35 +130,63 @@ async function fetchAuthenticated(
     }
   }
 
+  return { headers, url };
+}
+
+async function fetchAuthenticated(
+  input: RequestInfo | URL,
+  init: RequestInit = {}
+): Promise<Response> {
+  const method = (init.method || "GET").toUpperCase();
+  const isGet = method === "GET";
+  const cacheKey = typeof input === "string" ? input : input.toString();
+
+  // If this is a mutation (POST, PUT, DELETE, PATCH), invalidate cached GET responses in client context
+  if (!isGet) {
+    invalidateClientApiCache();
+  } else if (isClientContext) {
+    // 1. Check in-memory cache for recent responses
+    const cached = clientCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < CLIENT_CACHE_TTL_MS) {
+      return createResponseFromEntry(cached);
+    }
+
+    // 2. Synchronously check in-flight promise for concurrent duplicate requests
+    const existingInFlight = clientInFlight.get(cacheKey);
+    if (existingInFlight) {
+      const entry = await existingInFlight;
+      return createResponseFromEntry(entry);
+    }
+  }
+
   // Non-GET requests or server-side requests run directly without global memory caching
   if (!isGet || !isClientContext) {
+    const { headers, url } = await resolveAuthAndHeaders(init.headers, input);
     return fetch(url, { ...init, headers });
   }
 
-  // In-flight request deduplication for concurrent GET calls in browser
-  let inFlightPromise = clientInFlight.get(cacheKey);
-  if (!inFlightPromise) {
-    inFlightPromise = (async () => {
-      const response = await fetch(url, { ...init, headers });
-      const bodyText = await response.text();
-      const entry: ClientCacheEntry = {
-        bodyText,
-        status: response.status,
-        statusText: response.statusText,
-        headers: Array.from(response.headers.entries()),
-        timestamp: Date.now()
-      };
+  // GET in client context: register inFlight promise SYNCHRONOUSLY before any await
+  const inFlightPromise = (async () => {
+    const { headers, url } = await resolveAuthAndHeaders(init.headers, input);
+    const response = await fetch(url, { ...init, headers });
+    const bodyText = await response.text();
+    const entry: ClientCacheEntry = {
+      bodyText,
+      status: response.status,
+      statusText: response.statusText,
+      headers: Array.from(response.headers.entries()),
+      timestamp: Date.now()
+    };
 
-      if (response.ok) {
-        clientCache.set(cacheKey, entry);
-      }
-      return entry;
-    })().finally(() => {
-      clientInFlight.delete(cacheKey);
-    });
+    if (response.ok) {
+      clientCache.set(cacheKey, entry);
+    }
+    return entry;
+  })().finally(() => {
+    clientInFlight.delete(cacheKey);
+  });
 
-    clientInFlight.set(cacheKey, inFlightPromise);
-  }
+  clientInFlight.set(cacheKey, inFlightPromise);
 
   const entry = await inFlightPromise;
   return createResponseFromEntry(entry);

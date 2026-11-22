@@ -1,172 +1,19 @@
-"use client";
+import { getServerPageContext } from "@/lib/server-page";
+import { PlayerDetailClientView } from "./PlayerDetailClientView";
 
-import { use, useCallback, useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
-import {
-  fetchClubDiagnostic,
-  fetchPlayerDevelopment,
-  fetchSquadDepthAnalysis,
-  fetchSquadPlanning,
-  fetchSquadPlanningRecommendations,
-  fetchTrainingPageData,
-  syncSokker
-} from "@/api";
-import type {
-  DashboardStatus,
-  ImportResponse,
-  PlayerDevelopment,
-  SquadPlanningBundle,
-  TrainingPageData
-} from "@/app/types";
-import { AppShell } from "@/components/AppShell";
-import { PlayerDetail } from "@/components/PlayerDetail";
-import type { SokkerImportCredentials } from "@/components/SokkerImporterForm/types";
-import { pathForMainView } from "@/app/routing";
-import { useAuth } from "@/context/AuthContext";
-import { useClub } from "@/context/ClubContext";
-import { AuthScreen } from "@/components/Auth/AuthScreen";
-
-export default function PlayerDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
-  const { user, loading: authLoading } = useAuth();
-  const { club, refreshClub } = useClub();
-  const router = useRouter();
-
-  const [isSokkerImportOpen, setIsSokkerImportOpen] = useState(false);
-  const currency = club?.currency ?? null;
-  const clubId = club?.id ?? (club?.clubId ? String(club.clubId) : null);
-  const [playerDevelopment, setPlayerDevelopment] = useState<PlayerDevelopment | null>(null);
-  const [squadPlanning, setSquadPlanning] = useState<SquadPlanningBundle | null>(null);
-  const [trainingStatus, setTrainingStatus] = useState<DashboardStatus>("idle");
-  const [training, setTraining] = useState<TrainingPageData | null>(null);
-  const [trainingDiagnostic, setTrainingDiagnostic] = useState<ImportResponse["diagnostic"]>(null);
-
-  const loadPlayerData = useCallback(async () => {
-    setTrainingStatus("loading");
-    try {
-      const [dev, train, diag, assessment, depth, recommendations] = await Promise.all([
-        fetchPlayerDevelopment(),
-        fetchTrainingPageData(),
-        fetchClubDiagnostic(),
-        fetchSquadPlanning(),
-        fetchSquadDepthAnalysis(),
-        fetchSquadPlanningRecommendations()
-      ]);
-
-      setPlayerDevelopment(dev);
-      setTraining(train);
-      setTrainingDiagnostic(diag);
-      setSquadPlanning({ assessment, depth, recommendations });
-      setTrainingStatus("ready");
-    } catch {
-      setPlayerDevelopment(null);
-      setTraining(null);
-      setTrainingDiagnostic(null);
-      setSquadPlanning(null);
-      setTrainingStatus("error");
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!user) {
-      setPlayerDevelopment(null);
-      setTraining(null);
-      setTrainingDiagnostic(null);
-      setSquadPlanning(null);
-      setTrainingStatus("idle");
-      return;
-    }
-
-    void loadPlayerData();
-  }, [user, loadPlayerData]);
-
-  const diagnosticAlertCount = useMemo(
-    () =>
-      (trainingDiagnostic?.findings ?? []).filter(
-        (diagnostic) => diagnostic.severity === "high" || diagnostic.severity === "medium"
-      ).length,
-    [trainingDiagnostic]
-  );
-
-  const handleSokkerImport = useCallback(
-    async (credentials: SokkerImportCredentials) => {
-      const token = user ? await user.getIdToken() : undefined;
-      const { response, body } = await syncSokker(credentials, token);
-
-      if (!response.ok || body.importResult.status === "rejected") {
-        const message = body.importResult.errors
-          .map((error) => (error.path ? `${error.path}: ${error.message}` : error.message))
-          .join(" ");
-
-        throw new Error(message || "Failed to update data.");
-      }
-
-      if (body.importResult.clubId) {
-        await Promise.all([loadPlayerData(), refreshClub()]);
-        setIsSokkerImportOpen(false);
-      }
-
-      return body;
-    },
-    [user, loadPlayerData, refreshClub]
-  );
-
-  const handleViewChange = useCallback(
-    (view: Parameters<typeof pathForMainView>[0]) => {
-      router.push(pathForMainView(view));
-    },
-    [router]
-  );
-
-  const handleBack = useCallback(() => {
-    if (typeof window !== "undefined" && window.history.length > 1) {
-      router.back();
-    } else {
-      router.push(pathForMainView("squad"));
-    }
-  }, [router]);
-
-  const handleBackToSquad = useCallback(() => {
-    router.push(pathForMainView("squad"));
-  }, [router]);
-
-  if (authLoading) {
-    return (
-      <div className="atlas-auth-loading-screen">
-        <span className="atlas-auth-spinner" aria-hidden="true" />
-        <span>Loading ATLAS...</span>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return <AuthScreen />;
-  }
+export default async function PlayerDetailPage({
+  params
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const { serverUser, initialClub } = await getServerPageContext();
 
   return (
-    <AppShell
-      activeView={null}
-      diagnosticAlertCount={diagnosticAlertCount}
-      isSokkerImportOpen={isSokkerImportOpen}
-      navigationKey={`/player/${id}`}
-      onViewChange={handleViewChange}
-      onCloseSokkerImport={() => setIsSokkerImportOpen(false)}
-      onOpenSokkerImport={() => setIsSokkerImportOpen(true)}
-      onSokkerImport={handleSokkerImport}
-    >
-      <PlayerDetail
-        clubId={clubId}
-        currency={currency}
-        development={playerDevelopment}
-        onBack={handleBack}
-        onBackToSquad={handleBackToSquad}
-        playerId={id}
-        squadPlanning={squadPlanning}
-        training={training}
-        trainingDiagnostic={trainingDiagnostic}
-        trainingStatus={trainingStatus}
-        onTargetUpdated={loadPlayerData}
-      />
-    </AppShell>
+    <PlayerDetailClientView
+      id={id}
+      initialServerUser={serverUser}
+      initialClub={initialClub}
+    />
   );
 }
