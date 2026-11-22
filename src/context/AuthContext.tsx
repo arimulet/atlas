@@ -59,6 +59,12 @@ export function translateFirebaseError(code: string): string {
   }
 }
 
+let isServerSessionValidated = false;
+
+export function markSessionAsServerValidated(): void {
+  isServerSessionValidated = true;
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -74,6 +80,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
 
       if (currentUser) {
+        if (isServerSessionValidated) {
+          // SSR already validated and established the session cookie; skip redundant CSR fetch
+          return;
+        }
+
         void (async () => {
           try {
             const token = await currentUser.getIdToken();
@@ -114,6 +125,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
+    isServerSessionValidated = false;
     const firebaseAuth = getFirebaseAuth();
 
     try {
