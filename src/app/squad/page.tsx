@@ -7,6 +7,7 @@ import {
   fetchPlayerDevelopment,
   fetchSquadPlanning,
   fetchTrainingPageData,
+  fetchWeeklyTrainingIntelligence,
   resetSquadRoleAssignment,
   saveSquadRoleAssignment,
   syncSokker
@@ -17,7 +18,8 @@ import type {
   PlayerDevelopment,
   SquadPlanningBundle,
   SquadRole,
-  TrainingPageData
+  TrainingPageData,
+  WeeklyTrainingIntelligence
 } from "@/app/types";
 import { AppShell } from "@/components/AppShell";
 import { Squad } from "@/components/Squad";
@@ -41,6 +43,8 @@ export default function SquadPage() {
   const [trainingStatus, setTrainingStatus] = useState<DashboardStatus>("idle");
   const [training, setTraining] = useState<TrainingPageData | null>(null);
   const [trainingDiagnostic, setTrainingDiagnostic] = useState<ImportResponse["diagnostic"]>(null);
+  const [weeklyTrainingIntelligence, setWeeklyTrainingIntelligence] =
+    useState<WeeklyTrainingIntelligence | null>(null);
 
   const loadSquadPlanningData = useCallback(async (): Promise<boolean> => {
     setSquadPlanningStatus("loading");
@@ -62,6 +66,9 @@ export default function SquadPage() {
     void fetchClubDiagnostic()
       .then((diag) => setTrainingDiagnostic(diag))
       .catch(() => setTrainingDiagnostic(null));
+    void fetchWeeklyTrainingIntelligence()
+      .then((intel) => setWeeklyTrainingIntelligence(intel))
+      .catch(() => setWeeklyTrainingIntelligence(null));
 
     try {
       const [dev, train] = await Promise.all([
@@ -76,6 +83,7 @@ export default function SquadPage() {
       setPlayerDevelopment(null);
       setTraining(null);
       setTrainingDiagnostic(null);
+      setWeeklyTrainingIntelligence(null);
       setTrainingStatus("error");
     }
   }, [loadSquadPlanningData]);
@@ -87,6 +95,7 @@ export default function SquadPage() {
       setSquadPlanningStatus("idle");
       setTraining(null);
       setTrainingDiagnostic(null);
+      setWeeklyTrainingIntelligence(null);
       setTrainingStatus("idle");
       return;
     }
@@ -206,6 +215,7 @@ export default function SquadPage() {
         training={training}
         trainingDiagnostic={trainingDiagnostic}
         trainingStatus={trainingStatus}
+        weeklyTrainingIntelligence={weeklyTrainingIntelligence}
       />
     </AppShell>
   );

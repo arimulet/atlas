@@ -3,7 +3,8 @@ import type {
   PlayerDevelopment,
   SquadPlanningBundle,
   SquadRole,
-  TrainingPageData
+  TrainingPageData,
+  WeeklyTrainingIntelligence
 } from "@atlas/web/app/types";
 import type { TrainingDiagnostic } from "@/app/view-models/training-view-model";
 import type { PlayerTrainingProjectionSummary } from "@/app/view-models/player-detail-view-model";
@@ -21,6 +22,7 @@ export interface SquadProps {
   trainingDiagnostic: TrainingDiagnostic | null;
   trainingStatus: DashboardStatus;
   currency: string | null;
+  weeklyTrainingIntelligence?: WeeklyTrainingIntelligence | null;
 }
 
 export interface SquadTableProps {
