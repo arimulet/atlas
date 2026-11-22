@@ -26,7 +26,8 @@ export function Squad({
   squadPlanningStatus,
   training,
   trainingDiagnostic,
-  trainingStatus
+  trainingStatus,
+  weeklyTrainingIntelligence: externalIntelligence
 }: SquadProps) {
   if (training?.players) {
     registerPlayerCountries(training.players);
@@ -35,18 +36,20 @@ export function Squad({
     registerPlayerCountries(squadPlanning.assessment.depthPlayers);
   }
   const [isRecentProgressOpen, setIsRecentProgressOpen] = useState(false);
-  const weeklyTrainingIntelligence = useWeeklyTrainingIntelligence(
-    clubId ?? development?.clubId ?? null
+  const hookIntelligence = useWeeklyTrainingIntelligence(
+    externalIntelligence !== undefined ? null : (clubId ?? development?.clubId ?? null)
   );
+  const activeIntelligence = externalIntelligence !== undefined ? externalIntelligence : hookIntelligence.data;
+
   const recommendations = useMemo(
     () =>
       new Map(
-        (weeklyTrainingIntelligence.data?.recommendations ?? []).map((recommendation) => [
+        (activeIntelligence?.recommendations ?? []).map((recommendation) => [
           String(recommendation.playerId),
           recommendationLabel(recommendation)
         ])
       ),
-    [weeklyTrainingIntelligence.data?.recommendations]
+    [activeIntelligence?.recommendations]
   );
 
   const marketSummary = createSquadMarketValueSummary(
