@@ -1,5 +1,5 @@
 import { formatTrainingPriority } from "../formatters";
-import { isProcessedTrainingReport } from "../training-history";
+import { isProcessedTrainingReport, recordedTrainingSkillChanges } from "../training-history";
 import {
   calculateRequiredTrainingPoints,
   calculateWeeklyTrainingPointsByKind,
@@ -182,6 +182,7 @@ export function createPlayerDetailViewModel(
   const observedPlayer = input.development?.observed.players.find((candidate) =>
     identifiersMatch(candidate.snapshotPlayerId, player.id)
   );
+  const lastProcessedReport = latestProcessedPlayerReport(input.training, player);
   const trainedSkill = trainedSkillForPosition(
     input.training?.configuration ?? null,
     player.training.position
@@ -248,7 +249,7 @@ export function createPlayerDetailViewModel(
         value,
         levelLabel: skillLevelLabel(value),
         isImportant: importantSkills.includes(definition.key),
-        lastWeekChange: lastWeekSkillChange(player.latestReport, definition.key)
+        lastWeekChange: lastWeekSkillChange(lastProcessedReport, definition.key)
       };
     }),
     training: {
@@ -456,18 +457,34 @@ function importantSkillsForPlayer(
   return positionCode === null ? [] : IMPORTANT_SKILLS_BY_TRAINING_POSITION[positionCode];
 }
 
+function latestProcessedPlayerReport(
+  training: TrainingPageData | null,
+  player: TrainingPageData["players"][number]
+): TrainingPageData["players"][number]["latestReport"] {
+  const reports = (training?.history ?? []).filter(
+    (report) => identifiersMatch(report.playerId, player.playerId) && isProcessedTrainingReport(report)
+  );
+  if (player.latestReport && isProcessedTrainingReport(player.latestReport)) {
+    reports.push(player.latestReport);
+  }
+  return reports.reduce<TrainingPageData["players"][number]["latestReport"]>(
+    (latest, report) => !latest || report.gameWeek >= latest.gameWeek ? report : latest,
+    null
+  );
+}
+
 function lastWeekSkillChange(
   report: TrainingPageData["players"][number]["latestReport"],
   skill: SkillKey
 ): PlayerDetailViewModel["skills"][number]["lastWeekChange"] {
-  const change = report?.skillChanges?.find(
+  const change = recordedTrainingSkillChanges(report).find(
     (candidate) => trainingSkillForReport(candidate.skill) === toTrainingCostSkill(skill)
   );
 
   return change === undefined
     ? null
     : {
-        direction: change.direction,
+        direction: change.delta > 0 ? "up" : "down",
         levelDelta: Math.abs(change.delta)
       };
 }
