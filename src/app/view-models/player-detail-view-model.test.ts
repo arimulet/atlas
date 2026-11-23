@@ -8,6 +8,55 @@ import type {
 import { createPlayerDetailViewModel } from "./player-detail-view-model";
 
 describe("createPlayerDetailViewModel", () => {
+  it("shows changes from the latest processed report when the current week is pending", () => {
+    const processed = {
+      playerId: 42, gameWeek: 1200, seasonWeek: 8, date: "2026-08-14",
+      type: "passing", kind: "advanced" as const, intensity: 100, age: 20,
+      skills: { passing: 11, defending: 7 }, skillsChange: { passing: 1, defending: -1 }
+    };
+    const pending = {
+      ...processed, gameWeek: 1201, seasonWeek: 9, kind: "missing" as const,
+      intensity: 0, skillsChange: {}
+    };
+    const training: TrainingPageData = {
+      snapshotId: "snapshot-1", snapshotDate: "2026-08-21",
+      configuration: { GK: 2, DEF: 6, MID: 3, ATT: 7 },
+      players: [{ id: "42", playerId: 42, name: "Player One", age: 20,
+        training: { position: 2, advanced: true }, latestReport: pending }],
+      history: [pending, processed]
+    };
+
+    const result = createPlayerDetailViewModel({
+      playerId: "42", training, development: null, trainingDiagnostic: null, trainingStatus: "ready"
+    });
+
+    expect(result?.skills.find((skill) => skill.key === "passing")?.lastWeekChange)
+      .toEqual({ direction: "up", levelDelta: 1 });
+    expect(result?.skills.find((skill) => skill.key === "defender")?.lastWeekChange)
+      .toEqual({ direction: "down", levelDelta: 1 });
+  });
+
+  it("does not display an older improvement when the latest processed report has no change", () => {
+    const old = {
+      playerId: 42, gameWeek: 1200, seasonWeek: 8, date: "2026-08-14",
+      type: "passing", kind: "advanced" as const, intensity: 100, age: 20,
+      skills: { passing: 11 }, skillsChange: { passing: 1 }
+    };
+    const latest = { ...old, gameWeek: 1201, seasonWeek: 9, skillsChange: {} };
+    const training: TrainingPageData = {
+      snapshotId: "snapshot-1", snapshotDate: "2026-08-21",
+      configuration: { GK: 2, DEF: 6, MID: 3, ATT: 7 },
+      players: [{ id: "42", playerId: 42, name: "Player One", age: 20,
+        training: { position: 2, advanced: true }, latestReport: latest }],
+      history: [old, latest]
+    };
+
+    const result = createPlayerDetailViewModel({
+      playerId: "42", training, development: null, trainingDiagnostic: null, trainingStatus: "ready"
+    });
+
+    expect(result?.skills.find((skill) => skill.key === "passing")?.lastWeekChange).toBeNull();
+  });
   it("uses the configured training skill for the projection current state", () => {
     const training: TrainingPageData = {
       snapshotId: "snapshot-1",
