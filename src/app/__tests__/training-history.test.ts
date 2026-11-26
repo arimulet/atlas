@@ -32,6 +32,20 @@ describe("latestCompletedTrainingReports", () => {
     expect(result.map((report) => report.playerId)).toEqual([1, 2]);
   });
 
+  it("does not use an unprocessed week with only zero-intensity reports as completed", () => {
+    const history = [
+      { playerId: 1, gameWeek: 1218, date: "2026-11-19", kind: "advanced", intensity: 100 },
+      { playerId: 2, gameWeek: 1218, date: "2026-11-19", kind: "formation", intensity: 99 },
+      { playerId: 1, gameWeek: 1219, date: "2026-11-26", kind: "formation", intensity: 0 },
+      { playerId: 2, gameWeek: 1219, date: "2026-11-26", kind: "formation", intensity: 0 }
+    ] as TrainingReport[];
+
+    // Even if today is the date of week 1219, it has not processed yet (all zero intensity)
+    const result = latestCompletedTrainingReports(history, new Date("2026-11-26T12:00:00Z"));
+
+    expect(result.map((report) => report.gameWeek)).toEqual([1218, 1218]);
+  });
+
   it("does not use a future or undated report as the latest completed week", () => {
     const history = [
       { gameWeek: 1218, date: "2026-11-19" },
