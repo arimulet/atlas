@@ -1375,8 +1375,12 @@
 .atlas .atlas-training-details th,
 .atlas .atlas-training-details td,
 .atlas .atlas-training-details th:first-child,
-.atlas .atlas-training-details tbody th {
+.atlas .atlas-training-details tbody th,
+.atlas .atlas-training-table .atlas-training-details th,
+.atlas .atlas-training-table .atlas-training-details td {
+  height: auto;
   min-width: 0;
+  vertical-align: top;
 }
 
 .atlas .atlas-training-details__table-wrap {
