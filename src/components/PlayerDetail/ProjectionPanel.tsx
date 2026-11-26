@@ -34,7 +34,7 @@ export function ProjectionPanel({ projection, talent, training }: ProjectionPane
           <dl className="atlas-player-detail__data-list">
             <DataRow
               label={projection.current.skill ?? "Skill"}
-              value={formatNumber(projection.horizon.projectedLevel)}
+              value={formatSkillLevel(projection.horizon.projectedLevel)}
               title={skillLevelLabel(projection.horizon.projectedLevel) ?? undefined}
             />
           </dl>
@@ -105,7 +105,7 @@ function formatSkillLevel(level: number | null): string {
   const levelLabel = skillLevelLabel(level);
   const formattedLevel = formatNumber(level);
 
-  return levelLabel ? `${formattedLevel} (${levelLabel})` : formattedLevel;
+  return levelLabel ? `${levelLabel} [${formattedLevel}]` : formattedLevel;
 }
 
 function formatProgress(value: number | null): string {

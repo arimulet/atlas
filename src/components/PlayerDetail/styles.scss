@@ -207,16 +207,20 @@
 .atlas
   .atlas-player-detail__skills-grid
   > div:not(.is-important)
+  .atlas-player-detail__skill-name,
+.atlas
+  .atlas-player-detail__skills-grid
+  > div:not(.is-important)
   .atlas-player-detail__skill-level {
   font-weight: 400;
 }
 
 .atlas .atlas-player-detail__skills-grid > div.is-important .atlas-player-detail__skill-value,
+.atlas .atlas-player-detail__skills-grid > div.is-important .atlas-player-detail__skill-name,
 .atlas .atlas-player-detail__skills-grid > div.is-important .atlas-player-detail__skill-level {
   font-weight: 700;
 }
 
-.atlas .atlas-player-detail__skills-grid dd,
 .atlas .atlas-player-detail__data-list dd {
   align-items: center;
   color: var(--atlas-text);
@@ -227,30 +231,61 @@
   margin: 0;
 }
 
+.atlas .atlas-player-detail__skills-grid dd {
+  align-items: center;
+  color: var(--atlas-text);
+  display: flex;
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  justify-content: flex-end;
+  margin: 0;
+  padding-right: 28px;
+  position: relative;
+  text-align: right;
+}
+
 .atlas .atlas-player-detail__skill-value {
   align-items: center;
   display: inline-flex;
   gap: 4px;
+  justify-content: flex-end;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.atlas .atlas-player-detail__skill-name {
+  color: var(--atlas-text);
 }
 
 .atlas .atlas-player-detail__skill-level {
   color: var(--atlas-text-secondary);
+  font-variant-numeric: tabular-nums;
   font-weight: 500;
 }
 
 .atlas .atlas-player-detail__skill-value.is-up,
+.atlas .atlas-player-detail__skill-value.is-up .atlas-player-detail__skill-name,
 .atlas .atlas-player-detail__skill-value.is-up .atlas-player-detail__skill-level {
   color: var(--semantic-success-text);
 }
 
 .atlas .atlas-player-detail__skill-value.is-down,
+.atlas .atlas-player-detail__skill-value.is-down .atlas-player-detail__skill-name,
 .atlas .atlas-player-detail__skill-value.is-down .atlas-player-detail__skill-level {
   color: var(--semantic-error-text);
 }
 
 .atlas .atlas-player-detail__skill-change {
+  align-items: center;
+  display: inline-flex;
   font-size: 0.72rem;
   font-weight: 750;
+  justify-content: flex-end;
+  position: absolute;
+  right: 0;
+  text-align: right;
+  white-space: nowrap;
 }
 
 .atlas .atlas-player-detail__skill-change.is-up {
@@ -702,6 +737,80 @@
 
 .atlas .atlas-market-value__chart .recharts-tooltip-item {
   color: var(--atlas-text-secondary);
+}
+
+.atlas .atlas-market-value__chart-tooltip {
+  background: var(--atlas-surface);
+  border: 1px solid var(--atlas-border);
+  border-radius: var(--atlas-radius-sm);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  padding: 8px 10px;
+}
+
+.atlas .atlas-market-value__chart-tooltip-header {
+  color: var(--atlas-text);
+  font-size: 0.76rem;
+  font-weight: 600;
+  margin-bottom: 3px;
+}
+
+.atlas .atlas-market-value__chart-tooltip-value {
+  color: var(--atlas-text-secondary);
+  font-size: 0.74rem;
+}
+
+.atlas .atlas-market-value__chart-tooltip-value strong {
+  color: var(--atlas-text);
+  font-size: 0.82rem;
+}
+
+.atlas .atlas-market-value__chart-tooltip-range {
+  color: var(--atlas-text-muted);
+  display: flex;
+  flex-direction: column;
+  font-size: 0.68rem;
+  line-height: 1.35;
+  margin-top: 2px;
+}
+
+.atlas .atlas-market-value__chart-tooltip-skills {
+  border-top: 1px solid color-mix(in srgb, var(--atlas-border) 72%, transparent);
+  display: grid;
+  gap: 0 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 6px;
+  padding-top: 5px;
+}
+
+.atlas .atlas-market-value__chart-tooltip-skills-col {
+  display: grid;
+  gap: 1px;
+}
+
+.atlas .atlas-market-value__chart-tooltip-skill-row {
+  align-items: baseline;
+  display: flex;
+  font-size: 0.66rem;
+  gap: 6px;
+  justify-content: space-between;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.atlas .atlas-market-value__chart-tooltip-skill-name {
+  color: var(--atlas-text-muted);
+}
+
+.atlas .atlas-market-value__chart-tooltip-skill-val {
+  color: var(--atlas-text-secondary);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.atlas .atlas-market-value__chart-tooltip-skill-row.is-trained .atlas-market-value__chart-tooltip-skill-name,
+.atlas .atlas-market-value__chart-tooltip-skill-row.is-trained .atlas-market-value__chart-tooltip-skill-val {
+  color: var(--atlas-accent);
+  font-weight: 700;
 }
 
 .atlas .atlas-market-value__projection-list {

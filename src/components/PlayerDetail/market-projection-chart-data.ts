@@ -1,3 +1,4 @@
+import { normalizeSeasonWeek } from "@atlas/domain";
 import type {
   ConfidenceViewModel,
   MarketValueAmount,
@@ -20,6 +21,7 @@ interface MarketProjectionChartCurrentValue {
 
 interface CreateMarketProjectionChartDataInput {
   currentMarketValue: MarketProjectionChartCurrentValue | null | undefined;
+  currentSkills?: Record<string, number> | null;
   formatSkill: (skill: DevelopmentPlanPathRow["skill"]) => string;
   path: readonly DevelopmentPlanPathRow[];
   points: readonly MarketProjectionChartPoint[];
@@ -37,15 +39,27 @@ export interface MarketProjectionChartDatum {
   timelineLabel: string;
   confidence: string;
   basedOnFundamentalOnly: boolean;
+  projectedSkills: Record<string, number> | null;
+  trainedSkill: DevelopmentPlanPathRow["skill"] | null;
 }
 
 export function createMarketProjectionChartData({
   currentMarketValue,
+  currentSkills,
   formatSkill,
   path,
   points
 }: CreateMarketProjectionChartDataInput): MarketProjectionChartDatum[] {
   const pathByStep = new Map(path.map((step) => [step.order, step]));
+  const firstStep = path[0];
+  const currentGameWeek =
+    firstStep?.estimatedGameWeek !== null &&
+    firstStep?.estimatedGameWeek !== undefined &&
+    firstStep?.cumulativeWeeks !== null &&
+    firstStep?.cumulativeWeeks !== undefined
+      ? Math.round(firstStep.estimatedGameWeek - firstStep.cumulativeWeeks)
+      : null;
+  const step0Skills = resolveCurrentSkills(currentSkills, firstStep);
   const currentDatum = currentMarketValue
     ? {
         label: "Step 0 · Current",
@@ -56,9 +70,11 @@ export function createMarketProjectionChartData({
         minimumValueLabel: currentMarketValue.range?.low.label ?? null,
         maximumValue: currentMarketValue.range?.high.value ?? null,
         maximumValueLabel: currentMarketValue.range?.high.label ?? null,
-        timelineLabel: projectionTimelineLabel(points[0]?.age ?? "—", 0),
+        timelineLabel: projectionTimelineLabel(points[0]?.age ?? "—", currentGameWeek),
         confidence: currentMarketValue.confidence.label,
-        basedOnFundamentalOnly: currentMarketValue.basedOnFundamentalOnly ?? false
+        basedOnFundamentalOnly: currentMarketValue.basedOnFundamentalOnly ?? false,
+        projectedSkills: step0Skills,
+        trainedSkill: null
       }
     : null;
 
@@ -77,19 +93,42 @@ export function createMarketProjectionChartData({
       minimumValueLabel: point.range?.low.label ?? null,
       maximumValue: point.range?.high.value ?? null,
       maximumValueLabel: point.range?.high.label ?? null,
-      timelineLabel: projectionTimelineLabel(point.age, point.weeks),
+      timelineLabel: projectionTimelineLabel(point.age, trainingStep?.estimatedGameWeek ?? null),
       confidence: point.confidence.label,
-      basedOnFundamentalOnly: point.basedOnFundamentalOnly ?? false
+      basedOnFundamentalOnly: point.basedOnFundamentalOnly ?? false,
+      projectedSkills: trainingStep?.projectedSkills ?? null,
+      trainedSkill: trainingStep?.skill ?? null
     };
   });
 
   return currentDatum ? [currentDatum, ...projectedData] : projectedData;
 }
 
-function projectionTimelineLabel(age: string, weeks: number | null): string {
+function resolveCurrentSkills(
+  currentSkills: Record<string, number> | null | undefined,
+  firstStep: DevelopmentPlanPathRow | undefined
+): Record<string, number> | null {
+  if (currentSkills && Object.keys(currentSkills).length > 0) {
+    return currentSkills;
+  }
+
+  if (!firstStep?.projectedSkills) {
+    return null;
+  }
+
+  const derived = { ...firstStep.projectedSkills };
+  derived[firstStep.skill] = firstStep.fromLevel;
+  for (const residual of firstStep.residualChanges ?? []) {
+    derived[residual.skill] = residual.fromLevel;
+  }
+
+  return derived;
+}
+
+function projectionTimelineLabel(age: string, gameWeek: number | null): string {
   const displayedAge = age === "—" ? "Age unavailable" : `Age ${age.replace(/^~/, "")}`;
 
-  if (weeks === null) return displayedAge;
+  if (gameWeek === null) return displayedAge;
 
-  return `${displayedAge} · ${weeks.toLocaleString("en-US", { maximumFractionDigits: 1 })} weeks`;
+  return `${displayedAge} · W${normalizeSeasonWeek(gameWeek)}`;
 }
