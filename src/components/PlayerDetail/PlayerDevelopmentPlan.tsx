@@ -26,7 +26,7 @@ import {
   YAxis
 } from "recharts";
 import { normalizeSeasonWeek, type PlayerDevelopmentTargetOverride } from "@atlas/domain";
-import { formatEta } from "@/app/formatters";
+import { formatEta, formatSeasonDuration } from "@/app/formatters";
 import { formatSokkerSkill, skillLevelLabel } from "@/app/view-models/skill-level-label";
 import {
   type DevelopmentPlanPathRow,
@@ -901,10 +901,15 @@ function DevelopmentImpactDashboard({
         >
           <Clock size={14} /> {plan.completion.isPartial ? "Time to Plan End" : "Time to Target"}
         </span>
-        <strong style={{ fontSize: "1.1rem" }}>
-          {plan.completion.estimatedWeeks !== null
-            ? formatEta(plan.completion.estimatedWeeks, { unit: "long" })
-            : "Unknown"}
+        <strong
+          style={{ fontSize: "1.1rem" }}
+          title={
+            plan.completion.estimatedWeeks !== null
+              ? formatEta(plan.completion.estimatedWeeks, { unit: "long" })
+              : undefined
+          }
+        >
+          {formatSeasonDuration(plan.completion.estimatedWeeks)}
         </strong>
         {plan.completion.estimatedAge !== null && (
           <small style={{ color: "var(--atlas-text-muted)" }}>
