@@ -861,6 +861,22 @@
       background-color: transparent;
       border-color: transparent; // No border for completely empty slots
     }
+
+    &.is-improved {
+      border: 2px solid #00e5ff;
+      box-shadow: 0 0 8px rgba(0, 229, 255, 0.7), inset 0 0 4px rgba(0, 229, 255, 0.4);
+      position: relative;
+      animation: atlas-glow-pulse 2s infinite ease-in-out;
+    }
+  }
+}
+
+@keyframes atlas-glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 6px rgba(0, 229, 255, 0.6), inset 0 0 3px rgba(0, 229, 255, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 12px rgba(0, 229, 255, 0.95), inset 0 0 6px rgba(0, 229, 255, 0.5);
   }
 }
 .atlas-youth-observations-input { width: 100%; min-width: 60px; box-sizing: border-box; border: 1px solid transparent; background: transparent; padding: 4px; border-radius: 4px; color: var(--atlas-text); font-size: 0.8rem; outline: none; } .atlas-youth-observations-input:hover, .atlas-youth-observations-input:focus { border-color: var(--atlas-border); background: rgba(0,0,0,0.1); }

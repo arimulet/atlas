@@ -83,10 +83,21 @@ export async function getYouthPerformances(
 
     const matches = await juniorMatchesRepo.findByClubId(clubNumericId);
     
+    // Sort matches by dateExpected ascending to ensure chronological order
+    const sortedMatches = [...matches].sort((a, b) => {
+      const timeA = new Date(a.dateExpected).getTime();
+      const timeB = new Date(b.dateExpected).getTime();
+      return timeA - timeB;
+    });
+
+    const lastMatch = sortedMatches.at(-1) ?? null;
+
     const players: Record<string, YouthPlayerMatchPerformanceDto> = {};
 
-    for (const match of matches) {
+    for (const match of sortedMatches) {
       if (!match.playerStats) continue;
+      const isLatestMatch = lastMatch !== null && match.matchId === lastMatch.matchId;
+
       for (const stats of match.playerStats) {
         if (stats.rating === 0) continue; // Ignore players that played but got 0 rating
 
@@ -107,19 +118,35 @@ export async function getYouthPerformances(
         
         if (pos === 0) {
           if (stats.minutesPlayed > 0) {
-            p.gk.push({ rating: stats.rating, minutes: stats.minutesPlayed });
+            p.gk.push({
+              rating: stats.rating,
+              minutes: stats.minutesPlayed,
+              isImproved: isLatestMatch
+            });
           }
         } else if (pos === 1) {
           if (isBetterPerformance(p.def, stats.rating, stats.minutesPlayed)) {
-            p.def = { rating: stats.rating, minutes: stats.minutesPlayed };
+            p.def = {
+              rating: stats.rating,
+              minutes: stats.minutesPlayed,
+              isImproved: isLatestMatch
+            };
           }
         } else if (pos === 2) {
           if (isBetterPerformance(p.mid, stats.rating, stats.minutesPlayed)) {
-            p.mid = { rating: stats.rating, minutes: stats.minutesPlayed };
+            p.mid = {
+              rating: stats.rating,
+              minutes: stats.minutesPlayed,
+              isImproved: isLatestMatch
+            };
           }
         } else if (pos === 3) {
           if (isBetterPerformance(p.att, stats.rating, stats.minutesPlayed)) {
-            p.att = { rating: stats.rating, minutes: stats.minutesPlayed };
+            p.att = {
+              rating: stats.rating,
+              minutes: stats.minutesPlayed,
+              isImproved: isLatestMatch
+            };
           }
         }
       }
