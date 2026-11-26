@@ -123,11 +123,17 @@ interface DevelopmentPlanSectionProps {
 
 function DevelopmentPlanSection({ clubId, player, training, marketValue, onTargetUpdated }: DevelopmentPlanSectionProps) {
   const developmentPlan = usePlayerDevelopmentPlan({ clubId, player, training, onTargetUpdated });
+  const currentSkills = Object.fromEntries(
+    player.skills
+      .filter((skill): skill is typeof skill & { value: number } => skill.value !== null)
+      .map((skill) => [skill.key, skill.value])
+  );
 
   return (
     <PlayerDevelopmentPlan
       plan={developmentPlan.plan}
       marketValue={marketValue}
+      currentSkills={currentSkills}
       isLoading={developmentPlan.isLoading}
       isSaving={developmentPlan.isSaving}
       error={developmentPlan.error}
@@ -233,12 +239,18 @@ function SkillsPanel({ skills }: SkillsPanelProps) {
                     ? `atlas-player-detail__skill-value is-${skill.lastWeekChange.direction}`
                     : "atlas-player-detail__skill-value"
                 }
-                title={skill.levelLabel ?? undefined}
+                title={
+                  skill.levelLabel && skill.value !== null
+                    ? `${skill.levelLabel} [${formatNumber(skill.value)}]`
+                    : skill.levelLabel ?? undefined
+                }
               >
-                <span>{formatNumber(skill.value)}</span>
                 {skill.levelLabel ? (
-                  <span className="atlas-player-detail__skill-level">({skill.levelLabel})</span>
+                  <span className="atlas-player-detail__skill-name">{skill.levelLabel}</span>
                 ) : null}
+                <span className="atlas-player-detail__skill-level">
+                  {skill.value !== null ? `[${formatNumber(skill.value)}]` : "—"}
+                </span>
               </span>
               {skill.lastWeekChange ? (
                 <span

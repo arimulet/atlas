@@ -259,7 +259,7 @@ export function DevelopmentResults({
                     <tr>
                       <th scope="col">Age / season week</th>
                       <th scope="col">Skill</th>
-                      <th scope="col">Level</th>
+                      <th scope="col">General</th>
                       <th scope="col">Projected skills</th>
                     </tr>
                   </thead>
@@ -277,17 +277,19 @@ export function DevelopmentResults({
                             {step.age ?? "—"} y/o · {calendarLabel ?? "season week unavailable"}
                           </td>
                           <th scope="row">
-                            {step.skill}
-                            {step.residualChanges.length > 0 && (
-                              <div className="atlas-finances-panel__note">
-                                General:{" "}
+                            {step.skill} =&gt; {step.level}
+                          </th>
+                          <td>
+                            {step.residualChanges.length > 0 ? (
+                              <span className="atlas-finances-panel__note">
                                 {step.residualChanges
                                   .map((change) => `${change.skill} ${change.level}`)
                                   .join(", ")}
-                              </div>
+                              </span>
+                            ) : (
+                              "—"
                             )}
-                          </th>
-                          <td>{step.level}</td>
+                          </td>
                           <td>
                             <ProjectedSkillsTooltip
                               skills={skillSnapshots[index] ?? {}}
