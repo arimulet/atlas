@@ -1,6 +1,6 @@
 import type { DiagnosticFinding, TrainingPageData, TrainingPagePlayer, TrainingReport } from "@atlas/web/app/types";
 import type { PlayerTrainingProjectionSummary } from "./player-detail-view-model";
-import { latestCompletedTrainingReports, recordedTrainingSkillChanges } from "../training-history";
+import { isProcessedTrainingReport, latestCompletedTrainingReports, recordedTrainingSkillChanges } from "../training-history";
 
 export type TrainingStatusLabel = "Critical" | "Attention" | "Training prospect" | "Info";
 
@@ -50,6 +50,18 @@ export function createTrainingPlayerRows(
   return players.map((player) => {
     const playerId = String(player.playerId);
     const projectionSummary = projectionSummaries?.get(playerId);
+    const completedReport = latestCompletedByPlayer.get(playerId);
+    const effectiveReport =
+      player.latestReport && isProcessedTrainingReport(player.latestReport)
+        ? player.latestReport
+        : completedReport ?? player.latestReport;
+
+    const trainingKind =
+      player.training?.advanced !== undefined
+        ? player.training.advanced
+          ? "advanced"
+          : "formation"
+        : effectiveReport?.kind ?? null;
 
     return {
       playerId,
@@ -58,10 +70,10 @@ export function createTrainingPlayerRows(
       age: player.age,
       value: player.value ?? null,
       valueChange: player.valueChange ?? null,
-      trainingType: player.latestReport?.type ?? null,
-      trainingKind: player.latestReport?.kind ?? null,
-      intensity: player.latestReport?.intensity ?? null,
-      skillChanges: recordedTrainingSkillChanges(latestCompletedByPlayer.get(playerId)),
+      trainingType: effectiveReport?.type ?? null,
+      trainingKind,
+      intensity: effectiveReport?.intensity ?? null,
+      skillChanges: recordedTrainingSkillChanges(completedReport),
       progress: projectionSummary?.progress ?? null,
       talent: projectionSummary?.talent ?? null,
       nextSkillUp: projectionSummary?.nextSkillUp ?? null,

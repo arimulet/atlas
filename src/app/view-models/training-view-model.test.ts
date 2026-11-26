@@ -83,6 +83,94 @@ describe("createTrainingPlayerRows", () => {
     });
   });
 
+  it("uses player.training.advanced for trainingKind and skips unprocessed latestReport", () => {
+    const players = [
+      {
+        id: "player-1",
+        playerId: 42,
+        name: "Player One",
+        age: 20,
+        training: { position: 1, advanced: true },
+        latestReport: {
+          playerId: 42,
+          gameWeek: 1201,
+          seasonWeek: 3,
+          date: "2026-01-08",
+          type: "general",
+          kind: "formation" as const,
+          intensity: 0,
+          age: 20,
+          skills: { pace: 12 },
+          skillsChange: { pace: 0, up: 0, down: 0 },
+          skillChanges: []
+        }
+      },
+      {
+        id: "player-2",
+        playerId: 43,
+        name: "Player Two",
+        age: 22,
+        training: { position: 1, advanced: false },
+        latestReport: {
+          playerId: 43,
+          gameWeek: 1201,
+          seasonWeek: 3,
+          date: "2026-01-08",
+          type: "general",
+          kind: "formation" as const,
+          intensity: 0,
+          age: 22,
+          skills: { pace: 10 },
+          skillsChange: { pace: 0, up: 0, down: 0 },
+          skillChanges: []
+        }
+      }
+    ];
+
+    const history = [
+      {
+        playerId: 42,
+        gameWeek: 1200,
+        seasonWeek: 2,
+        date: "2026-01-01",
+        type: "pace",
+        kind: "advanced" as const,
+        intensity: 100,
+        age: 20,
+        skills: { pace: 12 },
+        skillsChange: { pace: 1, up: 1, down: 0 },
+        skillChanges: [{ skill: "pace", before: 11, after: 12, delta: 1, direction: "up" as const }]
+      },
+      {
+        playerId: 43,
+        gameWeek: 1200,
+        seasonWeek: 2,
+        date: "2026-01-01",
+        type: "pace",
+        kind: "formation" as const,
+        intensity: 99,
+        age: 22,
+        skills: { pace: 10 },
+        skillsChange: { pace: 0, up: 0, down: 0 },
+        skillChanges: []
+      },
+      players[0]!.latestReport,
+      players[1]!.latestReport
+    ];
+
+    const rows = createTrainingPlayerRows(players, null, undefined, history);
+
+    expect(rows[0]?.trainingKind).toBe("advanced");
+    expect(rows[0]?.trainingType).toBe("pace");
+    expect(rows[0]?.intensity).toBe(100);
+    expect(rows[0]?.skillChanges).toEqual([{ skill: "pace", delta: 1 }]);
+
+    expect(rows[1]?.trainingKind).toBe("formation");
+    expect(rows[1]?.trainingType).toBe("pace");
+    expect(rows[1]?.intensity).toBe(99);
+    expect(rows[1]?.skillChanges).toEqual([]);
+  });
+
   it("labels a training-potential finding as a positive training prospect", () => {
     const player = {
       id: "player-1",
