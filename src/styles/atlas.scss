@@ -437,6 +437,12 @@
     }
   }
 
+  .atlas-training-details th,
+  .atlas-training-details td {
+    height: auto;
+    vertical-align: top;
+  }
+
   :is(.atlas-training-table__numeric, .atlas-squad-table__numeric) {
     font-variant-numeric: tabular-nums;
     text-align: right !important;

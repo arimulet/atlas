@@ -10,15 +10,22 @@ export function latestCompletedTrainingReports(
   history: readonly TrainingReport[],
   asOf: Date = new Date()
 ): TrainingReport[] {
-  const completed = history.filter((report) => {
+  const eligibleReports = history.filter((report) => {
     const date = Date.parse(report.date);
     return Number.isFinite(date) && date <= asOf.getTime();
   });
-  const latestWeek = completed.reduce<number | null>(
-    (latest, report) => Math.max(latest ?? report.gameWeek, report.gameWeek),
+  const processedWeeks = new Set(
+    eligibleReports.filter(isProcessedTrainingReport).map((report) => report.gameWeek)
+  );
+  const targetWeeks = processedWeeks.size > 0 ? processedWeeks : null;
+  const latestWeek = eligibleReports.reduce<number | null>(
+    (latest, report) =>
+      !targetWeeks || targetWeeks.has(report.gameWeek)
+        ? Math.max(latest ?? report.gameWeek, report.gameWeek)
+        : latest,
     null
   );
-  return latestWeek === null ? [] : completed.filter((report) => report.gameWeek === latestWeek);
+  return latestWeek === null ? [] : eligibleReports.filter((report) => report.gameWeek === latestWeek);
 }
 
 export function recordedTrainingSkillChanges(
