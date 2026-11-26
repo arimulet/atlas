@@ -73,6 +73,35 @@ export function formatWeeks(
 
 export const formatEta = formatWeeks;
 
+const SOKKER_SEASON_WEEKS = 13;
+
+export function formatSeasonDuration(
+  value: number | null | undefined,
+  fallback = "Unknown"
+): string {
+  if (value === null || value === undefined || !Number.isFinite(value)) {
+    return fallback;
+  }
+
+  if (value < 1) {
+    return "less than 1 week";
+  }
+
+  const totalWeeks = Math.round(value);
+  const seasons = Math.floor(totalWeeks / SOKKER_SEASON_WEEKS);
+  const weeks = totalWeeks % SOKKER_SEASON_WEEKS;
+
+  const parts: string[] = [];
+  if (seasons > 0) {
+    parts.push(`${seasons} ${seasons === 1 ? "season" : "seasons"}`);
+  }
+  if (weeks > 0) {
+    parts.push(`${weeks} ${weeks === 1 ? "week" : "weeks"}`);
+  }
+
+  return `~${parts.join(" ")}`;
+}
+
 export function formatSignedWeeks(value: number | null | undefined): string {
   if (value === null || value === undefined) {
     return "—";

@@ -9,6 +9,7 @@ import {
   formatMoney,
   formatNumber,
   formatPercentage,
+  formatSeasonDuration,
   formatSignedWeeks,
   formatTalent,
   formatTrainingPriority,
@@ -86,6 +87,29 @@ describe("formatters", () => {
     it("formats ~Nw for standard values", () => {
       expect(formatWeeks(2.45)).toBe("~2.5w");
       expect(formatEta(5)).toBe("~5w");
+    });
+  });
+
+  describe("formatSeasonDuration", () => {
+    it("returns fallback for null or undefined", () => {
+      expect(formatSeasonDuration(null)).toBe("Unknown");
+      expect(formatSeasonDuration(undefined, "—")).toBe("—");
+    });
+
+    it("formats less than 1 week", () => {
+      expect(formatSeasonDuration(0.5)).toBe("less than 1 week");
+    });
+
+    it("formats weeks within a single season (13 weeks per season)", () => {
+      expect(formatSeasonDuration(1)).toBe("~1 week");
+      expect(formatSeasonDuration(8)).toBe("~8 weeks");
+    });
+
+    it("formats exact seasons and seasons plus remaining weeks", () => {
+      expect(formatSeasonDuration(13)).toBe("~1 season");
+      expect(formatSeasonDuration(26)).toBe("~2 seasons");
+      expect(formatSeasonDuration(14)).toBe("~1 season 1 week");
+      expect(formatSeasonDuration(31)).toBe("~2 seasons 5 weeks");
     });
   });
 
