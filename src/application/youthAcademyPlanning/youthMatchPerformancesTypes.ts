@@ -1,6 +1,7 @@
 export interface YouthPlayerMatchRating {
   rating: number;
   minutes: number;
+  isImproved?: boolean;
 }
 
 export interface YouthMatchPerformancesDto {

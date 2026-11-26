@@ -109,11 +109,17 @@ export function YouthPerformances({ clubId, youthAcademy }: YouthPerformancesPro
 
   const gkCols = Array.from({ length: 32 }, (_, i) => i + 1);
 
-  const formatPoints = (ratingObj: { rating: number, minutes: number } | null | undefined, isGk = false) => {
+  const formatPoints = (
+    ratingObj: { rating: number; minutes: number; isImproved?: boolean } | null | undefined,
+    isGk = false
+  ) => {
     if (!ratingObj || ratingObj.rating === 0) return { text: "", className: isGk ? "empty-slot" : "no-data" };
     const text = String(ratingObj.rating);
-    const className = ratingObj.minutes < 60 ? "half-match" : "full-match";
-    return { text, className };
+    const durationClass = ratingObj.minutes < 60 ? "half-match" : "full-match";
+    const improvedClass = ratingObj.isImproved ? " is-improved" : "";
+    const className = durationClass + improvedClass;
+    const title = ratingObj.isImproved ? "Improved performance in the latest match" : undefined;
+    return { text, className, title };
   };
 
   const getSkillColorClass = (skill: number | null) => {
@@ -182,7 +188,13 @@ export function YouthPerformances({ clubId, youthAcademy }: YouthPerformancesPro
                           const pts = formatPoints(match, true);
                           return (
                             <td key={i} className="performance-cell-wrapper" style={{ padding: "2px" }}>
-                              <div className={"performance-cell " + pts.className} style={{ minWidth: 0, padding: "2px" }}>{pts.text}</div>
+                              <div
+                                className={"performance-cell " + pts.className}
+                                style={{ minWidth: 0, padding: "2px" }}
+                                title={pts.title}
+                              >
+                                {pts.text}
+                              </div>
                             </td>
                           );
                         })}
@@ -242,13 +254,13 @@ export function YouthPerformances({ clubId, youthAcademy }: YouthPerformancesPro
                         <PositionBadge position={pos} />
                       </td>
                       <td className="performance-cell-wrapper">
-                        <div className={"performance-cell " + def.className}>{def.text}</div>
+                        <div className={"performance-cell " + def.className} title={def.title}>{def.text}</div>
                       </td>
                       <td className="performance-cell-wrapper">
-                        <div className={"performance-cell " + mid.className}>{mid.text}</div>
+                        <div className={"performance-cell " + mid.className} title={mid.title}>{mid.text}</div>
                       </td>
                       <td className="performance-cell-wrapper">
-                        <div className={"performance-cell " + att.className}>{att.text}</div>
+                        <div className={"performance-cell " + att.className} title={att.title}>{att.text}</div>
                       </td>
                       <td
                         className={getSkillColorClass(p.player.skill)}
