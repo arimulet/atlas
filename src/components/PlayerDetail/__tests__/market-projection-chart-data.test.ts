@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
+import { renderToStaticMarkup } from "react-dom/server";
 import type { DevelopmentPlanPathRow } from "../development-plan-view-model";
 import { createMarketProjectionChartData } from "../market-projection-chart-data";
+import { MarketProjectionChartTooltip } from "../PlayerDevelopmentPlan";
 
 const path: DevelopmentPlanPathRow[] = [
   {
@@ -76,6 +78,59 @@ describe("createMarketProjectionChartData", () => {
         tooltipLabel: "Step 1 · Defending 10 → 11"
       })
     ]);
+  });
+
+  it("includes projected Sokker skills for Step 0 and projected steps in the chart tooltip", () => {
+    const stepWithSkills: DevelopmentPlanPathRow = {
+      ...path[0]!,
+      projectedSkills: {
+        stamina: 6,
+        keeper: 0,
+        pace: 8,
+        defender: 11,
+        technique: 7,
+        playmaker: 5,
+        passing: 6,
+        striker: 4
+      }
+    };
+
+    const data = createMarketProjectionChartData({
+      currentMarketValue: {
+        expected: { value: 2_000_000, label: "$2,000,000" },
+        range: null,
+        confidence: { level: "high", label: "High confidence" }
+      },
+      formatSkill,
+      path: [stepWithSkills],
+      points: [
+        {
+          step: 1,
+          label: "Step 1",
+          value: { value: 2_500_000, label: "$2,500,000" },
+          range: null,
+          weeks: 4,
+          age: "~18.1",
+          confidence: { level: "high", label: "High confidence" },
+          basedOnFundamentalOnly: false
+        }
+      ]
+    });
+
+    expect(data[0]?.projectedSkills?.defender).toBe(10);
+    expect(data[1]?.projectedSkills?.defender).toBe(11);
+    expect(data[0]?.timelineLabel).toBe("Age 18.1 · W4");
+    expect(data[1]?.timelineLabel).toBe("Age 18.1 · W8");
+
+    const tooltipHtml = renderToStaticMarkup(
+      MarketProjectionChartTooltip({ active: true, payload: [{ payload: data[1] }] })
+    );
+
+    expect(tooltipHtml).toContain("stamina");
+    expect(tooltipHtml).toContain("adequate [6]");
+    expect(tooltipHtml).toContain("defender");
+    expect(tooltipHtml).toContain("formidable [11]");
+    expect(tooltipHtml).toContain("is-trained");
   });
 
   it("leaves the range lines empty when a projected step has no range", () => {

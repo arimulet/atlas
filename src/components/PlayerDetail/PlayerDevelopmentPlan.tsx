@@ -27,14 +27,17 @@ import {
 } from "recharts";
 import { normalizeSeasonWeek, type PlayerDevelopmentTargetOverride } from "@atlas/domain";
 import { formatEta } from "@/app/formatters";
-import { skillLevelLabel } from "@/app/view-models/skill-level-label";
+import { formatSokkerSkill, skillLevelLabel } from "@/app/view-models/skill-level-label";
 import {
   type DevelopmentPlanPathRow,
   type DevelopmentPlanTargetRow,
   type DevelopmentPlanViewModel
 } from "./development-plan-view-model";
 import { EditDevelopmentTargetModal } from "./EditDevelopmentTargetModal";
-import { createMarketProjectionChartData } from "./market-projection-chart-data";
+import {
+  createMarketProjectionChartData,
+  type MarketProjectionChartDatum
+} from "./market-projection-chart-data";
 import { ProjectedSkillsTooltip } from "@/components/InvestmentSimulator/ProjectedSkillsTooltip";
 import {
   hasHiddenDevelopmentPathSteps,
@@ -46,6 +49,7 @@ interface PlayerDevelopmentPlanProps {
   plan: DevelopmentPlanViewModel | null;
   marketValue:
     import("@/app/view-models/market-value-view-model").PlayerMarketValueViewModel | null;
+  currentSkills?: Record<string, number> | null;
   isLoading: boolean;
   isSaving: boolean;
   error: Error | null;
@@ -56,6 +60,7 @@ interface PlayerDevelopmentPlanProps {
 export function PlayerDevelopmentPlan({
   plan,
   marketValue,
+  currentSkills,
   isLoading,
   isSaving,
   error,
@@ -149,6 +154,7 @@ export function PlayerDevelopmentPlan({
           points={marketValue.projection.points}
           path={plan.path}
           currentMarketValue={marketValue.current}
+          currentSkills={currentSkills}
         />
       )}
       <TrainingAlignment plan={plan} />
@@ -959,20 +965,94 @@ function DevelopmentImpactDashboard({
   );
 }
 
+const SOKKER_TOOLTIP_SKILL_COLUMNS = [
+  ["stamina", "pace", "technique", "passing"],
+  ["keeper", "defender", "playmaker", "striker"]
+] as const;
+
+export function MarketProjectionChartTooltip({
+  active,
+  payload
+}: {
+  active?: boolean;
+  payload?: Array<{ payload?: MarketProjectionChartDatum }>;
+}) {
+  const data = payload?.[0]?.payload;
+  if (!active || !data) return null;
+
+  const headerLabel = data.timelineLabel
+    ? `${data.tooltipLabel} · ${data.timelineLabel}`
+    : data.tooltipLabel;
+  const valueLabel = data.basedOnFundamentalOnly ? `${data.valueLabel} 🧮` : data.valueLabel;
+  const nameLabel = data.basedOnFundamentalOnly
+    ? "Estimated value (Fundamental model)"
+    : "Estimated value";
+
+  return (
+    <div className="atlas-market-value__chart-tooltip">
+      <div className="atlas-market-value__chart-tooltip-header">{headerLabel}</div>
+      <div className="atlas-market-value__chart-tooltip-value">
+        <span>{nameLabel} : </span>
+        <strong>{valueLabel}</strong>
+      </div>
+      {data.minimumValueLabel || data.maximumValueLabel ? (
+        <div className="atlas-market-value__chart-tooltip-range">
+          {data.minimumValueLabel ? (
+            <span>Minimum transfer value: {data.minimumValueLabel}</span>
+          ) : null}
+          {data.maximumValueLabel ? (
+            <span>Maximum transfer value: {data.maximumValueLabel}</span>
+          ) : null}
+        </div>
+      ) : null}
+      {data.projectedSkills ? (
+        <div className="atlas-market-value__chart-tooltip-skills">
+          {SOKKER_TOOLTIP_SKILL_COLUMNS.map((column) => (
+            <div className="atlas-market-value__chart-tooltip-skills-col" key={column[0]}>
+              {column.map((skillKey) => {
+                const level = data.projectedSkills?.[skillKey];
+                const isTrained = data.trainedSkill === skillKey;
+                return (
+                  <div
+                    className={`atlas-market-value__chart-tooltip-skill-row${
+                      isTrained ? " is-trained" : ""
+                    }`}
+                    key={skillKey}
+                  >
+                    <span className="atlas-market-value__chart-tooltip-skill-name">
+                      {skillKey}
+                    </span>
+                    <span className="atlas-market-value__chart-tooltip-skill-val">
+                      {formatSokkerSkill(level)}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function MarketProjectionChart({
   points,
   path,
-  currentMarketValue
+  currentMarketValue,
+  currentSkills
 }: {
   points: import("@/app/view-models/market-value-view-model").ProjectionPointViewModel[];
   path: DevelopmentPlanPathRow[];
   currentMarketValue?: import("@/app/view-models/market-value-view-model").PlayerMarketValueViewModel["current"] | null;
+  currentSkills?: Record<string, number> | null;
 }) {
   if (points.length === 0) return null;
 
   const currencySymbol = marketCurrencySymbol(points);
   const data = createMarketProjectionChartData({
     currentMarketValue,
+    currentSkills,
     formatSkill: skillLabel,
     path,
     points
@@ -1009,57 +1089,7 @@ function MarketProjectionChart({
               width={58}
               stroke="var(--atlas-text-muted)"
             />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: "var(--atlas-surface)",
-                border: "1px solid var(--atlas-border)",
-                borderRadius: "var(--atlas-radius-sm)"
-              }}
-              formatter={(_value, _name, item) => {
-                const isFundamental = Boolean(item?.payload?.basedOnFundamentalOnly);
-                const valueLabel = isFundamental
-                  ? `${item.payload.valueLabel} 🧮`
-                  : item.payload.valueLabel;
-                const nameLabel = isFundamental
-                  ? "Estimated value (Fundamental model)"
-                  : "Estimated value";
-                const minimumValueLabel = item.payload.minimumValueLabel;
-                const maximumValueLabel = item.payload.maximumValueLabel;
-
-                return [
-                  <span key="market-value-summary">
-                    <strong style={{ color: "var(--atlas-text)", fontSize: "0.85rem" }}>
-                      {valueLabel}
-                    </strong>
-                    {minimumValueLabel ? (
-                      <>
-                        <br />
-                        <span style={{ color: "var(--atlas-text-muted)", fontSize: "0.72rem" }}>
-                          Minimum transfer value: {minimumValueLabel}
-                        </span>
-                      </>
-                    ) : null}
-                    {maximumValueLabel ? (
-                      <>
-                        <br />
-                        <span style={{ color: "var(--atlas-text-muted)", fontSize: "0.72rem" }}>
-                          Maximum transfer value: {maximumValueLabel}
-                        </span>
-                      </>
-                    ) : null}
-                  </span>,
-                  nameLabel
-                ];
-              }}
-              labelFormatter={(_label, payload) => {
-                const data = payload?.[0]?.payload;
-                if (data?.timelineLabel) {
-                  return `${data.tooltipLabel} · ${data.timelineLabel}`;
-                }
-                return data?.tooltipLabel ?? "";
-              }}
-              labelStyle={{ color: "var(--atlas-text)", fontWeight: 500, marginBottom: 4 }}
-            />
+            <Tooltip content={<MarketProjectionChartTooltip />} />
             <Line
               type="monotone"
               dataKey="minimumValue"
