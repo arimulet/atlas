@@ -5,6 +5,7 @@ export const MARKET_CALIBRATION_CONFIG: MarketCalibrationConfig = {
   minimumSimilarity: 0.75,
   requireMatchingProfile: true,
   maxAgeDifference: 0,
+  maxSeasonWeekDifference: 4,
   maxPrimarySkillDifference: 2,
   recencyHalfLifeDays: 180,
   minimumSamplesForMediumConfidence: 3,

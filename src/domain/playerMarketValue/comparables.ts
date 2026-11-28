@@ -14,6 +14,7 @@ import type {
   Formation
 } from "../playerDevelopment/index.js";
 import type { SkillKey, SkillSet } from "../types.js";
+import { WEEKS_PER_SOKKER_SEASON, normalizeSeasonWeek } from "../sokker/calendar.js";
 import { MARKET_CALIBRATION_CONFIG } from "./calibration-constants.js";
 import type {
   ComparableDifference,
@@ -43,13 +44,9 @@ export function calculatePlayerMarketSimilarity(
 ): number {
   const targetPlayer = readPlayer(target);
   const targetAge = typeof targetPlayer.age === "number" ? Math.floor(targetPlayer.age) : targetPlayer.age;
-  const maxAgeDiff = config.maxAgeDifference ?? 0;
-  if (
-    typeof targetAge === "number" &&
-    isValidAge(targetAge) &&
-    isValidAge(comparable.age) &&
-    Math.abs(targetAge - comparable.age) > maxAgeDiff
-  ) {
+  const targetSeasonWeek = resolveTargetSeasonWeek(targetPlayer);
+  const comparableSeasonWeek = resolveTransferSeasonWeek(comparable);
+  if (!isWithinAgeAndSeasonWeekWindow(targetAge, targetSeasonWeek, comparable.age, comparableSeasonWeek, config)) {
     return 0;
   }
 
@@ -107,6 +104,7 @@ export function findMarketComparables(
   const config = resolveCalibrationConfig(options);
   const targetPlayer = readPlayer(target);
   const targetAge = typeof targetPlayer.age === "number" ? Math.floor(targetPlayer.age) : targetPlayer.age;
+  const targetSeasonWeek = resolveTargetSeasonWeek(targetPlayer);
   const targetProfile = resolveProfile(targetPlayer, readContextProfile(target));
   const asOfDate =
     options.asOfDate ?? options.beforeDateExclusive ?? latestTransferDate(transfers) ?? new Date(0);
@@ -127,12 +125,15 @@ export function findMarketComparables(
       ) {
         return false;
       }
-      const maxAgeDiff = options.maxAgeDifference ?? config.maxAgeDifference ?? 0;
+      const comparableSeasonWeek = resolveTransferSeasonWeek(transfer);
       if (
-        typeof targetAge === "number" &&
-        isValidAge(targetAge) &&
-        isValidAge(transfer.age) &&
-        Math.abs(transfer.age - targetAge) > maxAgeDiff
+        !isWithinAgeAndSeasonWeekWindow(
+          targetAge,
+          targetSeasonWeek,
+          transfer.age,
+          comparableSeasonWeek,
+          config
+        )
       ) {
         return false;
       }
@@ -619,6 +620,9 @@ function resolveCalibrationConfig(options: FindMarketComparablesOptions): Market
     ...(options.maxAgeDifference === undefined
       ? {}
       : { maxAgeDifference: options.maxAgeDifference }),
+    ...(options.maxSeasonWeekDifference === undefined
+      ? {}
+      : { maxSeasonWeekDifference: options.maxSeasonWeekDifference }),
     ...(options.maxPrimarySkillDifference === undefined
       ? {}
       : { maxPrimarySkillDifference: options.maxPrimarySkillDifference }),
@@ -703,6 +707,59 @@ function readSkill(skills: SkillSet, skill: SkillKey): number | null {
 
 function isValidAge(age: number): boolean {
   return Number.isFinite(age) && age >= VALID_MINIMUM_AGE && age <= VALID_MAXIMUM_AGE;
+}
+
+function resolveTargetSeasonWeek(player: PlayerMarketValuePlayerInput): number | null {
+  if (
+    typeof player.seasonWeek === "number" &&
+    Number.isInteger(player.seasonWeek) &&
+    player.seasonWeek >= 1 &&
+    player.seasonWeek <= WEEKS_PER_SOKKER_SEASON
+  ) {
+    return player.seasonWeek;
+  }
+  return safeNormalizeSeasonWeek(player.gameWeek);
+}
+
+function resolveTransferSeasonWeek(transfer: PlayerTransferRecord): number | null {
+  return safeNormalizeSeasonWeek(transfer.gameWeek);
+}
+
+function safeNormalizeSeasonWeek(gameWeek: number | null | undefined): number | null {
+  if (typeof gameWeek !== "number" || !Number.isInteger(gameWeek)) return null;
+  try {
+    return normalizeSeasonWeek(gameWeek);
+  } catch {
+    return null;
+  }
+}
+
+function isWithinAgeAndSeasonWeekWindow(
+  targetAge: number | null | undefined,
+  targetSeasonWeek: number | null,
+  comparableAge: number,
+  comparableSeasonWeek: number | null,
+  config: MarketCalibrationConfig
+): boolean {
+  if (typeof targetAge !== "number" || !isValidAge(targetAge) || !isValidAge(comparableAge)) {
+    return true;
+  }
+  const maxAgeDiff = config.maxAgeDifference ?? 0;
+  const maxWeekDiff = config.maxSeasonWeekDifference;
+  if (
+    targetSeasonWeek !== null &&
+    comparableSeasonWeek !== null &&
+    typeof maxWeekDiff === "number" &&
+    Number.isFinite(maxWeekDiff) &&
+    maxWeekDiff >= 0
+  ) {
+    const targetTotalWeeks = Math.floor(targetAge) * WEEKS_PER_SOKKER_SEASON + targetSeasonWeek;
+    const comparableTotalWeeks =
+      Math.floor(comparableAge) * WEEKS_PER_SOKKER_SEASON + comparableSeasonWeek;
+    const effectiveMaxWeekDiff = maxAgeDiff * WEEKS_PER_SOKKER_SEASON + maxWeekDiff;
+    return Math.abs(comparableTotalWeeks - targetTotalWeeks) <= effectiveMaxWeekDiff;
+  }
+  return Math.abs(Math.floor(targetAge) - Math.floor(comparableAge)) <= maxAgeDiff;
 }
 
 function isUsableTransferDate(date: Date): boolean {

@@ -80,6 +80,7 @@ export interface FindMarketComparablesOptions {
    */
   requireMatchingProfile?: boolean;
   maxAgeDifference?: number;
+  maxSeasonWeekDifference?: number | null;
   minimumTransferPrice?: number;
   baseCurrency?: string | null;
   currencyNormalizer?: MarketCurrencyNormalizer;
@@ -114,6 +115,7 @@ export interface MarketCalibrationConfig {
   minimumSimilarity: number;
   requireMatchingProfile: boolean;
   maxAgeDifference: number;
+  maxSeasonWeekDifference?: number | null;
   maxPrimarySkillDifference?: number;
   recencyHalfLifeDays: number;
   minimumSamplesForMediumConfidence: number;

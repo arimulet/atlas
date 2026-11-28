@@ -637,5 +637,47 @@ describe("Player Market comparable calibration", () => {
     expect(estimate.comparables.some((item) => item.transfer.transferId === "valid-0")).toBe(true);
     expect(estimate.outliers).toEqual([]);
   });
+
+  it("matches comparables within +/-4 season weeks including season boundaries with adjusted age", () => {
+    const asOfDate = new Date("2026-04-01T00:00:00.000Z");
+    // Season 61 base is 976 -> season 61 week 12 is 976 + 11 = 987
+    const targetPlayer = player({ age: 18, gameWeek: 987 });
+    const transfers = [
+      transfer({ transferId: "same-season-in", age: 18, gameWeek: 983, transferDate: asOfDate, salePrice: 900_000 }), // week 8 (-4)
+      transfer({ transferId: "same-season-out", age: 18, gameWeek: 982, transferDate: asOfDate, salePrice: 900_000 }), // week 7 (-5)
+      transfer({ transferId: "next-season-in", age: 19, gameWeek: 991, transferDate: asOfDate, salePrice: 950_000 }), // next season week 3 (+4)
+      transfer({ transferId: "next-season-out", age: 19, gameWeek: 992, transferDate: asOfDate, salePrice: 950_000 }), // next season week 4 (+5)
+      transfer({ transferId: "same-age-wrong-week", age: 18, gameWeek: 978, transferDate: asOfDate, salePrice: 950_000 }) // week 3 (-9)
+    ];
+
+    const comparables = findMarketComparables(targetPlayer, transfers, { asOfDate });
+    const ids = comparables.map((item) => item.transfer.transferId);
+
+    expect(ids).toContain("same-season-in");
+    expect(ids).toContain("next-season-in");
+    expect(ids).not.toContain("same-season-out");
+    expect(ids).not.toContain("next-season-out");
+    expect(ids).not.toContain("same-age-wrong-week");
+  });
+
+  it("matches comparables crossing into the previous season with age - 1", () => {
+    const asOfDate = new Date("2026-04-01T00:00:00.000Z");
+    // Season 62 week 2 = 976 + 13 + 1 = 990
+    const targetPlayer = player({ age: 18, gameWeek: 990 });
+    const transfers = [
+      transfer({ transferId: "prev-season-in", age: 17, gameWeek: 986, transferDate: asOfDate, salePrice: 850_000 }), // season 61 week 11 (-4)
+      transfer({ transferId: "prev-season-out", age: 17, gameWeek: 985, transferDate: asOfDate, salePrice: 850_000 }), // season 61 week 10 (-5)
+      transfer({ transferId: "same-season-in", age: 18, gameWeek: 994, transferDate: asOfDate, salePrice: 880_000 }), // season 62 week 6 (+4)
+      transfer({ transferId: "same-season-out", age: 18, gameWeek: 995, transferDate: asOfDate, salePrice: 880_000 }) // season 62 week 7 (+5)
+    ];
+
+    const comparables = findMarketComparables(targetPlayer, transfers, { asOfDate });
+    const ids = comparables.map((item) => item.transfer.transferId);
+
+    expect(ids).toContain("prev-season-in");
+    expect(ids).toContain("same-season-in");
+    expect(ids).not.toContain("prev-season-out");
+    expect(ids).not.toContain("same-season-out");
+  });
 });
 

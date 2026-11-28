@@ -260,6 +260,7 @@ export function simulatePlayerAcquisition(
           player: {
             playerId: input.playerId ?? 0,
             age: normalizedAge ?? 20,
+            gameWeek: context.currentGameWeek ?? null,
             skills: normalizedSkills as SkillSet,
             position: (normalizedPosition as "GK" | "DEF" | "MID" | "ATT") ?? undefined
           },
@@ -454,11 +455,12 @@ export function simulatePlayerAcquisition(
       const mockPlayerInput = {
         playerId: input.playerId ?? 999999,
         age: normalizedAge!,
+        gameWeek: context.currentGameWeek ?? null,
         skills: normalizedSkills as SkillSet,
         wage: resolvedWage
       };
 
-      let currentVal = estimateSafeMarketValue(mockPlayerInput);
+      let currentVal = estimateSafeMarketValue(mockPlayerInput, context.marketTransfers, originalProfile);
       if (currentVal === null || currentVal <= 0) {
         currentVal = resolvedAmount > 0 ? resolvedAmount : 50000;
       }
@@ -466,26 +468,50 @@ export function simulatePlayerAcquisition(
       const projectSkills = (weeks: number) => {
         return projectAcquisitionSkills(normalizedSkills, development?.currentTrainingSteps ?? [], weeks) as SkillSet;
       };
-      const valS1 = estimateSafeMarketValue({
-        ...mockPlayerInput,
-        age: normalizedAge! + 1,
-        skills: projectSkills(WEEKS_PER_SOKKER_SEASON)
-      });
-      const valS2 = estimateSafeMarketValue({
-        ...mockPlayerInput,
-        age: normalizedAge! + 2,
-        skills: projectSkills(WEEKS_PER_SOKKER_SEASON * 2)
-      });
+      const valS1 = estimateSafeMarketValue(
+        {
+          ...mockPlayerInput,
+          age: normalizedAge! + 1,
+          gameWeek:
+            context.currentGameWeek != null
+              ? context.currentGameWeek + WEEKS_PER_SOKKER_SEASON
+              : null,
+          skills: projectSkills(WEEKS_PER_SOKKER_SEASON)
+        },
+        context.marketTransfers,
+        originalProfile
+      );
+      const valS2 = estimateSafeMarketValue(
+        {
+          ...mockPlayerInput,
+          age: normalizedAge! + 2,
+          gameWeek:
+            context.currentGameWeek != null
+              ? context.currentGameWeek + WEEKS_PER_SOKKER_SEASON * 2
+              : null,
+          skills: projectSkills(WEEKS_PER_SOKKER_SEASON * 2)
+        },
+        context.marketTransfers,
+        originalProfile
+      );
       if (valS1 !== null && valS2 !== null) {
         const proposedSkills = projectAcquisitionSkills(
           normalizedSkills, development?.steps ?? [], WEEKS_PER_SOKKER_SEASON * 2
         );
         const proposedValueSeason2 = development
-          ? estimateSafeMarketValue({
-              ...mockPlayerInput,
-              age: normalizedAge! + 2,
-              skills: proposedSkills as SkillSet
-            })
+          ? estimateSafeMarketValue(
+              {
+                ...mockPlayerInput,
+                age: normalizedAge! + 2,
+                gameWeek:
+                  context.currentGameWeek != null
+                    ? context.currentGameWeek + WEEKS_PER_SOKKER_SEASON * 2
+                    : null,
+                skills: proposedSkills as SkillSet
+              },
+              context.marketTransfers,
+              targetProfile
+            )
           : null;
         const wageWeekly = resolvedWage;
         const totalCostS1 = resolvedAmount + wageWeekly * WEEKS_PER_SOKKER_SEASON;
@@ -600,9 +626,20 @@ export function simulatePlayerAcquisition(
 }
 
 function estimateSafeMarketValue(
-  playerInput: Parameters<typeof estimatePlayerMarketValue>[0]["player"]
+  playerInput: Parameters<typeof estimatePlayerMarketValue>[0]["player"],
+  marketTransfers?: readonly PlayerTransferRecord[],
+  developmentProfile?: DevelopmentProfile | null
 ): number | null {
   try {
+    if (marketTransfers && marketTransfers.length > 0) {
+      const calibrated = calibratePlayerMarketValue(
+        { player: playerInput, developmentProfile: developmentProfile ?? undefined },
+        marketTransfers
+      );
+      return calibrated.comparableEstimate
+        ? calibrated.calibratedValue.expected
+        : calibrated.fundamental.estimatedValue.expected;
+    }
     const result = estimatePlayerMarketValue({ player: playerInput });
     return result.estimatedValue?.expected ?? null;
   } catch {
