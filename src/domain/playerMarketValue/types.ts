@@ -9,6 +9,8 @@ import type { SquadPlayerAssessment } from "../squadPlanning/types.js";
 
 export interface PlayerMarketValuePlayer extends DevelopmentPlayer {
   age: number | null;
+  gameWeek?: number | null;
+  seasonWeek?: number | null;
   skills: SkillSet;
   training?: {
     position: number;

@@ -535,4 +535,50 @@ describe("future player market value", () => {
     const result = projectPlayerMarketValue(context());
     expect(result.modelVersion).toContain("market-value-v1");
   });
+
+  it("uses step gameWeek and Sokker season-adjusted age for comparable transfers at each step", () => {
+    const base = context();
+    // Season 61 week 12 = 987; 3 weeks later is 990 (Season 62 week 2, so age 18 -> 19)
+    const step1 = base.projection.steps[0]!;
+    const step1Skills = { ...base.player.skills, [step1.skill]: step1.toLevel };
+    const result = projectPlayerMarketValue({
+      ...base,
+      player: { ...base.player, age: 18, gameWeek: 987 },
+      projection: {
+        ...base.projection,
+        steps: [
+          {
+            ...step1,
+            estimatedWeeks: 3,
+            cumulativeWeeks: 3,
+            estimatedGameWeek: 990,
+            estimatedAge: 18 + 3 / 13
+          }
+        ],
+        milestones: [],
+        completion: {
+          estimatedWeeks: 3,
+          estimatedGameWeek: 990,
+          estimatedDate: step1.estimatedDate,
+          estimatedAge: 18 + 3 / 13
+        }
+      },
+      transfers: [
+        {
+          transferId: "step-match",
+          transferDate: new Date("2026-04-01T00:00:00.000Z"),
+          gameWeek: 990, // Season 62 week 2
+          salePrice: 2_000_000,
+          age: 19,
+          skills: step1Skills,
+          developmentProfile: base.projection.profile,
+          source: "imported",
+          dataQuality: "complete"
+        }
+      ]
+    });
+
+    expect(result.points).toHaveLength(1);
+    expect(result.points[0]!.basedOnFundamentalOnly).toBe(false);
+  });
 });

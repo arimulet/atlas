@@ -208,7 +208,7 @@ async function computeSquadAssessment(
 
   const assessment = assessSquad(contexts);
   const contextByPlayer = new Map(contexts.map((context) => [context.playerId, context]));
-  const marketValues = createMarketValues(contexts, mappedTransfers);
+  const marketValues = createMarketValues(contexts, mappedTransfers, effectiveGameWeek);
   const depthPlayers: SquadDepthPlayer[] = assessment.players.map((playerAssessment) => {
     const context = contextByPlayer.get(playerAssessment.playerId);
     const marketValue = marketValues.get(playerAssessment.playerId);
@@ -441,12 +441,13 @@ function buildPlayerContext(
 
 function createMarketValues(
   contexts: readonly SquadPlayerContext[],
-  transfers: import("@atlas/domain").PlayerTransferRecord[]
+  transfers: import("@atlas/domain").PlayerTransferRecord[],
+  currentGameWeek: number | null = null
 ): Map<number, MarketValueEntry> {
   const values = new Map<number, MarketValueEntry>();
 
   for (const context of contexts) {
-    const player = toMarketValuePlayer(context);
+    const player = toMarketValuePlayer(context, currentGameWeek);
     const marketContext = {
       player,
       developmentProfile: context.profile ?? null,
@@ -649,10 +650,14 @@ function createScenarioProjection(
   }
 }
 
-function toMarketValuePlayer(context: SquadPlayerContext): PlayerMarketValuePlayerInput {
+function toMarketValuePlayer(
+  context: SquadPlayerContext,
+  currentGameWeek: number | null = null
+): PlayerMarketValuePlayerInput {
   return {
     playerId: context.playerId,
     age: context.age,
+    gameWeek: currentGameWeek ?? context.projection?.generatedAtGameWeek ?? null,
     skills: context.skills,
     formation: context.formation ?? null,
     position: context.position ?? null,
