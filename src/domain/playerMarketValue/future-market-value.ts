@@ -1,4 +1,5 @@
 import type { Confidence, SkillSet } from "../types.js";
+import { getSokkerSeason } from "../sokker/calendar.js";
 import { DEVELOPMENT_PROJECTION_WEEKS_PER_YEAR } from "../playerDevelopment/projection.js";
 import type {
   DevelopmentProjectionStep,
@@ -296,9 +297,16 @@ function valueProjectedState(
   confidence: Confidence;
   hasComparableEvidence: boolean;
 } {
+  const stepSokkerAge = resolveSokkerAgeAtGameWeek(
+    context.player.age,
+    context.player.gameWeek,
+    state.gameWeek
+  );
   const projectedPlayer: PlayerMarketValuePlayerInput = {
     ...context.player,
-    age: state.estimatedAge,
+    age: stepSokkerAge ?? state.estimatedAge,
+    gameWeek: state.gameWeek ?? context.player.gameWeek ?? null,
+    ...(state.gameWeek != null ? { seasonWeek: null } : {}),
     skills: cloneSkills(state.skills)
   };
   const marketContext = createMarketValueContext(context, projectedPlayer);
@@ -370,6 +378,28 @@ function projectedAgeFromWeeks(age: number | null, weeks: number | null): number
     return null;
   }
   return age + weeks / DEVELOPMENT_PROJECTION_WEEKS_PER_YEAR;
+}
+
+function resolveSokkerAgeAtGameWeek(
+  baseAge: number | null | undefined,
+  baseGameWeek: number | null | undefined,
+  targetGameWeek: number | null | undefined
+): number | null {
+  if (
+    typeof baseAge !== "number" ||
+    !Number.isFinite(baseAge) ||
+    typeof baseGameWeek !== "number" ||
+    !Number.isInteger(baseGameWeek) ||
+    typeof targetGameWeek !== "number" ||
+    !Number.isInteger(targetGameWeek)
+  ) {
+    return null;
+  }
+  try {
+    return Math.floor(baseAge) + (getSokkerSeason(targetGameWeek) - getSokkerSeason(baseGameWeek));
+  } catch {
+    return null;
+  }
 }
 
 function buildMilestones(
